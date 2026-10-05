@@ -116,6 +116,10 @@ final class Packages
     {
         $urls = [];
         foreach (self::$libs as $name => $dir) {
+            if (\http::$assetsMode !== 'source') {
+                $urls[$name] = \http::assetsRoot($name);   // /assets/systopic/cms/ - asset.php
+                continue;
+            }
             $real = realpath($dir);
             $url = $real === false ? null : \http::urlPath($real);
             if ($url !== null) {

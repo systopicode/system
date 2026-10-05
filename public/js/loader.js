@@ -71,7 +71,6 @@ sys.core.script.__class = function (loader, info, call) {
 			loader.onScriptsReady(call); // prob. not triggered when noc scripts loaded -> sys.onload (untested)
 		}
 	});
-	var vpx = settings.PUBLIC_VERSIONAPPENDIX ? settings.PUBLIC_VERSIONAPPENDIX : '';
 	lx('start loading:', info.id);
 	switch (info.root) {
 		case 'sys':
@@ -90,7 +89,9 @@ sys.core.script.__class = function (loader, info, call) {
 		f('root could not be defined ... dumping global settings:');
 		l(settings);
 	}
-	info.domObj.src = root + info.src + vpx; //sys.http.cmsRoot not ready
+	// the file's own version (its mtime, from the server): the URL changes
+	// exactly when the file does - see SYS/src/Http/Assets.php
+	info.domObj.src = root + info.src + (info.t ? '?t=' + info.t : ''); //sys.http.cmsRoot not ready
 };
 
 sys.script = sys.core.script.__class; // shorthand

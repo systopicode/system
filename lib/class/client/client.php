@@ -75,6 +75,8 @@ class client {
 				'id' => "$root:$src",
 				'root' => $root,
 				'src' => $src,
+				// the file's mtime - loader.js appends ?t=, see Http\Assets
+				't' => \Systopic\System\Http\Assets::versionOf((string) $root, (string) $src),
 				'type' => $type, // type is classname or sigleton
 				'classNames' => $classNames, // containing classes
 		];
@@ -141,7 +143,7 @@ class client {
 				if ($name === 'compressed.css') {
 					continue;
 				}
-				$url = rtrim($urlBase, '/') . '/' . $name . PUBLIC_VERSIONAPPENDIX;
+				$url = \Systopic\System\Http\Assets::href(rtrim($urlBase, '/') . '/' . $name, $cssFile);
 				$key = preg_replace('~\?.*$~', '', $url);
 				if (isset($seen[$key])) {
 					continue;
@@ -151,7 +153,7 @@ class client {
 			}
 		};
 
-		$projectRootUrl = fs::simplifyPath(http::$root . '../');
+		$projectRootUrl = http::$projectRoot;
 		$packageUrls = \Systopic\System\Sys\Packages::urls();
 
 		$pathParts = $realPath;

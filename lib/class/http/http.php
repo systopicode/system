@@ -34,6 +34,22 @@ class http implements \Systopic\System\Client\Contracts\PreloadsClientScript
 	// 
 	static $sysPath; // e.g. /projects/projectname/vendor/systopic/system/ (DEV)
 	static $sysRoot; // e.g. /projects/projectname/vendor/systopic/system/ (DEV)
+
+	/**
+	 * How the files of the system, the packages and the project's own lib/
+	 * and panels/ reach the browser - config key `assets` of the instance:
+	 *
+	 *   source   straight from their folders (the web reaches them: DEV)
+	 *   serve    through /assets/<root>/ -> public/asset.php, from the
+	 *            originals every time (debugging, no copies)
+	 *   publish  through /assets/<root>/, copied to public/assets/ (RC, LIVE)
+	 *
+	 * Not configured: source where the web reaches the system package,
+	 * publish where it does not. See SYS/.cursor/plans/asset-delivery.plan.md
+	 */
+	static string $assetsMode = 'source';
+
+	public const ASSET_MODES = ['source', 'serve', 'publish'];
 	static $sysUrl;	// e.g. https://servername/projectsprojectname/vendor/systopic/system/	
 	
 	static $requestPath;
@@ -134,6 +150,22 @@ class http implements \Systopic\System\Client\Contracts\PreloadsClientScript
 		return $urlPath === null ? null : self::$hostUrl . $urlPath;
 	}
 
+	/** the URL prefix of an asset root below public/: '<root>/assets/sys/' */
+	static function assetsRoot(string $root): string
+	{
+		return self::$root . 'assets/' . $root . '/';
+	}
+
+	private static function resolveAssetsMode(): string
+	{
+		$configured = \Systopic\System\Config\Config::current()?->instance->get('assets');
+		if (is_string($configured) && in_array($configured, self::ASSET_MODES, true)) {
+			return $configured;
+		}
+		// not configured: the originals where the web reaches them, copies where it does not
+		return fs::$sysRoot !== null && self::urlPath((string) fs::$sysRoot) !== null ? 'source' : 'publish';
+	}
+
 	static function setRoot(array $server): void
 	{
 		// dirname() yields the platform separator for a script at the root
@@ -148,6 +180,12 @@ class http implements \Systopic\System\Client\Contracts\PreloadsClientScript
 		fs::$hostRoot = fsDir::get($server['DOCUMENT_ROOT']);
 		self::$sysRoot = self::resolveSysRootUrl($server);
 		self::$projectRoot = fs::simplifyPath(self::$root . '../');
+		self::$assetsMode = self::resolveAssetsMode();
+		if (self::$assetsMode !== 'source') {
+			// the roots of everything outside public/ - asset.php serves or publishes them
+			self::$sysRoot = self::assetsRoot('sys');
+			self::$projectRoot = self::assetsRoot('app');
+		}
 		self::$siteRoot = self::$root;
 		self::$hostUrl = self::$protocol . '://' . self::$host;
 		self::$rootUrl = self::$hostUrl . self::$root;

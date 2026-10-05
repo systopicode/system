@@ -41,7 +41,7 @@ class fsLoader {
 				}
 				self::$filesIncluded[] = $file; // skip duplicates
 				$return->link()
-					->href($file->href . PUBLIC_VERSIONAPPENDIX)
+					->href(\Systopic\System\Http\Assets::href($file->href, $file->filepath))
 					->rel("stylesheet")
 					->type("text/css");
 				return $return; // immer zurückgeben
@@ -69,7 +69,7 @@ class fsLoader {
 	{
 		$imports = '';
 		foreach (self::cssFilesOf($dirFilesOrFile, $recursive) as $file) {
-			$imports .= "@import url('" . $file->href . PUBLIC_VERSIONAPPENDIX
+			$imports .= "@import url('" . \Systopic\System\Http\Assets::href($file->href, $file->filepath)
 				. "') layer($layer);\n";
 		}
 		return $imports === '' ? '' : "<style>\n$imports</style>\n";
@@ -164,7 +164,7 @@ class fsLoader {
 				}
 				self::$filesIncluded[] = $file; // skip duplicates
 				$return->script()
-					->src($file->href . PUBLIC_VERSIONAPPENDIX)
+					->src(\Systopic\System\Http\Assets::href($file->href, $file->filepath))
 					->type("text/javascript");
 			}, html::nodelist());
 	}

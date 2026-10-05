@@ -131,7 +131,7 @@ final class Config
      * Keys of config.local.json that belong to the selected instance — the
      * same keys an <Instance>.config.json has.
      */
-    private const LOCAL_INSTANCE_KEYS = ['db', 'debug', 'versionAppendix', 'versionDate'];
+    private const LOCAL_INSTANCE_KEYS = ['db', 'debug', 'versionAppendix', 'versionDate', 'assets'];
 
     /** @return array<string, mixed> config.local.json, [] when there is none */
     private static function readLocal(string $configDir): array
