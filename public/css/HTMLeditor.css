@@ -1,0 +1,303 @@
+/****************************** WYSIWYG CONTROLS ***************************/
+div.HTMLeditorMenu{
+    white-space: nowrap;
+    background: transparent !important;
+    padding-top:12px !important;
+    cursor: default !important;
+    position: absolute !important;
+    z-index: 99999 !important;
+}
+
+div.HTMLeditorMenu:before{
+    content:"\25B8" !important;
+    color: var(--cmsMainColor) !important;
+    font-size: 40px !important;
+    left: 0;
+    padding-top: 20px !important;
+    position: absolute !important;
+    top: -9px;
+    transform: rotate(270deg) !important;
+    z-index:-1 !important;
+}
+
+div.HTMLeditorMenu.outOfFocus:before{
+    left: calc(100% - 55px);
+}
+
+div.HTMLeditorMenu li{
+    list-style-type: none !important;
+    margin:0 !important;
+    padding: 0 !important;
+}
+
+div.HTMLeditorMenu li a{
+    text-decoration: none !important;
+}
+
+div.HTMLeditorMenu *,
+div.HTMLeditorMenu a:before{
+    color:#fff !important;
+}
+div.HTMLeditorMenu > ul{
+    background:transparent !important;
+    box-shadow: 0 2px 4px 2px rgba(0, 0, 0, 0.2) !important;
+    margin-left: -38px;
+    padding:0 !important;
+    list-style-type: none !important;
+	position: relative;
+	border-radius:4px;
+}
+
+div.HTMLeditorMenu.outOfFocus > ul{
+    margin-left: 0;
+}
+
+div.HTMLeditorMenu > ul > li{
+    display:inline-block !important;
+    white-space: nowrap !important;
+    margin-left: 0 !important;
+}
+
+div.HTMLeditorMenu .hasChildren,
+div.HTMLeditorMenu .hasChildren a,
+div.HTMLeditorMenu .hasChildren a:before{
+    cursor: default !important;
+}
+
+div.HTMLeditorMenu > ul > li > a{
+    padding: 10px !important;
+    background:var(--cmsMainColor);
+    display:inline-block !important;
+    line-height: 0;
+}
+
+div.HTMLeditorMenu > ul > li:first-child > a{
+	border-radius: 4px 0 0 4px;
+}
+
+div.HTMLeditorMenu > ul > li:last-child > a{
+	border-radius: 0 4px 4px 0;
+}
+
+div.HTMLeditorMenu > ul > li:first-child.hasChildren:hover a{
+	border-bottom-left-radius:0;
+}
+div.HTMLeditorMenu > ul > li:last-child.hasChildren:hover a{
+	border-bottom-right-radius:0;
+}
+
+div.HTMLeditorMenu ul li ul{
+    background: var(--cmsMainColor);
+    margin-top:-1px;
+    position: absolute;
+    opacity: 0;
+    left:0;
+	min-width: 100%;
+    visibility: hidden;
+    transition: opacity 0.25s ease-in-out 0s;
+	border-radius: 0 0 4px 4px;
+}
+
+div.HTMLeditorMenu ul li ul li:not(.selected):hover a{
+	background: var(--cmsHighlightColor);
+}
+
+div.HTMLeditorMenu > ul > li.selected > a,
+div.HTMLeditorMenu > ul > li > ul li.selected{
+	background: var(--cmsSecondaryColor);
+}
+
+div.HTMLeditorMenu > ul > li:hover > a{
+    background:var(--cmsHighlightColor);
+}
+
+div.HTMLeditorMenu ul li.hasChildren:hover ul{
+    opacity: 1 !important;
+    visibility: visible !important;
+}
+
+div.HTMLeditorMenu ul li ul li{
+    padding:0 !important;
+    margin:0 !important;
+}
+
+
+div.HTMLeditorMenu ul li ul li a{
+    font-family: "Font" !important;
+    font-weight: 300;
+    padding:6px 20px !important;
+    margin:0 !important;
+    display:block !important;
+}
+
+
+/****************************** editable content ***************************/
+body [contenteditable='true'],
+body div.plaintext
+{
+    cursor:text !important;
+    border:1px dashed rgb(52,52,52);
+    min-height: 20px;
+    background:none;
+    position: relative;
+}
+
+
+div.plaintext textarea,
+div.plaintext input
+{
+    box-sizing:border-box !important;
+    width:100% !important;
+    box-shadow: none !important;
+    position: relative;
+	border: none !important;
+	background: none !important;
+}
+
+
+[contenteditable='true'].confirm,
+[data-showeditableareas='true'].confirm,
+[contenteditable=true].confirm:focus,
+[data-showeditableareas='true'].confirm:focus
+{
+    outline:2px solid rgb(124,178,73);
+    background: none !important;
+    /* color:initial !important; problem bei bule-asset onpage */
+}
+
+[contenteditable='true'].error,
+[data-showeditableareas='true'].error,
+[contenteditable='true'].error:focus,
+[data-showeditableareas='true'].error:focus
+{
+    outline:2px solid rgb(213,20,25);
+    background: none !important;
+    color:initial !important;
+}
+
+.cms [contenteditable='false'],
+div.editor[contenteditable='false']{
+    cursor:context-menu;
+}
+
+div.editor[contenteditable='true']:after,
+div.editor[data-showeditableareas='true']:after,
+.plaintext:after,
+.objectPlaceholder:after {
+    content: "EDITOR";
+    font-size: 9px;
+    line-height: 14px;
+    padding: 0 2px;
+    position: absolute;
+    right: 0;
+    top: 0;
+    color: #fff;
+    font-family: Arial !important;
+    background: rgb(52,52,52);
+    font-weight: normal;
+    text-transform: uppercase;
+}
+div.editor.empty{
+	background: rgba(0,0,0,0.15);
+}
+div.plaintext textarea,
+div.plaintext input{
+    font-family: Courier;
+    font-size:16px;
+}
+div.plaintext{
+    position: relative;
+}
+.plaintext:after{
+    content: "PLAIN TEXT";
+}
+h1.editor[contenteditable="true"]:after{
+    content: "HEADLINE H1";
+}
+h2.editor[contenteditable="true"]:after{
+    content: "HEADLINE H2";
+}
+h3.editor[contenteditable="true"]:after{
+    content: "HEADLINE H3";
+}
+h4.editor[contenteditable="true"]:after{
+    content: "HEADLINE H4";
+}
+h5.editor[contenteditable="true"]:after{
+    content: "HEADLINE H5";
+}
+h6.editor[contenteditable="true"]:after{
+    content: "HEADLINE H6";
+}
+p.editor[contenteditable="true"]:after{
+    content: "PARAGRAPH p";
+}
+
+*.editor[contenteditable="true"]:not([data-editorLabel='']):after,
+*.editor.plaintext:not([data-editorLabel='']):after{
+    content: attr(data-editorLabel);
+}
+
+[contenteditable="true"]:focus,
+[data-showeditableareas="true"]:focus
+{
+    outline:1px solid var(--cmsHighlightColor);
+    outline-offset: -1px;
+}
+
+[contenteditable=true] a{
+    text-decoration: underline !important;
+}
+
+body .objectPlaceholder {
+    outline: 1px dashed rgb(52,52,52);
+    position: relative;
+    min-width: 100%;
+    min-height:100px;
+    background:rgb(217,217,217)
+}
+
+.objectContainer{
+    position: relative;
+}
+
+body .objectContainer > input.ajax{
+    position: absolute !important;
+    top:14px !important;
+    right:0 !important;
+    padding:1px !important;
+    border-radius: 0 !important;
+    background: rgba(0,0,0,0.2)  !important;
+    color:#000 !important;
+    font-family: Courier !important;
+    width:50px !important;
+    font-size: 10px !important;
+    z-index: 5;
+}
+
+.objectPlaceholder:after{
+    content:'OBJECT PLACEHOLDER'
+}
+
+[contenteditable][data-field^="text"]:focus{
+    text-transform: none;
+}
+
+
+span.insertHTMLeditorPlaceholder{
+    user-select:none;
+    -moz-user-select: none;
+}
+textarea.olink{
+    display:none;
+}
+
+
+.editor table{
+	width:100%;
+}
+
+.editor table td{
+	border:1px solid rgb(52,52,52);
+	min-height: 16px;
+}

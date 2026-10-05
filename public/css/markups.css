@@ -1,0 +1,27 @@
+.confirm{
+	color:yellowgreen;
+}
+
+.warn{
+	color:orange;
+}
+.error{
+	color:#DC0000;
+}
+.disabled{
+	color:lightgray;
+}
+button.disabled {
+	color:gray;
+	border-color:gray;
+	background:white;
+}
+.nowrap {
+	white-space: nowrap;
+}
+.space, .monospace {
+	width:1.5em;
+}
+s{
+	display: none;
+}

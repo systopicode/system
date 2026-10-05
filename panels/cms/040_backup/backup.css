@@ -1,0 +1,10 @@
+/* Scoped to this panel: body carries the panel path as classes (body.tpl.php),
+   and a module stylesheet is never unloaded once it was fetched. Unscoped,
+   this rule hid the pylon in every other panel for the rest of the session. */
+body.backup main > div.pylon {
+    display: none;
+}
+
+body.backup .cms table.hover ul li:last-child a.button {
+    padding: 4px 6px;
+}

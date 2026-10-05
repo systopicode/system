@@ -1,0 +1,239 @@
+/*************** DEFFAULT Menu ******************/
+
+ul.menu {
+  list-style-type: none;
+  flex-direction: column;
+  display: flex;
+  margin: 0;
+  padding: 0;
+}
+ul.menu li {
+  list-style-type: none;
+  margin: 0 15px 0 0;
+  white-space: nowrap;
+}
+ul.menu li.nogap {
+  margin-right: 3px;
+}
+/*************** BAR Menu ******************/
+ul.barmenu {
+  margin: 0 0 0 auto;
+  padding: 0;
+  list-style-type: none;
+  white-space: nowrap;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: row;
+  align-self: center;
+  margin-right: -4px;
+}
+
+ul.barmenu > li {
+  cursor: pointer;
+  margin: 0 0 0 15px;
+  outline: 5px solid transparent;
+  text-align: center;
+  align-items: center;
+  display: flex;
+  justify-content: center;
+  position: relative;
+  padding: 3px;
+}
+
+ul.barmenu > li > a > i {
+  margin: 0;
+}
+
+ul.barmenu > li > a {
+  overflow: hidden;
+  position: relative;
+}
+
+ul.barmenu > li > a:after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 5px;
+  height: 5px;
+  background: rgba(255, 255, 255, 0.2);
+  opacity: 0;
+  border-radius: 100%;
+  transform: scale(1, 1) translate(-50%);
+  transform-origin: 50% 50%;
+  pointer-events: none;
+}
+
+ul.barmenu > li > a:active:after {
+  animation: ripple 2s ease;
+}
+
+section.widget header > ul > li.spacer {
+  padding: 0;
+  margin: 0;
+  width: 15px;
+  cursor: default;
+  display: block;
+}
+
+section.widget header > ul > li:first-child {
+  margin-left: 0;
+}
+
+ul.barmenu li i {
+  line-height: 18px;
+  padding: 4px;
+}
+
+ul.barmenu li ul {
+  position: absolute;
+  background: var(--cmsMainColor);
+  right: -5px;
+  top: 23px;
+  margin-top: 2px;
+  box-shadow: 7px 17px 17px 1px rgba(0, 0, 0, 0.07);
+  list-style-type: none;
+  opacity: 0;
+  visibility: hidden;
+  z-index: 9;
+  color: #fff;
+  text-align: left;
+  padding: 6px;
+}
+ul.barmenu li ul.left {
+  right: auto;
+  left: -5px;
+}
+
+ul.barmenu li i.fa-ellipsis-v.left + ul li ul {
+  left: calc(100% - 6px);
+  top: initial;
+  margin-top: -32px;
+  right: auto;
+}
+
+ul.barmenu li i.fa-ellipsis-v.left + ul li:hover ul {
+  opacity: 1;
+  visibility: visible;
+  display: block;
+}
+
+ul.barmenu a,
+ul.barmenu a i {
+  color: var(--cmsMainColor);
+  font-size: 22px;
+}
+
+ul.barmenu a svg {
+  height: 24px;
+  width: 24px;
+  aspect-ratio: 1/1;
+}
+
+ul.barmenu a {
+  display: flex;
+  align-items: center;
+  flex-wrap: nowrap;
+}
+
+ul.barmenu li ul li {
+  padding: 6px;
+}
+
+ul.barmenu li.open > ul {
+  opacity: 1;
+  visibility: visible;
+  min-width: 125px;
+}
+
+ul.barmenu li ul li:hover,
+ul.barmenu li ul li.selected {
+  background: var(--cmsHighlightColor);
+}
+
+ul.barmenu li ul li span {
+  font-family: "Font";
+  font-weight: 300;
+  font-size: 16px;
+}
+
+ul.barmenu li ul li i + span {
+  padding-left: 10px;
+}
+
+.showTags ul.barmenu li.megadropdown {
+  background: white;
+}
+
+.showTags ul.barmenu li.megadropdown:before {
+  border-color: white;
+  box-shadow: 7px 17px 17px 1px rgba(0, 0, 0, 0.07);
+}
+
+ul.barmenu li.open:before,
+ul.barmenu li.megadropdown:before {
+  position: absolute;
+  top: -10px;
+  left: -10px;
+  right: -10px;
+  bottom: -10px;
+  content: "";
+  width: 23px;
+  height: 23px;
+  border: 10px solid transparent;
+  border-bottom-width: 30px;
+}
+
+ul.barmenu li.open {
+  background: var(--cmsMainColor);
+  color: #fff;
+  outline: 5px solid var(--cmsMainColor);
+}
+
+ul.barmenu li.open a,
+ul.barmenu li.open a i {
+  color: #fff;
+}
+
+ul.barmenu > li > a > i.fa-ellipsis-v {
+  width: 26px;
+}
+
+ul.barmenu li.open input {
+  color: #fff;
+  font-family: "Font";
+  font-weight: 400;
+  padding-left: 10px;
+  font-size: 1.6rem;
+}
+
+ul.barmenu li i.fa-ellipsis-v.left + ul {
+  right: auto;
+  left: -5px;
+}
+
+ul.barmenu select,
+ul.barmenu input {
+  background: transparent;
+  color: #fff;
+}
+
+[data-on_click],
+[data-href] {
+  cursor: pointer;
+}
+
+/**************** MEGA DROPWDOWN MENU *****************/
+div.megaDropDownContent {
+  padding: 10px;
+  box-shadow: 7px 17px 17px 1px rgba(0, 0, 0, 0.07);
+  background: #fff;
+  z-index: 2;
+  display: block;
+  position: relative;
+  transition: all ease-in-out 0.2s;
+  min-width: 100%;
+  flex: 0 0 100%;
+  margin-top: 5px;
+}

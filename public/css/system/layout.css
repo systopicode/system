@@ -1,0 +1,264 @@
+/**************************MAIN FRAMES***********************/
+body > main > div.main,
+body > main > div.pylon,
+body > main > div.content{
+    flex: 0 0 auto;
+    align-self: stretch;
+    position: relative;
+}
+
+body > main{
+    display:flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+    align-content: flex-start;
+    align-items: flex-start;
+    height:100%;
+}
+
+body > main > div.content {
+    flex-direction: column;
+    display: flex;
+    align-items: stretch;
+    flex-wrap: nowrap;
+    width: 0;
+}
+body > body main > div.content > header{
+    flex: 0 1 37px;
+    min-height: 37px;
+    max-height: 30%;
+}
+
+dialog + body > main{
+    height:calc(100% - 34px);
+}
+
+/********MAIN***************/
+body > main > div.main{
+    width:60px;
+}
+
+/********PYLON***************/
+body > main > div.pylon{
+    min-width:200px;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+}
+body > main > div.pylon nav{
+    flex: 1 1 auto;
+    width: 100%;
+    border-right: 2px solid rgb(217,217,217);
+    overflow: hidden;
+    height:100%;
+	background: var(--cmsBgColor);
+	border-radius: 8px 0 0 0;
+}
+
+body > main > div.pylon header{
+    /* flex:0 0 40px; */
+    /* width:100%; */
+    border-right: 2px solid var(--cmsSecondaryColor);
+    padding-left: 13px;
+    height: 40px;
+}
+body > main > div.pylon footer{
+    flex:1 1 auto;
+    position: relative;
+    width: 100%;
+    height:100%;
+	background:var(--cmsBgColor);
+}
+
+body > main > div.pylon footer:empty{
+	border-right: 2px solid rgb(217,217,217);
+}
+
+body > main > div.pylon:empty{
+    display:none;
+}
+
+/********CONTENT***************/
+body > main > div.content{
+    flex: 1 1 auto;
+}
+
+/* contain: layout makes this the containing block for fixed descendants.
+   The site's own css positions .logo, nav and div.lightbox fixed - without
+   this they attach to the VIEWPORT and land on the cms chrome instead of
+   inside the preview. */
+article.cmsContent{
+	contain: layout;
+    height: 100%;
+    overflow: scroll;
+	padding:10px;
+	width:100%;
+	max-width:100%;
+	box-sizing: border-box;
+}
+
+/**************************COLUMNS***********************/
+.cms .layout{
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: space-between;
+}
+
+.cms .layout .row{
+    width:100%;
+}
+
+.cms .layout .layout{
+    padding:0;
+}
+
+.cms div.cmslightboxContent .layout{
+    padding:0;
+}
+
+
+.cms .fullColumn,
+.cms ._1_1,
+.cms ._1
+{
+    width: calc(100% - 20px);
+}
+.cms .halfColumn,
+.cms ._1_2
+{
+    width: calc(( 100% / 2 ) - 20px);
+}
+
+.cms .oneThirdColumn,
+.cms ._1_3
+{
+    width: calc(( 100% / 3 ) - 20px);
+}
+
+.cms .twoThirdsColumn,
+.cms ._2_3
+{
+    width: calc(( 100% / 3 * 2) - 20px);
+}
+
+.cms .oneFourthColumn,
+.cms ._1_4
+{
+    width: calc(( 100% / 4 ) - 20px);
+}
+
+.cms ._2_4
+{
+    width: calc(( 100% / 4 * 2 ) - 20px);
+}
+
+.cms ._3_4
+{
+    width: calc(( 100% / 4 * 3 ) - 20px);
+}
+
+.cms .oneFifthColumn,
+.cms ._1_5
+{
+    width: calc(( 100% / 5 ) - 20px);
+}
+.cms ._1_6
+{
+    width: calc(( 100% / 6 ) - 20px);
+}
+
+.cms ._1_7
+{
+    width: calc(( 100% / 7 ) - 20px);
+}
+.cms ._1_8
+{
+    width: calc(( 100% / 8 ) - 20px);
+}
+
+.cms ._2_8
+{
+    width: calc(( 100% / 8 * 2 ) - 20px);
+}
+
+.cms ._3_8
+{
+    width: calc(( 100% / 8 * 3 ) - 20px);
+}
+
+.cms ._4_8
+{
+    width: calc(( 100% / 8 * 4 ) - 20px);
+}
+
+.cms ._5_8
+{
+    width: calc(( 100% / 8 * 5 ) - 20px);
+}
+
+.cms ._6_8
+{
+    width: calc(( 100% / 8 * 6 ) - 20px);
+}
+
+.cms ._7_8
+{
+    width: calc(( 100% / 8 * 7 ) - 20px);
+}
+
+.cms ._8_8
+{
+    width: calc(( 100% / 8 * 8 ) - 20px);
+}
+
+.cms [class*='Column'].box{
+    padding:15px;
+    background: rgb(217,217,217);
+}
+
+.cms [class*='Column'].box h3{
+    text-transform: uppercase;
+    color:#fff;
+    font-family: 'Font';
+    font-weight: 400;
+    background:var(--cmsHighlightColor);
+    padding:5px 15px;
+    margin:-15px 0 20px -15px;
+    width:calc(100% + 30px);
+}
+.cms break{
+    flex-basis: 100%;
+    width: 0px;
+    height: 0px;
+    overflow: hidden;
+}
+.flexRow {
+    display: flex;
+    flex-direction: row;
+    height: calc(100% - 39px);
+    flex-wrap: nowrap;
+	background: var(--cmsBgColor);
+	border-radius: 8px 0 0 0;
+}
+
+div.pylon + div.content .flexRow {
+	border-radius: 0;
+}
+
+.flexColumn {
+    display: flex;
+    flex-direction: column;
+    height:100%;
+    /* A flex item's min-width defaults to auto, which means "never smaller
+       than my content". The page preview sits in here, so without this the
+       column grows to the width the page demands and shoves the sidebar out.
+       The article inside scrolls, so nothing is lost by letting it shrink. */
+    min-width: 0;
+}
+.flexRow > *,
+.flexColumn > *
+{
+    flex:1 1 auto
+}

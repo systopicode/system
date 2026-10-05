@@ -1,0 +1,141 @@
+/****************************** LANGUAGE DROPDOWN ***************************/
+.cms div.languageSwitch > ul{
+    display:inline-block;
+
+    vertical-align: middle;
+}
+.cms div.languageSwitch > ul li{
+    margin-left: -5px;
+    display:inline-block;
+    vertical-align: middle;
+    line-height: 37px;
+    padding:0 10px 0 9px !important;
+}
+
+.cms div.languageSwitch > ul li:first-child{
+    margin-left: 0;
+}
+
+.cms div.languageSwitch > ul li:hover,
+.cms div.languageSwitch > ul li.selected{
+    background: #000;
+}
+
+.cms div.languageSwitch > ul li a{
+    line-height: 34px;
+}
+
+.cms div.languageSwitch > ul li img{
+    height:20px;
+    margin-top: 8px;
+}
+
+.cms  li.languageSwitchDropdown{
+    margin-left: 0;
+}
+
+.cms div.dropdown > ul > li.languageSwitchDropdown > span{
+    padding-left: 9px !important;
+    padding-right: 12px !important;
+}
+
+.cms li.languageSwitchDropdown table tbody tr:nth-child(2n){
+    background:none;
+}
+
+.cms li.languageSwitchDropdown table tbody td{
+    padding:10px 0 0 0;
+}
+
+.cms li.languageSwitchDropdown table tbody td:first-child{
+    padding-left: 10px;
+}
+
+.cms li.languageSwitchDropdown table tbody td:last-child{
+    padding-right: 10px;
+}
+
+.cms li.languageSwitchDropdown table tbody tr:last-child td{
+    padding-bottom: 10px;
+}
+
+.cms  li.languageSwitchDropdown div.dropdownContent{
+    width:225px !important;
+}
+
+.cms  li.languageSwitchDropdown div.dropdownContent a{
+    padding:6px 15px;
+    display:inline-block;
+}
+
+.cms  li.languageSwitchDropdown div.dropdownContent a:hover{
+    background:rgb(52,52,52);  
+}
+
+.cms  div.languageSwitch div.dropdown{
+    margin-left: -5px;
+}
+
+/****************************** REWRITE DROPWDONW ***************************/
+
+.cms div.dropdown li.rewrite .floatWrapper{
+    position: relative;
+}
+
+.cms div.dropdown li.rewrite .floatWrapper input[type='text']{
+    position: absolute;
+    left:30px;
+    top:0;
+    right:61px;
+    background:#262626;
+    width:calc(100% - 61px);
+    transition: left 0.2s ease-in-out, width  0.2s ease-in-out;
+    z-index: 1;
+}
+
+.cms div.dropdown li.rewrite .floatWrapper input[type='text'][readonly]{
+    right:30px;  
+    width:calc(100% - 30px);
+}
+.cms li.rewrite .floatWrapper input[type="radio"].custom + label{
+    margin: 9px 0 15px;
+}
+.cms div.dropdown li.rewrite .floatWrapper input[type='text'] + a{
+    position: absolute;
+    right: -9px;
+    top: 0px;
+    padding: 6px 6px;
+}
+
+.cms div.dropdown li.rewrite .floatWrapper input[type='text'] + a i{
+    font-size: 24px;
+    color:rgb(130,130,130);
+}
+
+main > div.content > article {
+    flex: 1 1 auto;
+    overflow: auto;
+    height: 100%;
+}
+
+[data-on_draginit="draginitPylonwidth"]
+{
+	width:20px;
+	position: absolute;
+	height: 100%;
+	right: -10px;
+	cursor: col-resize;
+}
+[data-on_draginit="draginitSidebarwidth"]
+{
+	width:20px;
+	position: absolute;
+	height: 100%;
+	left: -10px;
+	top: 0;
+	cursor: col-resize;
+}
+[data-on_draginit="draginitFooterHeight"]
+{
+	cursor: row-resize;
+}

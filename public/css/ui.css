@@ -1,0 +1,357 @@
+.flexRow,
+.flexRow a{
+	/* color:rgb(52, 52, 52); */
+	text-decoration: none;
+}
+
+.flexRow .layout:first-child{
+	margin:0;
+	background: none;
+}
+/****************************** PROGRESS BAR ***************************/
+#nprogress {
+	pointer-events: none;
+	z-index: 1900;
+}
+
+#nprogress .bar {
+	background: var(--cmsHighlightColor);
+	position: fixed;
+	z-index: 1600;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 4px;
+	box-shadow: -5px 0 3px 3px rgba(0,0,0,0.2);
+}
+
+#nprogress.showStatus.confirm .bar{
+	background: rgb(124,178,73);
+}
+
+#nprogress.showStatus.error .bar{
+	background: rgb(213,20,25);
+}
+
+#nprogress .peg {
+	display: block;
+	position: absolute;
+	right: 0px;
+	width: 100px;
+	height: 100%;
+	opacity: 1.0;
+	transform: rotate(3deg) translate(0px, -4px);
+}
+
+html.nprogress-busy{
+	cursor:wait;
+}
+
+
+/****************************** IMAGE EDITOR ***************************/
+div.dragimage{
+	border:1px dashed var(--cmsMainColor);
+	z-index: 1001;
+}
+
+div.dragimage > div{
+	border-width:4px 4px 0 0;
+	border-color:  rgb(52,52,52);
+	border-style: solid;
+	background:transparent;
+	width:12px;
+	height:12px;
+	position:absolute;
+	z-index: 1001;
+}
+
+div.dragimage > div:nth-child(3){
+	border-width:4px 0 0 4px;
+}
+
+div.dragimage > div:nth-child(4){
+	border-width:0 0 4px 4px;
+}
+
+div.dragimage > div:nth-child(5){
+	border-width:0 4px 4px 0;
+}
+
+div.imageEditor{
+	z-index: 90000;
+}
+
+div.imageEditor,
+div.imageEditor *{
+	transition: all 0s !important;
+}
+
+div.imageEditor > div:first-child{
+	outline:1px solid rgb(52,52,52);
+}
+
+div.imageEditorRaster{
+	position: absolute;
+	top:0;
+	right:1px;
+	bottom:0;
+	left:0;
+	display:flex;
+	flex-flow: row wrap;
+	z-index: 89999;
+	border-left:1px solid rgba(52,52,52,0.5);
+	border-top:1px solid rgba(52,52,52,0.5);
+}
+
+div.imageEditorRaster div{
+	border:1px solid rgba(52,52,52,0.5);
+	flex: 0 0 calc(10% - 1px);
+	margin:-1px -1px 0 0;
+	position: relative;
+}
+
+div.imageEditorRaster div:before{
+	content:attr(data-index);
+	font-size: 12px;
+	position: absolute;
+	top:10px;
+	left:0;
+	right:0;
+	text-align: center;
+	font-family: Arial;
+}
+div.flexHandle {
+	position: absolute;
+	border-bottom: 1px solid red;
+	border-top: 20px solid rgba(0,0,0,0.2);
+	margin-top: -21px;
+	z-index: 2000;
+	width:100%;
+	height:11px;
+	cursor: s-resize;
+}
+div.aspectRatioSelector{
+	position: absolute;
+	z-index:1002;
+	color:rgb(130,130,130);
+}
+div.aspectRatioSelector a{
+	background: rgb(52, 52, 52);
+	display: inline-block;
+	margin-right:6px;
+	padding:0 6px;
+	cursor:pointer;
+}
+
+/****************************** ON PAGE CMS CONTROLS ***************************/
+ul.onPageCMSControls{
+	opacity: 0.5 !important;
+	position: fixed !important;
+	top:0 !important;
+	right:0 !important;
+	border-radius: 0 0 0 5px !important;
+	overflow: hidden !important;
+	transition: opacity 0.1s ease-in !important;
+	padding:0 !important;
+	line-height: 0 !important;
+	z-index:999999997;
+	box-sizing: border-box !important;
+	user-select: none;
+	-moz-user-select: none;
+	margin:0;
+	padding:0;
+}
+
+ul.onPageCMSControls:hover,
+ul.onPageCMSControls:focus{
+	opacity: 1 !important;
+}
+
+ul.onPageCMSControls li{
+	display:inline-block;
+	vertical-align: top !important;
+	line-height: 0 !important;
+	padding:0  !important;
+	margin:0 !important;
+	list-style-type: none !important;
+	box-sizing: border-box !important;
+}
+
+ul.onPageCMSControls li *{
+	font-size:16px !important;
+}
+
+
+ul.onPageCMSControls li:first-child a{
+	border:none !important;
+}
+
+ul.onPageCMSControls li a{
+	width:30px !important;
+	height:30px !important;
+	text-align: center;
+	box-sizing: border-box !important;
+	letter-spacing: 0;
+	display: inline-block !important;
+	border-left:1px solid #fff !important;
+	background:var(--cmsMainColor) !important;
+	padding:5px !important;
+	cursor:pointer !important;
+	text-decoration: none !important;
+	margin:0  !important;
+	font-size: 16px;
+	color:#fff;
+}
+ul.onPageCMSControls li a i{
+	color:#fff !important;
+	font-family: 'CMS Font Awesome 6 Pro';
+}
+
+/****************************** DRAG ***************************/
+
+
+.draghelper {
+	position: absolute;
+	z-index: 1000;
+	s {
+		pointer-events: none;
+		display: block;
+		position: absolute;
+		border-color: var(--cmsHighlightColor);
+		border-style: dotted;
+		border-width: 0;
+		background-color: rgba(255,255,255,0.3);
+		&:nth-child(even) {
+			border-top-width: 2px;
+			width: 100%;
+			height: 2px;
+			top: 100%;
+			left: 100%;
+		}
+		&:nth-child(odd) {
+			border-left-width: 2px;
+			width: 2px;
+			height: 100%;
+			top: 100%;
+			left: 100%;
+		}
+		&:nth-child(3) {
+			left: 200%;
+		}
+		&:nth-child(4) {
+			left: 100%;
+			top: 200%;
+		}
+	}
+	&.accept {
+		transition-property: left, top, width, height;
+		transition-timing-function: ease-out;
+		transition-duration: 0.2s;
+		s {
+			border-color: var(--cmsHighlightColor);
+
+		}
+	}
+	&.ctrl {
+		&:after{
+			position: absolute;
+			left: calc(100% + 5px);
+			top: 100%;
+			display: block;
+			color:blue;
+			font-size: 30px;
+			content:'+';
+		}
+		s {
+			border-color: blue;
+		}
+	}
+}
+
+.draghelper i {
+	
+	position: absolute;
+	left: calc(200% + 6px);
+	bottom: -18px;
+	color: var(--cmsHighlightColor);
+	font-size: 17px;
+}
+
+
+div.sort {
+	position: absolute;
+	z-index: 1000;
+}
+
+div.sort.h{
+	width: calc(50% + 10px + 10px); /* tile + gap + space */
+	height: calc(100% + 10px);
+	top:0;
+}
+div.sort.h.insertBefore {
+	/* padding-right: calc(50% - 10px); */ /* tile - space */
+	left: calc( -10px - 10px ); /* - gap - space */
+}
+div.sort.h.insertAfter {
+	padding-left: calc(71% - 41px);  /* tile - space */
+	right: calc( -10px - 10px ); /* - gap - space */
+}
+
+div.sort.v{
+	width:100%;
+	height:0;
+	left:3px;
+}
+div.sort.v.insertBefore {
+	top:-11px;
+	padding-top: 8px;
+	padding-bottom: 7px;
+
+}
+div.sort.v.insertAfter {
+	bottom:-12px;
+	padding-top: 7px;
+	padding-bottom: 7px;
+}
+div.sort.v.insertInto {
+	height:15px;
+	padding-top: 2px;
+	padding-bottom: 2px;
+	top:9px;
+	top:4px;
+}
+div.sort.nosort.v.insertInto {
+	height:26px;
+	top:0px;
+}
+
+div.sort {
+	display:none;
+}
+body.pageDragging div[data-drop_accept="page"].sort,
+body.mediaDragging div[data-drop_accept="media"].sort
+{
+	display: block;
+}
+.dragged {
+	opacity: 0.4;
+}
+body.dragging .dragged div.sort,
+body.dragging .afterDragged div.sort.insertBefore,
+body.dragging .beforeDragged div.sort.insertAfter
+{
+	display: none;
+}
+
+body.dragging.debug div.sort.insertBefore {
+	background: rgba(255,100,100,0.5);
+}
+body.dragging.debug div.sort.insertAfter {
+	background: rgba(100,255,100,0.5);
+}
+body.dragging.debug div.sort.insertInto {
+	background: rgba(100,100,255,0.5);
+}
+body.dragging.debug .draghelper{
+	background: rgba(0,0,0,0.1);
+}

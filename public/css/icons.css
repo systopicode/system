@@ -1,0 +1,7 @@
+.fa-arrows-split-up-and-left{
+    transform: scaleX(-1);
+}
+
+i.right{
+    float:right;
+}

@@ -1,0 +1,38 @@
+## disable MultiViews causes mismatch e.g. between /admin and /admin.php
+Options +MultiViews
+ServerSignature Off
+Options +Indexes
+
+RewriteEngine on
+RewriteRule ^\.well-known/.+ - [END]
+##bypass external folders e.g. __prototype
+RewriteRule ^__* - [L,QSA]
+## sync file and sync app
+RewriteRule ^sync(\d\.php|) - [L,QSA]
+
+######################## media files handling #######################################################
+## add all allowed file-extensions for directly downloadable files here all others will be denied
+RewriteCond %{REQUEST_URI} !^.*\.(ico|jpg|svg|png|gif|mp4|webm|pdf|doc|docx|vcf|tif|css|js|zip|log|ics|json|otf|woff|woff2|webp|xml|webmanifest)$
+
+RewriteRule ^img/ - [F]
+## deny not css/js files to download from site class directory
+RewriteCond %{REQUEST_URI} !^.*\.(js|css)$
+RewriteRule ^class/ - [F]
+RewriteCond %{REQUEST_URI} !^.*\.(js|css)$
+RewriteRule ^modules/ - [F]
+RewriteCond %{REQUEST_URI} !^.*\.(css)$
+RewriteRule ^css/ - [F]
+RewriteCond %{REQUEST_URI} !^.*\.(js)$
+RewriteRule ^js/ - [F]
+RewriteCond %{REQUEST_URI} !^.*\.(ttf|woff|woff2)$
+RewriteRule ^fonts/ - [F]
+
+## send existing allowed files directly
+RewriteRule ^(img/|class/|css/|js/|modules/|fonts/|var/) - [NC,L]
+RewriteRule ^debug/(js|css)/.*\.(js|css) - [NC,L]
+## system public/ assets served via the resolved (non-symlink) URL path
+RewriteRule ^public/(css|fonts|img|js)/ - [NC,L]
+
+
+## all not catched calls: deny
+## RewriteRule .* - [F] ## disappears from dir listing

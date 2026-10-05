@@ -1,0 +1,186 @@
+/* ***************************** CATALOGUE PAGES *************************** */
+
+.catalogueCanvas {
+    position:relative;
+}
+
+.catalogueCanvas div.vspacer {
+    width:5px;
+    height:5px;
+    padding-bottom:55%; /*relative to width*/
+}
+div.catalogueBox {
+    position: absolute;
+}
+div.catalogueBox div.catalogueTextBox {
+    position: absolute;
+}
+div.catalogueBox div.catalogueBoxItem
+{
+    position: absolute;
+}
+div.catalogueBox div.label {
+    background: rgba(0,0,0,0.4);
+    height:30px;
+    display:block;
+    margin-bottom:7px;
+}
+div.catalogueBox div.label.catalogueLabel {
+    position:absolute;
+    right:100%;
+}
+div.catalogueBox div.label a {
+    color:#fff;
+    font-size: 16px;
+    font-weight:bold;
+    line-height: 33px;
+    text-transform: uppercase;
+}
+div.catalogueBox div.catalogueBoxItem {
+    position: absolute;
+}
+div.catalogueBox div.catalogueBoxItem img {
+    width:100%;
+}
+div.catalogueBox div.catalogueBoxItem img.display{
+    position:absolute;
+}
+div.catalogueBox div.catalogueBoxItem.middle img.display{
+    top:-50%;
+}
+div.catalogueBox div.catalogueBoxItem.bottom img.display{
+    top:-100%;
+}
+div.catalogueBox div.catalogueBoxItem img.ghost{
+    visibility:hidden;
+}
+div.catalogueBox.right div.catalogueTextBox{
+    text-align: right;
+}
+div.catalogueBox div.catalogueBoxTextColumn i{
+    font-style: normal;
+}
+body.cms div.catalogueBox div.catalogueBoxTextColumn i{
+    color: #666666 ;
+}
+@media (max-width: 1500px) and (max-height: 1000px){
+    div.catalogueBox div.catalogueBoxTextColumn p{
+		display: none;
+		max-width: 300px;
+    }
+}
+
+div.catalogueBox.right .label.catalogueLabel{
+    left:100%;
+}
+div.catalogueBoxTextColumn {
+    max-width:300px;
+}
+div.catalogueBox.right div.catalogueBoxTextColumn {
+    margin-left:auto;
+}
+div.catalogueBoxTextColumn,
+div.catalogueBoxTextColumn *{
+    font-weight: lighter;
+    font-size: 13px;
+    letter-spacing: 0.03em;
+    line-height: 19px;
+}
+
+div.catalogueBoxTextColumn h3{
+    font-weight: bold;
+    color: #3c3c3b;
+    margin-bottom: 15px;
+}
+
+/* ***************************** CATALOGUE PAGE HANDLES ETC *************************** */
+
+body.cms div.handle-move,
+body.cms .handle-scale,
+body.cms .handle-scaleX,
+body.showeditableareas div.handle-move,
+body.showeditableareas .handle-scale,
+body.showeditableareas .handle-scaleX
+{
+	display:block;
+	border:1px solid black;
+	position:absolute;
+	background:white;
+	z-index:1000;
+	width:7px;
+	height:7px;
+	transform: rotate(45deg);
+	margin-top:-5px;
+	margin-left:-5px;
+	cursor:move;
+}
+body.cms .catalogueCanvas,
+body.showeditableareas .catalogueCanvas {
+	background: rgba(0,0,0,0.1);
+}
+body.cms div.vspacer,
+body.showeditableareas div.vspacer {
+	background: rgba(255,0,0,0.2);
+}
+body.cms div.catalogueBox div.handle-move,
+body.showeditableareas div.catalogueBox div.handle-move {
+	border-radius: 50%;
+}
+body.cms div.catalogueBox > div.handle-move,
+body.showeditableareas div.catalogueBox > div.handle-move {
+	width:10px;
+	height:10px;
+	margin-top:-6px;
+	margin-left:-6px;
+}
+
+body.cms div.catalogueBox .handle-scaleX,
+body.showeditableareas div.catalogueBox .handle-scaleX {
+	cursor:ew-resize;
+}
+body.cms div.handle-scaleX,
+body.cms div.catalogueBox div.handle-scale,
+body.showeditableareas div.handle-scaleX,
+body.showeditableareas div.catalogueBox div.handle-scale
+{
+	margin-left:calc(100% - 4px);
+}
+body.cms div.catalogueBox div.handle-scale,
+body.showeditableareas div.catalogueBox div.handle-scale
+{
+	bottom:-4px;
+	transform: rotate(0deg);
+}
+body.cms div.catalogueBox .handle-scale,
+body.showeditableareas div.catalogueBox .handle-scale {
+	cursor:nwse-resize;
+}
+body.cms div.catalogueBox.left .handle-scale,
+body.showeditableareas div.catalogueBox.left .handle-scale {
+	cursor:nesw-resize;
+}
+/*************** MODIFIED HANDLES ****************************/
+body.cms div.catalogueBox.right span.handle-scaleX,
+body.showeditableareas div.catalogueBox.right span.handle-scaleX {
+	margin-left:calc(100% - 4px);
+}
+
+
+/************************** BORDERS ***************************/
+
+body.cms div.catalogueBox,
+body.showeditableareas div.catalogueBox 
+{
+	border:1px dashed gray;
+}
+body.cms div.catalogueBox div.catalogueTextBox,
+body.showeditableareas div.catalogueBox div.catalogueTextBox
+{
+	border-left:1px dotted gray;
+	border-top:1px dotted black;
+}
+body.cms div.catalogueBox div.catalogueBoxItem,
+body.showeditableareas div.catalogueBox div.catalogueBoxItem
+{
+	border-top:1px dotted gray;
+}

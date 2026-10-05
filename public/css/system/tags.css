@@ -1,0 +1,87 @@
+.cms:not(.cmslightbox) .tag {
+    display: block;
+    padding: 1px 9px;
+    margin: 2px 5px 3px 0;
+    border: 2px solid black;
+    cursor: pointer;
+    white-space: nowrap;
+    display: inline-flex;
+    align-content: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 0.9em;
+    height:23px;
+    line-height: 1rem;
+	border-radius: 4px;
+}
+
+.cms:not(.cmslightbox) .taggroup h6{
+    font-size: 15px;
+    margin-top: 15px;
+}
+
+.cms:not(.cmslightbox) .tag.active {
+    color: rgba(255,255,255,1) !important;
+    background:black;
+}
+
+.cms:not(.cmslightbox) .tag a {
+	margin-left:10px;
+}
+.cms:not(.cmslightbox) .tag.active a {
+    color: rgba(255,255,255,1) !important;
+}
+.cms:not(.cmslightbox) .tag:not(.active){
+    background:rgba(255,255,255,.7) !important;
+    color:black;
+}
+
+
+.cms:not(.cmslightbox) .tag a i{
+	display: block;
+	margin-top: -3px;
+}
+.cms:not(.cmslightbox) .tag number {
+    margin: 1px -5px 0 10px;
+    font-size: 10px;
+}
+
+.cms:not(.cmslightbox) .tag i.label{
+    margin-left: 0;
+    margin-right: 0;
+    font-size: 1.1em;
+    margin-top: 0;
+}
+
+.cms:not(.cmslightbox) .tag number {
+    border: .15rem solid #fff;
+    border-radius: 9px;
+    font-size: 10px;
+    text-align: center;
+    min-width: 18px;
+    height: 18px;
+    margin-top: -1px;
+    padding: 1px 3px;
+    background: none;
+    color: #fff;
+    line-height: 12px;
+}
+
+.cms:not(.cmslightbox) .layout .minWidthFlex .tags{
+    position: absolute;
+    top:0px;
+    right: 0;
+    padding-top:3px;
+    text-align: right;
+}
+
+.cms:not(.cmslightbox) .taggroup{
+    display:inline-block;
+}
+
+.cms:not(.cmslightbox) .taggroup h3{
+    display:inline-block;
+    float:left;
+    font-weight: 300;
+}
+

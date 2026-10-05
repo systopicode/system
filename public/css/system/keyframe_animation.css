@@ -1,0 +1,94 @@
+@keyframes inputHighlighter {
+    from  {
+		background:#5264AE;
+	}
+    to    {
+		width:0;
+		background:transparent;
+	}
+}
+
+@keyframes loading {
+    from {
+		left: -200px;
+		width: 30%;
+	}
+    50% {
+		width: 30%;
+	}
+    70% {
+		width: 70%;
+	}
+    80% {
+		left: 50%;
+	}
+    95% {
+		left: 120%;
+	}
+    to {
+		left: 100%;
+	}
+}
+
+@keyframes ripple {
+    0% {
+		transform: scale(0, 0);
+		opacity: 1;
+    }
+    20% {
+		transform: scale(25, 25);
+		opacity: 1;
+    }
+    100% {
+		opacity: 0;
+		transform: scale(40, 40);
+    }
+}
+
+@keyframes spinner {
+    to {
+		transform: rotate(360deg);
+	}
+}
+
+
+@-webkit-keyframes fstAnimationEnter {
+    from {
+		opacity:0;
+		-webkit-transform:translate3d(0, -1em, 0)
+    }
+    to {
+		opacity:1;
+		-webkit-transform:translate3d(0, 0, 0)
+    }
+}
+
+@-moz-keyframes fstAnimationEnter {
+    from {
+		opacity:0;
+		-moz-transform:translate3d(0, -1em, 0)
+    }
+    to {
+		opacity:1;
+		-moz-transform:translate3d(0, 0, 0)
+    }
+}
+
+@keyframes fstAnimationEnter {
+    from {
+		opacity:0;
+		-webkit-transform:translate3d(0, -1em, 0);
+		-moz-transform:translate3d(0, -1em, 0);
+		-ms-transform:translate3d(0, -1em, 0);
+		-o-transform:translate3d(0, -1em, 0);
+		transform:translate3d(0, -1em, 0)
+    }
+    to {
+		opacity:1;
+		-webkit-transform:translate3d(0, 0, 0);
+		-moz-transform:translate3d(0, 0, 0);
+		-ms-transform:translate3d(0, 0, 0);
+		-o-transform:translate3d(0, 0, 0);
+		transform:translate3d(0, 0, 0)
+    }
+}

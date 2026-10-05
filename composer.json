@@ -1,0 +1,24 @@
+{
+  "name": "systopic/system",
+  "description": "The systopic framework: panels, sessions and rights, nodes, media, tags - the base of every systopic project.",
+  "type": "library",
+  "license": "MIT",
+  "require": {
+    "php": "^8.4",
+    "systopic/db": "^1.0",
+    "tecnickcom/tcpdf": "^6.11"
+  },
+  "autoload": {
+    "psr-4": {
+      "Systopic\\System\\": "src/"
+    },
+    "files": [
+      "autoload.php"
+    ]
+  },
+  "extra": {
+    "branch-alias": {
+      "dev-main": "1.x-dev"
+    }
+  }
+}

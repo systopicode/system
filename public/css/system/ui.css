@@ -1,0 +1,240 @@
+@import url('../../../panels/cms/010_pages/pages.mml.css');
+@import url('../../../panels/cms/010_pages/pages.tree.css');
+@import url('../../../panels/cms/010_pages/module.css');
+/****************************** Drag and Drop ***************************/
+.pageDragged .pageDroppable,
+.mediaDragged .mediaDroppable{
+	border:1px dashed var(--cmsHighlightColor);
+	display:inline-block;
+}
+
+
+/****************************** ACCORDION / WIDGET ***************************/
+.widget{
+	margin:0 0 20px 0;
+}
+.widget header,
+.widget footer,
+.cmslightbox section > header{
+	display: flex;
+	position: relative;
+	margin: 2px 0 0 0;
+	padding: 0 15px;
+	background:#fbfbfb;
+	border:none;
+	border-radius: 8px 8px 0 0;
+}
+
+.widget footer{
+	border-radius:0 0  8px 8px;
+	display:flex;
+	justify-content: end;
+	align-items: center;
+	margin-top: 0;
+	height:42px;
+	padding:0 10px 0 15px;
+}
+
+.widget main + footer{
+	height:38px;
+	padding:0 10px 4px 15px;
+}
+
+.widget footer button,
+.widget footer .button{
+	margin-bottom: 0;
+}
+
+.widget footer button:last-child,
+.widget footer .button:last-child{
+	margin-right: 0;
+}
+.widget footer > .left{
+	flex-grow: 1;
+}
+
+.widget footer p{
+	margin-bottom: 0;
+}
+
+.cms .widget header + table{
+	border-radius: 0;
+}
+
+.cms .widget header + table th,
+.cms .widget header + table td{
+	padding-left: 15px;
+}
+
+.cms .widget header + table th{
+	background: #fbfbfb;
+}
+
+.widget main,
+.cmslightbox section > main{
+	padding: 15px;
+	border-top: 0;
+	background:#ebebeb;
+	overflow: auto;
+}
+
+.widget main{
+	border:4px solid #fbfbfb;
+}
+
+.widget > *:last-child{
+	border-radius: 0 0 8px 8px;
+}
+
+.cmslightbox section > main .widget{
+	margin-left: 0;
+	margin-right: 0;
+}
+
+.widget header h1,
+.cmslightbox section > header h1{
+	margin-bottom:0;
+	margin-top:20px;
+	font-size: 20px;
+	padding:3px 10px 5px;
+	display:flex;
+	font-family: 'Font';
+	font-weight: 600;
+	color: var(--cmsTextColor);
+	margin:0;
+	padding:0;
+	line-height: 1.2rem;
+	align-self: center;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+}
+
+.widget header h1 select{
+	padding:0;
+	font-family: 'Font';
+	font-weight: 600;
+	color: var(--cmsTextColor);
+	font-size: 20px;
+	margin:0;
+	line-height: 1;
+}
+
+
+
+/****************************** DOM EDITABLE ***************************/
+
+.domEditable {
+	position: relative;
+}
+
+.domEditable.int {
+	padding-left: 20px;
+	margin-left: 2px;
+}
+
+.domEditable.int i.fa-minus-circle {
+	left: 0;
+	right: auto;
+}
+
+.domEditable.inline {
+	padding-right: 20px;
+	margin-right: 2px;
+}
+
+.domEditable.inline i {
+	margin: 0;
+	transform: translateY(-75%);
+	top: calc(50% + .35rem);
+}
+
+.domEditable i {
+	font-size: 16px;
+	cursor: pointer;
+	position: absolute;
+	right: 0;
+}
+
+.input i.editable.fa-pen,
+.input i.editable.fa-edit {
+	display: none;
+}
+
+
+.domEditable:not(.inline) .fa-pen.editable,
+.domEditable:not(.inline) .fa-edit.editable {
+	margin-right: 0;
+	margin-left: 5px;
+	position: static;
+}
+
+[contentEditable].input br {
+	display: none;
+}
+
+.domEditable.input{
+	height: auto;
+	min-height: 35px;
+}
+
+.domEditable .fa-pen.editable,
+.domEditable .fa-edit.editable {
+	right: 0px;
+}
+
+.domEditable.block [contenteditable] {
+	display: inline-block;
+}
+
+.domEditable.block span{
+	white-space: pre-line;
+}
+
+.domEditable.confirmcontrols {
+	padding-right: 40px;
+}
+
+.domEditable.confirmcontrols .fa-pen,
+.domEditable.confirmcontrols .fa-edit {
+	right: 18px;
+}
+
+
+.domEditable.confirmcontrols.block i.fa-check-circle,
+.domEditable.confirmcontrols.block i.fa-times-circle {
+	margin-right: 0;
+}
+
+.domEditable.confirmcontrols.block i.fa-check-circle {
+	margin-right: 18px;
+	z-index: 1;
+
+}
+
+.domEditable.confirmcontrols.inline i.fa-check-circle {
+	right: 18px;
+	margin-right: 0;
+}
+
+.domEditable select,
+.domEditable select option{
+	border:none;
+	padding:0;
+	height:auto;
+	display:inline-block;
+	font-weight: bold;
+}
+
+.domEditable select + span,
+.domEditable select + span + i{
+	display:none;
+}
+
+div.domLayerPlaceholder:empty{
+	flex:0 0 0;
+}
+
+
+[onclick]{
+	cursor:pointer;
+}

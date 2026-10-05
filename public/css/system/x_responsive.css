@@ -1,0 +1,101 @@
+@media (max-width: 1000px) { 
+    body.hidePylon div.content{
+	display:block;
+    }
+    
+    body.hidePylon  main > div.pylon{
+	width:0;
+	min-width: 0;
+    }
+    
+     body.showPylon div.content{
+	display:none;
+    }
+    
+      body.showPylon  main > div.pylon{
+	max-width: calc(100% - 50px) !important;
+	overflow:hidden;
+    }
+
+    main > div.pylon:after{
+	position: absolute;
+	top:42px;
+	right:-25px;
+	width:25px;
+	height:10px;
+	background:red;
+	content:'';
+    }
+
+    section.cms{
+	padding:15px;
+	height:calc(100% - 15px);
+    }
+
+    main > div.main nav,
+    main > div.main,
+    .cms div.bottomMenu{
+	width:50px;
+    }
+
+    main > div.main nav > ul li{
+	width:50px;
+	border-left-width: 3px;
+	border-right-width: 2px;
+	padding-right: 1px;
+	height:44px;
+    }
+
+
+    div.pylon nav > ul li a{
+	padding:6px 10px;
+    }
+
+    main > div.main nav > ul:after{
+	left:47px;
+    }
+
+    main > div.main nav{
+	height: calc(100% - 37px);
+    }
+    
+    main > div.main nav ul li a span{
+	width:46px;
+	padding-right: 2px;
+	line-height: 1em;
+	font-size:12px;
+    }
+    main > div.main nav ul li a i{
+	width:48px;
+	margin-left: 2px;
+    }
+
+    main > div.main nav > ul li i svg{
+	padding:6px 9px;
+    }
+
+    main > div.main nav ul li a i{
+	height:44px;
+    }
+    main > div.main nav ul li a{
+	flex-basis:44px;
+    }
+
+    .cms div.dropdown.signetMenu span.initials{
+	width:47px;
+    }
+
+    body main > div.content > header{
+	min-height: 27px;
+    }
+
+    .cms header, main > div.content > header{
+	max-height: 38px;
+    }
+    
+    .cms button, .cms .button{
+	line-height: 22px;
+    }
+    
+}
+

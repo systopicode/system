@@ -1,0 +1,141 @@
+/****************************** LIGHBOX ***************************/
+.cmslightbox{
+    background-color: rgba(200, 200, 200, .8);
+    backdrop-filter: blur(0.1em);
+    z-index: 8000;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    transition: all ease-in-out .2s;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+
+body .cmslightbox section > main{
+    overflow-x: hidden;
+    overflow-y: scroll;
+    width: calc(100% - 30px);
+    flex: 1 1 auto;
+    background: none;
+    padding-right: 40px;
+	box-sizing: content-box;
+}
+
+body .cmslightbox section > div.layout{
+	gap:0;
+	height:calc(100% - 44px);
+}
+
+body .cmslightbox section > div.layout > main,
+body .cmslightbox section > div.layout > aside{
+    flex: 0 0 80%;
+    background: none;
+	box-sizing: border-box;
+	overflow: hidden;
+	height:100%;
+	padding-right: 20px;
+}
+
+body .cmslightbox section > div.layout > aside{
+	flex-basis:20%;
+	border-left:2px solid rgba(255,255,255,0.8);
+}
+
+body .cmslightbox section > div.layout > main > div,
+body .cmslightbox section > div.layout > aside > div{
+	overflow-x: hidden;
+    overflow-y: scroll;
+	width:calc(100% + 40px);
+	padding:20px 40px 20px 20px;
+	height:100%;
+}
+
+body .cmslightbox section > div.layout > aside h3{
+	color: var(--cmsHighlightColor);
+	border-bottom: 1px solid var(--cmsHighlightColor);
+	margin: 0 0 20px;
+	font-weight: 400;
+}
+
+body .cmslightbox section > div.layout > aside > div > div{
+	margin-bottom: 50px;
+}
+
+.cmslightbox section{
+    background: #ebebeb;
+    margin: 10% 5%;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    max-height: calc(100% - 40px);
+    overflow: hidden;
+	border-radius: 8px;
+	max-width: 100%;
+	min-width: 600px;
+	width: fit-content;
+}
+
+
+
+.cmslightbox[data-size="1"] section{
+    min-width: 50%;
+    max-width: 50%;
+}
+
+.cmslightbox[data-size="2"] section{
+    width: 100%;
+}
+
+.cmslightbox[data-size="3"] section{
+    width: 100%;
+    height:100%;
+	margin:20px;
+}
+
+.cmslightbox section > footer,
+.cmslightbox section > form > footer,
+.cmslightbox section > header{
+    position: relative;
+    width: 100%;
+    background: rgba(255,255,255,0.8) !important;
+    z-index: 1;
+    user-select: none;
+    -moz-user-select: none;
+    white-space: nowrap;
+    display: flex;
+    flex: 0 0 44px;
+    margin:0 !important;
+    border:none;
+    box-sizing: border-box;
+    min-height:44px;
+}
+
+.cmslightbox section > footer,
+.cmslightbox section > form > footer{
+    flex-direction: row-reverse;
+    padding:0 15px;
+    align-items: center;
+}
+
+.cmslightbox.cms > section > footer button,
+.cmslightbox.cms > section > form > footer button,
+.cmslightbox.cms > section  > footer .button,
+.cmslightbox.cms > section > form > footer .button{
+    margin:0 0 0 10px;
+}
+
+.cmslightbox div.message{
+	margin: 0 0 20px 0;
+}
+
+.cmslightbox.cms footer button{
+	margin-bottom: 0;
+}
+
+.cmslightbox.cms footer button:last-child{
+	margin-right: 0;
+}

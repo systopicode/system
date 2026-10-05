@@ -1,0 +1,828 @@
+/****************************** CONTEXTMENU ***************************/
+.cms ul.contextmenu {
+    position: absolute;
+    z-index: 1900;
+    background: var(--cmsMainColor);
+    padding:6px;
+    max-width: 350px;
+    box-shadow: 0 0 3px 3px rgba(0,0,0,0.2);
+	border-radius: 4px;
+}
+
+.cms ul.contextmenu  ul:first-child{
+    margin-top:0;
+}
+
+.cms ul.contextmenu li a:hover{
+    background:var(--cmsHighlightColor);
+}
+.cms ul.contextmenu li,
+.cms ul.contextmenu li a{
+    white-space: nowrap;
+}
+
+.cms ul.contextmenu ul li{
+    display: inline-block;
+}
+
+.cms ul.contextmenu ul li.iconOnly{
+    width:36px;
+    text-align: center;
+	flex: 0 0 36px;
+}
+
+.cms ul.contextmenu ul{
+    margin-top:10px;
+	display:flex;
+}
+
+.cms ul.contextmenu li a{
+    padding:6px 6px;
+    position: relative;
+    display:block;
+	border-radius: 4px;
+}
+
+.cms .contextmenu li a i {
+    font-size:18px;
+    display: inline-block;
+    left: 0;
+}
+
+.cms .contextmenu li a i img{
+    width:22px;
+}
+
+.cms .contextmenu li a.alias i{
+    margin-top: 2px;
+}
+
+.cms .contextmenu li a.redirect i{
+    margin-top: 2px;
+}
+
+.cms .contextmenu a i {
+    color: #fff;
+}
+
+a.alias i,
+.cms .contextmenu a.alias i{
+    color: rgb(67,132,241);
+}
+
+a.redirect i,
+.cms .contextmenu a.redirect i {
+    color: rgb(52,181,122);
+}
+
+.cms .contextmenu li ul:not(.contextmenu) > a.ajax > i {
+    position: absolute;
+    top: 10px;
+    display: block;
+}
+
+.cms .contextmenu li ul.iconsonly li a i {
+    margin: 0;
+}
+
+.cms .contextmenu li a span {
+    color: rgb(255, 255, 255);
+    display: inline-block;
+    position: relative;
+    width: calc(100% - 25px);
+    padding-left: 10px;
+}
+
+.cms ul.contextmenu li.seperator {
+    height: 1px;
+    margin: 6px -6px;
+    background:rgba(255,255,255,0.1);
+}
+
+/****************************** DROPDOWNS ***************************/
+
+.cms div.dropdown{
+    display:inline-block;
+    vertical-align: top;
+    z-index:1000;
+    position: relative;
+}
+
+.onPageEditing div.dropdown{
+    position: absolute;
+    z-index:8888;
+    left: 30px
+}
+
+.cms div.dropdownContent,
+.cms div.dropdownContent *,
+.cms div.dropdownContent *:before,
+.cms div.dropdownContent *:after{
+    color: rgb(130,130,130);
+}
+
+.cms div.dropdownContent *:before{
+    float: left;
+    font-size: 18px;
+    margin-right: 9px;
+}
+
+.cms div.dropdown > ul > li{
+    display:inline-block;
+    vertical-align: top;
+    position: relative;
+}
+
+.cms div.dropdown > ul > li:first-child{
+    margin-left:0;
+}
+
+.cms div.dropdown > ul > li > i,
+.cms div.dropdown > ul > li > span{
+    padding:0 10px 0 9px !important;
+    cursor:default;
+    white-space: nowrap;
+    float:left;
+    line-height: 39px;
+    height:40px;
+    color:rgb(130,130,130);
+    position: relative;
+    user-select: none;
+    -moz-user-select: none;
+}
+
+.cms div.dropdown > ul > li > i{
+    font-size: 26px;
+    width:28px;
+}
+
+.cms div.dropdown > ul > li.open > div.dropdownContent{
+    display:flex;
+    flex-wrap: wrap;
+}
+
+.cms div.dropdown > ul > li.open > div.dropdownContent break{
+    flex-basis: 100%;
+    height: 0;
+}
+
+.cms div.dropdown > ul > li > span:hover,
+.cms div.dropdown > ul > li > i:hover,
+.cms div.dropdown > ul > li.open > span,
+.cms div.dropdown > ul > li.open > i{
+    background: #000;
+}
+
+
+.cms div.dropdown li{
+    list-style-type: none !important;
+    margin:0;
+    padding:0;
+}
+
+.cms div.dropdownContent{
+    min-width:100%;
+    background: transparent;
+    cursor: default;
+    position: absolute;
+    top:0px;
+    margin-top:43px;
+    left: 0px;
+    background:#000;
+    box-shadow: 0 0 3px 3px rgba(0,0,0,0.2);
+}
+
+.cms div.dropdown:not(.contextMenu) div.dropdownContent{
+    display:none;
+}
+
+.cms  div.dropdown.contextMenu{
+    position: absolute;
+}
+
+.cms  div.dropdown.contextMenu > ul > li{
+    position: static;
+}
+
+.cms div.dropdown.contextMenu div.dropdownContent > ul{
+    width: 200px;
+    box-shadow: 0 0 3px 3px rgba(0,0,0,0.2);
+}
+
+.cms div.dropdown.contextMenu div.dropdownContent div.before,
+.cms div.dropdown.contextMenu div.dropdownContent:before{
+    display:none;
+}
+
+.cms div.dropdownContent div.before{
+    background:#000;
+    position: absolute;
+    top:-6px;
+    left:0;
+    height:8px;
+}
+
+.cms div.dropdownContent.right div.before{
+    right:0;
+    left:auto;
+}
+
+.cms div.dropdownContent li.seperator:not(:empty) {
+    background:none;
+    color: #fff !important;
+    cursor: default;
+    height: auto;
+    margin: 0;
+    padding: 2px 15px;
+    width: 100%;
+    margin-bottom:3px;
+    text-align:left;
+    text-transform:uppercase;
+}
+
+.cms div.dropdownContent li.seperator a.icon{
+    float: right;
+    font-size: 28px;
+    line-height: 0;
+    padding:0;
+    margin: 0 0 0 10px;
+    color:#fff;
+}
+
+.cms div.dropdownContent li.seperator:hover a.icon,
+.cms div.dropdownContent ul:not(.iconsonly) > li:hover a.icon{
+    background: none;
+}
+
+.cms div.dropdownContent li.iconsonly{
+    margin:0;
+}
+
+.cms div.dropdownContent li.iconsonly:hover{
+    background: none;
+}
+
+.cms div.dropdownContent li.seperator a.icon i{
+    color:#fff;
+    font-family: 'cms-icons-filled' !important;
+}
+
+
+.cms div.dropdownContent li.seperator:not(:empty):not(:first-child){
+    margin-top: 15px;
+}
+
+.cms div.dropdownContent li.seperator:empty{
+    background:rgb(217,217,217);
+    cursor: default;
+    height: 0px;
+    margin: 24px 0;
+    padding: 0;
+}
+
+
+.cms div.dropdownContent li.seperator.hr:empty{
+    height:2px;
+}
+
+.cms div.dropdownContent ul {
+    width: 280px;
+    flex-basis:280px;
+    vertical-align: top;
+    margin:10px;
+}
+
+
+
+.cms div.dropdownContent li.seperator + ul.iconsonly{
+    margin-top:-8px;
+}
+
+.cms div.dropdownContent ul.iconsonly + li.seperator{
+    margin-top:0;
+}
+
+.cms div.dropdownContent ul.iconsonly{
+    display:flex;
+    flex-wrap:wrap;
+    margin:0;
+}
+
+.cms div.dropdownContent ul.iconsonly li{
+    width: 66px;
+}
+
+.cms div.dropdownContent li.seperator a{
+    float:right;
+    color:#fff;
+    margin-left: 15px;
+}
+.cms header div.dropdownContent li.seperator a i{
+    color:#fff !important;
+}
+
+.cms div.dropdownContent ul.iconsonly > li:not(.seperator) > a{
+    width: 100%;
+    text-align: center;
+    display: inline-block;
+    padding: 6px 15px;
+}
+
+.cms div.dropdownContent ul:not(.iconsonly):nth-child(2n+3){
+    margin:10px 30px;
+}
+
+.cms div.dropdownContent ul:not(.iconsonly):last-child{
+    margin-right:10px;
+}
+
+.cms div.dropdown.contextMenu div.dropdownContent > ul > ul.iconsonly{
+    margin:-10px 0 0 -10px;
+    width:calc(100% + 20px);
+}
+.cms .contextMenu div.dropdownContent ul.iconsonly li{
+    width: 73px;
+}
+.cms div.dropdownContent ul li{
+    display: block;
+    list-style-type: none;
+    width: 100%;
+}
+
+.cms div.dropdownContent ul:not(.iconsonly) > li:not(.seperator),
+.cms div.dropdownContent ul:not(.iconsonly) form li:not(.seperator),
+.cms div.cmsSearchResults ul li a{
+    display: block;
+    margin: 0;
+    padding: 6px 15px;
+    text-align: left;
+    white-space: normal;
+    width:100%;
+}
+
+.cms div.dropdownContent ul:not(.iconsonly) > li:not(.seperator) > a{
+    display:block;
+    padding: 6px 15px;
+    margin:-6px -15px;
+}
+
+
+.cms div.dropdownContent ul:not(.iconsonly) > li:hover a,
+.cms div.dropdownContent ul.iconsonly > li:hover,
+.cms div.cmsSearchResults ul:not(.iconsonly) li:hover a,
+.cms div.dropdownContent a.selected{
+    background: var(--cmsHighlightColor);
+}
+
+.cms div.dropdownContent a.selected{
+    color:#fff;
+}
+
+.cms div.dropdown.pageInfos {
+    cursor: default;
+}
+
+.cms div.dropdown.pageInfos li{
+    width:100%;
+    height:100%;
+}
+
+.cms div.dropdown > ul > li > span.icon-infomation-circle:before{
+    font-size: 26px;
+    line-height: 39px;
+}
+
+.cms div.dropdown .error:not(input){
+    float:right;
+}
+
+.cms .arrow {
+    display:inline-block;
+    position: relative;
+    margin:0 10px 7px 15px;
+}
+
+.cms .arrowUpper:before,
+.cms .arrowUpper:after,
+.cms .arrowLower:before,
+.cms .arrowLower:after {
+    content: '';
+    position: absolute;
+    display: block;
+    right: -9px;
+    width: 11px;
+    height: 2px;
+    background: rgb(130,130,130);
+    transition: all 0.5s;
+}
+
+.cms .arrowUpper:before,
+.cms .arrowUpper:after {
+    top: 0px;
+    transform: rotate(-45deg);
+}
+
+.cms .arrowUpper:after {
+    right: inherit;
+    left: -9px;
+    transform: rotate(45deg);
+}
+
+.cms .arrowLower:before,
+.cms .arrowLower:after {
+    top: 0px;
+    transform: rotate(-45deg);
+}
+
+.cms .arrowLower:after {
+    right: inherit;
+    left: -9px;
+    transform: rotate(45deg);
+}
+
+.cms .animate .arrowLower:before,
+.cms .animate .arrowLower:after {
+    top: 6px;
+    transform: rotate(45deg);
+}
+
+.cms .animate .arrowLower:after {
+    transform: rotate(-45deg);
+}
+
+.cms div.dropdown > ul > li img,
+.cms div.dropdown > ul > li svg{
+    height: 20px;
+    display: inline-block;
+    float: left;
+    margin-top: 4px;
+    margin-bottom: 5px;
+    width:auto;
+}
+
+.cms div.dropdown > ul > li img.shareImage{
+    width:100%;
+    height:auto;
+}
+
+.cms div.dropdown > ul > li span img,
+.cms div.dropdown > ul > li span svg{
+    margin-top: 9px;
+    margin-bottom: 0;
+}
+
+.cms div.dropdown > ul > li svg *{
+    fill:rgb(130,130,130);
+}
+
+.cms div.dropdown > ul > li span wbr{
+    display: none;
+}
+
+.cms div.dropdownContent ul:not(.iconsonly) > li i,
+.cms div.dropdownContent ul:not(.iconsonly) > li i{
+    display: inline-block;
+    margin-right: 15px;
+    vertical-align: top;
+    margin-top: 2px;
+}
+
+
+.cms div.dropdownContent ul:not(.iconsonly) > li i + span,
+.cms div.dropdownContent ul:not(.iconsonly) > li i + span{
+    display: inline-block;
+    width:calc(100% - 44px);
+    vertical-align: middle;
+    line-height: 1.2em;
+}
+
+.cms div.dropdownContent label.checkbox{
+    margin:0;
+}
+
+/***************CONTROLS*************/
+.content header.cms ul{
+    white-space: nowrap;
+    height: 35px;
+	margin-top: 2px;
+	margin-left: 3px;
+}
+
+.content header.cms ul li{
+    height:100%;
+    display: inline-block;
+    margin-right: 3px;
+}
+.content header.cms ul li a,
+.pylon header ul li a{
+    padding: 0 12px;
+    text-align: center;
+    height: 100%;
+    color: #fff;
+    box-sizing: border-box;
+    height: 100%;
+    display: inline-block;
+    line-height: 35px;
+    white-space: nowrap;
+    cursor: pointer;
+	border-radius: 4px;
+}
+
+.content header.cms ul.sidebarControls li:hover{
+    background:#000;
+}
+
+.content header.cms ul li img{
+    height:calc(100% - 16px);
+    margin:9px 0;
+}
+
+.pylon header ul li a:hover,
+.content header.cms ul li a:hover,
+.content header.cms ul li a.selected,
+.content header.cms ul li.selected{
+    background:var(--cmsHighlightColor);
+	border-radius: 4px;
+}
+
+aside.cms {
+    border-left: 3px solid var(--cmsSecondaryColor);
+    background:var(--cmsMainColor);
+    color:#fff;
+    height:calc(100% - 30px);
+    position: relative;
+    min-width: 240px;
+    max-width: 800px;
+    padding:30px 0 0;
+}
+
+aside.cms .scrollContainer{
+    overflow-x: hidden;
+    width:calc(100% + 25px);
+    padding-right: 10px;
+    height:100%;
+    overflow-y: scroll;
+}
+
+.flexContainer{
+    width:100%;
+    height:100%;
+    overflow: hidden;
+}
+
+aside.cms .scrollContainerContent{
+    display: flex;
+    flex-flow: column wrap;
+    align-content: space-between;
+    height: 4000px;
+}
+
+aside.cms  div.sidebarItem {
+    width: 100%;
+    padding:10px;
+}
+
+aside.cms div.sidebarItem:nth-child(even){
+    background:var(--cmsSecondaryColor);
+}
+
+aside.cms[data-cols="2"] .sidebarItem:nth-child(2n+1) {
+    order: 1;
+}
+aside.cms[data-cols="2"] .sidebarItem:nth-child(2n+2) {
+    order: 2;
+}
+aside.cms[data-cols="2"] .sidebarItem{
+    width:50%;
+}
+
+aside.cms[data-cols="3"] .sidebarItem:nth-child(3n+1) {
+    order: 1;
+}
+aside.cms[data-cols="3"] .sidebarItem:nth-child(3n+2) {
+    order: 2;
+}
+aside.cms[data-cols="3"] .sidebarItem:nth-child(3n)   {
+    order: 3;
+}
+aside.cms[data-cols="3"] .sidebarItem{
+    width:33%;
+}
+
+.scrollContainerContent:before,
+.scrollContainerContent:after {
+    content: "";
+    flex-basis: 100%;
+    width: 0;
+    order: 2;
+}
+
+aside.cms  div.sidebarItem h3{
+    color:var(--cmsHighlightColor);
+    border-bottom: 1px solid var(--cmsHighlightColor);
+    margin:20px 0 20px;
+    font-weight: 400;
+}
+
+aside.cms  div.sidebarItem h3:first-child{
+	margin-top:0;
+}
+
+aside.cms  div.sidebarItem a{
+    color:#fff;
+}
+
+
+aside.cms  div.sidebarItem:last-child{
+    border:none;
+}
+
+
+aside.cms ul li{
+    display: block;
+    margin: 0;
+    position: relative;
+}
+
+aside.cms ul li > *{
+    display:inline-block;
+    transition: padding ease-in-out .2s;
+    padding: 6px 0;
+}
+
+aside.cms ul li.seperator,
+aside.cms h6.taggroup{
+    color:rgba(255,255,255,.7);
+    font-weight: 600;
+    text-transform: uppercase;
+    border-bottom:1px solid rgba(255,255,255,.7);
+    margin:0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+
+aside.cms h6.taggroup{
+	margin:30px 0 10px 0;
+	display:block;
+}
+
+aside.cms div.taggroup:first-child h6.taggroup{
+	margin-top:0;
+}
+
+aside.cms ul li a {
+    cursor:pointer;
+}
+aside.cms ul li a:not(.icon){
+    padding-left: 6px;
+    margin-left: -6px;
+    padding-top:4px;
+    padding-bottom: 4px;
+}
+aside.cms ul li a:not(.icon):hover,
+aside.cms ul li a.selected{
+    background: var(--cmsHighlightColor);
+    color: white;
+    padding: 4px 8px;
+	border-radius: 4px;
+}
+
+aside.cms label.checkbox{
+    margin:0;
+}
+aside.cms div.checkboxContainer + h4{
+	margin-top: 30px;
+}
+
+aside.cms label.checkbox span b,
+aside.cms h4{
+    font-weight: 600;
+    line-height: 1rem;
+}
+
+aside.cms h4{
+    margin:6px 0 3px 0;
+}
+
+aside.cms ul li a.icon{
+    margin-left: 10px;
+    padding:0;
+}
+
+aside.cms ul li i{
+    font-size: 17px;
+}
+
+aside.cms ul li i:first-child{
+    line-height: 1em;
+	padding: 0;
+}
+
+aside.cms input,
+aside.cms textarea,
+aside.cms select,
+aside.cms option,
+aside.cms input[type="checkbox"].switch + div,
+aside.cms input[type="checkbox"].custom + label{
+    background: rgba(255,255,255,0.15);
+	color:#fff;
+}
+
+aside.cms div.inputGroup input:not(:placeholder-shown) ~ label,
+aside.cms div.inputGroup input:placeholder-shown:focus ~ label,
+aside.cms div.inputGroup textarea:not(:placeholder-shown) ~ label,
+aside.cms div.inputGroup textarea:placeholder-shown:focus ~ label ,
+aside.cms div.inputGroup select ~ label{
+    color:#fff;
+    font-family:'Font';
+    font-weight: 600;
+}
+
+aside.cms div.inputGroup{
+    display:inline-block;
+	width:100%;
+}
+
+aside.cms label.checkbox,
+aside.cms div.inputGroup,
+aside.cms div.group{
+	margin:20px 0 0 0;
+}
+
+aside.cms div.inputGroup span.bar{
+	bottom:6px;
+}
+
+aside.cms label.checkbox{
+	margin:10px 0 0 0;
+}
+
+aside.cms select{
+	margin-bottom: 20px;
+}
+
+aside.cms ul li{
+	margin-bottom: 20px;
+}
+
+aside.cms div.group{
+	padding:0;
+}
+
+
+aside.cms ul li > p{
+    display:block;
+}
+
+aside.cms form{
+    width:100%;
+}
+
+aside.cms textarea + small{
+    margin-top: -10px;
+    display: block;
+}
+
+ul.rewrite li{
+    white-space: nowrap;
+    position: relative;
+}
+
+ul.rewrite li > div{
+    display:flex;
+    align-items: center;
+    width:100%;
+}
+
+ul.rewrite li > div input:first-child,
+ul.rewrite li > div input:last-child{
+    flex:0 0 auto;
+}
+
+aside.cms ul.rewrite input[type='text']{
+    margin: 0 10px 0 10px;
+}
+
+aside.cms ul li input + a.icon{
+    float:none;
+}
+
+aside.cms ul.rewrite input[type="radio"].custom + label{
+    transform: translate(0, 2px);
+}
+
+aside.cms a.clearSidebar{
+    position: absolute;
+    top: -1px;
+    right: 2px;
+    padding:5px 8px;
+    color:rgba(255,255,255,1);
+    font-size: 23px;
+    line-height: 0;
+}
+
+aside.cms div.sidebarItem option{
+    color:var(--cmsMainColor);
+}

@@ -1,0 +1,18 @@
+/****************************** MESSAGE CLASS 2020 ***************************/
+
+
+div.cms.message p{
+	background: #21ac98;
+	color: white;
+	padding:5px 20px;
+	margin:1px 0 0 0;
+
+}
+div.cms p.error{
+    background: #a11;
+	color: white;
+}
+div.cms p.info{
+	background: #21ac98;
+	color: white;
+}

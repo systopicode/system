@@ -1,0 +1,439 @@
+/**************************HEADER***********************/
+.cms header,
+main > div.content > header
+{
+    background: var(--cmsMainColor);
+    height: 40px;
+    z-index: 1600;
+    display: flex;
+    color: #fff;
+	flex-basis: 40px;
+	flex-shrink: 0;
+}
+
+main > div.content > header{
+	position: relative;
+}
+
+.cms header input[type='search'],
+main > div.content > header input[type='search']
+{
+    border:none;
+    background: rgba(255,255,255,0.15);
+    border-bottom: 3px solid transparent;
+    padding:7px 12px 6px;
+    width:100%;
+    margin-bottom: 0;
+    color:#fff;
+}
+.cms header input[type='search']:focus,
+main > div.content > header input[type='search']:focus
+{
+    background: var(--cmsSecondaryColor);
+}
+
+.cms div.searchInput{
+    position: relative;
+    margin: 0 25px;
+    width: 100%;
+}
+
+.cms div.searchInput div.inputGroup{
+    padding-top:0;
+}
+
+.cms div.searchInput div.inputGroup .bar,
+.cms div.searchInput div.inputGroup .bar:after,
+.cms div.searchInput div.inputGroup .bar:before{
+    height:3px;
+    bottom:0px;
+}
+
+.cms div.cmsSearchResults{
+    position: absolute;
+    background:  var(--cmsSecondaryColor);
+    left:0;
+    right:0;
+    max-height: 500px;
+    overflow:hidden;
+    width: 300px;
+    top:40px;
+    padding:6px;
+}
+
+.cms header input[type='search']:placeholder-shown ~ div.cmsSearchResults,
+.cms header input[type='search']:placeholder-shown:focus ~ div.cmsSearchResults,
+.cms header input[type='search']:not(:placeholder-shown):not(:focus) ~ div.cmsSearchResults{
+    display: none;
+}
+
+.cms header input[type='search']::placeholder{
+	opacity: .5;
+	color:#fff;
+}
+
+.cms header div.cmsSearchResults:active,
+.cms header div.cmsSearchResults.open
+{
+    display:block !important;
+}
+
+.cms ul#cmsSearchResults{
+    max-height: 500px;
+    overflow-x:hidden;
+    overflow-y:scroll;
+    width:calc(100% + 100px);
+}
+
+.cms div.cmsSearchResults ul li a{
+    width:calc(100% - 100px);
+    padding:0 10px;
+}
+
+.cms div.inputField{
+    display:flex;
+}
+
+.cms div.pagefuncs {
+    align-self: auto;
+    flex: 1 1 auto;
+    display:flex;
+}
+
+.cms  div.cmsControls{
+    white-space: nowrap;
+    display: inline-flex;
+    flex-grow: 1;
+}
+/****************************** MESSAGE ***************************/
+.cms header dialog ul,
+main > div.content > header dialog ul{
+    height: 29px;
+    overflow: hidden;
+    padding:0;
+}
+
+.cms header dialog li,
+main > div.content > header dialog li{
+    display:block;
+    padding:6px 15px;
+    background:#000;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.cms header dialog,
+main > div.content > header dialog
+{
+    display: inline-block;
+    vertical-align: top;
+    box-shadow: none;
+    position: relative;
+    text-align:left;
+    width:auto;
+    min-width: 100px;
+    margin-top:10px;
+    left:auto;
+    margin-left: 0;
+    top:0;
+    max-height: 27px;
+    background: transparent;
+}
+
+.cms header div.inputGroup label,
+main > div.content > header div.inputGroup label{
+    color:#fff;
+}
+
+/****************************** MAIN NAVI ***************************/
+main > div.main nav {
+    background: var(--cmsMainColor);
+    height: calc(100% - 40px);
+    width: 60px;
+    user-select: none;
+    -moz-user-select: none;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+main > div.main nav > ul:after{
+    position:absolute;
+    left:57px;
+    top:0;
+    bottom:0;
+    content:'';
+}
+
+main > div.main nav *,
+main > div.main nav i{
+    color:#fff;
+}
+
+main > div.main nav > ul {
+    width:calc(100% + 18px);
+    padding:0 25px 0 0;
+    overflow-x: hidden;
+    overflow-y: scroll;
+    position: relative;
+    flex: 1 1 auto;
+}
+
+main > div.main nav > ul li {
+    display:block;
+    list-style-type: none;
+    text-align: center;
+    width: 60px;
+    float:left;
+    border-left: 5px solid transparent;
+    padding-right: 2px;
+    border-right: 3px solid transparent;
+    z-index: 1;
+    overflow: hidden;
+    height:50px;
+}
+
+main > div.main nav > ul li:first-child{
+    margin-top:25px;
+}
+
+main > div.main nav > ul > li:last-child{
+    margin-bottom: 30px;
+}
+
+main > div.main nav ul li a{
+    width: 100px;
+    text-align: center;
+    position: relative;
+    display: flex;
+    margin-left: -50px;
+    transition: margin .3s ease-in-out;
+    height: 100%;
+    flex-basis: 50px;
+    flex-wrap: wrap;
+    align-self: center;
+}
+
+main > div.main nav ul li a span,
+main > div.main nav ul li a i{
+    width:50px;
+    display: table-cell;
+    vertical-align: middle;
+    white-space: normal;
+	hyphens: auto;
+}
+
+main > div.main nav ul li a span{
+    font-size: 14px;
+    text-transform: uppercase;
+    line-height: 1.2em;
+    align-self: center;
+	font-weight: 600;
+	word-wrap: break-word;
+}
+
+main > div.main nav ul li a i{
+    line-height: 50px;
+    letter-spacing: 1.5px;
+    text-align: center;
+    height:50px;
+    font-size: 28px;
+}
+
+main > div.main nav ul li:not(.active) a:hover{
+    margin-left: 0;
+}
+
+main > div.main nav > ul li.active{
+    background: var(--cmsBgColor);
+    border-left-color:var(--cmsHighlightColor);
+    position: relative;
+    border-right-color: var(--cmsBgColor);
+	border-radius: 4px 0 0 4px;
+}
+
+main > div.main nav > ul li.active i{
+    color:var(--cmsHighlightColor);
+}
+
+main > div.main nav > ul li.active:after{
+	content:'';
+	background:var(--cmsBackgroundColor);
+	border-radius: 4px;
+}
+
+main > div.main nav > ul li i svg{
+    width:100%;
+    height:100%;
+    padding:9px;
+}
+
+main > div.main nav > ul li i svg *{
+    fill:rgb(130,130,130);
+}
+
+main > div.main nav > ul li.active i svg *{
+    fill:var(--cmsHighlightColor);
+}
+
+/****************************** OTHER NAVI ***************************/
+.cms header button,
+.cms header .button,
+.cms header .submit,
+main > div.content > header .button,
+main > div.content > header .submit,
+main > div.content > header button{
+    padding:6px 12px;
+    margin-right: 3px;
+    margin-bottom: 0;
+    height: 37px;
+}
+
+.cms header button i + span,
+.cms header .button i + span,
+main > div.content >  header button i + span,
+main > div.content > header .button i + span{
+    line-height: 23px;
+}
+
+.cms header button i,
+.cms header .button i,
+main > div.content >  header button i,
+main > div.content > header .button i{
+    margin-bottom: -5px;
+    margin-top: -1px;
+}
+
+@-moz-document url-prefix() {
+    .cms header button i,
+    .cms header .button i,
+    main > div.content > header button i,
+    main > div.content > header .button i{
+		margin-top: -3px;
+    }
+}
+
+
+/****************************** BOTTOM MENU ***************************/
+.cms div.bottomMenu > div{
+    position: relative;
+}
+
+.cms div.bottomMenu  > div > a > img{
+    height:24px;
+}
+.cms div.bottomMenu > div > a{
+    padding:8px 10px;
+    display:block;
+    font-size: 0;
+    text-align: center;
+    line-height: 0;
+    line-height: 0;
+}
+.cms div.bottomMenu > div > a > i{
+    font-size: 24px;
+    padding: 0;
+    line-height: 23px;
+}
+.cms div.bottomMenu > div > a:hover{
+    background: #000;
+}
+
+/****************************** SERVER VERSION ***************************/
+.cms div.bottomMenu{
+    padding:0;
+    background:var(--cmsMainColor);
+    text-align: center;
+    width:60px;
+    cursor:default;
+    flex:0 1 auto;
+}
+.cms div.serverVersion b{
+    display: block;
+    color:#fff;
+    text-transform: uppercase;
+    line-height:0;
+    padding:20px 0 19px;
+}
+
+.cms div.serverVersion b.DEV {
+    background: rgb(124,178,73);
+}
+
+.cms div.serverVersion b,
+.cms div.serverVersion b.LIVE{
+    background:rgb(213,20,25);
+}
+
+.cms div.serverVersion b.STAGING{
+    background:rgb(246,191,59);
+}
+
+/****************************** NOTIFICATIONS ***************************/
+.cms div.notifications > a{
+    position: relative;
+}
+
+.cms div.notifications.open,
+.cms div.notifications:hover{
+    background:#000;
+}
+
+.cms div.notifications.selected > a:after{
+    content:' ';
+    border-radius: 50%;
+    width:10px;
+    height:10px;
+    position: absolute;
+    left:30px;
+    top:8px;
+    background:rgb(213,20,25);
+}
+
+.cms ul.notficiationList{
+    display:none;
+}
+
+.cms div.notifications.open ul.notficiationList{
+    display:block;
+    background: #000;
+    padding:10px;
+    width:250px;
+    bottom:42px;
+    box-shadow: 0 0 3px 3px rgba(0,0,0,0.2);
+    position: fixed;
+    z-index:9999999;
+}
+.cms ul.notficiationList li{
+    display: block;
+    margin: 0;
+    padding: 6px 15px;
+    text-align: left !important;
+    white-space: normal;
+    width: 100%;
+    position: relative;
+}
+
+.cms ul.notficiationList li:hover{
+    background:rgb(52,52,52);
+}
+
+.cms ul.notficiationList li a:last-child{
+    border-bottom: 0;
+}
+
+.cms ul.notficiationList li a{
+    position: absolute !important;
+    top:0;
+    left:0;
+    right:0;
+    bottom:0;
+    width:100% !important;
+    margin-left: 0 !important;
+    display:block !important;
+    border-bottom:1px solid rgba(255,255,255,0.5);
+}
+
+.cms ul.notficiationList li b{
+    display:block;
+}

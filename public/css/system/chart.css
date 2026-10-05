@@ -1,0 +1,26 @@
+div.bar{
+	border: 1px solid var(--cmsMainColor);;
+	margin: 0 5px 5px 0;
+	height: 30px;
+	position: relative;
+	border-radius: 4px;
+}
+div.bar div{
+	position: absolute;
+	background: var(--cmsMainColor);
+	height:100%;
+	width: 0;
+	overflow:hidden;
+	white-space: nowrap;
+}
+div.bar {
+	position: relative;
+}
+div.bar b{
+	position: absolute;
+	top:2px;
+	left:8px;
+}
+div.bar b:last-child{
+	color: white;
+}
