@@ -41,6 +41,14 @@ include_once('actions.php');
                 <li class="<?= $status['status'] ?>"><?= $status['label'] ?></li><br>
             <?php } ?>
         </ul>
+        <?php if ($var_thirdParty !== array()) { ?>
+            <h2>3rd party</h2>
+            <ul class="checkSystemEnvironment">
+                <?php foreach ($var_thirdParty as $package => $status) { ?>
+                    <li class="<?= $status['status'] ?>"><?= $status['label'] ?></li><br>
+                <?php } ?>
+            </ul>
+        <?php } ?>
     </div>
 
 </div>
@@ -65,6 +73,9 @@ include_once('actions.php');
     }
     ul.checkSystemEnvironment li.warning{
         background:rgb(246,191,59);
+    }
+    ul.checkSystemEnvironment li.info{
+        background:rgba(0,0,0,.08);
     }
     ul.checkSystemEnvironment li.error{
         background:rgb(213,20,25);

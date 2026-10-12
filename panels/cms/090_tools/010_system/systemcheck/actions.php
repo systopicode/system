@@ -271,15 +271,33 @@ $wantLink = match ($stage) {
     'RC', 'LIVE' => false,
     default => null,
 };
+// Every installed package from Composer's own record: version and where it
+// came from. Third-party packages are shown, not judged — a DEV machine may
+// take them from the mirror (repositories/) or from Packagist, both are fine.
+$vendorDir = fs::toNative(fs::$root . 'vendor/composer');
+$installed = json_decode((string) @file_get_contents($vendorDir . DIRECTORY_SEPARATOR . 'installed.json'), true);
+$devNames = $installed['dev-package-names'] ?? [];
 $var_packages = array();
-foreach (glob(fs::toNative(fs::$root . 'vendor/systopic/*'), GLOB_ONLYDIR) ?: [] as $dir) {
-    $name = 'systopic/' . basename($dir);
+$var_thirdParty = array();
+foreach ($installed['packages'] ?? [] as $package) {
+    $name = (string) $package['name'];
+    $dir = $vendorDir . DIRECTORY_SEPARATOR . (string) ($package['install-path'] ?? '../' . $name);
     $real = (string) realpath($dir);
     $own = (string) realpath(dirname($dir)) . DIRECTORY_SEPARATOR . basename($dir);
     $linked = is_link($dir) || strcasecmp($real, $own) !== 0;
-    $where = $linked ? 'linked to <b>' . htmlspecialchars($real) . '</b>' : 'installed from the source';
+    $source = $package['source']['url'] ?? $package['dist']['url'] ?? '';
+    $where = $linked
+        ? 'linked to <b>' . htmlspecialchars($real) . '</b>'
+        : 'from <b>' . htmlspecialchars((string) $source) . '</b>';
+    $label = "<b>$name</b> " . htmlspecialchars((string) ($package['version'] ?? '?'))
+        . (in_array($name, $devNames, true) ? ' (dev)' : '') . " $where";
+
+    if (!str_starts_with($name, 'systopic/')) {
+        $var_thirdParty[$name] = array('label' => $label, 'status' => 'info');
+        continue;
+    }
     $var_packages[$name] = array(
-        'label' => "<b>$name</b> $where",
+        'label' => $label,
         'status' => $wantLink === null || $wantLink === $linked ? 'confirm' : 'warning',
     );
     if ($wantLink === true && !$linked) {
@@ -290,7 +308,7 @@ foreach (glob(fs::toNative(fs::$root . 'vendor/systopic/*'), GLOB_ONLYDIR) ?: []
 }
 if ($var_packages === array()) {
     $var_packages['none'] = array(
-        'label' => 'No <b>vendor/systopic/*</b> found — composer install has not run.',
+        'label' => 'No <b>systopic/*</b> in vendor/composer/installed.json — composer install has not run.',
         'status' => 'error',
     );
 }
