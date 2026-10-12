@@ -62,7 +62,11 @@ final class Files
         @mkdir($dir, 0777, true);
         $media->filename = $filename;
         $path = self::originalPath($media);
-        rename($tmpFile, $path);
+        // Loud on failure: a silent one leaves a row with 'nofile/null' and a
+        // 404 in the page (a path in the internal spelling /C/… is one cause).
+        if (!@rename($tmpFile, $path)) {
+            throw new \RuntimeException("Files::store(): cannot move '$tmpFile' to '$path'");
+        }
         // Upload temps are often 0600; Apache (psacln) cannot serve those (403).
         @chmod($dir, 0775);
         @chmod($path, 0664);

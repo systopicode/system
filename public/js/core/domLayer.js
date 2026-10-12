@@ -14,6 +14,11 @@
 		layer.children = [];
 		layer.rootNodes = []; // containing all dom root nodes and layer objects if their placeholders were on root level
 		layer.outRootNodes = [];
+		// What a browser would run: no type, a JavaScript type, or a module.
+		layer.isExecutable = script => {
+			var type = (script.getAttribute('type') || '').trim().toLowerCase();
+			return type === '' || type === 'module' || /^(text|application)\/(x-)?(java|ecma)script$/.test(type);
+		};
 		layer.createRootLayer = (bodyLayerData) => {
 			// lt('createRootLayer');
 			layer.data = bodyLayerData.layers.data;
@@ -48,8 +53,12 @@
 			var scripts = parentNode.getElementsByTagName('script');
 			// innerHTML does not execute scripts
 			// !! execution order not mantained when re-inserted into document;
-			for (var script of scripts) { 
-				layer.scripts.push(script);
+			// Data blocks (type="application/json" …) are not code: they stay in
+			// the markup, where the page reads them, and are never executed.
+			for (var script of scripts) {
+				if (layer.isExecutable(script)) {
+					layer.scripts.push(script);
+				}
 			}
 			layer.scripts.forEach(script => script.remove());
 			layer.rootNodes = Array.prototype.slice.call(parentNode.firstChild.childNodes);
@@ -125,6 +134,9 @@
 				for (var deadScript of layer.scripts) {
 					await new Promise(resolve => {
 						var liveScript = document.createElement('script');
+						if (deadScript.type) {
+							liveScript.type = deadScript.type;   // keeps a module a module
+						}
 						if (deadScript.src) {
 							liveScript.onload = resolve;
 							liveScript.onerror = resolve;

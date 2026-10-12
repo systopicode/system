@@ -29,6 +29,13 @@ sys.processEvent = function (e) {
 		l('||| ' + e.type + ' found default Anchor - skip and return to default');
 		return;
 	}
+	// A link to another site (maps, mail, tel …) is not a panel request: the
+	// browser follows it. As XHR its path would be resolved below our root.
+	if (defaultAnchor && defaultAnchor.tagName === 'A' && defaultAnchor.href
+		&& (defaultAnchor.protocol.indexOf('http') !== 0 || defaultAnchor.origin !== location.origin)) {
+		l('||| ' + e.type + ' found foreign Anchor - skip and return to default');
+		return;
+	}
 	var nativeForm = (eventTarget && eventTarget.closest) ? eventTarget.closest('form[target]') : null;
 	if (nativeForm) {
 		l('||| ' + e.type + ' found form[target] - skip and return to default');

@@ -1,6 +1,3 @@
-@import url('../../../panels/cms/010_pages/pages.mml.css');
-@import url('../../../panels/cms/010_pages/pages.tree.css');
-@import url('../../../panels/cms/010_pages/module.css');
 /****************************** Drag and Drop ***************************/
 .pageDragged .pageDroppable,
 .mediaDragged .mediaDroppable{

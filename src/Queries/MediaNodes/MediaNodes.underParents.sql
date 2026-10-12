@@ -9,7 +9,7 @@ FROM cms_medias
 JOIN cms_nodes ON node_id = media_node_id
 WHERE node_parent_node_id IN (:parentIds)
 	AND ( !node_is_trashed OR :showtrashed )
-ORDER BY node_parent_node_id, node_ordering
+ORDER BY node_parent_node_id, node_ordering, node_id
 
 -- :parentIds
 -- :showtrashed
