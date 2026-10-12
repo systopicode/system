@@ -89,9 +89,11 @@ switch ($this->action) {
             break;
         }
 
-        // Off unless explicitly ticked. It only ever helps foreign keys, and
-        // then by not validating the rows that are already there.
-        $skipFk = (string) (http::form('skipFk') ?? '0') !== '0';
+        // Only from its own button ("Run checked without FK checks"). It helps
+        // in two places: a column a foreign key points at can be changed at all
+        // (MySQL 1833), and a new foreign key is added without validating the
+        // rows already there.
+        $skipFk = (string) (http::dataset('nofk') ?? '0') !== '0';
 
         $done     = $audit->apply($selected, withoutForeignKeyChecks: $skipFk);
         $failures = $audit->failures();
@@ -110,11 +112,14 @@ switch ($this->action) {
         // Every failure by name. One error and silence about the other thirty
         // is what made this worth changing.
         foreach ($failures as $failure) {
+            // 1833 is the one failure the checkbox is the answer to — say so.
+            $fkBlocked = !$skipFk && preg_match('~\b1833\b~', $failure['message']);
             message::error(sprintf(
-                '%s %s: %s',
+                '%s %s: %s%s',
                 $failure['action']->kind->value,
                 $failure['action']->subject,
                 $failure['message'],
+                $fkBlocked ? ' — use "Run checked without FK checks".' : '',
             ));
         }
 

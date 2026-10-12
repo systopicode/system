@@ -134,6 +134,10 @@ $lossless    = count(array_filter($actions, static fn($a) => !$a->destructive &&
 
     <div class="auditFooter">
         <button type="submit" class="button">Run checked</button>
+        <?php // Same body as "Run checked", with FOREIGN_KEY_CHECKS = 0 for the run. ?>
+        <a class="button submit" data-on_click="applyAudit" data-nofk="1"
+           title="Runs the checked actions with FOREIGN_KEY_CHECKS = 0, switched back on afterwards."
+        >Run checked without FK checks</a>
         <a class="button submit" data-on_click="applyLossless"
         >Run lossless only (<?= $lossless ?>)</a>
         <a class="button submit" data-on_click="userConfirm"
@@ -147,15 +151,12 @@ $lossless    = count(array_filter($actions, static fn($a) => !$a->destructive &&
             that can neither lose anything nor fail. A failing action no longer stops
             the rest — each one is reported by name.
         </p>
-        <p>
-            <label title="Creates foreign keys without validating the rows that are already there.">
-                <input type="checkbox" name="skipFk" value="1">
-                add foreign keys without checking existing rows
-            </label>
-            <span class="auditCount">
-                &mdash; the only thing this helps with. Existing violations stay in the
-                data and surface later; it does nothing for a duplicate in a unique key.
-            </span>
+        <p class="auditCount">
+            &ldquo;Run checked without FK checks&rdquo; is for two cases: a column that a
+            foreign key points at has to change (MySQL error 1833, e.g. a key getting
+            AUTO_INCREMENT), and a foreign key is to be added without validating the rows
+            already there (those violations stay in the data and surface later). It does
+            nothing for a duplicate in a unique key.
         </p>
     </div>
 </form>
