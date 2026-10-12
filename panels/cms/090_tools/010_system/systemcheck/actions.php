@@ -259,3 +259,38 @@ if (version_compare($mysqlVersion[0], '8.0.0') >= 0) {
     $var_extensions['mysqlVersion']['label'] = "Your MYSQL Version: <b>$mysqlVersion[0] </b>";
     $var_extensions['mysqlVersion']['status'] = 'confirm';
 }
+
+// Where vendor/systopic/* come from (SYS/.cursor/docs/composer.md): DEV and
+// STAGING redirect them to the shared packages/ folder through the global
+// Composer config, so they are symlinks (junctions on Windows); RC and LIVE
+// install them from the source, so they are real folders. is_link() is false
+// for a junction, hence the comparison of the real path with the own one.
+$stage = \Systopic\System\Config\Config::current()?->instance->stage ?? '';
+$wantLink = match ($stage) {
+    'DEV', 'STAGING' => true,
+    'RC', 'LIVE' => false,
+    default => null,
+};
+$var_packages = array();
+foreach (glob(fs::toNative(fs::$root . 'vendor/systopic/*'), GLOB_ONLYDIR) ?: [] as $dir) {
+    $name = 'systopic/' . basename($dir);
+    $real = (string) realpath($dir);
+    $own = (string) realpath(dirname($dir)) . DIRECTORY_SEPARATOR . basename($dir);
+    $linked = is_link($dir) || strcasecmp($real, $own) !== 0;
+    $where = $linked ? 'linked to <b>' . htmlspecialchars($real) . '</b>' : 'installed from the source';
+    $var_packages[$name] = array(
+        'label' => "<b>$name</b> $where",
+        'status' => $wantLink === null || $wantLink === $linked ? 'confirm' : 'warning',
+    );
+    if ($wantLink === true && !$linked) {
+        $var_packages[$name]['label'] .= ". On <b>$stage</b> it should be a link to packages/ — the global Composer config has no repository for packages/*, or composer update has not run since.";
+    } elseif ($wantLink === false && $linked) {
+        $var_packages[$name]['label'] .= ". On <b>$stage</b> it should come from the source — this server has a global Composer redirect.";
+    }
+}
+if ($var_packages === array()) {
+    $var_packages['none'] = array(
+        'label' => 'No <b>vendor/systopic/*</b> found — composer install has not run.',
+        'status' => 'error',
+    );
+}

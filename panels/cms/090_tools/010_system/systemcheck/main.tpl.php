@@ -33,6 +33,15 @@ include_once('actions.php');
             <?php } ?>
         </ul>
     </div>
+    <div class='halfColumn'>
+        <br><br><br>
+        <h1>Composer Packages<?= $stage !== '' ? ' (' . htmlspecialchars($stage) . ')' : '' ?></h1>
+        <ul class="checkSystemEnvironment">
+            <?php foreach ($var_packages as $package => $status) { ?>
+                <li class="<?= $status['status'] ?>"><?= $status['label'] ?></li><br>
+            <?php } ?>
+        </ul>
+    </div>
 
 </div>
 <style>
