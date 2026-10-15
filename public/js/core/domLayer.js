@@ -4,6 +4,10 @@
 		info: 'domLayer Class',
 		route: 'core.dom.layer'
 	};
+	// While rebuild() builds a layer away from the document, events and scripts
+	// wait for the finished dom: {layers: [...]} whose scripts are still to run.
+	var building = null;
+
 	sys.lib.add(setup, function () {
 		var layer = this;
 		layer.parent = null;
@@ -64,9 +68,11 @@
 			layer.rootNodes = Array.prototype.slice.call(parentNode.firstChild.childNodes);
 			layer.docNodes = layer.getDocNodes(parentNode);
 
-			layer.rootNodes.forEach(node => {
-				sys.initEvents($(node));
-			});
+			if (!building) {
+				layer.rootNodes.forEach(node => {
+					sys.initEvents($(node));
+				});
+			}
 
 			if (parentNode.childNodes.length > 1) {
 				l('HTML error: Layer not well-formed', layerData);
@@ -128,6 +134,11 @@
 				positionNode.remove();
 			}
 
+			building ? building.layers.push(layer) : layer.runScripts();
+		};
+
+		/** The layer's scripts, then: its panel hears that the view is in place. */
+		layer.runScripts = () => {
 			// Preserve order: external scripts must finish before later inline
 			// scripts run (e.g. patchwork config that needs $.fn.patchwork).
 			(async () => {
@@ -215,6 +226,104 @@
 
 		layer.removeRootNodes = () => {
 			layer.rootNodes.forEach(node => node.remove());
+		};
+
+		/** Is the node in this layer's dom (its own or a descendant layer's)? */
+		layer.holds = node => layer.rootNodes.some(root => root === node || (root.contains && root.contains(node)))
+			|| layer.children.some(child => child.holds(node));
+
+		/**
+		 * The layer anew from the server's html, its children included - for a
+		 * layer that is 'new' or 'update', or whose children no longer match.
+		 * With the focused element inside it, the new dom is built away from
+		 * the document and morphed in around that element, which never leaves
+		 * the document (core/focus.js).
+		 */
+		layer.rebuild = layerData => {
+			var focused = focusPath.focused();
+			if (!focused || !layer.holds(focused)) {
+				var positionNode = layer.shiftOutRootNodes();
+				layer.createDomObjects(layerData);
+				layer.addToLibnode();
+				layer.appendDomObjects(positionNode);
+				layer.removeOutRootNodes();
+				layer.children.forEach(child => child.removeRootNodes());
+				layer.children = [];
+				layer.createChildren(layerData);
+				return;
+			}
+			layer.rebuildAround(focused, layerData);
+		};
+
+		layer.rebuildAround = (focused, layerData) => {
+			var positionNode = layer.shiftOutRootNodes();
+			var oldNodes = [];
+			var collect = old => {
+				oldNodes.push(...old.outRootNodes);
+				old.outRootNodes = [];
+				old.children.forEach(collect);
+			};
+			collect(layer);
+
+			// the new dom, complete with its children, in a detached host
+			var host = document.createElement('div');
+			var anchor = document.createComment('rebuild');
+			host.appendChild(anchor);
+			building = {layers: []};
+			var built;
+			try {
+				layer.createDomObjects(layerData);
+				layer.addToLibnode();
+				layer.appendDomObjects(anchor);
+				layer.children = [];
+				layer.createChildren(layerData);
+			} finally {
+				built = building.layers;
+				building = null;
+			}
+			anchor.remove();   // still there when the layer came back empty
+			var fresh = Array.from(host.childNodes);
+
+			var kept = focusPath.keep(focused, oldNodes, host);
+			if (kept) {
+				fresh = fresh.map(node => kept.swaps.get(node) || node);
+				layer.swapNodes(kept.swaps);
+			} else {
+				fresh.forEach(node => positionNode.parentNode.insertBefore(node, positionNode));
+				focusPath.release(focused);
+			}
+
+			// what appendDomObjects() and removeOutRootNodes() do with the
+			// position: a layer with nodes needs no placeholder, an empty one does
+			if (layer.rootNodes.length) {
+				if (layer.parent) {
+					layer.parent.removePlaceholder(positionNode);
+					positionNode === layer.ownPlaceholder && positionNode.remove();
+				}
+			} else if (layer.ownPlaceholder && !layer.ownPlaceholder.isConnected && positionNode.parentNode) {
+				positionNode.parentNode.insertBefore(layer.ownPlaceholder, positionNode);
+			}
+			oldNodes.forEach(node => {
+				if (!kept || !kept.chain.includes(node)) {
+					node.remove();
+				}
+			});
+
+			sys.initEvents($(fresh), undefined, kept ? kept.chain : null);
+			built.forEach(each => each.runScripts());
+		};
+
+		/** References to the new nodes that were dropped for kept ones. */
+		layer.swapNodes = swaps => {
+			var swap = node => swaps.get(node) || node;
+			layer.rootNodes = layer.rootNodes.map(swap);
+			layer.placeholders = layer.placeholders.map(swap);
+			layer.ownPlaceholder = layer.ownPlaceholder && swap(layer.ownPlaceholder);
+			var docs = layer.docNodes || {};
+			Object.keys(docs).forEach(name => {
+				docs[name] = Array.isArray(docs[name]) ? docs[name].map(swap) : swap(docs[name]);
+			});
+			layer.children.forEach(child => child.swapNodes(swaps));
 		};
 
 		layer.createChildren = layerData => {

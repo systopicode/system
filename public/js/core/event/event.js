@@ -24,13 +24,36 @@ sys.processEvent = function (e) {
 		return;
 	}
 	var eventTarget = e.target || e.currentTarget;
-	// A field that a render took out of the document loses its focus, and some
-	// browsers fire blur for it. That is not the user leaving the field: a form
-	// that saves on blur would save again, its answer re-render, the next field
-	// blur ... Normally the field is not taken out at all (focusKeeper moves
-	// it into the new dom); this covers browsers without Element.moveBefore.
-	if ((e.type === 'blur' || e.type === 'focusout') && eventTarget && eventTarget.isConnected === false) {
-		l('||| ' + e.type + ' of a field a render removed - not the user, skipped');
+	// An element taken out of the document loses its focus, and the browser
+	// fires blur for it - Chrome while the element is still in the document.
+	// That is not the user leaving the field: a form that saves on blur would
+	// save again, its answer re-render, the next field blur ... A rebuild
+	// keeps the focused element in the document (core/focus.js); it takes it
+	// out only when the new dom has no place for it, and says so (released).
+	// Any other blur waits a microtask - the removal that may have caused it
+	// is through by then: still in the document, it was the user; gone, it is
+	// a bug - reported, and skipped all the same.
+	if ((e.type === 'blur' || e.type === 'focusout') && eventTarget && !e.settled) {
+		if (window.focusPath && focusPath.wasReleased(eventTarget)) {
+			l('||| ' + e.type + ' of a field the new dom has no place for - not the user, skipped');
+			return;
+		}
+		var currentTarget = e.currentTarget;
+		queueMicrotask(() => {
+			if (!eventTarget.isConnected) {
+				f('||| ' + e.type + ' of a focused element something removed from the document - skipped', eventTarget);
+				return;
+			}
+			// the event is through by now: target/currentTarget are gone from it
+			sys.processEvent({
+				type: e.type,
+				target: eventTarget,
+				currentTarget: currentTarget,
+				settled: true,
+				preventDefault: function () {},
+				stopPropagation: function () {}
+			});
+		});
 		return;
 	}
 	var defaultAnchor = (eventTarget && eventTarget.closest) ? (eventTarget.closest('a') || eventTarget) : null;

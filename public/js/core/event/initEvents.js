@@ -1,5 +1,12 @@
 ﻿/* global sys,c,p,t,l,onInitEvents,updateOctalSelector */
-sys.initEvents = function ($set, oneventcomplete) {
+/**
+ * Binds the events of the elements in $set and below.
+ * exclude: elements that are bound already and stay - the path a rebuild
+ * keeps around the focused element (core/domLayer.js rebuild()). They and
+ * only they are left out, what is new below them is bound; the hooks
+ * (onInitEvents) get a $set whose findInSet() leaves them out as well.
+ */
+sys.initEvents = function ($set, oneventcomplete, exclude) {
 	var eventCapsule = function () {
 		return e => {
 			sys.processEvent(e);
@@ -8,6 +15,13 @@ sys.initEvents = function ($set, oneventcomplete) {
 	if (typeof $.fn.findInSet !== 'function') {
 		$.fn.findInSet = function (selector) {
 			return $(this.find(selector).add(this).filter(selector));
+		};
+	}
+	if (exclude && exclude.length) {
+		var findAll = $.fn.findInSet;
+		$set = $($set);
+		$set.findInSet = function (selector) {
+			return findAll.call(this, selector).not(exclude);
 		};
 	}
 	/**** AJAX ALL NON FORM ELEMENTS ****/
@@ -31,14 +45,15 @@ sys.initEvents = function ($set, oneventcomplete) {
 	$set.findInSet('[data-on_draginit],[data-drag_type]').bind('mousedown', sys.processEvent);
 
 	/**** AJAX FORM - SUBMIT WHOLE (XHR default; opt-out: target=_self) ****/
-	var $xhrForms = $set.findInSet('form').not('[target]');
-	$xhrForms.find('button[type="submit"],input[type="submit"]').not('.ajax').click(function () { // create helper element for action
+	// a kept form is bound already, what is new inside it is not
+	var $xhrForms = $.fn.findInSet.call($set, 'form').not('[target]');
+	$xhrForms.find('button[type="submit"],input[type="submit"]').not('.ajax').not(exclude || []).click(function () { // create helper element for action
 		$(this).parents('form').append('<input class="cmsSubmitAjaxFormHelper" type="hidden" name="' + this.name + '" value="' + this.value + '"/>');
 	});
-	$xhrForms.find('.onchangesubmit').bind('change', function () {
+	$xhrForms.find('.onchangesubmit').not(exclude || []).bind('change', function () {
 		$(this).closest('form').submit();
 	});
-	$xhrForms.bind('submit', sys.processEvent);
+	$xhrForms.not(exclude || []).bind('submit', sys.processEvent);
 	$set.findInSet("button[name=action]").bind('click', e => {
 		e.currentTarget.form.setAttribute('action', e.currentTarget.value);
 	});

@@ -47,9 +47,6 @@
 				return;
 			}
 
-			// same as in domRenderer - see public/js/core/focus.js
-			var focus = window.focusKeeper ? focusKeeper.capture() : null;
-
 			renderer.applyBodyClasses(data.bodyClasses || []);
 
 			if (data.headLayer) {
@@ -63,8 +60,6 @@
 			// debug tooling and anything reaching for sys.dom.body keeps working.
 			sys.dom.head = headLayer;
 			sys.dom.body = bodyLayer;
-
-			focus && focusKeeper.restore(focus);
 
 			if (bodyLayer) {
 				bodyLayer.printDebug();
@@ -173,16 +168,9 @@
 			}
 		};
 
-		/** Replaces a layer's DOM subtree with freshly built nodes. */
+		/** Replaces a layer's DOM subtree with freshly built nodes - see core/domLayer.js. */
 		renderer.rebuild = (layerData, layer) => {
-			var positionNode = layer.shiftOutRootNodes();
-			layer.createDomObjects(layerData);
-			layer.addToLibnode();
-			layer.appendDomObjects(positionNode);
-			layer.removeOutRootNodes();
-			layer.children.forEach(child => child.removeRootNodes());
-			layer.children = [];
-			layer.createChildren(layerData);
+			layer.rebuild(layerData);
 		};
 	});
 })();

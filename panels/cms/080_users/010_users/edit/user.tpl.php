@@ -14,7 +14,7 @@ $field = static function (string $label, string $value, ?string $action = NULL, 
 };
 ?>
 <header>
-	<h1>Edit User</h1>
+	<h1><?= $e(trim((string) $user->fullname) !== '' ? $user->fullname : $user->name) ?></h1>
 	<ul class="barmenu">
 		<li>
 			<a class="ajax" href="../"><i class="fa-light fa-xmark-large"></i></a>

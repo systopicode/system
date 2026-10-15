@@ -1,348 +1,262 @@
-/* global document, window, Node, NodeFilter, sys, l */
+/* global document, sys, l, f */
 
 /**
- * The field being edited survives a document update.
+ * The focused element stays in the document while its layer is rebuilt.
  *
- * Every update rebuilds the dom of the layers that changed. A field that is
- * rebuilt while somebody types in it loses focus, caret and - with the
- * latency of a server render - the characters typed since the request went
- * out. The browser also fires blur for it, and a form that saves on blur
- * saves again, its answer re-renders the form, the next field blurs ... an
- * endless round, as soon as anything re-renders the form while one edits it
- * (the hub's signal after a save, systopic/relay).
+ * Every update rebuilds the dom of the layers that changed. An element that
+ * is taken out of the document loses the focus: the caret and what was typed
+ * since the request went out are gone, the browser fires blur, and a field
+ * that saves on blur saves again - its answer re-renders the form, the next
+ * field blurs ... (systopic/relay re-renders a form whenever someone saves).
  *
- * So the field being edited is never replaced. capture() parks the very
- * element outside the layers, the update rebuilds whatever it rebuilds, and
- * restore() moves it into the place of its counterpart in the new dom - the
- * element the server rendered in its stead is dropped. Same node: focus,
- * caret, value, a composition in progress, the listeners - all stay. Moved
- * with Element.moveBefore(), which keeps the focus and fires nothing; all of
- * it in one task, so nothing is painted in between. The rest of the layer -
- * a result list next to a search field - is new as usual.
+ * So nothing on the way to the focused element is taken out. domLayer.rebuild()
+ * builds the new dom of the layer away from the document; keep() finds the
+ * focused element's counterpart in it and morphs along the path: the focused
+ * element and its ancestors up to the layer's root stay, everything beside
+ * that path is the new dom, and the path takes over the new attributes. The
+ * element never leaves the document - no blur, the caret, a composition in
+ * progress, the scroll position of a container, an open mobile keyboard all
+ * stay, in every browser. A field with input keeps it: setting the value
+ * attribute does not touch a dirty field, an untouched one shows the new value.
  *
- *   var focus = focusKeeper.capture();
- *   … swap the dom …
- *   focusKeeper.restore(focus);
+ * Finding the counterpart, the first rule that hits exactly one element:
+ *   1. data-focus-id - set it in the template where the others are ambiguous
+ *   2. the element's attributes, except the ones a render changes (value,
+ *      class, style, state); ids are not used
+ *   3. tag, type, name, data-field and the data-on_* actions
+ *   4. 3 again, by position, when old and new have the same number of them
+ * The paths of old and new must have the same depth and the same tags.
  *
- * Without moveBefore (older browsers) the fallback: the field is replaced, its
- * counterpart takes over value and caret and gets the focus back; the blur of
- * the removed one is ignored (sys.processEvent).
- *
- * Only for a field one types in or picks from: text-like inputs, textarea,
- * select, contenteditable. A button or checkbox with focus is replaced as
- * rendered.
+ * When there is no counterpart, the layer is rebuilt as always and the focus
+ * is gone. release() notes that, so the blur of the removed element is known
+ * to come from a rebuild (sys.processEvent).
  */
-var focusKeeper = (function () {
+var focusPath = (function () {
 
-	var TEXT_INPUT = /^(text|search|email|url|tel|password|number|date|datetime-local|month|week|time)$/;
+	/** Attributes a render may change without the element being another one. */
+	var VOLATILE = /^(value|class|style|checked|selected|disabled|readonly|hidden|tabindex|id|data-focus-id|aria-.*)$/;
 
-	/** The field being edited, or null. */
-	function editing() {
+	var released = new WeakSet();
+
+	/** The focused element, or null. */
+	function focused() {
 		var element = document.activeElement;
-		if (!element || !element.tagName || element === document.body) {
-			return null;
-		}
-		if (element.isContentEditable === true || element.tagName === 'TEXTAREA' || element.tagName === 'SELECT') {
-			return element;
-		}
-		if (element.tagName === 'INPUT' && TEXT_INPUT.test(String(element.type || 'text').toLowerCase())) {
-			return element;
-		}
-		return null;
+		return element && element !== document.body && element !== document.documentElement ? element : null;
 	}
-
-	var canMove = typeof Element !== 'undefined' && typeof Element.prototype.moveBefore === 'function';
-
-	/** What is being edited - parked out of reach of the update when the browser can. */
-	function capture() {
-		var element = editing();
-		if (!element) {
-			return null;
-		}
-		var selector = selectorOf(element);
-		if (!selector) {
-			return null; // nothing to recognise it by, nothing to find again
-		}
-		var editable = element.isContentEditable === true;
-		var focus = {
-			element: element,
-			selector: selector,
-			index: queryAll(selector).indexOf(element),
-			editable: editable,
-			value: editable ? null : element.value,
-			caret: editable ? editableOffset(element) : fieldCaret(element),
-			parked: null
-		};
-		if (canMove && !editable) {
-			park(focus);
-		}
-		return focus;
-	}
-
-	/** Back into the new dom: the same element where it was, or in its counterpart's place. */
-	function restore(focus) {
-		if (!focus) {
-			return;
-		}
-		if (focus.parked) {
-			unpark(focus);
-			return;
-		}
-		if (focus.element.isConnected) {
-			return; // the node survived, so did the focus
-		}
-		var active = document.activeElement;
-		if (active && active !== document.body) {
-			return; // something else holds it now - do not steal it back
-		}
-		var element = counterpart(focus);
-		if (!element) {
-			return;
-		}
-		if (focus.value !== null && element.value !== focus.value) {
-			element.value = focus.value; // typed since the request went out
-		}
-		try {
-			element.focus({preventScroll: true});
-		} catch (error) {
-			element.focus();
-		}
-		if (!focus.caret) {
-			return;
-		}
-		if (focus.editable) {
-			setEditableOffset(element, focus.caret.offset);
-		} else {
-			setFieldCaret(element, focus.caret);
-		}
-	}
-
-	// ------------------------------------------------------------ parking
 
 	/**
-	 * The element leaves its place for a hidden one; a marker keeps the place.
-	 * Layers that list the element (a root node, a data-doc node) list the
-	 * marker meanwhile, so a layer that is NOT rebuilt finds it there.
+	 * Morph the new dom (the children of host) into the place of the old one,
+	 * around the focused element. oldNodes: the root nodes of the old layer and
+	 * of all its descendants. Returns {chain, swaps} - the kept elements, top
+	 * down, and new => kept for the layer references - or null when it cannot:
+	 * then nothing has been touched.
 	 */
-	function park(focus) {
-		var element = focus.element;
-		// Rendered, only out of sight: an element in a display:none box is not
-		// focusable, and the next style update would take the focus after all.
-		var lot = document.createElement('div');
-		lot.setAttribute('data-focus-parking', '');
-		lot.setAttribute('aria-hidden', 'true');
-		lot.style.cssText = 'position:fixed;left:-10000px;top:0;width:1px;height:1px;overflow:hidden';
-		document.body.appendChild(lot);
-		var marker = document.createComment('focusKeeper');
-		element.parentNode.insertBefore(marker, element);
-		try {
-			lot.moveBefore(element, null);
-		} catch (error) {
-			marker.remove();   // not movable here - the fallback takes over
-			lot.remove();
-			return;
+	function keep(element, oldNodes, host) {
+		var top = outermost(oldNodes, element);
+		if (!top) {
+			return null;
 		}
-		swapReferences(element, marker);
-		focus.parked = {lot: lot, marker: marker};
-	}
-
-	function unpark(focus) {
-		var element = focus.element;
-		var marker = focus.parked.marker;
-		var lot = focus.parked.lot;
-		focus.parked = null;
-		var place = marker.isConnected ? marker : counterpart(focus);
-		if (!place) {
-			// the field is gone in the new dom: the user went somewhere else
-			lot.remove();
-			return;
+		var counterpart = find(element, scope(oldNodes), scope(Array.from(host.childNodes)));
+		if (!counterpart) {
+			return null;
 		}
-		try {
-			// back where it was (nothing rebuilt it), or into its counterpart's
-			// place - the value the server rendered there is older than what
-			// was typed since
-			place.parentNode.moveBefore(element, place);
-		} catch (error) {
-			lot.remove();      // the element goes; its counterpart takes over value and caret
-			restore(focus);
-			return;
+		var kept = path(element, top);
+		var fresh = path(counterpart, null, host);
+		if (!fresh || kept.length !== fresh.length || kept.some((node, i) => node.tagName !== fresh[i].tagName)) {
+			f('focusPath: the new dom has the focused element in another place - replaced, focus lost', describe(element));
+			return null;
 		}
-		swapReferences(place, element);
-		// A script of the new dom may have focused the counterpart (an
-		// autofocus for the search field it renders) - removing it would take
-		// the focus to the body. Then, or when it is lost anyway, the kept
-		// field gets it back; a focus a script put somewhere else stays there.
-		var stolen = document.activeElement === place;
-		place.remove();
-		lot.remove();
-		if (place !== marker) {
-			l('focusKeeper: kept the field being edited - ' + focus.selector);
+		var swaps = new Map();
+		// root level: the new root nodes around the kept one
+		var parent = top.parentNode;
+		while (host.firstChild !== fresh[0]) {
+			parent.insertBefore(host.firstChild, top);
 		}
-		var active = document.activeElement;
-		if (active !== element && (stolen || !active || active === document.body)) {
-			refocus(element, focus);
+		host.removeChild(fresh[0]);
+		var after = top.nextSibling;
+		while (host.firstChild) {
+			parent.insertBefore(host.firstChild, after);
 		}
-	}
-
-	function refocus(element, focus) {
-		try {
-			element.focus({preventScroll: true});
-		} catch (error) {
-			element.focus();
-		}
-		if (focus.caret && !focus.editable) {
-			setFieldCaret(element, focus.caret);
-		}
-	}
-
-	/** The layers that pointed at one node point at the other. */
-	function swapReferences(from, to) {
-		var walk = layer => {
-			if (!layer) {
-				return;
+		for (var i = 0; i < kept.length; i++) {
+			var old = kept[i];
+			var neu = fresh[i];
+			swaps.set(neu, old);
+			warnEvents(old, neu);
+			attributes(old, neu);
+			if (i < kept.length - 1) {
+				around(old, neu, kept[i + 1], fresh[i + 1]);
+			} else {
+				content(old, neu);
 			}
-			var index = layer.rootNodes ? layer.rootNodes.indexOf(from) : -1;
-			if (index !== -1) {
-				layer.rootNodes[index] = to;
-			}
-			var docs = layer.docNodes || {};
-			Object.keys(docs).forEach(name => {
-				if (docs[name] === from) {
-					docs[name] = to;
-				} else if (Array.isArray(docs[name])) {
-					var at = docs[name].indexOf(from);
-					if (at !== -1) {
-						docs[name][at] = to;
-					}
-				}
-			});
-			(layer.children || []).forEach(walk);
-		};
-		if (window.sys && sys.dom) {
-			walk(sys.dom.head);
-			walk(sys.dom.body);
 		}
+		return {chain: kept, swaps: swaps};
+	}
+
+	/** The element was removed by a rebuild on purpose - see sys.processEvent. */
+	function release(element) {
+		element && released.add(element);
+	}
+
+	function wasReleased(element) {
+		return released.has(element);
 	}
 
 	// ------------------------------------------------------------ finding
 
-	/**
-	 * How to recognise the field again: id, else name, else data-field. The
-	 * index behind it covers the case of the same name appearing more than once.
-	 */
-	function selectorOf(element) {
-		if (element.id) {
-			return '#' + cssEscape(element.id);
+	function find(element, oldScope, newScope) {
+		var focusId = element.getAttribute('data-focus-id');
+		if (focusId !== null) {
+			return one(newScope.filter(node => node.getAttribute('data-focus-id') === focusId), element, 'data-focus-id');
 		}
-		var tag = element.tagName.toLowerCase();
-		var name = element.getAttribute('name');
-		if (name) {
-			return tag + '[name="' + attrEscape(name) + '"]';
+		var tag = element.tagName;
+		var candidates = newScope.filter(node => node.tagName === tag);
+		var strict = signature(element, true);
+		var hits = candidates.filter(node => signature(node, true) === strict);
+		if (hits.length === 1) {
+			return hits[0];
 		}
-		var field = element.getAttribute('data-field');
-		if (field) {
-			return tag + '[data-field="' + attrEscape(field) + '"]';
+		var loose = signature(element, false);
+		hits = candidates.filter(node => signature(node, false) === loose);
+		if (hits.length === 1) {
+			return hits[0];
+		}
+		if (!hits.length) {
+			l('focusPath: the focused element is gone in the new dom', describe(element));
+			return null;
+		}
+		var olds = oldScope.filter(node => node.tagName === tag && signature(node, false) === loose);
+		if (olds.length === hits.length) {
+			return hits[olds.indexOf(element)] || null;
+		}
+		f('focusPath: ' + hits.length + ' candidates for the focused element, '
+			+ olds.length + ' before - set data-focus-id', describe(element));
+		return null;
+	}
+
+	function one(hits, element, by) {
+		if (hits.length === 1) {
+			return hits[0];
+		}
+		if (hits.length) {
+			f('focusPath: ' + by + ' is not unique in the new dom', describe(element));
 		}
 		return null;
 	}
 
-	/** The new element in the place of the old one, the old one itself left out. */
-	function counterpart(focus) {
-		var matches = queryAll(focus.selector).filter(element => element !== focus.element);
-		return matches[focus.index] || matches[0] || null;
+	/** strict: all attributes but the volatile ones; loose: what says which field it is. */
+	function signature(element, strict) {
+		var parts = [element.tagName];
+		Array.from(element.attributes)
+			.filter(attribute => strict
+				? !VOLATILE.test(attribute.name)
+				: /^(type|name|data-field|data-on_.*)$/.test(attribute.name))
+			.sort((a, b) => a.name < b.name ? -1 : 1)
+			.forEach(attribute => parts.push(attribute.name + '=' + attribute.value));
+		return parts.join('\u0001');
 	}
 
-	function queryAll(selector) {
-		try {
-			return Array.prototype.slice.call(document.querySelectorAll(selector));
-		} catch (error) {
-			return [];
+	/** Every element of these nodes, each once, in document order. */
+	function scope(nodes) {
+		var seen = new Set();
+		var out = [];
+		nodes.forEach(node => {
+			if (node.nodeType !== 1 || seen.has(node)) {
+				return;
+			}
+			[node].concat(Array.from(node.querySelectorAll('*'))).forEach(element => {
+				if (!seen.has(element)) {
+					seen.add(element);
+					out.push(element);
+				}
+			});
+		});
+		return out;
+	}
+
+	/** The one of nodes that contains the element and is contained by no other. */
+	function outermost(nodes, element) {
+		var holders = nodes.filter(node => node.contains && node.contains(element));
+		return holders.find(node => !holders.some(other => other !== node && other.contains(node))) || null;
+	}
+
+	/** top ... element; with host: up to the child of host. */
+	function path(element, top, host) {
+		var nodes = [];
+		for (var node = element; node; node = node.parentNode) {
+			nodes.unshift(node);
+			if (node === top || (host && node.parentNode === host)) {
+				return nodes;
+			}
+		}
+		return null;
+	}
+
+	function describe(element) {
+		return '<' + element.tagName.toLowerCase()
+			+ Array.from(element.attributes)
+				.filter(attribute => /^(type|name|data-field|data-focus-id|data-on_.*)$/.test(attribute.name))
+				.map(attribute => ' ' + attribute.name + '="' + attribute.value + '"').join('')
+			+ '>';
+	}
+
+	// ------------------------------------------------------------ morphing
+
+	/** old takes the attributes of neu. */
+	function attributes(old, neu) {
+		Array.from(old.attributes).forEach(attribute => {
+			if (!neu.hasAttribute(attribute.name)) {
+				old.removeAttribute(attribute.name);
+			}
+		});
+		Array.from(neu.attributes).forEach(attribute => {
+			if (old.getAttribute(attribute.name) !== attribute.value) {
+				old.setAttribute(attribute.name, attribute.value);
+			}
+		});
+	}
+
+	/** Everything in old but the kept child is replaced by what is in neu around its child. */
+	function around(old, neu, keptChild, newChild) {
+		Array.from(old.childNodes).forEach(node => node !== keptChild && old.removeChild(node));
+		while (neu.firstChild !== newChild) {
+			old.insertBefore(neu.firstChild, keptChild);
+		}
+		neu.removeChild(newChild);
+		while (neu.firstChild) {
+			old.appendChild(neu.firstChild);
 		}
 	}
-
-	function cssEscape(value) {
-		return (window.CSS && CSS.escape) ? CSS.escape(value) : String(value).replace(/([^\w-])/g, '\\$1');
-	}
-
-	function attrEscape(value) {
-		return String(value).replace(/(["\\])/g, '\\$1');
-	}
-
-	// ------------------------------------------------------------ caret
 
 	/**
-	 * selectionStart exists only on fields that carry text - on
-	 * checkbox/radio/number/email the access throws in some browsers.
+	 * The focused element itself: what one types in keeps its content
+	 * (textarea, contenteditable), anything else shows the new one - the label
+	 * of a button, the options of a select (with the choice, if still there).
 	 */
-	function fieldCaret(element) {
-		try {
-			if (typeof element.selectionStart !== 'number') {
-				return null;
-			}
-			return {
-				start: element.selectionStart,
-				end: element.selectionEnd,
-				direction: element.selectionDirection || 'none'
-			};
-		} catch (error) {
-			return null;
-		}
-	}
-
-	function setFieldCaret(element, caret) {
-		try {
-			var length = typeof element.value === 'string' ? element.value.length : 0;
-			element.setSelectionRange(
-				Math.min(caret.start, length),
-				Math.min(caret.end, length),
-				caret.direction
-			);
-		} catch (error) {
-			// a field type without a caret - the focus alone is worth something
-		}
-	}
-
-	/** The caret in a contenteditable, as a character offset from its start. */
-	function editableOffset(root) {
-		var selection = window.getSelection();
-		if (!selection || !selection.rangeCount) {
-			return null;
-		}
-		var current = selection.getRangeAt(0);
-		if (!root.contains(current.endContainer)) {
-			return null;
-		}
-		var range = current.cloneRange();
-		range.selectNodeContents(root);
-		range.setEnd(current.endContainer, current.endOffset);
-		return {offset: range.toString().length};
-	}
-
-	function setEditableOffset(root, offset) {
-		if (typeof offset !== 'number') {
+	function content(old, neu) {
+		if (old.tagName === 'TEXTAREA' || old.isContentEditable) {
 			return;
 		}
-		var walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, null);
-		var node, seen = 0, last = null;
-		while ((node = walker.nextNode())) {
-			if (offset <= seen + node.length) {
-				return collapseTo(node, offset - seen);
-			}
-			seen += node.length;
-			last = node;
+		var choice = old.tagName === 'SELECT' ? old.value : null;
+		while (old.firstChild) {
+			old.removeChild(old.firstChild);
 		}
-		// the text got shorter - go to the end of what is there
-		last ? collapseTo(last, last.length) : collapseTo(root, 0);
+		while (neu.firstChild) {
+			old.appendChild(neu.firstChild);
+		}
+		if (choice !== null && Array.from(old.options).some(option => option.value === choice)) {
+			old.value = choice;
+		}
 	}
 
-	function collapseTo(node, offset) {
-		var range = document.createRange();
-		range.setStart(node, Math.max(0, offset));
-		range.collapse(true);
-		var selection = window.getSelection();
-		selection.removeAllRanges();
-		selection.addRange(range);
+	/** Events are bound when an element is built - a kept one keeps the old ones. */
+	function warnEvents(old, neu) {
+		var actions = element => Array.from(element.attributes)
+			.filter(attribute => /^data-on_/.test(attribute.name))
+			.map(attribute => attribute.name + '=' + attribute.value).sort().join(' ');
+		if (actions(old) !== actions(neu)) {
+			f('focusPath: a kept element has other actions now, its events are the old ones', describe(old), describe(neu));
+		}
 	}
 
-	return {capture: capture, restore: restore, editing: editing};
+	return {focused: focused, keep: keep, release: release, wasReleased: wasReleased};
 })();

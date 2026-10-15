@@ -1,10 +1,3 @@
-function setFocus(selector) {
-	var el = document.querySelectorAll(selector)[0];
-	let len = el.value.length;
-	el.focus();
-	el.setSelectionRange(len, len);
-}
-
 function minmax(min, value, max) {
 	return Math.min(Math.max(value, min), max);
 }
