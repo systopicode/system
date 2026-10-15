@@ -7,6 +7,7 @@ namespace Systopic\System\Dom\Renderer;
 use Systopic\System\Debug\BoxTree;
 use Systopic\System\Dom\Contracts\RenderNode;
 use Systopic\System\Dom\Contracts\RenderTree;
+use Systopic\System\Dom\Dependencies;
 use Systopic\System\Dom\Layer\DomLayer;
 use Systopic\System\Dom\Tree\DomLayerTree;
 
@@ -190,11 +191,13 @@ class DomRenderer
             $layer->type        = 'keep';
             $refLayer->refState = 'kept';
 
-            // Unless the panel asked for a re-render (updateView). Then the
-            // client rebuilds this subtree after all, and the old one does
-            // NOT survive — recursively, because rebuild() drops the whole
+            // Unless the panel asked for a re-render (updateView), or the
+            // request names something as changed that the browser's copy of
+            // this layer was rendered from (Dependencies). Then the client
+            // rebuilds this subtree after all, and the old one does NOT
+            // survive — recursively, because rebuild() drops the whole
             // subtree and builds it again from the shipped html.
-            if ($tree !== null && $layer->checkUpdate($tree)) {
+            if ($tree !== null && ($layer->checkUpdate($tree) || Dependencies::touched($refLayer))) {
                 $layer->type = 'update';
                 $refLayer->setRefStateRec('replaced');
             }

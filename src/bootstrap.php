@@ -52,6 +52,7 @@ $layerTree   = new DomLayerTree();
 $layerTree->setReferencesFromSession($domSession->loadReferencesByAddress());
 $layerTree->setReferenceRoot($domSession->loadReferenceRoot());
 $domRenderer = new DomRenderer($layerTree, $domSession);
+\Systopic\System\Dom\Dependencies::attach($layerTree);   // what the layers render from
 
 // ---- Panel tree ----
 $panelTree   = new PanelTree();

@@ -1,56 +1,91 @@
-/* global document, window, Node, NodeFilter */
+/* global document, window, Node, NodeFilter, sys, l */
 
 /**
- * Focus and caret across a document update.
+ * The field being edited survives a document update.
  *
- * Every panel update rebuilds the dom of the layers that changed, and an input
- * that gets replaced while somebody is typing in it loses focus and caret. It
- * hits exactly the fields that cause the update: `data-on_input` and
- * `.autosend` send on every keystroke, and the response re-renders the view
- * they sit in.
+ * Every update rebuilds the dom of the layers that changed. A field that is
+ * rebuilt while somebody types in it loses focus, caret and - with the
+ * latency of a server render - the characters typed since the request went
+ * out. The browser also fires blur for it, and a form that saves on blur
+ * saves again, its answer re-renders the form, the next field blurs ... an
+ * endless round, as soon as anything re-renders the form while one edits it
+ * (the hub's signal after a save, systopic/relay).
  *
- * So: remember what has focus, let the update run, and put the focus back on
- * the replacement node. Only then - if the user or the response moved focus
- * somewhere else meanwhile, it stays where it is.
+ * So the field being edited is never replaced. capture() parks the very
+ * element outside the layers, the update rebuilds whatever it rebuilds, and
+ * restore() moves it into the place of its counterpart in the new dom - the
+ * element the server rendered in its stead is dropped. Same node: focus,
+ * caret, value, a composition in progress, the listeners - all stay. Moved
+ * with Element.moveBefore(), which keeps the focus and fires nothing; all of
+ * it in one task, so nothing is painted in between. The rest of the layer -
+ * a result list next to a search field - is new as usual.
  *
  *   var focus = focusKeeper.capture();
  *   … swap the dom …
  *   focusKeeper.restore(focus);
  *
- * The field's VALUE is never touched: what the server rendered stays. Only the
- * caret is put back, clamped to the new length.
+ * Without moveBefore (older browsers) the fallback: the field is replaced, its
+ * counterpart takes over value and caret and gets the focus back; the blur of
+ * the removed one is ignored (sys.processEvent).
+ *
+ * Only for a field one types in or picks from: text-like inputs, textarea,
+ * select, contenteditable. A button or checkbox with focus is replaced as
+ * rendered.
  */
 var focusKeeper = (function () {
 
-	var FIELDS = ['INPUT', 'TEXTAREA', 'SELECT'];
+	var TEXT_INPUT = /^(text|search|email|url|tel|password|number|date|datetime-local|month|week|time)$/;
 
-	/** What has the focus, or null when there is nothing worth keeping. */
-	function capture() {
+	/** The field being edited, or null. */
+	function editing() {
 		var element = document.activeElement;
 		if (!element || !element.tagName || element === document.body) {
 			return null;
 		}
-		var editable = element.isContentEditable === true;
-		if (!editable && FIELDS.indexOf(element.tagName) === -1) {
+		if (element.isContentEditable === true || element.tagName === 'TEXTAREA' || element.tagName === 'SELECT') {
+			return element;
+		}
+		if (element.tagName === 'INPUT' && TEXT_INPUT.test(String(element.type || 'text').toLowerCase())) {
+			return element;
+		}
+		return null;
+	}
+
+	var canMove = typeof Element !== 'undefined' && typeof Element.prototype.moveBefore === 'function';
+
+	/** What is being edited - parked out of reach of the update when the browser can. */
+	function capture() {
+		var element = editing();
+		if (!element) {
 			return null;
 		}
 		var selector = selectorOf(element);
 		if (!selector) {
 			return null; // nothing to recognise it by, nothing to find again
 		}
-		var matches = queryAll(selector);
-		return {
+		var editable = element.isContentEditable === true;
+		var focus = {
 			element: element,
 			selector: selector,
-			index: matches.indexOf(element),
+			index: queryAll(selector).indexOf(element),
 			editable: editable,
-			caret: editable ? editableOffset(element) : fieldCaret(element)
+			value: editable ? null : element.value,
+			caret: editable ? editableOffset(element) : fieldCaret(element),
+			parked: null
 		};
+		if (canMove && !editable) {
+			park(focus);
+		}
+		return focus;
 	}
 
-	/** Puts the focus back, if the update was what took it away. */
+	/** Back into the new dom: the same element where it was, or in its counterpart's place. */
 	function restore(focus) {
 		if (!focus) {
+			return;
+		}
+		if (focus.parked) {
+			unpark(focus);
 			return;
 		}
 		if (focus.element.isConnected) {
@@ -60,10 +95,12 @@ var focusKeeper = (function () {
 		if (active && active !== document.body) {
 			return; // something else holds it now - do not steal it back
 		}
-		var matches = queryAll(focus.selector);
-		var element = matches[focus.index] || matches[0];
+		var element = counterpart(focus);
 		if (!element) {
 			return;
+		}
+		if (focus.value !== null && element.value !== focus.value) {
+			element.value = focus.value; // typed since the request went out
 		}
 		try {
 			element.focus({preventScroll: true});
@@ -79,6 +116,115 @@ var focusKeeper = (function () {
 			setFieldCaret(element, focus.caret);
 		}
 	}
+
+	// ------------------------------------------------------------ parking
+
+	/**
+	 * The element leaves its place for a hidden one; a marker keeps the place.
+	 * Layers that list the element (a root node, a data-doc node) list the
+	 * marker meanwhile, so a layer that is NOT rebuilt finds it there.
+	 */
+	function park(focus) {
+		var element = focus.element;
+		// Rendered, only out of sight: an element in a display:none box is not
+		// focusable, and the next style update would take the focus after all.
+		var lot = document.createElement('div');
+		lot.setAttribute('data-focus-parking', '');
+		lot.setAttribute('aria-hidden', 'true');
+		lot.style.cssText = 'position:fixed;left:-10000px;top:0;width:1px;height:1px;overflow:hidden';
+		document.body.appendChild(lot);
+		var marker = document.createComment('focusKeeper');
+		element.parentNode.insertBefore(marker, element);
+		try {
+			lot.moveBefore(element, null);
+		} catch (error) {
+			marker.remove();   // not movable here - the fallback takes over
+			lot.remove();
+			return;
+		}
+		swapReferences(element, marker);
+		focus.parked = {lot: lot, marker: marker};
+	}
+
+	function unpark(focus) {
+		var element = focus.element;
+		var marker = focus.parked.marker;
+		var lot = focus.parked.lot;
+		focus.parked = null;
+		var place = marker.isConnected ? marker : counterpart(focus);
+		if (!place) {
+			// the field is gone in the new dom: the user went somewhere else
+			lot.remove();
+			return;
+		}
+		try {
+			// back where it was (nothing rebuilt it), or into its counterpart's
+			// place - the value the server rendered there is older than what
+			// was typed since
+			place.parentNode.moveBefore(element, place);
+		} catch (error) {
+			lot.remove();      // the element goes; its counterpart takes over value and caret
+			restore(focus);
+			return;
+		}
+		swapReferences(place, element);
+		// A script of the new dom may have focused the counterpart (an
+		// autofocus for the search field it renders) - removing it would take
+		// the focus to the body. Then, or when it is lost anyway, the kept
+		// field gets it back; a focus a script put somewhere else stays there.
+		var stolen = document.activeElement === place;
+		place.remove();
+		lot.remove();
+		if (place !== marker) {
+			l('focusKeeper: kept the field being edited - ' + focus.selector);
+		}
+		var active = document.activeElement;
+		if (active !== element && (stolen || !active || active === document.body)) {
+			refocus(element, focus);
+		}
+	}
+
+	function refocus(element, focus) {
+		try {
+			element.focus({preventScroll: true});
+		} catch (error) {
+			element.focus();
+		}
+		if (focus.caret && !focus.editable) {
+			setFieldCaret(element, focus.caret);
+		}
+	}
+
+	/** The layers that pointed at one node point at the other. */
+	function swapReferences(from, to) {
+		var walk = layer => {
+			if (!layer) {
+				return;
+			}
+			var index = layer.rootNodes ? layer.rootNodes.indexOf(from) : -1;
+			if (index !== -1) {
+				layer.rootNodes[index] = to;
+			}
+			var docs = layer.docNodes || {};
+			Object.keys(docs).forEach(name => {
+				if (docs[name] === from) {
+					docs[name] = to;
+				} else if (Array.isArray(docs[name])) {
+					var at = docs[name].indexOf(from);
+					if (at !== -1) {
+						docs[name][at] = to;
+					}
+				}
+			});
+			(layer.children || []).forEach(walk);
+		};
+		if (window.sys && sys.dom) {
+			walk(sys.dom.head);
+			walk(sys.dom.body);
+		}
+	}
+
+	// ------------------------------------------------------------ finding
 
 	/**
 	 * How to recognise the field again: id, else name, else data-field. The
@@ -100,6 +246,12 @@ var focusKeeper = (function () {
 		return null;
 	}
 
+	/** The new element in the place of the old one, the old one itself left out. */
+	function counterpart(focus) {
+		var matches = queryAll(focus.selector).filter(element => element !== focus.element);
+		return matches[focus.index] || matches[0] || null;
+	}
+
 	function queryAll(selector) {
 		try {
 			return Array.prototype.slice.call(document.querySelectorAll(selector));
@@ -115,6 +267,8 @@ var focusKeeper = (function () {
 	function attrEscape(value) {
 		return String(value).replace(/(["\\])/g, '\\$1');
 	}
+
+	// ------------------------------------------------------------ caret
 
 	/**
 	 * selectionStart exists only on fields that carry text - on
@@ -190,5 +344,5 @@ var focusKeeper = (function () {
 		selection.addRange(range);
 	}
 
-	return {capture: capture, restore: restore};
+	return {capture: capture, restore: restore, editing: editing};
 })();

@@ -111,6 +111,15 @@ class DomLayer implements DomLayerItem
      */
     public string $refState = '';
 
+    /**
+     * What this layer's own output depends on, as opaque keys (key => true).
+     * Collected while it renders, stored with the reference; a request that
+     * names one of them as changed re-renders the layer. @see \Systopic\System\Dom\Dependencies
+     *
+     * @var array<string, true>
+     */
+    public array $dependencies = [];
+
     // -------------------------------------------------------------------------
     // Tree relations
     // -------------------------------------------------------------------------

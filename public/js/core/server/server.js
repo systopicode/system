@@ -1,4 +1,4 @@
-﻿/* global sys,c,p,t,l,obj,location */
+﻿/* global sys,c,p,t,l,f,obj,location */
 
 
 sys.core.server = new function () {
@@ -138,6 +138,55 @@ sys.core.server = new function () {
         }
     };
 
+    /**
+     * Headers for every request. A package adds a function that returns an
+     * object of headers (systopic/relay: which tab sends, what changed under
+     * it); it is asked once per request, right before it goes out, and is
+     * told the method. The system itself names no package here.
+     */
+    server.headerHooks = [];
+    server.addHeaders = fn => {
+        server.headerHooks.push(fn);
+    };
+    server.headersFor = method => {
+        var headers = {};
+        server.headerHooks.forEach(fn => {
+            try {
+                Object.assign(headers, fn(method) || {});
+            } catch (error) {
+                f('server header hook failed', error);
+            }
+        });
+        return headers;
+    };
+
+    /**
+     * Requests on their way. onIdle() runs a function once none is - right
+     * away if none is now. For whoever wants to wait for the answers before
+     * acting on the page (a held layer, a refresh that a request in flight
+     * may make unnecessary).
+     */
+    server.inFlight = 0;
+    server.idleHooks = [];
+    server.onIdle = fn => {
+        if (server.inFlight === 0) {
+            fn();
+            return;
+        }
+        server.idleHooks.push(fn);
+    };
+    server.settled = () => {
+        server.inFlight = Math.max(0, server.inFlight - 1);
+        while (server.inFlight === 0 && server.idleHooks.length) {
+            var fn = server.idleHooks.shift();
+            try {
+                fn();
+            } catch (error) {
+                f('server idle hook failed', error);
+            }
+        }
+    };
+
     server.startCommands = ['skipRefresh', 'done', 'updateClientData', 'updateDocument'];
     server.endCommands = []; // maybe onafter build hook
     server.sortCommands = (c1, c2) => {
@@ -257,6 +306,10 @@ sys.core.server.call = function (data) {
                 }
             }
         };
+        // After the handler above - once per request, also when it failed, was
+        // aborted, or a command threw: whoever waits for quiet sees the page
+        // as this answer left it, and never waits for good.
+        xhr.addEventListener('loadend', () => sys.core.server.settled());
 
         if (call.event) {
             obj.extend(call.data, call.event.data);
@@ -355,6 +408,11 @@ sys.core.server.call = function (data) {
         };
         xhr.open(method, xhrRootHref, true);
         xhr.setRequestHeader("X-Requested-With", "XMLHttpRequest");
+        var extraHeaders = sys.core.server.headersFor(method);
+        for (var headerName in extraHeaders) {
+            xhr.setRequestHeader(headerName, extraHeaders[headerName]);
+        }
+        sys.core.server.inFlight++;
         switch (method) {
             case 'get':
                 // anchors and forms with method get

@@ -131,7 +131,11 @@ if (defined('OUTPUT_FORMAT') && OUTPUT_FORMAT === 'json') {
 	return;
 }
 if (http::ajax()) {
-	if (http::$method === 'GET' || http::$method === 'POST' || $panelTree->getUpdateViewsCount()) {
+	// A PUT renders when an action marked views — or when data changed under
+	// what the window shows: named by the browser, or written by this very
+	// request (Dom\Dependencies, systopic/relay). One render for all of it.
+	if (http::$method === 'GET' || http::$method === 'POST' || $panelTree->getUpdateViewsCount()
+		|| \Systopic\System\Dom\Dependencies::changed() !== []) {
 		// Panel-Diff (PanelTree / DomLayer), not pages (site.php + renderPagesDiff.php).
 		// Uses the SAME closure-based template walk as the full render below —
 		// the navigator switches into 'diff' mode via beginDiff(), confirm()

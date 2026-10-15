@@ -42,6 +42,12 @@ $this->loadJS();
 		<div class="content">
 			<header class="cms">
 				<?php $this->withChildSelected('controls'); ?>
+				<?php if (function_exists('appCmsPreviewUrl')): ?>
+				<a class="button cmsPreviewBtn" target="_blank" rel="noopener noreferrer"
+					href="<?= htmlspecialchars(appCmsPreviewUrl()) ?>" title="Vorschau in der App">
+					<i class="fa-light fa-eye"></i><span>Vorschau</span>
+				</a>
+				<?php endif; ?>
 			</header>
 			<?php
 			echo message::flush(['template']);

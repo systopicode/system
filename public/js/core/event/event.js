@@ -24,6 +24,15 @@ sys.processEvent = function (e) {
 		return;
 	}
 	var eventTarget = e.target || e.currentTarget;
+	// A field that a render took out of the document loses its focus, and some
+	// browsers fire blur for it. That is not the user leaving the field: a form
+	// that saves on blur would save again, its answer re-render, the next field
+	// blur ... Normally the field is not taken out at all (focusKeeper moves
+	// it into the new dom); this covers browsers without Element.moveBefore.
+	if ((e.type === 'blur' || e.type === 'focusout') && eventTarget && eventTarget.isConnected === false) {
+		l('||| ' + e.type + ' of a field a render removed - not the user, skipped');
+		return;
+	}
 	var defaultAnchor = (eventTarget && eventTarget.closest) ? (eventTarget.closest('a') || eventTarget) : null;
 	if (defaultAnchor && defaultAnchor.hasAttribute && defaultAnchor.hasAttribute('target')) {
 		l('||| ' + e.type + ' found default Anchor - skip and return to default');
