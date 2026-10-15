@@ -3,16 +3,17 @@
 declare(strict_types=1);
 
 /**
- * The files of the system, the packages and the project's own lib/, panels/
- * and site/ - for a public/ that cannot reach them (RC, LIVE: the document
- * root is public/, vendor/ and the project lie above it).
+ * The files of the system, the packages and the project's own lib/, panels/,
+ * site/ and sites/ (the assets of one site) - for a public/ that cannot
+ * reach them (RC, LIVE: the document root is public/, vendor/ and the
+ * project lie above it).
  * See SYS/.cursor/plans/asset-delivery.plan.md.
  *
  * public/.htaccess sends every /assets/… that is not a file there to the
  * project's public/asset.php, which only includes this file:
  *
  *   /assets/sys/<path>              this package (systopic/system)
- *   /assets/app/<path>              the project - lib/, panels/, site/ only
+ *   /assets/app/<path>              the project - lib/, panels/, site/, sites/ only
  *   /assets/<vendor>/<pkg>/<path>   a package that registered itself (Sys\Packages)
  *
  * Mode `serve`: from the original, every time. Otherwise (`publish`) the

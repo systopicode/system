@@ -32,7 +32,7 @@ final class Assets
 	];
 
 	/** where the project keeps assets - the only folders /assets/app/ may reach */
-	public const APP_FOLDERS = ['lib', 'panels', 'site'];
+	public const APP_FOLDERS = ['lib', 'panels', 'site', 'sites'];
 
 	/** folders never walked when publishing everything */
 	private const SKIP_FOLDERS = ['vendor', 'node_modules'];
@@ -147,7 +147,7 @@ final class Assets
 
 	/**
 	 * Every asset root with its folder: the system, the packages that
-	 * registered one, the project's own lib/, panels/ and site/.
+	 * registered one, the project's own lib/, panels/, site/ and sites/.
 	 *
 	 * @return array<string, string> URL root name ('app/lib' for the project's folders) => native folder ending in '/'
 	 */

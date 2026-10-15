@@ -134,6 +134,36 @@ final class InstanceFiles
         return $log;
     }
 
+    /**
+     * The instance files that have rules, but none for the site — where
+     * addSite() would add one or report why it cannot. A file without rules
+     * needs nothing and is not listed.
+     *
+     * @return list<string> file names
+     */
+    public static function filesWithoutSite(string $configDir, string $name): array
+    {
+        $missing = [];
+        foreach (self::files($configDir) as $file) {
+            $ignored = [];
+            $data = self::read($file, $ignored);
+            if ($data === null || !is_array($data['matches'] ?? null) || $data['matches'] === []) {
+                continue;
+            }
+            $has = false;
+            foreach ($data['matches'] as $match) {
+                if (is_array($match) && ($match['site'] ?? null) === $name) {
+                    $has = true;
+                    break;
+                }
+            }
+            if (!$has) {
+                $missing[] = basename($file);
+            }
+        }
+        return $missing;
+    }
+
     // ------------------------------------------------------------------ paths
 
     /** '/projects/old/' → '/projects/new/' — whole segments only. */
