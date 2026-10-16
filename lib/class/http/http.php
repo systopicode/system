@@ -607,6 +607,17 @@ class http implements \Systopic\System\Client\Contracts\PreloadsClientScript
 		scripttime('pre session status');
 		if (session_status() == PHP_SESSION_NONE) {
 			scripttime('pre session start');
+			// the session cookie: never for JS, never over plain http when the
+			// request came by https, not sent along by other sites' requests
+			$cookie = session_get_cookie_params();
+			session_set_cookie_params([
+				'lifetime' => $cookie['lifetime'],
+				'path'     => $cookie['path'],
+				'domain'   => $cookie['domain'],
+				'secure'   => $cookie['secure'] || (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off'),
+				'httponly' => TRUE,
+				'samesite' => $cookie['samesite'] ?: 'Lax',
+			]);
 			session_start();
 			scripttime('session start done');
 			if (!empty($GLOBALS['__cli_session_merge']) && is_array($GLOBALS['__cli_session_merge'])) {

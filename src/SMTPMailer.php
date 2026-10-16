@@ -64,7 +64,7 @@ Class SMTPMailer {
 		elseif (!empty($_SERVER['SERVER_NAME']))
 			$this->local = $_SERVER['SERVER_NAME'];
 		else
-			$this->local = $_SERVER['SERVER_ADDR'];
+			$this->local = $_SERVER['SERVER_ADDR'] ?? 'localhost'; // CLI has none
 		if ($this->username)
 			$this->from = array($this->username, '');
 		if (!defined("NL")) {
@@ -158,9 +158,9 @@ Class SMTPMailer {
 			$mailto[] = '<' . $address[0] . '>';
 
 		// Open server connection and run transfers
-		$this->sock = fsockopen($this->hostname, $this->port, $enum, $estr, 30);
+		$this->sock = @fsockopen($this->hostname, $this->port, $enum, $estr, 30);
 		if (!$this->sock)
-			exit('Socket connection error: ' . $this->hostname);
+			throw new \RuntimeException("SMTP: no connection to $this->hostname:$this->port ($estr)");
 		$this->log[] = 'CONNECTION: fsockopen(' . $this->hostname . ')';
 		$this->response('220');
 		$this->logreq('EHLO ' . $this->local, '250');
@@ -172,9 +172,12 @@ Class SMTPMailer {
 			$this->logreq('EHLO ' . $this->local, '250');
 		}
 
-		$this->logreq('AUTH LOGIN', '334');
-		$this->logreq($user64, '334');
-		$this->logreq($pass64, '235');
+		// without an account no AUTH - a local catcher (Mailpit) takes it so
+		if ($this->username !== '') {
+			$this->logreq('AUTH LOGIN', '334');
+			$this->logreq($user64, '334');
+			$this->logreq($pass64, '235');
+		}
 
 		$this->logreq('MAIL FROM: ' . $mailfrom, '250');
 		foreach ($mailto as $address)
@@ -208,33 +211,30 @@ Class SMTPMailer {
 		stream_set_timeout($this->sock, 8);
 		$result = fread($this->sock, 768);
 		$meta = stream_get_meta_data($this->sock);
+		// errors throw, they never end the request; the log stays out of the
+		// message - it holds the account in base64
 		if ($meta['timed_out'] === true) {
 			fclose($this->sock);
-			$this->log[] = '<b>Was a timeout in Server response</b>';
-			$this->ShowLog();
-			print_r($meta);
-			exit();
+			throw new \RuntimeException("SMTP: $this->hostname did not answer (expected $code)");
 		}
 		$this->log[] = $result;
 		if (substr($result, 0, 3) == $code)
 			return;
 		fclose($this->sock);
-		$this->log[] = '<b>SMTP Server response Error</b>';
-		$this->ShowLog();
-		exit();
+		throw new \RuntimeException("SMTP: expected $code from $this->hostname, got: " . trim((string) $result));
 	}
 
 	// Do create headers after precheck
 	private function doHeaders($filedata = true) {
 		// Precheck. Test if we have necessary data
-		if (empty($this->username) || empty($this->password))
-			exit('We need username and password for: <b>' . $this->server . '</b>');
-		if (empty($this->from))
+		if (empty($this->from) && $this->username !== '')
 			$this->from = array($this->username, '');
+		if (empty($this->from) || !filter_var($this->from[0], FILTER_VALIDATE_EMAIL))
+			throw new \RuntimeException('SMTP: no valid sender address');
 		if (empty($this->to) || !filter_var($this->to[0][0], FILTER_VALIDATE_EMAIL))
-			exit('We need a valid email address to send to');
+			throw new \RuntimeException('SMTP: no valid recipient address');
 		if (strlen(trim($this->body)) < 3 && strlen(trim($this->text)) < 3)
-			exit('We really need a message to send');
+			throw new \RuntimeException('SMTP: no message to send');
 
 		// Create Headers
 		$headerstring = '';

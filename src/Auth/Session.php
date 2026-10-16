@@ -152,6 +152,12 @@ final class Session
             return;
         }
         \http::sessionStartOnce();
+        // a new id with every login: an id planted before (session fixation)
+        // is worth nothing afterwards. The CLI agent keeps its own - it has no
+        // cookie anybody could plant.
+        if (PHP_SAPI !== 'cli' && session_status() === PHP_SESSION_ACTIVE && !headers_sent()) {
+            session_regenerate_id(true);
+        }
         $_SESSION[self::USER_KEY] = (int) $row->id;
         $now = new \DateTimeImmutable();
         $row->firstLogin ??= $now;

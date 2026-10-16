@@ -16,23 +16,56 @@ class emailSmtp extends SMTPMailer {
       }
      */
 
-    public function __construct($server = 'smtp.systopic.net', $port = false, $secure = 'tls') {
-        if (!DEBUG && defined('SMTP_USER') && !empty(SMTP_USER)) {
-            parent::__construct(SMTP_SERVER, SMTP_PORT, $secure);
-            unset($this->subject);
-            $this->From(MAIL_SENDER_ADDRESS, MAIL_SENDER_NAME);
-            $this->Auth(SMTP_USER, SMTP_PASSWORD);
-        } else {
-            parent::__construct($server, $port, $secure);
-            unset($this->subject);
-            if (defined('MAIL_SENDER_NAME') && !empty(MAIL_SENDER_NAME)) {
-                $this->From(MAIL_SENDER_ADDRESS, MAIL_SENDER_NAME);
-            } else {
-                $this->From('noreply@systopic.media', 'fluxo cms');
-            }
-            $this->Auth('catchall@systopic.media', 'vHMEXisW_:');
-        }
+    /** set when this instance has no "mail" block and is not DEV: Send() refuses */
+    private bool $unconfigured = false;
+
+    /** set when the mail goes to the local catcher (Mailpit): nothing leaves the machine */
+    private bool $catcher = false;
+
+    /** DEBUG sends real mail to systopic's test addresses - not needed when nothing leaves */
+    private function redirected(): bool {
+        return defined('DEBUG') && DEBUG && !$this->catcher;
     }
+
+    /**
+     * The account comes from the "mail" block of the instance's config
+     * (<Instance>.config.json or config.local.json - never git):
+     *
+     *   "mail": {"host": "smtp.example.net", "port": 587, "secure": "tls",
+     *            "user": "…", "password": "…", "from": "…", "fromName": "…"}
+     *
+     * Without one, DEV hands the mail to Mailpit (127.0.0.1:1025, no account)
+     * and every other stage refuses to send. An explicit $server (the legacy
+     * callers) brings no account: the caller authenticates.
+     */
+    public function __construct($server = false, $port = false, $secure = 'tls') {
+        $mail = $server === false ? self::config() : null;
+        if ($server !== false) {
+            parent::__construct($server, $port, $secure);
+        } elseif ($mail !== null) {
+            parent::__construct((string) $mail['host'], (int) ($mail['port'] ?? 587), (string) ($mail['secure'] ?? 'tls'));
+            if ((string) ($mail['user'] ?? '') !== '') {
+                $this->Auth((string) $mail['user'], (string) ($mail['password'] ?? ''));
+            }
+        } elseif (defined('STAGE') && str_starts_with((string) STAGE, 'DEV')) {
+            parent::__construct('127.0.0.1', 1025, 'none');
+            $this->catcher = true;
+        } else {
+            parent::__construct('localhost', 25, 'none');
+            $this->unconfigured = true;
+        }
+        unset($this->subject);
+        $address = (string) ($mail['from'] ?? '') ?: (defined('MAIL_SENDER_ADDRESS') ? (string) MAIL_SENDER_ADDRESS : '') ?: (string) ($mail['user'] ?? '') ?: 'noreply@systopic.media';
+        $name = (string) ($mail['fromName'] ?? '') ?: (defined('MAIL_SENDER_NAME') ? (string) MAIL_SENDER_NAME : '') ?: 'fluxo cms';
+        $this->From($address, $name);
+    }
+
+    /** @return array<string, mixed>|null the "mail" block, when it names a host */
+    public static function config(): ?array {
+        $mail = \Systopic\System\Config\Config::current()?->instance->get('mail');
+        return is_array($mail) && (string) ($mail['host'] ?? '') !== '' ? $mail : null;
+    }
+
 
     protected function generateMessageID() {
         $cleanNumber = preg_replace('/[^0-9]/', '', microtime(false));
@@ -69,7 +102,7 @@ class emailSmtp extends SMTPMailer {
 
     // Add email reply to address
     public function addReplyTo($address, $name = '') {
-        if (DEBUG) {
+        if ($this->redirected()) {
             $address = 'replyto@systopic.media';
         }
         parent::addReplyTo($address, $name = '');
@@ -78,7 +111,7 @@ class emailSmtp extends SMTPMailer {
 
     // Add recipient email address
     public function addTo($address, $name = '') {
-        if (DEBUG) {
+        if ($this->redirected()) {
             $address = 'testmail@systopic.media';
         }
         parent::addTo($address, $name);
@@ -87,7 +120,7 @@ class emailSmtp extends SMTPMailer {
 
     // Add carbon copy email address
     public function addCc($address, $name = '') {
-        if (DEBUG) {
+        if ($this->redirected()) {
             $address = 'cc@systopic.media';
         }
         parent::addCc($address, $name = '');
@@ -96,7 +129,7 @@ class emailSmtp extends SMTPMailer {
 
     // Add blind carbon copy email address
     public function addBcc($address, $name = '') {
-        if (DEBUG) {
+        if ($this->redirected()) {
             $address = 'bcc@systopic.media';
         }
         parent::addBcc($address, $name = '');
@@ -105,7 +138,7 @@ class emailSmtp extends SMTPMailer {
 
     // Set email subject
     public function Subject($subject) {
-        if (DEBUG) {
+        if ($this->redirected()) {
             $subject = 'TESTMAIL // ' . $subject;
         }
         parent::Subject($subject);
@@ -186,6 +219,10 @@ class emailSmtp extends SMTPMailer {
         $status = 'failed';
         $error = null;
         try {
+            if ($this->unconfigured) {
+                error_log('[mail] not sent: no "mail" block in the config of stage ' . (defined('STAGE') ? STAGE : '?'));
+                throw new \RuntimeException('mail: no "mail" block in the config of this instance');
+            }
             $result = parent::Send();
             $status = $result ? 'success' : 'failed';
         } catch (Exception $e) {
