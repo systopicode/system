@@ -89,8 +89,9 @@ final class Devices
      * After a login: a new device for this browser, cookie set. A device the
      * browser held before (another login on it) is replaced.
      */
-    public static function issue(User $user, string $client = 'browser'): Device
+    public static function issue(User $user, ?string $client = null): Device
     {
+        $client ??= self::displayed() ?? 'browser';
         $scope = Scope::default();
         $now = new DateTimeImmutable();
         [$oldId, $oldSecret] = self::cookie() ?? [0, ''];
@@ -98,6 +99,9 @@ final class Devices
             && Operator::verdict($old, $oldSecret, $now) !== Operator::WRONG) {
             $scope->save(Operator::revoked($old, 'replaced', $now));
         }
+        // a read first: writing provisions nothing, and the very first device
+        // of an installation needs usm_devices to exist
+        DeviceQuery::ofUser($scope, (int) $user->id);
         $secret = bin2hex(random_bytes(32));
         $userAgent = (string) ($_SERVER['HTTP_USER_AGENT'] ?? '');
         $device = Operator::issued(
@@ -160,15 +164,6 @@ final class Devices
         return count($revoked);
     }
 
-    /** The page reported whether it runs as an installed web app. */
-    public static function report(bool $standalone): void
-    {
-        $device = self::current();
-        if ($device !== null && $device->client !== ($standalone ? 'app' : 'browser')) {
-            Scope::default()->save(Operator::reported($device, $standalone));
-        }
-    }
-
     // ------------------------------------------------------------ internal
 
     /** A live session: is its device still good? Ends the session when not. */
@@ -202,7 +197,21 @@ final class Devices
     private static function touch(Device $device, DateTimeImmutable $now): Device
     {
         $user = Session::current()->user;
+        if (($displayed = self::displayed()) !== null && $displayed !== $device->client) {
+            Operator::reported($device, $displayed === 'app');
+        }
         return Operator::touched($device, self::ip(), $user !== null ? self::expiresFor($user, $now) : $device->expiresAt, $now);
+    }
+
+    /**
+     * How the page runs, as its script reports it in the cookie `sys_display`
+     * (display-mode standalone = an installed web app): 'app', 'browser', or
+     * null when no script said so.
+     */
+    private static function displayed(): ?string
+    {
+        $display = $_COOKIE['sys_display'] ?? null;
+        return in_array($display, ['app', 'browser'], true) ? $display : null;
     }
 
     private static function expiresFor(User $user, DateTimeImmutable $now): ?DateTimeImmutable
