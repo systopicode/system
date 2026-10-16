@@ -75,6 +75,20 @@ final class LoginCodes
     }
 
     /**
+     * Whether what was typed (or came with a link) is a usable code of one of
+     * `$purposes` - without spending it. For a page that only shows or carries
+     * a code on. A miss counts against the IP like a failed redemption, so
+     * peeking is no way around the throttle.
+     *
+     * @param list<string> $purposes
+     */
+    public static function peek(string $input, array $purposes): ?LoginCode
+    {
+        self::$error = '';
+        return self::find($input, $purposes);
+    }
+
+    /**
      * A screen asks to be paired: a pair_screen code to show, and the secret
      * it polls with (`pollScreen()`), to be kept in a cookie.
      *

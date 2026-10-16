@@ -9,7 +9,10 @@
 	letter-spacing: 0.18em;
 	margin: 0.4rem 0;
 }
-.userAccess .issuedCode svg { width: 10rem; height: 10rem; }
+.userAccess .issuedCode svg { width: 10rem; height: 10rem; background: #fff; }
+/* black on white, whatever a project's own QR style is (spaceticker: white modules) */
+.userAccess .issuedCode svg.qr-code * { fill: #000 !important; }
+.userAccess .issuedCode svg.qr-code [fill="none"] { fill: none !important; }
 .userAccess .userDevice {
 	display: flex;
 	align-items: center;

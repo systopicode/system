@@ -46,43 +46,62 @@ final class Devices
         if (PHP_SAPI === 'cli' || Session::isRecovery()) {
             return;
         }
+        // a page's heartbeat (header X-Session-Check): checked now, answered
+        // with nothing but whether it is still logged in - a kiosk nobody
+        // touches learns of its revocation within a minute
+        $probe = isset($_SERVER['HTTP_X_SESSION_CHECK']);
         try {
             if (Session::known()) {
-                self::check();
-                return;
+                self::check($probe);
+            } else {
+                self::restoreFromCookie();
             }
-            [$id, $secret] = self::cookie() ?? [0, ''];
-            if ($id === 0) {
-                return;
-            }
-            $scope = Scope::default();
-            $now = new DateTimeImmutable();
-            $device = DeviceQuery::byId($scope, $id);
-            $verdict = $device === null ? Operator::WRONG : Operator::verdict($device, $secret, $now);
-            if ($verdict === Operator::REUSED) {
-                // a secret replaced more than a minute ago came back: the
-                // cookie was copied - nobody gets in with it any more
-                $scope->save(Operator::revoked($device, 'reuse', $now));
-                error_log("[devices] device $id revoked: a rotated secret came back");
-            }
-            if ($verdict !== Operator::OK && $verdict !== Operator::GRACED) {
-                self::clearCookie();
-                return;
-            }
-            Session::login((int) $device->relationId('user'));
-            if (!Session::known()) {
-                return;
-            }
-            if ($verdict === Operator::OK && Operator::dueForRotation($device, $now)) {
-                $secret = bin2hex(random_bytes(32));
-                Operator::rotated($device, $secret, $now);
-                self::setCookie($device, $secret);
-            }
-            self::remember($device, $now);
-            $scope->save(self::touch($device, $now));
         } catch (\Throwable $e) {
             error_log('[devices] restore: ' . $e->getMessage());
         }
+        if ($probe) {
+            while (ob_get_level()) {
+                ob_end_clean();
+            }
+            header('Content-Type: application/json; charset=utf-8');
+            header('Cache-Control: no-store');
+            echo json_encode(['loggedIn' => Session::known()]);
+            exit;
+        }
+    }
+
+    /** No session: the device cookie logs its user in again. */
+    private static function restoreFromCookie(): void
+    {
+        [$id, $secret] = self::cookie() ?? [0, ''];
+        if ($id === 0) {
+            return;
+        }
+        $scope = Scope::default();
+        $now = new DateTimeImmutable();
+        $device = DeviceQuery::byId($scope, $id);
+        $verdict = $device === null ? Operator::WRONG : Operator::verdict($device, $secret, $now);
+        if ($verdict === Operator::REUSED) {
+            // a secret replaced more than a minute ago came back: the
+            // cookie was copied - nobody gets in with it any more
+            $scope->save(Operator::revoked($device, 'reuse', $now));
+            error_log("[devices] device $id revoked: a rotated secret came back");
+        }
+        if ($verdict !== Operator::OK && $verdict !== Operator::GRACED) {
+            self::clearCookie();
+            return;
+        }
+        Session::login((int) $device->relationId('user'));
+        if (!Session::known()) {
+            return;
+        }
+        if ($verdict === Operator::OK && Operator::dueForRotation($device, $now)) {
+            $secret = bin2hex(random_bytes(32));
+            Operator::rotated($device, $secret, $now);
+            self::setCookie($device, $secret);
+        }
+        self::remember($device, $now);
+        $scope->save(self::touch($device, $now));
     }
 
     /**
@@ -167,7 +186,7 @@ final class Devices
     // ------------------------------------------------------------ internal
 
     /** A live session: is its device still good? Ends the session when not. */
-    private static function check(): void
+    private static function check(bool $force = false): void
     {
         $state = self::session();
         $id = (int) ($state['id'] ?? 0);
@@ -175,7 +194,7 @@ final class Devices
             return;   // logged in without a device (CMS, other projects)
         }
         $now = new DateTimeImmutable();
-        if ($now->getTimestamp() - (int) ($state['checked'] ?? 0) < self::CHECK_EVERY) {
+        if (!$force && $now->getTimestamp() - (int) ($state['checked'] ?? 0) < self::CHECK_EVERY) {
             return;
         }
         $scope = Scope::default();
