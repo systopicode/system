@@ -140,9 +140,6 @@ class client {
 			sort($cssFiles, SORT_STRING | SORT_FLAG_CASE);
 			foreach ($cssFiles as $cssFile) {
 				$name = basename($cssFile);
-				if ($name === 'compressed.css') {
-					continue;
-				}
 				$url = \Systopic\System\Http\Assets::href(rtrim($urlBase, '/') . '/' . $name, $cssFile);
 				$key = preg_replace('~\?.*$~', '', $url);
 				if (isset($seen[$key])) {

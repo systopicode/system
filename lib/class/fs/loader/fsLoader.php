@@ -6,36 +6,12 @@ class fsLoader {
 	static $filesIncluded = [];
 
 	static function includeCSSFiles($dirFilesOrFile, $recursive = FALSE) {
-		if (defined('COMPRESS_CSS')) {
-			if (COMPRESS_CSS) {
-				$compress = TRUE;
-			} else {
-				$compress = FALSE;
-			}
-		} else {
-			$compress = TRUE;
-		}
-		if (STAGE != 'DEV' && !\Systopic\System\Auth\Session::isSuperuser() && !\Systopic\System\Panels\Tree\PanelTree::getInstance()?->inCms() ?? false && $compress) {
-			clientCompress::compressCSS($dirFilesOrFile);
-			if (fs::fileExists($dirFilesOrFile . 'compressed.css')) {
-				// explizit die komprimierte Datei einbinden
-				return self::includeCSSFiles($dirFilesOrFile . 'compressed.css');
-			}
-		}
-
 		$files = fsFiles::create()->import($dirFilesOrFile, $recursive)->filter('~\.css$~');
 		$files->sort(function ($a, $b) {
 			return strcasecmp($a->name, $b->name);
 		});
 
-		$isExplicitFile = fs::isFile($dirFilesOrFile); // wichtig!
-
-		return $files->reduce(function ($return, $file) use ($isExplicitFile) {
-				// Nur skippen, wenn wir einen Ordner importieren.
-				// Wenn explizit "compressed.css" übergeben wurde, NICHT skippen.
-				if (!$isExplicitFile && $file->name === 'compressed.css') {
-					return $return; // Akkumulator zurückgeben!
-				}
+		return $files->reduce(function ($return, $file) {
 				if (!$file->exists || $file->ext !== 'css' || in_array($file, self::$filesIncluded, true)) {
 					return $return; // Akkumulator zurückgeben!
 				}
@@ -121,7 +97,7 @@ class fsLoader {
 
 	/**
 	 * Shared discovery for the two methods above: the .css files of a folder
-	 * (or one file), sorted by name, compressed.css and duplicates skipped -
+	 * (or one file), sorted by name, duplicates skipped -
 	 * the same selection includeCSSFiles() makes, without the markup.
 	 *
 	 * @return object[] fsFile
@@ -132,13 +108,8 @@ class fsLoader {
 		$files->sort(function ($a, $b) {
 			return strcasecmp($a->name, $b->name);
 		});
-		$isExplicitFile = fs::isFile($dirFilesOrFile);
-
 		$out = [];
 		foreach ($files as $file) {
-			if (!$isExplicitFile && $file->name === 'compressed.css') {
-				continue;
-			}
 			if (!$file->exists || $file->ext !== 'css' || in_array($file, self::$filesIncluded, TRUE)) {
 				continue;
 			}
@@ -151,10 +122,6 @@ class fsLoader {
 	static function includeScriptFiles($dirFilesOrFile, $recursive = TRUE) {
 		if (defined('JSOFF')) {
 			return '';
-		}
-		// nicht hier -> head.tpl -> head.tpl o. eigene klasse
-		if (FALSE && STAGE == 'LIVE' && fs::fileExists($dirFilesOrFile . 'compressed.js')) {
-			return self::includeCSSFile($dirFilesOrFile . 'compressed.js');
 		}
 		$files = fsFiles::create()->import($dirFilesOrFile, $recursive)->filter('~\.js$~');
 		$files->sort('fsLoader::scriptFilesSorting');
