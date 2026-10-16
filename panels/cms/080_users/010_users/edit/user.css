@@ -18,3 +18,4 @@
 	padding: 0.4rem 0;
 	border-bottom: 1px solid rgba(0, 0, 0, 0.08);
 }
+.userAccess .accessNote { padding: 0.4rem 0.6rem; background: rgba(0, 75, 147, 0.08); border-left: 3px solid #004b93; }

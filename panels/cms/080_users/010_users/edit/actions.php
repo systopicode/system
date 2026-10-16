@@ -37,6 +37,9 @@ switch ($this->action) {
 		$type = (string) \http::values('value');
 		if (in_array($type, [User::PERSON, User::SCREEN], TRUE)) {
 			$user->type = $type;
+			if ($type === User::SCREEN) {
+				$user->passwordHash = NULL;   // a screen is paired, never logs in with a password
+			}
 			$this->scope->save($user);
 		}
 		$this->updateView('lightbox');
@@ -51,13 +54,11 @@ switch ($this->action) {
 		}
 		$code = LoginCodes::create($purpose, $user, \Systopic\System\Auth\Session::id());
 		if ($this->action === 'inviteMail') {
-			if ((string) $user->email === '') {
-				\message::warning('Keine E-Mail-Adresse - zeig den Code oder den QR-Code vor.');
-			} elseif (CodeMail::send($user, $purpose, $code)) {
-				\message::confirm('Einladung an ' . htmlspecialchars((string) $user->email) . ' geschickt.');
-			} else {
-				\message::warning('Die Mail ging nicht raus - zeig den Code oder den QR-Code vor.');
-			}
+			$this->accessNote = match (TRUE) {
+				(string) $user->email === ''         => 'Keine E-Mail-Adresse - zeig den Code oder den QR-Code vor.',
+				CodeMail::send($user, $purpose, $code) => 'Einladung an ' . $user->email . ' geschickt.',
+				default                              => 'Die Mail ging nicht raus - zeig den Code oder den QR-Code vor.',
+			};
 		}
 		$this->issuedCode = ['purpose' => $purpose, 'code' => $code, 'expires' => time() + Codes::LIFETIMES[$purpose]];
 		$this->updateView('lightbox');
@@ -66,8 +67,8 @@ switch ($this->action) {
 	case 'approveScreen':
 		if ($user->type === User::SCREEN) {
 			$ok = LoginCodes::approveScreen((string) \http::values('value'), $user, (int) \Systopic\System\Auth\Session::id());
-			$ok ? \message::confirm('Screen gekoppelt - er meldet sich in wenigen Sekunden an.')
-				: \message::warning(LoginCodes::$error === LoginCodes::BLOCKED ? 'Zu viele falsche Codes von hier. Bitte in 15 Minuten noch einmal.' : 'Der Code stimmt nicht oder ist abgelaufen.');
+			$this->accessNote = $ok ? 'Screen gekoppelt - er meldet sich in wenigen Sekunden an.'
+				: (LoginCodes::$error === LoginCodes::BLOCKED ? 'Zu viele falsche Codes von hier. Bitte in 15 Minuten noch einmal.' : 'Der Code stimmt nicht oder ist abgelaufen.');
 		}
 		$this->updateView('lightbox');
 		break;

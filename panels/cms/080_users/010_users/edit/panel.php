@@ -45,6 +45,9 @@ class Panel extends CmsPanel {
 	 */
 	public ?array $issuedCode = NULL;
 
+	/** What the last access action did (mail sent, screen paired) - shown in the lightbox. */
+	public ?string $accessNote = NULL;
+
 	/** Mail the user a fresh activation link; the key must be saved alongside. */
 	function mailActivation(User $user) {
 		$active = \Systopic\System\Auth\Session::current();

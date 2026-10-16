@@ -71,6 +71,9 @@ $field = static function (string $label, string $value, ?string $action = NULL, 
 		<div class="row layout userAccess">
 			<div class="halfColumn">
 				<h2>Anmeldung</h2>
+				<?php if ($this->accessNote !== NULL) { ?>
+					<p class="accessNote"><?= $e($this->accessNote) ?></p>
+				<?php } ?>
 				<div class="inputGroup">
 					<select name="value" data-on_change="updateUserType">
 						<option value="person" <?= $isScreen ? '' : 'selected' ?>>Person</option>
