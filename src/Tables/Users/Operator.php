@@ -160,6 +160,18 @@ final class Operator
     }
 
     /**
+     * In through a one-time code (Auth\LoginCodes): the account is active, a
+     * key of an old activation mail is spent. A password stays optional.
+     */
+    public static function joined(Model $user): Model
+    {
+        $user->activationKey = null;
+        $user->activationKeyExpire = null;
+        $user->isActive = true;
+        return $user;
+    }
+
+    /**
      * A self-registered account: named after the part of the address before
      * the @, or the whole address if that name is taken.
      */

@@ -22,6 +22,15 @@ class emailSmtp extends SMTPMailer {
     /** set when the mail goes to the local catcher (Mailpit): nothing leaves the machine */
     private bool $catcher = false;
 
+    /** set by sensitive(): the log gets the envelope, not the content */
+    private bool $sensitive = false;
+
+    /** The mail carries a secret (a login code): var/log/email.log keeps no content. */
+    public function sensitive(): static {
+        $this->sensitive = true;
+        return $this;
+    }
+
     /** DEBUG sends real mail to systopic's test addresses - not needed when nothing leaves */
     private function redirected(): bool {
         return defined('DEBUG') && DEBUG && !$this->catcher;
@@ -191,8 +200,8 @@ class emailSmtp extends SMTPMailer {
         
         $sender = !empty($this->from) ? $this->from[0] : 'unknown';
         $subject = $this->subject ?? 'No subject';
-        $htmlContent = $this->body ?? '';
-        $textContent = $this->text ?? '';
+        $htmlContent = $this->sensitive ? '(not logged: contains a login code)' : ($this->body ?? '');
+        $textContent = $this->sensitive ? '' : ($this->text ?? '');
         $content = !empty($htmlContent) ? $htmlContent : $textContent;
         // Truncate content for logging (first 500 chars)
         $contentPreview = mb_substr($content, 0, 500);
