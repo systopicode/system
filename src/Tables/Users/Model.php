@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Systopic\System\Tables\Users;
 
 use DateTimeImmutable;
+use Systopic\Db\Schema\Col;
 use Systopic\Db\TableRow;
 use Systopic\Db\Type\Text;
 
@@ -118,6 +119,22 @@ final class Model extends TableRow
         set => $this->__set__(__PROPERTY__, $value);
     }
     public ?bool $isActive = false {
+        get => $this->__get__(__PROPERTY__);
+        set => $this->__set__(__PROPERTY__, $value);
+    }
+
+    public const PERSON = 'person';
+    public const SCREEN = 'screen';
+
+    /**
+     * What the account is: a person, or a screen - a device nobody owns (a
+     * kiosk, a lobby display). A screen never logs in with a password; it is
+     * paired by a user admin (Auth\LoginCodes, Auth\Devices). Rights come
+     * from roles either way. null on a row read before the column existed:
+     * a person.
+     */
+    #[Col(length: 10)]
+    public ?string $type = self::PERSON {
         get => $this->__get__(__PROPERTY__);
         set => $this->__set__(__PROPERTY__, $value);
     }

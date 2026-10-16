@@ -167,6 +167,17 @@ foreach ($var_writeableFolders as $folder => $status) {
     }
 }
 
+// Mail and login: from the instance's config (emailSmtp, Auth\AuthConfig)
+$isDev = defined('STAGE') && str_starts_with((string) STAGE, 'DEV');
+$var_access = array(
+    'mail' => emailSmtp::config() !== null
+        ? array('label' => 'Mail: <b>' . htmlspecialchars((string) emailSmtp::config()['host']) . '</b>', 'status' => 'confirm')
+        : array('label' => $isDev ? 'Mail: no <b>mail</b> block - DEV sends to Mailpit' : 'Mail: no <b>mail</b> block in the config - <b>nothing is sent</b>', 'status' => $isDev ? 'warning' : 'error'),
+    'auth' => \Systopic\System\Auth\AuthConfig::secret() !== null
+        ? array('label' => 'Login codes: <b>auth.secret</b> is set', 'status' => 'confirm')
+        : array('label' => 'Login codes: no <b>auth.secret</b> (32+ characters) - no invitations or codes', 'status' => 'error'),
+);
+
 $needed_extensions = array(
     "mysqlnd",
     "xml",

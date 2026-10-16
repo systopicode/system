@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Systopic\System\Queries\UserLookup;
 
+use Systopic\Db\Schema\Provisioner;
 use Systopic\Db\Scope;
 use Systopic\System\Tables\Users\Model as User;
 
@@ -32,7 +33,11 @@ final class UserLookup
 
     private static function find(Scope $scope, ?int $id, ?string $key, ?string $name): ?User
     {
-        $rows = $scope->rows(__DIR__ . '/UserLookup.sql', ['id' => $id, 'key' => $key, 'name' => $name]);
+        // provisioning: the query names usm_users.user_type (see the .sql)
+        $rows = $scope->rows(
+            __DIR__ . '/UserLookup.sql', ['id' => $id, 'key' => $key, 'name' => $name],
+            provisioner: new Provisioner($scope->connection),
+        );
         /** @var User|null */
         return $rows->first(User::class);
     }

@@ -21,6 +21,13 @@ include_once('actions.php');
                 <li class="<?= $status['status'] ?>"><?= $status['label'] ?></li><br>
             <?php } ?>
         </ul>
+        <br><br><br>
+        <h1>Mail & Login</h1>
+        <ul class="checkSystemEnvironment">
+            <?php foreach ($var_access as $status) { ?>
+                <li class="<?= $status['status'] ?>"><?= $status['label'] ?></li><br>
+            <?php } ?>
+        </ul>
     </div>
 </div>
 <div class='layout'>

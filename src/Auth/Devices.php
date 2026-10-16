@@ -1,0 +1,284 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Systopic\System\Auth;
+
+use DateTimeImmutable;
+use Systopic\Db\Scope;
+use Systopic\System\Queries\Devices\Devices as DeviceQuery;
+use Systopic\System\Tables\Devices\Model as Device;
+use Systopic\System\Tables\Devices\Operator;
+use Systopic\System\Tables\Users\Model as User;
+
+/**
+ * The devices a user is logged in on (`Tables\Devices`), and what keeps them
+ * logged in: a cookie `<device id>.<secret>`, good for long, next to the
+ * PHP session, which is short. When the session is gone, `restore()` logs
+ * the device's user in again, silently.
+ *
+ * While a session lives, `check()` looks at its device now and then: a
+ * device revoked elsewhere (another device, a user admin) ends the session
+ * within `CHECK_EVERY` seconds.
+ */
+final class Devices
+{
+    public const CHECK_EVERY = 60;
+    public const TOUCH_EVERY = 300;
+    public const COOKIE_DAYS = 400;   // the browsers' cap; the row decides
+
+    private const SESSION_KEY = 'systopic_device';
+
+    private static ?Device $current = null;
+
+    /** `__Host-` binds the cookie to this host, https and path / - not possible over http (DEV without TLS). */
+    public static function cookieName(): string
+    {
+        return self::https() ? '__Host-sys_device' : 'sys_device';
+    }
+
+    /**
+     * afterConnect, every request: a session with a device is checked now and
+     * then; without a session, the device cookie logs its user in again.
+     */
+    public static function restore(): void
+    {
+        if (PHP_SAPI === 'cli' || Session::isRecovery()) {
+            return;
+        }
+        try {
+            if (Session::known()) {
+                self::check();
+                return;
+            }
+            [$id, $secret] = self::cookie() ?? [0, ''];
+            if ($id === 0) {
+                return;
+            }
+            $scope = Scope::default();
+            $now = new DateTimeImmutable();
+            $device = DeviceQuery::byId($scope, $id);
+            $verdict = $device === null ? Operator::WRONG : Operator::verdict($device, $secret, $now);
+            if ($verdict === Operator::REUSED) {
+                // a secret replaced more than a minute ago came back: the
+                // cookie was copied - nobody gets in with it any more
+                $scope->save(Operator::revoked($device, 'reuse', $now));
+                error_log("[devices] device $id revoked: a rotated secret came back");
+            }
+            if ($verdict !== Operator::OK && $verdict !== Operator::GRACED) {
+                self::clearCookie();
+                return;
+            }
+            Session::login((int) $device->relationId('user'));
+            if (!Session::known()) {
+                return;
+            }
+            if ($verdict === Operator::OK && Operator::dueForRotation($device, $now)) {
+                $secret = bin2hex(random_bytes(32));
+                Operator::rotated($device, $secret, $now);
+                self::setCookie($device, $secret);
+            }
+            self::remember($device, $now);
+            $scope->save(self::touch($device, $now));
+        } catch (\Throwable $e) {
+            error_log('[devices] restore: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * After a login: a new device for this browser, cookie set. A device the
+     * browser held before (another login on it) is replaced.
+     */
+    public static function issue(User $user, string $client = 'browser'): Device
+    {
+        $scope = Scope::default();
+        $now = new DateTimeImmutable();
+        [$oldId, $oldSecret] = self::cookie() ?? [0, ''];
+        if ($oldId !== 0 && ($old = DeviceQuery::byId($scope, $oldId)) !== null && $old->revokedAt === null
+            && Operator::verdict($old, $oldSecret, $now) !== Operator::WRONG) {
+            $scope->save(Operator::revoked($old, 'replaced', $now));
+        }
+        $secret = bin2hex(random_bytes(32));
+        $userAgent = (string) ($_SERVER['HTTP_USER_AGENT'] ?? '');
+        $device = Operator::issued(
+            $user, $secret, DeviceName::from($userAgent), $client, $userAgent, self::ip(),
+            self::expiresFor($user, $now), $now,
+        );
+        $scope->save($device);
+        self::setCookie($device, $secret);
+        self::remember($device, $now);
+        return $device;
+    }
+
+    /** The device of this request's session, if it has one. */
+    public static function current(): ?Device
+    {
+        if (self::$current !== null) {
+            return self::$current;
+        }
+        $id = (int) (self::session()['id'] ?? 0);
+        return self::$current = $id > 0 ? DeviceQuery::byId(Scope::default(), $id) : null;
+    }
+
+    /** Log this device out: revoked, cookie gone. The session is Session's. */
+    public static function logoutHere(): void
+    {
+        $device = self::current();
+        if ($device !== null && $device->revokedAt === null) {
+            Scope::default()->save(Operator::revoked($device, 'logout', new DateTimeImmutable()));
+        }
+        self::forget();
+        self::clearCookie();
+    }
+
+    /** Revoke one device - from its own list or by a user admin. */
+    public static function revoke(Device $device, string $reason): void
+    {
+        if ($device->revokedAt === null) {
+            Scope::default()->save(Operator::revoked($device, $reason, new DateTimeImmutable()));
+        }
+        if ($device->id === self::current()?->id) {
+            self::forget();
+            self::clearCookie();
+        }
+    }
+
+    /** Every device of a user but `$exceptId` ("log out everywhere else"). */
+    public static function revokeAllOf(int $userId, ?int $exceptId, string $reason): int
+    {
+        $scope = Scope::default();
+        $now = new DateTimeImmutable();
+        $revoked = [];
+        foreach (DeviceQuery::ofUser($scope, $userId) as $device) {
+            if ($device->id !== $exceptId) {
+                $revoked[] = Operator::revoked($device, $reason, $now);
+            }
+        }
+        if ($revoked !== []) {
+            $scope->save(...$revoked);
+        }
+        return count($revoked);
+    }
+
+    /** The page reported whether it runs as an installed web app. */
+    public static function report(bool $standalone): void
+    {
+        $device = self::current();
+        if ($device !== null && $device->client !== ($standalone ? 'app' : 'browser')) {
+            Scope::default()->save(Operator::reported($device, $standalone));
+        }
+    }
+
+    // ------------------------------------------------------------ internal
+
+    /** A live session: is its device still good? Ends the session when not. */
+    private static function check(): void
+    {
+        $state = self::session();
+        $id = (int) ($state['id'] ?? 0);
+        if ($id === 0) {
+            return;   // logged in without a device (CMS, other projects)
+        }
+        $now = new DateTimeImmutable();
+        if ($now->getTimestamp() - (int) ($state['checked'] ?? 0) < self::CHECK_EVERY) {
+            return;
+        }
+        $scope = Scope::default();
+        $device = DeviceQuery::byId($scope, $id);
+        if ($device === null || $device->revokedAt !== null || ($device->expiresAt !== null && $device->expiresAt < $now)) {
+            self::forget();
+            self::clearCookie();
+            Session::logout(false);
+            return;
+        }
+        self::$current = $device;
+        $touch = $now->getTimestamp() - (int) ($state['touched'] ?? 0) >= self::TOUCH_EVERY;
+        self::remember($device, $now, $touch ? null : (int) ($state['touched'] ?? 0));
+        if ($touch) {
+            $scope->save(self::touch($device, $now));
+        }
+    }
+
+    private static function touch(Device $device, DateTimeImmutable $now): Device
+    {
+        $user = Session::current()->user;
+        return Operator::touched($device, self::ip(), $user !== null ? self::expiresFor($user, $now) : $device->expiresAt, $now);
+    }
+
+    private static function expiresFor(User $user, DateTimeImmutable $now): ?DateTimeImmutable
+    {
+        return Operator::expiresAt($user->type, AuthConfig::deviceDays(), AuthConfig::screenDays(), $now);
+    }
+
+    /** @return array{0: int, 1: string}|null the cookie's id and secret */
+    private static function cookie(): ?array
+    {
+        $raw = (string) ($_COOKIE[self::cookieName()] ?? '');
+        if (!preg_match('~^(\d+)\.([0-9a-f]{64})$~', $raw, $m)) {
+            return null;
+        }
+        return [(int) $m[1], $m[2]];
+    }
+
+    private static function setCookie(Device $device, string $secret): void
+    {
+        self::sendCookie($device->id . '.' . $secret, time() + self::COOKIE_DAYS * 86_400);
+    }
+
+    private static function clearCookie(): void
+    {
+        if (isset($_COOKIE[self::cookieName()])) {
+            self::sendCookie('', time() - 3600);
+        }
+    }
+
+    private static function sendCookie(string $value, int $expires): void
+    {
+        if (!headers_sent()) {
+            setcookie(self::cookieName(), $value, [
+                'expires'  => $expires,
+                'path'     => '/',
+                'secure'   => self::https(),
+                'httponly' => true,
+                'samesite' => 'Lax',
+            ]);
+        }
+        if ($value === '') {
+            unset($_COOKIE[self::cookieName()]);
+        } else {
+            $_COOKIE[self::cookieName()] = $value;
+        }
+    }
+
+    /** @return array{id?: int, checked?: int, touched?: int} */
+    private static function session(): array
+    {
+        \http::sessionStartOnce();
+        $state = $_SESSION[self::SESSION_KEY] ?? [];
+        return is_array($state) ? $state : [];
+    }
+
+    private static function remember(Device $device, DateTimeImmutable $now, ?int $touched = null): void
+    {
+        \http::sessionStartOnce();
+        $_SESSION[self::SESSION_KEY] = ['id' => (int) $device->id, 'checked' => $now->getTimestamp(), 'touched' => $touched ?? $now->getTimestamp()];
+        self::$current = $device;
+    }
+
+    private static function forget(): void
+    {
+        \http::sessionStartOnce();
+        unset($_SESSION[self::SESSION_KEY]);
+        self::$current = null;
+    }
+
+    private static function ip(): ?string
+    {
+        return isset($_SERVER['REMOTE_ADDR']) ? (string) $_SERVER['REMOTE_ADDR'] : null;
+    }
+
+    private static function https(): bool
+    {
+        return !empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off';
+    }
+}
