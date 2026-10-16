@@ -11,7 +11,7 @@ switch ($this->action) {
 			: NULL;
 		if ($target !== NULL && !$target->isSuperuser) {
 			$this->parent->child('user')->state->hijackerId = \Systopic\System\Auth\Session::id();
-			\Systopic\System\Auth\Session::logout();
+			\Systopic\System\Auth\Session::logout(false);   // the device stays the superuser's
 			\Systopic\System\Auth\Session::login($target);
 			\http::refresh('./');
 		}

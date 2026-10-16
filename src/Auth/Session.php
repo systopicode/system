@@ -184,8 +184,17 @@ final class Session
         return $user;
     }
 
-    public static function logout(): void
+    /**
+     * Out of the session — and, with `$thisDevice`, out on this device: its
+     * row revoked, its cookie gone, so it is not logged in again by
+     * Devices::restore(). Switching users (hijack and back) and a device
+     * revoked elsewhere pass false.
+     */
+    public static function logout(bool $thisDevice = true): void
     {
+        if ($thisDevice) {
+            Devices::logoutHere();
+        }
         \http::sessionStartOnce();
         unset($_SESSION[self::USER_KEY]);
         self::$current = self::load();

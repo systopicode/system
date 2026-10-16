@@ -41,7 +41,7 @@ switch ($this->action) {
 		if ($this->state->hijackerId) {
 			$hijacker = (int) $this->state->hijackerId;
 			$this->state->hijackerId = NULL;
-			\Systopic\System\Auth\Session::logout();
+			\Systopic\System\Auth\Session::logout(false);   // back to the superuser, same device
 			\Systopic\System\Auth\Session::login($hijacker);
 			\http::refresh('./');
 		}
