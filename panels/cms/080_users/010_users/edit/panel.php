@@ -34,6 +34,17 @@ class Panel extends CmsPanel {
 		get => $this->admin->user($this->user?->createdBy);
 	}
 
+	/** @return list<\Systopic\System\Tables\Devices\Model> the user's devices, not revoked */
+	public array $devices {
+		get => $this->user !== NULL ? \Systopic\System\Queries\Devices\Devices::ofUser($this->scope, (int) $this->user->id) : [];
+	}
+
+	/**
+	 * A code made in this request - shown once, right after the action that
+	 * made it: ['purpose' => …, 'code' => …, 'expires' => ts].
+	 */
+	public ?array $issuedCode = NULL;
+
 	/** Mail the user a fresh activation link; the key must be saved alongside. */
 	function mailActivation(User $user) {
 		$active = \Systopic\System\Auth\Session::current();
