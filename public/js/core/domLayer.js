@@ -233,6 +233,47 @@
 			|| layer.children.some(child => child.holds(node));
 
 		/**
+		 * Where a replaced node was scrolled to. The new tree has the same
+		 * element nesting (a list inside .appEventsScroll, the box itself
+		 * stays the second child of its section), so the path of child
+		 * indices still finds it. A container on the way to the focused
+		 * element is kept anyway and already holds its position.
+		 */
+		layer.scrollOffsets = () => {
+			var offsets = [];
+			var walk = (node, path) => {
+				if (!node || node.nodeType !== 1) {
+					return;
+				}
+				if (node.scrollTop || node.scrollLeft) {
+					offsets.push({path: path.slice(), top: node.scrollTop, left: node.scrollLeft});
+				}
+				var children = node.children;
+				for (var i = 0; i < children.length; i++) {
+					path.push(i);
+					walk(children[i], path);
+					path.pop();
+				}
+			};
+			layer.rootNodes.forEach((node, index) => walk(node, [index]));
+			return offsets;
+		};
+
+		layer.applyScrollOffsets = offsets => {
+			offsets.forEach(offset => {
+				var node = layer.rootNodes[offset.path[0]];
+				for (var i = 1; node && i < offset.path.length; i++) {
+					node = node.children[offset.path[i]];
+				}
+				if (!node) {
+					return;
+				}
+				node.scrollTop = offset.top;
+				node.scrollLeft = offset.left;
+			});
+		};
+
+		/**
 		 * The layer anew from the server's html, its children included - for a
 		 * layer that is 'new' or 'update', or whose children no longer match.
 		 * With the focused element inside it, the new dom is built away from
@@ -241,6 +282,7 @@
 		 */
 		layer.rebuild = layerData => {
 			var focused = focusPath.focused();
+			var offsets = layer.scrollOffsets();
 			if (!focused || !layer.holds(focused)) {
 				var positionNode = layer.shiftOutRootNodes();
 				layer.createDomObjects(layerData);
@@ -250,12 +292,13 @@
 				layer.children.forEach(child => child.removeRootNodes());
 				layer.children = [];
 				layer.createChildren(layerData);
+				layer.applyScrollOffsets(offsets);
 				return;
 			}
-			layer.rebuildAround(focused, layerData);
+			layer.rebuildAround(focused, layerData, offsets);
 		};
 
-		layer.rebuildAround = (focused, layerData) => {
+		layer.rebuildAround = (focused, layerData, offsets) => {
 			var positionNode = layer.shiftOutRootNodes();
 			var oldNodes = [];
 			var collect = old => {
@@ -311,6 +354,7 @@
 
 			sys.initEvents($(fresh), undefined, kept ? kept.chain : null);
 			built.forEach(each => each.runScripts());
+			layer.applyScrollOffsets(offsets || []);
 		};
 
 		/** References to the new nodes that were dropped for kept ones. */
