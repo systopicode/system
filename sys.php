@@ -38,6 +38,9 @@ class sys
 			if (fs::$projectRoot) {
 				p()->addPath((string) fs::$projectRoot, 'project');
 			}
+		} else {
+			// no debug tool here: the helpers everything calls, doing nothing
+			include __DIR__ . '/lib/debug.absent.php';
 		}
 		// p('hallo sys:init');
 		// client::addJsSettings(sys::getCoreJsSettings()); // (modules not built yet)

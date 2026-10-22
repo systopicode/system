@@ -1,0 +1,8 @@
+# Written by systopic/system (bin/scaffold.php) on every composer install and
+# update - do not edit.
+#
+# Allow Apache to follow symlinks in this directory tree.
+# Required on servers where vendor/systopic/system/ is a symlink
+# (e.g. to a shared /packages/system/ directory): without this,
+# Apache returns 403 for all assets served from vendor/systopic/system/public/.
+Options +SymLinksIfOwnerMatch

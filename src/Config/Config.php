@@ -99,7 +99,11 @@ final class Config
     {
         [$data, $files] = self::load($configDir);
         if ($files === []) {
-            throw new RuntimeException("config: no config.json in '$configDir'");
+            throw new NotConfigured(
+                "config: no config.json in '$configDir'",
+                NotConfigured::NO_CONFIG,
+                Instance::requestFacts($server, $projectDir),
+            );
         }
         $local = self::readLocal($configDir);
         if ($local !== []) {

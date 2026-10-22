@@ -50,6 +50,16 @@ defined('PUBLIC_PAGE_NAME') || define('PUBLIC_PAGE_NAME', 'fluxo cms');
 defined('PUBLIC_PAGE_TITLE') || define('PUBLIC_PAGE_TITLE', 'fluxo cms');
 defined('PUBLIC_PAGE_DESCRIPTION') || define('PUBLIC_PAGE_DESCRIPTION', 'fluxo cms');
 defined('PUBLIC_PAGE_KEYWORDS') || define('PUBLIC_PAGE_KEYWORDS', 'fluxo cms');
+// what settings.php used to have to define - a project without one, or one
+// that leaves something out, still runs. Defined only where missing.
+defined('PUBLIC_APP_NAME') || define('PUBLIC_APP_NAME', PUBLIC_PAGE_NAME);
+defined('PAGE_TITLE_SEPERATOR') || define('PAGE_TITLE_SEPERATOR', '|');
+defined('META_AUTHOR') || define('META_AUTHOR', '');
+defined('META_KEYWORDS') || define('META_KEYWORDS', '');
+defined('META_DESCRIPTION') || define('META_DESCRIPTION', '');
+defined('META_PAGE_TOPIC') || define('META_PAGE_TOPIC', '');
+defined('META_ROBOTS') || define('META_ROBOTS', 'index, follow');
+defined('DEFAULT_LANG') || define('DEFAULT_LANG', 'de');
 defined('PUBLIC_PAGE_AUTHOR') || define('PUBLIC_PAGE_AUTHOR', 'fluxo cms');
 defined('PUBLIC_PAGE_COPYRIGHT') || define('PUBLIC_PAGE_COPYRIGHT', 'fluxo cms');
 scripttime('post includes pre DB');
@@ -309,5 +319,15 @@ if (isset($mode)) {
 	\Systopic\System\Sys\Hooks\Hooks::emit('beforeDispatch', $mode);
 	include $_entry;
 } else {
+	// nobody answers - a frontend may say why (a fresh site without pages)
+	foreach (\Systopic\System\Sys\Packages::frontends() as $_frontend) {
+		$_notFound = $_frontend->notFound();
+		if ($_notFound !== null) {
+			logroute('include', basename($_notFound));
+			include $_notFound;
+			break;
+		}
+	}
+	unset($_frontend, $_notFound);
 	logroute('include', 'nothing');
 }

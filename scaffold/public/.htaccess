@@ -1,0 +1,204 @@
+############################################
+# Written by systopic/system (bin/scaffold.php) on every composer install
+# and update - the template is vendor/systopic/system/scaffold/public/.htaccess.
+# Do not edit here: changes go into the template, rules of this project only
+# between the "project" markers below - that block is kept.
+############################################
+############################################
+# SEO & SECURITY HEADERS
+############################################
+<IfModule mod_headers.c>
+  # Basisschutz
+  Header always append X-Frame-Options SAMEORIGIN
+  Header set X-Content-Type-Options nosniff
+  Header set X-XSS-Protection "1; mode=block"
+
+  # HSTS (nur über HTTPS aktiv)
+  Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains" env=HTTPS
+
+  # Referrer-Policy & Permissions-Policy
+  Header set Referrer-Policy "strict-origin-when-cross-origin"
+  Header set Permissions-Policy "geolocation=(), microphone=(), camera=(), autoplay=(*), fullscreen=(*), payment=()"
+
+  # CORS für Schriften
+  <FilesMatch "\.(?:ttf|otf|eot|woff|woff2)$">
+    Header set Access-Control-Allow-Origin "*"
+  </FilesMatch>
+
+  # Optional: zuerst als Report-Only testen
+  # Header set Content-Security-Policy-Report-Only "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.googletagmanager.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self'; frame-src 'self'; base-uri 'self'; form-action 'self'"
+</IfModule>
+
+############################################
+# MIME TYPES & DEFAULTS
+############################################
+AddDefaultCharset utf-8
+AddType image/svg+xml             svg svgz
+AddType font/ttf                  ttf
+AddType font/otf                  otf
+AddType font/woff                 woff
+AddType font/woff2                woff2
+AddType text/javascript           mjs
+AddType application/vnd.sketchup.skp  skp
+AddType text/vcard                vcf
+AddEncoding gzip .svgz
+
+############################################
+# KOMPRESSION (Brotli/Gzip)
+############################################
+<IfModule mod_brotli.c>
+  AddOutputFilterByType BROTLI_COMPRESS text/plain text/html text/css text/javascript application/javascript application/json application/xml image/svg+xml
+</IfModule>
+
+<IfModule mod_deflate.c>
+  AddOutputFilterByType DEFLATE text/plain text/html text/xml text/css text/javascript application/javascript application/json application/xml image/svg+xml
+  # Bereits komprimierte Typen NICHT gzippen
+  SetEnvIfNoCase Request_URI "\.(?:gif|jpe?g|png|webp|svgz|woff2)$" no-gzip
+</IfModule>
+
+############################################
+# BROWSER CACHING
+############################################
+<IfModule mod_expires.c>
+  ExpiresActive On
+
+  # Statische Assets – lange cachen
+  ExpiresByType text/css                       "access plus 1 year"
+  ExpiresByType text/javascript                "access plus 1 year"
+  ExpiresByType application/javascript         "access plus 1 year"
+  ExpiresByType application/json               "access plus 1 year"
+
+  ExpiresByType image/gif                      "access plus 1 year"
+  ExpiresByType image/png                      "access plus 1 year"
+  ExpiresByType image/jpg                      "access plus 1 year"
+  ExpiresByType image/jpeg                     "access plus 1 year"
+  ExpiresByType image/webp                     "access plus 1 year"
+  ExpiresByType image/svg+xml                  "access plus 1 year"
+  ExpiresByType image/x-icon                   "access plus 1 year"
+
+  ExpiresByType font/ttf                       "access plus 1 year"
+  ExpiresByType font/otf                       "access plus 1 year"
+  ExpiresByType font/woff                      "access plus 1 year"
+  ExpiresByType font/woff2                     "access plus 1 year"
+
+  # HTML frisch halten
+  ExpiresByType text/html                      "access plus 0 seconds"
+</IfModule>
+
+<IfModule mod_headers.c>
+  # Lange TTL + immutable für versionierte Assets
+  <FilesMatch "\.(?:css|js|gif|png|jpe?g|webp|svg|ico|ttf|otf|woff2?)$">
+    Header set Cache-Control "public, max-age=31536000, immutable"
+  </FilesMatch>
+
+  # HTML/PHP nicht cachen
+  <FilesMatch "\.(?:html?|php)$">
+    Header set Cache-Control "no-cache, no-store, must-revalidate"
+    Header set Pragma "no-cache"
+    Header set Expires "0"
+  </FilesMatch>
+
+  # ETag entrümpeln (optional)
+  Header unset ETag
+</IfModule>
+FileETag None
+
+############################################
+# SERVER-OPTIONEN
+############################################
+Options -MultiViews
+Options -Indexes
+ServerSignature Off
+
+############################################
+# GENERISCHE REDIRECTS: HTTPS & KANONISCHER HOST
+############################################
+RewriteEngine On
+
+# 1) IMMER HTTPS (generisch)
+RewriteCond %{HTTPS} !=on
+RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [R=301,L]
+
+# 2) non-www bevorzugen (generisch, keine Domain nötig)
+#    Wenn Host mit "www." beginnt → auf Apex umleiten
+RewriteCond %{HTTP_HOST} ^www\.(.+)$ [NC]
+RewriteRule ^ https://%1%{REQUEST_URI} [R=301,L]
+
+# --- ALTERNATIVE: www bevorzugen (generisch) ---
+# Nur aktivieren, wenn du www willst; obenstehenden Block dann auskommentieren.
+# Leitet NUR die Apex-Domain (ohne Subdomain) auf www. um, Subdomains bleiben unberührt.
+# RewriteCond %{HTTP_HOST} !^www\. [NC]
+# RewriteCond %{HTTP_HOST} ^([^.]+)\.([^.]+)$ [NC]
+# RewriteRule ^ https://www.%{HTTP_HOST}%{REQUEST_URI} [R=301,L]
+# ------------------------------------------------
+
+############################################
+# SCHUTZ SENSIBLER DATEIEN
+############################################
+<FilesMatch "(^\.|\.env|composer\.(json|lock)|package(-lock)?\.json|yarn\.lock|phpunit\.xml(\.dist)?|\.gitignore|\.htaccess|\.htpasswd)$">
+  Require all denied
+</FilesMatch>
+
+# TRACE/TRACK verbieten
+RewriteCond %{REQUEST_METHOD} ^(TRACE|TRACK)$ [NC]
+RewriteRule .* - [F]
+
+############################################
+# PROJECT RULES - kept when the file is written again
+############################################
+# >>> project
+# <<< project
+############################################
+# BESTEHENDE REWRITES & AUSNAHMEN
+############################################
+# Zulassen von .well-known
+RewriteRule ^\.well-known/.+ - [END]
+
+## bypass external folders e.g. __prototype
+RewriteRule ^__* - [L,QSA]
+RewriteRule ^sync.php$ - [L,QSA]
+
+## assets of the system, the packages and the project outside public/
+## (SYS/.cursor/plans/asset-delivery.plan.md): a published copy is sent as
+## it is, anything else goes to asset.php (serves it, and in mode publish
+## copies it here)
+RewriteCond %{REQUEST_FILENAME} -f
+RewriteRule ^assets/ - [END]
+RewriteRule ^assets/ asset.php [END]
+
+RewriteRule ^robots.txt$ - [L,QSA]
+RewriteRule ^sitemap.xml index.php [NC,QSA,L]
+RewriteRule ^lib/cronjobs.php - [L,QSA]
+RewriteRule ^css/x_responsive.(css|php) css/x_responsive.php [L,QSA]
+
+
+######################## media files handling ########################
+# Nur definierte Dateitypen direkt aus /var/ erlauben, Rest verbieten
+RewriteCond %{REQUEST_URI} !^.*\.(ico|jpe?g|svg|png|gif|mp4|webm|pdf|doc|docx|vcf|tif|css|js|mjs|zip|log|ics|json|otf|woff|woff2|webp|xml|skp)$ [NC]
+RewriteRule ^var/ - [F]
+
+# Existierende Medien direkt senden (wenn kein Rebuild)
+RewriteCond %{REQUEST_FILENAME} -f
+RewriteCond %{QUERY_STRING} !noheader
+RewriteCond %{QUERY_STRING} !updateMediaCrop
+RewriteCond %{QUERY_STRING} !rebuild
+RewriteRule ^(var/|img/|fonts/) - [NC,L]
+
+# Module-Assets direkt senden
+RewriteCond %{REQUEST_FILENAME} -f
+RewriteRule ^system/modules/ - [NC,L]
+
+######################## public ######################################
+# Statische Dateien whitelisten (ohne PHP)
+RewriteRule ^(system/|overrides/|)(css/|fonts/|img/|js/|modules/|class/|var/).*\.(css|js|mjs|ttf|woff2|woff|otf|svg)$ - [L]
+
+# Valide Requests ans Script
+RewriteRule ^[a-z0-9/_\-\&=\.~]*$ index.php [NC,QSA,L]
+
+######################## catch htaccess LOOP #########################
+RewriteCond %{ENV:REDIRECT_STATUS} 200
+RewriteCond %{QUERY_STRING} ^[a-z0-9/_\-\&=\.~?]*$ [NC]
+RewriteRule ^index\.php$ - [NC,L]
+
+## all not catched calls: deny
+RewriteRule .* - [F]

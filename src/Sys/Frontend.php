@@ -26,4 +26,11 @@ interface Frontend
 
     /** It serves the request: last preparations, returns the entry file to include. */
     public function dispatch(): string;
+
+    /**
+     * Nothing answered — no panel, no frontend claimed it, no app root: a
+     * file to include that says so, or NULL to stay silent (systopic/cms:
+     * "this site has no pages yet" for a fresh site).
+     */
+    public function notFound(): ?string;
 }

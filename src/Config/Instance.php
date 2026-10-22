@@ -66,7 +66,11 @@ final class Instance
     public static function select(array $instances, array $server, string $projectDir, ?string $pinned): self
     {
         if ($instances === []) {
-            throw new RuntimeException('config: no instances defined in config.json');
+            throw new NotConfigured(
+                'config: no instances defined in config.json',
+                NotConfigured::NO_INSTANCES,
+                self::facts($server, $projectDir),
+            );
         }
         foreach ($instances as $name => $entry) {
             if (isset($entry['match'])) {
@@ -98,16 +102,56 @@ final class Instance
 
         foreach ($instances as $name => $entry) {
             if (!empty($entry['default'])) {
+                // The default is LIVE: an installation nobody described.
+                // A browser on a local address (an IP, localhost, *.local,
+                // *.test) is a dev machine without a file of its own — on
+                // the default it would run on the live database. It gets
+                // the setup page instead. Never on the CLI: a cron job on a
+                // live server can well see a private socket ip.
+                if (PHP_SAPI !== 'cli' && self::isLocalHost($server)) {
+                    throw new NotConfigured(
+                        "config: no instance matches this local request — refusing the default '$name'",
+                        NotConfigured::LOCAL_DEFAULT,
+                        $facts,
+                        (string) $name,
+                    );
+                }
                 $instance = self::of((string) $name, $entry);
                 $instance->matchedBy = 'default';
                 return $instance;
             }
         }
 
-        throw new RuntimeException(
+        throw new NotConfigured(
             'config: no instance matches this request and none is marked default. Facts: '
-            . json_encode($facts, JSON_UNESCAPED_SLASHES)
+            . json_encode($facts, JSON_UNESCAPED_SLASHES),
+            NotConfigured::NO_MATCH,
+            $facts,
         );
+    }
+
+    /**
+     * Was this request addressed the way only a dev machine is — by an IP,
+     * localhost, or a *.local / *.test / *.localhost name? A live site is
+     * always called by its domain.
+     */
+    public static function isLocalHost(array $server): bool
+    {
+        $host = strtolower(trim((string) ($server['HTTP_HOST'] ?? $server['SERVER_NAME'] ?? '')));
+        $host = preg_replace('~:\d+$~', '', $host) ?? $host;
+        $host = trim($host, '[]'); // an IPv6 literal
+        if ($host === '') {
+            return false;
+        }
+        return filter_var($host, FILTER_VALIDATE_IP) !== false
+            || $host === 'localhost'
+            || (bool) preg_match('~\.(local|test|localhost)$~', $host);
+    }
+
+    /** what selection saw of the request - for the setup page */
+    public static function requestFacts(array $server, string $projectDir): array
+    {
+        return self::facts($server, $projectDir);
     }
 
     /** The site the matched rule names — null: the default site. */
