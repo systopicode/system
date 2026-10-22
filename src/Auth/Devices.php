@@ -34,7 +34,10 @@ final class Devices
     /** `__Host-` binds the cookie to this host, https and path / - not possible over http (DEV without TLS). */
     public static function cookieName(): string
     {
-        return self::https() ? '__Host-sys_device' : 'sys_device';
+        // __Host- needs the path /, so projects under paths of one host
+        // tell their cookies apart by name (see http::projectCookieKey())
+        $key = \http::projectCookieKey();
+        return (self::https() ? '__Host-sys_device' : 'sys_device') . ($key === null ? '' : '_' . $key);
     }
 
     /**

@@ -82,6 +82,16 @@ if (DB_NAME !== '') {
 			d("PDO misses MySQL Driver - plaese run: sudo apt install php-mysql");
 		}
 		\Systopic\System\Auth\Session::recover();
+		if (!\Systopic\System\Auth\Session::isRecovery()) {
+			// only who may set up gets the recovery user — for everyone else
+			// the site is down, not open
+			if (!headers_sent()) {
+				http_response_code(503);
+				header('Retry-After: 120');
+				header('Cache-Control: no-store');
+			}
+			exit('Service temporarily unavailable');
+		}
 	}
 } else {
 	// d('no database name set');

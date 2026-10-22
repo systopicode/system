@@ -17,6 +17,10 @@ $backupdirpathNative = fs::toNative($backupdirpath);
 
 switch ($this->action) {
 	case 'createTaskList':
+		if ($this->backupName(http::get('name')) === null) {
+			message::error("no such backup.");
+			break;
+		}
 		clearstatcache();
 		fsDir::get($tmpdirpath)->unlink(TRUE);
 		clearstatcache();
@@ -121,6 +125,8 @@ switch ($this->action) {
 
 		$this->updateView('lightbox');
 		if (\Systopic\System\Auth\Session::isRecovery()) {
+			// the installation has its accounts now: the setup link is spent
+			\Systopic\System\Setup\Setup::spendToken(fs::toNative((string) fs::$projectRoot));
 			message::confirm("Restore Complete - please type your credentials to log in!");
 			http::redirect(http::$root . 'cms/logout');
 		} else {

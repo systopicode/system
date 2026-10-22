@@ -4,15 +4,14 @@
 
 switch ($this->action) {
 	case "remove":
-		$filename = http::get('name');
-		if (preg_match('~[a-z0-9\-_]~i', $filename)) {
-			$fileindex = 0;
+		// the first part, <base>-0.zip: removed with every part after it
+		$filename = (string) $this->backupName(http::get('name'));
+		if (str_ends_with($filename, '-0.zip')) {
 			$basefilname = substr($filename, 0, -5);
-			$spanfilename = fs::$siteRoot . 'var/backups/' . $basefilname . $fileindex . '.zip';
-			while (fs::isFile($spanfilename)) {
+			for ($fileindex = 0; fs::isFile($spanfilename = fs::$siteRoot . 'var/backups/' . $basefilname . $fileindex . '.zip'); $fileindex++) {
 				if (fs::unlinkFile($spanfilename)) {
 					message::info("file '$basefilname$fileindex' removed.\n");
-				};
+				}
 			}
 		}
 		$this->backupfilestable = $this->getBackupfilestable($this->backupdirpath);

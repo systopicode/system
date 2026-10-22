@@ -6,6 +6,7 @@ namespace Systopic\System\Auth;
 
 use Systopic\Db\Scope;
 use Systopic\System\Queries\UserLookup\UserLookup;
+use Systopic\System\Setup\Setup;
 use Systopic\System\Tables\Users\Model as User;
 
 /**
@@ -24,13 +25,19 @@ use Systopic\System\Tables\Users\Model as User;
  * `systopic_user_state`): sessions open at the switch stay logged in.
  *
  * Who it is, in this order: the user of the session, `AUTOLOGON_ID` (CLI, DEV),
- * nobody. When the users table is not there (an empty database, before a
- * restore) the request runs as the recovery user with the role `restore`.
+ * nobody. When the database has no account (no users table, or no row but
+ * the system's own user 1 — an empty database before a restore) the request
+ * runs as the recovery user with the role `restore`; so it does when the
+ * database is not reachable, with the role `recovery`. Either only for whoever
+ * may set the installation up (Setup::trusts(): a local request, or the setup
+ * token) — anyone else is nobody, and a database that is down answers 503
+ * (loader.php).
  */
 final class Session
 {
     private const USER_KEY = 'systopic_user_id';
     private const STATE_KEY = 'systopic_user_state';
+    private const RECOVERY_KEY = 'systopic_recovery';
 
     private static ?Identity $current = null;
     private static ?object $state = null;
@@ -200,11 +207,36 @@ final class Session
         self::$current = self::load();
     }
 
-    /** The recovery user — no database, or a restore under way. @param list<string>|null $roles */
+    /**
+     * The database is not reachable: the recovery user — or nobody, for a
+     * request that may not set up (isRecovery() tells). @param list<string>|null $roles
+     */
     public static function recover(?array $roles = null): Identity
     {
         // a scope that never connects: the recovery user reads nothing
-        return self::$current = Identity::recovery(new Scope(), $roles ?? ['recovery']);
+        return self::$current = self::recoveryOrNobody(new Scope(), $roles ?? ['recovery']);
+    }
+
+    /**
+     * May this request be the recovery user? Whoever may set up (Setup::trusts)
+     * — remembered in the session, the token comes with the first url only.
+     * The CLI is always local.
+     */
+    public static function recoveryTrusted(): bool
+    {
+        if (PHP_SAPI === 'cli') {
+            return true;
+        }
+        \http::sessionStartOnce();
+        if (!empty($_SESSION[self::RECOVERY_KEY])) {
+            return true;
+        }
+        $given = (string) ($_POST['setup'] ?? $_GET['setup'] ?? '');
+        if (\fs::$projectRoot === null || !Setup::trusts(\fs::toNative((string) \fs::$projectRoot), $_SERVER, $given)) {
+            return false;
+        }
+        $_SESSION[self::RECOVERY_KEY] = true;
+        return true;
     }
 
     // ------------------------------------------------------------ state
@@ -240,7 +272,11 @@ final class Session
     {
         \http::sessionStartOnce();
         if (!\Systopic\Db\Connection::isOpen()) {
-            return Identity::recovery(new Scope(), ['restore']);
+            // an app without a database (DB_NAME '') has nothing to restore
+            // and runs as the recovery user, as it always did
+            return defined('DB_NAME') && DB_NAME !== ''
+                ? self::recoveryOrNobody(new Scope())
+                : Identity::recovery(new Scope(), ['restore']);
         }
         $scope = Scope::default();
         $id = (int) ($_SESSION[self::USER_KEY] ?? 0);
@@ -248,19 +284,25 @@ final class Session
             $id = (int) AUTOLOGON_ID;
         }
         try {
-            if ($id > 0) {
-                $user = UserLookup::byId($scope, $id);
-                return $user === null ? Identity::anonymous($scope) : new Identity($scope, $user);
+            if ($id > 0 && ($user = UserLookup::byId($scope, $id)) !== null) {
+                return new Identity($scope, $user);
             }
-            // nobody logged in: is there a users table at all? (empty database → restore)
-            $scope->connection->run('SELECT 1 FROM ' . \Systopic\Db\Schema\Schema::tableNameOf(User::class) . ' LIMIT 0');
-            return Identity::anonymous($scope);
+            // nobody logged in: is there an account at all? Asked by row, not
+            // by table — a lookup with the provisioner creates usm_users empty.
+            $any = $scope->connection->value('SELECT 1 FROM ' . \Systopic\Db\Schema\Schema::tableNameOf(User::class) . ' WHERE user_id > 1 LIMIT 1');
+            return $any === null ? self::recoveryOrNobody($scope) : Identity::anonymous($scope);
         } catch (\PDOException $e) {
             if (($e->errorInfo[1] ?? null) === 1146) {   // table missing
-                return Identity::recovery($scope, ['restore']);
+                return self::recoveryOrNobody($scope);
             }
             throw $e;
         }
+    }
+
+    /** @param list<string> $roles */
+    private static function recoveryOrNobody(Scope $scope, array $roles = ['restore']): Identity
+    {
+        return self::recoveryTrusted() ? Identity::recovery($scope, $roles) : Identity::anonymous($scope);
     }
 
     /** @param list<int> $groupIds */

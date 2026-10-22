@@ -593,6 +593,17 @@ class http implements \Systopic\System\Client\Contracts\PreloadsClientScript
 		session_write_close();
 	}
 
+	/**
+	 * What tells this project's cookies from those of the other projects on
+	 * the same host — null when it is at the host's root, where it has the
+	 * host's cookies to itself (and every name stays as it was).
+	 */
+	static function projectCookieKey(): ?string
+	{
+		$root = (string) self::$root;
+		return $root === '' || $root === '/' ? null : substr(md5($root), 0, 10);
+	}
+
 	static function sessionResume()
 	{
 		self::sessionStartOnce();
@@ -610,6 +621,12 @@ class http implements \Systopic\System\Client\Contracts\PreloadsClientScript
 			// the session cookie: never for JS, never over plain http when the
 			// request came by https, not sent along by other sites' requests
 			$cookie = session_get_cookie_params();
+			// one session per project: projects under paths of one host (DEV)
+			// must not share a login. At the host's root nothing changes.
+			if (PHP_SAPI !== 'cli' && ($key = self::projectCookieKey()) !== null) {
+				session_name('SID' . $key);
+				$cookie['path'] = self::$root;
+			}
 			session_set_cookie_params([
 				'lifetime' => $cookie['lifetime'],
 				'path'     => $cookie['path'],

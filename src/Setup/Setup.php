@@ -139,21 +139,41 @@ final class Setup
         @unlink($this->root . '/' . self::ACCOUNT_FILE);
     }
 
-    /** a local request, or the token from var/setup.token */
     private function allowed(): bool
     {
-        $token = $this->token();
-        $given = (string) ($_POST['setup'] ?? $_GET['setup'] ?? '');
+        return self::trusts($this->root, $this->server, (string) ($_POST['setup'] ?? $_GET['setup'] ?? ''));
+    }
+
+    /**
+     * May this request set the installation up — or, before its first
+     * account, restore a backup as the recovery user (Auth\Session)? A local
+     * request (an IP / localhost / *.local / *.test host and a private
+     * client address), or one that brings the token of var/setup.token.
+     */
+    public static function trusts(string $projectRoot, array $server, string $given): bool
+    {
+        $token = self::tokenIn($projectRoot);
         if ($token !== null && $given !== '' && hash_equals($token, $given)) {
             return true;
         }
-        $client = (string) ($this->server['REMOTE_ADDR'] ?? '');
-        return Instance::isLocalHost($this->server) && self::isPrivateIp($client);
+        $client = (string) ($server['REMOTE_ADDR'] ?? '');
+        return Instance::isLocalHost($server) && self::isPrivateIp($client);
+    }
+
+    /** the backup is in: the link the setup left for the recovery user is spent */
+    public static function spendToken(string $projectRoot): void
+    {
+        @unlink(rtrim(str_replace('\\', '/', $projectRoot), '/') . '/' . self::TOKEN_FILE);
     }
 
     private function token(): ?string
     {
-        $file = $this->root . '/' . self::TOKEN_FILE;
+        return self::tokenIn($this->root);
+    }
+
+    private static function tokenIn(string $projectRoot): ?string
+    {
+        $file = rtrim(str_replace('\\', '/', $projectRoot), '/') . '/' . self::TOKEN_FILE;
         $token = is_file($file) ? trim((string) file_get_contents($file)) : '';
         return $token === '' ? null : $token;
     }
@@ -179,10 +199,13 @@ final class Setup
         $root = $this->urlRoot() . '/';
         $more = $step === 'project' || ($step === 'database' && self::accountPending($this->root));
         $token = $this->token();
+        $withToken = $token !== null && isset($_POST['setup']);
         $url = match (true) {
-            $more && $token !== null && isset($_POST['setup']) => $root . '?setup=' . rawurlencode($token),
+            $more && $withToken                                 => $root . '?setup=' . rawurlencode($token),
             $more                                               => $root,
-            $step === 'account' && empty($_POST['skip'])         => $root . 'cms/',
+            // skipped: on to the recovery user, who needs the token as well
+            $step === 'account' && $withToken && !empty($_POST['skip']) => $root . 'cms/?setup=' . rawurlencode($token),
+            $step === 'account'                                 => $root . 'cms/',
             default                                             => $root,
         };
         header('Location: ' . $url, true, 303);
@@ -530,12 +553,13 @@ final class Setup
      * The first account of the installation, a superuser — what cms/auth/root
      * does, but that panel cannot be reached here: without a users table the
      * cms runs in recovery mode and offers only to restore a backup. Which is
-     * the other way out, hence "skip".
+     * the other way out, hence "skip". The token stays for it: the recovery
+     * user is whoever may set up (trusts()), the restore spends it.
      */
     private function saveAccount(): bool
     {
         if (!empty($_POST['skip'])) {
-            $this->finish();
+            @unlink($this->root . '/' . self::ACCOUNT_FILE);
             return true;
         }
         $name     = trim((string) ($_POST['name'] ?? ''));

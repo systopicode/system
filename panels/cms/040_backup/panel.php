@@ -35,6 +35,29 @@ class Panel extends CmsPanel
 		return \Systopic\System\Auth\Session::hasOneRole('editor');
 	}
 
+	/** The panel is open to editors and the recovery user — its actions are not. */
+	public function actionGranted($action = null)
+	{
+		if ($this->name !== 'backup') {
+			return parent::actionGranted($action);
+		}
+		return match ($action) {
+			'remove', 'clearTempdirs' => \Systopic\System\Auth\Session::hasRole('admin'),
+			'createDatabase'          => \Systopic\System\Auth\Session::hasRole('recovery') && \Systopic\System\Auth\Session::isRecovery(),
+			default                   => parent::actionGranted($action),
+		};
+	}
+
+	/**
+	 * A backup's name as the table links it — a file name in var/backups/,
+	 * never a path. null when it is not one.
+	 */
+	public static function backupName(mixed $name): ?string
+	{
+		$name = (string) $name;
+		return preg_match('~^[\w.-]+$~', $name) && !str_contains($name, '..') ? $name : null;
+	}
+
 	function onLoadThisClass(): void
 	{
 		$this->backupdirpath        = \fs::$siteRoot . 'var/backups/';
