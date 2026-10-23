@@ -41,6 +41,34 @@ class shellBinary {
 				return $line;
 			}
 		}
+		return self::searchPath($name, $isWindows);
+	}
+
+	/**
+	 * The PATH as PHP sees it, searched by hand.
+	 *
+	 * Under FastCGI (mod_fcgid, Windows) getenv('PATH') is the variable the
+	 * request was handed, but a child process - `where`, the tool itself -
+	 * inherits the web server's own environment. A tool installed after the
+	 * server started is in the first and missing from the second: `where`
+	 * finds nothing, the full path runs fine (2026-10-23, ImageMagick).
+	 * The full path is what this returns, so the child's PATH no longer matters.
+	 */
+	private static function searchPath(string $name, bool $isWindows): ?string {
+		$extensions = $isWindows ? ['.exe', '.bat', '.cmd', '.com'] : [''];
+		foreach (explode(PATH_SEPARATOR, (string) getenv('PATH')) as $dir) {
+			$dir = rtrim(trim($dir, " \"'"), '/\\');
+			if ($dir === '') {
+				continue;
+			}
+			foreach ($extensions as $extension) {
+				$candidate = $dir . DIRECTORY_SEPARATOR . $name . $extension;
+				// @: a PATH entry may sit outside open_basedir
+				if (@is_file($candidate)) {
+					return $candidate;
+				}
+			}
+		}
 		return NULL;
 	}
 }

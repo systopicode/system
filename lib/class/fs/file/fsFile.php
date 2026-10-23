@@ -208,12 +208,16 @@ class fsFile
 		return $this->operators->getOperator($name);
 	}
 
-	function convertTo(string $format, ?string $operator = null): fsFileOperator
+	/**
+	 * The first of the named operators that does $job - see
+	 * fsFileOperators::firstOperator(). NULL when none did;
+	 * $file->operators->lastError says why for each.
+	 *
+	 *   $file->firstOperator(['magick', 'imagick'], fn($op) => $op->setMegapixels(2)->render('png'));
+	 */
+	function firstOperator(array $names, callable $job): ?fsFileOperator
 	{
-		$operatorName = $operator ?? fsFileOperators::findOperatorFor($this->extension, $format);
-		$op = $this->getOperator($operatorName);
-		$op->render($format);
-		return $op;
+		return $this->operators->firstOperator($names, $job);
 	}
 
 	function unvalidate()

@@ -55,23 +55,33 @@ class mediaImage {
 	}
 
 	/**
-	 * A still from a video, as jpeg bytes.
+	 * The alias of a source: one raster at the alias megapixels, which every
+	 * format is cut from. The file operators make it; which one depends on
+	 * the source, and the order is decided here, with the reason:
 	 *
-	 * fsFileOperator_ffmpeg pipes the frame straight out of ffmpeg, so nothing
-	 * is written on the way - Imagick reads the blob below. The operator is
-	 * destroyed right after: the frame is needed once, for the alias.
+	 *  - video: a still from ffmpeg, scaled by ffmpeg
+	 *  - pages (pdf …): magick first - its own process, so a broken or huge
+	 *    upload cannot take the PHP worker down - the imagick extension as
+	 *    fallback; both rasterize at the density that gives the megapixels
+	 *  - pixel images: imagick reads and resamples (sinc filter, as before)
+	 *
+	 * PNG between operator and mediaImage: lossless, keeps transparency.
+	 * The caller destroys the operator once it has read the result.
 	 */
-	protected static function extractVideoFrame($videoPath, &$msg): ?string {
-		/** @var fsFileOperator_ffmpeg $operator */
-		$operator = fsFile::get($videoPath)->getOperator('ffmpeg');
-		$operator->render('jpg');
-		$blob = $operator->hasResult() ? $operator->getContents() : null;
-		if ($blob === null) {
-			$msg .= 'no video frame: ' . $operator->lastError;
+	protected static function renderAlias(string $originalPath, float $megapixels, string $type, bool $isVideo, string $msg): fsFileOperator {
+		$source = fsFile::get($originalPath);
+		$operator = match (true) {
+			$isVideo => $source->firstOperator(['ffmpeg'],
+					fn($op) => $op->setMegapixels($megapixels)->render('png')),
+			in_array($type, fsFileOperator::PAGE_FORMATS, true) => $source->firstOperator(['magick', 'imagick'],
+					fn($op) => $op->setMegapixels($megapixels)->setPage(0)->render('png')),
+			default => $source->firstOperator(['imagick'],
+					fn($op) => $op->setMegapixels($megapixels)->resample()->render('png')),
+		};
+		if ($operator === null) {
+			throw new \RuntimeException($msg . ' no alias: ' . $source->operators->lastError);
 		}
-		$operator->cleanup();
-		$operator->destroy();
-		return $blob;
+		return $operator;
 	}
 
 	static function createImageFormat($media_id, $format, $original_filename, $filename, $fileexists = TRUE, $msg = '') {
@@ -122,12 +132,10 @@ class mediaImage {
 			'pdf'
 		]);
 
-		// A video has no page to read. It gets a still instead - extracted
-		// further down, where the alias is built, so an existing alias costs
-		// no ffmpeg run. From here on the source behaves like the jpg it will
-		// be. Without this every uploaded video died on 'Support mp4:FALSE'.
+		// A video has no page to read. It gets a still instead - made where
+		// the alias is built (renderAlias()), so an existing alias costs no
+		// ffmpeg run. From here on the source behaves like the jpg it will be.
 		$isVideo = str_starts_with((string) $mediacrop->media_mimetype, 'video/');
-		$videoFrameBlob = null;
 		if ($fileexists && $isVideo) {
 			$type = 'jpg';
 			$typeSupported = TRUE;
@@ -143,41 +151,23 @@ class mediaImage {
 		if ($fileexists && $typeSupported) {
 			/*			 * **************************** GENERATE OR LOAD ALIAS ************************** */
 			if (!fs::fileExists($alias_filename) || isset($_GET['rebuild'])) {
-				if ($isVideo) {
-					$videoFrameBlob = self::extractVideoFrame($original_filename, $msg);
-					if ($videoFrameBlob === null) {
-						throw new \RuntimeException($msg);
-					}
-				}
 				$aliasMegapixels = (float) ($image_formats['alias']['megapixels'] ?? 0);
 				if ($aliasMegapixels <= 0) {
 					$aliasMegapixels = (float) ($image_format['megapixels'] ?? 2);
 				}
-				$megapixels = 1E+6 * max(0.1, $aliasMegapixels);
-
-			if (in_array($type, ['pdf', 'jpg', 'jpeg'])) {
-				$lay_image->setBackgroundColor(new ImagickPixel('white'));
-			} else {
-				$lay_image->setBackgroundColor(new ImagickPixel('transparent'));
-			}
-
-				if ($type === 'pdf') {
-					// $lay_image->readImage($original_filename); // very slow - generates images of all pages
-				$tempfile = fs::$siteRoot . 'var/pdf.tpm.webp';
-				$tempfileNative = fs::toNative($tempfile);
-				$originalNative = fs::toNative($original_filename);
-				$info = str::parseYAML(shell_exec("identify -verbose \"{$originalNative}[0]\""));
-				list($wInch, $hInch) = explode('x', $info['Image']['Print size']['value']);
-				$inch2px = sqrt($megapixels / $wInch / $hInch);
-				shell_exec("convert -density $inch2px \"{$originalNative}[0]\" \"{$tempfileNative}\"");
-				$lay_image->readImage($tempfileNative);
-					fs::unlinkFile($tempfile);
-			} elseif ($videoFrameBlob !== null) {
-				$lay_image->readImageBlob($videoFrameBlob); // the still never hits the disk
-				$videoFrameBlob = null;
-			} else {
-				$lay_image->readImage(fs::toNative($original_filename));
-			}
+				// the raster comes at the alias size from a file operator - no
+				// tool calls of its own here (renderAlias())
+				$alias = self::renderAlias($original_filename, max(0.1, $aliasMegapixels), $type, $isVideo, $msg);
+				$lay_image->readImageBlob($alias->getContents());
+				// the size of the medium: the original's where the operator scaled it
+				[$orig_width, $orig_height] = $alias->sourceSize ?? [$lay_image->getImageWidth(), $lay_image->getImageHeight()];
+				$alias->cleanup();
+				$alias->destroy();
+				if (in_array($type, ['pdf', 'jpg', 'jpeg'])) {
+					// transparent areas on white, not black in a jpg
+					$lay_image->setImageBackgroundColor(new ImagickPixel('white'));
+					$lay_image->setImageAlphaChannel(Imagick::ALPHACHANNEL_REMOVE);
+				}
 				if ($filetype === 'png') {
 					$lay_image->setImageFormat("png24"); // ?? bei logos versucht imagick umzuwandeln ??
 					$lay_image->setImageCompressionQuality(0);
@@ -186,17 +176,7 @@ class mediaImage {
 					$lay_image->setformat($filetype);
 				}
 				$lay_image->setIteratorIndex(0);
-				$orig_width = max(1, (int) $lay_image->getImageWidth());
-				$orig_height = max(1, (int) $lay_image->getImageHeight());
-//		if ( $orig_width * $orig_height > $megapixels * 1.5 ){ // für später: alias nur erzeugen, wenn original zu gross
-				$src_width = sqrt($orig_width * $megapixels / $orig_height);
-				$src_height = $src_width * $orig_height / $orig_width;
 				$lay_image->setResourceLimit(Imagick::RESOURCETYPE_TIME, (int) 30E+6); // microseconds
-				if ($type !== 'pdf') {
-					$aliasWidth = max(1, (int) round($src_width));
-					$aliasHeight = max(1, (int) round($src_height));
-					$lay_image->resizeImage($aliasWidth, $aliasHeight, Imagick::FILTER_SINC, 1);
-				}
 				\Systopic\System\Tables\Medias\Files::writeFormat($lay_image, (int) $media_id, 'alias', $filename);
 //		}
 		} else {

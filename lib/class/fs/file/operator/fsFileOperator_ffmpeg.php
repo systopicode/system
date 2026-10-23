@@ -42,9 +42,6 @@ class fsFileOperator_ffmpeg extends fsFileOperator {
 		'webp' => ['-f', 'webp'],
 	];
 
-	/** why the last render produced nothing - the base class has no error channel */
-	public string $lastError = '';
-
 	protected bool $stream = TRUE;
 	protected ?float $seconds = null;
 	protected ?int $width = null;
@@ -52,6 +49,16 @@ class fsFileOperator_ffmpeg extends fsFileOperator {
 
 	static function isAvailable(): bool {
 		return shellBinary::isAvailable('ffmpeg');
+	}
+
+	/**
+	 * Reading: the demuxers (`ffmpeg -demuxers`, " D   mov,mp4,m4a,3gp,3g2,mj2 QuickTime").
+	 * Writing stays the declared list - a still goes out through MUXERS only.
+	 */
+	protected static function queryFormats(): array {
+		$output = (string) shell_exec(escapeshellarg((string) shellBinary::find('ffmpeg')) . ' -hide_banner -demuxers 2>&1');
+		preg_match_all('~^\s*D\S*\s+([a-z0-9_,]+)\s~m', $output, $m);
+		return ['read' => explode(',', implode(',', $m[1] ?? []))];
 	}
 
 	function setSeconds($seconds): static {
@@ -108,6 +115,14 @@ class fsFileOperator_ffmpeg extends fsFileOperator {
 		if ($this->width && $this->height) {
 			$command[] = '-s';
 			$command[] = ((int) $this->width) . 'x' . ((int) $this->height);
+		} elseif ($this->megapixels) {
+			// to the megapixels, up or down, aspect kept: w = sqrt(px * iw / ih)
+			$pixels = (int) round($this->megapixels * 1e6);
+			$command[] = '-vf';
+			$command[] = "scale=w=round(sqrt($pixels*iw/ih)):h=-1:flags=lanczos";
+			$width = (int) ($this->file->mediainfo->width ?: 0);
+			$height = (int) ($this->file->mediainfo->height ?: 0);
+			$this->sourceSize = $width && $height ? [$width, $height] : null;
 		}
 
 		$streamable = $this->stream && isset(self::MUXERS[$format]);
