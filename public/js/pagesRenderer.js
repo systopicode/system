@@ -46,6 +46,8 @@
 				f('pagesRenderer: no layer data — is PagesRenderer registered in clientInterfaces?');
 				return;
 			}
+			// layers from an earlier call: this is a diff update (ajax navigation)
+			var isUpdate = headLayer !== null || bodyLayer !== null;
 
 			renderer.applyBodyClasses(data.bodyClasses || []);
 
@@ -64,7 +66,13 @@
 			if (bodyLayer) {
 				bodyLayer.printDebug();
 			}
+			// onDocumentReady runs once (its queue empties on the first flush);
+			// onDocumentUpdate after every later update - the content changed,
+			// the window did not. Nothing flushed that queue before 2026-10-23.
 			sys.flushOnDocumentReady();
+			if (isUpdate) {
+				sys.flushOnDocumentUpdate();
+			}
 		};
 
 		/**
