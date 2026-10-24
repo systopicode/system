@@ -426,7 +426,13 @@ class DomLayer implements DomLayerItem
             if ($item->isLayer()) {
                 /** @var self $item */
                 $layers[] = $item->export();
-                $slices[] = "\n<div class=domLayerPlaceholder></div>\n";
+                // <template>, not <div>: a placeholder a child layer leaves
+                // empty stays in the page as its anchor - as a div it counted
+                // for :last-of-type, :nth-child, flex and grid (the smp.de
+                // slider never wrapped around), and a div in a <table> or
+                // <select> is moved out by the parser. A template is inert,
+                // invisible and allowed anywhere.
+                $slices[] = "\n<template class=domLayerPlaceholder></template>\n";
             } else {
                 $slices[] = (string) $item;
             }

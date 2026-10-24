@@ -227,10 +227,6 @@
 	display:none;
 }
 
-div.domLayerPlaceholder:empty{
-	flex:0 0 0;
-}
-
 
 [onclick]{
 	cursor:pointer;

@@ -14,7 +14,8 @@
  *
  * and each is mounted against its own placeholder in the served skeleton:
  * <template id=systemPagesHeadPlaceholder> in the head, and
- * <div id=systemPagesBodyPlaceholder> in the body.
+ * <template id=systemPagesBodyPlaceholder> in the body (inert, like the
+ * domLayerPlaceholder anchors the layers leave behind).
  *
  * The shorthand is `siteRenderer` because that is the name
  * core/server/server.command.js already dispatches to when settings.inApp is
@@ -90,7 +91,7 @@
 				// No skeleton placeholder (e.g. a page served before this
 				// script existed). Create an anchor so the layer still has a
 				// stable position to render at and to collapse back into.
-				placeholder = document.createElement('div');
+				placeholder = document.createElement('template');
 				placeholder.id = placeholderId;
 				host.appendChild(placeholder);
 			}
