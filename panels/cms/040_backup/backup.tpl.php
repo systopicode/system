@@ -27,7 +27,8 @@
 						$i++;
 						echo html::create('a.button.transparent')->target('_self')
 							->download(basename($singlefile))
-							->href(http::$siteUrl . 'var/backups/' . basename($singlefile))
+							// through the panel (actions.php: download) - var/backups/ is not served
+							->href(http::$siteUrl . 'cms/backup/download?name=' . rawurlencode(basename($singlefile)))
 							->title(basename($singlefile))
 							->append('i.fa-light.fa-arrow-down-to-line')
 							('a')->text(($i === 1 ? 'Path ' : '') . ($i))
