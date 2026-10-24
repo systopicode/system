@@ -81,6 +81,9 @@
 	echo $cmsCss(fs::$sysRoot . 'public/css/', 'cms');
 	echo $cmsCss(fs::$sysRoot . 'public/css/system/', 'cms');
 	echo $cmsCss(fs::$sysRoot . 'public/css/system/fixes/', 'cms', TRUE);
+	foreach (\Systopic\System\Sys\Packages::panelAssets() as $assetDir) {
+		echo $cmsCss(fs::toInternal($assetDir) . 'css/', 'cms');
+	}
 	?>
 	<!-- +-+-+-+-+-+-+-+-+-+ MODULE CSS -+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-->
 	<?php
@@ -204,6 +207,9 @@
 
 	echo fsLoader::includeScriptFiles(fs::$sysRoot . 'public/js/core/');
 	echo fsLoader::includeScriptFiles(fs::$sysRoot . 'public/js/cms/');
+	foreach (\Systopic\System\Sys\Packages::panelAssets() as $assetDir) {
+		echo fsLoader::includeScriptFiles(fs::toInternal($assetDir) . 'js/');
+	}
 	if (!defined('JSOFF')) {
 		?>
 		<script>

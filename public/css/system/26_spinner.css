@@ -1,20 +1,5 @@
 /****************************** LOADING SPINNER ***************************/
-.cms div.spinnerWrapper{
-    display:inline-block;
-    vertical-align: middle;
-    width:100%;
-    position: relative;
-}
 
-div.cms li.rewrite div.spinnerWrapper{
-    display:inline;
-}
-
-div.cms div.spinnerWrapper input{
-    display:block;
-}
-
-div.cms div.input.spinnerWrapper:before,
 .cms button.loading:before,
 .cms .button.loading:before{
     right:10px;
@@ -84,5 +69,4 @@ form.loading button:before,
 .loading{
     cursor:wait;
 }
-
 

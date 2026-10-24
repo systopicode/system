@@ -97,20 +97,7 @@
     transition: border-color .15s, box-shadow .15s;
 }
 
-.cms .portraitActions{
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 0.4rem;
-    margin-top: 0.7rem;
-}
-
-.cms .portraitForm{
-    display: contents;
-}
-
-.cms .portraitDrop input[type="file"],
-.cms .portraitForm input[type="file"]{
+.cms .portraitDrop input[type="file"]{
     position: absolute;
     inset: 0;
     width: 100% !important;
@@ -408,9 +395,7 @@ div.pylon > header input:focus{
     opacity: .45;
 }
 
-.cms .floatRight button,
 .cms .rightAlign button,
-.cms .floatRight .button,
 .cms .rightAlign .button{
     margin-right: 0;
     margin-left: 0.4rem;
@@ -420,17 +405,6 @@ div.pylon > header input:focus{
     width: calc(100% - 4.5rem);
     display: inline-block;
     float: left;
-}
-
-.cms i.pwGenerate.button.transparent,
-.cms i.clearPWField.button.transparent{
-    width: 2.25rem;
-    height: var(--cmsControl);
-    margin: 0 0 0 0.25rem;
-    padding: 0;
-    font-size: 1.1rem;
-    float: left;
-    background: var(--cmsHover);
 }
 
 /****************************** CHECKBOX ***************************/
@@ -680,16 +654,11 @@ div.cmslightbox.cms div#complexity{
     width: 100%;
 }
 
-div.cms div#complexity.weak{
-    border-bottom-color: var(--cmsError);
-}
-
 div.cms div#complexity.strong{
     border-bottom-color: var(--cmsWarning);
 }
 
-div.cms div#complexity.stronger,
-div.cms div#complexity.strongest{
+div.cms div#complexity.stronger{
     border-bottom-color: var(--cmsSuccess);
 }
 

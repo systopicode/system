@@ -11,6 +11,30 @@ document.addEventListener('click', function (event) {
 	});
 });
 
+function copyToClipboard(e) {
+	$(e.target).addClass('confirm');
+	if ($(e.target).prop('tagName') === 'A') {
+		e.preventDefault();
+		var text = $(e.target).attr('href');
+	} else if ($(e.delegateTarget).prop('tagName') === 'A') {
+		var text = $(e.delegateTarget).attr('href');
+	} else {
+		var text = $(e.target).html();
+	}
+	if (typeof $(e.target).attr('data-copy') !== 'undefined') {
+		var text = $(e.target).attr('data-copy');
+	}
+	if ((typeof text) === 'undefined') {
+		var text = e.element.innerText;
+		if (typeof $(e.element).attr('data-copy') !== 'undefined') {
+			var text = $(e.element).attr('data-copy');
+		}
+	}
+	if (navigator.clipboard) {
+		navigator.clipboard.writeText(text);
+	}
+}
+
 $(document).keydown(function (event) {
 	if (event.ctrlKey || event.metaKey) {
 		switch (String.fromCharCode(event.which).toLowerCase()) {

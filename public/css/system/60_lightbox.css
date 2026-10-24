@@ -279,9 +279,8 @@ body .cmslightbox section > div.layout > aside:not(.cms) > div > div{
     }
 
     .cmslightbox .fileStage.split > .fileFrame,
-    .cmslightbox .fileStage.split > .fileSide,
-    .cmslightbox .fileStage.split > textarea.fileSource,
-    .cmslightbox .fileStage.split > .filePane{
+.cmslightbox .fileStage.split > textarea.fileSource,
+.cmslightbox .fileStage.split > .filePane{
         min-height: 0;
         height: 100%;
     }
@@ -537,18 +536,6 @@ body .cmslightbox section > div.layout > aside:not(.cms) > div > div{
     margin-right: 0.4rem;
 }
 
-.cmslightbox .posterImageContainer{
-    flex: 0 0 auto;
-    width: min(100%, 28rem);
-    align-self: center;
-}
-
-.cmslightbox .posterImageContainer img{
-    display: block;
-    width: 100%;
-    height: auto;
-}
-
 /****************************** UPLOAD ***************************/
 .cmslightbox.upload main.uploadStage{
     display: flex;
@@ -686,31 +673,4 @@ body .cmslightbox section > div.layout > aside:not(.cms) > div > div{
 .cmslightbox.upload .idle [data-doc=upload],
 .cmslightbox.upload .reading [data-doc=upload]{
     opacity: 0;
-}
-
-.cmslightbox dl.mediaFacts{
-    display: grid;
-    gap: 0.7rem;
-    margin: 1.25rem 0 0;
-}
-
-body .cmslightbox section > div.layout > aside dl.mediaFacts div{
-    display: grid;
-    gap: 0.1rem;
-    margin: 0;
-}
-
-.cmslightbox dl.mediaFacts dt{
-    font-size: 0.6875rem;
-    font-weight: 600;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-    color: var(--cmsMuted);
-}
-
-.cmslightbox dl.mediaFacts dd{
-    margin: 0;
-    font-size: 0.8125rem;
-    line-height: 1.35;
-    color: var(--cmsTextColor);
 }

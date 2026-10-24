@@ -201,10 +201,6 @@ foreach (\Systopic\System\Sys\Packages::frontends() as $_frontend) {
 unset($_frontend, $_early);
 if (count(app::request()->modulePath) > 0) {
 	switch (app::request()->modulePath[0]) {
-		case 'css_parsed':
-			logroute('include css.php');
-			include 'css.php';
-			exit;
 		case 'var':
 			logroute('include media.php');
 			include 'media.php';

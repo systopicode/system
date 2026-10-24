@@ -1,0 +1,62 @@
+/****************************** ON PAGE CMS CONTROLS ***************************/
+ul.onPageCMSControls {
+	opacity: 0.5 !important;
+	position: fixed !important;
+	top: 0 !important;
+	right: 0 !important;
+	border-radius: 0 0 0 5px !important;
+	overflow: hidden !important;
+	transition: opacity 0.1s ease-in !important;
+	padding: 0 !important;
+	line-height: 0 !important;
+	z-index: 999999997;
+	box-sizing: border-box !important;
+	user-select: none;
+	margin: 0;
+
+	&:hover,
+	&:focus {
+		opacity: 1 !important;
+	}
+
+	li {
+		display: inline-block;
+		vertical-align: top !important;
+		line-height: 0 !important;
+		padding: 0 !important;
+		margin: 0 !important;
+		list-style-type: none !important;
+		box-sizing: border-box !important;
+
+		* {
+			font-size: 16px !important;
+		}
+
+		&:first-child a {
+			border: none !important;
+		}
+
+		a {
+			width: 30px !important;
+			height: 30px !important;
+			text-align: center;
+			box-sizing: border-box !important;
+			letter-spacing: 0;
+			display: inline-block !important;
+			border-left: 1px solid #fff !important;
+			background: var(--cmsMainColor) !important;
+			padding: 5px !important;
+			cursor: pointer !important;
+			text-decoration: none !important;
+			margin: 0 !important;
+			font-size: 16px;
+			color: #fff;
+
+			i {
+				color: #fff !important;
+				font-family: 'CMS Font Awesome 7 Pro';
+			}
+		}
+	}
+}
+

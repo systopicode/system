@@ -379,15 +379,6 @@ body.tools > main > div.content > header{
     background: var(--cmsBgColor);
 }
 
-/* Seiten-Editor: dunkle Arbeitsfläche wie in der Live-Seite */
-.flexRow:has(article.cmsContent){
-    background: var(--cmsEditorBg);
-}
-
-.flexRow:has(article.cmsContent) > aside.cms{
-    margin-left: auto;
-}
-
 .flexColumn{
     display: flex;
     flex-direction: column;
@@ -397,70 +388,6 @@ body.tools > main > div.content > header{
 .flexRow > *,
 .flexColumn > *{
     flex: 1 1 auto;
-}
-
-article.cmsContent{
-    width: 100%;
-    max-width: 100%;
-    height: 100%;
-    padding: 1.5rem;
-    overflow: auto;
-    box-sizing: border-box;
-}
-
-/* Vorschaubreite: die Spalte ist der Container, die @media-Regeln der Seite gelten dafür */
-.flexColumn:has(article.cmsContent){
-    container-type: inline-size;
-    container-name: cms-preview;
-}
-
-body[data-cms-device="tablet"] .flexColumn:has(article.cmsContent),
-body[data-cms-device="mobile"] .flexColumn:has(article.cmsContent){
-    flex: 0 1 auto;
-    width: 100%;
-    max-width: calc(var(--cms-device-width, 820px) + 3rem);
-}
-
-body[data-cms-device="tablet"] article.cmsContent,
-body[data-cms-device="mobile"] article.cmsContent{
-    border-inline: 1px dashed rgba(151,215,249,.18);
-}
-
-/* Pages on a tablet. Saved column widths may shrink so the preview
-   keeps a share. The phone layout starts below this. */
-@media (max-width: 1180px) and (min-width: 861px){
-    body.pages > main > div.pylon{
-        flex: 0 1 18rem !important;
-        width: auto !important;
-        min-width: 18rem !important;
-        max-width: 22rem !important;
-    }
-
-    body.pages > main > div.pylon > footer{
-        max-height: 42% !important;
-    }
-
-    body.pages aside.cms{
-        flex: 0 1 16rem !important;
-        width: auto !important;
-        min-width: 14rem !important;
-        max-width: 18rem !important;
-    }
-
-    body.pages .flexRow,
-    body.pages .flexColumn:has(article.cmsContent){
-        min-width: 0;
-    }
-
-    body.pages header.cms:has(.pageHead){
-        gap: 0.35rem;
-        padding-left: 0.75rem;
-        padding-right: 0.75rem;
-    }
-
-    body.pages header.cms:has(.pageHead) .langSwitch > .splitApplyMenu span{
-        display: none;
-    }
 }
 
 /**************************SPALTEN***********************/
@@ -483,27 +410,31 @@ body[data-cms-device="mobile"] article.cmsContent{
 .cms .fullColumn, .cms ._1_1, .cms ._1      { width: calc(100% - 20px); }
 .cms .halfColumn, .cms ._1_2                { width: calc((100% / 2) - 20px); }
 .cms .oneThirdColumn, .cms ._1_3            { width: calc((100% / 3) - 20px); }
-.cms .twoThirdsColumn, .cms ._2_3           { width: calc((100% / 3 * 2) - 20px); }
-.cms .oneFourthColumn, .cms ._1_4           { width: calc((100% / 4) - 20px); }
+.cms ._2_3{ width: calc((100% / 3 * 2) - 20px); }
+.cms ._1_4{ width: calc((100% / 4) - 20px); }
 .cms ._2_4                                  { width: calc((100% / 4 * 2) - 20px); }
 .cms ._3_4                                  { width: calc((100% / 4 * 3) - 20px); }
-.cms .oneFifthColumn, .cms ._1_5            { width: calc((100% / 5) - 20px); }
+.cms ._1_5{ width: calc((100% / 5) - 20px); }
 
 @media (max-width: 1180px){
-    .cms .oneThirdColumn, .cms ._1_3,
-    .cms .oneFourthColumn, .cms ._1_4,
-    .cms .oneFifthColumn, .cms ._1_5{
+    .cms .oneThirdColumn,
+.cms ._1_3,
+.cms ._1_4,
+.cms ._1_5{
         width: calc((100% / 2) - 20px);
     }
 }
 
 @media (max-width: 860px){
-    .cms .halfColumn, .cms ._1_2,
-    .cms .oneThirdColumn, .cms ._1_3,
-    .cms .twoThirdsColumn, .cms ._2_3,
-    .cms .oneFourthColumn, .cms ._1_4,
-    .cms .oneFifthColumn, .cms ._1_5,
-    .cms ._2_4, .cms ._3_4{
+    .cms .halfColumn,
+.cms ._1_2,
+.cms .oneThirdColumn,
+.cms ._1_3,
+.cms ._2_3,
+.cms ._1_4,
+.cms ._1_5,
+.cms ._2_4,
+.cms ._3_4{
         width: calc(100% - 20px);
     }
 }

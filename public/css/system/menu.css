@@ -13,10 +13,6 @@ ul.menu li{
     list-style-type: none;
 }
 
-ul.menu li.nogap{
-    margin-right: 3px;
-}
-
 /*************** AKTIONSLEISTE ******************/
 ul.barmenu{
     display: flex;
@@ -156,10 +152,6 @@ ul.barmenu li.open input{
 ul.barmenu select,
 ul.barmenu input{
     background: transparent;
-}
-
-.showTags ul.barmenu li.megadropdown{
-    background: var(--cmsCanvas);
 }
 
 [data-on_click],

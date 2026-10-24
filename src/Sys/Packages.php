@@ -56,6 +56,25 @@ final class Packages
     /** @var array<string, string> root name => namespace root of its panel classes */
     private static array $panels = [];
 
+    /** @var list<string> folders with css/ and js/ for every panel page */
+    private static array $panelAssets = [];
+
+    /**
+     * A folder whose `css/` and `js/` the panel head loads on every page,
+     * after the system's own. Opt-in: a package's other public files
+     * (systopic/relay: centrifuge.js) stay loaded on demand.
+     */
+    public static function addPanelAssets(string $dir): void
+    {
+        self::$panelAssets[] = rtrim(str_replace('\\', '/', $dir), '/') . '/';
+    }
+
+    /** @return list<string> */
+    public static function panelAssets(): array
+    {
+        return self::$panelAssets;
+    }
+
     /** @var list<Frontend> */
     private static array $frontends = [];
 

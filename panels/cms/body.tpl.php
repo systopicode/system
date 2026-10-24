@@ -58,13 +58,8 @@ $this->loadJS();
 
 			$this->withChildSelected();
 
-			if ($this->withChildSelected('footer')) { ?>
-				<script>
-					footerResize();
-				</script>
-			<?php } ?>
+			$this->withChildSelected('footer');
 
-			<?php
 			echo '</div>';
 			$this->withChildSelected('sidebar');
 			echo '</div>';

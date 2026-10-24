@@ -1,0 +1,741 @@
+/* Rules whose classes no template or script uses anymore. */
+
+/* ================= packages/system/public/css/dropdown.css ================= */
+.cms ul.contextmenu .iconStack{
+    position: relative;
+    display: block;
+    width: 1.05rem;
+    height: 1.05rem;
+}
+
+.cms ul.contextmenu .iconStack i{
+    position: absolute;
+    width: auto;
+    line-height: 1;
+}
+
+.cms ul.contextmenu .iconStack i:first-child{
+    top: -1px;
+    left: -1px;
+    font-size: 0.72rem;
+}
+
+.cms ul.contextmenu .iconStack i:last-child{
+    right: -2px;
+    bottom: -2px;
+    font-size: 0.6rem;
+}
+
+.cms div.dropdown.pageInfos{
+    cursor: default;
+}
+
+.cms div.dropdown.pageInfos li{
+    width: 100%;
+    height: 100%;
+}
+
+.cms .arrowUpper:before,
+.cms .arrowUpper:after,
+.cms .arrowLower:before,
+.cms .arrowLower:after{
+    content: '';
+    position: absolute;
+    top: 0;
+    right: -9px;
+    display: block;
+    width: 11px;
+    height: 2px;
+    background: var(--cmsMuted);
+    transform: rotate(-45deg);
+    transition: all .3s;
+}
+
+.cms .arrowUpper:after,
+.cms .arrowLower:after{
+    right: inherit;
+    left: -9px;
+    transform: rotate(45deg);
+}
+
+.cms .animate .arrowLower:before,
+.cms .animate .arrowLower:after{
+    top: 6px;
+    transform: rotate(45deg);
+}
+
+.cms .animate .arrowLower:after{
+    transform: rotate(-45deg);
+}
+
+/* ================= packages/system/public/css/system/25_widgets.css ================= */
+.cms .loader.finished.sucessfull  .loader-spiner{
+    border-color:var(--cmsSuccess);
+}
+
+.cms .animateHidden{
+    display:none;
+}
+
+.colpick {
+    position: absolute;
+    width: 346px;
+    height: 170px;
+    overflow: hidden;
+    display: none;
+    background:var(--cmsMainColor);
+    box-shadow: 0 7px 4px 4px rgba(0,0,0,0.2);
+    z-index: 17001;
+}
+
+.colpick_color {
+    position: absolute;
+    left: 7px;
+    top: 7px;
+    width: 156px;
+    height: 156px;
+    overflow: hidden;
+    cursor: crosshair;
+}
+
+.colpick_color_overlay1 {
+    position: absolute;
+    left:0;
+    top:0;
+    width: 156px;
+    height: 156px;
+    background: linear-gradient(to right, rgba(255,255,255,1) 0%, rgba(255,255,255,0) 100%);
+}
+
+.colpick_color_overlay2 {
+    position: absolute;
+    left:0;
+    top:0;
+    width: 156px;
+    height: 156px;
+    background: linear-gradient(to bottom, rgba(0,0,0,0) 0%,rgba(0,0,0,1) 100%); /* W3C */
+}
+
+.colpick_selector_outer, div.cms .colpick_selector_outer:before {
+    position: absolute;
+    width: 11px;
+    height: 11px;
+    margin: -6px 0 0 -6px;
+    border: 1px solid black;
+    border-radius: 50%;
+}
+
+.colpick_selector_inner{
+    position: absolute;
+    width: 9px;
+    height: 9px;
+    border: 1px solid white;
+    border-radius: 50%;
+}
+
+.colpick_hue {
+    position: absolute;
+    top: 6px;
+    left: 175px;
+    width: 19px;
+    height: 156px;
+    cursor: ns-resize;
+}
+
+.colpick_hue_arrs {
+    position: absolute;
+    left: -8px;
+    width: 35px;
+    height: 7px;
+    margin: -7px 0 0 0;
+}
+
+.colpick_hue_larr {
+    position:absolute;
+    width: 0;
+    height: 0;
+    border-top: 6px solid transparent;
+    border-bottom: 6px solid transparent;
+    border-left: 7px solid #fff;
+}
+
+.colpick_hue_rarr {
+    position:absolute;
+    right:0;
+    width: 0;
+    height: 0;
+    border-top: 6px solid transparent;
+    border-bottom: 6px solid transparent;
+    border-right: 7px solid #fff;
+}
+
+.colpick_new_color,
+.colpick_current_color{
+    height: 27px;
+    position: absolute;
+    right: 7px;
+    bottom: 7px;
+    width: 61px;
+    border:1px solid #fff;
+
+}
+
+.colpick_new_color{
+    border-left: 0;
+}
+
+.colpick_current_color{
+    right:68px;
+    border-right: 0;
+}
+
+.colpick_field,
+.colpick_hex_field  {
+    overflow:hidden;
+    position: absolute;
+    right:7px;
+}
+
+.colpick_hex_field{
+    top:7px;
+}
+
+.colpick_field input,
+.colpick_hex_field input{
+    text-align: center;
+    padding:0px 2px;
+    font-size: 16px;
+    color:#fff;
+    background:rgba(255,255,255,0.15);
+}
+
+.colpick_field_letter{
+    line-height: 28px;
+    margin-right: 5px;
+    color:#fff;
+}
+
+.colpick_hex_field input{
+    width: 80px;
+}
+
+.colpick_rgb_r .colpick_field_letter,
+.colpick_rgb_g .colpick_field_letter,
+.colpick_rgb_b .colpick_field_letter{
+    float: none;
+    line-height: 1.2em;
+    width: 100%;
+    text-align: center;
+    padding: 0;
+    margin-bottom: 2px;
+}
+
+.colpick_rgb_r{
+    top:45px;
+    right:97px;
+}
+
+.colpick_rgb_g{
+    top:45px;
+    right:52px;
+}
+
+.colpick_rgb_b{
+    top:45px;
+}
+
+.colpick_field_letter {
+    float:left;
+    height: 20px;
+    line-height: 24px;
+    padding-left: 4px;
+}
+
+.colpick_submit,
+.colpick [class*='colpick_hsb']{
+    display:none;
+}
+
+.colpick_hex_ns .colpick_hex_field {
+    width:118px;
+    background: transparent;
+}
+
+/* ================= packages/system/public/css/system/60_lightbox.css ================= */
+.cmslightbox .fileStage.split > .fileSide { /* selector removed from a shared rule */ }
+
+.cmslightbox .posterImageContainer{
+    flex: 0 0 auto;
+    width: min(100%, 28rem);
+    align-self: center;
+}
+
+.cmslightbox .posterImageContainer img{
+    display: block;
+    width: 100%;
+    height: auto;
+}
+
+.cmslightbox dl.mediaFacts{
+    display: grid;
+    gap: 0.7rem;
+    margin: 1.25rem 0 0;
+}
+
+body .cmslightbox section > div.layout > aside dl.mediaFacts div{
+    display: grid;
+    gap: 0.1rem;
+    margin: 0;
+}
+
+.cmslightbox dl.mediaFacts dt{
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--cmsMuted);
+}
+
+.cmslightbox dl.mediaFacts dd{
+    margin: 0;
+    font-size: 0.8125rem;
+    line-height: 1.35;
+    color: var(--cmsTextColor);
+}
+
+/* ================= packages/system/public/css/system/45_sidebar.css ================= */
+aside.cms p.cmsSeoLinks a{
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: var(--cmsSubText);
+    text-decoration: underline;
+    text-underline-offset: 0.15em;
+}
+
+aside.cms p.cmsHint{
+    margin: 0.15rem 0 0;
+    font-size: 0.8125rem;
+    line-height: 1.45;
+    color: var(--cmsSubText);
+}
+
+aside.cms p.cmsSeoLinks{
+    display: flex;
+    gap: 0.85rem;
+    margin: 0.65rem 0 0;
+}
+
+aside.cms p.cmsSeoLinks a{
+    font-weight: 600;
+}
+
+/* ================= packages/system/public/css/system/50_forms.css ================= */
+.cms .portraitActions{
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.4rem;
+    margin-top: 0.7rem;
+}
+
+.cms .portraitForm{
+    display: contents;
+}
+
+.cms .portraitForm input[type="file"] { /* selector removed from a shared rule */ }
+
+.cms .floatRight button,
+.cms .floatRight .button { /* selector removed from a shared rule */ }
+
+.cms i.pwGenerate.button.transparent,
+.cms i.clearPWField.button.transparent{
+    width: 2.25rem;
+    height: var(--cmsControl);
+    margin: 0 0 0 0.25rem;
+    padding: 0;
+    font-size: 1.1rem;
+    float: left;
+    background: var(--cmsHover);
+}
+
+div.cms div#complexity.weak{
+    border-bottom-color: var(--cmsError);
+}
+
+div.cms div#complexity.strongest { /* selector removed from a shared rule */ }
+
+/* ================= packages/system/public/css/system/20_base.css ================= */
+.wf-loading *{
+    opacity: 0 !important;
+}
+
+.cms div.specialContent hr { /* selector removed from a shared rule */ }
+
+.cms .floatRight{
+    float: right;
+}
+
+.cms .floatLeft{
+    float: left;
+}
+
+footer.cms div.resizable-handle.resizable-n{
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 0 !important;
+    display: block;
+    width: 100%;
+    height: 12px;
+    background: transparent;
+    cursor: ns-resize;
+}
+
+section.cms.withFooter,
+section.cms.withFooter + footer{
+    height: auto;
+    overflow: hidden;
+}
+
+section.cms.withFooter + footer div.resizable-handle.resizable-n{
+    cursor: none;
+}
+
+.cms div.dz-error-message span { /* selector removed from a shared rule */ }
+
+div.formElementMessage{
+    display: inline-block;
+    vertical-align: top;
+}
+
+div.formElementMessage span{
+    display: block;
+    float: left;
+    clear: both;
+    width: 100%;
+    padding: 0.15rem 0.4rem;
+    border-radius: 4px;
+    background: var(--cmsError);
+    color: #fff;
+    font-size: 0.8125rem;
+}
+
+/* ================= packages/system/public/css/system/30_layout.css ================= */
+.cms .twoThirdsColumn { /* selector removed from a shared rule */ }
+
+.cms .oneFourthColumn { /* selector removed from a shared rule */ }
+
+.cms .oneFifthColumn { /* selector removed from a shared rule */ }
+
+.cms .oneFourthColumn,
+.cms .oneFifthColumn { /* selector removed from a shared rule */ }
+
+.cms .twoThirdsColumn,
+.cms .oneFourthColumn,
+.cms .oneFifthColumn { /* selector removed from a shared rule */ }
+
+/* ================= packages/system/public/css/system/menu.css ================= */
+ul.menu li.nogap{
+    margin-right: 3px;
+}
+
+.showTags ul.barmenu li.megadropdown{
+    background: var(--cmsCanvas);
+}
+
+/* ================= packages/system/public/css/system/27_tree.css ================= */
+div.pylon div.resizable-handle.resizable-e{
+    position: absolute;
+    top: 0;
+    right: -8px;
+    display: block;
+    width: 20px !important;
+    height: 100%;
+    border: none;
+    background: transparent;
+    font-size: 0.1px;
+    z-index: 0 !important;
+    cursor: ew-resize;
+}
+
+/* ================= packages/system/public/css/system/40_nav.css ================= */
+.cms div.pagefuncs{
+    display: flex;
+    align-items: center;
+    flex: 1 1 auto;
+}
+
+.cms div.cmsControls{
+    display: inline-flex;
+    align-items: center;
+    flex-grow: 1;
+    white-space: nowrap;
+}
+
+.cms div.inputField{
+    display: flex;
+}
+
+.cms div.notifications > a{
+    position: relative;
+}
+
+.cms div.notifications.open > a,
+.cms div.notifications:hover > a{
+    background: var(--cmsOnDark);
+}
+
+.cms div.notifications.selected > a:after{
+    content: '';
+    position: absolute;
+    top: 6px;
+    right: 10px;
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: var(--cmsError);
+    box-shadow: 0 0 0 2px var(--cmsMainColor);
+}
+
+.cms ul.notficiationList{
+    display: none;
+}
+
+.cms div.notifications.open ul.notficiationList{
+    display: block;
+    position: fixed;
+    bottom: 3rem;
+    left: 4.25rem;
+    z-index: 9999999;
+    width: 280px;
+    padding: 0.35rem;
+    background: var(--cmsCanvas);
+    border: 1px solid var(--cmsLine);
+    border-radius: var(--cmsRadiusLg);
+    box-shadow: var(--cmsShadowLg);
+}
+
+.cms ul.notficiationList li{
+    position: relative;
+    display: block;
+    width: 100%;
+    padding: 0.5rem 0.75rem;
+    border-radius: var(--cmsRadius);
+    text-align: left !important;
+    white-space: normal;
+    color: var(--cmsTextColor);
+}
+
+.cms ul.notficiationList li *{
+    color: var(--cmsTextColor);
+}
+
+.cms ul.notficiationList li:hover{
+    background: var(--cmsHover);
+}
+
+.cms ul.notficiationList li a{
+    position: absolute !important;
+    inset: 0;
+    display: block !important;
+}
+
+.cms ul.notficiationList li b{
+    display: block;
+}
+
+/* ================= packages/system/public/css/system/26_spinner.css ================= */
+.cms div.spinnerWrapper{
+    display:inline-block;
+    vertical-align: middle;
+    width:100%;
+    position: relative;
+}
+
+div.cms li.rewrite div.spinnerWrapper{
+    display:inline;
+}
+
+div.cms div.spinnerWrapper input{
+    display:block;
+}
+
+div.cms div.input.spinnerWrapper:before { /* selector removed from a shared rule */ }
+
+/* ================= packages/system/panels/cms/090_tools/tools.css ================= */
+body.tools .logView{
+	display: block;
+	width: 100%;
+	height: min(32rem, 70vh);
+	margin: 0;
+	padding: 0.75rem;
+	border: 0;
+	resize: vertical;
+	font-family: ui-monospace, monospace;
+	font-size: 0.75rem;
+	line-height: 1.45;
+	background: var(--cmsCanvas);
+	color: var(--cmsTextColor);
+}
+
+/* ================= packages/cms/panels/cms/010_pages/module.css ================= */
+.cms div.dropdown li.rewrite .floatWrapper{
+    position: relative;
+}
+
+.cms div.dropdown li.rewrite .floatWrapper input[type='text']{
+    position: absolute;
+    left:30px;
+    top:0;
+    right:61px;
+    background: var(--cmsCanvas);
+    width:calc(100% - 61px);
+    transition: left 0.2s ease-in-out, width  0.2s ease-in-out;
+    z-index: 1;
+}
+
+.cms div.dropdown li.rewrite .floatWrapper input[type='text'][readonly]{
+    right:30px;  
+    width:calc(100% - 30px);
+}
+
+.cms li.rewrite .floatWrapper input[type="radio"].custom + label{
+    margin: 9px 0 15px;
+}
+
+.cms div.dropdown li.rewrite .floatWrapper input[type='text'] + a{
+    position: absolute;
+    right: -9px;
+    top: 0px;
+    padding: 6px 6px;
+}
+
+.cms div.dropdown li.rewrite .floatWrapper input[type='text'] + a i{
+    font-size: 24px;
+    color:var(--cmsMuted);
+}
+
+/* ================= packages/cms/panels/cms/010_pages/pages.mml.css ================= */
+.cms div.resizable-handle.resizable-n {
+    position: absolute;
+    display: block;
+    cursor: ns-resize;
+    width: 100%;
+    top: 0;
+    left: 0;
+    border-top: 1px solid var(--cmsLineStrong);
+    background: transparent;
+    height: 12px;
+}
+
+.cms div.dz-filename {
+    display: none;
+}
+
+.cms div.mmlContent ul li:not(.title).originalNotExists {
+    border-color: var(--cmsError);
+}
+
+.cms div.mmlContent ul li:not(.title).originalNotExists a {
+    line-height: 1em;
+}
+
+.cms div.mmlContent ul li:not(.title).originalNotExists a:before {
+    content: "ORIGINAL FILE IS MISSING";
+    color: var(--cmsError);
+    padding: 3px;
+    font-size: 11px;
+    font-weight: 600;
+    display: inline-block;
+}
+
+.cms div.mmlContent ul li:not(.title).originalNotExists img,
+.cms div.mmlContent ul li:not(.title).originalNotExists a:after {
+    display: none;
+}
+
+.cms div.mml ul li.dropPlaceholder,
+.cms div.mml div.mmlContent ul li.emptyPlaceholder {
+    border: 1px dashed var(--cmsSuccess);
+    width: 64px;
+    height: 64px;
+}
+
+.cms div.mmlContent ul li.upload.ui-droppable.drop_active,
+.cms div.mmlContent ul li.upload.ui-droppable.drop_active:before,
+.cms div.mmlContent ul li.children_images.ui-droppable.drop_active:before,
+.cms div.mmlContent ul li.ui-droppable.drop_active:not(.title),
+.cms .mll_item {
+    border-color: var(--cmsMainColor);
+    color: var(--cmsMainColor);
+}
+
+.cms div.mml div.mmlContent ul li.emptyPlaceholder {
+    border-color: transparent;
+}
+
+body.cms.dragActive div.mml li.dropPlaceholder {
+    border: none;
+}
+
+.cms .ui-sortable-helper {
+    border: none;
+    overflow: visible;
+    list-style-type: none;
+}
+
+.cms .ui-sortable-helper.image {
+    width: 50%;
+    opacity: 0.8;
+}
+
+.ui-draggable-helper-mml,
+.ui-draggable-helper-mml-out {
+    list-style-type: none;
+    border: 1px dashed transparent;
+    z-index: 3002 !important;
+}
+
+.ui-draggable-helper-mml img {
+    width: 60px;
+}
+
+.ui-draggable-helper-mml-out {
+    width: 240px !important;
+}
+
+.ui-draggable-helper-mml-out img {
+    width: 240px !important;
+}
+
+div.posterImageContainer img {
+    width: 100%;
+}
+
+div.posterImageContainer { /* selector removed from a shared rule */ }
+
+div.posterImageContainer{
+	line-height: 0;
+}
+
+/* ================= packages/system/public/css/icons.css ================= */
+.fa-arrows-split-up-and-left{
+    transform: scaleX(-1);
+}
+
+/* ================= packages/system/public/css/dropdown.css (separator links, font cms-icons-filled is gone) ================= */
+.cms div.dropdownContent li.seperator a{
+    float: right;
+    margin-left: 0.75rem;
+}
+
+.cms div.dropdownContent li.seperator a.icon{
+    padding: 0;
+    font-size: 1.1rem;
+    line-height: 1;
+}
+
+.cms div.dropdownContent li.seperator a.icon i{
+    font-family: 'cms-icons-filled' !important;
+    color: var(--cmsMainColor) !important;
+}

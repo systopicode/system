@@ -3,8 +3,6 @@
 class app
 {
 
-	private static ?appCms $cms = null;
-
 	private static ?appSite $site = null;
 
 	private static ?appRequest $request = null;
@@ -14,11 +12,6 @@ class app
 	private static ?appRequest $renderRequest = null;
 
 	private static ?appRequest $reference = null;
-
-	public static function cms(): appCms
-	{
-		return self::$cms ??= new appCms;
-	}
 
 	public static function site(): appSite
 	{

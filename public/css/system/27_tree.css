@@ -1,0 +1,230 @@
+/****************************** TREE ***************************/
+.cms div.tree{
+    flex: 1 1 auto;
+    min-width: 110px;
+    min-height: 0;
+    width: 100%;
+    overflow-x: hidden;
+    overflow-y: auto;
+    scrollbar-width: none;
+}
+
+.cms div.tree::-webkit-scrollbar{
+    display: none;
+}
+
+.cms ul.tree{
+    width: 100%;
+    padding: 0.25rem 0.5rem 3rem;
+}
+
+.cms ul.tree ul{
+    padding-left: 1rem;
+}
+
+.cms ul.tree li{
+    display: block;
+}
+
+.cms ul.tree li label{
+    position: relative;
+    display: flex;
+    align-items: center;
+    min-height: 1.875rem;
+    padding: 0 0.25rem;
+    border-radius: var(--cmsRadius);
+    white-space: nowrap;
+    transition: background-color .15s;
+}
+
+.cms ul.tree li > label:hover{
+    background: var(--cmsHover);
+}
+
+.cms ul.tree li.active > label{
+    background: var(--cmsActive);
+}
+
+.cms ul.tree a{
+    color: var(--cmsSubText);
+}
+
+.cms ul.tree a.label{
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex: 1 1 auto;
+    min-width: 0;
+    padding: 0.3rem 0.25rem;
+    font-size: 0.875rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.cms ul.tree li.active > label a.label{
+    font-weight: 500;
+    color: var(--cmsTextColor);
+}
+
+.cms ul.tree a.label i.type{
+    flex: 0 0 1rem;
+    font-size: 0.875rem;
+    color: var(--cmsMuted);
+    text-align: center;
+}
+
+.cms ul.tree li.active > label a.label i.type{
+    color: var(--cmsMainColor);
+}
+
+.cms ul.tree label > i.type{
+    flex: 0 0 1rem;
+    margin-left: 0.25rem;
+    font-size: 0.875rem;
+    color: var(--cmsMainColor);
+    text-align: center;
+}
+
+.cms ul.tree span.label[contenteditable="true"]{
+    display: block;
+    flex: 1 1 auto;
+    min-width: 4rem;
+    margin: 0.2rem 0.35rem 0.2rem 0.15rem;
+    padding: 0.1rem 0.45rem;
+    border: 1px solid var(--cmsInteractive);
+    border-radius: var(--cmsRadius);
+    background: #fff;
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--cmsInteractive) 18%, transparent);
+    font-size: 0.875rem;
+    font-weight: 500;
+    line-height: 1.4;
+    color: var(--cmsTextColor);
+    white-space: nowrap;
+    outline: none;
+    cursor: text;
+}
+
+/* Auf-/Zuklappen; Blätter halten nur den Platz */
+.cms ul.tree a.fold{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 1.25rem;
+    height: 1.25rem;
+    border-radius: 4px;
+    color: var(--cmsMuted);
+    cursor: pointer;
+}
+
+.cms ul.tree a.fold i{
+    font-size: 0.6875rem;
+}
+
+.cms ul.tree a.fold:hover{
+    color: var(--cmsTextColor);
+    background: var(--cmsHover);
+}
+
+.cms ul.tree a.fold.leaf{
+    cursor: default;
+    background: none;
+}
+
+/* Status-Icons hinter dem Label (Alias, unveröffentlicht, Papierkorb) */
+.cms ul.tree label > a:not(.label):not(.fold),
+.cms ul.tree label > i:not(.treeGrip){
+    flex: 0 0 auto;
+    padding: 0 0.3rem;
+    font-size: 0.75rem;
+    color: var(--cmsMuted);
+}
+
+/* Griff und Menü liegen rechts, gleiche Fläche, und nehmen ihren Platz
+   immer ein. Sonst springt das Label beim Hover nach rechts. */
+.cms ul.tree i.treeGrip,
+.cms ul.tree button.treeMenu{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 1.25rem;
+    width: 1.25rem;
+    height: 1.25rem;
+    min-height: 0;
+    margin: 0 0 0 0.1rem;
+    padding: 0;
+    border: 0;
+    border-radius: 4px;
+    background: transparent;
+    color: var(--cmsMuted);
+    font-size: 0.8rem;
+    line-height: 1;
+    opacity: 0;
+}
+
+.cms ul.tree i.treeGrip{
+    order: 1;
+    margin-left: 0.45rem;
+    cursor: grab;
+}
+
+.cms ul.tree i.treeGrip:active{
+    cursor: grabbing;
+}
+
+.cms ul.tree button.treeMenu{
+    order: 2;
+    margin-left: 0.35rem;
+    cursor: pointer;
+}
+
+.cms ul.tree li > label:hover i.treeGrip,
+.cms ul.tree li > label:hover button.treeMenu,
+.cms ul.tree li.menuTarget > label i.treeGrip,
+.cms ul.tree li.menuTarget > label button.treeMenu{
+    opacity: 1;
+}
+
+.cms ul.tree i.treeGrip:hover,
+.cms ul.tree button.treeMenu:hover{
+    background: var(--cmsButtonBg);
+    color: var(--cmsTextColor);
+}
+
+.cms ul.tree button.treeMenu i{
+    font-size: inherit;
+    line-height: 1;
+}
+
+.cms ul.tree li.menuTarget > label{
+    background: color-mix(in srgb, var(--cmsHighlightColor) 18%, var(--cmsCanvas));
+}
+
+/****************************** RESIZE TREE ***************************/
+
+/****************************** TREE NAVI ***************************/
+.cms .treeNavi{
+    display: flex;
+    gap: 0;
+}
+
+.cms .treeNavi li{
+    display: inline-block;
+    list-style-type: none;
+}
+
+.cms .treeNavi a{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    border-radius: var(--cmsRadius);
+    color: var(--cmsMuted);
+    font-size: 0.875rem;
+    cursor: pointer;
+}
+
+.cms .treeNavi a:hover{
+    background: var(--cmsHover);
+    color: var(--cmsTextColor);
+}
