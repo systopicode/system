@@ -301,3 +301,16 @@ textarea.olink{
 	border:1px solid rgb(52,52,52);
 	min-height: 16px;
 }
+
+/* references (Cms\Refs): a text reference shows its value in a box, a missing target is marked */
+.editor span.ref{
+	background: rgba(127,127,127,.18);
+	border-radius: 3px;
+	padding: 0 2px;
+	cursor: default;
+}
+
+.editor [data-ref-missing]{
+	outline: 2px dashed #d33 !important;
+	outline-offset: 1px;
+}

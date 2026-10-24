@@ -136,12 +136,22 @@ function editColumns(e) {
 	editor.trigger('input');
 }
 
+/**
+ * The medium an editor image shows: its reference (data-ref-src, set by the
+ * CMS beside the url - Cms\Refs\Resolver), "media:293?format=collection".
+ */
+function editorMediaRef(element) {
+	var ref = (element && element.getAttribute('data-ref-src')) || '';
+	var match = ref.match(/^media:(\d+)(?:\?format=([\w-]+))?/);
+	return match ? {node_id: match[1], format: match[2] || 'original'} : {node_id: null, format: ''};
+}
+
 function formatImage(event) {
-	var $targetDomObj = $(event.data.target);
-	if ($targetDomObj.data('format') == 'original') {
+	var media = editorMediaRef(event.data.target);
+	if (media.format === 'original') {
 		alert("Original Format cannot be edited");
-	} else {
-		var href = settings.siteRoot + "cms/pages/editor/file/?target_id=" + $targetDomObj.data('node_id') + "&format=" + $targetDomObj.data('format') + "";
+	} else if (media.node_id !== null) {
+		var href = settings.siteRoot + "cms/pages/editor/file/?target_id=" + media.node_id + "&format=" + media.format + "";
 		sys.core.server.sendCall({
 			method: 'get',
 		}, href);
@@ -172,16 +182,11 @@ function changeHTMLeditorImage(event) {
 	var $parent = $(event.data.target).closest('[contenteditable="true"]');
 	var newFormat = event.data.imageFormat;
 	var src = event.data.target.getAttribute('src');
-	var oldFormat = event.data.target.getAttribute('data-format');
+	var media = editorMediaRef(event.data.target);
+	var oldFormat = media.format;
 	var image = $(event.data.target);
-
-	if (oldFormat === '') {
-		oldformat = src.match(/^.*\/var\/formats\/([^\/]*)/);
-		if (oldformat === null) {
-			oldformat = 'original';
-		} else {
-			oldformat = oldformat[1];
-		}
+	if (media.node_id === null) {
+		return; // not a medium of this site
 	}
 
 	if (newFormat === 'original') {
@@ -205,8 +210,9 @@ function changeHTMLeditorImage(event) {
 		newSrc += '.webp';
 	}
 
+	// the url only shows it in the editor - what is saved is the reference
 	$(image).attr("src", newSrc);
-	$(image).attr("data-format", newFormat);
+	$(image).attr("data-ref-src", "media:" + media.node_id + (newFormat === 'original' ? '' : "?format=" + newFormat));
 	$parent.trigger('input');
 }
 
@@ -240,14 +246,14 @@ function createHTMLeditorLink(event) {
 	switch (elementMode) {
 		case "IMG-new":
 			data.values = {
-				image_node_id: $(event.data.target).attr('data-node_id'),
+				image_node_id: editorMediaRef(event.data.target).node_id,
 			};
 			href = settings.siteRoot + "cms/pages/editor/editLink/";
 			break;
 
 		case "IMG-edit":
 			data.values = {
-				image_node_id: $(event.data.target).attr('data-node_id'),
+				image_node_id: editorMediaRef(event.data.target).node_id,
 				classNames: clickedElement.attr('class'),
 				download: clickedElement.attr('download'),
 				target: clickedElement.attr('target'),

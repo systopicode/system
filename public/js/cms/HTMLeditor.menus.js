@@ -7,7 +7,7 @@ function handleHTMLeditorServerResponse(response, element) {
 
 function HTMLeditorRightClick(clicktype, event, elements) {
 	var tag = $(event.target).prop('tagName');
-	var format = event.target.dataset.format;
+	var format = editorMediaRef(event.target).format;
 	switch (clicktype) {
 		case "image":
 			var subs = [];
@@ -32,7 +32,7 @@ function HTMLeditorRightClick(clicktype, event, elements) {
 						formats: {
 							title: 'Formats',
 							className: 'fa-light fa-image',
-							active: ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'].includes($(event.target).data('mimetype')) ? true : false,
+							active: ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'].includes($(event.target).attr('data-ref-mimetype')) ? true : false,
 							subs: subs
 						},
 						edit: {
