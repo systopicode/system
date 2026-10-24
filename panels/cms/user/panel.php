@@ -23,9 +23,9 @@ class Panel extends CmsPanel {
 	}
 
 	/**
-	 * Initials and gravatar address for the signet, which is on every CMS
-	 * page: from the session service, which has the user loaded anyway —
-	 * reading the row here would cost a query per request.
+	 * Initials for the signet, which is on every CMS page: from the session
+	 * service, which has the user loaded anyway — reading the row here would
+	 * cost a query per request.
 	 */
 	public string $initials {
 		// No `??`: it asks __isset() first, and the legacy record does not
@@ -85,18 +85,4 @@ class Panel extends CmsPanel {
 		;
 	}
 
-	/**
-	 * The gravatar of an address, or FALSE if it has none. Asks gravatar.com
-	 * (a HEAD request), so a template calls it once.
-	 */
-	static function get_gravatar($email, $s = 40, $d = '404', $r = 'g') {
-		$url = 'https://www.gravatar.com/avatar/';
-		$url .= md5(strtolower(trim($email ?? '')));
-		$url .= "?s=$s&d=$d&r=$r";
-		$response = @get_headers($url);
-		if ($response && str_contains($response[0], '200')) {
-			return $url;
-		}
-		return FALSE;
-	}
 }

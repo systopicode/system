@@ -1,0 +1,34 @@
+.userList .userStatusCell{
+    width: 2rem;
+    text-align: center;
+}
+
+.userList .userStatus{
+    display: inline-block;
+    width: 0.55rem;
+    height: 0.55rem;
+    border-radius: 50%;
+    background: var(--cmsMuted);
+}
+
+.userList .userStatus.is-online{
+    background: var(--cmsSuccess);
+}
+
+.userList .userStatus.is-offline{
+    background: var(--cmsError);
+}
+
+.userList .roles{
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.35rem;
+    min-height: 1.75rem;
+}
+
+.userList .userSuper{
+    margin-left: 0.35rem;
+    color: var(--cmsHighlightColor);
+    font-size: 0.85rem;
+}

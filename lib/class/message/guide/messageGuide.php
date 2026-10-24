@@ -16,7 +16,7 @@ class messageGuide extends message {
 				->type('info')
 				->message('No Templates found in your project. you may create a default template')
 				->action('Create Template', 'cms/pages/createDefaultTemplate')
-				->help('read about rutancms Templates', '/templates')
+				->help('Hilfe zu Vorlagen', 'https://fluxo-help.1f2c.de')
 		;
 	}
 

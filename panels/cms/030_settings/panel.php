@@ -8,7 +8,10 @@ use Systopic\System\Panels\PanelNode;
 
 class Panel extends PanelNode {
 
-	public $icon = 'fa-regular fa-gear';
+	public $icon = 'fa-duotone fa-regular fa-gear';
+
+	/** Page Settings and Tags exist before onLoad, so the menu can open one. */
+	public bool $buildChildPanels = true;
 
 	/** The request's scope — the settings children read and write through it. */
 	public Scope $scope {
@@ -30,6 +33,10 @@ class Panel extends PanelNode {
 	}
 
 	function onLoad() {
+		if ($this->inPath()) {
+			$this->updateView('pylon');
+		}
+		$this->rememberOrOpenChild();
 		// child('page') is the 010_page sub-panel; it is null until the
 		// children are built, which is exactly what this guard checks
 		$page = $this->child('page');
@@ -42,6 +49,7 @@ class Panel extends PanelNode {
 		return (object) [
 			    'id' => NULL,
 			    'childSelected' => NULL,
+			    'openChild' => NULL,
 			    'pylonWidth' => 250,
 			    'openFolds' => [],
 		];

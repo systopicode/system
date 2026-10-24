@@ -1,0 +1,273 @@
+/* Only what the tools screens need and nothing else uses. */
+
+body.tools .toolCheck{
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	display: flex;
+	flex-direction: column;
+	gap: 0.4rem;
+}
+
+body.tools .toolCheck li{
+	margin: 0;
+	padding: 0.4rem 0.7rem;
+	border-radius: var(--cmsRadius);
+	font-size: 0.875rem;
+	line-height: 1.4;
+	color: var(--cmsTextColor);
+}
+
+body.tools .toolCheck li.confirm{
+	background: color-mix(in srgb, #7cb249 18%, var(--cmsCanvas));
+}
+
+body.tools .toolCheck li.warning{
+	background: color-mix(in srgb, var(--cmsHighlightColor) 32%, var(--cmsCanvas));
+}
+
+body.tools .toolCheck li.error{
+	background: color-mix(in srgb, var(--cmsError) 14%, var(--cmsCanvas));
+}
+
+body.tools .toolCheck li.info{
+	background: var(--cmsHover);
+}
+
+body.tools .phpinfo{
+	overflow: auto;
+}
+
+body.tools .phpinfo table{
+	font-size: 0.8125rem;
+}
+
+body.tools .logView{
+	display: block;
+	width: 100%;
+	height: min(32rem, 70vh);
+	margin: 0;
+	padding: 0.75rem;
+	border: 0;
+	resize: vertical;
+	font-family: ui-monospace, monospace;
+	font-size: 0.75rem;
+	line-height: 1.45;
+	background: var(--cmsCanvas);
+	color: var(--cmsTextColor);
+}
+
+body.tools .schemaBar{
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 0.75rem;
+	margin: 0 0 1.25rem;
+}
+
+body.tools .schemaBar .button{
+	margin: 0;
+}
+
+body.tools .schemaFilters{
+	display: flex;
+	align-items: center;
+	gap: 0.75rem;
+	margin: 0;
+}
+
+body.tools .schemaFilters select{
+	width: 14rem;
+	margin: 0;
+}
+
+body.tools .schemaFilters .checkbox{
+	margin: 0;
+	white-space: nowrap;
+}
+
+body.tools .schemaFilters .switch + div{
+	margin-left: 0.35rem;
+}
+
+body.tools tr.schemaDiff td{
+	background: color-mix(in srgb, var(--cmsHighlightColor) 12%, var(--cmsCanvas));
+	color: var(--cmsTextColor);
+}
+
+body.tools .schemaCompare{
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+	align-items: center;
+	gap: 0.65rem;
+	width: 100%;
+}
+
+body.tools .schemaFrom,
+body.tools .schemaTo{
+	display: block;
+	padding: 0.35rem 0.55rem;
+	border: 1px solid var(--cmsLine);
+	border-radius: var(--cmsRadius);
+	background: var(--cmsPageBg, var(--cmsCanvas));
+	font-family: ui-monospace, monospace;
+	font-size: 0.8125rem;
+	white-space: normal;
+	overflow-wrap: anywhere;
+}
+
+body.tools .schemaFrom{
+	color: var(--cmsMuted);
+}
+
+body.tools .schemaTo{
+	border-color: color-mix(in srgb, var(--cmsHighlightColor) 50%, var(--cmsLine));
+	background: color-mix(in srgb, var(--cmsHighlightColor) 16%, var(--cmsCanvas));
+	color: var(--cmsTextColor);
+	font-weight: 600;
+}
+
+body.tools .schemaCompare i{
+	color: var(--cmsMuted);
+	font-size: 0.75rem;
+}
+
+body.tools td.schemaApply{
+	width: 1%;
+	white-space: nowrap;
+	text-align: right;
+	vertical-align: middle;
+}
+
+body.tools td.schemaApply .button{
+	margin: 0;
+}
+
+body.tools tr.destructive td{
+	background: color-mix(in srgb, var(--cmsError) 10%, var(--cmsCanvas));
+	color: var(--cmsTextColor);
+}
+
+body.tools tr.blocked td{
+	background: color-mix(in srgb, var(--cmsHighlightColor) 16%, var(--cmsCanvas));
+	color: var(--cmsTextColor);
+}
+
+body.tools .auditKind{
+	display: block;
+	color: var(--cmsMuted);
+	font-size: 0.75rem;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.03em;
+}
+
+body.tools .auditSubject{
+	font-family: ui-monospace, monospace;
+	font-size: 0.8125rem;
+}
+
+body.tools .auditSql{
+	margin-top: 0.35rem;
+}
+
+body.tools .auditSql summary{
+	color: var(--cmsMuted);
+	font-size: 0.75rem;
+	cursor: pointer;
+}
+
+body.tools .auditSql pre{
+	margin: 0.35rem 0 0;
+	white-space: pre-wrap;
+	font-family: ui-monospace, monospace;
+	font-size: 0.75rem;
+	color: var(--cmsMuted);
+}
+
+body.tools .auditNote{
+	display: block;
+	margin-top: 0.2rem;
+	color: var(--cmsMuted);
+	font-size: 0.75rem;
+}
+
+body.tools .logError{
+	margin: 0 0 1rem;
+	color: var(--cmsError);
+}
+
+body.tools .logList td:first-child{
+	white-space: nowrap;
+	vertical-align: top;
+}
+
+body.tools .logTrace{
+	margin: 0.4rem 0 0;
+	max-height: 8rem;
+	overflow: auto;
+	font-family: ui-monospace, monospace;
+	font-size: 0.75rem;
+	line-height: 1.4;
+	color: var(--cmsMuted);
+	white-space: pre-wrap;
+}
+
+body.tools .logPill{
+	display: inline-block;
+	padding: 0.1rem 0.5rem;
+	border-radius: 999px;
+	font-size: 0.75rem;
+	line-height: 1.4;
+	background: var(--cmsHover);
+}
+
+body.tools .logPill.is-ok{
+	background: color-mix(in srgb, #7cb249 22%, var(--cmsCanvas));
+}
+
+body.tools .logPill.is-bad{
+	background: color-mix(in srgb, var(--cmsError) 16%, var(--cmsCanvas));
+	color: var(--cmsError);
+}
+
+body.tools .mailLog dl{
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: 0.75rem 1.5rem;
+	margin: 0 0 1.25rem;
+}
+
+body.tools .mailLog dt{
+	font-size: 0.75rem;
+	color: var(--cmsMuted);
+}
+
+body.tools .mailLog dd{
+	margin: 0.1rem 0 0;
+}
+
+body.tools .mailPreview{
+	display: block;
+	width: 100%;
+	height: min(36rem, 62vh);
+	overflow: auto;
+	border: 1px solid var(--cmsLine);
+	border-radius: var(--cmsRadius);
+	background: var(--cmsBgColor);
+}
+
+body.tools pre.mailPreview{
+	margin: 0;
+	padding: 1rem;
+	white-space: pre-wrap;
+}
+
+body.tools .mediaResult{
+	margin-top: 0.25rem;
+	overflow: auto;
+}
+
+body.tools .mediaResult:empty{
+	display: none;
+}

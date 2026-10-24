@@ -134,8 +134,9 @@ class mediaImage {
 		}
 
 		if (!$fileexists || !$typeSupported) {
+			// Missing file or a type Imagick cannot read (mp4): the afternoon
+			// renderer paints this notice onto a gray canvas instead of 404ing.
 			$msg .= "Support $type:" . ($typeSupported ? 'TRUE' : 'FALSE');
-			throw new \RuntimeException($msg);
 		}
 
 		$lay_image = new Imagick();
@@ -343,6 +344,21 @@ class mediaImage {
 			}
 			$compoSiteWidth = ($cnv_width / 2) - ($lay_width / 2) + (0.5 - $crop_left) * $lay_width;
 			$cnv_image->compositeImage($lay_image, $originalCompose, (int) round($compoSiteWidth), (int) round(($cnv_height / 2) - ($lay_height / 2) + ((0.5 - $crop_top) * $lay_height)));
+		} else {
+			$pixel = new ImagickPixel("rgba(100,100,100,0.8)");
+			$cnv_image->newImage((int) round($cnv_width), (int) round($cnv_height), $pixel);
+			$draw = new ImagickDraw();
+			$draw->setFillColor('rgba(255,255,255,1)');
+			$font = fs::$sysRoot . 'public/fonts/Lato-Regular.ttf';
+			if (is_file($font)) {
+				$draw->setFont($font);
+			}
+			$scale = max(12, $cnv_height / 30, $cnv_width / 30);
+			$draw->setFontSize((float) $scale);
+			$draw->setTextAntialias(TRUE);
+			$cnv_image->annotateImage($draw, $scale, $scale * 2, 0, $msg);
+			$cnv_image->setImageFormat('png');
+			return $cnv_image;
 		}
 		$cnv_image->setImageFormat($filetype);
 		if ($filetype == 'png') {
@@ -352,6 +368,8 @@ class mediaImage {
 		} else if ($filetype == 'jpg') {
 			$cnv_image->setImageCompressionQuality(100);
 		}
+		// The look belongs to this format. The original file is not changed.
+		\Systopic\System\Tables\Medias\Files::tune($cnv_image, (int) $media_id, (string) $filename, (string) $format);
 		return ($cnv_image);
 	}
 }

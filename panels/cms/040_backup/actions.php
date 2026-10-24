@@ -8,10 +8,14 @@ switch ($this->action) {
 		$filename = (string) $this->backupName(http::get('name'));
 		if (str_ends_with($filename, '-0.zip')) {
 			$basefilname = substr($filename, 0, -5);
+			$removed = 0;
 			for ($fileindex = 0; fs::isFile($spanfilename = fs::$siteRoot . 'var/backups/' . $basefilname . $fileindex . '.zip'); $fileindex++) {
 				if (fs::unlinkFile($spanfilename)) {
-					message::info("file '$basefilname$fileindex' removed.\n");
+					$removed++;
 				}
+			}
+			if ($removed > 0) {
+				message::confirm('Backup removed.');
 			}
 		}
 		$this->backupfilestable = $this->getBackupfilestable($this->backupdirpath);
@@ -33,17 +37,37 @@ switch ($this->action) {
 		http::redirect('./');
 		//$this->updateView();
 		break;
+	case 'upload':
+		$name = (string) http::put('name');
+		$problem = $this->acceptBackupSpan(
+			$name,
+			(int) http::put('spanIndex'),
+			(bool) http::put('lastSpan'),
+			(string) http::binary(),
+		);
+		if ($problem !== null) {
+			message::error($problem);
+			break;
+		}
+		if (!http::put('lastSpan')) {
+			$renderStyle = 'none';
+			break;
+		}
+		message::confirm('Backup uploaded.');
+		$this->backupfilestable = $this->getBackupfilestable($this->backupdirpath);
+		$this->updateView();
+		break;
 	case 'clearTempdirs':
 		$tmpdirpaths =  ['var/backups/tmp/', 'var/original_replaced/'];
+		$cleared = 0;
 		foreach ($tmpdirpaths as $tmpdirpath) {
 			if (fs::isDir(fs::$siteRoot . $tmpdirpath)) {
 				$tmpDir = fsDir::get(fs::$siteRoot . $tmpdirpath);
 				$tmpDir->unlink(TRUE);
-				message::confirm("$tmpdirpath cleared.");
-			} else {
-				message::info("$tmpdirpath not found.");
+				$cleared++;
 			}
 		}
+		message::confirm($cleared > 0 ? 'Temporary files cleared.' : 'Nothing to clear.');
 		$this->updateView();
 		break;
 }

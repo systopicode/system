@@ -9,6 +9,9 @@ switch ($this->action) {
 	case 'register':
 	case 'login':
 	case 'resetPassword':
+	case 'license':
+	case 'imprint':
+	case 'privacy':
 		$this->form = $this->action;
 		$this->updateView('main');
 		break;
@@ -79,6 +82,7 @@ switch ($this->action) {
 	case 'doLogin':
 		$user = \Systopic\System\Auth\Session::check((string) \http::posted('username', ''), (string) \http::posted('password', ''));
 		if ($user === NULL) {
+			\Systopic\System\Auth\LoginLog::write((string) \http::posted('username', ''), 'wrong username/password');
 			$this->refuse("We don't know this combination");
 			break;
 		}

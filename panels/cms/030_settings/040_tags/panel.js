@@ -62,7 +62,17 @@
 		};
 
 		tags.delete = event => {
-			if (confirm('remove Tag')) {
+			var name = (event.element && event.element.dataset.label || '').trim();
+			var question = name
+				? 'Delete the tag "' + name + '"? It is removed everywhere it is used.'
+				: 'Delete this tag? It is removed everywhere it is used.';
+			if (confirm(question)) {
+				sys.core.server.sendEventCall(event);
+			}
+		};
+
+		tags.deleteGroup = event => {
+			if (confirm('Delete this empty group?')) {
 				sys.core.server.sendEventCall(event);
 			}
 		};
@@ -74,21 +84,17 @@
 		tags.updateColor = event => {
 			var input = Object.values(event.data.values)[0];
 			if (input.match(/#[a-f0-9]{6}/i)) {
-				// Das Widget wird ueber sein data-group_id gefunden, nicht ueber
-				// den Tag-Namen: gerendert wird ein div, nicht eine section.
-				// closest('section') landete deshalb bei section.cms und faerbte
-				// die Tags *aller* Gruppen um.
-				var tags = event.element.closest('[data-group_id]').querySelectorAll('div.tag');
-				for (var tag of tags) {
+				// The widget is the div that carries data-group_id. The text
+				// colour is contrast-color(var(--tag-color)), so the variable
+				// has to move with the swatch or the letters stay on the old
+				// colour.
+				var pills = event.element.closest('[data-group_id]').querySelectorAll('div.tag');
+				for (var tag of pills) {
+					tag.style.setProperty('--tag-color', input);
 					tag.style.backgroundColor = input;
 					tag.style.borderColor = input;
-					var count = tag.getElementsByTagName('number');
-					if (count.length) {
-						count[0].style.color = input;
-					}
-
 				}
-				sys.core.server.sendEventCall(event)
+				sys.core.server.sendEventCall(event);
 			}
 
 		};
@@ -141,7 +147,6 @@
 
 			selectElementContents(h1);
 			h1.onkeydown = (e) => {
-				c(e.keyCode);
 				switch (e.keyCode) {
 					case 13:
 						h1.removeAttribute('contenteditable');

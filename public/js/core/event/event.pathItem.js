@@ -1,4 +1,4 @@
-﻿/* global sys,c,p,t,l,obj */
+/* global sys,c,p,t,l,obj */
 
 
 sys.core.event.pathItem = function (element, event) {
@@ -145,8 +145,23 @@ sys.core.event.pathItem = function (element, event) {
 	};
 
 	pathItem.getQuery = href => {
-		var hrefInfo = href.match(/^((https?:\/\/)([^\/]*)|)(.*\/|)(.*?)(\?(.*?)|)(#(.*?)|)$/);
-		return sys.http.parseQuery(hrefInfo[7]);
+		var hrefInfo = String(href || '').match(/^((https?:\/\/)([^\/]*)|)(.*\/|)(.*?)(\?(.*?)|)(#(.*?)|)$/);
+		var query = hrefInfo ? hrefInfo[7] : '';
+		// sys.http is built with the singletons, after the first DOM walk.
+		if (sys.http && sys.http.parseQuery) {
+			return sys.http.parseQuery(query);
+		}
+		if (!query) {
+			return false;
+		}
+		var data = {};
+		query.split('&').forEach(function (part) {
+			var pair = part.split('=');
+			if (pair[0]) {
+				data[pair[0]] = pair[1];
+			}
+		});
+		return data;
 	};
 
 	pathItem.getInputData = function (element) {

@@ -1,0 +1,484 @@
+/**************************FONT***********************/
+@font-face {
+    font-family: 'Font';
+    src: url('../../fonts/InterVariable.woff2') format('woff2');
+    font-weight: 300 700;
+    font-style: normal;
+    font-display: swap;
+}
+
+.wf-loading *{
+    opacity: 0 !important;
+}
+
+/**************************ALLGEMEIN***********************/
+html{
+    /* Eine Stufe für die ganze Oberfläche. rem hängt hieran, nicht an px. */
+    font-size: 17.5px;
+}
+
+html,
+body{
+    height: 100%;
+    width: 100%;
+    margin: 0 auto;
+}
+
+body{
+    display: flex;
+    flex-direction: column;
+    box-sizing: border-box;
+    margin-top: -1px; /* margin collapse */
+    border-top: 1px solid;
+    background: var(--cmsMainColor);
+    font-family: var(--cmsFont);
+    font-size: 1rem;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+.cms{
+    font-family: var(--cmsFont);
+    font-weight: 400;
+    color: var(--cmsTextColor);
+}
+
+.cms *{
+    margin: 0;
+    padding: 0;
+    border: 0;
+    outline: none;
+    box-sizing: border-box;
+    font-style: normal;
+    line-height: 1.5em;
+    letter-spacing: 0;
+    list-style-type: none;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-overflow-scrolling: touch;
+}
+
+.cms *:focus-visible{
+    outline: 2px solid var(--cmsHighlightColor);
+    outline-offset: 2px;
+}
+
+.cms *:not(div)::selection{
+    background: var(--cmsHighlightColor);
+    color: var(--cmsOnHighlight);
+}
+
+.cms hr,
+.cms div.specialContent hr{
+    display: inline-block;
+    clear: both;
+    width: 100%;
+    height: 1px;
+    margin: 1rem 0;
+    background: var(--cmsLine);
+}
+
+body.cms > div.content > section{
+    flex: 1 1 auto;
+    overflow: auto;
+}
+
+section.cms{
+    flex: 1 1 auto;
+    height: calc(100% - 60px);
+    padding: 1.5rem;
+    overflow: auto;
+}
+
+/****************************** AUSRICHTUNG ***************************/
+.cms .rightAlign{
+    text-align: right;
+    margin-left: auto;
+}
+
+.cms .floatRight{
+    float: right;
+}
+
+.cms .floatLeft{
+    float: left;
+}
+
+/****************************** PYLON-FOOTER (MEDIATHEK) ***************************/
+footer.cms{
+    position: relative;
+    top: initial !important;
+    z-index: 999;
+    clear: both;
+    flex: 1 1 auto;
+    width: 100%;
+    height: 100%;
+    min-height: 50px;
+    overflow: hidden;
+    background: var(--cmsBgColor);
+    border-top: 1px solid var(--cmsLine);
+}
+
+footer.cms div.footerContent{
+    width: 100%;
+    height: 100%;
+    padding: 0 0.75rem;
+    overflow-x: hidden;
+    overflow-y: auto;
+}
+
+footer.cms div.footerContent:not(.layout){
+    padding: 0;
+}
+
+footer.cms div.footerContent > .layout{
+    gap: 2rem;
+}
+
+footer.cms .widget{
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+}
+
+footer.cms .widget main{
+    flex: 1 1 auto;
+}
+
+footer.cms div.resizable-handle.resizable-n{
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 0 !important;
+    display: block;
+    width: 100%;
+    height: 12px;
+    background: transparent;
+    cursor: ns-resize;
+}
+
+footer.cms label{
+    display: block;
+    width: 100%;
+    margin: 0;
+    padding: 0.6rem 0.75rem;
+    background: transparent;
+    border-bottom: 1px solid var(--cmsLine);
+}
+
+footer.cms label b{
+    display: block;
+    width: calc(100% - 30px);
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--cmsMuted);
+}
+
+section.cms.withFooter,
+section.cms.withFooter + footer{
+    height: auto;
+    overflow: hidden;
+}
+
+section.cms.withFooter + footer div.resizable-handle.resizable-n{
+    cursor: none;
+}
+
+/****************************** MELDUNGEN ***************************/
+dialog.cms{
+    position: relative;
+    z-index: 2000;
+    display: block;
+    width: 100%;
+    height: 0;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    text-align: center;
+    border: none;
+    user-select: none;
+    transition: height 0.4s ease-in-out;
+}
+
+dialog.cms:hover{
+    overflow: visible;
+}
+
+dialog.cms h2{
+    display: none;
+    position: relative;
+    margin: 0;
+    padding: 0.4rem;
+    text-transform: none;
+    cursor: default;
+}
+
+dialog.cms h2,
+dialog.cms h2 *{
+    font-size: 0.9375rem;
+}
+
+dialog.cms i.close{
+    position: absolute;
+    top: 0;
+    right: 0;
+    display: none;
+    padding: 0.4rem 0.9rem;
+    font-size: 1.1rem;
+    color: #fff;
+    cursor: pointer;
+}
+
+dialog.cms h2:first-child i{
+    display: block;
+}
+
+dialog.cms h2 + h2{
+    border-top: 1px solid rgba(255,255,255,.35);
+}
+
+.cms h2.error,
+.cms h2.error *,
+.cms div.dz-error-message span,
+.cms button:not(.transparent).error,
+.cms .button:not(.transparent).error,
+dialog.cms .error{
+    background: var(--cmsError);
+    color: #fff !important;
+}
+
+.cms h2.confirm,
+.cms h2.confirm *,
+.cms button:not(.transparent).confirm,
+.cms .button:not(.transparent).confirm,
+dialog.cms .confirm{
+    background: var(--cmsSuccess);
+    color: #fff !important;
+}
+
+.cms h2.warning,
+.cms h2.warning *,
+.cms button:not(.transparent).warning,
+.cms .button:not(.transparent).warning,
+dialog.cms .warning{
+    background: var(--cmsWarning);
+    color: var(--cmsTextColor) !important;
+}
+
+.cms h2.error.message,
+.cms h2.confirm.message,
+.cms h2.warning.message{
+    margin-bottom: 0.4rem;
+    padding: 0.4rem 0.75rem;
+    border-radius: var(--cmsRadius);
+}
+
+.cms p.error,
+.cms p.warning,
+.cms p.confirm{
+    padding: 0.15rem 0.4rem;
+    border-radius: 4px;
+}
+
+.cms form.confirm{
+    outline: 1px solid var(--cmsSuccess);
+}
+
+.cms a.confirm{
+    color: var(--cmsSuccess);
+}
+
+div.formElementMessage{
+    display: inline-block;
+    vertical-align: top;
+}
+
+div.formElementMessage span{
+    display: block;
+    float: left;
+    clear: both;
+    width: 100%;
+    padding: 0.15rem 0.4rem;
+    border-radius: 4px;
+    background: var(--cmsError);
+    color: #fff;
+    font-size: 0.8125rem;
+}
+
+/* Meldungsblöcke: eine Fläche, der Text bleibt ungefärbt */
+div.cms.message:empty{
+    display: none;
+}
+
+div.cms.message{
+    margin: 1.25rem;
+
+    > div{
+        margin: 0 0 0.4rem;
+        padding: 0.7rem 0.85rem;
+        border-radius: var(--cmsRadius);
+        background: color-mix(in srgb, var(--cmsMainColor) 8%, var(--cmsCanvas));
+        color: var(--cmsTextColor);
+    }
+
+    p{
+        margin: 0;
+        padding: 0;
+        background: none;
+        color: inherit;
+    }
+
+    > div.error{
+        background: color-mix(in srgb, var(--cmsError) 12%, var(--cmsCanvas));
+    }
+
+    > div.warning{
+        background: color-mix(in srgb, var(--cmsWarning) 28%, var(--cmsCanvas));
+    }
+
+    > div.confirm{
+        background: color-mix(in srgb, var(--cmsSuccess) 14%, var(--cmsCanvas));
+    }
+
+    > div.info,
+    > div.notice{
+        background: color-mix(in srgb, var(--cmsThirdColor) 14%, var(--cmsCanvas));
+    }
+}
+
+div.cms.message pre,
+div.cms.message pre b{
+    font-family: ui-monospace, Menlo, monospace;
+    font-size: 12px;
+}
+
+div.cms.message pre{
+    padding: 0 3px;
+    border-radius: 3px;
+    background: rgba(0,0,0,.06);
+}
+
+/****************************** SIGNET ***************************/
+.cms div.signet{
+    position: relative;
+    display: flex;
+    justify-content: center;
+    width: 300px;
+    margin-bottom: 20px;
+    aspect-ratio: 1/1;
+    overflow: hidden;
+    border-radius: 50%;
+    border: 4px solid var(--cmsHighlightColor);
+    background: var(--cmsSecondaryColor);
+}
+
+.cms div.signet span,
+.cms div.signet img{
+    align-self: center;
+    height: 0;
+    margin-top: -7%;
+    object-fit: cover;
+    font-size: 100px;
+    font-weight: 600;
+    letter-spacing: 10px;
+    line-height: 0;
+    color: var(--cmsMainColor);
+}
+
+.cms div.signet img{
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    object-fit: cover;
+}
+
+.cms div.bottomMenu div.signet{
+    z-index: 1;
+    width: 2.25rem;
+    height: 2.25rem;
+    margin: 0.5rem auto 0.25rem;
+    border: 2px solid rgba(255,255,255,.25);
+    cursor: pointer;
+}
+
+.cms div.bottomMenu div.signet span{
+    margin-top: 0;
+    font-size: 0.8125rem;
+    letter-spacing: 0.5px;
+    color: #fff;
+}
+
+.cms div.bottomMenu div.signet > a{
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+}
+
+.cms div.bottomMenu div.signet:hover:after{
+    content: '\f013';
+    position: absolute;
+    inset: 0;
+    z-index: 3;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: "CMS Font Awesome 7 Pro";
+    font-size: 0.9rem;
+    color: #fff;
+    background: var(--cmsSecondaryColor);
+    pointer-events: none;
+}
+
+/****************************** MARKE ***************************/
+.cms a.cmsBrand{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+}
+
+.cms a.cmsBrand img.brandMark{
+    width: 2.5rem;
+    height: 2.5rem;
+}
+
+.cms a.cmsBrand img.brandFull{
+    display: none;
+}
+
+/* Wortmarke nur auf dem Dashboard. In den Modulen bleibt das Zeichen. */
+.cms a.cmsBrand.is-home{
+    justify-content: flex-start;
+    padding-left: 0.85rem;
+}
+
+.cms a.cmsBrand.is-home img.brandMark{
+    display: none;
+}
+
+.cms a.cmsBrand.is-home img.brandFull{
+    display: block;
+    position: relative;
+    z-index: 2;
+    flex: 0 0 auto;
+    height: 2rem;
+    width: auto;
+    max-width: none;
+    transform: translateY(-5%);
+}
+
+main:has(a.cmsBrand.is-home) > div.main > header{
+    overflow: visible;
+    z-index: 1700;
+}
+
+main:has(a.cmsBrand.is-home) > div.content > header{
+    padding-left: 7.5rem;
+}

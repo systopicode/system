@@ -10,13 +10,13 @@ $entryIndex = (int)http::get('index', 0);
 
 if (empty($output)) {
     ?>
-    <div class="cmslightbox cms" data-size="2">
+    <div class="cmslightbox cms" data-size="1">
 	<section>
 	    <header>
 		<h1>Email Log Entry</h1>
 		<ul class="barmenu">
 		    <li>
-			<a class="ajax" href="../"><i class="fa-light fa-xmark-large"></i></a>
+			<a class="ajax" href="<?= htmlspecialchars($this->parent->getHref(\http::$root)) ?>"><i class="fa-regular fa-xmark"></i></a>
 		    </li>
 		</ul>
 	    </header>
@@ -36,13 +36,13 @@ if (empty($output)) {
     
     if (!isset($entries[$entryIndex])) {
 	?>
-	<div class="cmslightbox cms" data-size="2">
+	<div class="cmslightbox cms" data-size="1">
 	    <section>
 		<header>
 		    <h1>Email Log Entry</h1>
 		    <ul class="barmenu">
 			<li>
-			    <a class="ajax" href="../"><i class="fa-light fa-xmark-large"></i></a>
+			    <a class="ajax" href="<?= htmlspecialchars($this->parent->getHref(\http::$root)) ?>"><i class="fa-regular fa-xmark"></i></a>
 			</li>
 		    </ul>
 		</header>
@@ -105,93 +105,47 @@ if (empty($output)) {
 	    $statusClass = 'red';
 	}
 	?>
-	<div class="cmslightbox cms" data-size="2">
+	<?php
+	$pill = ($status === 'error' || $status === 'failed') ? 'is-bad' : ($status === 'success' ? 'is-ok' : '');
+	$who = $recipients !== [] ? implode(', ', $recipients) : $to;
+	?>
+	<div class="cmslightbox cms" data-size="1">
 	    <section>
 		<header>
-		    <h1>Email Details</h1>
+		    <h1><?= htmlspecialchars($subject !== '' ? $subject : 'Email') ?></h1>
 		    <ul class="barmenu">
 			<li>
-			    <a class="ajax" href="../"><i class="fa-light fa-xmark-large"></i></a>
+			    <a class="ajax" href="<?= htmlspecialchars($this->parent->getHref(\http::$root)) ?>"><i class="fa-regular fa-xmark"></i></a>
 			</li>
 		    </ul>
 		</header>
-		<div class="layout">
-		    <main>
-			<div>
-			    <div style="background: white; padding: 20px; margin-bottom: 20px; border-radius: 4px;">
-				<h2 style="margin-top: 0;"><?= htmlspecialchars($subject) ?></h2>
-				<table style="width: 100%; margin-bottom: 20px;">
-				    <tr>
-					<td style="width: 100px; font-weight: bold;">From:</td>
-					<td><?= htmlspecialchars($from) ?></td>
-				    </tr>
-				    <tr>
-					<td style="font-weight: bold;">To:</td>
-					<td><?= htmlspecialchars($to) ?></td>
-				    </tr>
-				    <tr>
-					<td style="font-weight: bold;">Date:</td>
-					<td><?= htmlspecialchars($timestamp) ?></td>
-				    </tr>
-				    <tr>
-					<td style="font-weight: bold;">Status:</td>
-					<td><span class="badge <?= $statusClass ?>"><?= htmlspecialchars($status) ?></span></td>
-				    </tr>
-				    <?php if ($error): ?>
-				    <tr>
-					<td style="font-weight: bold; color: red;">Error:</td>
-					<td style="color: red;"><?= htmlspecialchars($error) ?></td>
-				    </tr>
-				    <?php endif; ?>
-				    <?php if (!empty($attachments)): ?>
-				    <tr>
-					<td style="font-weight: bold;">Attachments:</td>
-					<td>
-					    <?php foreach ($attachments as $attachment): ?>
-						<span class="badge"><?= htmlspecialchars($attachment) ?></span>
-					    <?php endforeach; ?>
-					</td>
-				    </tr>
-				    <?php endif; ?>
-				</table>
-				
-				<div style="border-top: 1px solid #ddd; padding-top: 20px;">
-				    <?php if (!empty($htmlContent)): ?>
-					<div style="border: 1px solid #ddd; padding: 15px; background: #f9f9f9; border-radius: 4px;">
-						<h3 style="margin-top: 0;">HTML Content:</h3>
-						<div style="border: 1px solid #ccc; background: white; max-height: 600px; overflow: auto;">
-							<iframe id="emailContentFrame" style="width: 100%; height: 600px; border: none;"></iframe>
-							<script>
-							    (function() {
-								var frame = document.getElementById('emailContentFrame');
-								var content = <?= json_encode($htmlContent, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>;
-								frame.srcdoc = content;
-							    })();
-							</script>
-						</div>
-					</div>
-				    <?php elseif (!empty($textContent)): ?>
-					<div style="border: 1px solid #ddd; padding: 15px; background: #f9f9f9; border-radius: 4px;">
-						<h3 style="margin-top: 0;">Text Content:</h3>
-						<pre style="white-space: pre-wrap; font-family: inherit; background: white; padding: 15px; border: 1px solid #ccc; max-height: 600px; overflow: auto;"><?= htmlspecialchars($textContent) ?></pre>
-					</div>
-				    <?php else: ?>
-					<p>No content available.</p>
-				    <?php endif; ?>
-				</div>
-			    </div>
-			</div>
-		    </main>
-		    <aside>
-			<div>
-			    <h3>Details</h3>
-			    <div>
-				<p><strong>User:</strong><br><?= htmlspecialchars($user) ?></p>
-				<p><strong>Recipients:</strong><br><?= htmlspecialchars(implode(', ', $recipients)) ?></p>
-			    </div>
-			</div>
-		    </aside>
-		</div>
+		<main class="mailLog">
+		    <dl>
+			<div><dt>From</dt><dd><?= htmlspecialchars($from) ?></dd></div>
+			<div><dt>To</dt><dd><?= htmlspecialchars($who) ?></dd></div>
+			<div><dt>Date</dt><dd><?= htmlspecialchars($timestamp) ?></dd></div>
+			<div><dt>Status</dt><dd><span class="logPill <?= $pill ?>"><?= htmlspecialchars($status) ?></span></dd></div>
+			<?php if ($user !== '' && $user !== 'not logged in') { ?>
+			    <div><dt>Sent by</dt><dd><?= htmlspecialchars($user) ?></dd></div>
+			<?php } ?>
+			<?php if ($attachments !== []) { ?>
+			    <div><dt>Attachments</dt><dd><?= htmlspecialchars(implode(', ', $attachments)) ?></dd></div>
+			<?php } ?>
+		    </dl>
+		    <?php if ($error !== '') { ?>
+			<p class="logError"><?= htmlspecialchars($error) ?></p>
+		    <?php } ?>
+		    <?php if ($htmlContent !== '') { ?>
+			<iframe id="mailPreview" class="mailPreview" title="Message"></iframe>
+			<script>
+				document.getElementById('mailPreview').srcdoc = <?= json_encode($htmlContent, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>;
+			</script>
+		    <?php } elseif ($textContent !== '') { ?>
+			<pre class="mailPreview"><?= htmlspecialchars($textContent) ?></pre>
+		    <?php } else { ?>
+			<p>No content was stored.</p>
+		    <?php } ?>
+		</main>
 	    </section>
 	</div>
 	<?php

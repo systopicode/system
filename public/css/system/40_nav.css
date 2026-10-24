@@ -1,0 +1,748 @@
+/****************************** HEADER (BASIS) ***************************/
+.cms header,
+main > div.content > header{
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-height: var(--cmsBar);
+    flex: 0 0 var(--cmsBar);
+    position: relative;
+    z-index: 1600;
+}
+
+/* dunkle Köpfe: Hauptnavigation und Pylon */
+main > div.main > header,
+main > div.pylon > header{
+    background: var(--cmsFrame);
+    color: #fff;
+}
+
+main > div.main > header{
+    border-bottom: 1px solid var(--cmsFrameLine);
+}
+
+/* helle Köpfe: Inhalt */
+main > div.content > header{
+    background: var(--cmsHeadBg);
+    color: var(--cmsTextColor);
+    border-bottom: 1px solid var(--cmsLine);
+    padding: 0 0.75rem;
+}
+
+/* Kein Button, keine Krümel, kein Feld: die Leiste fällt weg. */
+main > div.content > header.cms:not(:has(a, button, .button, input, select, textarea, nav, ul, form, label)){
+    display: none;
+}
+
+header.cms .leftAlign,
+header.cms .rightAlign{
+    display: flex;
+    align-items: center;
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+header.cms .rightAlign{
+    justify-content: flex-end;
+}
+
+/* Seitenkopf: Breadcrumb und Titel */
+main > div.content > header:has(.pageHead){
+    flex: 0 0 auto;
+    padding: 0.85rem 1.5rem 0.9rem;
+}
+
+header.cms .pageHead{
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+header.cms .pageHead .crumbs,
+header.cms > nav.crumbs{
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    height: 1rem;
+    min-height: 1rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--cmsSubText);
+    white-space: nowrap;
+    overflow: hidden;
+}
+
+header.cms > nav.crumbs{
+    flex: 1 1 auto;
+    min-width: 0;
+    height: auto;
+}
+
+header.cms .pageHead .crumbs:empty{
+    visibility: hidden;
+}
+
+header.cms .pageHead .crumbs a,
+header.cms > nav.crumbs a{
+    color: var(--cmsSubText);
+}
+
+header.cms .pageHead .crumbs a:hover,
+header.cms > nav.crumbs a:hover{
+    color: var(--cmsTextColor);
+}
+
+header.cms .pageHead .crumbs i,
+header.cms > nav.crumbs i{
+    font-size: 0.5625rem;
+}
+
+header.cms > nav.crumbs b{
+    color: var(--cmsTextColor);
+    font-weight: 600;
+}
+
+header.cms > nav.crumbs + .rightAlign{
+    flex: 0 0 auto;
+}
+
+header.cms .pageTitleRow{
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    min-width: 0;
+    margin-top: 0.2rem;
+}
+
+header.cms .pageHead h1{
+    margin: 0;
+    min-width: 0;
+    font-size: 1.375rem;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    line-height: 1.35;
+    color: var(--cmsTextColor);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+header.cms .pageTitleEdit{
+    display: flex;
+    flex: 0 0 auto;
+    align-items: center;
+    justify-content: center;
+    width: 1.75rem;
+    height: 1.75rem;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    border-radius: var(--cmsRadius);
+    background: transparent;
+    color: var(--cmsMuted);
+    cursor: pointer;
+}
+
+header.cms .pageTitleEdit:hover{
+    background: var(--cmsButtonBg);
+    color: var(--cmsTextColor);
+}
+
+header.cms .pageTitle[contenteditable="true"]{
+    outline: 1px dashed var(--cmsTextColor);
+    outline-offset: 3px;
+    background: transparent;
+    cursor: text;
+}
+
+header.cms .pageTitle[contenteditable="true"]::selection{
+    background: color-mix(in srgb, var(--cmsTextColor) 16%, transparent);
+    color: inherit;
+}
+
+header.cms:has(.pageHead) .leftAlign{
+    flex: 0 0 auto;
+}
+
+/* Vorschaubreite */
+header.cms .deviceSwitch{
+    display: flex;
+    flex: 0 0 auto;
+    gap: 2px;
+    padding: 2px;
+    border-radius: var(--cmsRadius);
+    background: var(--cmsButtonBg);
+}
+
+header.cms .deviceSwitch button{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.25rem;
+    height: 2rem;
+    min-height: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    border-radius: calc(var(--cmsRadius) - 2px);
+    background: transparent;
+    color: var(--cmsMuted);
+    font-size: 0.9rem;
+    cursor: pointer;
+}
+
+header.cms .deviceSwitch button:hover{
+    color: var(--cmsTextColor);
+}
+
+body[data-cms-device="desktop"] header.cms .deviceSwitch button[data-cms-device="desktop"],
+body[data-cms-device="tablet"] header.cms .deviceSwitch button[data-cms-device="tablet"],
+body[data-cms-device="mobile"] header.cms .deviceSwitch button[data-cms-device="mobile"]{
+    background: var(--cmsCanvas);
+    color: var(--cmsTextColor);
+    box-shadow: 0 1px 2px rgba(0,0,0,.12);
+}
+
+header.cms .langSwitch{
+    flex: 0 0 auto;
+}
+
+header.cms .langSwitch > .splitApplyMenu{
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    height: 2.25rem;
+    min-height: 0;
+    margin: 0;
+    padding: 0 0.55rem 0 0.45rem;
+    border: 0;
+    border-radius: var(--cmsRadius);
+    background: var(--cmsButtonBg);
+    color: var(--cmsTextColor);
+    font-size: 0.8125rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+header.cms .langSwitch > .splitApplyMenu img{
+    width: 1.25rem;
+    height: 0.85rem;
+    object-fit: cover;
+    border-radius: 2px;
+}
+
+header.cms .langSwitch > .splitApplyMenu i{
+    font-size: 0.7rem;
+    color: var(--cmsMuted);
+}
+
+/* The menu is moved to the body, so it cannot depend on the header. */
+.cms .langMenu img{
+    width: 1.25rem;
+    height: 0.85rem;
+    object-fit: cover;
+    border-radius: 2px;
+}
+
+.cms .langMenu{
+    width: max-content;
+    overflow: visible;
+    border-radius: var(--cmsRadius);
+}
+
+.cms .langMenu a{
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    width: 100%;
+    box-sizing: border-box;
+    min-height: 2rem;
+    margin: 0;
+    padding: 0.35rem 0.7rem;
+    border-radius: calc(var(--cmsRadius) - 2px);
+    color: var(--cmsTextColor);
+    font-size: 0.8125rem;
+    font-weight: 600;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.cms .langMenu a:hover{
+    background: var(--cmsHover);
+}
+
+.cms .langMenu a.is-current{
+    background: var(--cmsSelected);
+}
+
+.cms .langMenu a.is-current:hover{
+    background: color-mix(in srgb, var(--cmsHighlightColor) 28%, var(--cmsCanvas));
+}
+
+.cms div.pagefuncs{
+    display: flex;
+    align-items: center;
+    flex: 1 1 auto;
+}
+
+.cms div.cmsControls{
+    display: inline-flex;
+    align-items: center;
+    flex-grow: 1;
+    white-space: nowrap;
+}
+
+.cms div.inputField{
+    display: flex;
+}
+
+/****************************** STAGE ***************************/
+.cmsStage{
+    flex: 0 0 auto;
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.6875rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    line-height: 1.2;
+    color: #fff;
+    background: var(--cmsError);
+}
+
+.cmsStage.DEV{
+    background: var(--cmsSuccess);
+}
+
+.cmsStage.STAGING{
+    background: var(--cmsWarning);
+    color: var(--cmsTextColor);
+}
+
+/****************************** KOPF-TABS ***************************/
+.content header.cms ul{
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    white-space: nowrap;
+}
+
+.content header.cms ul li{
+    display: flex;
+}
+
+.content header.cms ul li a{
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    height: 2rem;
+    padding: 0 0.75rem;
+    border-radius: var(--cmsRadius);
+    font-size: 0.875rem;
+    font-weight: 500;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: background-color .15s, color .15s;
+}
+
+.content header.cms ul li a{
+    color: var(--cmsTextColor);
+}
+
+.content header.cms ul li a:hover{
+    background: var(--cmsHover);
+}
+
+.content header.cms ul li a.selected{
+    background: var(--cmsSelected);
+    color: var(--cmsHighlightText);
+}
+
+.content header.cms ul li img{
+    height: 1rem;
+    border-radius: 2px;
+}
+
+
+/* Buttons im hellen Kopf */
+main > div.content > header button,
+main > div.content > header .button,
+main > div.content > header .submit{
+    margin: 0 0 0 0.4rem;
+}
+
+/****************************** SUCHE ***************************/
+.cms div.searchInput{
+    position: relative;
+    width: 100%;
+    margin: 0 0.75rem 0 0.25rem;
+}
+
+main > div.pylon > header .searchInput{
+    flex: 1 1 auto;
+    min-width: 0;
+    width: auto;
+}
+
+.cms div.searchInput input[type='search']{
+    min-height: 2rem;
+    margin: 0;
+    padding: 0.3rem 0.75rem;
+}
+
+.cms div.searchInput .searchIcon{
+    position: absolute;
+    top: 50%;
+    left: 0.7rem;
+    z-index: 1;
+    transform: translateY(-50%);
+    font-size: 0.8125rem;
+    color: rgba(255,255,255,.55);
+    pointer-events: none;
+}
+
+.cms div.searchInput .searchIcon ~ .inputGroup input[type='search']{
+    padding-left: 2rem;
+}
+
+main > div.pylon > header div.searchInput input[type='search']{
+    height: 2rem;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    background: var(--cmsFrameField);
+    color: #fff;
+    font-size: 0.8125rem;
+}
+
+main > div.pylon > header div.searchInput input[type='search']::placeholder{
+    color: rgba(255,255,255,.55);
+}
+
+main > div.pylon > header div.searchInput input[type='search']:focus{
+    border-color: rgba(255,255,255,.25);
+    box-shadow: none;
+}
+
+.cms div.cmsSearchResults{
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    right: 0;
+    max-height: 320px;
+    overflow: hidden;
+    padding: 0.35rem;
+    background: var(--cmsCanvas);
+    border: 1px solid var(--cmsLine);
+    border-radius: var(--cmsRadiusLg);
+    box-shadow: var(--cmsShadowLg);
+}
+
+.cms header input[type='search']:placeholder-shown ~ div.cmsSearchResults,
+.cms header input[type='search']:placeholder-shown:focus ~ div.cmsSearchResults,
+.cms header input[type='search']:not(:placeholder-shown):not(:focus) ~ div.cmsSearchResults{
+    display: none;
+}
+
+.cms header div.cmsSearchResults:active,
+.cms header div.cmsSearchResults.open{
+    display: block !important;
+}
+
+.cms ul#cmsSearchResults{
+    display: block;
+    max-height: 300px;
+    overflow-x: hidden;
+    overflow-y: auto;
+    white-space: normal;
+}
+
+.cms div.cmsSearchResults ul li{
+    display: block;
+}
+
+.cms div.cmsSearchResults ul li a{
+    display: block;
+    overflow: hidden;
+    padding: 0.4rem 0.6rem;
+    border-radius: var(--cmsRadius);
+    color: var(--cmsTextColor);
+    font-size: 0.8125rem;
+    font-weight: 500;
+    line-height: 1.35;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.cms div.cmsSearchResults ul li a:hover{
+    background: var(--cmsHover);
+}
+
+/****************************** KOPF-MELDUNGEN ***************************/
+.cms header dialog,
+main > div.content > header dialog{
+    display: inline-block;
+    position: relative;
+    width: auto;
+    min-width: 100px;
+    max-height: 28px;
+    margin: 0;
+    top: 0;
+    left: auto;
+    text-align: left;
+    vertical-align: middle;
+    background: transparent;
+    box-shadow: none;
+}
+
+.cms header dialog ul,
+main > div.content > header dialog ul{
+    height: 28px;
+    overflow: hidden;
+}
+
+.cms header dialog li,
+main > div.content > header dialog li{
+    display: block;
+    padding: 0.3rem 0.75rem;
+    border-radius: var(--cmsRadius);
+    background: var(--cmsMainColor);
+    color: #fff;
+    font-size: 0.8125rem;
+    cursor: pointer;
+}
+
+/****************************** HAUPTNAVIGATION ***************************/
+main > div.main nav{
+    display: flex;
+    flex-direction: column;
+    width: 4.75rem;
+    height: calc(100% - var(--cmsBar));
+    overflow: hidden;
+    background: var(--cmsMainColor);
+    user-select: none;
+}
+
+main > div.main nav *,
+main > div.main nav i{
+    color: var(--cmsFrameText);
+}
+
+main > div.main nav > ul{
+    position: relative;
+    flex: 1 1 auto;
+    width: 100%;
+    padding: 0.75rem 0.4rem;
+    overflow-x: hidden;
+    overflow-y: auto;
+}
+
+main > div.main nav > ul li{
+    display: block;
+    width: 100%;
+    margin-bottom: 0.25rem;
+    text-align: center;
+}
+
+main > div.main nav ul li a{
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.25rem;
+    width: 100%;
+    min-height: 3.6rem;
+    padding: 0.45rem 0.15rem;
+    border-radius: var(--cmsRadius);
+    transition: background-color .15s;
+}
+
+main > div.main nav ul li a:hover{
+    background: var(--cmsOnDark);
+}
+
+main > div.main nav ul li a span{
+    width: 100%;
+    font-size: 0.75rem;
+    font-weight: 500;
+    line-height: 1.15;
+    white-space: normal;
+    overflow-wrap: anywhere;
+}
+
+main > div.main nav ul li a i{
+    order: -1;
+    font-size: 1.45rem;
+    line-height: 1;
+}
+
+main > div.main nav > ul li i svg{
+    width: 1.65rem;
+    height: 1.65rem;
+}
+
+main > div.main nav > ul li i svg *{
+    fill: var(--cmsFrameText);
+}
+
+main > div.main nav > ul li.active > a{
+    background: transparent;
+}
+
+main > div.main nav > ul li.active > a:before{
+    content: "";
+    position: absolute;
+    left: -0.15rem;
+    top: 0.6rem;
+    bottom: 0.6rem;
+    width: 3px;
+    border-radius: 3px;
+    background: var(--cmsHighlightColor);
+}
+
+main > div.main nav i.fa-duotone{
+    --fa-secondary-opacity: .35;
+}
+
+main > div.main nav > ul li.active span{
+    color: var(--cmsHighlightColor);
+}
+
+/* Duotone: Grundform hell, Akzentebene in Markengelb */
+main > div.main nav > ul li.active i{
+    --fa-primary-color: #fff;
+    --fa-secondary-color: var(--cmsHighlightColor);
+    --fa-secondary-opacity: 1;
+    color: var(--cmsHighlightColor);
+}
+
+main > div.main nav > ul li.active i svg *{
+    fill: var(--cmsHighlightColor);
+}
+
+/****************************** UNTERES MENÜ ***************************/
+.cms div.bottomMenu{
+    flex: 0 0 auto;
+    margin-top: auto;
+    width: 4.75rem;
+    padding: 0.4rem;
+    background: var(--cmsMainColor);
+    text-align: center;
+    cursor: default;
+}
+
+.cms div.bottomMenu > div{
+    position: relative;
+}
+
+.cms div.bottomMenu > div > a{
+    display: block;
+    padding: 0.5rem;
+    border-radius: var(--cmsRadius);
+    font-size: 0;
+    line-height: 0;
+    text-align: center;
+}
+
+.cms div.bottomMenu > div > a > img{
+    height: 24px;
+}
+
+.cms div.bottomMenu > div > a > i{
+    font-size: 1.35rem;
+    line-height: 1;
+    color: rgba(255,255,255,.82);
+}
+
+.cms div.bottomMenu > div > a:hover{
+    background: var(--cmsOnDark);
+}
+
+
+.cms div.bottomMenu a.cmsHelp{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.45rem 0.2rem;
+    border-radius: var(--cmsRadius);
+    font-size: 0.75rem;
+    font-weight: 500;
+    line-height: 1.15;
+}
+
+.cms div.bottomMenu a.cmsHelp i{
+    font-size: 1.45rem;
+    line-height: 1;
+}
+
+.cms div.bottomMenu a.cmsHelp:hover{
+    background: var(--cmsOnDark);
+}
+
+/****************************** BENACHRICHTIGUNGEN ***************************/
+.cms div.notifications > a{
+    position: relative;
+}
+
+.cms div.notifications.open > a,
+.cms div.notifications:hover > a{
+    background: var(--cmsOnDark);
+}
+
+.cms div.notifications.selected > a:after{
+    content: '';
+    position: absolute;
+    top: 6px;
+    right: 10px;
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: var(--cmsError);
+    box-shadow: 0 0 0 2px var(--cmsMainColor);
+}
+
+.cms ul.notficiationList{
+    display: none;
+}
+
+.cms div.notifications.open ul.notficiationList{
+    display: block;
+    position: fixed;
+    bottom: 3rem;
+    left: 4.25rem;
+    z-index: 9999999;
+    width: 280px;
+    padding: 0.35rem;
+    background: var(--cmsCanvas);
+    border: 1px solid var(--cmsLine);
+    border-radius: var(--cmsRadiusLg);
+    box-shadow: var(--cmsShadowLg);
+}
+
+.cms ul.notficiationList li{
+    position: relative;
+    display: block;
+    width: 100%;
+    padding: 0.5rem 0.75rem;
+    border-radius: var(--cmsRadius);
+    text-align: left !important;
+    white-space: normal;
+    color: var(--cmsTextColor);
+}
+
+.cms ul.notficiationList li *{
+    color: var(--cmsTextColor);
+}
+
+.cms ul.notficiationList li:hover{
+    background: var(--cmsHover);
+}
+
+.cms ul.notficiationList li a{
+    position: absolute !important;
+    inset: 0;
+    display: block !important;
+}
+
+.cms ul.notficiationList li b{
+    display: block;
+}

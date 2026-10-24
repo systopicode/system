@@ -5,12 +5,11 @@
 use Systopic\System\Auth\CodeMail;
 use Systopic\System\Auth\Devices;
 use Systopic\System\Auth\LoginCodes;
+use Systopic\System\Auth\Portrait;
 use Systopic\System\Queries\Devices\Devices as DeviceQuery;
 use Systopic\System\Tables\LoginCodes\Operator as Codes;
 use Systopic\System\Tables\Users\Model as User;
 use Systopic\System\Tables\Users\Operator as UserOperator;
-
-include '../../child.role.actions.php';
 
 $user = $this->user;
 if ($user === NULL) {
@@ -24,10 +23,85 @@ switch ($this->action) {
 		$this->parent->updateView('main');
 		break;
 
+	case 'makeSuperuser':
+	case 'revokeSuperuser':
+		if (\Systopic\System\Auth\Session::isSuperuser()) {
+			$this->scope->save(...UserOperator::superuser($user, $this->action === 'makeSuperuser', \Systopic\System\Auth\Session::id()));
+		}
+		$this->updateView('lightbox');
+		$this->parent->updateView('main');
+		break;
+
+	case 'toggleUserRole':
+		$role = $this->admin->role((int) \http::dataset('role_id'));
+		if ($role !== null) {
+			$link = $this->admin->assignment($user, $role);
+			if ($link !== null) {
+				$this->scope->remove($link);
+			} else {
+				$link = new \Systopic\System\Tables\UsersAtRoles\Model();
+				[$link->user, $link->role] = [$user, $role];
+				$this->scope->save($link);
+			}
+		}
+		$this->updateView('lightbox');
+		$this->parent->updateView('main');
+		break;
+
+	case 'uploadPortrait':
+		$error = Portrait::store((int) $user->id);
+		$error === null ? \message::confirm('Photo updated.') : \message::error($error);
+		\http::redirect($this->href . '?user_id=' . (int) $user->id);
+		break;
+
+	case 'removePortrait':
+		Portrait::remove((int) $user->id);
+		$this->updateView('lightbox');
+		break;
+
+	case 'removeUser':
+		if ((int) $user->id === (int) \Systopic\System\Auth\Session::id()) {
+			\message::error('You cannot delete your own account.');
+			break;
+		}
+		$gone = [];
+		foreach ($this->admin->roles as $role) {
+			$link = $this->admin->assignment($user, $role);
+			if ($link !== null) {
+				$gone[] = $link;
+			}
+		}
+		foreach ($this->devices as $device) {
+			$gone[] = $device;
+		}
+		$gone[] = $user;
+		$this->scope->remove(...$gone);
+		\http::redirect('../');
+		break;
+
 	case 'resendActivationEmail':
+		if ((string) $user->email === '') {
+			$this->accessNote = 'This account has no email address.';
+			\message::error($this->accessNote);
+			$this->updateView('lightbox');
+			break;
+		}
 		$this->scope->save(UserOperator::newActivationKey($user));
-		$this->mailActivation($user);
-		\message::confirm('New activation Mail was sent.');
+		try {
+			$sent = (bool) $this->mailActivation($user);
+		} catch (\Throwable $e) {
+			$sent = false;
+			$this->accessNote = 'The email could not be sent. ' . $e->getMessage();
+		}
+		if ($sent) {
+			$this->accessNote = 'Activation email sent to ' . $user->email . '.';
+			\message::confirm($this->accessNote);
+		} elseif ($this->accessNote === null) {
+			$this->accessNote = 'The email could not be sent.';
+			\message::error($this->accessNote);
+		} else {
+			\message::error($this->accessNote);
+		}
 		$this->updateView('lightbox');
 		break;
 

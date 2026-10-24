@@ -18,7 +18,7 @@ $backupdirpathNative = fs::toNative($backupdirpath);
 switch ($this->action) {
 	case 'createTaskList':
 		if ($this->backupName(http::get('name')) === null) {
-			message::error("no such backup.");
+			message::error('This backup was not found.');
 			break;
 		}
 		clearstatcache();
@@ -43,7 +43,7 @@ switch ($this->action) {
 		}
 		$this->parent->state->taskListNextIndex = 0;
 		$this->parent->state->restoreMediaFolder = 0; // dont swap media folders on finishBackup
-		message::confirm("Task list created.");
+		message::confirm('Preparing restore.');
 		$this->updateView('lightbox');
 		http::refresh('./', $this->parent->state->taskList[$this->parent->state->taskListNextIndex]['action']);
 		break;
@@ -58,7 +58,7 @@ switch ($this->action) {
 		fs::file_put_contents($tmpdirpath . 'mysqldump_all.sql', $mysqldumpPatched);
 		$zip->close();
 		$this->parent->state->taskListNextIndex++;
-		message::confirm("MySQL Dump extracted.");
+		message::confirm('Database extracted.');
 		$this->updateView('lightbox');
 		http::refresh('./', $this->parent->state->taskList[$this->parent->state->taskListNextIndex]['action']);
 		break;
@@ -91,7 +91,7 @@ switch ($this->action) {
 		fs::unlinkFile($tmpdirpath . $zipname);
 		$zip->close();
 		$this->parent->state->taskListNextIndex++;
-		message::confirm("extracted Media Directory $mediaDir.");
+		message::confirm('Media files extracted.');
 		$this->updateView('lightbox');
 		http::refresh('./', $this->parent->state->taskList[$this->parent->state->taskListNextIndex]['action']);
 		break;
@@ -102,7 +102,7 @@ switch ($this->action) {
 		$restore = new Restore($this->scope->connection);
 		$restore->dropForeignKeys();
 		foreach ($restore->run((string) fs::file_get_contents($mysqlfile)) as $error) {
-			message::error("SQL Error during Restore: $error");
+			message::error('Database error during restore: ' . $error);
 		}
 
 		if ($this->parent->state->restoreMediaFolder && fs::isDir($tmpdirpath . '/media/')) {
@@ -114,11 +114,11 @@ switch ($this->action) {
 				}
 			}
 			if(!fs::fsRename($tmpdirpath . 'media/', $mediadirpath)) {
-				message::error("Media Folder could not be renamed.");
+				message::error('The media folder could not be replaced.');
 				$this->parent->log("rename('$tmpdirpath' . 'media/', '$mediadirpath') failed");
 				break;
 			}
-			message::confirm("Database restored, Media Folder renamed.");
+			message::confirm('Database and media files restored.');
 		}
 		$this->parent->log("Backup Restored");
 		$this->parent->state->taskListNextIndex++;
@@ -127,10 +127,10 @@ switch ($this->action) {
 		if (\Systopic\System\Auth\Session::isRecovery()) {
 			// the installation has its accounts now: the setup link is spent
 			\Systopic\System\Setup\Setup::spendToken(fs::toNative((string) fs::$projectRoot));
-			message::confirm("Restore Complete - please type your credentials to log in!");
+			message::confirm('Restore complete. Sign in again.');
 			http::redirect(http::$root . 'cms/logout');
 		} else {
-			message::confirm("Restore Complete - Good Luck! - removing Tempfiles ...");
+			message::confirm('Restore complete.');
 			http::refresh('./', 'clearTempfiles');
 		}
 		break;
@@ -142,14 +142,10 @@ switch ($this->action) {
 		fsDir::get($replacedmediadirpath)->unlink(TRUE);
 		fsDir::get($tmpdirpath)->unlink(TRUE);
 		clearstatcache();
-		if (fs::fileExists($tmpdirpath)) {
-			message::error("temp File could not be removed");
-		} elseif(fs::fileExists($replacedmediadirpath)) {
-			message::error("old Media Dir could not be removed");
-		}else{
-			message::confirm("mysql dump file removed.");
-			message::confirm("old Media Dir removed.");
-			message::confirm("temp Files cleared.");
+		if (fs::fileExists($tmpdirpath) || fs::fileExists($replacedmediadirpath)) {
+			message::error('Temporary files could not be removed.');
+		} else {
+			message::confirm('Temporary files cleared.');
 		}
 		$this->updateView('lightbox');
 		break;

@@ -18,6 +18,8 @@ use Systopic\System\Panels\PanelNode;
  */
 class Panel extends PanelNode {
 
+	public $icon = 'fa-regular fa-tags';
+
 	public function __construct($name, $parent) {
 		parent::__construct($name, $parent);
 		$this->label = 'Tags';

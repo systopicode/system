@@ -1,3 +1,3 @@
 <div class="rightAlign">
-    <li class='button submit' title="Add Group" data-on_click='addGroup'><i class="fa-light fa-circle-plus"></i>Group</li>
+    <button type="button" class="button submit" title="Add group" data-on_click="addGroup"><i class="fa-regular fa-plus"></i>Group</button>
 </div>

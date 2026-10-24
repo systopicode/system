@@ -14,7 +14,8 @@ use Systopic\System\Tables\Users\Model as User;
 class Panel extends CmsPanel {
 
 	public $showSubnavi = FALSE;
-	public $icon = 'fa-regular fa-user';
+	public $icon = 'fa-duotone fa-regular fa-users';
+	public bool $buildChildPanels = true;
 
 	function buildGranted() {
 		return \Systopic\System\Auth\Session::hasOneRole('userAdmin');
@@ -28,11 +29,13 @@ class Panel extends CmsPanel {
 		if ($this->inPath()) {
 			$this->updateView('pylon');
 		}
+		$this->rememberOrOpenChild();
 	}
 
 	function getDefaultState() {
 		$defaultState = parent::getDefaultState();
 		$defaultState->hijackerId = NULL;
+		$defaultState->openChild = NULL;
 		return $defaultState;
 	}
 
@@ -42,8 +45,9 @@ class Panel extends CmsPanel {
 	 */
 	public static function roleSticker(Role $role, ?string $action = NULL): string {
 		$e = static fn($v): string => htmlspecialchars((string) $v, ENT_QUOTES);
-		$style = $role->color ? " style='background:{$e($role->color)};border-color:{$e($role->color)}'" : '';
-		$minus = $action !== NULL ? "<i class='far fa-minus-circle' data-on_click='{$e($action)}'></i>" : '';
+		$color = ($role->color !== null && $role->color !== '') ? $role->color : '#8a8f93';
+		$style = " style='--tag-color:{$e($color)};--tag-bg:{$e($color)};background:{$e($color)};border-color:{$e($color)}'";
+		$minus = $action !== NULL ? "<i class='fa-regular fa-minus-circle' data-on_click='{$e($action)}'></i>" : '';
 		return "<div class='tag active' data-role_id='{$role->id}'$style>{$e($role->name)}$minus</div>";
 	}
 

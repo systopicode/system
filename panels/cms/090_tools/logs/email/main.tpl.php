@@ -1,19 +1,12 @@
-<script>
-    $(function () {
-	$('table.hover').dataTable({
-	    "iDisplayLength": 25,
-	    "aaSorting": [[0, "desc"]],
-	    "aLengthMenu": [
-		[10, 25, 50, 100, -1],
-		[10, 25, 50, 100, "All"]
-	    ],
-	    "oLanguage": {
-		"sSearch": ""
-	    }
-	});
-    });
-</script>
-<div class="tabContainer">
+<h1>Email log</h1>
+<p class="tagsHint">What was sent, and what failed. The eye opens one message.</p>
+<section class="widget is-list logList">
+	<header>
+		<h2>Messages</h2>
+		<input class="listSearch" type="search" placeholder="Search" data-on_input="filterLog" autocomplete="off">
+		<a target="_self" href="<?= htmlspecialchars($this->getHref(\http::$root) . 'downloadLog') ?>" class="button" title="Download"><i class="fa-regular fa-file-arrow-down"></i><span>Download</span></a>
+		<a data-on_click="userConfirm" data-action="?action=clearLog&value=email" data-confirm="Delete this log file?" class="button" title="Clear"><i class="fa-regular fa-broom"></i><span>Clear</span></a>
+	</header>
     <?php
     // Define EMAILLOGFILE constant if not already defined
     if (!defined('EMAILLOGFILE')) {
@@ -24,7 +17,7 @@
     
     if (empty($output)) {
 	?>
-	<h2>LOGFILE IS EMPTY</h2>
+	<p>The log is empty.</p>
 	<?php
     } else {
 	// Split entries by separator line
@@ -33,22 +26,20 @@
 	    return !empty(trim($entry));
 	});
 	?>
-	<table class="hover">
+	<table>
 	    <thead>
 		<tr>
-		    <th>Date / Time</th>
+		    <th>Date</th>
 		    <th>Status</th>
-		    <th>From</th>
 		    <th>To</th>
 		    <th>Subject</th>
-		    <th>User</th>
-		    <th>Attachments</th>
-		    <th>Actions</th>
+		    <th></th>
 		</tr>
 	    </thead>
 	    <tbody>
 		<?php
 		$entryIndex = 0;
+		$rows = [];
 		foreach ($entries as $entry) {
 		    $lines = explode("\n", trim($entry));
 		    if (empty($lines)) continue;
@@ -110,35 +101,27 @@
 		    
 		    // Create unique ID for this entry
 		    $entryId = md5($timestamp . $from . $to . $subject . $entryIndex);
+		    $pill = ($status === 'error' || $status === 'failed') ? 'is-bad' : ($status === 'success' ? 'is-ok' : '');
+		    $rows[] = compact('timestamp', 'status', 'to', 'subject', 'error', 'entryId', 'pill') + ['index' => $entryIndex];
 		    $entryIndex++;
+		}
+		foreach (array_reverse($rows) as $row) {
 		    ?>
 		    <tr>
-			<td data-order="<?= $dateOrder ?>"><?= htmlspecialchars($timestamp) ?></td>
-			<td>
-			    <span class="badge <?= $statusClass ?>"><?= htmlspecialchars($status) ?></span>
-			    <?php if ($error): ?>
-				<br><small style="color: red;"><?= htmlspecialchars($error) ?></small>
-			    <?php endif; ?>
-			</td>
-			<td><?= htmlspecialchars($from) ?></td>
-			<td><?= htmlspecialchars($to) ?></td>
-			<td><?= htmlspecialchars($subject) ?></td>
-			<td><?= htmlspecialchars($user) ?></td>
-			<td>
-			    <?php if (!empty($attachments)): ?>
-				<?php foreach ($attachments as $attachment): ?>
-				    <span class="badge"><?= htmlspecialchars($attachment) ?></span>
-				<?php endforeach; ?>
-			    <?php else: ?>
-				-
-			    <?php endif; ?>
-			</td>
-			<td>
-			    <a href="view/?entry_id=<?= $entryId ?>&index=<?= $entryIndex - 1 ?>" 
-			       class="ajax button transparent" 
-			       title="View Email">
-				<i class="fa-light fa-eye"></i> View
-			    </a>
+			<td><?= htmlspecialchars($row['timestamp']) ?></td>
+			<td><span class="logPill <?= $row['pill'] ?>"><?= htmlspecialchars($row['status']) ?></span></td>
+			<td><?= htmlspecialchars($row['to']) ?></td>
+			<td><?= htmlspecialchars($row['subject']) ?></td>
+			<td class="icons">
+			    <ul>
+				<li>
+				    <a href="view/?entry_id=<?= $row['entryId'] ?>&index=<?= $row['index'] ?>"
+				       class="ajax button icononly"
+				       title="View">
+					<i class="fa-regular fa-eye"></i>
+				    </a>
+				</li>
+			    </ul>
 			</td>
 		    </tr>
 		    <?php
@@ -149,4 +132,4 @@
 	<?php
     }
     ?>
-</div>
+</section>

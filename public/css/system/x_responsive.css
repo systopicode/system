@@ -1,101 +1,142 @@
-@media (max-width: 1000px) { 
-    body.hidePylon div.content{
-	display:block;
-    }
-    
-    body.hidePylon  main > div.pylon{
-	width:0;
-	min-width: 0;
-    }
-    
-     body.showPylon div.content{
-	display:none;
-    }
-    
-      body.showPylon  main > div.pylon{
-	max-width: calc(100% - 50px) !important;
-	overflow:hidden;
-    }
+/* Phone: eine Fläche. Desktop ignoriert die Pane-Klassen. */
 
-    main > div.pylon:after{
-	position: absolute;
-	top:42px;
-	right:-25px;
-	width:25px;
-	height:10px;
-	background:red;
-	content:'';
-    }
-
-    section.cms{
-	padding:15px;
-	height:calc(100% - 15px);
-    }
-
-    main > div.main nav,
-    main > div.main,
-    .cms div.bottomMenu{
-	width:50px;
-    }
-
-    main > div.main nav > ul li{
-	width:50px;
-	border-left-width: 3px;
-	border-right-width: 2px;
-	padding-right: 1px;
-	height:44px;
-    }
-
-
-    div.pylon nav > ul li a{
-	padding:6px 10px;
-    }
-
-    main > div.main nav > ul:after{
-	left:47px;
-    }
-
-    main > div.main nav{
-	height: calc(100% - 37px);
-    }
-    
-    main > div.main nav ul li a span{
-	width:46px;
-	padding-right: 2px;
-	line-height: 1em;
-	font-size:12px;
-    }
-    main > div.main nav ul li a i{
-	width:48px;
-	margin-left: 2px;
-    }
-
-    main > div.main nav > ul li i svg{
-	padding:6px 9px;
-    }
-
-    main > div.main nav ul li a i{
-	height:44px;
-    }
-    main > div.main nav ul li a{
-	flex-basis:44px;
-    }
-
-    .cms div.dropdown.signetMenu span.initials{
-	width:47px;
-    }
-
-    body main > div.content > header{
-	min-height: 27px;
-    }
-
-    .cms header, main > div.content > header{
-	max-height: 38px;
-    }
-    
-    .cms button, .cms .button{
-	line-height: 22px;
-    }
-    
+.cmsPanes {
+	display: none;
 }
 
+@media (max-width: 860px) {
+	.cmsPanes {
+		display: flex;
+		position: fixed;
+		z-index: 1800;
+		left: 0;
+		right: 0;
+		bottom: 0;
+		min-height: 52px;
+		padding-bottom: env(safe-area-inset-bottom);
+		background: var(--cmsMainColor);
+	}
+
+	.cmsPanes button {
+		flex: 1 1 0;
+		min-height: 44px;
+		margin: 0;
+		padding: 0.4rem 0.2rem;
+		border: 0;
+		border-radius: 0;
+		background: transparent;
+		color: #fff;
+		font-size: 0.68rem;
+		font-weight: 600;
+		letter-spacing: 0.06em;
+		text-transform: uppercase;
+	}
+
+	.cmsPanes button[aria-pressed="true"] {
+		color: var(--cmsHighlightColor);
+	}
+
+	body > main {
+		--cmsStatusBar: 0px;
+		margin-bottom: calc(52px + env(safe-area-inset-bottom));
+	}
+
+	footer.cmsStatusbar {
+		display: none;
+	}
+
+	body[class*="cmsPane-"]:not(.cmsPane-menu) > main > div.main,
+	body[class*="cmsPane-"]:not(.cmsPane-tree) > main > div.pylon,
+	body[class*="cmsPane-"]:not(.cmsPane-editor):not(.cmsPane-side) > main > div.content {
+		display: none;
+	}
+
+	body.cmsPane-menu > main > div.main,
+	body.cmsPane-tree > main > div.pylon,
+	body.cmsPane-editor > main > div.content,
+	body.cmsPane-side > main > div.content {
+		display: flex;
+		width: 100%;
+		max-width: none !important;
+		min-width: 0;
+		flex: 1 1 auto;
+	}
+
+	body.cmsPane-menu main > div.main nav,
+	body.cmsPane-menu .cms div.bottomMenu {
+		width: 100%;
+	}
+
+	body.cmsPane-menu main > div.main nav > ul li a {
+		flex-direction: row;
+		justify-content: flex-start;
+		gap: 0.85rem;
+		padding: 0.65rem 1rem;
+		min-height: 44px;
+	}
+
+	body .cms a.cmsBrand{
+		justify-content: flex-start;
+		padding-left: 1rem;
+	}
+
+	body .cms a.cmsBrand img.brandMark{
+		display: none;
+	}
+
+	body .cms a.cmsBrand img.brandFull{
+		display: block;
+		height: 1.7rem;
+		width: auto;
+		max-width: none;
+	}
+
+	body.cmsPane-menu main > div.main nav > ul li a span {
+		width: auto;
+		font-size: 0.85rem;
+		text-align: left;
+	}
+
+	body.cmsPane-editor > main > div.content .flexColumn {
+		display: flex;
+		flex: 1 1 auto;
+		min-width: 0;
+	}
+
+	body.cmsPane-editor > main > div.content aside,
+	body.cmsPane-side > main > div.content .flexColumn {
+		display: none;
+	}
+
+	body.cmsPane-side > main > div.content aside {
+		display: flex;
+		flex: 1 1 auto;
+		width: 100% !important;
+		max-width: none !important;
+	}
+
+	[data-on_draginit="draginitPylonwidth"],
+	[data-on_draginit="draginitSidebarwidth"],
+	[data-on_draginit="draginitFooterHeight"] {
+		display: none;
+	}
+
+	div.cms div.center_content,
+	div.cms div.login_content,
+	body.cms.login div.formContainer,
+	div.login_content form {
+		width: min(100% - 2rem, 22rem);
+	}
+
+	body.settings > main > div.pylon,
+	body.users > main > div.pylon,
+	body.tools > main > div.pylon,
+	body.settings > main > div.content,
+	body.users > main > div.content,
+	body.tools > main > div.content{
+		margin: 0;
+		border-radius: 0;
+		box-shadow: none;
+		clip-path: none;
+	}
+}

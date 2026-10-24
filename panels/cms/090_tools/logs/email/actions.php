@@ -8,6 +8,15 @@ if (!defined('EMAILLOGFILE')) {
 }
 
 switch ($this->action) {
+    case 'downloadLog':
+	if (is_file(EMAILLOGFILE)) {
+	    header('Content-Type: text/plain; charset=utf-8');
+	    header('Content-Disposition: attachment; filename="email.log"');
+	    header('Content-Length: ' . (string) filesize(EMAILLOGFILE));
+	    readfile(EMAILLOGFILE);
+	    exit;
+	}
+	break;
     case 'clearLog':
 	fs::file_put_contents(EMAILLOGFILE, '');
 	$ajaxresponse['functionName'] = 'reload';

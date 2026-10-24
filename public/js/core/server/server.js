@@ -1,4 +1,4 @@
-﻿/* global sys,c,p,t,l,f,obj,location */
+/* global sys,c,p,t,l,f,obj,location */
 
 
 sys.core.server = new function () {
@@ -175,8 +175,30 @@ sys.core.server = new function () {
         }
         server.idleHooks.push(fn);
     };
+    server.showBusy = () => {
+        var bar = document.getElementById('nprogress');
+        if (!bar) {
+            bar = document.createElement('div');
+            bar.id = 'nprogress';
+            bar.innerHTML = '<div class="bar"></div>';
+            document.body.appendChild(bar);
+        }
+        bar.hidden = false;
+        document.documentElement.classList.add('nprogress-busy');
+    };
+    server.hideBusy = () => {
+        var bar = document.getElementById('nprogress');
+        if (bar) {
+            bar.hidden = true;
+        }
+        document.documentElement.classList.remove('nprogress-busy');
+    };
+    server.loginUrl = () => (sys.http && sys.http.root ? sys.http.root : '/') + 'cms/auth/';
     server.settled = () => {
         server.inFlight = Math.max(0, server.inFlight - 1);
+        if (server.inFlight === 0) {
+            server.hideBusy();
+        }
         while (server.inFlight === 0 && server.idleHooks.length) {
             var fn = server.idleHooks.shift();
             try {
@@ -259,6 +281,10 @@ sys.core.server.call = function (data) {
                     } catch (e) {
                         p('NO JSON!', sys.core.server.callContext(call, method, xhrRootHref, xhr), responseStr);
                         l(responseStr);
+                        if (typeof responseStr === 'string' && /class="authCard"|Sign in to fluxo cms/.test(responseStr)) {
+                            location.href = sys.core.server.loginUrl();
+                            return;
+                        }
                     }
                     if (call.responses) {
                         call.responses.sort(sys.core.server.sortCommands);
@@ -274,15 +300,18 @@ sys.core.server.call = function (data) {
                             call.response.index = index;
                             l(call.response.command);
                             new sys.core.server.command(call);
+                            if (call.redirecting) {
+                                break;
+                            }
                         }
                         if (doneFunc) {
                             //l('***************** ondone call', call.dataPassedToCallbackFunction);
                             doneFunc(call.dataPassedToCallbackFunction);
                         }
 
-                        if (method !== 'put') {
+                        if (method !== 'put' && !call.redirecting) {
                             sys.http.historyPush(sys.http.url2string(call.url));
-                            if (call.url.hashChanged && call.url.hash !== '') {
+                            if (call.url.hashChanged && call.url.hash !== '' && !call.url.pathChanged && !call.url.queryChanged) {
                                 var target = document.getElementById(call.url.hash.replace('#', ''));
                                 if (target) {
                                     target.scrollIntoView(true);
@@ -290,19 +319,26 @@ sys.core.server.call = function (data) {
                             } else {
                                 if (typeof onAfterHisotryPush === "function") {
                                     onAfterHisotryPush(call.url);
-                                } else {
-                                    //	l("scrollto top");
-                                    /*var target = document.getElementById('top');
-                                     if (target) {
-                                     target.scrollIntoView(true);
-                                     } */
-                                    document.body.scrollTop = document.documentElement.scrollTop = 0;
+                                }
+                                document.body.scrollTop = document.documentElement.scrollTop = 0;
+                                if (call.url && (call.url.pathChanged || call.url.queryChanged)) {
+                                    document.querySelectorAll('main > div.content, main > div.content *').forEach(function (node) {
+                                        if (node.scrollTop) {
+                                            node.scrollTop = 0;
+                                        }
+                                        if (node.scrollLeft) {
+                                            node.scrollLeft = 0;
+                                        }
+                                    });
                                 }
                             }
                         }
                     }
                 } else {
                     p('XHERRor! Status ' + xhr.status);
+                    if (xhr.status === 401 || xhr.status === 403) {
+                        location.href = sys.core.server.loginUrl();
+                    }
                 }
             }
         };
@@ -368,7 +404,12 @@ sys.core.server.call = function (data) {
         // how to decide if url,query or dat.get is sent? -> so long send both
         var query;
         if (method === 'get') {
-            query = obj.extend(obj.extend({}, call.url.query));
+            // A link already names its query in the url. A form does not:
+            // its fields travel in data.get, and a native submit never ran.
+            query = obj.extend({}, call.url.query);
+            if (call.event && call.event.type === 'submit' && call.data.get) {
+                obj.extend(query, call.data.get);
+            }
         } else {
             query = obj.extend(obj.extend({}, call.data.get), call.url.query);
         }
@@ -413,6 +454,7 @@ sys.core.server.call = function (data) {
             xhr.setRequestHeader(headerName, extraHeaders[headerName]);
         }
         sys.core.server.inFlight++;
+        sys.core.server.showBusy();
         switch (method) {
             case 'get':
                 // anchors and forms with method get

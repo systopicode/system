@@ -1,0 +1,88 @@
+/****************************** LOADING SPINNER ***************************/
+.cms div.spinnerWrapper{
+    display:inline-block;
+    vertical-align: middle;
+    width:100%;
+    position: relative;
+}
+
+div.cms li.rewrite div.spinnerWrapper{
+    display:inline;
+}
+
+div.cms div.spinnerWrapper input{
+    display:block;
+}
+
+div.cms div.input.spinnerWrapper:before,
+.cms button.loading:before,
+.cms .button.loading:before{
+    right:10px;
+    left:auto;
+    position: absolute;
+}
+
+.spinner {
+    min-width: 24px;
+    min-height: 24px;
+}
+
+.cms button.loading:before,
+.cms .button.loading:before,
+form.loading button:before,
+.spinner:before {
+    content: 'Loading';
+    position: absolute;
+    top: 49%;
+    left: 50%;
+    width: 16px;
+    height: 16px;
+    margin-top: -10px;
+    margin-left: -10px;
+}
+
+form.loading button:before,
+.spinner:not(:required):before,
+.cms button.loading:before,
+.cms .button.loading:before{
+    content: '';
+    border-radius: 50%;
+    border: 2px solid currentColor;
+    border-top-color: transparent;
+    animation: spinner .6s linear infinite;
+}
+
+.cms form.loading button.submit:before,
+.cms form.loading .button.submit:before,
+.cms button.submit.loading:before,
+.cms .button.submit.loading:before{
+    border-color: var(--cmsOnHighlight);
+    border-top-color: transparent;
+}
+
+.cms form.loading button.submit,
+.cms form.loading .button.submit,
+.cms button.submit.loading,
+.cms .button.submit.loading,
+.cms .submit.loading{
+	background: var(--cmsHighlightColor);
+	color: transparent;
+	pointer-events: none;
+}
+
+.cms form.loading button,
+.cms form.loading .button,
+.cms button.loading,
+.cms .button.loading,
+.cms form.loading button i,
+.cms button.loading i,
+.cms .button.loading i{
+	color: transparent;
+	pointer-events: none;
+}
+
+.loading{
+    cursor:wait;
+}
+
+

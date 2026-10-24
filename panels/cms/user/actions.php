@@ -2,10 +2,12 @@
 
 /** @var \Systopic\System\Panels\Root\Cms\User\Panel $this */
 
+use Systopic\System\Auth\Portrait;
 use Systopic\System\Tables\Users\Operator as UserOperator;
 
 switch ($this->action) {
 	case 'logout':
+		\Systopic\System\Auth\LoginLog::write(\Systopic\System\Auth\Session::current()->name, 'logged out');
 		\Systopic\System\Auth\Session::logout();
 		\http::refresh('../auth/logout');
 		break;
@@ -38,13 +40,34 @@ switch ($this->action) {
 
 	case 'ransomUser':
 		// Back from cms/users' hijackUser to the superuser who hijacked.
-		if ($this->state->hijackerId) {
-			$hijacker = (int) $this->state->hijackerId;
+		// A real form post, not an ajax click: the browser must store the
+		// new session cookie and only then follow the redirect. An ajax
+		// navigation kept the ghost session.
+		$hijacker = (int) ($this->state->hijackerId ?? 0);
+		if ($hijacker > 0) {
 			$this->state->hijackerId = NULL;
 			\Systopic\System\Auth\Session::logout(false);   // back to the superuser, same device
 			\Systopic\System\Auth\Session::login($hijacker);
-			\http::refresh('./');
+			if (session_status() === PHP_SESSION_ACTIVE) {
+				session_write_close();
+			}
+			\http::redirect($this->href);
 		}
+		break;
+
+	case 'uploadPortrait':
+		if ($this->me) {
+			$error = Portrait::store((int) $this->me->id);
+			$error === null ? \message::confirm('Photo updated.') : \message::error($error);
+		}
+		\http::redirect($this->href);
+		break;
+
+	case 'removePortrait':
+		if ($this->me) {
+			Portrait::remove((int) $this->me->id);
+		}
+		\http::redirect($this->href);
 		break;
 
 	case 'updateUserName':

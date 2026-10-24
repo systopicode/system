@@ -36,6 +36,29 @@ switch ($this->action) {
 		$this->updateView('main');
 		break;
 
+	case 'removeUser':
+		if ($this->user === null) {
+			break;
+		}
+		if ((int) $this->user->id === (int) \Systopic\System\Auth\Session::id()) {
+			\message::error('You cannot delete your own account.');
+			break;
+		}
+		$gone = [];
+		foreach ($this->roles as $role) {
+			$link = $this->admin->assignment($this->user, $role);
+			if ($link !== null) {
+				$gone[] = $link;
+			}
+		}
+		foreach (\Systopic\System\Queries\Devices\Devices::ofUser($this->scope, (int) $this->user->id) as $device) {
+			$gone[] = $device;
+		}
+		$gone[] = $this->user;
+		$this->scope->remove(...$gone);
+		$this->updateView('main');
+		break;
+
 	case 'makeSuperuser':
 	case 'revokeSuperuser':
 		if (\Systopic\System\Auth\Session::isSuperuser() && $this->user) {

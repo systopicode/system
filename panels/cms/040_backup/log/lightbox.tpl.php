@@ -4,13 +4,13 @@
 			<h1>Backup Log</h1>
 			<ul class="barmenu">
 				<li>
-					<a download target="self" href="<?= http::$siteUrl . 'var/backups/backup.log' ?>"  title="Download Logfile"><i class="fa-light fa-arrow-down-to-line"></i></a>
+					<a download target="self" href="<?= http::$siteUrl . 'var/backups/backup.log' ?>"  title="Download log"><i class="fa-regular fa-arrow-down-to-line"></i></a>
 				</li>
 				<li>
-					<a data-on_click='userConfirm' href="clear" data-confirm='Do you really want to clear this Log?' title="Clear Logfile"><i class="fa-light fa-trash"></i></a>
+					<a data-on_click='userConfirm' href="clear" data-confirm='Clear this log?' title="Clear log"><i class="fa-regular fa-trash"></i></a>
 				</li>
 				<li>
-					<a class="ajax" href="../"><i class="fa-light fa-xmark-large"></i></a>
+					<a class="ajax" href="../" title="Close"><i class="fa-regular fa-xmark"></i></a>
 				</li>
 			</ul>
 		</header>

@@ -33,13 +33,13 @@ $max_execution_time = array(
     'status' => 'warning'
 );
 
-$get_max_execution_time = ini_get('max_execution_time');
+$get_max_execution_time = (int) ini_get('max_execution_time');
 
-if ($get_max_execution_time >= '60') {
-    $max_execution_time['label'] = 'Your Script Time is: <b>' . $get_max_execution_time . ' sec</b>';
+if ($get_max_execution_time === 0 || $get_max_execution_time >= 60) {
+    $max_execution_time['label'] = 'Your Script Time is: <b>' . ($get_max_execution_time === 0 ? 'unlimited' : $get_max_execution_time . ' sec') . '</b>';
     $max_execution_time['status'] = 'confirm';
 } else {
-    $max_execution_time['label'] = 'Your Script Time is max: <b>' . $get_max_execution_time . ' sec.</b> We recommend at least <b>120 sec.</b>';
+    $max_execution_time['label'] = 'Your Script Time is max: <b>' . $get_max_execution_time . ' sec.</b> We recommend at least <b>60 sec.</b>';
 }
 
 
@@ -77,27 +77,16 @@ $log_errors = array(
 );
 
 $get_log_errors = ini_get('log_errors');
-$get_log_errors_path = ini_get('error_log');
-$get_log_errors_path = trim($get_log_errors_path);
+$get_log_errors_path = trim((string) (defined('PHPLOGFILE') ? PHPLOGFILE : ini_get('error_log')));
+$log_errors_writable = $get_log_errors_path !== '' && is_file($get_log_errors_path) && is_writable($get_log_errors_path);
 
-if ($get_log_errors && $get_log_errors_path === 'var/log/PHP_errors.log') {
-    $log_errors['label'] = 'Log Errors is <b>on</b> and Error Log Path is <b>' . 'var/log/PHP_errors.log</b>';
+if ($get_log_errors && $log_errors_writable) {
+    $log_errors['label'] = 'Log Errors is <b>on</b>. File <b>' . htmlspecialchars($get_log_errors_path) . '</b>';
     $log_errors['status'] = 'confirm';
-} else if ($get_log_errors && $get_log_errors_path !== 'var/log/PHP_errors.log') {
-    $log_errors['label'] = "Log Errors is <b>on</b> but Error Log Path is <b>{$get_log_errors_path}</b>. <br>We recommend to change it in <b>var/log/PHP_errors.log</b>";
-} else if (!$get_log_errors && $get_log_errors_path == 'var/log/PHP_errors.log') {
-    $log_errors['label'] = 'Log Errors off <b>on</b> but Error Log Path <b>is</b> <b>' . 'var/log/PHP_errors.log</b>';
+} else if ($get_log_errors) {
+    $log_errors['label'] = 'Log Errors is <b>on</b> but <b>' . htmlspecialchars($get_log_errors_path !== '' ? $get_log_errors_path : 'no file') . '</b> is not writable.';
 } else {
-    $log_errors['label'] = 'Log Errors <b>off</b>. <br>We recommend to turn them <b>on</b>.';
-}
-
-
-
-if ($get_log_errors_path === 'var/log/PHP_errors.log') {
-    $log_errors_path['label'] = 'Your Error Log Path is <b>' . 'var/log/PHP_errors.log</b>';
-    $log_errors_path['status'] = 'confirm';
-} else {
-    $log_errors_path['label'] = 'Error Log Path is <b>$get_log_errors_path</b>. We recommend to change it to <b>' . 'var/log/PHP_errors.log</b>.';
+    $log_errors['label'] = 'Log Errors <b>off</b>. We recommend to turn them <b>on</b>.';
 }
 
 $upload_max_size = array(
@@ -107,11 +96,18 @@ $upload_max_size = array(
 
 $getUploadMaxSize = $getBytes((string) ini_get('upload_max_filesize'));
 
-if ($getUploadMaxSize >= '128') {
+if ($getUploadMaxSize >= 128 * 1024 * 1024) {
     $upload_max_size['label'] = 'Your Upload Size: <b>' . str::formatbytes((int) $getUploadMaxSize) . '</b>';
     $upload_max_size['status'] = 'confirm';
+} elseif ($getUploadMaxSize >= 50 * 1024 * 1024) {
+    $upload_max_size['label'] = 'Your Upload Size: <b>' . str::formatbytes((int) $getUploadMaxSize) . '</b>. Fine for most files, <b>128 MB</b> is better for video.';
 } else {
-    $upload_max_size['label'] = 'Your Upload Size: <b>' . str::formatbytes((int) $getUploadMaxSize) . '</b>. We recommend at least <b>128MB</b>';
+    $upload_max_size['label'] = 'Your Upload Size: <b>' . str::formatbytes((int) $getUploadMaxSize) . '</b>. We recommend at least <b>50 MB</b>, better <b>128 MB</b>.';
+}
+
+if ($getPostMaxSize < $getUploadMaxSize) {
+    $post_max_size['label'] .= '. Post size is smaller than the upload size, so large uploads are rejected.';
+    $post_max_size['status'] = 'error';
 }
 
 
@@ -120,59 +116,55 @@ $php_version = array(
     'status' => 'error'
 );
 
-$get_php_version = phpversion();
-$get_php_version = preg_match_all("/^[0-9]\.[0-9]/", $get_php_version, $php_matches);
-$php_matches = $php_matches[0];
-$php_matches = $php_matches[0];
+$php_version_full = PHP_VERSION;
 
-if ($php_matches >= '8.3') {
-    $php_version['label'] = 'Your PHP Version: <b>' . $php_matches . '</b>';
+if (version_compare($php_version_full, '8.4.0', '>=')) {
+    $php_version['label'] = 'Your PHP Version: <b>' . htmlspecialchars($php_version_full) . '</b>';
     $php_version['status'] = 'confirm';
+} elseif (version_compare($php_version_full, '8.3.0', '>=')) {
+    $php_version['label'] = 'Your PHP Version: <b>' . htmlspecialchars($php_version_full) . '</b>. The CMS accepts 8.3, Composer asks for <b>8.4</b>.';
+    $php_version['status'] = 'warning';
 } else {
-    $php_version['label'] = 'Your PHP Version: <b>' . $php_matches . '</b>. You need at least <b>8.3</b>';
+    $php_version['label'] = 'Your PHP Version: <b>' . htmlspecialchars($php_version_full) . '</b>. You need at least <b>8.4</b>.';
 }
 
 
+$projectRoot = rtrim((string) fs::$root, '/\\');
+$siteRoot = rtrim((string) fs::$siteRoot, '/\\');
 $var_writeableFolders = array(
-    'var' => array(
-        'label' => 'Upload folder <b>var</b> <b>is not</b> writeable',
-        'status' => 'error'
-    ),
-    'var/backups' => array(
-        'label' => 'Upload folder <b>' . 'var/backups</b> <b>is not</b> writeable',
-        'status' => 'error'
-    ),
-    'var/formats' => array(
-        'label' => 'Upload folder <b>' . 'var/formats</b> <b>is not</b> writeable',
-        'status' => 'error'
-    ),
-    'var/log' => array(
-        'label' => 'Upload folder <b>' . 'var/log</b> <b>is not</b> writeable',
-        'status' => 'error'
-    ),
-    'var/original' => array(
-        'label' => 'Upload folder <b>' . 'var/original</b> <b>is not</b> writeable',
-        'status' => 'error'
-    ),
+    $projectRoot . '/var/log' => 'var/log',
+    $siteRoot . '/var' => 'public/var',
+    $siteRoot . '/var/backups' => 'public/var/backups',
+    $siteRoot . '/var/formats' => 'public/var/formats',
+    $siteRoot . '/var/original' => 'public/var/original',
+    $siteRoot . '/var/bin' => 'public/var/bin',
 );
 
-foreach ($var_writeableFolders as $folder => $status) {
-    $folderPath = (string) $folder;
-    if (fs::isDir(fs::$root . $folderPath) && is_writeable(fs::$root . $folderPath)) {
-        $var_writeableFolders[$folderPath]['label'] = "Upload folder <b>{$folderPath}</b> is writeable";
-        $var_writeableFolders[$folderPath]['status'] = 'confirm';
+foreach ($var_writeableFolders as $folderPath => $label) {
+    if (is_dir($folderPath) && is_writable($folderPath)) {
+        $var_writeableFolders[$folderPath] = array(
+            'label' => "<b>{$label}</b> is writeable",
+            'status' => 'confirm',
+        );
     } else {
-        $var_writeableFolders[$folderPath]['label'] = "Upload folder <b>{$folderPath}</b> <b>is not</b> writeable";
-        $var_writeableFolders[$folderPath]['status'] = 'error';
+        $var_writeableFolders[$folderPath] = array(
+            'label' => "<b>{$label}</b> is missing or not writeable",
+            'status' => 'error',
+        );
     }
 }
 
 // Mail and login: from the instance's config (emailSmtp, Auth\AuthConfig)
 $isDev = defined('STAGE') && str_starts_with((string) STAGE, 'DEV');
+$instanceName = (string) (\Systopic\System\Config\Config::current()?->instance->name ?? '');
+$instanceFile = $instanceName !== '' ? $instanceName . '.config.json' : 'the instance config';
 $var_access = array(
     'mail' => emailSmtp::config() !== null
         ? array('label' => 'Mail: <b>' . htmlspecialchars((string) emailSmtp::config()['host']) . '</b>', 'status' => 'confirm')
-        : array('label' => $isDev ? 'Mail: no <b>mail</b> block - DEV sends to Mailpit' : 'Mail: no <b>mail</b> block in the config - <b>nothing is sent</b>', 'status' => $isDev ? 'warning' : 'error'),
+        : array('label' => $isDev
+            ? 'Mail: no host in <b>' . htmlspecialchars($instanceFile) . '</b>. On DEV nothing leaves this machine. It is kept by Mailpit at 127.0.0.1:1025.'
+            : 'Mail: no host in <b>' . htmlspecialchars($instanceFile) . '</b>. Nothing is sent.',
+            'status' => $isDev ? 'warning' : 'error'),
     'auth' => \Systopic\System\Auth\AuthConfig::secret() !== null
         ? array('label' => 'Login codes: <b>auth.secret</b> is set', 'status' => 'confirm')
         : array('label' => 'Login codes: no <b>auth.secret</b> (32+ characters) - no invitations or codes', 'status' => 'error'),
@@ -194,6 +186,12 @@ $needed_extensions = array(
     "xmlwriter",
     "xsl",
     "zip",
+    "openssl",
+    "fileinfo",
+    "session",
+    "iconv",
+    "ctype",
+    "tokenizer",
 );
 
 $var_extensions = array();
@@ -237,38 +235,112 @@ if (class_exists('Imagick', FALSE)) {
         $var_extensions['imagickPDF']['label'] = "ImageMagick <b>PDF</b> reading is allowed";
         $var_extensions['imagickPDF']['status'] = 'confirm';
     } else {
-        $var_extensions['imagickPDF']['label'] = "ImageMagick <b>PDF</b> reading is not allowed";
-        $var_extensions['imagickPDF']['status'] = 'confirm';
+        $var_extensions['imagickPDF']['label'] = "ImageMagick <b>PDF</b> reading is not allowed. Only matters for PDF uploads.";
+        $var_extensions['imagickPDF']['status'] = 'warning';
     }
 
     if (!empty(Imagick::queryFormats('WEBP'))) {
         $var_extensions['imagickWEBP']['label'] = "ImageMagick <b>WEBP</b> reading/writing is allowed";
         $var_extensions['imagickWEBP']['status'] = 'confirm';
     } else {
-        $var_extensions['imagickWEBP']['label'] = "ImageMagick <b>WEBP</b> reading/writing is not allowed";
-        $var_extensions['imagickWEBP']['status'] = 'confirm';
+        $var_extensions['imagickWEBP']['label'] = "ImageMagick <b>WEBP</b> reading/writing is not allowed. Image formats will fail.";
+        $var_extensions['imagickWEBP']['status'] = 'error';
     }
 } else {
     $var_extensions['imagickVersion']['label'] = "Imagick class does not exist.";
     $var_extensions['imagickVersion']['status'] = 'error';
 }
 
-if (function_exists('exec')) {
-    $var_extensions['exec']['label'] = "exec function enabled";
-    $var_extensions['exec']['status'] = 'confirm';
-} else {
-    $var_extensions['exec']['label'] = "exec function disabld";
-    $var_extensions['exec']['status'] = 'error';
+$disabledFunctions = array_values(array_filter(array_map('trim', explode(',', (string) ini_get('disable_functions')))));
+$var_functions = array();
+foreach (array(
+    'exec' => 'ffmpeg frames',
+    'shell_exec' => 'finding binaries',
+    'proc_open' => 'piped ffmpeg',
+) as $function => $why) {
+    $enabled = function_exists($function) && !in_array($function, $disabledFunctions, true);
+    $var_functions[$function] = array(
+        'label' => $enabled ? "<b>{$function}()</b> is available ({$why})" : "<b>{$function}()</b> is disabled ({$why})",
+        'status' => $enabled ? 'confirm' : 'error',
+    );
+}
+$var_functions['disable_functions'] = array(
+    'label' => $disabledFunctions === array()
+        ? '<b>disable_functions</b> is empty'
+        : '<b>disable_functions</b>: ' . htmlspecialchars(implode(', ', $disabledFunctions)),
+    'status' => $disabledFunctions === array() ? 'confirm' : 'warning',
+);
+
+$var_binaries = array();
+foreach (array('ffmpeg' => 'video frames', 'ffprobe' => 'video info', 'identify' => 'PDF media info') as $binary => $why) {
+    $found = \shellBinary::find($binary);
+    $local = $siteRoot . '/var/bin/' . $binary;
+    if ($found !== null) {
+        $var_binaries[$binary] = array(
+            'label' => "<b>{$binary}</b> ({$why}): " . htmlspecialchars($found),
+            'status' => 'confirm',
+        );
+    } elseif (is_file($local)) {
+        $var_binaries[$binary] = array(
+            'label' => "<b>{$binary}</b> is in public/var/bin but not on PATH, so the CMS does not use it.",
+            'status' => 'warning',
+        );
+    } else {
+        $var_binaries[$binary] = array(
+            'label' => "<b>{$binary}</b> was not found ({$why}).",
+            'status' => $binary === 'identify' ? 'warning' : 'error',
+        );
+    }
 }
 
+$var_server = array();
+$htaccess = $siteRoot . '/.htaccess';
+$var_server['htaccess'] = array(
+    'label' => is_file($htaccess) ? '<b>public/.htaccess</b> is present' : '<b>public/.htaccess</b> is missing',
+    'status' => is_file($htaccess) ? 'confirm' : 'error',
+);
+if (function_exists('apache_get_modules')) {
+    $modules = apache_get_modules();
+    foreach (array(
+        'mod_rewrite' => 'error',
+        'mod_headers' => 'warning',
+        'mod_expires' => 'warning',
+        'mod_deflate' => 'warning',
+    ) as $module => $missingStatus) {
+        $loaded = in_array($module, $modules, true);
+        $var_server[$module] = array(
+            'label' => $loaded ? "<b>{$module}</b> is loaded" : "<b>{$module}</b> is not loaded",
+            'status' => $loaded ? 'confirm' : $missingStatus,
+        );
+    }
+} else {
+    $var_server['apache'] = array(
+        'label' => 'Apache module list is not available (PHP-FPM or nginx). Rewrite has to be configured the same way as .htaccess.',
+        'status' => 'info',
+    );
+}
 
-$output = shell_exec('mysql -V');
-preg_match('@[0-9]+\.[0-9]+\.[0-9]+@', $output, $mysqlVersion);
-$var_extensions['mysqlVersion']['label'] = "Your MYSQL Version: <b>$mysqlVersion[0]</b>. We recommend at least <b>8.0.0</b>";
-$var_extensions['mysqlVersion']['status'] = 'error';
-if (version_compare($mysqlVersion[0], '8.0.0') >= 0) {
-    $var_extensions['mysqlVersion']['label'] = "Your MYSQL Version: <b>$mysqlVersion[0] </b>";
-    $var_extensions['mysqlVersion']['status'] = 'confirm';
+try {
+    $pdo = \Systopic\Db\Connection::default()->pdo();
+    $serverVersion = (string) $pdo->getAttribute(PDO::ATTR_SERVER_VERSION);
+    $shortVersion = explode('-', $serverVersion)[0];
+    $var_server['mysql'] = array(
+        'label' => 'Database server <b>' . htmlspecialchars($serverVersion) . '</b>',
+        'status' => version_compare($shortVersion, '8.0.0', '>=') ? 'confirm' : 'warning',
+    );
+    $prefix = defined('DEFAULT_TABLE_PREFIX') ? (string) DEFAULT_TABLE_PREFIX : 'cms';
+    $like = str_replace(array('\\', '%', '_'), array('\\\\', '\\%', '\\_'), $prefix) . '%';
+    $tables = $pdo->query('SHOW TABLES LIKE ' . $pdo->quote($like))->fetchAll(PDO::FETCH_NUM);
+    $count = is_array($tables) ? count($tables) : 0;
+    $var_server['tables'] = array(
+        'label' => $count > 0 ? "<b>{$count}</b> tables with prefix <b>" . htmlspecialchars($prefix) . "</b>" : 'No tables with prefix <b>' . htmlspecialchars($prefix) . '</b>',
+        'status' => $count > 0 ? 'confirm' : 'error',
+    );
+} catch (Throwable $e) {
+    $var_server['mysql'] = array(
+        'label' => 'Database connection failed: ' . htmlspecialchars($e->getMessage()),
+        'status' => 'error',
+    );
 }
 
 // Where vendor/systopic/* come from (SYS/.cursor/docs/composer.md): DEV and

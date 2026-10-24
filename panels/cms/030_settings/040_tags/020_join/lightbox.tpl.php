@@ -4,46 +4,39 @@
 $e = static fn($v): string => htmlspecialchars((string) $v, ENT_QUOTES);
 $pages = static fn(int $n): string => ($n ?: 'No') . ' Page' . ($n === 1 ? '' : 's');
 [$source, $target] = [$this->source, $this->target];
+$swatch = static function ($tag) use ($e): string {
+	$color = $tag->colorStyle !== '' ? $tag->colorStyle : '#000';
+	return '--tag-color:' . $e($color) . ';background-color:' . $e($color) . ';border-color:' . $e($color);
+};
 ?>
-<div class="lightbox">
+<div class="cmslightbox cms">
 	<section>
 		<header>
-			<h1>Tags Zusammenführen</h1>
+			<h1>Join tags</h1>
 			<ul class="barmenu">
-				<li><a class=ajax href=".././"><i class="far fa-times"></i></a></li>
+				<li><a class="ajax" href="../" title="Close"><i class="fa-regular fa-xmark"></i></a></li>
 			</ul>
 		</header>
 		<?php if ($source && $target) { ?>
 			<main>
-				<div class="merge layout">
-					<div class="twoFifth">
-						<div class="tag active" style="background:#1F8A70;"><?= $e($source->name) ?></div>
+				<div class="tagJoin">
+					<div>
+						<div class="tag" style="<?= $swatch($source) ?>"><?= $e($source->name) ?></div>
 						<p><?= $pages($this->sourcePages) ?></p>
 					</div>
-					<div class="oneFifth">
-						<i class="far fa-arrow-right"></i>
-					</div>
-					<div class="twoFifth">
-						<div class="tag active" style="background:#1F8A70;"><?= $e($target->name) ?></div>
+					<i class="fa-regular fa-arrow-right"></i>
+					<div>
+						<div class="tag" style="<?= $swatch($target) ?>"><?= $e($target->name) ?></div>
 						<p><?= $pages($this->targetPages) ?></p>
 					</div>
 				</div>
-				<p><?= $e($source->name) ?> wird gelöscht; seine Seiten bekommen <?= $e($target->name) ?>.</p>
+				<p class="tagsHint"><?= $e($source->name) ?> is removed. Its pages and files keep <?= $e($target->name) ?>.</p>
 			</main>
 			<footer>
-				<button data-on_click=join>Zusammenführen</button>
+				<button type="button" class="button submit" data-on_click="join" data-id="<?= (int) $source->id ?>" data-into="<?= (int) $target->id ?>">Join</button>
 			</footer>
+		<?php } else { ?>
+			<main><p class="tagsHint">These two tags are not here.</p></main>
 		<?php } ?>
 	</section>
-	<style>
-		.merge {
-			font-size: 1.5em;
-			text-align: center;
-			margin-bottom: 10px;
-		}
-
-		.merge > i {
-			margin: 0 20px;
-		}
-	</style>
 </div>

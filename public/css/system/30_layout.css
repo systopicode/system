@@ -1,0 +1,545 @@
+/**************************RAHMEN***********************/
+/* Leiste, Kopf über dem Pylon und Statusleiste bilden einen dunklen Rahmen */
+body > main{
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+    align-content: flex-start;
+    align-items: flex-start;
+    flex: 1 1 0;
+    min-height: 0;
+    background: var(--cmsFrame);
+}
+
+body > main > div.main,
+body > main > div.pylon,
+body > main > div.content{
+    position: relative;
+    flex: 0 0 auto;
+    align-self: stretch;
+}
+
+dialog + body > main{
+    height: calc(100% - 34px);
+}
+
+/* Spalten laufen unter der Statusleiste durch, damit ihre Trenner bis unten reichen */
+body > main > div.main,
+body > main > div.pylon{
+    padding-bottom: var(--cmsStatusBar);
+}
+
+body > main > div.main{
+    background: var(--cmsFrame);
+}
+
+/* Kein Strich zwischen Navigation und Pylon: der petrolfarbene Streifen
+   unter der Mediathek bleibt offen, das Stage-Badge wächst dort hinein. */
+body > main > div.pylon:after{
+    content: "";
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 1px;
+    background: var(--cmsFrameDivider);
+    pointer-events: none;
+    z-index: 1;
+}
+
+/********STATUSLEISTE***************/
+footer.cmsStatusbar{
+    flex: 0 0 var(--cmsStatusBar);
+    position: relative;
+    z-index: 2;
+    margin-top: calc(-1 * var(--cmsStatusBar));
+    height: var(--cmsStatusBar);
+    min-height: 0;
+    border-top: 0;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 1rem;
+    box-sizing: border-box;
+    padding: 0 0.75rem 0 calc(4.75rem + 0.75rem);
+    background: transparent;
+    pointer-events: none;
+    color: var(--cmsFrameText);
+    font-size: 0.75rem;
+}
+
+footer.cmsStatusbar .cmsJobs{
+    display: none;
+    align-items: center;
+    gap: 0.85rem;
+    margin-right: auto;
+    min-width: 0;
+}
+
+footer.cmsStatusbar .cmsJobs.on{
+    display: inline-flex;
+}
+
+footer.cmsStatusbar .cmsJobs .job{
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    min-width: 0;
+}
+
+footer.cmsStatusbar .cmsJobs .job b{
+    font-weight: 600;
+}
+
+footer.cmsStatusbar .cmsJobs .spin{
+    width: 0.7rem;
+    height: 0.7rem;
+    border: 1.5px solid currentColor;
+    border-top-color: transparent;
+    border-radius: 50%;
+    animation: spinner .6s linear infinite;
+}
+
+footer.cmsStatusbar .cmsJobs .bar{
+    width: 4.5rem;
+    height: 3px;
+    border-radius: 2px;
+    background: color-mix(in srgb, var(--cmsFrameText) 28%, transparent);
+    overflow: hidden;
+}
+
+footer.cmsStatusbar .cmsJobs .bar i{
+    display: block;
+    height: 100%;
+    background: var(--cmsHighlightColor);
+}
+
+footer.cmsStatusbar .cmsStatusInfo{
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    min-width: 0;
+    white-space: nowrap;
+}
+
+footer.cmsStatusbar .cmsStatusInfo .modified{
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: color-mix(in srgb, var(--cmsFrameText) 75%, var(--cmsFrame));
+}
+
+footer.cmsStatusbar .publishState{
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-weight: 600;
+}
+
+footer.cmsStatusbar .publishState:before{
+    content: "";
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 50%;
+    background: currentColor;
+}
+
+footer.cmsStatusbar .publishState.online{ color: #6fd27b; }
+footer.cmsStatusbar .publishState.scheduled{ color: #8fc3dc; }
+footer.cmsStatusbar .publishState.offline,
+footer.cmsStatusbar .publishState.expired{ color: var(--cmsFrameText); }
+
+/* Stage als umrandetes Badge */
+footer.cmsStatusbar .cmsStage{
+    position: absolute;
+    left: 0.7rem;
+    top: 0;
+    bottom: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 0.4rem;
+    width: auto;
+    height: 1.375rem;
+    margin: auto 0;
+    padding: 0 0.6rem 0 0.45rem;
+    border: 1px solid currentColor;
+    border-radius: var(--cmsRadius);
+    background: transparent;
+    color: #e46a70;
+    font-size: 0.6875rem;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+}
+
+footer.cmsStatusbar .cmsStage:before{
+    content: "";
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 50%;
+    background: currentColor;
+}
+
+footer.cmsStatusbar .cmsStage.DEV{
+    color: var(--cmsSuccess);
+    border-color: var(--cmsSuccess);
+    background: color-mix(in srgb, var(--cmsSuccess) 14%, transparent);
+}
+
+footer.cmsStatusbar .cmsStage.STAGING{
+    color: var(--cmsHighlightColor);
+    border-color: var(--cmsHighlightColor);
+    background: color-mix(in srgb, var(--cmsHighlightColor) 16%, transparent);
+}
+
+footer.cmsStatusbar .cmsStage.LIVE{
+    color: var(--cmsError);
+    border-color: var(--cmsError);
+    background: color-mix(in srgb, var(--cmsError) 14%, transparent);
+}
+
+/********HAUPTNAVIGATION***************/
+/* Fixed rail. A pylon beside it must not stretch this column. */
+body > main > div.main{
+    flex: 0 0 4.75rem;
+    width: 4.75rem;
+    min-width: 4.75rem;
+    max-width: 4.75rem;
+    overflow: hidden;
+}
+
+/********PYLON***************/
+body > main > div.pylon{
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    min-width: 200px;
+}
+
+body > main > div.pylon > header{
+    height: var(--cmsBar);
+    padding-left: 0.5rem;
+}
+
+body > main > div.pylon nav{
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    width: 100%;
+    height: 100%;
+    min-height: 0;
+    overflow: hidden;
+    background: var(--cmsBgColor);
+    border-radius: var(--cmsRadiusLg) 0 0 0;
+}
+
+body > main > div.pylon footer{
+    position: relative;
+    flex: 1 1 auto;
+    width: 100%;
+    height: 100%;
+    background: var(--cmsPanelAlt);
+    border-top: 1px solid var(--cmsLineStrong);
+}
+
+/* Titelzeile einer Pylon-Spalte: Titel links, Aktionen rechts */
+.cms .pylonTitle{
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    flex: 0 0 auto;
+    margin: 0 0.75rem 0.5rem;
+    padding: 0.9rem 0 0.7rem 0.25rem;
+    border-bottom: 1px solid var(--cmsLineStrong);
+}
+
+.cms .pylonTitle h2{
+    flex: 1 1 auto;
+    margin: 0;
+    font-size: 1.0625rem;
+    font-weight: 700;
+    color: var(--cmsTextColor);
+}
+
+.cms .pylonTitle .treeNavi,
+.cms .pylonTitle .button.icononly{
+    align-self: center;
+}
+
+.cms .pylonTitle .button.icononly{
+    flex: 0 0 auto;
+    width: 2rem;
+    min-height: 2rem;
+    height: 2rem;
+    margin: 0 0 0 0.15rem;
+}
+
+.cms .pylonTitle .treeNavi a i,
+.cms .pylonTitle .button.icononly i{
+    font-size: 0.9rem;
+    line-height: 1;
+}
+
+body > main > div.pylon:empty{
+    display: none;
+}
+
+/********INHALT***************/
+body > main > div.content{
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    flex-wrap: nowrap;
+    align-items: stretch;
+    width: 0;
+    background: var(--cmsBgColor);
+}
+
+/* Die Inhaltsspalte liegt als Fenster im dunklen Rahmen */
+body > main > div.content{
+    margin: 0.5rem 0.5rem var(--cmsStatusBar) 0;
+    border-radius: var(--cmsRadiusLg) var(--cmsRadiusLg) 0 0;
+    box-shadow: 0 0 0 1px rgba(255,255,255,.06), 0 8px 24px rgba(0,0,0,.18);
+}
+
+/* kein overflow:hidden, damit Popover im Kopf nicht abgeschnitten werden */
+body > main > div.content > header{
+    border-radius: var(--cmsRadiusLg) var(--cmsRadiusLg) 0 0;
+}
+
+body > main > div.main + div.content{
+    margin-left: 0.5rem;
+}
+
+/* Settings, users, tools: the same inset window as backup, with the
+   menu as its left side. The empty pylon header is the bright bar. */
+body.settings > main > div.pylon,
+body.users > main > div.pylon,
+body.tools > main > div.pylon{
+    flex: 0 0 13.5rem;
+    width: 13.5rem;
+    min-width: 13.5rem;
+    max-width: 13.5rem;
+    /* Backup's content sits flush on the rail: the hidden pylon between
+       them keeps the extra left margin from applying. Match that edge. */
+    margin: 0.5rem 0 var(--cmsStatusBar) 0;
+    padding-bottom: 0;
+    background: var(--cmsBgColor);
+    border-radius: var(--cmsRadiusLg) 0 0 0;
+    box-shadow: 0 8px 24px rgba(0,0,0,.18);
+    clip-path: inset(-40px 0 -40px -40px);
+    z-index: 2;
+}
+
+body.settings > main > div.pylon:after,
+body.users > main > div.pylon:after,
+body.tools > main > div.pylon:after{
+    content: none;
+}
+
+body.settings > main > div.pylon > header,
+body.users > main > div.pylon > header,
+body.tools > main > div.pylon > header{
+    display: none;
+}
+
+body.settings > main > div.pylon nav,
+body.users > main > div.pylon nav,
+body.tools > main > div.pylon nav{
+    background: transparent;
+    border-radius: var(--cmsRadiusLg) 0 0 0;
+    border-right: 1px solid var(--cmsLineStrong);
+}
+
+body.settings > main > div.content,
+body.users > main > div.content,
+body.tools > main > div.content{
+    flex: 1 1 auto;
+    width: 0;
+    min-width: 0;
+    margin-left: 0;
+    border-radius: 0 var(--cmsRadiusLg) 0 0;
+    clip-path: inset(-40px -40px -40px 0);
+    container-type: inline-size;
+    container-name: cms-module;
+}
+
+body.settings > main > div.content > header,
+body.users > main > div.content > header,
+body.tools > main > div.content > header{
+    border-radius: 0 var(--cmsRadiusLg) 0 0;
+}
+
+.flexRow{
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    flex: 1 1 0;
+    min-height: 0;
+    background: var(--cmsBgColor);
+}
+
+/* Seiten-Editor: dunkle Arbeitsfläche wie in der Live-Seite */
+.flexRow:has(article.cmsContent){
+    background: var(--cmsEditorBg);
+}
+
+.flexRow:has(article.cmsContent) > aside.cms{
+    margin-left: auto;
+}
+
+.flexColumn{
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.flexRow > *,
+.flexColumn > *{
+    flex: 1 1 auto;
+}
+
+article.cmsContent{
+    width: 100%;
+    max-width: 100%;
+    height: 100%;
+    padding: 1.5rem;
+    overflow: auto;
+    box-sizing: border-box;
+}
+
+/* Vorschaubreite: die Spalte ist der Container, die @media-Regeln der Seite gelten dafür */
+.flexColumn:has(article.cmsContent){
+    container-type: inline-size;
+    container-name: cms-preview;
+}
+
+body[data-cms-device="tablet"] .flexColumn:has(article.cmsContent),
+body[data-cms-device="mobile"] .flexColumn:has(article.cmsContent){
+    flex: 0 1 auto;
+    width: 100%;
+    max-width: calc(var(--cms-device-width, 820px) + 3rem);
+}
+
+body[data-cms-device="tablet"] article.cmsContent,
+body[data-cms-device="mobile"] article.cmsContent{
+    border-inline: 1px dashed rgba(151,215,249,.18);
+}
+
+/* Pages on a tablet. Saved column widths may shrink so the preview
+   keeps a share. The phone layout starts below this. */
+@media (max-width: 1180px) and (min-width: 861px){
+    body.pages > main > div.pylon{
+        flex: 0 1 18rem !important;
+        width: auto !important;
+        min-width: 18rem !important;
+        max-width: 22rem !important;
+    }
+
+    body.pages > main > div.pylon > footer{
+        max-height: 42% !important;
+    }
+
+    body.pages aside.cms{
+        flex: 0 1 16rem !important;
+        width: auto !important;
+        min-width: 14rem !important;
+        max-width: 18rem !important;
+    }
+
+    body.pages .flexRow,
+    body.pages .flexColumn:has(article.cmsContent){
+        min-width: 0;
+    }
+
+    body.pages header.cms:has(.pageHead){
+        gap: 0.35rem;
+        padding-left: 0.75rem;
+        padding-right: 0.75rem;
+    }
+
+    body.pages header.cms:has(.pageHead) .langSwitch > .splitApplyMenu span{
+        display: none;
+    }
+}
+
+/**************************SPALTEN***********************/
+.cms .layout{
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: space-between;
+}
+
+.cms .layout .row{
+    width: 100%;
+}
+
+.cms .layout .layout,
+.cms div.cmslightboxContent .layout{
+    padding: 0;
+}
+
+.cms .fullColumn, .cms ._1_1, .cms ._1      { width: calc(100% - 20px); }
+.cms .halfColumn, .cms ._1_2                { width: calc((100% / 2) - 20px); }
+.cms .oneThirdColumn, .cms ._1_3            { width: calc((100% / 3) - 20px); }
+.cms .twoThirdsColumn, .cms ._2_3           { width: calc((100% / 3 * 2) - 20px); }
+.cms .oneFourthColumn, .cms ._1_4           { width: calc((100% / 4) - 20px); }
+.cms ._2_4                                  { width: calc((100% / 4 * 2) - 20px); }
+.cms ._3_4                                  { width: calc((100% / 4 * 3) - 20px); }
+.cms .oneFifthColumn, .cms ._1_5            { width: calc((100% / 5) - 20px); }
+
+@media (max-width: 1180px){
+    .cms .oneThirdColumn, .cms ._1_3,
+    .cms .oneFourthColumn, .cms ._1_4,
+    .cms .oneFifthColumn, .cms ._1_5{
+        width: calc((100% / 2) - 20px);
+    }
+}
+
+@media (max-width: 860px){
+    .cms .halfColumn, .cms ._1_2,
+    .cms .oneThirdColumn, .cms ._1_3,
+    .cms .twoThirdsColumn, .cms ._2_3,
+    .cms .oneFourthColumn, .cms ._1_4,
+    .cms .oneFifthColumn, .cms ._1_5,
+    .cms ._2_4, .cms ._3_4{
+        width: calc(100% - 20px);
+    }
+}
+.cms ._1_6                                  { width: calc((100% / 6) - 20px); }
+.cms ._1_7                                  { width: calc((100% / 7) - 20px); }
+.cms ._1_8                                  { width: calc((100% / 8) - 20px); }
+.cms ._2_8                                  { width: calc((100% / 8 * 2) - 20px); }
+.cms ._3_8                                  { width: calc((100% / 8 * 3) - 20px); }
+.cms ._4_8                                  { width: calc((100% / 8 * 4) - 20px); }
+.cms ._5_8                                  { width: calc((100% / 8 * 5) - 20px); }
+.cms ._6_8                                  { width: calc((100% / 8 * 6) - 20px); }
+.cms ._7_8                                  { width: calc((100% / 8 * 7) - 20px); }
+.cms ._8_8                                  { width: calc(100% - 20px); }
+
+.cms [class*='Column'].box{
+    padding: 1.25rem;
+    background: var(--cmsCanvas);
+    border: 1px solid var(--cmsLine);
+    border-radius: var(--cmsRadiusLg);
+    box-shadow: var(--cmsShadow);
+}
+
+.cms [class*='Column'].box h3{
+    margin: 0 0 1rem;
+    padding: 0 0 0.5rem;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--cmsMuted);
+    border-bottom: 1px solid var(--cmsLine);
+}
+
+.cms break{
+    flex-basis: 100%;
+    width: 0;
+    height: 0;
+    overflow: hidden;
+}

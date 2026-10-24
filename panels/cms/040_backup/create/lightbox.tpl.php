@@ -8,12 +8,12 @@ switch ($this->action) {
 	case 'createTaskList':
 	case 'addMysqldump':
 	case 'addMediaDir':
-		$title = 'Backup running' . http::ajax();
+		$title = 'Backup running';
 		$include = 'progress.tpl.php';
 		$close = FALSE;
 		break;
 	case 'finishBackup':
-		$title = 'Backup completed.';
+		$title = 'Backup complete';
 		$include = 'progress.tpl.php';
 		$close = TRUE;
 		break;
@@ -26,7 +26,7 @@ switch ($this->action) {
 			<?php if ($close) { ?>
 				<ul class="barmenu">
 					<li>
-						<a class="ajax" href="../"><i class="fa-light fa-xmark-large"></i></a>
+						<a class="ajax" href="../" title="Close"><i class="fa-regular fa-xmark"></i></a>
 					</li>
 				</ul>
 			<?php } ?>

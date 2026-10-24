@@ -158,6 +158,27 @@ logroute('app::request()', app::request()->debugInfo());
 logroute('app::referrer()', app::referrer()->debugInfo());
 scripttime('path ready');
 
+// Session gone: a click in the CMS must land on the login, not sit on a dead page.
+$reqPath = app::request()->modulePath;
+if (php_sapi_name() !== 'cli'
+	&& ($reqPath[0] ?? '') === 'cms'
+	&& ($reqPath[1] ?? '') !== 'auth'
+	&& !\Systopic\System\Auth\Session::known()
+) {
+	$loginUrl = rtrim((string) http::$root, '/') . '/cms/auth/';
+	if (http::ajax()) {
+		header('Content-type: application/json; charset=utf-8');
+		header('Cache-Control: no-store');
+		echo json_encode([[
+			'command' => 'redirect',
+			'data' => ['path' => $loginUrl, 'action' => ''],
+		]]);
+		exit;
+	}
+	header('Location: ' . $loginUrl);
+	exit;
+}
+
 // A diff url names two states: '<reference>~<target>'. It is meant to be
 // fetched, not navigated to — arriving as an ordinary request (pasted,
 // bookmarked, followed by a crawler) there is nothing to diff against, and

@@ -1,0 +1,213 @@
+header.cms .rightAlign form{
+    display: contents;
+}
+
+.profile .profileHead{
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+    margin: 0 0 1.25rem;
+}
+
+.profile .profileHead .signet{
+    flex: 0 0 auto;
+    width: 5.5rem;
+    margin: 0;
+    border-width: 3px;
+}
+
+.profile .profileHead .signet span{
+    height: auto;
+    margin: 0;
+    font-size: 1.35rem;
+    letter-spacing: 0.04em;
+    line-height: 1;
+}
+
+.profile .profileHead h1{
+    margin: 0;
+    font-size: 1.35rem;
+}
+
+.profile .profileHead p{
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    margin: 0.15rem 0 0;
+    color: var(--cmsMuted);
+}
+
+.profile .profileHead p i{
+    font-size: 0.75rem;
+}
+
+.profileRoles{
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    margin: 0.55rem 0 0;
+    padding: 0;
+    list-style: none;
+}
+
+.profileRoles li{
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.05rem 0.55rem;
+    border: 1px solid var(--cmsLine);
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    line-height: 1.6;
+}
+
+.profileRoles li i{
+    font-size: 0.7rem;
+}
+
+.profileRoles li.is-super{
+    border-color: var(--cmsHighlightColor);
+}
+
+.profileRoles li.is-none{
+    color: var(--cmsMuted);
+    font-weight: 500;
+}
+
+.profile .profileHead a{
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    margin-top: 0.45rem;
+    font-size: 0.8125rem;
+    color: var(--cmsSubText);
+}
+
+.profilePreview{
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    margin: 0 0 1.25rem;
+    font-size: 0.875rem;
+}
+
+.profilePreview a{
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.profileGrid{
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr));
+    gap: 1.25rem;
+    align-items: start;
+}
+
+.profile .widget{
+    margin: 0;
+}
+
+.profile .widget > header h2{
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0;
+    font-size: 1rem;
+}
+
+.profile .widget > header h2 i,
+.profile .profileHead p i{
+    color: var(--cmsMuted);
+    font-size: 0.9rem;
+}
+
+.profile .profilePortrait{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.4rem;
+    flex: 0 0 auto;
+}
+
+.profile .portraitFrame{
+    position: relative;
+    width: 5.5rem;
+}
+
+.profile .profilePortrait > span{
+    width: 6.5rem;
+    font-size: 0.75rem;
+    line-height: 1.25;
+    text-align: center;
+    color: var(--cmsMuted);
+}
+
+.profile .portraitDrop{
+    position: relative;
+    margin: 0;
+}
+
+.profile .portraitRemove{
+    position: absolute;
+    right: -0.15rem;
+    bottom: -0.15rem;
+    z-index: 3;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.65rem;
+    height: 1.65rem;
+    min-height: 0;
+    margin: 0;
+    padding: 0;
+    border: 2px solid var(--cmsCanvas);
+    border-radius: 50%;
+    background: var(--cmsCanvas);
+    box-shadow: var(--cmsShadow);
+    color: var(--cmsMuted);
+    cursor: pointer;
+}
+
+.profile .portraitRemove:hover{
+    color: var(--cmsError);
+}
+
+.profile .portraitRemove i{
+    font-size: 0.7rem;
+}
+
+.profile .portraitDrop.is-over .signet{
+    box-shadow: 0 0 0 3px var(--cmsHighlightColor);
+}
+
+.profile .widget > form{
+    display: flex;
+    flex-direction: column;
+}
+
+.profile .widget > form > main{
+    padding: 1.25rem;
+}
+
+.profile .widget > form > footer{
+    display: flex;
+    justify-content: flex-end;
+    margin: 0;
+    padding: 0.75rem 1.25rem;
+    border-top: 1px solid var(--cmsLine);
+}
+
+.profile .widget > form > footer .button{
+    margin: 0;
+}
+
+.profile .fieldGrid{
+    grid-template-columns: 1fr;
+}
+
+.profile .profileEmpty{
+    margin: 0;
+    font-size: 0.875rem;
+    color: var(--cmsMuted);
+}

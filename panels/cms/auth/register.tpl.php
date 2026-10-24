@@ -1,4 +1,5 @@
-<h1>New here?</h1>
+<h1>Create account</h1>
+<p class="authLead">Use an email address your administrator has allowed.</p>
 <main>
 	<div class="row">
 		<div class="message"><?= message::flush() ?></div>
@@ -7,7 +8,7 @@
 		<form method=post action=createAccount  onsubmit='this.classList.add("loading")'>
 			<div class="row">
 				<div class='inputGroup'>
-					<input required spellcheck="false" autocapitalize="off" placeholder="E-Mail" type=email
+					<input required spellcheck="false" autocapitalize="off" placeholder="Email" type=email autocomplete="username"
 						   name=email_create
 						   value="<?= http::post('email_create') ?>"/>
 					<span class='bar'></span>
@@ -16,7 +17,7 @@
 			<div class="row">
 				<div>
 					 <br>
-					<button class='submit'>Create account</button>
+					<button class='submit'><i class="fa-regular fa-user-plus"></i> Create account</button>
 				</div>
 			</div>
 		</form>
@@ -24,7 +25,7 @@
 	<div class="row">
 		<div>
 			 <br>
-			<p><a href=login class="ajax">Already have an account? Go to Login</a></p>
+			<p class="authLinks"><a href="login" class="ajax"><i class="fa-regular fa-chevron-left"></i> Back to sign in</a></p>
 		</div>
 	</div>
 </main>

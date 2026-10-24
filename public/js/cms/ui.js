@@ -1,5 +1,16 @@
 
 /****************************** KEEPRESS FUNCTIONSs ***************************/
+document.addEventListener('click', function (event) {
+	var button = event.target.closest ? event.target.closest('[data-copy]') : null;
+	if (!button || !navigator.clipboard) {
+		return;
+	}
+	var text = button.getAttribute('data-copy') || '';
+	navigator.clipboard.writeText(text).then(function () {
+		button.classList.add('is-copied');
+	});
+});
+
 $(document).keydown(function (event) {
 	if (event.ctrlKey || event.metaKey) {
 		switch (String.fromCharCode(event.which).toLowerCase()) {

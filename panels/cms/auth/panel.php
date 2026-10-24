@@ -60,11 +60,12 @@ class Panel extends PanelNode {
 	/** Hand a user to the session service: from here on they are logged in. */
 	function signIn(User $user): void {
 		\Systopic\System\Auth\Session::login($user);
+		\Systopic\System\Auth\LoginLog::write((string) $user->name, 'logged in');
 	}
 
 	/** A form went wrong: say why, and let the button spin no more. */
 	function refuse(string $message, ?string $form = NULL): void {
-		\message::warning($message);
+		\message::error($message);
 		\client::removeClass('form.loading', 'loading');
 		$this->form = $form ?? $this->form;
 		$this->updateView('main');
@@ -76,6 +77,22 @@ class Panel extends PanelNode {
 
 	function sendResetPassword(User $user) {
 		return $this->sendEmail('emailResetPassword.tpl.php', 'RESET PASSWORD', $user);
+	}
+
+	/**
+	 * What the login footer shows. A released install sets versionDate in its
+	 * config; otherwise the system package's last git commit.
+	 */
+	public function revision(): string {
+		if (defined('PUBLIC_VERSIONDATE') && PUBLIC_VERSIONDATE !== '') {
+			return (string) PUBLIC_VERSIONDATE;
+		}
+		if (!function_exists('shell_exec')) {
+			return '';
+		}
+		$dir = rtrim((string) \fs::$sysRoot, '/');
+		$line = trim((string) shell_exec('git -C ' . escapeshellarg($dir) . ' log -1 --format=%cs\ %h 2>/dev/null'));
+		return $line;
 	}
 
 	function sendEmail($template, $subject, User $user) {

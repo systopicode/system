@@ -17,6 +17,8 @@ use Systopic\System\Tables\Users\Model as User;
  */
 class Panel extends CmsPanel {
 
+	public bool $inNavi = false;
+
 	public UserAdmin $admin {
 		get => UserAdmin::of($this->scope);
 	}

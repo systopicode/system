@@ -136,8 +136,10 @@ body [contenteditable='true'],
 body div.plaintext
 {
     cursor:text !important;
-    border:1px dashed rgb(52,52,52);
+    border:1px dashed rgba(151,215,249,.22);
+    border-radius: 4px;
     min-height: 20px;
+    transition: border-color .15s;
     background:none;
     position: relative;
 }
@@ -160,7 +162,7 @@ div.plaintext input
 [contenteditable=true].confirm:focus,
 [data-showeditableareas='true'].confirm:focus
 {
-    outline:2px solid rgb(124,178,73);
+    outline:2px solid var(--cmsSuccess);
     background: none !important;
     /* color:initial !important; problem bei bule-asset onpage */
 }
@@ -170,7 +172,7 @@ div.plaintext input
 [contenteditable='true'].error:focus,
 [data-showeditableareas='true'].error:focus
 {
-    outline:2px solid rgb(213,20,25);
+    outline:2px solid var(--cmsError);
     background: none !important;
     color:initial !important;
 }
@@ -185,17 +187,40 @@ div.editor[data-showeditableareas='true']:after,
 .plaintext:after,
 .objectPlaceholder:after {
     content: "EDITOR";
-    font-size: 9px;
-    line-height: 14px;
-    padding: 0 2px;
     position: absolute;
-    right: 0;
-    top: 0;
-    color: #fff;
-    font-family: Arial !important;
-    background: rgb(52,52,52);
-    font-weight: normal;
+    right: 4px;
+    top: 4px;
+    z-index: 5;
+    padding: 2px 6px;
+    border-radius: 4px;
+    background: var(--cmsChip);
+    color: var(--cmsChipText);
+    font-family: var(--cmsFont) !important;
+    font-size: 10px;
+    font-weight: 600;
+    line-height: 14px;
+    letter-spacing: 0.02em;
     text-transform: uppercase;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity .15s;
+}
+
+[contenteditable='true']:hover,
+div.plaintext:hover{
+    border-style: solid;
+    border-color: rgba(151,215,249,.75);
+    background: rgba(151,215,249,.05);
+}
+
+div.editor[contenteditable='true']:hover:after,
+div.editor[contenteditable='true']:focus:after,
+div.editor[data-showeditableareas='true']:hover:after,
+div.editor[data-showeditableareas='true']:focus:after,
+.plaintext:hover:after,
+.plaintext:focus-within:after,
+.objectPlaceholder:hover:after{
+    opacity: 1;
 }
 div.editor.empty{
 	background: rgba(0,0,0,0.15);
@@ -233,9 +258,9 @@ p.editor[contenteditable="true"]:after{
     content: "PARAGRAPH p";
 }
 
-*.editor[contenteditable="true"]:not([data-editorLabel='']):after,
-*.editor.plaintext:not([data-editorLabel='']):after{
-    content: attr(data-editorLabel);
+*.editor[contenteditable="true"]:not([data-editorlabel='']):after,
+*.editor.plaintext:not([data-editorlabel='']):after{
+    content: attr(data-editorlabel);
 }
 
 [contenteditable="true"]:focus,
@@ -254,7 +279,7 @@ body .objectPlaceholder {
     position: relative;
     min-width: 100%;
     min-height:100px;
-    background:rgb(217,217,217)
+    background:var(--cmsLine)
 }
 
 .objectContainer{

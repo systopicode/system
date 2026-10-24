@@ -2,23 +2,23 @@
 switch ($this->action) {
 	default:
 		$include = 'confirm.tpl.php';
-		$title = 'Restore Backup';
+		$title = 'Restore backup';
 		$close = TRUE;
 		break;
 	case 'createTaskList':
 	case 'extractMysqldump':
 	case 'extractMediaDir':
-		$title = 'Restore running ...';
+		$title = 'Restoring';
 		$include = 'progress.tpl.php';
 		$close = FALSE;
 		break;
 	case 'finishRestore':
-		$title = 'Restore completed.';
+		$title = 'Restore complete';
 		$include = 'progress.tpl.php';
 		$close = FALSE;
 		break;
 	case 'clearTempfiles':
-		$title = 'All Done';
+		$title = 'Restore complete';
 		$include = 'progress.tpl.php';
 		$close = TRUE;
 		break;
@@ -32,7 +32,7 @@ switch ($this->action) {
 			<?php if ($close) { ?>
 				<ul class="barmenu">
 					<li>
-						<a class="ajax" href="../"><i class="fa-light fa-xmark-large"></i></a>
+						<a class="ajax" href="../" title="Close"><i class="fa-regular fa-xmark"></i></a>
 					</li>
 				</ul>
 			<?php } ?>

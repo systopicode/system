@@ -1,0 +1,53 @@
+/****************************** PYLON NAVI ***************************/
+div.pylon nav > ul{
+    padding: 1rem 0.6rem;
+}
+
+div.pylon nav > ul li a{
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    padding: 0.45rem 0.7rem;
+    border-radius: var(--cmsRadius);
+    color: var(--cmsTextColor);
+    font-size: 0.9375rem;
+    transition: background-color .15s;
+}
+
+div.pylon nav > ul li a i{
+    flex: 0 0 1.15rem;
+    width: 1.15rem;
+    font-size: 1rem;
+    line-height: 1;
+    text-align: center;
+    color: var(--cmsMuted);
+}
+
+div.pylon nav > ul li.active > a i{
+    color: var(--cmsMainColor);
+}
+
+div.pylon nav > ul li:hover > a{
+    background: var(--cmsHover);
+}
+
+div.pylon nav > ul li.active > a{
+    background: var(--cmsActive);
+    color: var(--cmsMainColor);
+    font-weight: 600;
+}
+
+div.pylon nav > ul li ul{
+    margin: 0.15rem 0 0 0.9rem;
+    padding-left: 0.5rem;
+    border-left: 1px solid var(--cmsLine);
+}
+
+div.pylon nav > ul li ul:not(:empty){
+    margin-bottom: 0.75rem;
+}
+
+div.pylon nav > ul li ul li a{
+    padding: 0.35rem 0.6rem;
+    font-size: 0.875rem;
+}

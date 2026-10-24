@@ -107,8 +107,13 @@ class message {
 	}
 
 	public function help($label, $href) {
-		$link = "<a class='button' href='http://cms.rutan.de/$href' target='_blank'>$label</a>";
-		$this->links [] = $link;
+		$href = (string) $href;
+		if (!str_starts_with($href, 'http')) {
+			$href = 'https://fluxo-help.1f2c.de/' . ltrim($href, '/');
+		}
+		$label = htmlspecialchars((string) $label, ENT_QUOTES);
+		$href = htmlspecialchars($href, ENT_QUOTES);
+		$this->links[] = "<a class='button' href='$href' target='_blank' rel='noopener'>$label</a>";
 		return $this;
 	}
 }

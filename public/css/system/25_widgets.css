@@ -1,0 +1,296 @@
+/****************************** PERCENTAGE CIRCLES ***************************/
+.cms .loader{
+    position: relative;
+    width: 200px;
+    height: 200px;
+    user-select: none;
+    -moz-user-select: none;
+    box-sizing: border-box;
+    margin: 50px 0 50px 0;
+}
+.cms .loader-bg{
+    width: 200px;
+    height: 200px;
+    border-radius: 50%;
+    border: 15px solid var(--cmsLine);
+    box-sizing: border-box;
+}
+.cms .spiner-holder-one{
+    position: absolute;
+    top:0;
+    left:0;
+    overflow: hidden;
+    width: 50%;
+    height: 50%;
+    background: transparent;
+    box-sizing: border-box;
+}
+.cms .spiner-holder-two{
+    position: absolute;
+    top:0;
+    left:0;
+    overflow: hidden;
+    width: 100%;
+    height: 100%;
+    background: transparent;
+    box-sizing: border-box;
+}
+.cms .loader-spiner{
+    width: 200%;
+    height: 200%;
+    border-radius: 50%;
+    border: 15px solid var(--cmsHighlightColor);
+    box-sizing: border-box;
+}
+
+.cms .loader.finished.sucessfull  .loader-spiner{
+    border-color:var(--cmsSuccess);
+}
+
+.cms .animate-0-25-a{
+    transform: rotate(90deg);
+    transform-origin: 100% 100%;
+}
+.cms .animate-0-25-b{
+    transform: rotate(-90deg);
+    transform-origin: 100% 100%;
+}
+.cms .animate-25-50-a{
+    transform: rotate(180deg);
+    transform-origin: 100% 100%;
+}
+.cms .animate-25-50-b{
+    transform: rotate(-90deg);
+    transform-origin: 100% 100%;
+}
+.cms .animate-50-75-a{
+    transform: rotate(270deg);
+    transform-origin: 100% 100%;
+}
+.cms .animate-50-75-b{
+    transform: rotate(-90deg);
+    transform-origin:100% 100%;
+}
+.cms .animate-75-100-a{
+    transform: rotate(0deg);
+    transform-origin: 100% 100%;
+}
+.cms .animate-75-100-b{
+    transform: rotate(-90deg);
+    transform-origin: 100% 100%;
+}
+
+.cms .loader .text{
+    text-align: center;
+    padding-top: 50px;
+}
+.cms .loader .text b{
+    font-size: 50px;
+}
+
+.cms .loader .text span{
+    display: block;
+    margin-left: -65px;
+    margin-top: 82px;
+    overflow: hidden;
+    width: 300px;
+}
+
+.cms .animateHidden{
+    display:none;
+}
+
+
+/****************************** COLOR PICKER ***************************/
+.colpick {
+    position: absolute;
+    width: 346px;
+    height: 170px;
+    overflow: hidden;
+    display: none;
+    background:var(--cmsMainColor);
+    box-shadow: 0 7px 4px 4px rgba(0,0,0,0.2);
+    z-index: 17001;
+}
+
+
+.colpick_color {
+    position: absolute;
+    left: 7px;
+    top: 7px;
+    width: 156px;
+    height: 156px;
+    overflow: hidden;
+    cursor: crosshair;
+}
+
+.colpick_color_overlay1 {
+    position: absolute;
+    left:0;
+    top:0;
+    width: 156px;
+    height: 156px;
+    background: linear-gradient(to right, rgba(255,255,255,1) 0%, rgba(255,255,255,0) 100%);
+}
+
+.colpick_color_overlay2 {
+    position: absolute;
+    left:0;
+    top:0;
+    width: 156px;
+    height: 156px;
+    background: linear-gradient(to bottom, rgba(0,0,0,0) 0%,rgba(0,0,0,1) 100%); /* W3C */
+}
+
+.colpick_selector_outer, div.cms .colpick_selector_outer:before {
+    position: absolute;
+    width: 11px;
+    height: 11px;
+    margin: -6px 0 0 -6px;
+    border: 1px solid black;
+    border-radius: 50%;
+}
+
+.colpick_selector_inner{
+    position: absolute;
+    width: 9px;
+    height: 9px;
+    border: 1px solid white;
+    border-radius: 50%;
+}
+
+.colpick_hue {
+    position: absolute;
+    top: 6px;
+    left: 175px;
+    width: 19px;
+    height: 156px;
+    cursor: ns-resize;
+}
+
+.colpick_hue_arrs {
+    position: absolute;
+    left: -8px;
+    width: 35px;
+    height: 7px;
+    margin: -7px 0 0 0;
+}
+
+.colpick_hue_larr {
+    position:absolute;
+    width: 0;
+    height: 0;
+    border-top: 6px solid transparent;
+    border-bottom: 6px solid transparent;
+    border-left: 7px solid #fff;
+}
+
+.colpick_hue_rarr {
+    position:absolute;
+    right:0;
+    width: 0;
+    height: 0;
+    border-top: 6px solid transparent;
+    border-bottom: 6px solid transparent;
+    border-right: 7px solid #fff;
+}
+
+.colpick_new_color,
+.colpick_current_color{
+    height: 27px;
+    position: absolute;
+    right: 7px;
+    bottom: 7px;
+    width: 61px;
+    border:1px solid #fff;
+
+}
+.colpick_new_color{
+    border-left: 0;
+}
+.colpick_current_color{
+    right:68px;
+    border-right: 0;
+}
+
+.colpick_field,
+.colpick_hex_field  {
+    overflow:hidden;
+    position: absolute;
+    right:7px;
+}
+
+.colpick_hex_field{
+    top:7px;
+}
+
+.colpick_field input,
+.colpick_hex_field input{
+    text-align: center;
+    padding:0px 2px;
+    font-size: 16px;
+    color:#fff;
+    background:rgba(255,255,255,0.15);
+}
+
+.colpick_field_letter{
+    line-height: 28px;
+    margin-right: 5px;
+    color:#fff;
+}
+.colpick_hex_field input{
+    width: 80px;
+}
+.colpick_rgb_r .colpick_field_letter,
+.colpick_rgb_g .colpick_field_letter,
+.colpick_rgb_b .colpick_field_letter{
+    float: none;
+    line-height: 1.2em;
+    width: 100%;
+    text-align: center;
+    padding: 0;
+    margin-bottom: 2px;
+}
+
+.colpick_rgb_r{
+    top:45px;
+    right:97px;
+}
+
+.colpick_rgb_g{
+    top:45px;
+    right:52px;
+}
+.colpick_rgb_b{
+    top:45px;
+}
+
+.colpick_field_letter {
+    float:left;
+    height: 20px;
+    line-height: 24px;
+    padding-left: 4px;
+}
+
+.colpick_submit,
+.colpick [class*='colpick_hsb']{
+    display:none;
+}
+.colpick_hex_ns .colpick_hex_field {
+    width:118px;
+    background: transparent;
+}
+
+.cms input.picker[type="text"]{
+    box-shadow: 20px 0px 0px #000 inset;
+    padding-left: 25px;
+}
+
+.cms .inputGroup input.picker[type="text"]:placeholder-shown ~ label{
+    left:25px;
+}
+
+.cms div.inputGroup input.picker[type="text"]:placeholder-shown:focus ~ label{
+    left:0px;
+}
+

@@ -1,24 +1,163 @@
-/* the "Anmeldung & Geräte" part of the user lightbox (user.tpl.php) */
-.userAccess h2 { font-size: 1rem; margin: 1.2rem 0 0.6rem; }
-.userAccess button.submit { margin: 0 0.4rem 0.4rem 0; }
-.userAccess .issuedCode { margin-top: 1rem; text-align: center; }
-.userAccess .issuedCodeValue {
-	font-family: 'SF Mono', Menlo, Consolas, monospace;
-	font-size: 1.8rem;
-	font-weight: 600;
-	letter-spacing: 0.18em;
-	margin: 0.4rem 0;
+.cmslightbox .userEdit .userAccount > main{
+    display: grid;
+    grid-template-columns: 8.5rem 1fr;
+    gap: 1.25rem;
+    align-items: center;
 }
-.userAccess .issuedCode svg { width: 10rem; height: 10rem; background: #fff; }
-/* black on white, whatever a project's own QR style is (spaceticker: white modules) */
-.userAccess .issuedCode svg.qr-code * { fill: #000 !important; }
-.userAccess .issuedCode svg.qr-code [fill="none"] { fill: none !important; }
-.userAccess .userDevice {
-	display: flex;
-	align-items: center;
-	justify-content: space-between;
-	gap: 0.6rem;
-	padding: 0.4rem 0;
-	border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+
+.cmslightbox .userEdit .accountPhoto{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
-.userAccess .accessNote { padding: 0.4rem 0.6rem; background: rgba(0, 75, 147, 0.08); border-left: 3px solid #004b93; }
+
+.cmslightbox .userEdit .accountFields{
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem 1.5rem;
+    align-items: start;
+}
+
+.cmslightbox .userEdit .portraitDrop{
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    width: 100%;
+    margin: 0;
+    padding: 0.75rem 0.35rem;
+    border: 1px dashed color-mix(in srgb, var(--cmsMainColor) 28%, var(--cmsLine));
+    border-radius: var(--cmsRadiusLg);
+    background: color-mix(in srgb, var(--cmsMainColor) 4%, var(--cmsCanvas));
+    text-align: center;
+}
+
+.cmslightbox .userEdit .portraitDrop.is-over{
+    border-color: var(--cmsHighlightColor);
+    background: color-mix(in srgb, var(--cmsHighlightColor) 14%, var(--cmsCanvas));
+}
+
+.cmslightbox .userEdit .portraitFace{
+    position: relative;
+    display: block;
+    width: 5.25rem;
+    height: 5.25rem;
+    border: 3px solid var(--cmsHighlightColor);
+    border-radius: 50%;
+    overflow: hidden;
+    cursor: pointer;
+}
+
+.cmslightbox .userEdit .portraitFace img{
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.cmslightbox .userEdit .portraitDrop > span{
+    max-width: 14rem;
+    color: var(--cmsMuted);
+    font-size: 0.8125rem;
+}
+
+.cmslightbox .userEdit .accountPhoto .button{
+    margin: 0.45rem 0 0;
+}
+
+.cmslightbox .userEdit .profileEmpty,
+.cmslightbox .userEdit .tagsHint{
+    margin: 0 0 0.75rem;
+}
+
+.userAccess .issuedCode{
+    margin-top: 1rem;
+    text-align: center;
+}
+
+.userAccess .issuedCodeValue{
+    margin: 0.4rem 0;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 1.6rem;
+    font-weight: 600;
+    letter-spacing: 0.18em;
+}
+
+.userAccess .issuedCode svg{
+    width: 10rem;
+    height: 10rem;
+    background: #fff;
+}
+
+.userAccess .issuedCode svg.qr-code *{
+    fill: #000 !important;
+}
+
+.userAccess .issuedCode svg.qr-code [fill="none"]{
+    fill: none !important;
+}
+
+.userAccess .userDevice{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 0.55rem 0;
+    border-bottom: 1px solid var(--cmsLine);
+}
+
+.userAccess .userDevice small,
+.userEdit .userDevice small{
+    display: block;
+    color: var(--cmsMuted);
+}
+
+.userEdit .userDevice{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 0.55rem 0;
+    border-bottom: 1px solid var(--cmsLine);
+}
+
+.userEdit .accessBar{
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 0.75rem 1rem;
+}
+
+.userEdit .accessBar > .field{
+    flex: 1 1 14rem;
+    margin: 0;
+}
+
+.userEdit .accessButtons{
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+}
+
+.userEdit .accessButtons .button{
+    margin: 0;
+}
+
+.userEdit .accessButtons .button.is-copied{
+    color: var(--cmsSuccess);
+}
+
+.userAccess .accessNote{
+    margin: 0 0 0.75rem;
+    padding: 0.45rem 0.7rem;
+    background: var(--cmsSelected);
+    border-left: 3px solid var(--cmsHighlightColor);
+}
+
+@media (max-width: 52rem){
+    .cmslightbox .userEdit .userAccount > main,
+    .cmslightbox .userEdit .accountFields{
+        grid-template-columns: 1fr;
+    }
+}

@@ -18,6 +18,8 @@ use Systopic\System\Tables\Users\Operator as UserOperator;
  */
 class Panel extends CmsPanel {
 
+	public $icon = 'fa-regular fa-users';
+
 	public $showSubnavi = FALSE;
 
 	public bool $bequests = true;

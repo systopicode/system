@@ -382,8 +382,6 @@ class http implements \Systopic\System\Client\Contracts\PreloadsClientScript
 		return (object) self::getCoreJsSettings();
 	}
 
-	// static $app; // contains the path from server root to to the rutancms root folder
-
 	/**
 	 * Form field from PUT `form`, then POST body (migration helper).
 	 * Use when a save action should accept both method=post and PUT-without-method.

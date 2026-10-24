@@ -10,14 +10,14 @@
 use Systopic\System\Tables\Roles\Operator as RoleOperator;
 
 $role = $this->role;
-if ($role === NULL) {
-	return;
-}
-switch ($this->action) {
-	case 'updateRoleName':
-	case 'updateRoleDescription':
-	case 'updateRoleColor':
-		$this->scope->save(RoleOperator::assign($role, strtolower(substr($this->action, 10)), (string) \http::values('value')));
-		$this->parent->updateView();
-		break;
+if ($role !== null) {
+	switch ($this->action) {
+		case 'updateRoleName':
+		case 'updateRoleDescription':
+		case 'updateRoleColor':
+			$this->scope->save(RoleOperator::assign($role, strtolower(substr($this->action, 10)), (string) \http::values('value')));
+			$this->updateView('lightbox');
+			$this->parent->updateView('main');
+			break;
+	}
 }

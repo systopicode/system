@@ -1,0 +1,147 @@
+/****************************** TABLE ***************************/
+.cms table:not(.octalSelector){
+    width: 100%;
+    border: none;
+    border-spacing: 0;
+    border-collapse: separate;
+    background: var(--cmsCanvas);
+    font-size: 0.875rem;
+}
+
+.cms table:not(.octalSelector) th{
+    padding: 0.6rem 2rem 0.6rem 0.75rem;
+    text-align: left;
+    white-space: nowrap;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--cmsMuted);
+    background: var(--cmsCanvas);
+    border-bottom: 1px solid var(--cmsLine);
+}
+
+.cms table:not(.octalSelector) tbody td{
+    padding: 0.55rem 0.75rem;
+    vertical-align: middle;
+    border-bottom: 1px solid var(--cmsLine);
+}
+
+.cms table:not(.octalSelector) tbody tr:last-child td{
+    border-bottom: none;
+}
+
+.cms table:not(.octalSelector) tbody tr:hover td{
+    background: color-mix(in srgb, var(--cmsHighlightColor) 24%, var(--cmsCanvas));
+}
+
+.cms table:not(.octalSelector) tbody tr:hover td:first-child{
+    box-shadow: inset 3px 0 0 var(--cmsHighlightColor);
+}
+
+.cms table tr.selected td{
+    background: var(--cmsSelected);
+}
+
+.cms table tr.selected td:first-child{
+    box-shadow: inset 3px 0 0 var(--cmsHighlightColor);
+}
+
+.cms table.data td{
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.cms table:not(.octalSelector) tbody td.icons{
+    width: 1%;
+    white-space: nowrap;
+    vertical-align: middle;
+}
+
+.cms table:not(.octalSelector) td.icons ul{
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.4rem;
+}
+
+.cms table:not(.octalSelector) td.icons .button{
+    margin: 0;
+}
+
+.cms table:not(.octalSelector) td.muted{
+    white-space: nowrap;
+    color: var(--cmsMuted);
+}
+
+.cms table:not(.octalSelector) td.muted span + span{
+    margin-left: 0.4rem;
+}
+
+.cms table:not(.octalSelector) input{
+    background: var(--cmsCanvas);
+}
+
+.cms table .button,
+.cms table button{
+    min-height: 1.875rem;
+    margin-bottom: 0;
+    padding: 0 0.6rem;
+}
+
+.cms table .button i,
+.cms table button i{
+    font-size: 1rem;
+}
+
+.cms table:not(.octalSelector) ul{
+    white-space: nowrap;
+    text-align: right;
+}
+
+.cms table:not(.octalSelector) ul li{
+    display: inline-block;
+    list-style-type: none;
+}
+
+.cms table:not(.octalSelector) ul li.seperator{
+    position: relative;
+    width: 1px;
+    height: 1.5rem;
+    margin: 0 0.4rem;
+    vertical-align: middle;
+    background: var(--cmsLine);
+}
+
+.cms table tfoot td{
+    height: 2.5rem;
+    padding: 0 0.75rem;
+    text-align: right;
+    background: var(--cmsCanvas);
+    border-top: 1px solid var(--cmsLine);
+}
+
+.cms table tfoot td .pagination a{
+    padding: 0.15rem 0.35rem;
+    border-radius: 4px;
+}
+
+.cms table tfoot td .pagination a.selected{
+    font-weight: 600;
+    background: var(--cmsSelected);
+    cursor: pointer;
+}
+
+/****************************** DIV TABLE ***************************/
+div.table{
+    display: table;
+    width: 100%;
+}
+
+div.table .tr{
+    display: table-row;
+}
+
+div.table .tc{
+    display: table-cell;
+}

@@ -50,8 +50,8 @@ $angle_4 = min(0, calculate::minmax(270, $angle, 360) - 360);
 </main>
 <footer>
 	<?php if ($this->action !== 'finishBackup') { ?>
-		<a href="cancel" class="button submit ajax"><span>Cancel Backup</span></a>
+		<a href="cancel" class="button submit ajax"><span>Cancel</span></a>
 	<?php } else { ?>
-		<a href="../" class="button ajax submit"><span>OK</span></a>
+		<a href="../" class="button ajax submit"><span>Backup finished</span></a>
 	<?php } ?>
 </footer>

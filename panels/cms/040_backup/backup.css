@@ -8,3 +8,55 @@ body.backup main > div.pylon {
 body.backup .cms table.hover ul li:last-child a.button {
     padding: 4px 6px;
 }
+
+body.backup .backupCreate{
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+}
+
+body.backup .backupCreateGrid{
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 1.5rem 2rem;
+}
+
+body.backup .backupCreate h2{
+    margin: 0 0 0.75rem;
+    padding-bottom: 0.4rem;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    line-height: 1.2;
+    text-transform: uppercase;
+    color: var(--cmsMuted);
+    border-bottom: 1px solid var(--cmsLineStrong);
+}
+
+body.backup .backupCreate .checkBoxList{
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+}
+
+body.backup label.backupUpload{
+    position: relative;
+}
+
+body.backup label.backupUpload input{
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    border: 0;
+}
+
+body.backup .backupConfirmName{
+    margin: 0;
+    font-weight: 700;
+    color: var(--cmsTextColor);
+}
+

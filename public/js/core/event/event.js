@@ -235,7 +235,29 @@ sys.core.event = function (e) {
 					return hooks;
 			}
 		}
+		// data-on_load="ajaxFuncs" names a function. The page preview sits in
+		// the CMS document, so running it here would bind the public site to
+		// the editor. A real address still goes through parseURL.
+		if (event.type === 'load') {
+			var loadName = event.triggers.load;
+			var inEditor = document.body && document.body.classList.contains('cms');
+			if (!inEditor && typeof window[loadName] === 'function') {
+				window[loadName](event.e);
+			}
+			return hooks;
+		}
+		if (!sys.http || !event.data.href) {
+			return hooks;
+		}
 		event.url = sys.http.parseURL(event.data.href);
+		// A get form names no query in its action. The fields sit in data.get.
+		// Fold them in before the "nothing changed" check, or the submit is
+		// dropped and the filter never reaches the server.
+		if (event.type === 'submit' && event.data.method === 'get' && event.data.get && event.url) {
+			event.url.query = obj.extend(event.url.query || {}, event.data.get);
+			var here = sys.http.parseURL(location.href);
+			event.url.queryChanged = !sys.http.queriesEqual(here && here.query, event.url.query);
+		}
 		if (event.data.method === 'get') {
 			if (event.url.pathChanged || event.url.queryChanged || event.url.actionChanged) {
 				l("render");

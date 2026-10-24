@@ -40,6 +40,12 @@ final class Model extends TableRow
         set => $this->__set__(__PROPERTY__, $value);
     }
 
+    /** Position in the group. Steps of 2, same idea as node_ordering. */
+    public int $ordering = 0 {
+        get => $this->__get__(__PROPERTY__);
+        set => $this->__set__(__PROPERTY__, $value);
+    }
+
     /**
      * The nodes this tag hangs on.
      *

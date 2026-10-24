@@ -1,7 +1,18 @@
-﻿function openContextMenu(call) {
+function markContextTarget(src) {
+	document.querySelectorAll('.menuTarget').forEach(function (row) {
+		row.classList.remove('menuTarget');
+	});
+	if (!src || !src.closest) return;
+	var row = src.closest('.mmlContent ul ul > li') || src.closest('ul.tree li');
+	if (row) row.classList.add('menuTarget');
+}
+
+function openContextMenu(call) {
 	var $menu = $(call.html);
 	// p(call.response.html);
 	closeAllMenus();
+	var src = call.event && (call.event.sourceElement || call.event.element);
+	markContextTarget(src);
 	$menu.css({
 		left: call.event.e.clientX,
 		top: call.event.e.clientY + window.scrollY,
@@ -126,6 +137,9 @@ function initContextMenuEvents() {
 
 var contextMenus = [];
 function closeAllMenus() {
+	document.querySelectorAll('.menuTarget').forEach(function (row) {
+		row.classList.remove('menuTarget');
+	});
 	$('div.main.cms ul.contextmenu').off();
 	$('div.main.cms ul.contextmenu').remove();
 	for (var key in contextMenus) {
@@ -134,6 +148,18 @@ function closeAllMenus() {
 	}
 	contextMenus = [];
 }
+
+// Most clicks in the CMS stop at the element (sys.processEvent) and never
+// reach the body handler that used to close the menu. Capture runs first.
+document.addEventListener('mousedown', function (event) {
+	if (!document.querySelector('ul.contextmenu, div.dropdown.contextMenu, .HTMLeditorMenu')) {
+		return;
+	}
+	if (event.target.closest && event.target.closest('ul.contextmenu, div.dropdown.contextMenu, .HTMLeditorMenu')) {
+		return;
+	}
+	closeAllMenus();
+}, true);
 function contextMenu2(config, e) {
 	$('div.cms.dropdown.contextMenu').parent().remove();
 	var $contextTarget = $(e.target);
@@ -378,4 +404,51 @@ var contextMenuWW = function (params, event, elements) {
 		$(event.target).focus();
 	});
 }
-;
+
+// The arrow on a split button (image editor, language switch).
+document.addEventListener('click', function (event) {
+	var button = event.target.closest && event.target.closest('.splitApplyMenu');
+	if (button) {
+		event.preventDefault();
+		event.stopPropagation();
+		var split = button.closest('.splitApply');
+		var list = split && (split.querySelector('.splitApplyList') || split.splitList);
+		var open = list && list.classList.contains('is-open');
+		closeSplitMenus();
+		if (list && split && !open) {
+			split.splitList = list;
+			list.splitHome = split;
+			document.body.appendChild(list);
+			list.hidden = false;
+			list.classList.add('is-open');
+			list.style.width = 'max-content';
+			var rect = split.getBoundingClientRect();
+			var width = Math.max(rect.width, list.scrollWidth);
+			list.style.width = width + 'px';
+			list.style.top = (rect.bottom + 4) + 'px';
+			list.style.left = Math.max(8, Math.min(rect.left, window.innerWidth - width - 8)) + 'px';
+			split.classList.add('is-open');
+		}
+		return;
+	}
+	if (!(event.target.closest && event.target.closest('.splitApplyList'))) {
+		closeSplitMenus();
+	}
+});
+
+function closeSplitMenus() {
+	document.querySelectorAll('.splitApplyList.is-open').forEach(function (list) {
+		list.hidden = true;
+		list.classList.remove('is-open');
+		// The list is parked on the body while it is open. Put it back,
+		// or the next click looks inside the button and finds nothing.
+		if (list.splitHome && list.splitHome.isConnected) {
+			list.splitHome.appendChild(list);
+		} else {
+			list.remove();
+		}
+	});
+	document.querySelectorAll('.splitApply.is-open').forEach(function (split) {
+		split.classList.remove('is-open');
+	});
+}

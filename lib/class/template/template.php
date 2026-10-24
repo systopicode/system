@@ -65,8 +65,27 @@ class template {
 	 * folder a page actually renders from — shared or its site's — is decided
 	 * per page by Pages\Builder\ViewResolver, not here.
 	 */
+	/**
+	 * Templates live at the project root (templates/pages), not in public/.
+	 * openRootDir() walks back to whatever the dir stack calls root, which
+	 * during a render is often public/ — then the scan is empty and the
+	 * "No Templates" guide stacks in the session.
+	 */
+	private static function openTemplateRoot(): bool {
+		$projectRoot = rtrim(str_replace('\\', '/', (string) fs::$projectRoot), '/');
+		if ($projectRoot !== '' && (is_dir($projectRoot . '/templates/pages') || is_dir($projectRoot . '/templates'))) {
+			return fs::openDir($projectRoot, true);
+		}
+		return fs::openRootDir();
+	}
+
+	private static function projectHasTemplates(): bool {
+		$projectRoot = rtrim(str_replace('\\', '/', (string) fs::$projectRoot), '/');
+		return $projectRoot !== '' && (is_dir($projectRoot . '/templates/pages') || is_dir($projectRoot . '/templates'));
+	}
+
 	static function scanDir() {
-		if (!fs::openRootDir()) {
+		if (!self::openTemplateRoot()) {
 			error_log('template::scanDir: failed to open root dir, cwd: ' . fs::cwd());
 			return;
 		}
@@ -83,8 +102,8 @@ class template {
 			// glob answers in native spelling; openDir() counts '/' segments
 			self::scanFolder(str_replace('\\', '/', $siteDir));
 		}
-		fs::closeDir(); // fs::openRootDir()
-		if (!count((array) self::$templates)) {
+		fs::closeDir(); // openTemplateRoot()
+		if (!count((array) self::$templates) && !self::projectHasTemplates()) {
 			message::guide()->noTemplates()->target('template');
 		}
 	}
@@ -98,7 +117,7 @@ class template {
 	 * @param ?string $site the site's name (= its folder), null for none
 	 */
 	static function forSite(?string $site): object {
-		if (!fs::openRootDir()) {
+		if (!self::openTemplateRoot()) {
 			return (object) [];
 		}
 		$all = self::$templates;
@@ -110,7 +129,7 @@ class template {
 		if ($site !== null && $site !== '' && fs::isDir("sites/$site/templates/pages")) {
 			self::scanFolder("sites/$site/templates/pages");
 		}
-		fs::closeDir(); // fs::openRootDir()
+		fs::closeDir(); // openTemplateRoot()
 		$found = (array) self::$templates;
 		self::$templates = $all;
 		uasort($found, static fn($a, $b) => strnatcmp((string) $a->prefix, (string) $b->prefix));

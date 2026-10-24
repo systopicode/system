@@ -1,9 +1,12 @@
-
+/*
+ * Theme. Ein Projekt überschreibt nur diese Werte
+ * (overrides/css liegt in einer späteren Layer). Der Rest folgt in ui.css.
+ */
 :root {
-	--cmsHighlightColor: #e5ac00;
-	--cmsBgColor:#EBEBEB;
-	--cmsTextColor:#4C6873;
-	--cmsMainColor:#4C6873;
-	--cmsSecondaryColor:#677f88;
-	--cmsThridColor:#7DABBD;
+	--cmsMainColor: #1f3a45;
+	--cmsHighlightColor: #fcb60c;
+	--cmsBgColor: #f0f3f4;
+	--cmsTextColor: #161c1f;
+	--cmsFont: 'Font', system-ui, -apple-system, 'Segoe UI', sans-serif;
+	--cmsRadius: 6px;
 }

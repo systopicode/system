@@ -1,3 +1,10 @@
+function cmsQuery(url, data) {
+	var params = new URLSearchParams();
+	Object.keys(data).forEach(function (key) {
+		params.set(key, data[key]);
+	});
+	return fetch(url + '?' + params.toString(), {credentials: 'same-origin'});
+}
 function url2mediaParams(url) {
 	var params = url.match(/\/var_?[a-z]*\/formats\/([^\/]*)\/([0-9]*)\/([0-9]*)\//);
 	return {
@@ -6,20 +13,19 @@ function url2mediaParams(url) {
 	}
 }
 function runImageEditor(iParams) {
+	// The CMS jQuery is built without $.ajax. DOM helpers stay on jQuery.
+	var $ = window.jQuery;
 	var shiftKeyPressed = false;
 	var media_params = url2mediaParams(iParams.src);
-	$.ajax({
-		url: settings.siteRoot + 'cms/pages/getImageEditor',
-		type: "GET",
-		data: {
-			media_id: media_params.media_id,
-			image_format: media_params.media_crop_format,
-			width: iParams.display_width,
-			height: iParams.display_height,
-			ajax: 1
-		},
-		dataType: "json",
-		success: function (response) {
+	cmsQuery(settings.siteRoot + 'cms/pages/getImageEditor', {
+		media_id: media_params.media_id,
+		image_format: media_params.media_crop_format,
+		width: iParams.display_width,
+		height: iParams.display_height,
+		ajax: 1
+	}).then(function (res) {
+		return res.json();
+	}).then(function (response) {
 			if (response.message && response.message.error) {
 				p(response.message.error);
 				return;
@@ -41,22 +47,37 @@ function runImageEditor(iParams) {
 					x_dir, y_dir,
 					move // true on move else scale
 					;
-			imageEditor.css({
-				left: iParams.offset_left,
-				top: iParams.offset_top
-			});
+			var scrim = $('<div class="imageEditorScrim"></div>');
+			$('body').append(scrim);
 			iParams.domObj.css({
 				visibility: 'hidden'
-//				opacity: 0.1
 			});
 			$('body').append(imageEditor);
+			var frame = imageEditor.children('div').not('.cropTools').first();
+			var frameW = frame.outerWidth() || 480;
+			var frameH = frame.outerHeight() || 320;
+			imageEditor.css({
+				left: Math.max(16, (window.innerWidth - frameW) / 2),
+				top: Math.max(56, (window.innerHeight - frameH) / 2)
+			});
+			function dismiss() {
+				imageEditor.remove();
+				scrim.remove();
+				$('div.imageEditorRaster').remove();
+				iParams.domObj.css({visibility: 'visible'});
+			}
 
 			var drag_image = imageEditor.children('div.dragimage');
 			var crop_image = imageEditor.find('img.cropimage');
 			var flex_handle = imageEditor.find('div.flexHandle');
 			var crop_box = crop_image.parent();
-			drag_image.children('img').css({opacity: 0.1});
+			drag_image.children('img').css({opacity: 0.35});
 			$('body').bind('mousemove mouseover mousedown mouseup mouseleave keyup keydown', function (event) {
+				if (event.type === 'keydown' && event.key === 'Escape') {
+					$('body').unbind('mousemove mouseover mousedown mouseup mouseleave keyup keydown');
+					dismiss();
+					return;
+				}
 				event.preventDefault();
 				editorTargeted = $(event.target).parents('div.imageEditor').length;
 				if (event.ctrlKey && event.type === 'keydown') {
@@ -132,9 +153,7 @@ function runImageEditor(iParams) {
 						mode = 'down';
 						move = cursor === 'move';
 						if (!editorTargeted) {
-							imageEditor.remove();
-							$("div.imageEditorRaster").remove();
-							iParams.domObj.css({visibility: 'visible'});
+							dismiss();
 						}
 						break;
 					case 'down.mouseup': // click to confirm or cancel
@@ -143,33 +162,25 @@ function runImageEditor(iParams) {
 							var src = iParams.src.split("?")[0]
 							drag_image.css({cursor: 'wait'});
 							if (iParams.is_backgroundimage) {
-								$("div.imageEditorRaster").remove();
-								imageEditor.remove();
-								iParams.domObj.css({visibility: 'visible'});
+								dismiss();
 							} else {
 								iParams.domObj.bind('load', function () {
 									iParams.domObj.unbind('load');
-									imageEditor.remove();
-									$("div.imageEditorRaster").remove();
-									iParams.domObj.css({visibility: 'visible'});
+									dismiss();
 								});
 							}
 							// Saved through the CMS (login, rights), then the format is
 							// made again: ?rebuild passes the existing file in .htaccess
 							// on to media.php, which only renders.
-							$.ajax({
-								url: settings.siteRoot + 'cms/pages/updateMediaCrop',
-								type: "GET",
-								data: {
-									media_id: media_params.media_id,
-									image_format: media_params.media_crop_format,
-									width: crop_w / w / data.display_scale,
-									height: crop_box.height() / h,
-									left: (crop_l + crop_w / 2 / data.display_scale) / w,
-									top: (crop_t + crop_h / 2 / data.display_scale) / h,
-									ajax: 1
-								}
-							}).always(function () {
+							cmsQuery(settings.siteRoot + 'cms/pages/updateMediaCrop', {
+								media_id: media_params.media_id,
+								image_format: media_params.media_crop_format,
+								width: crop_w / w / data.display_scale,
+								height: crop_box.height() / h,
+								left: (crop_l + crop_w / 2 / data.display_scale) / w,
+								top: (crop_t + crop_h / 2 / data.display_scale) / h,
+								ajax: 1
+							}).finally(function () {
 								var updatesrc = src + '?rebuild=' + Date.now();
 								if (iParams.is_backgroundimage) {
 									iParams.domObj.css('background-image', 'url(' + updatesrc + ')');
@@ -179,9 +190,7 @@ function runImageEditor(iParams) {
 							});
 
 						} else { // do nothing
-							imageEditor.remove();
-							$("div.imageEditorRaster").remove();
-							iParams.domObj.css({visibility: 'visible'});
+							dismiss();
 						}
 
 					case 'drag.mouseup':
@@ -249,7 +258,6 @@ function runImageEditor(iParams) {
 			imageEditor.bind('click', function (event) {
 				event.preventDefault();
 			});
-		}
 	});
 }
 ;

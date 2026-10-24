@@ -16,6 +16,7 @@
 
 use Systopic\Db\Connection;
 use Systopic\Db\Schema\Audit;
+use Systopic\Db\Schema\AuditKind;
 use Systopic\Db\Schema\Registry;
 
 switch ($this->action) {
@@ -28,99 +29,50 @@ switch ($this->action) {
         break;
 
     case 'applyAudit':
-    case 'applyLossless':
-    case 'applyAll':
         Registry::scanTables();
 
         $audit   = new Audit(Connection::default());
         $current = $audit->run();
+        $single  = (string) (http::dataset('key') ?? '');
+        $table   = (string) (http::dataset('table') ?? '');
 
-        // A single button in a row beats the ticks. Somebody pressing "run"
-        // means that one action, not whatever else happened to be checked.
-        $single = (string) (http::dataset('key') ?? '');
-
-        $missing = 0;
-        if ($single !== '') {
-            $selected = array_values(array_filter(
-                $current,
-                static fn($action) => $action->key() === $single,
-            ));
-            $missing = 1 - count($selected);
-        } elseif ($this->action === 'applyAll') {
-            $selected = $current;
-        } elseif ($this->action === 'applyLossless') {
-            // Deliberately ignores the checkboxes: the point of this button is
-            // "everything that cannot go wrong", not "everything ticked that
-            // cannot go wrong". Blocked actions are out too — they lose
-            // nothing, but they cannot run, and a button that reliably
-            // produces errors stops being read.
-            $selected = array_values(array_filter(
-                $current,
-                static fn($action) => !$action->destructive && !$action->blocked,
-            ));
-        } else {
-            // The boxes are called `run:<key>` and send 1 or 0. One name per
-            // action, because equally named fields overwrite each other in the
-            // client.
-            $wanted = [];
-            foreach ((array) (http::form() ?: []) as $name => $value) {
-                if (str_starts_with((string) $name, 'run:') && (string) $value !== '0') {
-                    $wanted[] = substr((string) $name, 4);
+        $selected = array_values(array_filter(
+            $current,
+            static function ($action) use ($single, $table): bool {
+                if ($action->blocked || $action->statements === []) {
+                    return false;
                 }
-            }
-            if ($wanted === []) {
-                message::error('Nothing checked — nothing was run.');
-                $this->updateView('message');
-                break;
-            }
-            $selected = array_values(array_filter(
-                $current,
-                static fn($action) => in_array($action->key(), $wanted, true),
-            ));
-            $missing = count($wanted) - count($selected);
-        }
+                if ($single !== '') {
+                    return $action->key() === $single;
+                }
+                if ($table === 'Migrations') {
+                    return $action->kind === AuditKind::Migration;
+                }
+                return $table !== ''
+                    && ($action->subject === $table || str_starts_with($action->subject, $table . '.'));
+            },
+        ));
 
+        $where = $single !== '' ? $single : $table;
         if ($selected === []) {
-            message::error($current === []
-                ? 'Database and model agree — nothing to run.'
-                : 'None of the chosen actions is still pending — nothing was run.');
+            message::error($where === ''
+                ? 'Database and model agree. Nothing to apply.'
+                : 'Nothing pending for ' . $where . '.');
             $this->updateView('message');
             $this->updateView('main');
             break;
         }
 
-        // Only from its own button ("Run checked without FK checks"). It helps
-        // in two places: a column a foreign key points at can be changed at all
-        // (MySQL 1833), and a new foreign key is added without validating the
-        // rows already there.
-        $skipFk = (string) (http::dataset('nofk') ?? '0') !== '0';
-
-        $done     = $audit->apply($selected, withoutForeignKeyChecks: $skipFk);
+        $audit->apply($selected);
         $failures = $audit->failures();
         $ok       = count($selected) - count($failures);
 
         if ($ok > 0) {
-            message::confirm(sprintf(
-                'Ran %d of %d action%s, %d statement%s.%s%s',
-                $ok, count($selected), count($selected) === 1 ? '' : 's',
-                count($done), count($done) === 1 ? '' : 's',
-                $missing > 0 ? " $missing no longer pending." : '',
-                $skipFk ? ' Foreign key checks were off.' : '',
-            ));
+            message::confirm('Applied ' . $ok . ' action' . ($ok === 1 ? '' : 's')
+                . ($where !== '' ? ' for ' . $where : '') . '.');
         }
-
-        // Every failure by name. One error and silence about the other thirty
-        // is what made this worth changing.
         foreach ($failures as $failure) {
-            // 1833 is the one failure the checkbox is the answer to — say so.
-            $fkBlocked = !$skipFk && preg_match('~\b1833\b~', $failure['message']);
-            message::error(sprintf(
-                '%s %s: %s%s',
-                $failure['action']->kind->value,
-                $failure['action']->subject,
-                $failure['message'],
-                $fkBlocked ? ' — use "Run checked without FK checks".' : '',
-            ));
+            message::error($failure['action']->subject . ': ' . $failure['message']);
         }
 
         // Both: the message, and the list that just changed.

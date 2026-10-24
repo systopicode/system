@@ -9,12 +9,14 @@ class Panel extends PanelNode {
 
 //		public $loadChildModules = TRUE;
 	public $showSubnavi = TRUE;
-	public $icon = 'fa-regular fa-wrench';
+	public $icon = 'fa-duotone fa-regular fa-wrench';
+	public bool $buildChildPanels = true;
 
 	function getDefaultState() {
 		return (object) [
 					'id' => NULL,
 					'childSelected' => NULL,
+					'openChild' => NULL,
 					'pylonWidth' => 250,
 					'openFolds' => [],
 		];
@@ -32,6 +34,7 @@ class Panel extends PanelNode {
 		if ($this->inPath()) {
 			$this->updateView('pylon');
 		}
+		$this->rememberOrOpenChild();
 	}
 
 }

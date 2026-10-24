@@ -71,12 +71,13 @@ ORDER BY taggroup_name;
 SELECT
 	tag_id,
 	tag_taggroup_id,
-	tag_name
+	tag_name,
+	tag_ordering
 FROM cms_tags
 WHERE tag_taggroup_id IN (
 	SELECT taggroup_id FROM cms_taggroups WHERE taggroup_id != 1
 )
-ORDER BY tag_name;
+ORDER BY tag_ordering, tag_name;
 
 -- -------------------------------------- 3 Zuordnung Tag -> Node (Junction)
 -- Der JOIN auf cms_nodes bleibt, er filtert verwaiste Junction-Zeilen weg --

@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 150 150" role="img" aria-label="fluxo">
+	<path d="M129 33L129 49 Q129 55 123 55L72 55 Q69 55 66.88 57.12L38.74 85.26 Q34.5 89.5 30.26 85.26L20.95 75.95 Q16 71 20.95 66.05L55.76 31.24 Q60 27 66 27L123 27 Q129 27 129 33Z" fill="#243e48"/>
+	<rect x="90" y="63" width="39" height="24.5" rx="7" fill="#fcb60c"/>
+	<rect x="42" y="93" width="65.5" height="30" rx="6.5" fill="#243e48"/>
+</svg>

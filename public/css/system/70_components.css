@@ -1,0 +1,338 @@
+/****************************** Drag and Drop ***************************/
+.pageDragged .pageDroppable,
+.mediaDragged .mediaDroppable{
+	border:1px dashed var(--cmsHighlightColor);
+	display:inline-block;
+}
+
+
+/****************************** KARTE / WIDGET ***************************/
+.flexColumn > .widget{
+	flex: 0 0 auto;
+	margin: 1.25rem;
+}
+
+.widget{
+	margin: 0 0 1.25rem 0;
+	background: var(--cmsCanvas);
+	border: 1px solid var(--cmsLine);
+	border-radius: var(--cmsRadiusLg);
+	box-shadow: var(--cmsShadow);
+	overflow: hidden;
+}
+
+.widget > header,
+.widget > footer,
+.cmslightbox section > header,
+.cmslightbox section > footer{
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	position: relative;
+	min-height: 3rem;
+	margin: 0;
+	padding: 0 0.75rem 0 1.25rem;
+	background: var(--cmsCanvas);
+	color: var(--cmsTextColor);
+	border: none;
+}
+
+.widget > header,
+.cmslightbox section > header{
+	border-bottom: 1px solid var(--cmsLine);
+}
+
+.widget > footer,
+.cmslightbox section > footer{
+	justify-content: flex-end;
+	border-top: 1px solid var(--cmsLine);
+}
+
+.widget > footer > .left{
+	flex-grow: 1;
+}
+
+.widget footer p{
+	margin-bottom: 0;
+}
+
+.widget footer button,
+.widget footer .button{
+	margin: 0 0 0 0.4rem;
+}
+
+.widget > header h2 i{
+	color: var(--cmsMuted);
+	font-size: 0.9rem;
+}
+
+.widget.is-list > header{
+	flex-wrap: wrap;
+	row-gap: 0.35rem;
+}
+
+.widget.is-list > header h2{
+	flex: 1 1 auto;
+}
+
+.widget.is-list > .tagsHint{
+	margin: 0;
+	padding: 0.9rem 1.25rem 0.85rem;
+}
+
+.widget.is-list > header .listSearch{
+	flex: 0 1 14rem;
+	width: 14rem;
+	min-height: 2rem;
+	margin: 0;
+}
+
+.widget.is-list > header .button{
+	margin: 0 0.35rem 0 0.5rem;
+}
+
+.widget.is-list tbody tr[hidden]{
+	display: none;
+}
+
+.widget.is-list .tag{
+	margin: 0;
+}
+
+.swatch{
+	display: inline-block;
+	width: 1.15rem;
+	height: 1.15rem;
+	border-radius: 50%;
+	vertical-align: middle;
+}
+
+.widget > header h1,
+.widget > header h2,
+.cmslightbox section > header h1{
+	display: flex;
+	align-items: center;
+	margin: 0;
+	padding: 0;
+	font-size: 1rem;
+	font-weight: 600;
+	line-height: 1.3;
+	color: var(--cmsTextColor);
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.widget > header h1 select{
+	min-height: 0;
+	margin: 0;
+	padding: 0 1.5rem 0 0;
+	border: none;
+	background-color: transparent;
+	font-size: 1rem;
+	font-weight: 600;
+	color: var(--cmsTextColor);
+}
+
+.widget > header ul.barmenu{
+	margin-left: auto;
+}
+
+.widget > main,
+.cmslightbox section > main{
+	padding: 1.25rem;
+	background: var(--cmsCanvas);
+	overflow: auto;
+}
+
+.cms .widget > header + table,
+.cms .widget > .tagsHint + table{
+	margin: 0;
+}
+
+.cms .widget > header + table th:first-child,
+.cms .widget > header + table td:first-child,
+.cms .widget > .tagsHint + table th:first-child,
+.cms .widget > .tagsHint + table td:first-child,
+section.cms > table th:first-child,
+section.cms > table td:first-child{
+	padding-left: 1.25rem;
+}
+
+.cms .widget > header + table th:last-child,
+.cms .widget > header + table td:last-child,
+.cms .widget > .tagsHint + table th:last-child,
+.cms .widget > .tagsHint + table td:last-child,
+section.cms > table th:last-child,
+section.cms > table td:last-child{
+	padding-right: 1.25rem;
+}
+
+/* A table that fills the content is the same card as a widget. */
+section.cms:has(> table){
+	margin: 1.25rem;
+	padding: 0;
+	height: auto;
+	min-height: 0;
+	background: var(--cmsCanvas);
+	border: 1px solid var(--cmsLine);
+	border-radius: var(--cmsRadiusLg);
+	box-shadow: var(--cmsShadow);
+	overflow: auto;
+}
+
+.cmslightbox section > main .widget{
+	margin-left: 0;
+	margin-right: 0;
+}
+
+/* A group of cards. Columns, so a short card sits under the one above it
+   instead of waiting out the tallest card in the row. .is-wide runs across. */
+.widgets{
+	columns: 2;
+	column-gap: 1.25rem;
+}
+
+.widgets > .widget{
+	break-inside: avoid;
+	display: inline-block;
+	width: 100%;
+	margin: 0 0 1.25rem;
+}
+
+.widgets > .is-wide{
+	display: block;
+	column-span: all;
+}
+
+@container cms-module (max-width: 52rem){
+	.widgets{
+		columns: 1;
+	}
+}
+
+@media (max-width: 52rem){
+	.widgets{
+		columns: 1;
+	}
+}
+
+
+
+/****************************** DOM EDITABLE ***************************/
+
+.domEditable {
+	position: relative;
+}
+
+.domEditable.int {
+	padding-left: 20px;
+	margin-left: 2px;
+}
+
+.domEditable.int i.fa-minus-circle {
+	left: 0;
+	right: auto;
+}
+
+.domEditable.inline {
+	padding-right: 20px;
+	margin-right: 2px;
+}
+
+.domEditable.inline i {
+	margin: 0;
+	transform: translateY(-75%);
+	top: calc(50% + .35rem);
+}
+
+.domEditable i {
+	font-size: 16px;
+	cursor: pointer;
+	position: absolute;
+	right: 0;
+}
+
+.input i.editable.fa-pen,
+.input i.editable.fa-edit {
+	display: none;
+}
+
+
+.domEditable:not(.inline) .fa-pen.editable,
+.domEditable:not(.inline) .fa-edit.editable {
+	margin-right: 0;
+	margin-left: 5px;
+	position: static;
+}
+
+[contentEditable].input br {
+	display: none;
+}
+
+.domEditable.input{
+	height: auto;
+	min-height: 35px;
+}
+
+.domEditable .fa-pen.editable,
+.domEditable .fa-edit.editable {
+	right: 0px;
+}
+
+.domEditable.block [contenteditable] {
+	display: inline-block;
+}
+
+.domEditable.block span{
+	white-space: pre-line;
+}
+
+.domEditable.confirmcontrols {
+	padding-right: 40px;
+}
+
+.domEditable.confirmcontrols .fa-pen,
+.domEditable.confirmcontrols .fa-edit {
+	right: 18px;
+}
+
+
+.domEditable.confirmcontrols.block i.fa-check-circle,
+.domEditable.confirmcontrols.block i.fa-times-circle {
+	margin-right: 0;
+}
+
+.domEditable.confirmcontrols.block i.fa-check-circle {
+	margin-right: 18px;
+	z-index: 1;
+
+}
+
+.domEditable.confirmcontrols.inline i.fa-check-circle {
+	right: 18px;
+	margin-right: 0;
+}
+
+.domEditable select,
+.domEditable select option{
+	border:none;
+	padding:0;
+	height:auto;
+	display:inline-block;
+	font-weight: bold;
+}
+
+.domEditable select + span,
+.domEditable select + span + i{
+	display:none;
+}
+
+div.domLayerPlaceholder:empty{
+	flex:0 0 0;
+}
+
+
+[onclick]{
+	cursor:pointer;
+}

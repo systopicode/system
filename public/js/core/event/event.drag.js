@@ -1,4 +1,4 @@
-﻿/* global sys,c,p,t,l */
+/* global sys,c,p,t,l */
 sys.core.event.drag = function (event, hooks) { // 2. param raus
 	var e = event.e;
 	var drag = this;
@@ -57,15 +57,23 @@ sys.core.event.drag = function (event, hooks) { // 2. param raus
 		if (drag.status !== 'down') {
 			keysHoldable.forEach(key => drag.$helper[0].classList.remove(key));
 			drag.keysheld.forEach(key => drag.$helper[0].classList.add(key));
-			drag.dropObj = e.target.closest('[data-drop_accept]');
+			var nextDrop = e.target.closest('[data-drop_accept]');
+			if (drag.dropObj && drag.dropObj !== nextDrop) {
+				drag.dropObj.classList.remove('dropTarget');
+			}
+			drag.dropObj = nextDrop;
 			if (isAcceptable()) {
 				drag.status = 'accept';
+				drag.dropObj.classList.add('dropTarget');
 				if (drag.hasHelper) {
 					drag.$helper.addClass('accept');
 					css = getBoundingBox(drag.dropObj);
 				}
 			} else {
 				drag.status = 'dragging';
+				if (drag.dropObj) {
+					drag.dropObj.classList.remove('dropTarget');
+				}
 				if (drag.hasHelper) {
 					drag.$helper.show();
 					drag.$helper.removeClass('accept');
@@ -100,6 +108,9 @@ sys.core.event.drag = function (event, hooks) { // 2. param raus
 		// the DOM and body.dragging / body.<type>Dragging stuck for good.
 		if (drag.$helper) {
 			drag.$helper.remove();
+		}
+		if (drag.dropObj) {
+			drag.dropObj.classList.remove('dropTarget');
 		}
 		$('body').removeClass('dragging');
 		$('body').removeClass(drag.type + 'Dragging');

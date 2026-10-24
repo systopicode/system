@@ -39,8 +39,15 @@ ini_set('max_execution_time', 60);
 ini_set('memory_limit', '1G');
 ini_set('serialize_precision', 14);
 ini_set('log_errors', 1);
-ini_set('error_log', 'var/log/PHP_errors.log');
 ini_set('html_errors', false);
+// Absolute, so a later chdir cannot send errors into public/var or nowhere.
+// Config may override this afterwards; a relative override is put back below.
+$__logDir = $__projectRoot . '/var/log';
+if (!is_dir($__logDir)) {
+	mkdir($__logDir, 0775, true);
+}
+$__phpLog = $__logDir . '/PHP_errors.log';
+ini_set('error_log', $__phpLog);
 
 /* ***************************** INSTANCE + SITE (config/) ************************** */
 // config.json: project constants (and sites without a database);
@@ -61,6 +68,16 @@ try {
 // project constants from config.json (DEFAULT_TABLE_PREFIX, ACCOUNT_WHITELIST,
 // PROJECT_NAMESPACE)
 $config->defineConstants();
+// The instance or the server php.ini may point at a machine log such as
+// ServBay. This project keeps its own file, next to the other logs.
+ini_set('log_errors', '1');
+ini_set('error_log', $__phpLog);
+if (!defined('PHPLOGFILE')) {
+	define('PHPLOGFILE', $__phpLog);
+}
+if (!is_file(PHPLOGFILE)) {
+	touch(PHPLOGFILE);
+}
 umask(0002);
 // a config, but no database yet - or the first account still to make: the
 // later steps of the setup (exit)

@@ -1,0 +1,695 @@
+/****************************** SIDEBAR ***************************/
+aside.cms{
+    position: relative;
+    z-index: 5;
+    display: flex;
+    flex-direction: column;
+    box-sizing: border-box;
+    height: 100%;
+    min-width: 260px;
+    max-width: 800px;
+    background: var(--cmsCanvas);
+    color: var(--cmsTextColor);
+    border-left: 1px solid var(--cmsLineStrong);
+}
+
+aside.cms > .flexContainer{
+    flex: 1 1 0;
+    min-height: 0;
+}
+
+/****************************** REITER ***************************/
+aside.cms nav.sidebarTabs{
+    position: relative;
+    flex: 0 0 auto;
+    padding: 0.35rem 0 0;
+    border-bottom: 1px solid var(--cmsLine);
+}
+
+aside.cms nav.sidebarTabs ul{
+    display: flex;
+    flex-wrap: nowrap;
+    column-gap: 0.85rem;
+    padding: 0 0.9rem;
+    overflow-x: auto;
+    scrollbar-width: none;
+}
+
+aside.cms nav.sidebarTabs ul::-webkit-scrollbar{
+    display: none;
+}
+
+aside.cms nav.sidebarTabs button.tabScroll{
+    position: absolute;
+    top: 0.35rem;
+    bottom: 1px;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    min-height: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: var(--cmsCanvas);
+    color: var(--cmsSubText);
+    font-size: 0.75rem;
+    cursor: pointer;
+}
+
+aside.cms nav.sidebarTabs button.tabScroll[hidden]{
+    display: none;
+}
+
+aside.cms nav.sidebarTabs button.tabScroll:hover{
+    color: var(--cmsTextColor);
+}
+
+aside.cms nav.sidebarTabs button.prev{
+    left: 0;
+    box-shadow: 8px 0 8px -4px var(--cmsCanvas);
+}
+
+aside.cms nav.sidebarTabs button.next{
+    right: 0;
+    box-shadow: -8px 0 8px -4px var(--cmsCanvas);
+}
+
+aside.cms nav.sidebarTabs li{
+    margin: 0;
+}
+
+aside.cms nav.sidebarTabs ul li a{
+    display: flex;
+    align-items: center;
+    height: 2.5rem;
+    margin: 0 0 -1px;
+    padding: 0;
+    border-radius: 0;
+    background: none;
+    border-bottom: 2px solid transparent;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: var(--cmsMuted);
+    white-space: nowrap;
+    cursor: pointer;
+}
+
+aside.cms nav.sidebarTabs ul li a:hover{
+    background: none;
+    color: var(--cmsTextColor);
+}
+
+aside.cms nav.sidebarTabs ul li a.selected{
+    background: none;
+    border-bottom-color: var(--cmsHighlightColor);
+    box-shadow: none;
+    color: var(--cmsTextColor);
+    font-weight: 600;
+}
+
+/****************************** EIN- UND AUSFAHREN ***************************/
+aside.cms a.sidebarFlag{
+    position: absolute;
+    top: 0.75rem;
+    left: calc(-1.25rem - 1px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.25rem;
+    height: 2.75rem;
+    background: var(--cmsCanvas);
+    border: 1px solid var(--cmsLineStrong);
+    border-right: 0;
+    border-radius: var(--cmsRadius) 0 0 var(--cmsRadius);
+    box-shadow: -2px 2px 6px rgba(0,0,0,.18);
+    color: var(--cmsMuted);
+    font-size: 0.6875rem;
+    cursor: pointer;
+}
+
+aside.cms a.sidebarFlag:hover{
+    color: var(--cmsTextColor);
+}
+
+aside.cms.collapsed{
+    min-width: 0;
+    overflow: visible;
+}
+
+aside.cms .scrollContainer{
+    width: 100%;
+    height: 100%;
+    overflow-x: hidden;
+    overflow-y: auto;
+    scrollbar-width: none;
+}
+
+aside.cms .scrollContainer::-webkit-scrollbar{
+    display: none;
+}
+
+.flexContainer{
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+}
+
+aside.cms .scrollContainerContent{
+    padding-bottom: 2rem;
+}
+
+/****************************** AKKORDEONS ***************************/
+aside.cms details.sidebarSection{
+    border-bottom: 1px solid var(--cmsLine);
+}
+
+aside.cms details.sidebarSection > summary{
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0;
+    padding: 0.75rem 1rem;
+    list-style: none;
+    background: var(--cmsPanelAlt);
+    font-size: 0.875rem;
+    font-weight: 700;
+    color: var(--cmsTextColor);
+    cursor: pointer;
+    user-select: none;
+}
+
+aside.cms details.sidebarSection > summary::-webkit-details-marker{
+    display: none;
+}
+
+aside.cms details.sidebarSection > summary .sidebarInfo{
+    margin-left: auto;
+    color: var(--cmsMuted);
+}
+
+aside.cms details.sidebarSection > summary .sidebarInfo:hover{
+    color: var(--cmsTextColor);
+}
+
+aside.cms details.sidebarSection > summary::after{
+    content: "\f078";
+    margin-left: auto;
+    font-family: "CMS Font Awesome 7 Pro";
+    font-weight: 400;
+    font-size: 0.6875rem;
+    color: var(--cmsMuted);
+    transition: transform .15s;
+}
+
+aside.cms details.sidebarSection > summary:has(.sidebarInfo)::after{
+    margin-left: 0.65rem;
+}
+
+aside.cms details.sidebarSection:not([open]) > summary::after{
+    transform: rotate(-90deg);
+}
+
+aside.cms details.sidebarSection > summary:hover{
+    background: color-mix(in srgb, var(--cmsMainColor) 6%, var(--cmsPanelAlt));
+}
+
+aside.cms details.sidebarSection > summary:hover,
+aside.cms details.sidebarSection > summary:hover::after{
+    color: var(--cmsTextColor);
+}
+
+aside.cms details.sidebarSection > summary:focus-visible{
+    outline: 2px solid var(--cmsHighlightColor);
+    outline-offset: -2px;
+}
+
+aside.cms div.sidebarItem{
+    width: 100%;
+    padding: 0.85rem 1rem 1rem;
+}
+
+aside.cms div.sidebarItem > *:first-child{
+    margin-top: 0;
+}
+
+aside.cms div.sidebarItem h3,
+aside.cms div.sidebarItem h4,
+aside.cms div.sidebarItem h6,
+aside.cms div.sidebarItem label,
+aside.cms ul li.seperator{
+    margin-top: 0.85rem;
+    margin-bottom: 0.35rem;
+}
+
+aside.cms details.sidebarSection div.sidebarItem > h3:first-child{
+    display: none;
+}
+
+aside.cms details.sidebarSection div.sidebarItem > h3:first-child + *{
+    margin-top: 0;
+}
+
+/* Abschnittstitel – gleiche Optik wie Lightbox-Aside und Mediathek */
+aside.cms div.sidebarItem h3{
+    margin: 0.85rem 0 0.35rem;
+    font-size: 0.875rem;
+    font-weight: 700;
+    color: var(--cmsTextColor);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+aside.cms ul li.seperator,
+aside.cms .taggroup > h6,
+aside.cms h6.taggroup{
+    display: block;
+    box-sizing: border-box;
+    margin: 1.15rem -1rem 0.5rem;
+    padding: 0 1rem 0.4rem;
+    border: 0;
+    border-bottom: 1px solid var(--cmsLineStrong);
+    background: none;
+    font-size: 0.6875rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    line-height: 1.2;
+    text-transform: uppercase;
+    color: var(--cmsSubText);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+aside.cms div.sidebarItem h3:first-child,
+aside.cms div.taggroup:first-child h6.taggroup{
+    margin-top: 0;
+}
+
+aside.cms.cms .taggroup{
+    display: block;
+    width: 100%;
+}
+
+aside.cms .taggroup > h6.taggroup{
+    display: block;
+    box-sizing: border-box;
+    width: calc(100% + 2rem);
+    margin: 1.15rem -1rem 0.5rem;
+    padding: 0 1rem 0.4rem;
+    border: 0;
+    border-bottom: 1px solid var(--cmsLineStrong);
+    background: none;
+    font-size: 0.6875rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    line-height: 1.2;
+    text-transform: uppercase;
+    color: var(--cmsSubText);
+}
+
+aside.cms .taggroup:first-child > h6.taggroup{
+    margin-top: 0;
+}
+
+aside.cms h4,
+aside.cms label.checkbox span b{
+    margin: 0.85rem 0 0.3rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    line-height: 1.3;
+    color: var(--cmsMuted);
+}
+
+aside.cms .sidebarItem h4:first-of-type{
+    margin-top: 0;
+}
+
+aside.cms div[data-on_input] > label{
+    display: block;
+    margin: 0.85rem 0 0;
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--cmsMuted);
+}
+
+aside.cms div[data-on_input] > label input{
+    margin: 0.3rem 0 0;
+}
+
+aside.cms div.checkboxContainer + h4{
+    margin-top: 1.5rem;
+}
+
+aside.cms .settingGroup{
+    margin: 1rem 0 0.35rem;
+    padding: 0.7rem 0.75rem 0.85rem;
+    background: color-mix(in srgb, var(--cmsMainColor) 4%, var(--cmsCanvas));
+    border: 1px solid var(--cmsLine);
+    border-radius: var(--cmsRadius);
+}
+
+aside.cms .settingGroup > h4{
+    margin: 0 0 0.15rem;
+    padding-bottom: 0.45rem;
+    border-bottom: 1px solid var(--cmsLine);
+    font-size: 0.8125rem;
+    font-weight: 700;
+    letter-spacing: 0;
+    text-transform: none;
+    color: var(--cmsTextColor);
+}
+
+aside.cms .settingGroup div[data-on_input] > label{
+    margin-top: 0.65rem;
+}
+
+aside.cms .settingGroup div[data-on_input] > label:first-child{
+    margin-top: 0.55rem;
+}
+
+aside.cms div.sidebarItem a{
+    color: var(--cmsTextColor);
+}
+
+/****************************** LISTEN ***************************/
+aside.cms ul li{
+    position: relative;
+    display: block;
+    margin: 0 0 0.25rem;
+}
+
+aside.cms ul li > *{
+    display: inline-block;
+    padding: 0.3rem 0;
+}
+
+aside.cms ul li > p{
+    display: block;
+}
+
+aside.cms ul li a{
+    cursor: pointer;
+}
+
+aside.cms ul li a:not(.icon){
+    margin-left: -0.5rem;
+    padding: 0.3rem 0.5rem;
+    border-radius: var(--cmsRadius);
+    transition: background-color .15s;
+}
+
+aside.cms ul li a:not(.icon):hover{
+    background: var(--cmsHover);
+}
+
+aside.cms ul li a.selected{
+    background: var(--cmsSelected);
+    color: var(--cmsHighlightText);
+    font-weight: 600;
+}
+
+aside.cms ul.templates li.seperator:empty{
+    height: 0;
+    margin: 0.85rem -1rem 0.45rem;
+    padding: 0;
+    border-top: 0;
+    border-bottom: 1px solid var(--cmsLineStrong);
+}
+
+aside.cms ul li a.icon{
+    margin-left: 0.5rem;
+    padding: 0;
+}
+
+aside.cms ul li i{
+    font-size: 1rem;
+    color: var(--cmsMainColor);
+}
+
+aside.cms ul li i:first-child{
+    line-height: 1em;
+    padding: 0;
+}
+
+aside.cms ul li input + a.icon{
+    float: none;
+}
+
+/****************************** FELDER ***************************/
+aside.cms form{
+    width: 100%;
+}
+
+aside.cms div.inputGroup{
+    display: flex;
+    width: 100%;
+    margin: 0.85rem 0 0;
+    padding: 0;
+}
+
+aside.cms div.inputGroup label{
+    margin: 0;
+}
+
+aside.cms label.checkbox,
+aside.cms div.inputGroup,
+aside.cms div.group{
+    margin: 0.55rem 0 0;
+}
+
+aside.cms label.checkbox{
+    margin-bottom: 0.35rem;
+}
+
+aside.cms .sidebarItem select,
+aside.cms .sidebarItem textarea,
+aside.cms .sidebarItem input[type="text"],
+aside.cms .sidebarItem input[type="datetime-local"]{
+    min-height: 2rem;
+    margin-bottom: 0;
+    padding: 0.3rem 0.6rem;
+    font-size: 0.8125rem;
+}
+
+aside.cms p.hint{
+    margin: 0 0 0.35rem;
+    font-size: 0.75rem;
+    line-height: 1.4;
+    color: var(--cmsMuted);
+}
+
+aside.cms .sideActions{
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    margin-top: 0.35rem;
+}
+
+aside.cms a.sideAction{
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    width: 100%;
+    min-height: 0;
+    margin: 0;
+    padding: 0.35rem 0.45rem;
+    border-radius: var(--cmsRadius);
+    font-size: 0.8125rem;
+    font-weight: 500;
+    line-height: 1.25;
+}
+
+aside.cms a.sideAction i{
+    width: 1rem;
+    margin: 0;
+    font-size: 0.85rem;
+    color: var(--cmsMuted);
+    text-align: center;
+}
+
+aside.cms a.sideAction:hover i{
+    color: inherit;
+}
+
+aside.cms a.sideAction.danger{
+    margin-top: 1rem;
+    color: var(--cmsError);
+}
+
+aside.cms p.cmsSeoLinks a{
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: var(--cmsSubText);
+    text-decoration: underline;
+    text-underline-offset: 0.15em;
+}
+
+aside.cms form.tagAdd{
+    display: block;
+    margin: 0.45rem 0 0.2rem;
+}
+
+aside.cms form.tagAdd input{
+    width: 100%;
+    min-height: 1.75rem;
+    margin: 0;
+    font-size: 0.8125rem;
+}
+
+aside.cms ul.rewrite li > div[data-rewritepath_id]{
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    width: 100%;
+}
+
+aside.cms ul.rewrite li > div[data-rewritepath_id] input[type="text"]{
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+aside.cms ul.rewrite .pathMeta{
+    margin: 0.2rem 0 0.65rem;
+    font-size: 0.75rem;
+    line-height: 1.45;
+    color: var(--cmsMuted);
+}
+
+aside.cms ul li.seperator i{
+    float: right;
+    cursor: pointer;
+    color: var(--cmsMuted);
+}
+
+aside.cms ul li.seperator i:hover{
+    color: var(--cmsTextColor);
+}
+
+aside.cms label.checkbox{
+    margin-bottom: 0;
+}
+
+aside.cms div.group{
+    padding: 0;
+}
+
+aside.cms select{
+    margin-bottom: 0;
+}
+
+aside.cms textarea + small{
+    display: block;
+    margin-top: -0.5rem;
+    color: var(--cmsMuted);
+}
+
+aside.cms p.cmsHint{
+    margin: 0.15rem 0 0;
+    font-size: 0.8125rem;
+    line-height: 1.45;
+    color: var(--cmsSubText);
+}
+
+aside.cms .cmsSeoPreview{
+    display: block;
+    width: 100%;
+}
+
+aside.cms dl.cmsSeoFacts{
+    display: block;
+    margin: 0.15rem 0 0;
+    font-size: 0.8125rem;
+    line-height: 1.4;
+}
+
+aside.cms dl.cmsSeoFacts dt{
+    margin: 0.7rem 0 0.1rem;
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--cmsMuted);
+}
+
+aside.cms dl.cmsSeoFacts dt:first-child{
+    margin-top: 0;
+}
+
+aside.cms dl.cmsSeoFacts dd{
+    margin: 0;
+    overflow-wrap: anywhere;
+}
+
+aside.cms p.cmsSeoLinks{
+    display: flex;
+    gap: 0.85rem;
+    margin: 0.65rem 0 0;
+}
+
+aside.cms p.cmsSeoLinks a{
+    font-weight: 600;
+}
+
+ul.rewrite li{
+    position: relative;
+    white-space: nowrap;
+}
+
+ul.rewrite li > div{
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    width: 100%;
+}
+
+ul.rewrite li > div input:first-child,
+ul.rewrite li > div input:last-child{
+    flex: 0 0 auto;
+}
+
+aside.cms ul.rewrite input[type='text']{
+    width: auto;
+    flex: 1 1 auto;
+    min-width: 0;
+    margin: 0;
+}
+
+aside.cms ul.templates li > *{
+    display: block;
+    padding: 0;
+}
+
+aside.cms ul.templates a{
+    display: block;
+    margin: 0;
+    padding: 0.32rem 0.5rem;
+}
+
+aside.cms ul.templates li.seperator{
+    margin-top: 0.9rem;
+}
+
+aside.cms dl.cmsFacts{
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
+    margin: 0.85rem 0 0;
+}
+
+aside.cms dl.cmsFacts dt{
+    margin: 0;
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--cmsMuted);
+}
+
+aside.cms dl.cmsFacts dd{
+    margin: 0.1rem 0 0;
+    font-size: 0.8125rem;
+}

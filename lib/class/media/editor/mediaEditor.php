@@ -60,7 +60,7 @@ class mediaEditor {
 		$aspectRatiosSelector .= '</div>';
 		$html = "
 		<div style='position:absolute;' class='imageEditor'>
-			<div style='width:{$cnv_width}px;height:{$cnv_height}px;position:absolute;overflow:hidden;'>
+			<div class='cropFrame' style='width:{$cnv_width}px;height:{$cnv_height}px;position:absolute;overflow:hidden;'>
 				$aspectRatiosSelector
 				$flexHandle
 				<img class='cropimage' style='margin-left:{$margin_left}px;margin-top:{$margin_top}px;width:{$alias_width}px;height:{$alias_height}px;position:absolute;' src='$src_public_filename' />

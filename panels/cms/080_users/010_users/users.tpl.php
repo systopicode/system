@@ -2,65 +2,65 @@
 /** @var \Systopic\System\Panels\Root\Cms\Users\Users\Panel $this */
 
 use Systopic\System\Panels\Root\Cms\Users\Panel as Users;
-use Systopic\System\Tables\Users\Operator as UserOperator;
 
 $e = static fn($v): string => htmlspecialchars((string) $v, ENT_QUOTES);
 $superuser = \Systopic\System\Auth\Session::isSuperuser();
-$arrow = $this->state->sortDesc ? 'down' : 'up';
 ?>
-<div class="widget">
+<h1>Users</h1>
+<p class="tagsHint">Search by username, full name or email. The pen opens the user.</p>
+<section class="widget is-list userList">
 	<header>
-		<h1>List of users</h1>
-		<?= \menu::create('barmenu')->item('addUser')->icon('fal fa-plus-circle') ?>
+		<h2>List of users</h2>
+		<input class="listSearch" type="search" placeholder="Search" data-on_input="filterUsers" autocomplete="off">
+		<a class="button submit" data-on_click="addUser"><i class="fa-regular fa-plus"></i><span>Add user</span></a>
 	</header>
-	<main>
-		<div class="row">
-			<div>
-				<table class="keycolumn">
-					<tr>
-						<?php foreach (['name', 'email', 'last_login'] as $key) { ?>
-							<th><b data-on_click="sortUsers" data-sortby="<?= $key ?>"><?= $key ?><?= $key === $this->state->sortBy ? " <i class=\"fas fa-sort-$arrow\"></i>" : '' ?></b></th>
+	<table>
+		<thead>
+			<tr>
+				<th></th>
+				<th>Username</th>
+				<th>Full name</th>
+				<th>Email</th>
+				<th>Last sign-in</th>
+				<th>Roles</th>
+				<th></th>
+			</tr>
+		</thead>
+		<tbody>
+			<?php foreach ($this->users as $user) { ?>
+				<tr data-user_id="<?= $user->id ?>">
+					<td class="userStatusCell"><span class="userStatus is-unknown" title="Unknown"></span></td>
+					<td>
+						<?= $e($user->name) ?>
+						<?php if ($user->isSuperuser) { ?>
+							<i class="fa-regular fa-user-shield userSuper" title="Superuser"></i>
 						<?php } ?>
-						<th><b>roles</b></th>
-						<th></th>
-					</tr>
-					<?php foreach ($this->users as $user) { ?>
-						<tr data-user_id="<?= $user->id ?>">
-							<td><?= $e($user->name) ?></td>
-							<td><?= $e($user->email) ?></td>
-							<td><?= $user->lastLogin?->format('d.m.Y H:i:s') ?? 'unbekannt' ?></td>
-							<td>
-								<div class="roles" data-drop_accept="role" data-on_drop="addRoleToUser">
-									<?php
-									// A superuser has every role; the ones really assigned can be taken away.
-									foreach ($user->isSuperuser ? $this->roles : $this->admin->rolesOf($user) as $role) {
-										echo Users::roleSticker($role, $this->admin->assignment($user, $role) ? 'removeRoleFromUser' : NULL);
-									}
-									?>
-								</div>
-							</td>
-							<td>
-								<span class="nowrap">
-									<?php if ($superuser && $user->isSuperuser) { ?>
-										<i class="fas fa-spider space" data-on_click="revokeSuperuser"></i>
-									<?php } elseif ($superuser) { ?>
-										<i class="fas fa-spider disabled space" data-on_click="makeSuperuser"></i>
-										<i class="fas fa-ghost space" data-on_click="../hijackUser"></i>
-									<?php } elseif ($user->isSuperuser) { ?>
-										<i class="fas fa-spider space"></i>
-									<?php } ?>
-									<a class="ajax" href="edit/?user_id=<?= $user->id ?>"><i class="fas fa-pen space"></i></a>
-								</span>
-							</td>
-						</tr>
-					<?php } ?>
-				</table>
-			</div>
-		</div>
-	</main>
-</div>
-<style>
-	div.roles {
-		min-height: 20px;
-	}
-</style>
+					</td>
+					<td><?= $e($user->fullname) ?></td>
+					<td><?= $e($user->email) ?></td>
+					<td><?= $user->lastLogin ? $e($user->lastLogin->format('j M Y, H:i')) : 'Unknown' ?></td>
+					<td>
+						<div class="roles" data-drop_accept="role" data-on_drop="addRoleToUser">
+							<?php
+							foreach ($user->isSuperuser ? $this->roles : $this->admin->rolesOf($user) as $role) {
+								echo Users::roleSticker($role);
+							}
+							?>
+						</div>
+					</td>
+					<td class="icons">
+						<ul>
+							<?php if ($superuser && !$user->isSuperuser) { ?>
+								<li><a class="button icononly" title="Sign in as this user" data-on_click="../hijackUser"><i class="fa-regular fa-ghost"></i></a></li>
+							<?php } ?>
+							<li><a class="ajax button icononly" title="Edit" href="edit/?user_id=<?= $user->id ?>"><i class="fa-regular fa-pen"></i></a></li>
+							<?php if ((int) $user->id !== (int) \Systopic\System\Auth\Session::id()) { ?>
+								<li><a class="button icononly" title="Delete" data-on_click="userConfirm" data-action="removeUser" data-confirm="Delete this user? This cannot be undone." data-user_id="<?= (int) $user->id ?>"><i class="fa-regular fa-trash"></i></a></li>
+							<?php } ?>
+						</ul>
+					</td>
+				</tr>
+			<?php } ?>
+		</tbody>
+	</table>
+</section>

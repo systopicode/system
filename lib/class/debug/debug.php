@@ -19,7 +19,6 @@ class debug {
 		}
 		$remove = [
 			$_SERVER['DOCUMENT_ROOT'],
-			'_rutancms/'
 		];
 		$file = str_replace($remove, '', $caller['file'] ?? '');
 		$line = $caller['line'] ?? 0;

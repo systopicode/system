@@ -1,6 +1,6 @@
 <?php
 if (empty($this->backupfilestable)) {
-	echo html::section()->class('cms')->h1('No Backups created.');
+	echo html::section()->class('cms')->h1('No backups yet.');
 	return;
 }
 ?>

@@ -203,6 +203,117 @@ final class Files
         return count($dirs);
     }
 
+    /**
+     * Look of one format, never of the original. The original file stays as uploaded.
+     *
+     * @return array<string, array{b:int,c:int,s:int,r:int,f:int}>
+     */
+    public static function tunes(int $mediaId, string $filename): array
+    {
+        $file = self::tuneFile($mediaId, $filename);
+        if (!is_file($file)) {
+            return [];
+        }
+        $data = json_decode((string) file_get_contents($file), true);
+        return is_array($data) ? $data : [];
+    }
+
+    /** null removes the format. An empty list removes every format. */
+    public static function saveTune(int $mediaId, string $filename, ?string $format, ?array $tune): void
+    {
+        $all = self::tunes($mediaId, $filename);
+        if ($format === null) {
+            $all = [];
+        } elseif ($tune === null) {
+            unset($all[$format]);
+        } else {
+            $all[$format] = $tune;
+        }
+        $file = self::tuneFile($mediaId, $filename);
+        if ($all === []) {
+            @unlink($file);
+            return;
+        }
+        $dir = dirname($file);
+        if (!is_dir($dir)) {
+            @mkdir($dir, 0775, true);
+        }
+        file_put_contents($file, json_encode($all));
+    }
+
+    /** The rendered format file, so the next view builds it again from the original. */
+    public static function dropFormatFile(int $mediaId, string $format, string $filename): void
+    {
+        if (!preg_match('~^[A-Za-z0-9_-]+$~', $format) || $filename === '') {
+            return;
+        }
+        $dir = self::varDir() . 'formats' . DIRECTORY_SEPARATOR . $format . DIRECTORY_SEPARATOR
+            . str_replace('/', DIRECTORY_SEPARATOR, self::idPath($mediaId));
+        foreach (glob($dir . $filename . '*') ?: [] as $file) {
+            if (is_file($file)) {
+                @unlink($file);
+            }
+        }
+    }
+
+    public static function tune(\Imagick $image, int $mediaId, string $filename, string $format): void
+    {
+        $tune = self::tunes($mediaId, $filename)[$format] ?? null;
+        if (!is_array($tune)) {
+            return;
+        }
+        $brightness = max(0, min(200, (int) ($tune['b'] ?? 100)));
+        $contrast = max(0, min(200, (int) ($tune['c'] ?? 100)));
+        $saturation = max(0, min(200, (int) ($tune['s'] ?? 100)));
+        $rotate = ((int) ($tune['r'] ?? 0) % 360 + 360) % 360;
+        $flip = (int) ($tune['f'] ?? 0) === 1;
+        if ($brightness === 100 && $contrast === 100 && $saturation === 100 && $rotate === 0 && !$flip) {
+            return;
+        }
+        // Same math as the CSS preview: brightness(), then contrast(), then saturate().
+        // brightnessContrastImage() uses a different curve and blows the picture out.
+        $channels = \Imagick::CHANNEL_RED | \Imagick::CHANNEL_GREEN | \Imagick::CHANNEL_BLUE;
+        if ($brightness !== 100) {
+            $image->evaluateImage(\Imagick::EVALUATE_MULTIPLY, $brightness / 100, $channels);
+        }
+        if ($contrast !== 100) {
+            $factor = $contrast / 100;
+            $image->evaluateImage(\Imagick::EVALUATE_MULTIPLY, $factor, $channels);
+            $image->evaluateImage(\Imagick::EVALUATE_ADD, (1 - $factor) * 0.5 * \Imagick::getQuantum(), $channels);
+        }
+        if ($saturation !== 100) {
+            $image->modulateImage(100, $saturation, 100);
+        }
+        if ($flip) {
+            $image->flopImage();
+        }
+        if ($rotate !== 0) {
+            // The format stays its size. The picture turns inside that frame.
+            $frameW = $image->getImageWidth();
+            $frameH = $image->getImageHeight();
+            $fmt = strtolower($image->getImageFormat());
+            $pixel = new \ImagickPixel(in_array($fmt, ['jpeg', 'jpg'], true) ? 'white' : 'transparent');
+            $image->rotateImage($pixel, $rotate);
+            $image->setImagePage(0, 0, 0, 0);
+            $image->setImageBackgroundColor($pixel);
+            $image->extentImage(
+                $frameW,
+                $frameH,
+                (int) round(($image->getImageWidth() - $frameW) / 2),
+                (int) round(($image->getImageHeight() - $frameH) / 2)
+            );
+            $image->setImagePage(0, 0, 0, 0);
+        }
+    }
+
+    private static function tuneFile(int $mediaId, string $filename): string
+    {
+        // The rendered file is often "name.jpg.webp"; the row's name is "name.jpg".
+        // The look is stored per medium, not per that spelling.
+        return self::varDir() . 'adjust' . DIRECTORY_SEPARATOR
+            . str_replace('/', DIRECTORY_SEPARATOR, self::idPath($mediaId)) . 'look.json';
+    }
+
     private static function removeDir(string $dir): void
     {
         if (!is_dir($dir)) {

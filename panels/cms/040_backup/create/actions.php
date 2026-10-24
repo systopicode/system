@@ -248,15 +248,13 @@ switch ($this->action) {
 		$this->parent->updateView('backups');
 		$this->updateView('lightbox');
 		$tmpdir->unlink(TRUE);
-		if (!$tmpdir->exists) {
-			message::confirm("Temp Dir removed");
-		} else {
-			message::error("failed to remove Temp Dir");
+		if ($tmpdir->exists) {
+			message::error('The temporary folder could not be removed.');
 		}
 
 		$this->parent->log("Backup Created");
 		$this->parent->state->taskListNextIndex++;
-		message::confirm("Backup complete - good Luck!");
+		message::confirm('Backup complete.');
 		break;
 }
 

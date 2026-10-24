@@ -14,7 +14,7 @@ use Systopic\System\Panels\Root\Cms\Panel as CmsPanel;
 class Panel extends CmsPanel
 {
 	public bool $bequests = true;
-	public $icon = 'fa-regular fa-arrow-rotate-left';
+	public $icon = 'fa-duotone fa-regular fa-box-archive';
 	public $infoFilename = 'info.txt';
 	public $dumpFilename = 'mysqldump_all.sql';
 
@@ -42,7 +42,7 @@ class Panel extends CmsPanel
 			return parent::actionGranted($action);
 		}
 		return match ($action) {
-			'remove', 'clearTempdirs' => \Systopic\System\Auth\Session::hasRole('admin'),
+			'remove', 'clearTempdirs', 'upload' => \Systopic\System\Auth\Session::hasRole('admin'),
 			'createDatabase'          => \Systopic\System\Auth\Session::hasRole('recovery') && \Systopic\System\Auth\Session::isRecovery(),
 			default                   => parent::actionGranted($action),
 		};
@@ -144,5 +144,84 @@ class Panel extends CmsPanel
 	function removeOldMediaDir(): void
 	{
 		\fsDir::get($this->backupdirpath . 'tmp/original_old/')->unlink(true);
+	}
+
+	/**
+	 * One slice of an upload. The browser sends the zip in parts, the way the
+	 * media library does, and only the last part is checked and filed.
+	 * Null means this slice is in, or the finished zip is filed. A string is
+	 * why it was refused.
+	 */
+	public function acceptBackupSpan(string $original, int $spanIndex, bool $last, string $binary): ?string
+	{
+		$safe = str::getSafeName($original);
+		if ($safe === '' || $safe === '.') {
+			$safe = 'backup.zip';
+		}
+		if (!str_ends_with(strtolower($safe), '.zip')) {
+			$safe .= '.zip';
+		}
+		$dir = $this->backupdirpath . 'tmp/incoming/';
+		if (!is_dir($dir) && !mkdir($dir, 0775, true) && !is_dir($dir)) {
+			return 'The backup folder is missing.';
+		}
+		$tmp = $dir . $safe;
+		if (file_put_contents($tmp, $binary, $spanIndex === 0 ? 0 : FILE_APPEND) === false) {
+			return "$original could not be stored.";
+		}
+		if (!$last) {
+			return null;
+		}
+		$problem = $this->installBackupFile($tmp, $original);
+		if ($problem !== null) {
+			unlink($tmp);
+		}
+		return $problem;
+	}
+
+	/** Move a finished zip into var/backups/. A string is why it was refused. */
+	public function installBackupFile(string $tmp, string $original): ?string
+	{
+		$given = basename(str_replace('\\', '/', $original));
+		$span = [];
+		$named = preg_match('/^(\d{4}-\d{2}-\d{2}--\d{2}-\d{2}-\d{2}-[\w.-]+)-(\d+)\.zip$/', $given, $span) === 1;
+		$part = $named ? (int) $span[2] : 0;
+
+		$zip = new \ZipArchive();
+		if ($zip->open($tmp) !== true) {
+			return "$original is not a zip file.";
+		}
+		if ($part === 0) {
+			$info = $zip->getFromName('info.txt');
+			$dump = $zip->locateName('mysqldump_all.sql');
+			$zip->close();
+			if (!is_string($info) || !str_starts_with($info, 'a:') || $dump === false) {
+				return "$original is not a backup.";
+			}
+		} else {
+			$zip->close();
+		}
+
+		if ($named) {
+			$destName = $given;
+		} else {
+			$database = preg_replace('/[^\w.-]+/', '', (string) DB_NAME) ?: 'database';
+			$destName = date('Y-m-d--H-i-s-') . $database . '-0.zip';
+		}
+		if (self::backupName($destName) === null || !str_ends_with($destName, '.zip')) {
+			return "$original has a name this backup folder does not accept.";
+		}
+
+		$dest = $this->backupdirpath . $destName;
+		if (is_file($dest)) {
+			return "A backup named $destName is already here.";
+		}
+		if (!is_dir($this->backupdirpath) && !mkdir($this->backupdirpath, 0775, true) && !is_dir($this->backupdirpath)) {
+			return 'The backup folder is missing.';
+		}
+		if (!rename($tmp, $dest)) {
+			return "$original could not be stored.";
+		}
+		return null;
 	}
 }

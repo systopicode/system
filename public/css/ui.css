@@ -1,3 +1,54 @@
+
+:root {
+	/* Folgen aus theme.css. Hue bleibt, nur Helligkeit und Sättigung wandern. */
+	--cmsOnHighlight: hsl(from var(--cmsMainColor) h s calc(l - 5));
+	--cmsHighlightText: hsl(from var(--cmsHighlightColor) h s calc(l - 19));
+	--cmsSecondaryColor: hsl(from var(--cmsMainColor) h s calc(l + 6));
+	--cmsThirdColor: hsl(from var(--cmsMainColor) h calc(s * .45) 51);
+	--cmsThridColor: var(--cmsThirdColor);
+	--cmsInteractive: hsl(from var(--cmsMainColor) h 80 calc(l + 8));
+
+	--cmsFrame: var(--cmsMainColor);
+	--cmsFrameHead: hsl(from var(--cmsMainColor) h s calc(l + 5));
+	--cmsFrameField: hsl(from var(--cmsMainColor) h calc(s * .65) calc(l + 12));
+	--cmsFrameText: hsl(from var(--cmsMainColor) h calc(s * .55) 77);
+	--cmsFrameLine: rgb(255 255 255 / .08);
+	--cmsFrameDivider: hsl(from var(--cmsMainColor) h calc(s * .55) calc(l + 15));
+
+	--cmsBackgroundColor: var(--cmsBgColor);
+	--cmsCanvas: #fff;
+	--cmsHeadBg: hsl(from var(--cmsBgColor) h s calc(l + 2));
+	--cmsFieldBg: hsl(from var(--cmsBgColor) h s calc(l + 1));
+	--cmsButtonBg: hsl(from var(--cmsBgColor) h s calc(l - 8));
+	--cmsEditorBg: hsl(from var(--cmsMainColor) h s calc(l - 10));
+	--cmsLine: hsl(from var(--cmsBgColor) h calc(s * .8) calc(l - 4));
+	--cmsLineStrong: hsl(from var(--cmsBgColor) h s calc(l - 11));
+	--cmsPanelAlt: hsl(from var(--cmsBgColor) h s calc(l - 3.5));
+
+	--cmsSubText: color-mix(in srgb, var(--cmsTextColor) 72%, var(--cmsCanvas));
+	--cmsMuted: color-mix(in srgb, var(--cmsTextColor) 48%, var(--cmsCanvas));
+
+	--cmsSuccess: #4fb95e;
+	--cmsError: #d6454c;
+	--cmsWarning: var(--cmsHighlightColor);
+	--cmsHover: color-mix(in srgb, var(--cmsMainColor) 6%, transparent);
+	--cmsSelected: color-mix(in srgb, var(--cmsHighlightColor) 18%, transparent);
+	--cmsActive: hsl(from var(--cmsMainColor) h 28 82);
+	--cmsStatusBar: 34px;
+	--cmsOnDark: rgb(255 255 255 / .10);
+
+	--cmsChip: hsl(from var(--cmsMainColor) h 12 52 / .92);
+	--cmsChipText: hsl(from var(--cmsMainColor) h 28 93);
+	--cmsToolbar: hsl(from var(--cmsMainColor) h calc(s * .7) l);
+	--cmsAdd: hsl(from var(--cmsMainColor) h 89 78);
+
+	--cmsRadiusLg: calc(var(--cmsRadius) + 4px);
+	--cmsControl: 2rem;
+	--cmsBar: 44px;
+	--cmsShadow: 0 1px 2px rgb(16 24 40 / .06), 0 1px 3px rgb(16 24 40 / .08);
+	--cmsShadowLg: 0 16px 40px rgb(16 24 40 / .22);
+}
+
 .flexRow,
 .flexRow a{
 	/* color:rgb(52, 52, 52); */
@@ -11,40 +62,54 @@
 /****************************** PROGRESS BAR ***************************/
 #nprogress {
 	pointer-events: none;
-	z-index: 1900;
-}
-
-#nprogress .bar {
-	background: var(--cmsHighlightColor);
 	position: fixed;
-	z-index: 1600;
+	z-index: 100000;
 	top: 0;
 	left: 0;
-	width: 100%;
-	height: 4px;
-	box-shadow: -5px 0 3px 3px rgba(0,0,0,0.2);
-}
+	right: 0;
+	height: 3px;
+	overflow: hidden;
 
-#nprogress.showStatus.confirm .bar{
-	background: rgb(124,178,73);
-}
+	&[hidden] {
+		display: none !important;
+	}
 
-#nprogress.showStatus.error .bar{
-	background: rgb(213,20,25);
-}
+	.bar {
+		background: var(--cmsHighlightColor);
+		position: absolute;
+		top: 0;
+		left: 0;
+		width: 35%;
+		height: 100%;
+		animation: cmsBusy 0.8s ease-in-out infinite;
+	}
 
-#nprogress .peg {
-	display: block;
-	position: absolute;
-	right: 0px;
-	width: 100px;
-	height: 100%;
-	opacity: 1.0;
-	transform: rotate(3deg) translate(0px, -4px);
+	&.showStatus.confirm .bar {
+		background: var(--cmsSuccess);
+	}
+
+	&.showStatus.error .bar {
+		background: var(--cmsError);
+	}
+
+	.peg {
+		display: block;
+		position: absolute;
+		right: 0;
+		width: 100px;
+		height: 100%;
+		opacity: 1;
+		transform: rotate(3deg) translate(0, -4px);
+	}
 }
 
 html.nprogress-busy{
 	cursor:wait;
+}
+
+@keyframes cmsBusy {
+	from { transform: translateX(-120%); }
+	to { transform: translateX(380%); }
 }
 
 
@@ -77,6 +142,13 @@ div.dragimage > div:nth-child(5){
 	border-width:0 4px 4px 0;
 }
 
+div.imageEditorScrim{
+	position: fixed;
+	inset: 0;
+	z-index: 89990;
+	background: color-mix(in srgb, var(--cmsMainColor) 55%, transparent);
+}
+
 div.imageEditor{
 	z-index: 90000;
 }
@@ -86,8 +158,9 @@ div.imageEditor *{
 	transition: all 0s !important;
 }
 
-div.imageEditor > div:first-child{
-	outline:1px solid rgb(52,52,52);
+div.imageEditor .cropFrame{
+	outline: 2px solid #fff;
+	box-shadow: 0 0 0 3px var(--cmsHighlightColor);
 }
 
 div.imageEditorRaster{
@@ -133,7 +206,7 @@ div.flexHandle {
 div.aspectRatioSelector{
 	position: absolute;
 	z-index:1002;
-	color:rgb(130,130,130);
+	color:var(--cmsMuted);
 }
 div.aspectRatioSelector a{
 	background: rgb(52, 52, 52);
@@ -144,67 +217,65 @@ div.aspectRatioSelector a{
 }
 
 /****************************** ON PAGE CMS CONTROLS ***************************/
-ul.onPageCMSControls{
+ul.onPageCMSControls {
 	opacity: 0.5 !important;
 	position: fixed !important;
-	top:0 !important;
-	right:0 !important;
+	top: 0 !important;
+	right: 0 !important;
 	border-radius: 0 0 0 5px !important;
 	overflow: hidden !important;
 	transition: opacity 0.1s ease-in !important;
-	padding:0 !important;
+	padding: 0 !important;
 	line-height: 0 !important;
-	z-index:999999997;
+	z-index: 999999997;
 	box-sizing: border-box !important;
 	user-select: none;
-	-moz-user-select: none;
-	margin:0;
-	padding:0;
-}
+	margin: 0;
 
-ul.onPageCMSControls:hover,
-ul.onPageCMSControls:focus{
-	opacity: 1 !important;
-}
+	&:hover,
+	&:focus {
+		opacity: 1 !important;
+	}
 
-ul.onPageCMSControls li{
-	display:inline-block;
-	vertical-align: top !important;
-	line-height: 0 !important;
-	padding:0  !important;
-	margin:0 !important;
-	list-style-type: none !important;
-	box-sizing: border-box !important;
-}
+	li {
+		display: inline-block;
+		vertical-align: top !important;
+		line-height: 0 !important;
+		padding: 0 !important;
+		margin: 0 !important;
+		list-style-type: none !important;
+		box-sizing: border-box !important;
 
-ul.onPageCMSControls li *{
-	font-size:16px !important;
-}
+		* {
+			font-size: 16px !important;
+		}
 
+		&:first-child a {
+			border: none !important;
+		}
 
-ul.onPageCMSControls li:first-child a{
-	border:none !important;
-}
+		a {
+			width: 30px !important;
+			height: 30px !important;
+			text-align: center;
+			box-sizing: border-box !important;
+			letter-spacing: 0;
+			display: inline-block !important;
+			border-left: 1px solid #fff !important;
+			background: var(--cmsMainColor) !important;
+			padding: 5px !important;
+			cursor: pointer !important;
+			text-decoration: none !important;
+			margin: 0 !important;
+			font-size: 16px;
+			color: #fff;
 
-ul.onPageCMSControls li a{
-	width:30px !important;
-	height:30px !important;
-	text-align: center;
-	box-sizing: border-box !important;
-	letter-spacing: 0;
-	display: inline-block !important;
-	border-left:1px solid #fff !important;
-	background:var(--cmsMainColor) !important;
-	padding:5px !important;
-	cursor:pointer !important;
-	text-decoration: none !important;
-	margin:0  !important;
-	font-size: 16px;
-	color:#fff;
-}
-ul.onPageCMSControls li a i{
-	color:#fff !important;
-	font-family: 'CMS Font Awesome 6 Pro';
+			i {
+				color: #fff !important;
+				font-family: 'CMS Font Awesome 7 Pro';
+			}
+		}
+	}
 }
 
 /****************************** DRAG ***************************/
@@ -329,7 +400,9 @@ div.sort {
 	display:none;
 }
 body.pageDragging div[data-drop_accept="page"].sort,
-body.mediaDragging div[data-drop_accept="media"].sort
+body.mediaDragging div[data-drop_accept="media"].sort,
+body.tagDragging div[data-drop_accept="tag"].sort,
+body.settingDragging div[data-drop_accept="setting"].sort
 {
 	display: block;
 }

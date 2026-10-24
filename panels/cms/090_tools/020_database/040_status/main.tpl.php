@@ -1,121 +1,108 @@
 <?php
 
 /**
- * Database against model, side by side.
+ * Database against model. Each difference is database, then the model.
+ * Apply writes the pending column changes for that table.
  *
- * The database is on the left, what the class declares is on the right. The
- * colours follow from that: **orange on the left** is what would change,
- * **green on the right** is the reference it would change towards. A row
- * without colour is a row nobody has to think about.
- *
- * Compared through `Column::comparable()` — the same rule the audit uses. So
- * this view cannot show a row as matching that the audit then offers to
- * change.
- *
- * This page changes nothing. It only reads.
+ * @var \Systopic\System\Panels\Root\Cms\Tools\Database\Status\Panel $this
  */
 
-use Systopic\Db\Connection;
-use Systopic\Db\Schema\Registry;
-use Systopic\Db\Schema\Status;
+$state = $this->schemaState();
+$differ = $state['differ'];
+$agree = $state['agree'];
 
-Registry::scanTables();
-
-$status = new Status(Connection::default());
-$tables = $status->tables();
-
-$onlyDiffs = http::get('diffs', '') === '1';
-$filter    = (string) http::get('table', '');
-
-$shown = array_values(array_filter($tables, static function ($t) use ($onlyDiffs, $filter) {
-    if ($filter !== '' && $t->name !== $filter) {
-        return false;
-    }
-    return !$onlyDiffs || $t->differences > 0;
-}));
-
-$totalDiffs = array_sum(array_map(static fn($t) => $t->differences, $tables));
-$withModel  = count(array_filter($tables, static fn($t) => $t->hasModel));
-
-/** One cell showing one side of a column. */
-$cell = static function (?string $text, string $class): string {
-    return $text === null
-        ? "<td class='schemaNothing'>&mdash;</td>"
-        : "<td class='$class'>" . htmlspecialchars($text, ENT_QUOTES) . '</td>';
+$e = static fn($value): string => htmlspecialchars((string) $value, ENT_QUOTES);
+$show = static function (?string $text, string $empty) use ($e): string {
+	return $text === null || $text === '' ? $empty : $e($text);
 };
 ?>
-<style>
-    .schemaStatus { width: 100%; border-collapse: collapse; }
-    .schemaStatus > tbody > tr > td { vertical-align: top; padding: 0 12px 24px 0; width: 50%; }
-    .schemaStatus h2 { margin: 0 0 4px; font-size: 1.05em; }
-    .schemaStatus h2 small { font-weight: normal; opacity: .6; }
-    .schemaSide { width: 100%; border-collapse: collapse; font-family: monospace; font-size: .85em; }
-    .schemaSide th { text-align: left; padding: 2px 8px 2px 0; opacity: .55; font-weight: normal; }
-    .schemaSide td { padding: 2px 8px 2px 0; white-space: nowrap; }
-    .schemaSide tr.differs td.schemaName { font-weight: bold; }
-    /* orange = would change, green = the reference for it */
-    .schemaActual   { background: #ffe2c2; }
-    .schemaDeclared { background: #d3f2d0; }
-    .schemaNothing  { opacity: .35; }
-    .schemaNoModel  { opacity: .5; }
-    .schemaLegend span { padding: 2px 8px; margin-right: 8px; font-family: monospace; font-size: .85em; }
-</style>
+<h1>Database status</h1>
+<p class="tagsHint"><?= count($state['tables']) ?> tables, <?= (int) $state['withModel'] ?> with a model. <?= (int) $state['totalDiffs'] ?> columns would change.</p>
+<div class="schemaBar">
+	<form class="schemaFilters" method="get" action="./">
+		<select name="table" class="onchangesubmit">
+			<option value="">All tables</option>
+			<?php foreach ($state['tables'] as $table): ?>
+				<option value="<?= $e($table->name) ?>"<?= $state['filter'] === $table->name ? ' selected' : '' ?>><?= $e($table->name) ?><?= $table->differences > 0 ? ' (' . (int) $table->differences . ')' : '' ?></option>
+			<?php endforeach; ?>
+		</select>
+		<label class="checkbox">
+			<span>Only differences</span>
+			<input type="checkbox" name="diffs" value="1" class="switch onchangesubmit"<?= $state['onlyDiffs'] ? ' checked' : '' ?>>
+			<div><div></div></div>
+		</label>
+	</form>
+	<a class="button" data-on_click="refreshStatus">Refresh</a>
+</div>
+<?php if ($state['shown'] === []): ?>
+	<p class="tagsHint">No table matches the selection.</p>
+<?php endif; ?>
 
-<p class="schemaLegend">
-    <?= count($tables) ?> tables, <?= $withModel ?> with a model class &middot;
-    <b><?= $totalDiffs ?></b> differences
-    &nbsp; <span class="schemaActual">database &mdash; would change</span>
-    <span class="schemaDeclared">model &mdash; the reference</span>
-</p>
+<?php foreach ($differ as $table):
+	$rows = $table->exists ? $table->rowCount . ' rows' : 'not in the database';
+	$diffColumns = array_values(array_filter($table->columns, static fn($column) => $column->differs));
+	?>
+	<section class="widget is-list">
+		<header>
+			<h2><?= $e($table->name) ?></h2>
+			<?php if (!$table->hasModel): ?>
+				<span class="logPill">No model</span>
+			<?php else: ?>
+				<span class="logPill is-bad"><?= (int) $table->differences ?> differences</span>
+			<?php endif; ?>
+		</header>
+		<?php if (!$table->hasModel): ?>
+			<main><p class="tagsHint"><?= $e($rows) ?>. Nothing is proposed for this table.</p></main>
+		<?php else: ?>
+			<?php $same = count($table->columns) - count($diffColumns); ?>
+			<p class="tagsHint"><?= $e($table->shortClass) ?> · <?= $e($rows) ?>. <?= $same === 1 ? '1 column already agrees' : $same . ' columns already agree' ?>.</p>
+			<table>
+				<thead>
+					<tr><th>Column</th><th>Database → model</th><th></th></tr>
+				</thead>
+				<tbody>
+					<?php foreach ($diffColumns as $column): ?>
+						<tr class="schemaDiff">
+							<td><?= $e($column->name) ?></td>
+							<td>
+								<span class="schemaCompare">
+									<span class="schemaFrom"><?= $show($column->actual, 'missing') ?></span>
+									<i class="fa-regular fa-arrow-right"></i>
+									<span class="schemaTo"><?= $show($column->declared, 'not declared') ?></span>
+								</span>
+							</td>
+							<td class="schemaApply">
+								<?php if ($table->exists): ?>
+									<a class="button submit" data-on_click="userConfirm" data-action="applyTable" data-table="<?= $e($table->name) ?>" data-column="<?= $e($column->name) ?>" data-confirm="<?= $e('Apply the model to ' . $table->name . '.' . $column->name . '? The column can change.') ?>">Apply</a>
+								<?php endif; ?>
+							</td>
+						</tr>
+					<?php endforeach; ?>
+				</tbody>
+			</table>
+			<footer>
+				<a class="button submit" data-on_click="userConfirm" data-action="applyTable" data-table="<?= $e($table->name) ?>" data-confirm="<?= $e($table->exists ? 'Apply the model to ' . $table->name . '? Columns can change.' : 'Create ' . $table->name . ' from the model?') ?>">Apply all</a>
+			</footer>
+		<?php endif; ?>
+	</section>
+<?php endforeach; ?>
 
-<table class="schemaStatus">
-    <?php foreach ($shown as $table): ?>
-        <tr>
-            <td>
-                <h2><?= htmlspecialchars($table->name) ?>
-                    <small><?= $table->exists
-                        ? $table->rowCount . ' rows'
-                        : 'not in the database' ?></small></h2>
-                <table class="schemaSide">
-                    <tr><th>Column</th><th>Database</th></tr>
-                    <?php foreach ($table->columns as $column): ?>
-                        <tr class="<?= $column->differs ? 'differs' : '' ?>">
-                            <td class="schemaName"><?= htmlspecialchars($column->name) ?></td>
-                            <?= $cell($column->actual, $column->differs ? 'schemaActual' : '') ?>
-                        </tr>
-                    <?php endforeach; ?>
-                </table>
-            </td>
-            <td>
-                <h2><?= $table->hasModel
-                        ? htmlspecialchars($table->shortClass)
-                        : '<i>no model class</i>' ?>
-                    <small><?= $table->differences === 0
-                        ? ($table->hasModel ? 'identical' : '')
-                        : $table->differences . ' differences' ?></small></h2>
-                <?php if (!$table->hasModel): ?>
-                    <p class="schemaNoModel">
-                        No class describes this table. That is not the same as orphaned:
-                        a junction table with a composite primary key cannot be expressed
-                        by this layer, which is why the audit proposes nothing for it
-                        either.
-                    </p>
-                <?php else: ?>
-                    <table class="schemaSide">
-                        <tr><th>Column</th><th>Model</th></tr>
-                        <?php foreach ($table->columns as $column): ?>
-                            <tr class="<?= $column->differs ? 'differs' : '' ?>">
-                                <td class="schemaName"><?= htmlspecialchars($column->name) ?></td>
-                                <?= $cell($column->declared, $column->differs ? 'schemaDeclared' : '') ?>
-                            </tr>
-                        <?php endforeach; ?>
-                    </table>
-                <?php endif; ?>
-            </td>
-        </tr>
-    <?php endforeach; ?>
-</table>
-
-<?php if ($shown === []): ?>
-    <p>No table matches the selection.</p>
+<?php if ($agree !== []): ?>
+	<section class="widget is-list">
+		<header><h2>In agreement</h2><span class="logPill is-ok"><?= count($agree) ?></span></header>
+		<table>
+			<thead>
+				<tr><th>Table</th><th>Rows</th><th>Model</th></tr>
+			</thead>
+			<tbody>
+				<?php foreach ($agree as $table): ?>
+					<tr>
+						<td><?= $e($table->name) ?></td>
+						<td class="muted"><?= $table->exists ? (int) $table->rowCount : '—' ?></td>
+						<td class="muted"><?= $e($table->shortClass) ?></td>
+					</tr>
+				<?php endforeach; ?>
+			</tbody>
+		</table>
+	</section>
 <?php endif; ?>

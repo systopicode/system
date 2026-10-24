@@ -18,10 +18,36 @@ use Systopic\System\Tables\Medias\Files as MediaFiles;
 
 // cms/tools extends PanelNode directly and declares no scope (orm-migration.md §1)
 $scope = Scope::default();
-$html = '';
+$e = static fn($v): string => htmlspecialchars((string) $v, ENT_QUOTES);
+$table = static function (array $rows) use ($e): string {
+	if ($rows === []) {
+		return '<p class="tagsHint">Nothing to do.</p>';
+	}
+	$html = '<table><thead><tr>';
+	foreach (array_keys($rows[0]) as $label) {
+		$html .= '<th>' . $e($label) . '</th>';
+	}
+	$html .= '</tr></thead><tbody>';
+	foreach ($rows as $row) {
+		$html .= '<tr>';
+		foreach ($row as $cell) {
+			$html .= '<td>' . $e($cell) . '</td>';
+		}
+		$html .= '</tr>';
+	}
+	return $html . '</tbody></table>';
+};
+$chosenFormat = static function (): string {
+	$value = (string) (\http::dataset('value') ?: \http::params('value'));
+	return $value === 'all' ? 'total' : $value;
+};
 switch ($this->action) {
 	case 'removeCropCache':
-		$format = (string) http::params('value');
+		$format = $chosenFormat();
+		if ($format === '') {
+			message::error('Choose a format first.');
+			break;
+		}
 		$count = MediaFiles::clearFormat($format);
 		message::confirm("$format: $count format folder(s) removed.");
 		if (http::params('total')) {
@@ -34,13 +60,17 @@ switch ($this->action) {
 
 	case 'removeCropParams':
 		// past the unit of work: nobody holds these rows — invalidated by hand
-		$format = (string) http::params('value');
-		$table = Schema::tableNameOf(Crop::class);
+		$format = $chosenFormat();
+		if ($format === '') {
+			message::error('Choose a format first.');
+			break;
+		}
+		$tableName = Schema::tableNameOf(Crop::class);
 		$count = $scope->connection->run(
-			"DELETE FROM $table WHERE media_crop_format = ? OR ? = 'total'", [$format, $format],
+			"DELETE FROM $tableName WHERE media_crop_format = ? OR ? = 'total'", [$format, $format],
 		)->rowCount();
-		$scope->results->invalidate([$table]);
-		message::confirm("$format: $count Entries removed");
+		$scope->results->invalidate([$tableName]);
+		message::confirm("$format: $count crop frames removed.");
 		break;
 
 	case 'showMediaWithInsufficientPermissions':
@@ -86,10 +116,10 @@ switch ($this->action) {
 		if ($fix) {
 			message::confirm($fixed . ' files set to 0664');
 		}
-		$html = $rows
-			? (string) htmlTable::create('keycolumn')->rows($rows)
-			: '<p>No files with insufficient permissions.</p>';
-		client::replaceInner('.showPermissionsContainer', "<br/>$html");
+		client::replaceInner('.showPermissionsContainer', $table(array_map(static fn(array $row): array => [
+			'File' => $row['file'],
+			'Permissions' => $row['permissions'],
+		], $rows)));
 		break;
 
 	case 'showMediaWithoutMimetype':
@@ -98,23 +128,23 @@ switch ($this->action) {
 		$rows = [];
 		$changed = [];
 		foreach (MediaMaintenance::lacking($scope, 'mimetype', $show ? 100 : 2000) as $media) {
-			$result = (string) $media->mimetype;
+			$result = 'File missing';
 			if (is_file(MediaFiles::originalPath($media))) {
 				$before = $media->mimetype;
 				MediaFiles::describe($media);
-				$result = ($show ? 'new: ' : 'upd: ') . $media->mimetype;
+				$result = (string) $media->mimetype;
 				if ($show) {
 					$media->mimetype = $before;   // only looked
 				} else {
 					$changed[] = $media;
 				}
 			}
-			$rows[] = ['media_id' => $media->id, 'media_filename' => $media->filename, 'media_mimetype' => $result];
+			$rows[] = ['File' => (string) $media->filename, 'Type' => $result !== '' ? $result : 'Unknown'];
 		}
 		if ($changed !== []) {
 			$scope->save(...$changed);
 		}
-		client::replaceInner('.showMimeContainer', '<br/>' . htmlTable::create('keycolumn')->rows($rows));
+		client::replaceInner('.showMimeContainer', $table($rows));
 		break;
 
 	case 'showMediaWithoutSize':
@@ -123,23 +153,23 @@ switch ($this->action) {
 		$rows = [];
 		$changed = [];
 		foreach (MediaMaintenance::lacking($scope, 'size', $show ? 100 : 2000) as $media) {
-			$resultW = $media->width ?? '';
-			$resultH = $media->height ?? '';
+			$result = 'File missing';
 			$path = MediaFiles::originalPath($media);
 			$size = is_file($path) ? @getimagesize($path) : FALSE;
 			if ($size) {
-				$prefix = $show ? 'new: ' : 'upd: ';
-				[$resultW, $resultH] = [$prefix . $size[0], $prefix . $size[1]];
+				$result = $size[0] . ' × ' . $size[1];
 				if (!$show) {
 					[$media->width, $media->height] = [(int) $size[0], (int) $size[1]];
 					$changed[] = $media;
 				}
+			} elseif (is_file($path)) {
+				$result = 'Not an image';
 			}
-			$rows[] = ['media_id' => $media->id, 'media_filename' => $media->filename, 'media_width' => $resultW, 'media_height' => $resultH];
+			$rows[] = ['File' => (string) $media->filename, 'Size' => $result];
 		}
 		if ($changed !== []) {
 			$scope->save(...$changed);
 		}
-		client::replaceInner('.showMediaContainer', '<br/>' . htmlTable::create('keycolumn')->rows($rows));
+		client::replaceInner('.showMediaContainer', $table($rows));
 		break;
 }

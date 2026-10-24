@@ -1,12 +1,8 @@
-<h1>Reset password</h1>
+<h1>Enter the code</h1>
+<p class="authLead">Check your inbox, and the spam folder.</p>
 <main>
 	<div class="row">
 		<div class="message"><?= message::flush() ?></div>
-	</div>
-	<div class="row">
-		<div>
-			<p>If you did not receive an email please also check your spam folder.</p>
-		</div>
 	</div>
 	<div class="row">
 		<form method=get action=reset  onsubmit='this.classList.add("loading")'>
@@ -18,7 +14,7 @@
 			</div>
 			<div class="row">
 				<br>
-				<button class='submit'>reset password</button>
+				<button class='submit'><i class="fa-regular fa-arrow-right"></i> Continue</button>
 			</div>
 		</form>
 	</div>

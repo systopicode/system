@@ -1,50 +1,49 @@
 <?php
 /** @var \Systopic\System\Panels\Root\Cms\Users\Permissions\Panel $this */
 
-use Systopic\System\Panels\Root\Cms\Users\Panel as Users;
-
 $e = static fn($v): string => htmlspecialchars((string) $v, ENT_QUOTES);
-$cell = function ($group, string $right, string $drop, string $remove): string {
-	$stickers = '';
+$names = function ($group, string $right) use ($e): string {
+	$list = [];
 	foreach ($this->admin->rolesWith($group, $right) as $role) {
-		$stickers .= Users::roleSticker($role, $remove);
+		$list[] = $e($role->name);
 	}
-	return "<div class='roles' data-drop_accept='role' data-on_drop='$drop'>$stickers</div>";
+	return $list === [] ? '' : implode(', ', $list);
 };
 ?>
-<section class="widget">
+<section class="widget is-list groupList">
 	<header>
-		<h1>Content Groups and assigned Role permissions</h1>
-		<?= \menu::create('barmenu')->item('addGroup')->icon('fal fa-plus-circle') ?>
+		<h2>Content groups</h2>
+		<input class="listSearch" type="search" placeholder="Search" data-on_input="filterGroups" autocomplete="off">
+		<a class="button submit" data-on_click="addGroup"><i class="fa-regular fa-plus"></i><span>Add group</span></a>
 	</header>
-	<main>
-		<div class="row">
-			<div>
-				<table class="keycolumn">
-					<tr>
-						<th>id</th>
-						<th>name</th>
-						<th><i class="fas fa-eye space"></i>read access</th>
-						<th><i class="fas fa-pen space"></i>write access</th>
-					</tr>
-					<?php foreach ($this->groups as $group) { ?>
-						<tr data-group_id="<?= $group->id ?>"<?= $group->color ? " style='background:{$e($group->color)}'" : '' ?>>
-							<td><?= $group->id ?></td>
-							<td>
-								<a class="ajax" href="edit/?group_id=<?= $group->id ?>"><div class="tag"><?= $e($group->name) ?><i class="fas fa-pen space"></i></div></a>
-								<p><?= $e($group->description) ?></p>
-							</td>
-							<td><?= $cell($group, 'read', 'addReadRoleToGroup', 'removeReadRoleFromGroup') ?></td>
-							<td><?= $cell($group, 'write', 'addWriteRoleToGroup', 'removeWriteRoleFromGroup') ?></td>
-						</tr>
-					<?php } ?>
-				</table>
-			</div>
-		</div>
-	</main>
+	<table>
+		<thead>
+			<tr>
+				<th>Name</th>
+				<th>Color</th>
+				<th>Description</th>
+				<th>Read</th>
+				<th>Write</th>
+				<th></th>
+			</tr>
+		</thead>
+		<tbody>
+			<?php foreach ($this->groups as $group) {
+				$color = ($group->color !== null && $group->color !== '') ? $group->color : '#8a8f93';
+			?>
+				<tr data-group_id="<?= (int) $group->id ?>">
+					<td><?= $e($group->name) ?></td>
+					<td><span class="swatch" style="background:<?= $e($color) ?>"></span></td>
+					<td><?= $e($group->description) ?></td>
+					<td><?= $names($group, 'read') ?></td>
+					<td><?= $names($group, 'write') ?></td>
+					<td class="icons">
+						<ul>
+							<li><a class="ajax button icononly" title="Edit" href="edit/?group_id=<?= (int) $group->id ?>"><i class="fa-regular fa-pen"></i></a></li>
+						</ul>
+					</td>
+				</tr>
+			<?php } ?>
+		</tbody>
+	</table>
 </section>
-<style>
-	div.roles {
-		min-height: 20px;
-	}
-</style>

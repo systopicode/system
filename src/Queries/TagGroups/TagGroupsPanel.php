@@ -39,43 +39,47 @@ final class TagGroupsPanel
     /** One group widget. */
     public static function group(TagGroup $group): mixed
     {
-        return \html::create('div.oneThirdColumn.widget.open#widget')
-            ->style([
-                'width'      => '32%',
-                'flex-basis' => '32%',
-            ])
+        return \html::create('div.widget.open#widget')
             ->data([
                 'group'       => $group->entitiesName,
                 'group_id'    => $group->id,
                 'drop_accept' => 'tag',
                 'on_drop'     => 'insertIntoGroup',
             ])
-            ->append('header h1')->doc('groupName')->text($group->name)->close()
-            ->append(self::barmenu($group))
+            ->append(self::header($group))
             ->get('widget')->append('main')->attr('onmousedown', 'event.stopPropagation()')
-            ->append('div.row input')->placeholder('Tag hinzufügen')->data([
-                'on_keyup' => 'enterNewTag',
-            ])->close()
             ->append('div.row div')->foreach($group->tags, static function ($div, Tag $tag) {
                 $div->append(self::item($tag));
-            });
+            })->close()
+            ->append('div.row input')->placeholder('Add tag')->data([
+                'on_keyup' => 'enterNewTag',
+            ]);
     }
 
     /** One tag inside the widget. */
     public static function item(Tag $tag): mixed
     {
         $el = \html::create('div.tag.active')
+            ->style('--tag-color', $tag->colorStyle !== '' ? $tag->colorStyle : '#000')
             ->style('background-color', $tag->colorStyle)
             ->style('border-color', $tag->colorStyle)
             ->click('edit')
             ->text($tag->name)
-            ->data([
-                'drag_type'   => 'tag',
-                'drop_accept' => 'tag',
-                'on_drop'     => 'join',
-                'id'          => $tag->id,
-                'label'       => $tag->name,
-            ]);
+				->data([
+					'drag_type'   => 'tag',
+					'drop_accept' => 'tag',
+					'on_drop'     => 'join',
+					'id'          => $tag->id,
+					'label'       => $tag->name,
+				])
+				->append('div.sort.h.insertBefore')->data([
+					'drop_accept' => 'tag',
+					'on_drop'     => 'insertTagBefore',
+				])->close()
+				->append('div.sort.h.insertAfter')->data([
+					'drop_accept' => 'tag',
+					'on_drop'     => 'insertTagAfter',
+				])->close();
 
         // A tag that hangs on no page may go; one with usages shows their
         // count.
@@ -87,7 +91,7 @@ final class TagGroupsPanel
         if ($tag->nodeCount > 0) {
             $el->append('number')->text($tag->nodeCount);
         } else {
-            $el->append('i.far.fa-trash')->click('delete');
+            $el->append('i.far.fa-trash')->click('delete')->data(['label' => $tag->name]);
         }
         return $el;
     }
@@ -104,27 +108,36 @@ final class TagGroupsPanel
      * @param list<int> $active the tag ids the page carries — `TagLinks::tagIdsOf()`,
      *        not `$tag->nodeIds`, which only knows published pages
      * @param array<int, int> $related tag id => node id of its page
+     * @param string $action path of the sidebar actions, relative to the panel
+     *        that is on screen (`sidebar/` on a page, `../../sidebar/` in the
+     *        file editor)
+     * @param string $pageBase href of a tag's own page, same idea
      */
-    public static function forPage(array $groups, int $nodeId, array $active, array $related = []): mixed
+    public static function forPage(array $groups, int $nodeId, array $active, array $related = [], string $action = 'sidebar/', string $pageBase = '?id='): mixed
     {
-        return \html::create('div')->foreach($groups, static function ($div, TagGroup $group) use ($nodeId, $active, $related) {
+        return \html::create('div')->foreach($groups, static function ($div, TagGroup $group) use ($nodeId, $active, $related, $action, $pageBase) {
             $div->append('div.taggroup h6.taggroup')->text($group->name)->close()
                 ->append('div.tags')
-                ->foreach($group->tags, static function ($div, Tag $tag) use ($nodeId, $active, $related) {
-                    $div->append(self::pageItem($tag, $nodeId, in_array((int) $tag->id, $active, true), $related[(int) $tag->id] ?? null));
-                });
+                ->foreach($group->tags, static function ($div, Tag $tag) use ($nodeId, $active, $related, $action, $pageBase) {
+                    $div->append(self::pageItem($tag, $nodeId, in_array((int) $tag->id, $active, true), $related[(int) $tag->id] ?? null, $action, $pageBase));
+                })
+                ->close()
+                ->append('form.tagAdd')->attr('method', 'put')->attr('action', $action . 'addTag')
+                ->append('input[name=name]')->placeholder('Add tag')->attr('autocomplete', 'off')->close()
+                ->append('input[type=hidden][name=group_id]')->value((string) $group->id)->close()
+                ->append('input[type=hidden][name=node_id]')->value((string) $nodeId);
         });
     }
 
     /** One tag in the page sidebar — `tag::toPagePanelItem()`. */
-    public static function pageItem(Tag $tag, int $nodeId, bool $active, ?int $relatedNodeId = null): mixed
+    public static function pageItem(Tag $tag, int $nodeId, bool $active, ?int $relatedNodeId = null, string $action = 'sidebar/', string $pageBase = '?id='): mixed
     {
         $el = \html::create('div.tag')
             ->if($active)->class('active')
             ->style('background-color', $tag->colorStyle)
             ->style('border-color', $tag->colorStyle)
             ->style('color', $tag->colorStyle)
-            ->click('sidebar/' . ($active ? 'removeTagFrom_page' : 'addTagTo_page'))
+            ->click($action . ($active ? 'removeTagFrom_page' : 'addTagTo_page'))
             ->text($tag->label)
             ->data([
                 'id'     => $nodeId,
@@ -132,28 +145,30 @@ final class TagGroupsPanel
                 'label'  => $tag->name,
             ]);
         if ($relatedNodeId !== null) {
-            $el->append('a.ajax')->href("?id=$relatedNodeId")
+            $el->append('a.ajax')->href($pageBase . $relatedNodeId)
                 ->style('color', $tag->colorStyle)
                 ->append('i.fa-regular.fa-arrow-turn-down-right');
         }
         return $el;
     }
 
-    private static function barmenu(TagGroup $group): mixed
+    /** Title, rename, colour, and delete when the group is empty. */
+    private static function header(TagGroup $group): mixed
     {
-        return \menu::create('barmenu')
-            ->item('toggleMenu')->icon('far fa-ellipsis-v')
-            ->openSubmenu()
-            ->item('updateColor')->icon('far fa-paint-roller')
-            // Deliberately without a default colour: the legacy code sets an
-            // empty value here when the colour is empty, and a '#000000' would
-            // be a silent change of behaviour — black looks like a decision.
-            ->insert('input[type=color][name=color]')
-            ->value($group->colorStyle)
-            ->data(['on_input' => 'updateColor'])
-            ->item('rename')->icon('far fa-edit')->label('rename')
-            ->if(!count($group->tags))
-            ->item('deleteGroup')->icon('far fa-trash')->label('delete Group')
-            ->closeSubmenu();
+        $header = \html::create('header');
+        $header->append('h1')->doc('groupName')->text($group->name);
+        $header->append('button.tagGroupRename')->attr('type', 'button')->title('Rename')
+            ->data(['on_click' => 'rename'])
+            ->append('i.fa-regular.fa-pen');
+        $header->append('input.tagGroupColor[type=color][name=color]')
+            ->value($group->colorStyle !== '' ? $group->colorStyle : '#888888')
+            ->title('Colour')
+            ->data(['on_input' => 'updateColor']);
+        if ($group->tags === []) {
+            $header->append('button.tagGroupDelete')->attr('type', 'button')->title('Delete group')
+                ->data(['on_click' => 'deleteGroup'])
+                ->append('i.fa-regular.fa-trash');
+        }
+        return $header;
     }
 }

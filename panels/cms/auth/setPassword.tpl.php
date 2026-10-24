@@ -1,14 +1,8 @@
-<h1>Set password</h1>
+<h1>Choose a password</h1>
+<p class="authLead">At least 5 characters, with an uppercase letter, a number and a symbol.</p>
 <main>
 	<div class="row">
 		<div class="message"><?= message::flush() ?></div>
-	</div>
-	<div class="row">
-		<div>
-			<h3>Type your very secret password twice here. </h3>
-			<p>It must be at least 5 characters long contain an uppercase letter, a number and one special
-				char.</p>
-		</div>
 	</div>
 	<div class="row">
 		<form method=post action=setPassword  onsubmit='this.classList.add("loading")'>
@@ -29,7 +23,7 @@
 			</div>
 			<div class="row">
 				<br>
-				<button class="submit">Set Password</button>
+				<button class="submit"><i class="fa-regular fa-check"></i> Save password</button>
 				<!--	<button name=action value=setPasswordAndMakeSuperuser>Set Password and make Superuser</button> -->
 			</div>
 		</form>

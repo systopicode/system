@@ -1,0 +1,804 @@
+/****************************** FIELDS ***************************/
+.cms form.visible{
+    outline: 1px dashed var(--cmsLine);
+    outline-offset: 10px;
+}
+
+/* Split button: the action, and a menu on the arrow. */
+.cms .splitApply{
+    position: relative;
+    display: inline-flex;
+    align-items: stretch;
+    gap: 0;
+}
+
+.cms .splitApply > .button.submit{
+    margin: 0;
+    border: 0;
+    border-radius: var(--cmsRadius) 0 0 var(--cmsRadius);
+}
+
+.cms .splitApplyMenu.button.submit{
+    width: 2rem;
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    border-radius: 0 var(--cmsRadius) var(--cmsRadius) 0;
+    background: color-mix(in srgb, var(--cmsHighlightColor) 62%, white);
+    color: var(--cmsHighlightText);
+}
+
+.cms .splitApplyMenu.button.submit:hover{
+    background: color-mix(in srgb, var(--cmsHighlightColor) 80%, white);
+}
+
+.cms .splitApplyList[hidden]{
+    display: none !important;
+}
+
+.cms .splitApplyList{
+    position: fixed;
+    z-index: 90000;
+    display: none;
+    width: max-content;
+    margin: 0;
+    padding: 0.3rem;
+    border: 1px solid var(--cmsLineStrong);
+    border-radius: var(--cmsRadius);
+    background: var(--cmsCanvas);
+    box-shadow: var(--cmsShadowLg);
+}
+
+.cms .splitApplyList.is-open{
+    display: block;
+}
+
+.cms .splitApplyList button{
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    width: auto;
+    min-width: 100%;
+    height: auto;
+    min-height: 2rem;
+    margin: 0;
+    padding: 0.4rem 0.7rem;
+    border: 0;
+    border-radius: calc(var(--cmsRadius) - 2px);
+    background: transparent;
+    color: var(--cmsTextColor);
+    font-size: 0.8125rem;
+    font-weight: 600;
+    text-align: left;
+    white-space: nowrap;
+    overflow: visible;
+    cursor: pointer;
+}
+
+.cms .splitApplyList button:hover{
+    background: var(--cmsHover);
+}
+
+.cms input,
+.cms textarea,
+.cms select{
+    font-family: var(--cmsFont);
+    font-size: 0.875rem;
+    color: var(--cmsTextColor);
+    background: var(--cmsCanvas);
+    border: 1px solid var(--cmsLine);
+    border-radius: var(--cmsRadius);
+    padding: 0.35rem 0.7rem;
+    min-height: var(--cmsControl);
+    width: 100%;
+    margin-bottom: 0.75rem;
+    resize: none;
+    transition: border-color .15s, box-shadow .15s;
+}
+
+.cms .portraitActions{
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.4rem;
+    margin-top: 0.7rem;
+}
+
+.cms .portraitForm{
+    display: contents;
+}
+
+.cms .portraitDrop input[type="file"],
+.cms .portraitForm input[type="file"]{
+    position: absolute;
+    inset: 0;
+    width: 100% !important;
+    height: 100%;
+    min-height: 0;
+    margin: 0;
+    padding: 0;
+    opacity: 0;
+    cursor: pointer;
+    border: 0;
+    z-index: 2;
+}
+
+.cms input[type="checkbox"]:not(.custom):not(.switch),
+.cms input[type="radio"]:not(.custom){
+    width: auto;
+    min-width: 0;
+    min-height: 0;
+    margin: 0;
+    padding: 0;
+    background: transparent;
+    box-shadow: none;
+}
+
+.cms input[type="color"]{
+    flex: 0 0 auto;
+    width: 1.5rem;
+    min-width: 1.5rem;
+    height: 1.5rem;
+    min-height: 1.5rem;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: none;
+    cursor: pointer;
+}
+
+.cms input[type="color"]::-webkit-color-swatch-wrapper{
+    padding: 0;
+}
+
+.cms input[type="color"]::-webkit-color-swatch{
+    border: 0;
+    border-radius: 50%;
+}
+
+.cms option{
+    font-family: var(--cmsFont);
+    color: var(--cmsTextColor);
+    background: var(--cmsCanvas);
+}
+
+.cms input:hover,
+.cms textarea:hover,
+.cms select:hover{
+    border-color: color-mix(in srgb, var(--cmsMainColor) 30%, var(--cmsLine));
+}
+
+.cms input:focus,
+.cms textarea:focus,
+.cms select:focus,
+.cms input:focus-visible,
+.cms textarea:focus-visible,
+.cms select:focus-visible{
+    outline: none;
+    border-color: var(--cmsInteractive);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--cmsInteractive) 16%, transparent);
+}
+
+.cms input::placeholder,
+.cms textarea::placeholder{
+    color: var(--cmsMuted);
+    opacity: 1;
+}
+
+[readonly]{
+    opacity: .6;
+    cursor: not-allowed;
+}
+
+.cms textarea{
+    resize: vertical;
+    min-height: 200px;
+    line-height: 1.5;
+}
+
+.cms input.small{
+    width: 100px;
+}
+
+.cms select{
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    padding-right: 2rem;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5l5 5 5-5' fill='none' stroke='%236b7c84' stroke-width='1.6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.75rem center;
+}
+
+.cms select[multiple]{
+    padding: 0.4rem;
+    background-image: none;
+}
+
+.cms select[multiple] option{
+    padding: 0.25rem 0.6rem;
+    border-radius: 4px;
+    margin-bottom: 2px;
+}
+
+.cms select[multiple] option:checked{
+    background: var(--cmsSelected) linear-gradient(0deg, var(--cmsSelected) 0%, var(--cmsSelected) 100%);
+    color: var(--cmsTextColor);
+}
+
+.cms input.confirm,
+.cms textarea.confirm,
+.cms select.confirm{
+    border-color: var(--cmsSuccess) !important;
+}
+
+.cms input.error,
+.cms textarea.error,
+.cms select.error{
+    border-color: var(--cmsError) !important;
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--cmsError) 15%, transparent);
+}
+
+.cms input:invalid,
+.cms textarea:invalid,
+.cms select:invalid{
+    box-shadow: none;
+}
+
+/* Beschriftung über Feld: <label>Text<input></label> */
+.cms .layout > label{
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--cmsTextColor);
+}
+
+.cms .layout > label > input,
+.cms .layout > label > select,
+.cms .layout > label > textarea{
+    margin-top: 0.3rem;
+    font-weight: 400;
+}
+
+.cms form label.disabled{
+    opacity: 0.5;
+}
+
+.cms input[type="search"]::-webkit-search-decoration,
+.cms input[type="search"]::-webkit-search-cancel-button,
+.cms input[type="search"]::-webkit-search-results-button,
+.cms input[type="search"]::-webkit-search-results-decoration{
+    display: none;
+}
+
+.cms i + input{
+    width: calc(100% - 48px);
+    margin-left: 10px;
+}
+
+/* Felder auf dunklem Grund (Pylon-Kopf, Hauptnavigation) */
+div.pylon > header input,
+div.pylon > header select,
+div.main input,
+div.main select{
+    background: var(--cmsOnDark);
+    border-color: transparent;
+    color: #fff;
+}
+
+div.pylon > header input::placeholder{
+    color: rgba(255,255,255,.6);
+}
+
+div.pylon > header input:focus{
+    background: var(--cmsSecondaryColor);
+    border-color: transparent;
+    box-shadow: none;
+}
+
+/****************************** BUTTONS ***************************/
+.cms button,
+.cms .button,
+.cms .submit{
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    position: relative;
+    min-height: var(--cmsControl);
+    padding: 0 0.9rem;
+    margin: 0 0.4rem 0.4rem 0;
+    border: 1px solid transparent;
+    border-radius: var(--cmsRadius);
+    background: var(--cmsButtonBg);
+    color: var(--cmsTextColor);
+    font-size: 0.8125rem;
+    font-weight: 500;
+    line-height: 1.2;
+    vertical-align: middle;
+    white-space: nowrap;
+    cursor: pointer;
+    overflow: hidden;
+    box-shadow: none !important;
+    transition: background-color .15s, border-color .15s, color .15s;
+}
+
+.cms button{
+    font-family: var(--cmsFont);
+}
+
+.cms button[hidden],
+.cms .button[hidden]{
+    display: none !important;
+}
+
+.cms button:hover,
+.cms .button:hover{
+    background: color-mix(in srgb, var(--cmsButtonBg) 88%, var(--cmsMainColor));
+}
+
+.cms button span,
+.cms .button span,
+.cms button i,
+.cms .button i{
+    color: inherit;
+}
+
+.cms button i,
+.cms .button i{
+    font-size: 1.1rem;
+    line-height: 1;
+    margin: 0;
+    padding: 0;
+}
+
+.cms button.submit,
+.cms .button.submit,
+.cms .submit{
+    background: var(--cmsHighlightColor);
+    color: var(--cmsOnHighlight);
+    font-weight: 600;
+}
+
+.cms button.submit:hover,
+.cms .button.submit:hover,
+.cms .submit:hover{
+    background: color-mix(in srgb, var(--cmsHighlightColor) 88%, #000);
+}
+
+.cms .button.transparent,
+.cms button.transparent{
+    background: transparent;
+    color: var(--cmsMainColor);
+    font-size: 0.875rem;
+}
+
+.cms .button.transparent i,
+.cms button.transparent i{
+    color: var(--cmsMainColor);
+}
+
+.cms .button.transparent:hover,
+.cms button.transparent:hover{
+    background: var(--cmsHover);
+}
+
+.cms .button.transparent:active,
+.cms button.transparent:active{
+    background: color-mix(in srgb, var(--cmsMainColor) 14%, transparent);
+}
+
+.cms .button.transparent.confirm,
+.cms .button.transparent.confirm i{
+    color: var(--cmsSuccess);
+}
+
+.cms button.icononly,
+.cms .button.icononly{
+    padding: 0;
+    width: var(--cmsControl);
+}
+
+.cms button[disabled],
+.cms .button[disabled],
+.cms .button.disabled,
+.cms input[disabled]{
+    cursor: not-allowed;
+    opacity: .45;
+}
+
+.cms .floatRight button,
+.cms .rightAlign button,
+.cms .floatRight .button,
+.cms .rightAlign .button{
+    margin-right: 0;
+    margin-left: 0.4rem;
+}
+
+.cms div.inputGroup input.generate{
+    width: calc(100% - 4.5rem);
+    display: inline-block;
+    float: left;
+}
+
+.cms i.pwGenerate.button.transparent,
+.cms i.clearPWField.button.transparent{
+    width: 2.25rem;
+    height: var(--cmsControl);
+    margin: 0 0 0 0.25rem;
+    padding: 0;
+    font-size: 1.1rem;
+    float: left;
+    background: var(--cmsHover);
+}
+
+/****************************** CHECKBOX ***************************/
+.cms input[type="checkbox"].custom,
+.cms input[type="radio"].custom{
+    position: absolute;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    height: 1px;
+    width: 1px;
+    min-height: 0;
+    margin: -1px;
+    padding: 0;
+    border: 0;
+}
+
+.cms input[type="checkbox"].custom + label,
+.cms input[type="radio"].custom + label{
+    position: relative;
+    display: inline-block;
+    width: 18px;
+    height: 18px;
+    flex: 0 0 18px;
+    cursor: pointer;
+    background: var(--cmsCanvas);
+    border: 1.5px solid color-mix(in srgb, var(--cmsMainColor) 35%, var(--cmsLine));
+    border-radius: 4px;
+    transition: background-color .15s, border-color .15s;
+}
+
+.cms input[type="radio"].custom + label{
+    border-radius: 50%;
+}
+
+.cms input[type="checkbox"].custom + label:after{
+    content: "";
+    position: absolute;
+    left: 5px;
+    top: 1px;
+    width: 4px;
+    height: 9px;
+    border: solid transparent;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+}
+
+.cms input[type="checkbox"].custom + label:hover,
+.cms input[type="radio"].custom + label:hover{
+    border-color: var(--cmsHighlightColor);
+}
+
+.cms input[type="checkbox"].custom:checked + label{
+    background: var(--cmsHighlightColor);
+    border-color: var(--cmsHighlightColor);
+}
+
+.cms input[type="checkbox"].custom:checked + label:after{
+    border-color: var(--cmsOnHighlight);
+}
+
+.cms input[type="radio"].custom + label:after{
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 8px;
+    height: 8px;
+    margin: -4px 0 0 -4px;
+    border-radius: 50%;
+    background: transparent;
+}
+
+.cms input[type="radio"].custom:checked + label{
+    border-color: var(--cmsHighlightColor);
+}
+
+.cms input[type="radio"].custom:checked + label:after{
+    background: var(--cmsHighlightColor);
+}
+
+.cms input[type="checkbox"].custom:focus-visible + label,
+.cms input[type="radio"].custom:focus-visible + label{
+    box-shadow: 0 0 0 3px var(--cmsSelected);
+}
+
+/****************************** SWITCH ***************************/
+.cms label.checkbox{
+    display: flex !important;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1.25rem;
+}
+
+.cms input[type="checkbox"].switch{
+    display: none;
+}
+
+.cms input[type="checkbox"].switch + div{
+    position: relative;
+    display: block;
+    flex: 0 0 36px;
+    width: 36px;
+    height: 20px;
+    margin-left: auto;
+    border-radius: 10px;
+    background: color-mix(in srgb, var(--cmsMainColor) 22%, var(--cmsLine));
+    transition: background-color .2s;
+    cursor: pointer;
+}
+
+.cms input[type="checkbox"].switch + div div{
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: #fff;
+    box-shadow: 0 1px 2px rgba(0,0,0,.25);
+    transition: left .2s ease;
+    cursor: pointer;
+}
+
+.cms input[type="checkbox"].switch:checked + div{
+    background: var(--cmsInteractive);
+}
+
+.cms input[type="checkbox"].switch:checked + div div{
+    left: 18px;
+}
+
+.cms input[type="checkbox"].switch.confirm + div{
+    background: var(--cmsSuccess);
+}
+
+.cms input[type="checkbox"].switch.error + div{
+    background: var(--cmsError);
+}
+
+/****************************** FELD MIT BESCHRIFTUNG ***************************/
+.cms div.inputGroup{
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.3rem;
+    width: 100%;
+    padding-top: 0;
+    margin: 0.75rem 0 0;
+}
+
+.cms div.inputGroup.small{
+    width: calc(50% - 7px);
+}
+
+.cms div.inputGroup.small.first{
+    margin-right: 7px;
+}
+
+.cms div.inputGroup.small.last{
+    margin-left: 7px;
+    clear: right;
+}
+
+.cms div.inputGroup input,
+.cms div.inputGroup textarea,
+.cms div.inputGroup select{
+    display: block;
+    width: 100%;
+    margin-bottom: 0;
+}
+
+.cms div.inputGroup label{
+    position: static;
+    order: -1;
+    margin: 0;
+    pointer-events: none;
+    font-family: var(--cmsFont);
+    font-size: 0.75rem;
+    font-weight: 600;
+    line-height: 1.3;
+    color: var(--cmsMuted);
+}
+
+.cms div.inputGroup label:empty{
+    display: none;
+}
+
+.cms div.inputGroup:focus-within label{
+    color: var(--cmsTextColor);
+}
+
+div.pylon > header div.inputGroup{
+    margin: 0;
+    padding-top: 0;
+}
+
+/* Fortschrittsbalken für Felder, die gerade speichern */
+.cms div.inputGroup .bar{
+    position: absolute;
+    left: 1px;
+    right: 1px;
+    bottom: 0;
+    height: 2px;
+    overflow: hidden;
+    border-radius: 0 0 var(--cmsRadius) var(--cmsRadius);
+    pointer-events: none;
+}
+
+.cms div.inputGroup .bar:before,
+.cms div.inputGroup .bar:after{
+    content: none;
+}
+
+.cms div.inputGroup input.loading ~ .bar:before,
+.cms div.inputGroup textarea.loading ~ .bar:before,
+.cms div.inputGroup select.loading ~ .bar:before{
+    content: "";
+    position: absolute;
+    top: 0;
+    left: -200px;
+    width: 200px;
+    height: 2px;
+    background: var(--cmsHighlightColor);
+    animation: loading 2s linear infinite;
+}
+
+.cms div.inputGroup input.confirm ~ .bar,
+.cms div.inputGroup textarea.confirm ~ .bar{
+    background: var(--cmsSuccess);
+}
+
+.cms div.inputGroup input.error ~ .bar,
+.cms div.inputGroup textarea.error ~ .bar{
+    background: var(--cmsError);
+}
+
+/****************************** PASSWORD CHECK ***************************/
+div.cms div#complexity{
+    width: calc(100% - 25px);
+    padding-bottom: 5px;
+    margin-top: 3px;
+    border-bottom: 3px solid var(--cmsLine);
+}
+
+div.cmslightbox.cms div#complexity{
+    width: 100%;
+}
+
+div.cms div#complexity.weak{
+    border-bottom-color: var(--cmsError);
+}
+
+div.cms div#complexity.strong{
+    border-bottom-color: var(--cmsWarning);
+}
+
+div.cms div#complexity.stronger,
+div.cms div#complexity.strongest{
+    border-bottom-color: var(--cmsSuccess);
+}
+
+body.firefox .cms select:-moz-focusring{
+    color: transparent !important;
+    text-shadow: 0 0 0 var(--cmsTextColor) !important;
+}
+
+.cms .fieldGrid{
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0.75rem 1rem;
+}
+
+.cms .fieldGrid > h3,
+.widget > main > h3{
+    grid-column: 1 / -1;
+    margin: 0.5rem 0 0;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--cmsMuted);
+}
+
+.cms .field,
+.cms .fieldGrid > .field{
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    min-width: 0;
+    margin: 0;
+}
+
+.cms .field.is-wide{
+    grid-column: span 2;
+}
+
+.cms .field > span{
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--cmsMuted);
+}
+
+.cms .field > input,
+.cms .field > select,
+.cms .field > textarea{
+    margin: 0;
+}
+
+.cms .field > small{
+    font-size: 0.75rem;
+    line-height: 1.35;
+    color: var(--cmsMuted);
+}
+
+.cmslightbox .fieldGrid{
+    grid-template-columns: 1fr 1fr;
+}
+
+.cms .fieldGrid.is-stack{
+    grid-template-columns: 1fr;
+}
+
+.cms .colorChoice{
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.cms .picks{
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+}
+
+.cms .picks .tag{
+    margin: 0;
+    height: 1.75rem;
+    padding: 0 0.55rem;
+    border-color: var(--cmsLine);
+}
+
+.cms .picks .tag[data-on_click]{
+    cursor: pointer;
+}
+
+.cms .picks .tag.active{
+    border: 0;
+}
+
+.cms .tag.is-plain{
+    margin: 0;
+    border: 0;
+    height: 1.75rem;
+    padding: 0 0.7rem;
+    cursor: default;
+}
+
+.cmslightbox .field.is-wide{
+    grid-column: 1 / -1;
+}
+
+@container cms-module (max-width: 52rem){
+    .cms .fieldGrid{
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .cms .field.is-wide{
+        grid-column: 1 / -1;
+    }
+}

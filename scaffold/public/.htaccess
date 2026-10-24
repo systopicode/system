@@ -167,7 +167,9 @@ RewriteRule ^assets/ - [END]
 RewriteRule ^assets/ asset.php [END]
 
 RewriteRule ^robots.txt$ - [L,QSA]
+# Not files. index.php builds them from the pages as they are now.
 RewriteRule ^sitemap.xml index.php [NC,QSA,L]
+RewriteRule ^llms.txt index.php [NC,QSA,L]
 RewriteRule ^lib/cronjobs.php - [L,QSA]
 RewriteRule ^css/x_responsive.(css|php) css/x_responsive.php [L,QSA]
 

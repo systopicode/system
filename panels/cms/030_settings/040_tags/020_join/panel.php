@@ -15,16 +15,18 @@ use Systopic\System\Tables\Tags\Model as Tag;
  */
 class Panel extends PanelNode {
 
+	public bool $inNavi = false;
+
 	public Scope $scope {
 		get => Scope::default();
 	}
 
 	public ?Tag $source {
-		get => ($id = (int) \http::get('id')) > 0 ? TagGroups::tagById($this->scope, $id) : NULL;
+		get => ($id = (int) (\http::get('id') ?: \http::dataset('id'))) > 0 ? TagGroups::tagById($this->scope, $id) : NULL;
 	}
 
 	public ?Tag $target {
-		get => ($id = (int) \http::get('into')) > 0 ? TagGroups::tagById($this->scope, $id) : NULL;
+		get => ($id = (int) (\http::get('into') ?: \http::dataset('into'))) > 0 ? TagGroups::tagById($this->scope, $id) : NULL;
 	}
 
 	/** How many nodes carry the source, and the target. */

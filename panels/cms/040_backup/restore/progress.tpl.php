@@ -50,3 +50,8 @@ $angle_4 = min(0, calculate::minmax(270, $angle, 360) - 360);
 		*/ ?>
     </center>
 </main>
+<?php if ($this->action === 'clearTempfiles') { ?>
+<footer>
+	<a href="../" class="button ajax submit"><span>Restore finished</span></a>
+</footer>
+<?php } ?>

@@ -1,4 +1,4 @@
-﻿/* global $,sys,settings,cmsPrompt */
+/* global $,sys,settings,cmsPrompt */
 sys.core.server.command = function (call) {
 	var cmd = this;
 	var element = call.event ? call.event.element : null;
@@ -47,19 +47,43 @@ sys.core.server.command = function (call) {
 					sendPutRefresh();
 				}
 			} else {
-				var url = response.data.path + response.data.action;
+				// Same as redirect: a get stays in the ajax flow. Downloads
+				// and a real form post still leave through the browser.
+				var refreshData = response.data || {};
+				var url = (refreshData.path || '')
+					+ (typeof refreshData.action === 'string' ? refreshData.action : '');
+				var refreshGet = (refreshData.get && typeof refreshData.get === 'object')
+					? refreshData.get : {};
+				var go = function () {
+					if (!url) {
+						return;
+					}
+					call.redirecting = true;
+					sys.core.server.sendGet(url, refreshGet);
+				};
 				if (response.delay != null && response.delay > 0) {
-					setTimeout(() => {
-						location.href = url;
-					}, 1000 * response.delay);
+					setTimeout(go, 1000 * response.delay);
 				} else {
-					location.href = url;
+					go();
 				}
 			}
 			break;
 		case cmd.skipRefresh ?? 'redirect':
-			var url = response.data.path + response.data.action;
-			setTimeout(() => sys.core.server.sendGet(url), 100);
+			var url = (response.data && response.data.path ? response.data.path : '')
+				+ (response.data && response.data.action ? response.data.action : '');
+			if (url) {
+				// The request URL must not be written back afterwards, or the
+				// address bar stays on the page this redirect is leaving.
+				// A get stays in the ajax flow: opening a module follows on
+				// to its last child without a full page load.
+				call.redirecting = true;
+				var redirectMethod = (response.data && response.data.method) || 'get';
+				if (redirectMethod === 'get') {
+					sys.core.server.sendGet(url, (response.data && response.data.get) || {});
+				} else {
+					location.href = url;
+				}
+			}
 			break;
 
 		case 'callFunction':
@@ -236,23 +260,62 @@ sys.core.server.command = function (call) {
 			sys.loader.addScripts(response.scriptFiles, call);
 			break;
 		case 'loadCSS':
-			(response.cssFiles || []).forEach((href) => {
+			// Module sheets belong in the cms layer, same as the full page.
+			// A plain link has no layer and beats the preview. An @import
+			// written into a style tag after load is dropped by the browser,
+			// so the text is inlined into the layer instead.
+			(response.cssFiles || []).forEach((item) => {
+				var href = typeof item === 'string' ? item : (item && item.href);
+				var css = typeof item === 'string' ? '' : (item && item.css) || '';
 				if (!href) {
 					return;
 				}
-				var normalizedHref = String(href).split('?')[0];
-				var exists = Array.from(document.querySelectorAll('link[rel="stylesheet"]')).some((link) => {
-					var existingHref = link.getAttribute('href') || '';
-					return existingHref === href || existingHref.split('?')[0] === normalizedHref;
-				});
-				if (exists) {
+				var path = String(href).split('?')[0];
+				var sheets = document.querySelectorAll('style[data-cms-module]');
+				var node = null;
+				for (var i = 0; i < sheets.length; i++) {
+					if (sheets[i].getAttribute('data-cms-module') === path) {
+						node = sheets[i];
+						break;
+					}
+				}
+				if (!node) {
+					var imported = false;
+					document.querySelectorAll('style:not([data-cms-module])').forEach((style) => {
+						if ((style.textContent || '').indexOf(path) !== -1) {
+							imported = true;
+						}
+					});
+					if (imported) {
+						return;
+					}
+				} else if (node.getAttribute('data-cms-href') === href) {
 					return;
 				}
-				var link = document.createElement('link');
-				link.rel = 'stylesheet';
-				link.type = 'text/css';
-				link.href = href;
-				document.head.appendChild(link);
+				var apply = (text) => {
+					if (!text) {
+						return;
+					}
+					text = text.replace(/url\(\s*(['"]?)(?!data:|https?:|\/\/|#)([^'")]+)\1\s*\)/g, (_, quote, rel) => {
+						try {
+							return "url('" + new URL(rel, href).href + "')";
+						} catch (error) {
+							return 'url(' + quote + rel + quote + ')';
+						}
+					});
+					var target = node || document.createElement('style');
+					target.setAttribute('data-cms-module', path);
+					target.setAttribute('data-cms-href', href);
+					target.textContent = '@layer cms {\n' + text + '\n}\n';
+					if (!node) {
+						document.head.appendChild(target);
+					}
+				};
+				if (css) {
+					apply(css);
+					return;
+				}
+				fetch(href, {credentials: 'same-origin'}).then((res) => res.ok ? res.text() : '').then(apply);
 			});
 			break;
 		case 'updateClientData':

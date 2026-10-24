@@ -146,13 +146,20 @@ class client {
 					continue;
 				}
 				$seen[$key] = true;
-				$files[] = $url;
+				$css = is_file($cssFile) ? (string) file_get_contents($cssFile) : '';
+				if (strlen($css) > 200000) {
+					$css = '';
+				}
+				$files[] = ['href' => $url, 'css' => $css];
 			}
 		};
 
 		$projectRootUrl = http::$projectRoot;
 		$packageUrls = \Systopic\System\Sys\Packages::urls();
 
+		// Only the module sheets along the open panel. The system UI is already
+		// in the cms layer from the full page. Sending it again as a plain
+		// link put it outside every layer, so it painted over the page preview.
 		$pathParts = $realPath;
 		foreach ($realPath as $unused) {
 			$modulePathString = implode('/', $pathParts);
@@ -193,6 +200,14 @@ class client {
 			'command' => 'updateClientData',
 			'data' => clientInterfaces::clientData_export()
 		]];
+		// Before the document swap, so a module sheet is in the cms layer
+		// when the new markup paints. A link inserted afterwards has no layer.
+		if (count(self::$cssAppFiles)) {
+			$return[] = [
+				'command' => 'loadCSS',
+				'cssFiles' => self::$cssAppFiles
+			];
+		}
 		foreach ($queued as $cmd) {
 			$return[] = $cmd;
 		}
@@ -223,12 +238,6 @@ class client {
 			];
 		} else {
 			p('really nothing to load -> should run onJSready');
-		}
-		if (count(self::$cssAppFiles)) {
-			$return [] = [
-				'command' => 'loadCSS',
-				'cssFiles' => self::$cssAppFiles
-			];
 		}
 		self::$response = [];
 		return $return;

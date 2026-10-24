@@ -146,6 +146,9 @@ class PanelNode implements ClientExportable, RenderNode
      */
     public $icon = null;
 
+    /** False for a lightbox: it is opened from the screen, not listed in the menu. */
+    public bool $inNavi = true;
+
     // -------------------------------------------------------------------------
     // View / render state
     // -------------------------------------------------------------------------
@@ -610,6 +613,42 @@ class PanelNode implements ClientExportable, RenderNode
         return \Systopic\System\Dom\Layer\DomLayer::SOURCE_PANEL;
     }
 
+    /**
+     * A module with a menu and no child in the URL opens the child that was
+     * open last, or the first one in the menu.
+     *
+     * `openChild` has to be a key of getDefaultState(), otherwise the session
+     * drops it on the next request.
+     */
+    protected function rememberOrOpenChild(): void
+    {
+        if (!$this->inPath()) {
+            return;
+        }
+        $selected = $this->childSelected;
+        if ($selected !== null) {
+            if ($selected->inNavi) {
+                $this->state->openChild = $selected->name;
+            }
+            return;
+        }
+        $this->ensureChildrenBuilt();
+        $name = isset($this->state->openChild) ? (string) $this->state->openChild : '';
+        $target = $name !== '' ? $this->child($name) : null;
+        if ($target === null || !$target->inNavi) {
+            $target = null;
+            for ($child = $this->firstChild; $child !== null; $child = $child->next) {
+                if ($child->inNavi) {
+                    $target = $child;
+                    break;
+                }
+            }
+        }
+        if ($target !== null) {
+            \http::redirect($target->href);
+        }
+    }
+
     /** True when this panel is on the active URL path (all ancestors are selected). */
     public function inPath(): bool
     {
@@ -710,16 +749,46 @@ class PanelNode implements ClientExportable, RenderNode
      */
     public function getNaviItem(): ?\htmlElement
     {
-        $icon = $this->icon ?? $this->name;
+        if (!$this->inNavi) {
+            return null;
+        }
+        $icon = $this->navIcon();
         $li = \html::create('li.nav_' . $this->name)
             ->attr('data-name', $this->name)
             ->class($this->inPath() ? 'active' : null);
 
         $a = $li->append('a')->href($this->getHref(\http::$root));
-        $a->append('span')->text($this->name);
-        $a->append('i')->class($icon);
+        if ($icon !== null) {
+            $a->append('i')->class($icon);
+        }
+        $a->append('span')->text($this->label);
 
         return $li;
+    }
+
+    /**
+     * Icon for the side menu. Under Tools only the first level has one
+     * (System, Database, Maintenance, Logs). Deeper entries are text.
+     * Everywhere else a panel's own icon is used, or its name as before.
+     */
+    private function navIcon(): ?string
+    {
+        // The Tools item itself keeps its wrench. Only what hangs under it
+        // is limited to the first level (System, Database, Maintenance, Logs).
+        if ($this->name !== 'tools' && in_array('tools', $this->path, true)) {
+            if ($this->parent?->name !== 'tools') {
+                return null;
+            }
+            return match ($this->name) {
+                'system' => 'fa-regular fa-server',
+                'database' => 'fa-regular fa-database',
+                'maintenance' => 'fa-regular fa-wrench',
+                'logs' => 'fa-regular fa-file-text',
+                default => null,
+            };
+        }
+        $icon = is_string($this->icon) && $this->icon !== '' ? $this->icon : $this->name;
+        return $icon;
     }
 
     /**
