@@ -6,7 +6,7 @@ namespace Systopic\System\Sys;
 
 /**
  * The CMS theme colours outside a stylesheet (portraits, the web app
- * manifest, theme-color): theme.css, then whatever the project overrides
+ * manifest, theme-color): 00_theme.css, then whatever the project overrides
  * (css/cms_overrides.css, overrides/css/*.css) - the last value wins.
  */
 final class Theme
@@ -49,7 +49,7 @@ final class Theme
     private static function stylesheets(): array
     {
         $files = [];
-        $theme = Packages::panelAsset('css/theme.css');
+        $theme = Packages::panelAsset('css/00_theme.css');
         if ($theme !== null) {
             $files[] = $theme;
         }

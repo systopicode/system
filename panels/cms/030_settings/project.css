@@ -1,0 +1,107 @@
+.projectFiles .envPick{
+    max-width: 24rem;
+    margin: 0 0 1.25rem;
+}
+
+.projectFiles .envFile[hidden]{
+    display: none;
+}
+
+.projectFiles .widget > header h2{
+    flex: 1 1 auto;
+}
+
+.projectFiles .widget > header .button,
+.projectFiles .projectBar .button{
+    margin: 0 0 0 auto;
+}
+
+.projectFiles .projectBar{
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    min-height: 2.75rem;
+    padding: 0.35rem 0.75rem 0.35rem 1.25rem;
+    border-top: 1px solid var(--cmsLine);
+}
+
+.projectFiles .projectBar h3{
+    margin: 0;
+    font-size: 0.8125rem;
+    font-weight: 700;
+    color: var(--cmsTextColor);
+}
+
+.projectFiles .widget > .tableScroll > table{
+    margin: 0;
+}
+
+.projectFiles table th{
+    padding-right: 0.75rem;
+}
+
+.projectFiles table.scalars td:first-child{
+    width: 16rem;
+    font-weight: 600;
+}
+
+.projectFiles td span small{
+    display: block;
+    margin-top: 0.1rem;
+    font-size: 0.6875rem;
+    font-weight: 500;
+    letter-spacing: 0;
+    text-transform: none;
+    color: var(--cmsMuted);
+}
+
+/* the drop zones sit on the row - Safari needs the transform for that */
+.projectFiles tbody tr{
+    position: relative;
+    transform: translate(0);
+}
+
+.projectFiles td.pageSettingDrag{
+    position: static;
+    width: 2.25rem;
+    color: var(--cmsMuted);
+    cursor: grab;
+}
+
+body.settingDragging .projectFiles div.sort{
+    display: block;
+    z-index: 4;
+}
+
+body.settingDragging .projectFiles td input,
+body.settingDragging .projectFiles td textarea,
+body.settingDragging .projectFiles td select,
+body.settingDragging .projectFiles td label{
+    pointer-events: none;
+}
+
+.projectFiles td.projectRemove{
+    width: 3rem;
+    text-align: right;
+}
+
+.cms .projectFiles table:not(.octalSelector) tbody tr:hover td{
+    background: color-mix(in srgb, var(--cmsMainColor) 4%, var(--cmsCanvas));
+    box-shadow: none;
+}
+
+.projectFiles td input,
+.projectFiles td textarea{
+    margin: 0;
+    min-height: 2rem;
+}
+
+.projectFiles .projectSwitch{
+    display: flex;
+    align-items: center;
+    min-height: 2rem;
+}
+
+.projectFiles .projectSwitch input.switch + div{
+    margin-left: 0;
+}

@@ -1,6 +1,6 @@
 
 :root {
-	/* Folgen aus theme.css. Hue bleibt, nur Helligkeit und Sättigung wandern. */
+	/* Folgen aus 00_theme.css. Hue bleibt, nur Helligkeit und Sättigung wandern. */
 	--cmsOnHighlight: hsl(from var(--cmsMainColor) h s calc(l - 5));
 	--cmsHighlightText: hsl(from var(--cmsHighlightColor) h s calc(l - 19));
 	--cmsSecondaryColor: hsl(from var(--cmsMainColor) h s calc(l + 6));

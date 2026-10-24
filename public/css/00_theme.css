@@ -1,6 +1,6 @@
 /*
  * Theme. Ein Projekt überschreibt nur diese Werte
- * (overrides/css liegt in einer späteren Layer). Der Rest folgt in ui.css.
+ * (overrides/css liegt in einer späteren Layer). Der Rest folgt in 18_ui.css.
  */
 :root {
 	--cmsMainColor: #1f3a45;

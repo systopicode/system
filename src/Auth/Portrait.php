@@ -9,7 +9,7 @@ use Systopic\System\Sys\Theme;
 /**
  * A user's picture: an uploaded file in `public/var/avatars/`,
  * or a generated portrait whose colours follow the CMS theme
- * (theme.css, then whatever the project overrides).
+ * (00_theme.css, then whatever the project overrides).
  */
 final class Portrait
 {

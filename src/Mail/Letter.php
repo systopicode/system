@@ -69,7 +69,7 @@ final class Letter
         }
         $vars = [];
         $files = [];
-        $theme = \Systopic\System\Sys\Packages::panelAsset('css/theme.css');
+        $theme = \Systopic\System\Sys\Packages::panelAsset('css/00_theme.css');
         if ($theme !== null) {
             $files[] = $theme;
         }

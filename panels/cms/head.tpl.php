@@ -79,8 +79,8 @@
 	};
 
 	echo '<!-- +-+-+-+-+-+-+-+-+-+ CMS CSS +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-->';
-	// the system first, then each package: css/, then its subfolders by name -
-	// a recursive import would sort all files into one list
+	// the system first, then each package: css/ by name (the number prefixes
+	// are the cascade order), then its subfolders
 	foreach ([fs::$sysRoot . 'public/', ...\Systopic\System\Sys\Packages::panelAssets()] as $assetDir) {
 		$cssDir = fs::toInternal($assetDir) . 'css/';
 		echo $cmsCss($cssDir, 'cms');
@@ -224,7 +224,7 @@
 	echo client::flushScripts();
 
 	echo fsLoader::includeScriptFiles(fs::$sysRoot . 'public/js/core/');
-	echo fsLoader::includeScriptFiles(fs::$sysRoot . 'public/js/cms/');
+	echo fsLoader::includeScriptFiles(fs::$sysRoot . 'public/js/gui/');
 	foreach (\Systopic\System\Sys\Packages::panelAssets() as $assetDir) {
 		echo fsLoader::includeScriptFiles(fs::toInternal($assetDir) . 'js/');
 	}
