@@ -331,7 +331,7 @@ class htmlElements { // nodelist & baseclass for node
                 return $this;
             // ************** DEPR ************
             case 'icon':
-                return $this->i()->class("fa-light fa-$arg")->close();
+                return $this->i()->class("fa-regular fa-$arg")->close();
             case 'row':
                 return $this->append('tr');
             case 'cell':

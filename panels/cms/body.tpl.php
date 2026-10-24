@@ -47,7 +47,7 @@ $this->loadJS();
 				<?php if (function_exists('appCmsPreviewUrl')): ?>
 				<a class="button cmsPreviewBtn" target="_blank" rel="noopener noreferrer"
 					href="<?= htmlspecialchars(appCmsPreviewUrl()) ?>" title="Vorschau in der App">
-					<i class="fa-light fa-eye"></i><span>Vorschau</span>
+					<i class="fa-regular fa-eye"></i><span>Vorschau</span>
 				</a>
 				<?php endif; ?>
 			</header>

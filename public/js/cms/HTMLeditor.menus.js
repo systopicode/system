@@ -31,13 +31,13 @@ function HTMLeditorRightClick(clicktype, event, elements) {
 					{
 						formats: {
 							title: 'Formats',
-							className: 'fa-light fa-image',
+							className: 'fa-regular fa-image',
 							active: ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'].includes($(event.target).data('mimetype')) ? true : false,
 							subs: subs
 						},
 						edit: {
 							title: 'Edit',
-							className: 'fa-light fa-crop-simple',
+							className: 'fa-regular fa-crop-simple',
 							func: 'formatImage',
 							param: {
 								target: event.target
@@ -46,7 +46,7 @@ function HTMLeditorRightClick(clicktype, event, elements) {
 						insertAnchor: {
 							active: $(event.target).parent().prop('tagName') === 'A' ? false : true,
 							title: 'Insert Link',
-							className: 'fa-light fa-link',
+							className: 'fa-regular fa-link',
 							func: 'createHTMLeditorLink',
 							param: {
 								target: event.target
@@ -55,7 +55,7 @@ function HTMLeditorRightClick(clicktype, event, elements) {
 						removeanchor: {
 							active: $(event.target).parent().prop('tagName') === 'A' ? true : false,
 							title: 'remove Link',
-							className: 'fa-light fa-link-slash',
+							className: 'fa-regular fa-link-slash',
 							func: 'removeAnchor',
 							param: {
 								target: event.target
@@ -64,7 +64,7 @@ function HTMLeditorRightClick(clicktype, event, elements) {
 						editanchor: {
 							active: $(event.target).parent().prop('tagName') === 'A' ? true : false,
 							title: 'Edit Link',
-							className: 'fa-light fa-pen-to-square',
+							className: 'fa-regular fa-pen-to-square',
 							selected: $(event.target).parent().prop('tagName') === 'A' ? true : false,
 							func: 'createHTMLeditorLink',
 							param: {
@@ -73,7 +73,7 @@ function HTMLeditorRightClick(clicktype, event, elements) {
 						},
 						clear: {
 							title: 'Remove from Page',
-							className: 'fa-light fa-trash',
+							className: 'fa-regular fa-trash',
 							func: 'removeImageFromHTMLeditor',
 							param: {
 								target: event.target
@@ -87,7 +87,7 @@ function HTMLeditorRightClick(clicktype, event, elements) {
 					{
 						edit: {
 							title: 'Edit',
-							className: 'fa-light fa-pen-to-square',
+							className: 'fa-regular fa-pen-to-square',
 							func: 'formatImage',
 							param: {
 								target: event.target
@@ -95,7 +95,7 @@ function HTMLeditorRightClick(clicktype, event, elements) {
 						},
 						controls: {
 							title: 'Toggle Controls',
-							className: 'fa-light fa-light fa-ellipsis',
+							className: 'fa-regular fa-regular fa-ellipsis',
 							func: event.target.getAttribute('controls') ? 'removeAttribute' : 'setAttribute',
 							param: {
 								attr: 'controls',
@@ -105,7 +105,7 @@ function HTMLeditorRightClick(clicktype, event, elements) {
 						},
 						playsinline: {
 							title: 'Toggle Playsinline',
-							className: 'fa-light fa-frame',
+							className: 'fa-regular fa-frame',
 							func: event.target.getAttribute('playsinline') ? 'removeAttribute' : 'setAttribute',
 							param: {
 								attr: 'playsinline',
@@ -115,7 +115,7 @@ function HTMLeditorRightClick(clicktype, event, elements) {
 						},
 						autoplay: {
 							title: 'Toggle Autoplay',
-							className: 'fa-light fa-play',
+							className: 'fa-regular fa-play',
 							func: event.target.getAttribute('autoplay') ? 'removeAttribute' : 'setAttribute',
 							param: {
 								attr: 'autoplay',
@@ -125,7 +125,7 @@ function HTMLeditorRightClick(clicktype, event, elements) {
 						},
 						muted: {
 							title: event.target.getAttribute('muted') ? 'Set Volumne on' : 'Mute Video',
-							className: event.target.getAttribute('muted') ? 'fa-light fa-volume-slash' : 'fa-light fa-volume',
+							className: event.target.getAttribute('muted') ? 'fa-regular fa-volume-slash' : 'fa-regular fa-volume',
 							func: event.target.getAttribute('muted') ? 'removeAttribute' : 'setAttribute',
 							param: {
 								attr: 'muted',
@@ -135,7 +135,7 @@ function HTMLeditorRightClick(clicktype, event, elements) {
 						},
 						loop: {
 							title: 'Toggle Loop',
-							className: 'fa-light fa-arrows-repeat',
+							className: 'fa-regular fa-arrows-repeat',
 							func: event.target.getAttribute('loop') ? 'removeAttribute' : 'setAttribute',
 							param: {
 								attr: 'loop',
@@ -145,7 +145,7 @@ function HTMLeditorRightClick(clicktype, event, elements) {
 						},
 						clear: {
 							title: 'Remove from Page',
-							className: 'fa-light fa-trash',
+							className: 'fa-regular fa-trash',
 							func: 'removeImageFromHTMLeditor',
 							param: {
 								target: event.target
@@ -161,7 +161,7 @@ function HTMLeditorRightClick(clicktype, event, elements) {
 
 						edit: {
 							title: 'Edit',
-							className: 'fa-light fa-pen-to-square',
+							className: 'fa-regular fa-pen-to-square',
 							func: 'formatImage',
 							param: {
 								target: event.target
@@ -170,7 +170,7 @@ function HTMLeditorRightClick(clicktype, event, elements) {
 
 						clear: {
 							title: 'Remove from Page',
-							className: 'fa-light fa-trash',
+							className: 'fa-regular fa-trash',
 							func: 'removeImageFromHTMLeditor',
 							param: {
 								target: event.target
@@ -184,7 +184,7 @@ function HTMLeditorRightClick(clicktype, event, elements) {
 					{
 						rowMenu: {
 							title: '',
-							className: 'fa-light fa-border-center-h',
+							className: 'fa-regular fa-border-center-h',
 							subs: {
 								duplicate: {
 									title: 'duplicate Row',
@@ -222,7 +222,7 @@ function HTMLeditorRightClick(clicktype, event, elements) {
 						},
 						columnMenu: {
 							title: '',
-							className: 'fa-light fa-border-center-v',
+							className: 'fa-regular fa-border-center-v',
 							subs: {
 								insertBefore: {
 									title: 'insert before',
@@ -253,7 +253,7 @@ function HTMLeditorRightClick(clicktype, event, elements) {
 
 						removeTable: {
 							title: 'Remove Table',
-							className: 'fa-light fa-trash',
+							className: 'fa-regular fa-trash',
 							func: 'removeTable',
 							param: {
 								elements: elements,
@@ -268,7 +268,7 @@ function HTMLeditorRightClick(clicktype, event, elements) {
 					{
 						headlines: {
 							title: '',
-							className: 'fa-light fa-heading',
+							className: 'fa-regular fa-heading',
 							selected: ['H1', 'H2', 'H3', 'H4', 'H5', 'H6'].includes(tag) ? true : false,
 							subs: {
 								h1: {
@@ -329,7 +329,7 @@ function HTMLeditorRightClick(clicktype, event, elements) {
 						},
 						paragraph: {
 							title: 'Paragraph',
-							className: 'fa-light fa-paragraph',
+							className: 'fa-regular fa-paragraph',
 							selected: ['P'].includes(tag) ? true : false,
 							nodeName: 'P',
 							func: 'formatHTMLeditor',
@@ -340,7 +340,7 @@ function HTMLeditorRightClick(clicktype, event, elements) {
 						},
 						insertAnchor: {
 							title: 'Insert Link',
-							className: 'fa-light fa-link',
+							className: 'fa-regular fa-link',
 							func: 'createHTMLeditorLink',
 							param: {
 								target: event.target
@@ -348,7 +348,7 @@ function HTMLeditorRightClick(clicktype, event, elements) {
 						},
 						insertList: {
 							title: '',
-							className: 'fa-light fa-list-radio',
+							className: 'fa-regular fa-list-radio',
 							selected: ['UL', 'OL', 'LI'].includes(tag) ? true : false,
 							subs: {
 								ul: {
@@ -373,7 +373,7 @@ function HTMLeditorRightClick(clicktype, event, elements) {
 						},
 						insertTable: {
 							title: 'Insert Table',
-							className: 'fa-light fa-table',
+							className: 'fa-regular fa-table',
 							nodeName: 'TABLE',
 							func: 'insertTable',
 							param: {
@@ -382,7 +382,7 @@ function HTMLeditorRightClick(clicktype, event, elements) {
 						},
 						htmlMode: {
 							title: 'HTML Mode',
-							className: 'fa-light fa-brackets-curly',
+							className: 'fa-regular fa-brackets-curly',
 							func: 'HTMLeditorHTMLMode',
 							param: {
 								target: event.target
@@ -390,7 +390,7 @@ function HTMLeditorRightClick(clicktype, event, elements) {
 						},
 						clear: {
 							title: 'Clear Format',
-							className: 'fa-light fa-text-slash',
+							className: 'fa-regular fa-text-slash',
 							func: 'formatHTMLeditor',
 							param: {
 								element: "removeformat"
@@ -404,7 +404,7 @@ function HTMLeditorRightClick(clicktype, event, elements) {
 					{
 						bold: {
 							title: 'Bold',
-							className: 'fa-light fa-bold',
+							className: 'fa-regular fa-bold',
 							nodeName: 'B',
 							func: 'formatHTMLeditor',
 							param: {
@@ -413,7 +413,7 @@ function HTMLeditorRightClick(clicktype, event, elements) {
 						},
 						italic: {
 							title: 'Italic',
-							className: 'fa-light fa-italic',
+							className: 'fa-regular fa-italic',
 							func: 'formatHTMLeditor',
 							param: {
 								element: "italic"
@@ -421,7 +421,7 @@ function HTMLeditorRightClick(clicktype, event, elements) {
 						},
 						underlined: {
 							title: 'Underlined',
-							className: 'fa-light fa-underline',
+							className: 'fa-regular fa-underline',
 							func: 'formatHTMLeditor',
 							param: {
 								element: "underline"
@@ -429,7 +429,7 @@ function HTMLeditorRightClick(clicktype, event, elements) {
 						},
 						headlines: {
 							title: '',
-							className: 'fa-light fa-heading',
+							className: 'fa-regular fa-heading',
 							subs: {
 								h1: {
 									title: 'Headline 1',
@@ -483,7 +483,7 @@ function HTMLeditorRightClick(clicktype, event, elements) {
 						},
 						paragraph: {
 							title: 'Paragraph',
-							className: 'fa-light fa-paragraph',
+							className: 'fa-regular fa-paragraph',
 							nodeName: 'P',
 							func: 'formatHTMLeditor',
 							param: {
@@ -493,7 +493,7 @@ function HTMLeditorRightClick(clicktype, event, elements) {
 						},
 						insertAnchor: {
 							title: 'Insert Link',
-							className: 'fa-light fa-link',
+							className: 'fa-regular fa-link',
 							func: 'createHTMLeditorLink',
 							param: {
 								target: event.target
@@ -501,7 +501,7 @@ function HTMLeditorRightClick(clicktype, event, elements) {
 						},
 						insertList: {
 							title: '',
-							className: 'fa-light fa-list-radio',
+							className: 'fa-regular fa-list-radio',
 							selected: ['UL', 'OL', 'LI'].includes(tag) ? true : false,
 							subs: {
 								ul: {
@@ -526,7 +526,7 @@ function HTMLeditorRightClick(clicktype, event, elements) {
 						},
 						htmlMode: {
 							title: 'HTML Mode',
-							className: 'fa-light fa-brackets-curly',
+							className: 'fa-regular fa-brackets-curly',
 							func: 'HTMLeditorHTMLMode',
 							param: {
 								target: event.target
@@ -534,7 +534,7 @@ function HTMLeditorRightClick(clicktype, event, elements) {
 						},
 						clear: {
 							title: 'Clear Format',
-							className: 'fa-light fa-text-slash',
+							className: 'fa-regular fa-text-slash',
 							func: 'formatHTMLeditor',
 							param: {
 								element: "removeformat"
@@ -547,7 +547,7 @@ function HTMLeditorRightClick(clicktype, event, elements) {
 					{
 						bold: {
 							title: 'Bold',
-							className: 'fa-light fa-bold',
+							className: 'fa-regular fa-bold',
 							nodeName: 'B',
 							func: 'formatHTMLeditor',
 							param: {
@@ -556,7 +556,7 @@ function HTMLeditorRightClick(clicktype, event, elements) {
 						},
 						italic: {
 							title: 'Italic',
-							className: 'fa-light fa-italic',
+							className: 'fa-regular fa-italic',
 							func: 'formatHTMLeditor',
 							param: {
 								element: "italic"
@@ -564,7 +564,7 @@ function HTMLeditorRightClick(clicktype, event, elements) {
 						},
 						underlined: {
 							title: 'Underlined',
-							className: 'fa-light fa-underline',
+							className: 'fa-regular fa-underline',
 							func: 'formatHTMLeditor',
 							param: {
 								element: "underline"
@@ -573,7 +573,7 @@ function HTMLeditorRightClick(clicktype, event, elements) {
 
 						insertAnchor: {
 							title: 'Insert Link',
-							className: 'fa-light fa-link',
+							className: 'fa-regular fa-link',
 							func: 'createHTMLeditorLink',
 							param: {
 								target: event.target
@@ -582,7 +582,7 @@ function HTMLeditorRightClick(clicktype, event, elements) {
 
 						clear: {
 							title: 'Clear Format',
-							className: 'fa-light fa-text-slash',
+							className: 'fa-regular fa-text-slash',
 							func: 'formatHTMLeditor',
 							param: {
 								element: "removeformat"
@@ -596,7 +596,7 @@ function HTMLeditorRightClick(clicktype, event, elements) {
 					{
 						insertAnchor: {
 							title: 'Insert Link',
-							className: 'fa-light fa-link',
+							className: 'fa-regular fa-link',
 							func: 'createHTMLeditorLink',
 							param: {
 								target: event.target
@@ -604,7 +604,7 @@ function HTMLeditorRightClick(clicktype, event, elements) {
 						},
 						insertList: {
 							title: '',
-							className: 'fa-light fa-list-radio',
+							className: 'fa-regular fa-list-radio',
 							selected: ['UL', 'OL', 'LI'].includes(tag) ? true : false,
 							subs: {
 								ul: {
@@ -629,7 +629,7 @@ function HTMLeditorRightClick(clicktype, event, elements) {
 						},
 						insertTable: {
 							title: 'Insert Table',
-							className: 'fa-light fa-table',
+							className: 'fa-regular fa-table',
 							nodeName: 'TABLE',
 							func: 'insertTable',
 							param: {
@@ -638,7 +638,7 @@ function HTMLeditorRightClick(clicktype, event, elements) {
 						},
 						htmlMode: {
 							title: 'HTML Mode',
-							className: 'fa-light fa-brackets-curly',
+							className: 'fa-regular fa-brackets-curly',
 							func: 'HTMLeditorHTMLMode',
 							param: {
 								target: event.target
@@ -652,7 +652,7 @@ function HTMLeditorRightClick(clicktype, event, elements) {
 					{
 						removeanchor: {
 							title: 'remove Link',
-							className: 'fa-light fa-link-slash',
+							className: 'fa-regular fa-link-slash',
 							func: 'removeAnchor',
 							param: {
 								target: event.target
@@ -660,7 +660,7 @@ function HTMLeditorRightClick(clicktype, event, elements) {
 						},
 						editanchor: {
 							title: 'Edit Link',
-							className: 'fa-light fa-pen-to-square',
+							className: 'fa-regular fa-pen-to-square',
 							func: 'createHTMLeditorLink',
 							param: {
 								target: event.target
@@ -668,7 +668,7 @@ function HTMLeditorRightClick(clicktype, event, elements) {
 						},
 						clear: {
 							title: 'Clear Format',
-							className: 'fa-light fa-text-slash',
+							className: 'fa-regular fa-text-slash',
 							func: 'formatHTMLeditor',
 							param: {
 								element: "removeformat"

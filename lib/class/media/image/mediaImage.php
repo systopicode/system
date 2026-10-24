@@ -349,10 +349,6 @@ class mediaImage {
 			$cnv_image->newImage((int) round($cnv_width), (int) round($cnv_height), $pixel);
 			$draw = new ImagickDraw();
 			$draw->setFillColor('rgba(255,255,255,1)');
-			$font = fs::$sysRoot . 'public/fonts/Lato-Regular.ttf';
-			if (is_file($font)) {
-				$draw->setFont($font);
-			}
 			$scale = max(12, $cnv_height / 30, $cnv_width / 30);
 			$draw->setFontSize((float) $scale);
 			$draw->setTextAntialias(TRUE);
