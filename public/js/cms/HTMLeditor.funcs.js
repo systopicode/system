@@ -20,132 +20,86 @@ function insertHtmlAtCursor(html) {
 	return true;
 }
 
-function isTextSelected() {
-	if (window.getSelection || document.selectio) {
-		return true;
+/** The menu commands, named as execCommand named them, done by HTMLeditor.format.js. */
+function formatHTMLeditor(event) {
+	switch (event.data.element) {
+		case 'bold':
+			return wysiwyg.toggle('STRONG');
+		case 'italic':
+			return wysiwyg.toggle('EM');
+		case 'underline':
+			return wysiwyg.toggle('U');
+		case 'formatBlock':
+			return wysiwyg.setBlock(event.data.tag.toUpperCase());
+		case 'insertUnorderedList':
+			return wysiwyg.toggleList('UL');
+		case 'insertorderedlist':
+			return wysiwyg.toggleList('OL');
+		case 'removeformat':
+			return wysiwyg.clearFormat();
 	}
+}
+
+
+function insertTable() {
+	wysiwyg.insertTable();
+}
+
+function tableHTMLeditor(event) {
+	wysiwyg.table(event.data.action, event.data.cell);
+}
+
+function undoHTMLeditor(event) {
+	wysiwyg.step(wysiwygOf(event.data.target), -1);
+}
+
+function redoHTMLeditor(event) {
+	wysiwyg.step(wysiwygOf(event.data.target), 1);
+}
+
+/** The class field takes the place of the buttons in the bar. */
+function editBlockClass(event) {
+	var block = wysiwyg.blockFor(event.data.target);
+	var menu = document.querySelector('.HTMLeditorMenu');
+	if (!block || !menu) {
+		return;
+	}
+	var used = [];
+	var same = /^(IMG|VIDEO|IFRAME|TABLE)$/.test(block.nodeName) ? block.nodeName : 'p,h1,h2,h3,h4,h5,h6,ul,ol';
+	document.querySelectorAll('.editor[contenteditable=true] :is(' + same + ')[class]').forEach(function (el) {
+		el.classList.forEach(function (name) {
+			used.indexOf(name) < 0 && used.push(name);
+		});
+	});
+	var form = document.createElement('form');
+	form.className = 'HTMLeditorClass';
+	var kind = {P: 'paragraph', UL: 'list', OL: 'list', TABLE: 'table', IMG: 'image', VIDEO: 'video', IFRAME: 'embed'}[block.nodeName] || 'headline';
+	form.innerHTML = '<input name="className" list="HTMLeditorClasses" placeholder="CSS classes of this ' + kind + '" autocapitalize="off" autocomplete="off" spellcheck="false">'
+		+ '<datalist id="HTMLeditorClasses"></datalist>'
+		+ '<button type="submit" title="Apply"><i class="fa-regular fa-check"></i></button>';
+	used.sort().forEach(function (name) {
+		form.querySelector('datalist').appendChild(new Option(name));
+	});
+	var input = form.querySelector('input');
+	input.value = block.getAttribute('class') || '';
+	form.addEventListener('submit', function (e) {
+		e.preventDefault();
+		wysiwyg.setBlockClass(block, input.value);
+		closeAllMenus();
+	});
+	input.addEventListener('keydown', function (e) {
+		e.key === 'Escape' && closeAllMenus();
+	});
+	menu.querySelector('ul').replaceWith(form);
+	placeEditorMenu(menu);
+	input.focus();
 	return false;
 }
 
-function SelectText(element) {
-	var doc = document,
-			text = doc.getElementById(element),
-			range,
-			selection;
-	if (doc.body.createTextRange) {
-		range = document.body.createTextRange();
-		range.moveToElementText(text);
-		range.select();
-	} else if (window.getSelection) {
-		selection = window.getSelection();
-		range = document.createRange();
-		range.selectNodeContents(text);
-		selection.removeAllRanges();
-		selection.addRange(range);
-	}
-}
-
-function formatHTMLeditor(event) {
-	var type = event.data.element;
-	var tag = event.data.tag;
-	if (!isset(tag)) {
-		tag = false;
-	}
-	document.execCommand(type, false, tag);
-}
-
-function toggleClassname(e) {
-	var editor = $(e.data.elements).parents('div.editor');
-	var className = e.data.classname;
-	(e.data.elements).each(function () {
-		if (className === 'none') {
-			$(this).removeAttr('class');
-		} else {
-			$(this).addClass(className);
-		}
-	});
-	editor.trigger('input');
-}
-
-
-function insertTable(event) {
-	var $parent = $(event.data.target).closest('[contenteditable="true"]');
-	insertHtmlAtCursor("<table><tr><td>&nbsp;</td><td>&nbsp;</td></tr><tr><td>&nbsp;</td><td>&nbsp;</td></tr></table>");
-	$parent.trigger('input');
-}
-
-function removeTable(e) {
-	var editor = $(e.data.elements).parents('div.editor');
-	$(e.data.elements).parents('table').remove();
-	editor.trigger('input');
-}
-
-function editRows(e) {
-	var $tr = $(e.data.elements).parent('tr');
-	var editor = $tr.parents('div.editor');
-	var $table = $tr.parents('table');
-	switch (e.data.action) {
-		case 'remove':
-			$tr.remove();
-			break;
-		case 'duplicate':
-			$tr.clone().insertAfter($tr);
-			break;
-		case 'insertAfter':
-			var columns = $tr.children('td').length;
-			var i = 1;
-			var html = document.createElement('tr');
-			while (i++ <= columns) {
-				$(html).append('<td>New Row</td>');
-			}
-			console.log(html);
-			$(html).insertAfter($tr);
-			break;
-		case 'insertBefore':
-			var columns = $tr.children('td').length;
-			var i = 1;
-			var html = document.createElement('tr');
-			while (i++ <= columns) {
-				$(html).append('<td>New Row</td>');
-			}
-			console.log(html);
-			$(html).insertBefore($tr);
-			break;
-	}
-	editor.trigger('input');
-}
-
-function editColumns(e) {
-	var $td = $(e.data.elements);
-
-	var editor = $td.parents('div.editor');
-	var $table = $td.parents('table');
-	var selectedIndex = $td.index();
-	console.log($table.find('tr').html());
-	switch (e.data.action) {
-		case 'remove':
-			$table.find('tr').find('td:eq(' + selectedIndex + ')').remove();
-			break;
-
-		case 'insertAfter':
-			$('<td>New Column</td>').insertAfter($table.find('tr').find('td:eq(' + selectedIndex + ')'));
-			break;
-		case 'insertBefore':
-			$('<td>New Column</td>').insertBefore($table.find('tr').find('td:eq(' + selectedIndex + ')'));
-	}
-	editor.trigger('input');
-}
-
+/** The editor of the image or video, in the format it shows now. */
 function formatImage(event) {
-	var $targetDomObj = $(event.data.target);
-	if ($targetDomObj.data('format') == 'original') {
-		alert("Original Format cannot be edited");
-	} else {
-		var href = settings.siteRoot + "cms/pages/editor/file/?target_id=" + $targetDomObj.data('node_id') + "&format=" + $targetDomObj.data('format') + "";
-		sys.core.server.sendCall({
-			method: 'get',
-		}, href);
-	}
+	var el = event.data.target;
+	sys.core.server.sendCall({method: 'get'}, settings.siteRoot + 'cms/pages/editor/file/?target_id=' + el.dataset.node_id + '&format=' + encodeURIComponent(mediaFormatOf(el)));
 }
 
 function HTMLeditorHTMLMode(event) {
@@ -168,221 +122,152 @@ function HTMLeditorHTMLMode(event) {
 }
 
 
-function changeHTMLeditorImage(event) {
-	var $parent = $(event.data.target).closest('[contenteditable="true"]');
-	var newFormat = event.data.imageFormat;
-	var src = event.data.target.getAttribute('src');
-	var oldFormat = event.data.target.getAttribute('data-format');
-	var image = $(event.data.target);
-
-	if (oldFormat === '') {
-		oldformat = src.match(/^.*\/var\/formats\/([^\/]*)/);
-		if (oldformat === null) {
-			oldformat = 'original';
-		} else {
-			oldformat = oldformat[1];
-		}
-	}
-
-	if (newFormat === 'original') {
-		var newSrc = src.replace('formats/' + oldFormat, newFormat);
-	} else if (oldFormat === 'original' && newFormat !== 'original') {
-		var newSrc = src.replace(oldFormat, 'formats/' + newFormat);
-	} else {
-		var newSrc = src.replace(oldFormat, newFormat);
-	}
-
-	var fileExt = newSrc.split('.').pop();
-
-	if (newFormat === 'original') {
-		newSrc = newSrc.replaceAll('.webp', '');
-		var originalWebp = newSrc.split(".");
-		originalWebp = originalWebp[originalWebp.length - 1].length === 3 ? false : true;
-		if (originalWebp) {
-			newSrc += '.webp';
-		}
-	} else if (!fileExt.includes('webp')) {
-		newSrc += '.webp';
-	}
-
-	$(image).attr("src", newSrc);
-	$(image).attr("data-format", newFormat);
-	$parent.trigger('input');
+/** var/original/… or var/formats/<format>/… of an image or video of the media library. */
+function mediaFormatParts(el) {
+	var m = (el.getAttribute('src') || '').split('?')[0].match(/^(.*\/var\/)(original|formats\/([^\/]+))\/(\d{3}\/\d{2}\/)([^\/]+)$/);
+	return m && {base: m[1], format: m[3] || 'original', folders: m[4], file: m[5]};
 }
 
+function mediaFormatOf(el) {
+	var parts = mediaFormatParts(el);
+	return parts ? parts.format : el.dataset.format || 'original';
+}
+
+/** A missing image format is made by media.php, a missing video format by the project (the original plays meanwhile). */
+function changeMediaFormat(event) {
+	var el = event.data.target;
+	var format = event.data.format;
+	var parts = mediaFormatParts(el);
+	if (!parts || parts.format === format) {
+		return;
+	}
+	var video = el.nodeName === 'VIDEO';
+	if (parts.format === 'original') {
+		el.dataset.original = parts.file;
+	}
+	var original = el.dataset.original || (video ? parts.file : parts.file.replace(/(\.\w+)\.webp$/i, '$1'));
+	var src = parts.base + 'original/' + parts.folders + original;
+	if (format !== 'original') {
+		src = parts.base + 'formats/' + format + '/' + parts.folders + (video ? original.replace(/\.\w+$/, '.mp4') : original.replace(/\.webp$/i, '') + '.webp');
+	}
+	el.setAttribute('src', src);
+	el.dataset.format = format;
+	wysiwyg.changed(el.closest('[contenteditable="true"]'));
+}
+
+/** Opens the link dialog for the link, image or text under the target. */
 function createHTMLeditorLink(event) {
-	// $(event.data.target).append("<div class='insertHTMLeditorPlaceholder'></div>");
-	var element = event.data.target.nodeName;
-	var mode = "new";
-	var href;
-	var selectedText = "";
-	var sel, range, clickedElement, content;
-	if (empty(getSelText())) {
-		selectedText = $(event.data.target).text();
-	} else {
-		selectedText = getSelText();
+	var state = wysiwyg.linkFor(event.data.target);
+	if (!state) {
+		return;
 	}
-
-	if ($(event.data.target).parent().prop("tagName") === "A") {
-		mode = "edit";
-		clickedElement = $(event.data.target).parent();
-	}
-
-	if ($(event.data.target).prop("tagName") === "A") {
-		mode = "edit";
-		clickedElement = $(event.data.target);
-	}
-
-	var data = {};
-
-	var elementMode = element + "-" + mode;
-	// l(elementMode,clickedElement[0]);
-	switch (elementMode) {
-		case "IMG-new":
-			data.values = {
-				image_node_id: $(event.data.target).attr('data-node_id'),
-			};
-			href = settings.siteRoot + "cms/pages/editor/editLink/";
-			break;
-
-		case "IMG-edit":
-			data.values = {
-				image_node_id: $(event.data.target).attr('data-node_id'),
-				classNames: clickedElement.attr('class'),
-				download: clickedElement.attr('download'),
-				target: clickedElement.attr('target'),
-				href: clickedElement.attr('href'),
-				olink: clickedElement[0].outerHTML
-			};
-			href = settings.siteRoot + "cms/pages/editor/editLink/";
-			break;
-
-		case "A-edit":
-			data.values = {
-				text: selectedText,
-				classNames: clickedElement.attr('class'),
-				download: clickedElement.attr('download'),
-				target: clickedElement.attr('target'),
-				href: clickedElement.attr('href'),
-				olink: clickedElement[0].outerHTML
-			};
-			href = settings.siteRoot + "cms/pages/editor/editLink/";
-			break;
-
-		default:
-			if (empty(selectedText)) {
-				href = settings.siteRoot + "cms/pages/editor/insertLink/";
-			} else {
-				href = settings.siteRoot + "cms/pages/editor/insertLink/";
-				data.values = {
-					text: selectedText,
-					olink: selectedText
-				};
-			}
-			break;
-	}
-
-	if (empty(selectedText)) {
-		$(event.data.target).append("<span class='insertHTMLeditorPlaceholder'></span>");
-	} else {
-		sel = window.getSelection();
-		range = sel.getRangeAt(0);
-		content = range.toString();
-		range.deleteContents();
-		insertHtmlAtCursor("<span class='insertHTMLeditorPlaceholder'>" + content + "</span>");
+	var post = state.image ? {image_node_id: state.image.dataset.node_id} : {text: state.text};
+	var anchor = state.anchor;
+	if (anchor) {
+		post.href = anchor.getAttribute('href') || '';
+		post.classNames = anchor.getAttribute('class') || '';
+		post.download = anchor.hasAttribute('download') ? 1 : '';
+		post.target = anchor.getAttribute('target') || '';
 	}
 	sys.core.server.sendCall({
 		method: 'post',
-		post: data.values,
-	}, href);
+		post: post
+	}, settings.siteRoot + 'cms/pages/editor/editLink/');
+}
+
+/** "Save" in the link dialog: closing renders the page anew, so the field is saved first. */
+function applyHTMLeditorLink(button) {
+	var box = button.closest('.cmslightbox');
+	var field = function (name) {
+		return box.querySelector('[name=' + name + ']');
+	};
+	var close = function () {
+		box.querySelector('header a').click();
+	};
+	var editor = wysiwyg.applyLink({
+		text: field('linkTitle') ? field('linkTitle').value.replace(/\s+/g, ' ').trim() : '',
+		href: linkHref(field('linkType').value, field('linkUrl').value),
+		className: field('linkClass').value,
+		newTab: field('target').value === '_blank',
+		download: field('download').checked
+	});
+	if (!editor) {
+		return close();
+	}
+	// touch: a caret left in the field keeps the keyboard up after the dialog, and the bar away
+	if (editorPointer === 'touch') {
+		getSelection().removeAllRanges();
+		editor.blur();
+	}
+	button.classList.add('loading');
+	var save = new sys.core.event({type: 'input', target: editor, currentTarget: editor});
+	save.collectElementData();
+	save.dispatch().done(close);
+}
+
+function linkHref(type, address) {
+	address = address.replace(/[\r\n]+/g, '').trim();
+	if (type === 'url') {
+		address = address.replace(/ /g, '%20');
+	}
+	if (address === '' || /^[a-z][\w+.-]*:/i.test(address)) {
+		return address;
+	}
+	if (type === 'url') {
+		if (/^[^@\/]+@[^@\/]+\.\w+$/.test(address)) {
+			return 'mailto:' + address;
+		}
+		return /^[\/#?.]/.test(address) ? address : 'https://' + address;
+	}
+	return type + ':' + (type === 'mailto' ? address : address.replace(/[^\d+*#]/g, ''));
+}
+
+function linkTypeChanged(select) {
+	select.nextElementSibling.placeholder = select.selectedOptions[0].dataset.hint;
+	select.nextElementSibling.focus();
+}
+
+/** A tab of the link dialog: an address, a page or a file. */
+function linkTab(tab) {
+	var target = tab.closest('.linkTarget');
+	target.querySelectorAll('[role=tab]').forEach(function (other) {
+		other.setAttribute('aria-selected', other === tab ? 'true' : 'false');
+	});
+	target.querySelectorAll('.linkPane').forEach(function (pane) {
+		pane.hidden = pane.dataset.pane !== tab.dataset.tab;
+	});
+	var field = target.querySelector('.linkPane:not([hidden]) :is(textarea, input)');
+	field && field.focus();
+}
+
+/** A page or a file picked in the link dialog becomes the address; an empty text takes its name. */
+function linkPicked(button) {
+	var main = button.closest('main');
+	main.querySelectorAll('.linkPane button.selected').forEach(function (other) {
+		other.classList.remove('selected');
+	});
+	button.classList.add('selected');
+	main.querySelector('[name=linkType]').value = 'url';
+	main.querySelector('[name=linkUrl]').value = button.dataset.href;
+	var text = main.querySelector('[name=linkTitle]');
+	if (text && text.value.trim() === '') {
+		text.value = button.dataset.label;
+	}
+}
+
+function linkFormatChosen(select) {
+	var main = select.closest('main');
+	main.querySelector('[name=linkType]').value = 'url';
+	main.querySelector('[name=linkUrl]').value = select.value;
 }
 
 function removeAnchor(event) {
-	var $anchor = $(event.data.target);
-	var $parent = $(event.data.target).closest('[contenteditable="true"]');
-	if ($anchor.prop('tagName') !== 'A') {
-		$anchor = $(event.data.target).parent('a');
-	}
-	$anchor.replaceWith($anchor.html());
-	$parent.trigger('input');
+	wysiwyg.unlink(event.data.target);
 }
 
-function insertHTMLeditorLink(event) {
-	var title = $("input[name=linkTitle]").val();
-	var url = $("input[name=linkUrl]").val();
-	var linkclass = $("input[name=linkClass]").val();
-	var link;
-	var newTab = "";
-	var download = "";
-
-	if ($("input[name=newTab]").prop('checked')) {
-		newTab = "target='_blank'";
-	}
-	if ($("input[name=download]").prop('checked')) {
-		download = "download=''";
-	}
-
-	if (isset(linkclass)) {
-		linkclass = "class='" + linkclass + "'";
-	} else {
-		linkclass = "";
-	}
-
-	link = " <a " + download + " " + linkclass + " " + newTab + " href='" + url + "'>" + title + "</a>";
-	var $parent = $("span.insertHTMLeditorPlaceholder").closest('[contenteditable="true"]');
-	l($("span.insertHTMLeditorPlaceholder").text());
-	if ($("span.insertHTMLeditorPlaceholder").text()) { // selection
-		$("span.insertHTMLeditorPlaceholder").replaceWith(link);
-	} else { // no selection
-		$("span.insertHTMLeditorPlaceholder").parent().replaceWith(link);
-	}
-
-	$parent.trigger('input');
-}
-
-function insertHTMLeditorImageLink(event) {
-	var url = $("input[name=linkUrl]").val();
-	var linkclass = $("input[name=linkClass]").val();
-	var link;
-	var newTab = "";
-	var download = "";
-	var img = $("span.insertHTMLeditorPlaceholder").parent('img').prop("outerHTML");
-
-	if ($("input[name=newTab]").prop('checked')) {
-		newTab = "target='_blank'";
-	}
-	if ($("input[name=download]").prop('checked')) {
-		download = "download=''";
-	}
-
-	if (isset(linkclass)) {
-		linkclass = "class='" + linkclass + "'";
-	} else {
-		linkclass = "";
-	}
-
-	link = " <a " + download + " " + linkclass + " " + newTab + " href='" + url + "'>" + img + "</a>";
-
-	var $parent = $("span.insertHTMLeditorPlaceholder").parent('img').closest('[contenteditable="true"]');
-	$("span.insertHTMLeditorPlaceholder").parent('img').replaceWith(link);
-
-	$parent.trigger('input');
-}
-
-function closeLinkLightbox() {
-	if ($("span.insertHTMLeditorPlaceholder").text().length > 0) {
-		$("span.insertHTMLeditorPlaceholder").replaceWith($("span.insertHTMLeditorPlaceholder").text());
-	} else {
-		$("span.insertHTMLeditorPlaceholder").remove();
-	}
-}
-
-function closeHTMLeditorImageLink() {
-	alert('deprecated');
-}
-
-function closeHTMLeditorLink() {
-	alert('deprecated');
+function openAnchor(event) {
+	var anchor = event.data.target.closest('a');
+	anchor && window.open(anchor.href, '_blank', 'noopener');
 }
 
 function setAttribute(e) {
@@ -390,18 +275,18 @@ function setAttribute(e) {
 	var attribute = e.data.attr;
 	var val = e.data.val;
 	$(e.data.target).attr(attribute, val);
-	$parent.trigger('input');
+	wysiwyg.changed($parent[0]);
 }
 
 function removeAttribute(e) {
 	var $parent = $(e.data.target).closest('[contenteditable="true"]');
 	var attribute = e.data.attr;
 	$(e.data.target).removeAttr(attribute);
-	$parent.trigger('input');
+	wysiwyg.changed($parent[0]);
 }
 
 function removeImageFromHTMLeditor(event) {
 	var $parent = $(event.data.target).closest('[contenteditable="true"]');
 	$(event.data.target).remove();
-	$parent.trigger('input');
+	wysiwyg.changed($parent[0]);
 }

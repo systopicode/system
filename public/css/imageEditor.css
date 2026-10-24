@@ -1,18 +1,27 @@
 /****************************** IMAGE EDITOR ***************************/
 div.dragimage{
-	border:1px dashed var(--cmsMainColor);
+	border:1px dashed rgb(255 255 255 / 0.8);
 	z-index: 1001;
 }
 
+/* the corners scale the image: big and white, so nobody has to guess */
 div.dragimage > div{
-	border-width:4px 4px 0 0;
-	border-color:  rgb(52,52,52);
+	border-width:5px 5px 0 0;
+	border-color: #fff;
 	border-style: solid;
 	background:transparent;
-	width:12px;
-	height:12px;
+	width:28px;
+	height:28px;
 	position:absolute;
 	z-index: 1001;
+	filter: drop-shadow(0 0 2px rgb(0 0 0 / 0.7));
+}
+
+@media (any-pointer: coarse) {
+	div.dragimage > div{
+		width:44px;
+		height:44px;
+	}
 }
 
 div.dragimage > div:nth-child(3){
@@ -31,7 +40,8 @@ div.imageEditorScrim{
 	position: fixed;
 	inset: 0;
 	z-index: 89990;
-	background: color-mix(in srgb, var(--cmsMainColor) 55%, transparent);
+	/* while cropping only the image counts: the rest steps far back */
+	background: color-mix(in srgb, var(--cmsMainColor) 85%, transparent);
 }
 
 div.imageEditor{
@@ -46,6 +56,46 @@ div.imageEditor *{
 div.imageEditor .cropFrame{
 	outline: 2px solid #fff;
 	box-shadow: 0 0 0 3px var(--cmsHighlightColor);
+}
+
+/* at the top of the frame: the bottom edge belongs to the height handle */
+div.imageEditor .cropBar{
+	position: absolute;
+	top: 0.75rem;
+	left: 0;
+	z-index: 2001;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 0.5rem;
+	white-space: nowrap;
+	container-type: inline-size;
+	pointer-events: none;
+}
+
+/* hint and buttons: one height, one line */
+div.imageEditor .cropBar > *{
+	box-sizing: border-box;
+	display: inline-flex;
+	align-items: center;
+	height: 2.25rem;
+	margin: 0;
+	pointer-events: auto;
+	cursor: default;
+}
+
+div.imageEditor .cropBar span{
+	padding: 0 0.85rem;
+	border-radius: var(--cmsRadius);
+	background: rgb(0 0 0 / 0.65);
+	color: #fff;
+	font-size: 0.8125rem;
+}
+
+@container (max-width: 32rem){
+	div.imageEditor .cropBar span{
+		display: none;
+	}
 }
 
 div.imageEditorRaster{
@@ -78,15 +128,40 @@ div.imageEditorRaster div:before{
 	text-align: center;
 	font-family: Arial;
 }
+/* the bottom edge of the frame: a line to drag anywhere, a grip in the middle to find it */
 div.flexHandle {
 	position: absolute;
-	border-bottom: 1px solid red;
-	border-top: 20px solid rgba(0,0,0,0.2);
-	margin-top: -21px;
+	left: 0;
 	z-index: 2000;
-	width:100%;
-	height:11px;
-	cursor: s-resize;
+	height: 44px;
+	margin-top: -22px;
+	cursor: ns-resize;
+	touch-action: none;
+}
+
+div.flexHandle::before{
+	content: "";
+	position: absolute;
+	inset: 50% 0 auto;
+	border-top: 3px solid var(--cmsHighlightColor);
+	transform: translateY(-50%);
+	pointer-events: none;
+}
+
+div.flexHandle::after{
+	content: "";
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	width: 4rem;
+	height: 0.875rem;
+	transform: translate(-50%, -50%);
+	border-radius: 1rem;
+	background:
+		repeating-linear-gradient(90deg, transparent 0 0.4rem, rgb(0 0 0 / 0.35) 0.4rem 0.5rem) center / 1.5rem 0.4rem no-repeat,
+		#fff;
+	box-shadow: 0 0 0 3px var(--cmsHighlightColor), 0 1px 6px rgb(0 0 0 / 0.5);
+	pointer-events: none;
 }
 div.aspectRatioSelector{
 	position: absolute;

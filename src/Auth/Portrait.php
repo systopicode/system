@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Systopic\System\Auth;
 
+use Systopic\System\Sys\Theme;
+
 /**
  * A user's picture: an uploaded file in `public/var/avatars/`,
  * or a generated portrait whose colours follow the CMS theme
@@ -179,7 +181,7 @@ final class Portrait
 
     /**
      * Both theme colours: main draws the lines, highlight fills the figure.
-     * The backdrop stays a light tint of the page. An override follows.
+     * The backdrop stays a light tint of the page.
      *
      * @return array{ink: string, background: string, paper: string}
      */
@@ -188,51 +190,12 @@ final class Portrait
         if (self::$colors !== null) {
             return self::$colors;
         }
-        $vars = [];
-        foreach (self::stylesheets() as $file) {
-            $text = (string) @file_get_contents($file);
-            if (preg_match_all('/--(cmsMainColor|cmsHighlightColor|cmsBgColor)\s*:\s*#([0-9a-fA-F]{3,8})\b/', $text, $found, PREG_SET_ORDER)) {
-                foreach ($found as $hit) {
-                    $vars[$hit[1]] = self::normalize($hit[2]);
-                }
-            }
-        }
-        $ink = $vars['cmsMainColor'] ?? '1f3a45';
-        $accent = $vars['cmsHighlightColor'] ?? 'fcb60c';
-        $page = $vars['cmsBgColor'] ?? 'f0f3f4';
+        $accent = Theme::color('cmsHighlightColor');
         return self::$colors = [
-            'ink' => $ink,
+            'ink' => Theme::color('cmsMainColor'),
             'paper' => $accent,
-            'background' => self::mix($accent, $page, 0.28),
+            'background' => self::mix($accent, Theme::color('cmsBgColor'), 0.28),
         ];
-    }
-
-    /** @return list<string> */
-    private static function stylesheets(): array
-    {
-        $files = [];
-        $theme = (string) \fs::$sysRoot . 'public/css/theme.css';
-        if (is_file($theme)) {
-            $files[] = $theme;
-        }
-        $root = (string) \fs::$siteRoot;
-        $named = $root . 'css/cms_overrides.css';
-        if (is_file($named)) {
-            $files[] = $named;
-        }
-        foreach (glob($root . 'overrides/css/*.css') ?: [] as $file) {
-            $files[] = $file;
-        }
-        return $files;
-    }
-
-    private static function normalize(string $hex): string
-    {
-        $hex = strtolower($hex);
-        if (strlen($hex) === 3) {
-            $hex = $hex[0] . $hex[0] . $hex[1] . $hex[1] . $hex[2] . $hex[2];
-        }
-        return substr($hex, 0, 6);
     }
 
     private static function mix(string $hex, string $onto, float $amount): string
@@ -249,7 +212,7 @@ final class Portrait
     /** @return array{0: int, 1: int, 2: int} */
     private static function rgb(string $hex): array
     {
-        $hex = self::normalize($hex);
+        $hex = Theme::normalize($hex);
         return [hexdec(substr($hex, 0, 2)), hexdec(substr($hex, 2, 2)), hexdec(substr($hex, 4, 2))];
     }
 }

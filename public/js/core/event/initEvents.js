@@ -1,4 +1,4 @@
-﻿/* global sys,c,p,t,l,onInitEvents,updateOctalSelector */
+/* global sys,c,p,t,l,onInitEvents,updateOctalSelector */
 /**
  * Binds the events of the elements in $set and below.
  * exclude: elements that are bound already and stay - the path a rebuild
@@ -42,7 +42,7 @@ sys.initEvents = function ($set, oneventcomplete, exclude) {
 	$set.findInSet('[data-on_input]').bind('input', sys.processEventDelayed);
 	$set.findInSet('.autosend').bind('input', sys.processEventDelayed);
 	/**** drag ****/
-	$set.findInSet('[data-on_draginit],[data-drag_type]').bind('mousedown', sys.processEvent);
+	$set.findInSet('[data-on_draginit],[data-drag_type]').bind('mousedown', sys.processEvent).bind('pointerdown', sys.processPointerDown);
 
 	/**** AJAX FORM - SUBMIT WHOLE (XHR default; opt-out: target=_self) ****/
 	// a kept form is bound already, what is new inside it is not
@@ -73,6 +73,9 @@ sys.initEvents = function ($set, oneventcomplete, exclude) {
 	$set.findInSet('.octalSelector input[type=checkbox]').bind('change', updateOctalSelector);
 	if (typeof initCMSUsersAjaxEvents === 'function') {
 		initCMSUsersAjaxEvents($set);
+	}
+	if (typeof sys.fitTables === 'function') {
+		sys.fitTables($set);
 	}
 	// other events - under construction
 	var $onLoadAjax = $set.findInSet('[data-on_load]'); // experimental
@@ -170,6 +173,7 @@ function initHTMLeditorInputTimer($items) {
  
  set.findInSet('[data-on_draginit],[data-drag_type]').forEach(function (element) {
  element.addEventListener('mousedown', sys.processEvent);
+ element.addEventListener('pointerdown', sys.processPointerDown);
  });
  
  set.findInSet('form.ajax button[type="submit"],form.ajax input[type="submit"]').forEach(function (element) {

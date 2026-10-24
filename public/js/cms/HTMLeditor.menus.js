@@ -1,682 +1,135 @@
-
-var rebuiltHTML = false;
-function handleHTMLeditorServerResponse(response, element) {
-	rebuiltHTML = response.html;
-
-}
-
+/**
+ * The bar of the WYSIWYG fields: what the caret, the selection or the element
+ * under the pointer offers. Items marked sep start a new group, reopen keeps
+ * the bar after the command, so formatting can go on.
+ */
 function HTMLeditorRightClick(clicktype, event, elements) {
-	var tag = $(event.target).prop('tagName');
-	var format = event.target.dataset.format;
+	var target = event.target;
+	var editor = wysiwygOf(target);
+	var anchorNode = getSelection().anchorNode || target;
+	var at = anchorNode.nodeType === 1 ? anchorNode : anchorNode.parentElement;
+	var inLink = !!at.closest('[contenteditable] a');
+	var blockTag = (at.closest('p,h1,h2,h3,h4,h5,h6,li') || {}).nodeName;
+	var listTag = (at.closest('ul,ol') || {}).nodeName;
+	var param = {target: target};
+	var cmd = function (title, icon, func, extra) {
+		return Object.assign({title: title, className: 'fa-regular fa-' + icon, func: func, param: param}, extra);
+	};
+	var format = function (title, icon, data, extra) {
+		return Object.assign({title: title, className: 'fa-regular fa-' + icon, func: 'formatHTMLeditor', param: data, reopen: true}, extra);
+	};
+	var sub = function (title, func, data, selected) {
+		return {title: title, func: func, param: data, selected: selected, reopen: func !== 'createHTMLeditorLink'};
+	};
+
+	var history = editor ? {
+		undo: cmd('Undo', 'arrow-rotate-left', 'undoHTMLeditor', {disabled: !wysiwyg.canStep(editor, -1), reopen: true}),
+		redo: cmd('Redo', 'arrow-rotate-right', 'redoHTMLeditor', {disabled: !wysiwyg.canStep(editor, 1), reopen: true})
+	} : {};
+	var inline = {
+		bold: format('Bold', 'bold', {element: 'bold'}, {selected: wysiwyg.active('STRONG'), sep: true}),
+		italic: format('Italic', 'italic', {element: 'italic'}, {selected: wysiwyg.active('EM')}),
+		underline: format('Underline', 'underline', {element: 'underline'}, {selected: wysiwyg.active('U')})
+	};
+	var headings = {};
+	[1, 2, 3, 4, 5, 6].forEach(function (n) {
+		headings['h' + n] = sub('Headline ' + n, 'formatHTMLeditor', {element: 'formatBlock', tag: 'h' + n}, blockTag === 'H' + n);
+	});
+	var blocks = {
+		headlines: {title: 'Headline', className: 'fa-regular fa-heading', selected: /^H\d$/.test(blockTag), subs: headings, sep: true},
+		paragraph: format('Paragraph', 'paragraph', {element: 'formatBlock', tag: 'p'}, {selected: blockTag === 'P'}),
+		list: {title: 'List', className: 'fa-regular fa-list-ul', selected: !!listTag, subs: {
+			ul: sub('Bullet points', 'formatHTMLeditor', {element: 'insertUnorderedList'}, listTag === 'UL'),
+			ol: sub('Numbered', 'formatHTMLeditor', {element: 'insertorderedlist'}, listTag === 'OL')
+		}}
+	};
+	var link = {
+		insertAnchor: cmd(inLink ? 'Edit link' : 'Insert link', inLink ? 'pen' : 'link', 'createHTMLeditorLink', {selected: inLink, sep: true}),
+		removeAnchor: cmd('Remove link', 'link-slash', 'removeAnchor', {active: inLink})
+	};
+	var classItem = function (el, sep) {
+		var name = el && el.getAttribute('class');
+		return cmd(name ? 'CSS classes: ' + name : 'CSS classes', 'tag', 'editBlockClass', {selected: !!name, active: !!el, sep: sep, param: {target: el || target}});
+	};
+	var blockClass = {blockClass: classItem(wysiwyg.blockFor(at), true)};
+	var html = {htmlMode: cmd('HTML mode', 'brackets-curly', 'HTMLeditorHTMLMode')};
+	var clear = {clear: format('Clear format', 'text-slash', {element: 'removeformat'})};
+	var removeMedia = {clear: cmd('Remove from page', 'trash', 'removeImageFromHTMLeditor', {sep: true})};
+	var formatMenu = function (kind, usable) {
+		var current = mediaFormatOf(target);
+		var subs = {original: sub('Original', 'changeMediaFormat', {target: target, format: 'original'}, current === 'original')};
+		$.each(editorFormats[kind], function (name, label) {
+			subs[name] = sub(label, 'changeMediaFormat', {target: target, format: name}, current === name);
+		});
+		return {title: 'Format', className: 'fa-regular fa-' + (kind === 'video' ? 'film' : 'image'), active: usable && Object.keys(subs).length > 1, subs: subs};
+	};
+	var toggleAttr = function (attr, title, icon) {
+		var on = target.hasAttribute(attr);
+		return cmd(title, icon, on ? 'removeAttribute' : 'setAttribute', {selected: on, param: {attr: attr, val: attr, target: target}});
+	};
+
+	var items;
 	switch (clicktype) {
-		case "image":
-			var subs = [];
-			imageFormats['original'] = 'original';
-			$.each(imageFormats, function (index, el) {
-				if (el.cms_display !== 'none') {
-					subs.push({
-						title: index,
-						func: 'changeHTMLeditorImage',
-						className: 'imageformats',
-						selected: format === index ? true : false,
-						param: {
-							target: event.target,
-							imageFormat: index
-						}
-					});
-				}
-			});
-
-			new contextMenuWW(
-					{
-						formats: {
-							title: 'Formats',
-							className: 'fa-regular fa-image',
-							active: ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'].includes($(event.target).data('mimetype')) ? true : false,
-							subs: subs
-						},
-						edit: {
-							title: 'Edit',
-							className: 'fa-regular fa-crop-simple',
-							func: 'formatImage',
-							param: {
-								target: event.target
-							}
-						},
-						insertAnchor: {
-							active: $(event.target).parent().prop('tagName') === 'A' ? false : true,
-							title: 'Insert Link',
-							className: 'fa-regular fa-link',
-							func: 'createHTMLeditorLink',
-							param: {
-								target: event.target
-							}
-						},
-						removeanchor: {
-							active: $(event.target).parent().prop('tagName') === 'A' ? true : false,
-							title: 'remove Link',
-							className: 'fa-regular fa-link-slash',
-							func: 'removeAnchor',
-							param: {
-								target: event.target
-							}
-						},
-						editanchor: {
-							active: $(event.target).parent().prop('tagName') === 'A' ? true : false,
-							title: 'Edit Link',
-							className: 'fa-regular fa-pen-to-square',
-							selected: $(event.target).parent().prop('tagName') === 'A' ? true : false,
-							func: 'createHTMLeditorLink',
-							param: {
-								target: event.target
-							}
-						},
-						clear: {
-							title: 'Remove from Page',
-							className: 'fa-regular fa-trash',
-							func: 'removeImageFromHTMLeditor',
-							param: {
-								target: event.target
-							}
-						}
-					}, event
-					);
+		case 'selectedWord':
+			items = Object.assign({}, history, inline, blocks, link, clear);
 			break;
-		case "video":
-			new contextMenuWW(
-					{
-						edit: {
-							title: 'Edit',
-							className: 'fa-regular fa-pen-to-square',
-							func: 'formatImage',
-							param: {
-								target: event.target
-							}
-						},
-						controls: {
-							title: 'Toggle Controls',
-							className: 'fa-regular fa-regular fa-ellipsis',
-							func: event.target.getAttribute('controls') ? 'removeAttribute' : 'setAttribute',
-							param: {
-								attr: 'controls',
-								val: 'controls',
-								target: event.target
-							}
-						},
-						playsinline: {
-							title: 'Toggle Playsinline',
-							className: 'fa-regular fa-frame',
-							func: event.target.getAttribute('playsinline') ? 'removeAttribute' : 'setAttribute',
-							param: {
-								attr: 'playsinline',
-								val: 'playsinline',
-								target: event.target
-							}
-						},
-						autoplay: {
-							title: 'Toggle Autoplay',
-							className: 'fa-regular fa-play',
-							func: event.target.getAttribute('autoplay') ? 'removeAttribute' : 'setAttribute',
-							param: {
-								attr: 'autoplay',
-								val: 'autoplay',
-								target: event.target
-							}
-						},
-						muted: {
-							title: event.target.getAttribute('muted') ? 'Set Volumne on' : 'Mute Video',
-							className: event.target.getAttribute('muted') ? 'fa-regular fa-volume-slash' : 'fa-regular fa-volume',
-							func: event.target.getAttribute('muted') ? 'removeAttribute' : 'setAttribute',
-							param: {
-								attr: 'muted',
-								val: 'muted',
-								target: event.target
-							}
-						},
-						loop: {
-							title: 'Toggle Loop',
-							className: 'fa-regular fa-arrows-repeat',
-							func: event.target.getAttribute('loop') ? 'removeAttribute' : 'setAttribute',
-							param: {
-								attr: 'loop',
-								val: 'loop',
-								target: event.target
-							}
-						},
-						clear: {
-							title: 'Remove from Page',
-							className: 'fa-regular fa-trash',
-							func: 'removeImageFromHTMLeditor',
-							param: {
-								target: event.target
-							}
-						}
-					}, event
-					);
+		case 'selectedBlock':
+			items = Object.assign({}, history, blocks, link, blockClass, {insertTable: cmd('Insert table', 'table', 'insertTable')}, html, clear);
 			break;
-		case "iframe":
-			var subs = [];
-			new contextMenuWW(
-					{
-
-						edit: {
-							title: 'Edit',
-							className: 'fa-regular fa-pen-to-square',
-							func: 'formatImage',
-							param: {
-								target: event.target
-							}
-						},
-
-						clear: {
-							title: 'Remove from Page',
-							className: 'fa-regular fa-trash',
-							func: 'removeImageFromHTMLeditor',
-							param: {
-								target: event.target
-							}
-						}
-					}, event
-					);
+		case 'table':
+			var cell = elements[0] || elements;
+			var tableCmd = function (title, action) {
+				return sub(title, 'tableHTMLeditor', {action: action, cell: cell});
+			};
+			items = Object.assign({}, history, {
+				row: {title: 'Row', className: 'fa-regular fa-table-rows', sep: true, subs: {
+					before: tableCmd('Insert row above', 'rowBefore'),
+					after: tableCmd('Insert row below', 'rowAfter'),
+					remove: tableCmd('Delete row', 'rowRemove')
+				}},
+				column: {title: 'Column', className: 'fa-regular fa-table-columns', subs: {
+					before: tableCmd('Insert column left', 'colBefore'),
+					after: tableCmd('Insert column right', 'colAfter'),
+					remove: tableCmd('Delete column', 'colRemove')
+				}},
+				header: cmd('Header row', 'table-layout', 'tableHTMLeditor', {selected: !!cell.closest('thead'), reopen: true, param: {action: 'header', cell: cell}}),
+				removeTable: cmd('Delete table', 'trash', 'tableHTMLeditor', {param: {action: 'remove', cell: cell}})
+			}, link, {blockClass: classItem(cell.closest('table'), true)}, html);
 			break;
-		case "selectedTable":
-			new contextMenuWW(
-					{
-						rowMenu: {
-							title: '',
-							className: 'fa-regular fa-border-center-h',
-							subs: {
-								duplicate: {
-									title: 'duplicate Row',
-									func: 'editRows',
-									param: {
-										elements: elements,
-										action: "duplicate"
-									}
-								},
-								insertBefore: {
-									title: 'insert before',
-									func: 'editRows',
-									param: {
-										elements: elements,
-										action: "insertBefore"
-									}
-								},
-								insertAfter: {
-									title: 'insert after',
-									func: 'editRows',
-									param: {
-										elements: elements,
-										action: "insertAfter"
-									}
-								},
-								remove: {
-									title: 'remove',
-									func: 'editRows',
-									param: {
-										elements: elements,
-										action: "remove"
-									}
-								},
-							}
-						},
-						columnMenu: {
-							title: '',
-							className: 'fa-regular fa-border-center-v',
-							subs: {
-								insertBefore: {
-									title: 'insert before',
-									func: 'editColumns',
-									param: {
-										elements: elements,
-										action: "insertBefore"
-									}
-								},
-								insertAfter: {
-									title: 'insert after',
-									func: 'editColumns',
-									param: {
-										elements: elements,
-										action: "insertAfter"
-									}
-								},
-								remove: {
-									title: 'remove',
-									func: 'editColumns',
-									param: {
-										elements: elements,
-										action: "remove"
-									}
-								},
-							}
-						},
-
-						removeTable: {
-							title: 'Remove Table',
-							className: 'fa-regular fa-trash',
-							func: 'removeTable',
-							param: {
-								elements: elements,
-							}
-
-						}
-					}, event, elements
-					);
+		case 'anchor':
+			items = {
+				editanchor: cmd('Edit link', 'pen', 'createHTMLeditorLink'),
+				openanchor: cmd('Open link', 'arrow-up-right-from-square', 'openAnchor'),
+				removeanchor: cmd('Remove link', 'link-slash', 'removeAnchor')
+			};
 			break;
-		case "selectedBlock":
-			new contextMenuWW(
-					{
-						headlines: {
-							title: '',
-							className: 'fa-regular fa-heading',
-							selected: ['H1', 'H2', 'H3', 'H4', 'H5', 'H6'].includes(tag) ? true : false,
-							subs: {
-								h1: {
-									title: 'Headline 1',
-									selected: ['H1'].includes(tag) ? true : false,
-									func: 'formatHTMLeditor',
-									param: {
-										element: "formatBlock",
-										tag: "h1"
-									}
-								},
-								h2: {
-									title: 'Headline 2',
-									func: 'formatHTMLeditor',
-									selected: ['H2'].includes(tag) ? true : false,
-									param: {
-										element: "formatBlock",
-										tag: "h2"
-									}
-								},
-								h3: {
-									title: 'Headline 3',
-									func: 'formatHTMLeditor',
-									selected: ['H3'].includes(tag) ? true : false,
-									param: {
-										element: "formatBlock",
-										tag: "h3"
-									}
-								},
-								h4: {
-									title: 'Headline 4',
-									func: 'formatHTMLeditor',
-									selected: ['H4'].includes(tag) ? true : false,
-									param: {
-										element: "formatBlock",
-										tag: "h4"
-									}
-								},
-								h5: {
-									title: 'Headline 5',
-									func: 'formatHTMLeditor',
-									selected: ['H5'].includes(tag) ? true : false,
-									param: {
-										element: "formatBlock",
-										tag: "h5"
-									}
-								},
-								h6: {
-									title: 'Headline 6',
-									func: 'formatHTMLeditor',
-									selected: ['H6'].includes(tag) ? true : false,
-									param: {
-										element: "formatBlock",
-										tag: "h6"
-									}
-								}
-							}
-						},
-						paragraph: {
-							title: 'Paragraph',
-							className: 'fa-regular fa-paragraph',
-							selected: ['P'].includes(tag) ? true : false,
-							nodeName: 'P',
-							func: 'formatHTMLeditor',
-							param: {
-								element: "formatBlock",
-								tag: "p"
-							}
-						},
-						insertAnchor: {
-							title: 'Insert Link',
-							className: 'fa-regular fa-link',
-							func: 'createHTMLeditorLink',
-							param: {
-								target: event.target
-							}
-						},
-						insertList: {
-							title: '',
-							className: 'fa-regular fa-list-radio',
-							selected: ['UL', 'OL', 'LI'].includes(tag) ? true : false,
-							subs: {
-								ul: {
-									title: 'Unorder List (Bullet Points)',
-									func: 'formatHTMLeditor',
-									selected: $(event.target).parent().prop('tagName') === 'UL' || ['UL'].includes(tag) ? true : false,
-									param: {
-										element: "insertUnorderedList"
-									}
-								},
-								ol: {
-									title: 'Orderd List (Numbered)',
-									func: 'formatHTMLeditor',
-									selected: $(event.target).parent().prop('tagName') === 'OL' || ['OL'].includes(tag) ? true : false,
-
-									param: {
-										element: "insertorderedlist"
-									}
-								}
-
-							}
-						},
-						insertTable: {
-							title: 'Insert Table',
-							className: 'fa-regular fa-table',
-							nodeName: 'TABLE',
-							func: 'insertTable',
-							param: {
-								target: event.target
-							}
-						},
-						htmlMode: {
-							title: 'HTML Mode',
-							className: 'fa-regular fa-brackets-curly',
-							func: 'HTMLeditorHTMLMode',
-							param: {
-								target: event.target
-							}
-						},
-						clear: {
-							title: 'Clear Format',
-							className: 'fa-regular fa-text-slash',
-							func: 'formatHTMLeditor',
-							param: {
-								element: "removeformat"
-							}
-						}
-					}, event, elements
-					);
+		case 'image':
+			var linked = !!target.closest('a');
+			items = Object.assign({
+				formats: formatMenu('image', /^image\/(jpe?g|png|webp)$/.test(target.dataset.mimetype)),
+				edit: cmd('Crop and adjust', 'crop-simple', 'formatImage'),
+				anchor: cmd(linked ? 'Edit link' : 'Insert link', linked ? 'pen' : 'link', 'createHTMLeditorLink', {selected: linked, sep: true}),
+				unlink: cmd('Remove link', 'link-slash', 'removeAnchor', {active: linked}),
+				blockClass: classItem(target, true)
+			}, removeMedia);
 			break;
-		case "selectedWord":
-			new contextMenuWW(
-					{
-						bold: {
-							title: 'Bold',
-							className: 'fa-regular fa-bold',
-							nodeName: 'B',
-							func: 'formatHTMLeditor',
-							param: {
-								element: "bold"
-							}
-						},
-						italic: {
-							title: 'Italic',
-							className: 'fa-regular fa-italic',
-							func: 'formatHTMLeditor',
-							param: {
-								element: "italic"
-							}
-						},
-						underlined: {
-							title: 'Underlined',
-							className: 'fa-regular fa-underline',
-							func: 'formatHTMLeditor',
-							param: {
-								element: "underline"
-							}
-						},
-						headlines: {
-							title: '',
-							className: 'fa-regular fa-heading',
-							subs: {
-								h1: {
-									title: 'Headline 1',
-									func: 'formatHTMLeditor',
-									param: {
-										element: "formatBlock",
-										tag: "h1"
-									}
-								},
-								h2: {
-									title: 'Headline 2',
-									func: 'formatHTMLeditor',
-									param: {
-										element: "formatBlock",
-										tag: "h2"
-									}
-								},
-								h3: {
-									title: 'Headline 3',
-									func: 'formatHTMLeditor',
-									param: {
-										element: "formatBlock",
-										tag: "h3"
-									}
-								},
-								h4: {
-									title: 'Headline 4',
-									func: 'formatHTMLeditor',
-									param: {
-										element: "formatBlock",
-										tag: "h4"
-									}
-								},
-								h5: {
-									title: 'Headline 5',
-									func: 'formatHTMLeditor',
-									param: {
-										element: "formatBlock",
-										tag: "h5"
-									}
-								},
-								h6: {
-									title: 'Headline 6',
-									func: 'formatHTMLeditor',
-									param: {
-										element: "formatBlock",
-										tag: "h6"
-									}
-								}
-							}
-						},
-						paragraph: {
-							title: 'Paragraph',
-							className: 'fa-regular fa-paragraph',
-							nodeName: 'P',
-							func: 'formatHTMLeditor',
-							param: {
-								element: "formatBlock",
-								tag: "p"
-							}
-						},
-						insertAnchor: {
-							title: 'Insert Link',
-							className: 'fa-regular fa-link',
-							func: 'createHTMLeditorLink',
-							param: {
-								target: event.target
-							}
-						},
-						insertList: {
-							title: '',
-							className: 'fa-regular fa-list-radio',
-							selected: ['UL', 'OL', 'LI'].includes(tag) ? true : false,
-							subs: {
-								ul: {
-									title: 'Unorder List (Bullet Points)',
-									func: 'formatHTMLeditor',
-									selected: $(event.target).parent().prop('tagName') === 'UL' || ['UL'].includes(tag) ? true : false,
-									param: {
-										element: "insertUnorderedList"
-									}
-								},
-								ol: {
-									title: 'Orderd List (Numbered)',
-									func: 'formatHTMLeditor',
-									selected: $(event.target).parent().prop('tagName') === 'OL' || ['OL'].includes(tag) ? true : false,
-
-									param: {
-										element: "insertorderedlist"
-									}
-								}
-
-							}
-						},
-						htmlMode: {
-							title: 'HTML Mode',
-							className: 'fa-regular fa-brackets-curly',
-							func: 'HTMLeditorHTMLMode',
-							param: {
-								target: event.target
-							}
-						},
-						clear: {
-							title: 'Clear Format',
-							className: 'fa-regular fa-text-slash',
-							func: 'formatHTMLeditor',
-							param: {
-								element: "removeformat"
-							}
-						}
-					}, event
-					);
-		case "selectedHeadlineWord":
-			new contextMenuWW(
-					{
-						bold: {
-							title: 'Bold',
-							className: 'fa-regular fa-bold',
-							nodeName: 'B',
-							func: 'formatHTMLeditor',
-							param: {
-								element: "bold"
-							}
-						},
-						italic: {
-							title: 'Italic',
-							className: 'fa-regular fa-italic',
-							func: 'formatHTMLeditor',
-							param: {
-								element: "italic"
-							}
-						},
-						underlined: {
-							title: 'Underlined',
-							className: 'fa-regular fa-underline',
-							func: 'formatHTMLeditor',
-							param: {
-								element: "underline"
-							}
-						},
-
-						insertAnchor: {
-							title: 'Insert Link',
-							className: 'fa-regular fa-link',
-							func: 'createHTMLeditorLink',
-							param: {
-								target: event.target
-							}
-						},
-
-						clear: {
-							title: 'Clear Format',
-							className: 'fa-regular fa-text-slash',
-							func: 'formatHTMLeditor',
-							param: {
-								element: "removeformat"
-							}
-						}
-					}, event
-					);
+		case 'video':
+			items = Object.assign({
+				formats: formatMenu('video', !!mediaFormatParts(target)),
+				edit: cmd('Edit', 'pen', 'formatImage'),
+				controls: toggleAttr('controls', 'Controls', 'sliders'),
+				autoplay: toggleAttr('autoplay', 'Autoplay', 'play'),
+				muted: toggleAttr('muted', 'Muted', 'volume-slash'),
+				loop: toggleAttr('loop', 'Loop', 'arrows-repeat'),
+				playsinline: toggleAttr('playsinline', 'Play inline on phones', 'mobile'),
+				blockClass: classItem(target, true)
+			}, removeMedia);
+			items.controls.sep = true;
 			break;
-		case "notselected":
-			new contextMenuWW(
-					{
-						insertAnchor: {
-							title: 'Insert Link',
-							className: 'fa-regular fa-link',
-							func: 'createHTMLeditorLink',
-							param: {
-								target: event.target
-							}
-						},
-						insertList: {
-							title: '',
-							className: 'fa-regular fa-list-radio',
-							selected: ['UL', 'OL', 'LI'].includes(tag) ? true : false,
-							subs: {
-								ul: {
-									title: 'Unorder List (Bullet Points)',
-									func: 'formatHTMLeditor',
-									selected: $(event.target).parent().prop('tagName') === 'UL' || ['UL'].includes(tag) ? true : false,
-									param: {
-										element: "insertUnorderedList"
-									}
-								},
-								ol: {
-									title: 'Orderd List (Numbered)',
-									func: 'formatHTMLeditor',
-									selected: $(event.target).parent().prop('tagName') === 'OL' || ['OL'].includes(tag) ? true : false,
-
-									param: {
-										element: "insertorderedlist"
-									}
-								}
-
-							}
-						},
-						insertTable: {
-							title: 'Insert Table',
-							className: 'fa-regular fa-table',
-							nodeName: 'TABLE',
-							func: 'insertTable',
-							param: {
-								target: event.target
-							}
-						},
-						htmlMode: {
-							title: 'HTML Mode',
-							className: 'fa-regular fa-brackets-curly',
-							func: 'HTMLeditorHTMLMode',
-							param: {
-								target: event.target
-							}
-						}
-					}, event
-					);
-			break;
-		case "anchor":
-			new contextMenuWW(
-					{
-						removeanchor: {
-							title: 'remove Link',
-							className: 'fa-regular fa-link-slash',
-							func: 'removeAnchor',
-							param: {
-								target: event.target
-							}
-						},
-						editanchor: {
-							title: 'Edit Link',
-							className: 'fa-regular fa-pen-to-square',
-							func: 'createHTMLeditorLink',
-							param: {
-								target: event.target
-							}
-						},
-						clear: {
-							title: 'Clear Format',
-							className: 'fa-regular fa-text-slash',
-							func: 'formatHTMLeditor',
-							param: {
-								element: "removeformat"
-							}
-						}
-					}, event, obj
-					);
+		case 'iframe':
+			items = Object.assign({edit: cmd('Edit', 'pen', 'formatImage'), blockClass: classItem(target, true)}, removeMedia);
 			break;
 	}
+	items && new contextMenuWW(items, event, elements);
 	return false;
 }

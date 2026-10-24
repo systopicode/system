@@ -191,8 +191,10 @@ RewriteCond %{REQUEST_FILENAME} -f
 RewriteRule ^system/modules/ - [NC,L]
 
 ######################## public ######################################
-# Statische Dateien whitelisten (ohne PHP)
-RewriteRule ^(system/|overrides/|)(css/|fonts/|img/|js/|modules/|class/|var/).*\.(css|js|mjs|ttf|woff2|woff|otf|svg)$ - [L]
+# Statische Dateien whitelisten (ohne PHP) - ein Rebuild geht ans Script,
+# ein fehlendes Format unter var/ auch (media.php erzeugt es)
+RewriteCond %{QUERY_STRING} !rebuild
+RewriteRule ^(system/|overrides/|)(css/|fonts/|img/|js/|modules/|class/).*\.(css|js|mjs|ttf|woff2|woff|otf|svg|png|jpe?g|webp|gif|ico)$ - [L]
 
 # Valide Requests ans Script
 RewriteRule ^[a-z0-9/_\-\&=\.~]*$ index.php [NC,QSA,L]

@@ -78,7 +78,7 @@ class str implements clientData {
 		$suffixes = array('Byte', 'KB', 'MB', 'GB', 'TB');
 		$size = pow(1024, $base - floor($base));
 		$decimals = $precision - strlen(floor($size));
-		$filesize = round($size, $decimals) . '&nbsp;' . $suffixes[floor($base)];
+		$filesize = round($size, $decimals) . "\u{00A0}" . $suffixes[floor($base)];
 
 		if ($filesize <= 0) {
 			return $filesize = 'unknown file size';

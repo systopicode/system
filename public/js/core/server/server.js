@@ -209,6 +209,29 @@ sys.core.server = new function () {
         }
     };
 
+    /** The scrolled boxes of the page, each named by the tags and classes on its way down from body. */
+    server.scrollPositions = () => {
+        var selectorOf = el => {
+            var parts = [];
+            for (; el && el !== document.body; el = el.parentElement) {
+                parts.unshift(el.localName + [...el.classList].map(name => '.' + CSS.escape(name)).join(''));
+            }
+            return 'body > ' + parts.join(' > ');
+        };
+        return [...document.body.querySelectorAll('*')].filter(el => el.scrollTop > 0)
+            .map(el => ({selector: selectorOf(el), top: el.scrollTop}));
+    };
+    /** A box built anew gets its place back, also once its images have their height. */
+    server.restoreScroll = positions => {
+        var apply = () => positions.forEach(position => {
+            var el = document.querySelector(position.selector);
+            el && el.scrollTop !== position.top && (el.scrollTop = position.top);
+        });
+        apply();
+        requestAnimationFrame(apply);
+        setTimeout(apply, 300);
+    };
+
     server.startCommands = ['skipRefresh', 'done', 'updateClientData', 'updateDocument'];
     server.endCommands = []; // maybe onafter build hook
     server.sortCommands = (c1, c2) => {
@@ -262,6 +285,8 @@ sys.core.server.call = function (data) {
             }
         };
 
+        call.fromLightbox = !!document.querySelector('.cmslightbox');
+        call.scrolled = sys.core.server.scrollPositions();
         var xhr = new XMLHttpRequest();
         xhr.onreadystatechange = () => {
 
@@ -310,7 +335,12 @@ sys.core.server.call = function (data) {
                         }
 
                         if (method !== 'put' && !call.redirecting) {
-                            sys.http.historyPush(sys.http.url2string(call.url));
+                            // a post that rendered (a lightbox opened) is what the next diff starts from
+                            if (method === 'post' && call.responses.some(response => response.command === 'updateDocument')) {
+                                sys.http.markRendered(xhrRootHref);
+                            }
+                            // an action is a command, not an address - a reload would run it again
+                            sys.http.historyPush(sys.http.url2string(Object.assign({}, call.url, {action: ''})));
                             if (call.url.hashChanged && call.url.hash !== '' && !call.url.pathChanged && !call.url.queryChanged) {
                                 var target = document.getElementById(call.url.hash.replace('#', ''));
                                 if (target) {
@@ -320,9 +350,14 @@ sys.core.server.call = function (data) {
                                 if (typeof onAfterHisotryPush === "function") {
                                     onAfterHisotryPush(call.url);
                                 }
+                                // opening or closing a lightbox keeps the page under it where it was
+                                if (call.fromLightbox || document.querySelector('.cmslightbox')) {
+                                    sys.core.server.restoreScroll(call.scrolled);
+                                    return;
+                                }
                                 document.body.scrollTop = document.documentElement.scrollTop = 0;
-                                if (call.url && (call.url.pathChanged || call.url.queryChanged)) {
-                                    document.querySelectorAll('main > div.content, main > div.content *').forEach(function (node) {
+                                if (call.url && (call.url.pathChanged || call.url.queryChanged || call.url.actionChanged)) {
+                                    document.querySelectorAll('main > div.content, main > div.content *, .authCard main').forEach(function (node) {
                                         if (node.scrollTop) {
                                             node.scrollTop = 0;
                                         }

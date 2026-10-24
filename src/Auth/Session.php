@@ -38,6 +38,7 @@ final class Session
     private const USER_KEY = 'systopic_user_id';
     private const STATE_KEY = 'systopic_user_state';
     private const RECOVERY_KEY = 'systopic_recovery';
+    private const RETURN_KEY = 'systopic_return_to';
 
     private static ?Identity $current = null;
     private static ?object $state = null;
@@ -208,6 +209,33 @@ final class Session
     }
 
     /**
+     * The page someone without a session asked for - a deep link, a click
+     * after the session ran out, a page of a site that is not public. Only
+     * the path and query are kept, and only below the site root: the sign-in
+     * cannot be sent anywhere else.
+     */
+    public static function rememberReturn(string $url): void
+    {
+        $path = (string) parse_url($url, PHP_URL_PATH);
+        $query = (string) parse_url($url, PHP_URL_QUERY);
+        $root = rtrim((string) \http::$root, '/') . '/';
+        if (!str_starts_with($path, $root) || preg_match('~^(cms/)?auth(/|$)~', substr($path, strlen($root)))) {
+            return;
+        }
+        \http::sessionStartOnce();
+        $_SESSION[self::RETURN_KEY] = $path . ($query !== '' ? '?' . $query : '');
+    }
+
+    /** Where the sign-in leads, once. */
+    public static function takeReturn(): ?string
+    {
+        \http::sessionStartOnce();
+        $url = $_SESSION[self::RETURN_KEY] ?? null;
+        unset($_SESSION[self::RETURN_KEY]);
+        return is_string($url) ? $url : null;
+    }
+
+    /**
      * The database is not reachable: the recovery user — or nobody, for a
      * request that may not set up (isRecovery() tells). @param list<string>|null $roles
      */
@@ -247,10 +275,39 @@ final class Session
         if (self::$state === null) {
             \http::sessionStartOnce();
             $stored = $_SESSION[self::STATE_KEY] ?? null;
-            self::$state = is_object($stored) ? $stored : (object) ['fakeRoles' => []];
+            self::$state = is_object($stored) ? $stored : (object) ['fakeRoles' => [], 'since' => time()];
             self::$state->fakeRoles ??= [];
+            if (self::resetRequested() > (self::$state->since ?? 0)) {
+                self::$state = (object) ['fakeRoles' => self::$state->fakeRoles, 'since' => time()];
+            }
         }
         return self::$state;
+    }
+
+    /** Every panel back to its default state (open panes, folds, filters); fake roles stay. */
+    public static function resetState(): void
+    {
+        self::$state = (object) ['fakeRoles' => self::state()->fakeRoles, 'since' => time()];
+    }
+
+    /**
+     * Resets the state of another user at their next request: the state sits
+     * in their session, out of reach - the account keeps the time instead.
+     */
+    public static function requestStateReset(\Systopic\System\Tables\Users\Model $user): \Systopic\System\Tables\Users\Model
+    {
+        $data = json_decode((string) $user->sessiondata?->value, true);
+        $data = is_array($data) ? $data : [];
+        $data['stateReset'] = time();
+        $user->sessiondata = new \Systopic\Db\Type\Text((string) json_encode($data));
+        return $user;
+    }
+
+    private static function resetRequested(): int
+    {
+        $user = self::current()->user;
+        $data = $user === null ? null : json_decode((string) $user->sessiondata?->value, true);
+        return (int) ($data['stateReset'] ?? 0);
     }
 
     /** Written back once per request (app.php), after the panels changed it. */

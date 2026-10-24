@@ -185,6 +185,27 @@ body.cms {
 				color: var(--cmsMainColor);
 			}
 
+			h2 {
+				margin: 0.4rem 0 -0.35rem;
+				font-size: 0.95rem;
+
+				small {
+					margin-left: 0.35rem;
+					font-size: 0.75rem;
+					font-weight: 400;
+					color: var(--cmsMuted);
+				}
+			}
+
+			h3 {
+				margin: 0 0 -0.45rem;
+				font-size: 0.6875rem;
+				font-weight: 600;
+				letter-spacing: 0.06em;
+				text-transform: uppercase;
+				color: var(--cmsMuted);
+			}
+
 			.authScroll {
 				display: flex;
 				flex-direction: column;

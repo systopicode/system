@@ -51,7 +51,8 @@ class mediaEditor {
 		$margin_left = round($cnv_width / 2 - $alias_width * $mediacrop->media_crop_left, 1);
 		$margin_top = round($cnv_height / 2 - $alias_height * $mediacrop->media_crop_top, 1);
 
-		$flexHandle = isset($image_format['height']) ? '' : "<div class='flexHandle' style='top:{$cnv_height}px;'></div>";
+		$flexHandle = isset($image_format['height']) ? '' : "<div class='flexHandle' title='Drag to set the height' style='top:{$cnv_height}px;width:{$cnv_width}px;'></div>";
+		$hint = $flexHandle === '' ? 'Drag the image to move it, a corner to scale it' : 'Drag the image to move it, a corner to scale it, the bottom handle to set the height';
 
 		$aspectRatiosSelector = "<div class='aspectRatioSelector'>";
 		foreach ($image_format['aspect_ratios'] AS $label => $ratio) {
@@ -62,16 +63,22 @@ class mediaEditor {
 		<div style='position:absolute;' class='imageEditor'>
 			<div class='cropFrame' style='width:{$cnv_width}px;height:{$cnv_height}px;position:absolute;overflow:hidden;'>
 				$aspectRatiosSelector
-				$flexHandle
 				<img class='cropimage' style='margin-left:{$margin_left}px;margin-top:{$margin_top}px;width:{$alias_width}px;height:{$alias_height}px;position:absolute;' src='$src_public_filename' />
 			</div>
 
 			<div class='dragimage' style='margin-left:{$margin_left}px;margin-top:{$margin_top}px;width:{$alias_width}px;height:{$alias_height}px;position:absolute'>
 				<img style='width:100%;height:100%' src='$src_public_filename' />
-				<div style='right:-2px;top:-2px;'></div>
-				<div style='left:-2px;top:-2px;'></div>
-				<div style='left:-2px;bottom:-2px;'></div>
-				<div style='right:-2px;bottom:-2px;'></div>
+				<div style='right:-5px;top:-5px;'></div>
+				<div style='left:-5px;top:-5px;'></div>
+				<div style='left:-5px;bottom:-5px;'></div>
+				<div style='right:-5px;bottom:-5px;'></div>
+			</div>
+			$flexHandle
+
+			<div class='cropBar' style='width:{$cnv_width}px;'>
+				<span>$hint</span>
+				<button type='button' class='button' data-crop_cancel>Cancel</button>
+				<button type='button' class='button submit'><i class='fa-regular fa-check'></i>Apply</button>
 			</div>
 		</div>
 	";

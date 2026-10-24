@@ -40,30 +40,32 @@ $entries = array_reverse($entries);
 	<?php if ($entries === []) { ?>
 		<main><p>The log is empty.</p></main>
 	<?php } else { ?>
-		<table>
-			<thead>
-				<tr>
-					<th>Date</th>
-					<th>Level</th>
-					<th>Message</th>
-				</tr>
-			</thead>
-			<tbody>
-				<?php foreach ($entries as $entry) {
-					$bad = preg_match('/fatal|error/i', $entry['level']) === 1;
-					?>
+		<div class="tableScroll">
+			<table>
+				<thead>
 					<tr>
-						<td><?= $e($entry['time']) ?></td>
-						<td><span class="logPill<?= $bad ? ' is-bad' : '' ?>"><?= $e($entry['level']) ?></span></td>
-						<td>
-							<?= $e($entry['message']) ?>
-							<?php if (trim($entry['trace']) !== '') { ?>
-								<pre class="logTrace"><?= $e($entry['trace']) ?></pre>
-							<?php } ?>
-						</td>
+						<th>Date</th>
+						<th>Level</th>
+						<th>Message</th>
 					</tr>
-				<?php } ?>
-			</tbody>
-		</table>
+				</thead>
+				<tbody>
+					<?php foreach ($entries as $entry) {
+						$bad = preg_match('/fatal|error/i', $entry['level']) === 1;
+						?>
+						<tr>
+							<td><?= $e($entry['time']) ?></td>
+							<td><span class="logPill<?= $bad ? ' is-bad' : '' ?>"><?= $e($entry['level']) ?></span></td>
+							<td>
+								<?= $e($entry['message']) ?>
+								<?php if (trim($entry['trace']) !== '') { ?>
+									<pre class="logTrace"><?= $e($entry['trace']) ?></pre>
+								<?php } ?>
+							</td>
+						</tr>
+					<?php } ?>
+				</tbody>
+			</table>
+		</div>
 	<?php } ?>
 </section>

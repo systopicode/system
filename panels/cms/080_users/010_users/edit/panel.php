@@ -53,6 +53,6 @@ class Panel extends CmsPanel {
 	/** Mail the user a fresh activation link; the key must be saved alongside. */
 	function mailActivation(User $user) {
 		$active = \Systopic\System\Auth\Session::current();
-		return $this->sendUserEmail('emailInvitation.tpl.php', 'YOUR INVITATION FROM ' . strtoupper((string) $active->name), $user);
+		return $this->sendUserEmail('emailInvitation.tpl.php', 'Your invitation from ' . $active->name, $user);
 	}
 }

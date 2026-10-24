@@ -13,6 +13,7 @@ switch ($this->action) {
 			$this->parent->child('user')->state->hijackerId = \Systopic\System\Auth\Session::id();
 			\Systopic\System\Auth\Session::logout(false);   // the device stays the superuser's
 			\Systopic\System\Auth\Session::login($target);
+			\Systopic\System\Auth\LoginLog::write((string) $target->name, 'logged in', \Systopic\System\Auth\LoginLog::SWITCH);
 			\http::refresh('./');
 		}
 		break;

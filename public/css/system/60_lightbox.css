@@ -8,6 +8,7 @@
     align-items: center;
     padding: 1.5rem;
     background-color: color-mix(in srgb, var(--cmsMainColor) 45%, transparent);
+    -webkit-backdrop-filter: blur(3px);
     backdrop-filter: blur(3px);
 }
 
@@ -85,6 +86,59 @@ body .cmslightbox section > main{
     margin: 0 0 1.25rem 0;
 }
 
+/* One section style in every lightbox: a small uppercase heading over a
+   hairline. Cards (.widget) drop their frame here and read as sections. */
+.cmslightbox section > main h2,
+body .cmslightbox section > div.layout > aside:not(.cms) h3{
+    margin: 0 0 0.75rem;
+    padding-bottom: 0.4rem;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    line-height: 1.2;
+    text-transform: uppercase;
+    color: var(--cmsMuted);
+    border-bottom: 1px solid var(--cmsLineStrong);
+}
+
+.cmslightbox section > main .widget{
+    margin-bottom: 1.75rem;
+    background: none;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+    overflow: visible;
+}
+
+.cmslightbox section > main .widget > header,
+.cmslightbox section > main .widget > main,
+.cmslightbox section > main .widget > footer{
+    min-height: 0;
+    padding: 0;
+    background: none;
+    border: 0;
+}
+
+.cmslightbox section > main .widget > header{
+    margin-bottom: 0.75rem;
+    padding-bottom: 0.4rem;
+    border-bottom: 1px solid var(--cmsLineStrong);
+}
+
+.cmslightbox section > main .widget > header h2{
+    margin: 0;
+    padding: 0;
+    border: 0;
+}
+
+.cmslightbox section > main .widget > footer{
+    margin-top: 0.75rem;
+}
+
+.cmslightbox section > main .widget > header h2 i{
+    display: none;
+}
+
 /* Zweispaltige Lightbox (Inhalt + Aside) */
 body .cmslightbox section > div.layout{
     flex: 1 1 auto;
@@ -122,6 +176,16 @@ body .cmslightbox section > div.layout > aside.cms{
     border-left: 1px solid var(--cmsLineStrong);
 }
 
+/* Tablet: the image gets the room */
+@media (max-width: 1280px), (hover: none) {
+    body .cmslightbox section > div.layout > aside.cms{
+        flex-basis: 16rem;
+        width: 16rem;
+        min-width: 14rem;
+        max-width: 16rem;
+    }
+}
+
 body .cmslightbox .fileStage{
     overflow: visible;
 }
@@ -142,17 +206,6 @@ body .cmslightbox section > div.layout > aside.cms > div{
     height: 100%;
     padding: 0;
     overflow: hidden;
-}
-
-body .cmslightbox section > div.layout > aside:not(.cms) h3{
-    margin: 0 0 0.75rem;
-    padding-bottom: 0.4rem;
-    font-size: 0.75rem;
-    font-weight: 700;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    color: var(--cmsMuted);
-    border-bottom: 1px solid var(--cmsLine);
 }
 
 body .cmslightbox section > div.layout > aside:not(.cms) > div > div{
@@ -185,13 +238,14 @@ body .cmslightbox section > div.layout > aside:not(.cms) > div > div{
     margin: 0;
 }
 
-.cmslightbox .mediaUrlField,
+/* div.inputGroup: above .cms div.inputGroup (50_forms.css) */
+.cmslightbox div.inputGroup.mediaUrlField,
 .cmslightbox .mediaUrlNote{
     display: none;
 }
 
-.cmslightbox:has(select[name="type"] option[data-external]:checked) .mediaUrlField{
-    display: block;
+.cmslightbox:has(select[name="type"] option[data-external]:checked) div.inputGroup.mediaUrlField{
+    display: flex;
 }
 
 .cmslightbox:has(select[name="type"] option[data-external]:checked) .mediaUrlNote{
@@ -249,6 +303,14 @@ body .cmslightbox section > div.layout > aside:not(.cms) > div > div{
     margin: 0;
     font-family: ui-monospace, monospace;
     font-size: 0.75rem;
+}
+
+.cmslightbox textarea.htmlSource{
+    height: 100%;
+    font-family: ui-monospace, monospace;
+    font-size: 0.8125rem;
+    line-height: 1.6;
+    tab-size: 2;
 }
 
 .cmslightbox .fileFrame .fileHint{

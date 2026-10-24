@@ -56,30 +56,32 @@ $show = static function (?string $text, string $empty) use ($e): string {
 		<?php else: ?>
 			<?php $same = count($table->columns) - count($diffColumns); ?>
 			<p class="tagsHint"><?= $e($table->shortClass) ?> · <?= $e($rows) ?>. <?= $same === 1 ? '1 column already agrees' : $same . ' columns already agree' ?>.</p>
-			<table>
-				<thead>
-					<tr><th>Column</th><th>Database → model</th><th></th></tr>
-				</thead>
-				<tbody>
-					<?php foreach ($diffColumns as $column): ?>
-						<tr class="schemaDiff">
-							<td><?= $e($column->name) ?></td>
-							<td>
-								<span class="schemaCompare">
-									<span class="schemaFrom"><?= $show($column->actual, 'missing') ?></span>
-									<i class="fa-regular fa-arrow-right"></i>
-									<span class="schemaTo"><?= $show($column->declared, 'not declared') ?></span>
-								</span>
-							</td>
-							<td class="schemaApply">
-								<?php if ($table->exists): ?>
-									<a class="button submit" data-on_click="userConfirm" data-action="applyTable" data-table="<?= $e($table->name) ?>" data-column="<?= $e($column->name) ?>" data-confirm="<?= $e('Apply the model to ' . $table->name . '.' . $column->name . '? The column can change.') ?>">Apply</a>
-								<?php endif; ?>
-							</td>
-						</tr>
-					<?php endforeach; ?>
-				</tbody>
-			</table>
+			<div class="tableScroll">
+				<table>
+					<thead>
+						<tr><th>Column</th><th>Database → model</th><th></th></tr>
+					</thead>
+					<tbody>
+						<?php foreach ($diffColumns as $column): ?>
+							<tr class="schemaDiff">
+								<td><?= $e($column->name) ?></td>
+								<td>
+									<span class="schemaCompare">
+										<span class="schemaFrom"><?= $show($column->actual, 'missing') ?></span>
+										<i class="fa-regular fa-arrow-right"></i>
+										<span class="schemaTo"><?= $show($column->declared, 'not declared') ?></span>
+									</span>
+								</td>
+								<td class="schemaApply">
+									<?php if ($table->exists): ?>
+										<a class="button submit" data-on_click="userConfirm" data-action="applyTable" data-table="<?= $e($table->name) ?>" data-column="<?= $e($column->name) ?>" data-confirm="<?= $e('Apply the model to ' . $table->name . '.' . $column->name . '? The column can change.') ?>">Apply</a>
+									<?php endif; ?>
+								</td>
+							</tr>
+						<?php endforeach; ?>
+					</tbody>
+				</table>
+			</div>
 			<footer>
 				<a class="button submit" data-on_click="userConfirm" data-action="applyTable" data-table="<?= $e($table->name) ?>" data-confirm="<?= $e($table->exists ? 'Apply the model to ' . $table->name . '? Columns can change.' : 'Create ' . $table->name . ' from the model?') ?>">Apply all</a>
 			</footer>
@@ -90,19 +92,21 @@ $show = static function (?string $text, string $empty) use ($e): string {
 <?php if ($agree !== []): ?>
 	<section class="widget is-list">
 		<header><h2>In agreement</h2><span class="logPill is-ok"><?= count($agree) ?></span></header>
-		<table>
-			<thead>
-				<tr><th>Table</th><th>Rows</th><th>Model</th></tr>
-			</thead>
-			<tbody>
-				<?php foreach ($agree as $table): ?>
-					<tr>
-						<td><?= $e($table->name) ?></td>
-						<td class="muted"><?= $table->exists ? (int) $table->rowCount : '—' ?></td>
-						<td class="muted"><?= $e($table->shortClass) ?></td>
-					</tr>
-				<?php endforeach; ?>
-			</tbody>
-		</table>
+		<div class="tableScroll">
+			<table>
+				<thead>
+					<tr><th>Table</th><th>Rows</th><th>Model</th></tr>
+				</thead>
+				<tbody>
+					<?php foreach ($agree as $table): ?>
+						<tr>
+							<td><?= $e($table->name) ?></td>
+							<td class="muted"><?= $table->exists ? (int) $table->rowCount : '—' ?></td>
+							<td class="muted"><?= $e($table->shortClass) ?></td>
+						</tr>
+					<?php endforeach; ?>
+				</tbody>
+			</table>
+		</div>
 	</section>
 <?php endif; ?>

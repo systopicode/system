@@ -1,4 +1,4 @@
-﻿/* global sys,c,p,t,l,loglevel */
+/* global sys,c,p,t,l,loglevel */
 loglevel = 0;
 // lev 0 off
 // lev 1 invoke
@@ -115,6 +115,82 @@ sys.processEvent = function (e) {
 	return hooks;
 };
 
+// Touch and pen start a drag through pointer events; the mouse keeps mousedown.
+// Resize handles start at once; rows and thumbs (data-drag_type) wait for a
+// long press, so a finger that moves first just scrolls the list.
+sys.processPointerDown = function (e) {
+	var down = e.originalEvent || e;
+	var element = e.currentTarget;
+	if (down.pointerType === 'mouse' || !element) {
+		return;
+	}
+	if (!element.dataset.drag_type || element.dataset.on_draginit) {
+		return sys.processEvent(e);
+	}
+	e.stopPropagation();
+	// no emulated mousedown afterwards - it would start a second, mouse drag
+	down.preventDefault();
+	sys.longPress(down, element, function () {
+		sys.processEvent($.Event(down, {currentTarget: element}));
+	});
+};
+
+// A finger holds the row, not the small grip in it: the long press of a
+// table row goes to its grip. Fields, links and buttons keep their touch.
+document.addEventListener('pointerdown', function (down) {
+	if (down.pointerType === 'mouse' || !down.target.closest) {
+		return;
+	}
+	var row = down.target.closest('tr');
+	var grip = row && row.querySelector(':scope > td > [data-drag_type]');
+	if (!grip || grip.contains(down.target) || down.target.closest('a, button, input, select, textarea, label, [contenteditable]')) {
+		return;
+	}
+	sys.processPointerDown({originalEvent: down, currentTarget: grip, stopPropagation: function () {}});
+});
+
+sys.longPress = function (down, element, start) {
+	var held = false;
+	element.classList.add('pressing');
+	var timer = setTimeout(function () {
+		held = true;
+		element.classList.remove('pressing');
+		element.classList.add('longPressed');
+		navigator.vibrate && navigator.vibrate(10);
+		start();
+	}, 400);
+	var block = function (ev) {
+		if (held) {
+			ev.preventDefault();
+			ev.stopPropagation();
+		}
+	};
+	var move = function (ev) {
+		if (!held && ev.pointerId === down.pointerId && Math.hypot(ev.clientX - down.clientX, ev.clientY - down.clientY) > 8) {
+			end();
+		}
+	};
+	var end = function () {
+		clearTimeout(timer);
+		element.classList.remove('pressing', 'longPressed');
+		document.removeEventListener('pointermove', move, true);
+		document.removeEventListener('pointerup', end, true);
+		document.removeEventListener('pointercancel', end, true);
+		document.removeEventListener('touchmove', block, {capture: true, passive: false});
+		document.removeEventListener('contextmenu', block, true);
+		// the tap that ends a long press must not follow the link under it
+		setTimeout(function () {
+			document.removeEventListener('click', block, true);
+		}, 0);
+	};
+	document.addEventListener('pointermove', move, true);
+	document.addEventListener('pointerup', end, true);
+	document.addEventListener('pointercancel', end, true);
+	document.addEventListener('touchmove', block, {capture: true, passive: false});
+	document.addEventListener('contextmenu', block, true);
+	document.addEventListener('click', block, true);
+};
+
 sys.processEventDelayed = function (e) {
 	var events = sys.core.event;
 	if (events.inputTimer) {
@@ -138,7 +214,7 @@ sys.core.event = function (e) {
 
 	var event = this;
 	event.e = e;
-	event.type = e.type;
+	event.type = {pointerdown: 'mousedown', pointerup: 'mouseup'}[e.type] || e.type;
 	event.url = {};
 
 	event.collectElementData = () => {

@@ -252,6 +252,13 @@
     opacity: 0.5;
 }
 
+.cms input[type="search"]{
+    padding-left: 2rem;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 14 14'%3E%3Ccircle cx='6' cy='6' r='4.5' fill='none' stroke='%236b7c84' stroke-width='1.6'/%3E%3Cpath d='M9.4 9.4L13 13' stroke='%236b7c84' stroke-width='1.6' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: left 0.7rem center;
+}
+
 .cms input[type="search"]::-webkit-search-decoration,
 .cms input[type="search"]::-webkit-search-cancel-button,
 .cms input[type="search"]::-webkit-search-results-button,
@@ -264,24 +271,12 @@
     margin-left: 10px;
 }
 
-/* Felder auf dunklem Grund (Pylon-Kopf, Hauptnavigation) */
-div.pylon > header input,
-div.pylon > header select,
+/* Felder auf dunklem Grund (Hauptnavigation) */
 div.main input,
 div.main select{
     background: var(--cmsOnDark);
     border-color: transparent;
     color: #fff;
-}
-
-div.pylon > header input::placeholder{
-    color: rgba(255,255,255,.6);
-}
-
-div.pylon > header input:focus{
-    background: var(--cmsSecondaryColor);
-    border-color: transparent;
-    box-shadow: none;
 }
 
 /****************************** BUTTONS ***************************/
@@ -595,11 +590,6 @@ div.pylon > header input:focus{
 
 .cms div.inputGroup:focus-within label{
     color: var(--cmsTextColor);
-}
-
-div.pylon > header div.inputGroup{
-    margin: 0;
-    padding-top: 0;
 }
 
 /* Fortschrittsbalken für Felder, die gerade speichern */

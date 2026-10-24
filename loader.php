@@ -166,6 +166,8 @@ if (php_sapi_name() !== 'cli'
 	&& !\Systopic\System\Auth\Session::known()
 ) {
 	$loginUrl = rtrim((string) http::$root, '/') . '/cms/auth/';
+	// an ajax call comes from the page on screen: that is where to come back to
+	\Systopic\System\Auth\Session::rememberReturn((string) (http::ajax() ? ($_SERVER['HTTP_REFERER'] ?? '') : ($_SERVER['REQUEST_URI'] ?? '')));
 	if (http::ajax()) {
 		header('Content-type: application/json; charset=utf-8');
 		header('Cache-Control: no-store');

@@ -289,7 +289,7 @@ class http implements \Systopic\System\Client\Contracts\PreloadsClientScript
 	 * (e.g. /packages/system/), Apache refuses to serve assets through the symlink with 403
 	 * even when the files are readable.  In that case we resolve the real filesystem path
 	 * via realpath() and re-derive the URL relative to the document root, so the browser
-	 * requests /packages/system/public/css/… directly — no symlink traversal needed.
+	 * requests /packages/system/public/js/… directly — no symlink traversal needed.
 	 */
 	private static function resolveSysRootUrl(array $server): string
 	{

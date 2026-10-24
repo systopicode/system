@@ -29,16 +29,18 @@ $hint = match ($mode) {
 		<header><h2>Sources</h2></header>
 		<main>
 			<p class="tagsHint">The folders the copies are made from.</p>
-			<table>
-				<tbody>
-					<?php foreach (Assets::roots() as $name => $dir) { ?>
-						<tr>
-							<td class="muted"><?= $e($name) ?></td>
-							<td><?= $e($dir) ?></td>
-						</tr>
-					<?php } ?>
-				</tbody>
-			</table>
+			<div class="tableScroll">
+				<table>
+					<tbody>
+						<?php foreach (Assets::roots() as $name => $dir) { ?>
+							<tr>
+								<td class="muted"><?= $e($name) ?></td>
+								<td><?= $e($dir) ?></td>
+							</tr>
+						<?php } ?>
+					</tbody>
+				</table>
+			</div>
 		</main>
 	</section>
 </div>

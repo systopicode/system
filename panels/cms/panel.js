@@ -15,12 +15,13 @@
 			var drag = event.drag;
 			drag.hasHelper = false;
 			drag.hooks.move = function () {
-				$pylon.css('max-width', maxWidthInit + drag.moveX);
+				$pylon[0].style.setProperty('--pylonWidth', (maxWidthInit + drag.moveX) + 'px');
 			};
 			drag.hooks.release = function () {
-				sys.core.server.sendCall({
-					width: maxWidthInit + drag.moveX
-				}, 'updatePylonWidth');
+				// what the css limit left of the pull
+				var width = Math.round($pylon.width());
+				$pylon[0].style.setProperty('--pylonWidth', width + 'px');
+				sys.core.server.sendCall({width: width}, 'updatePylonWidth');
 			};
 		};
 
@@ -36,7 +37,7 @@
 			};
 			drag.hooks.release = function () {
 				sys.core.server.sendCall({
-					width: widthInit - drag.moveX
+					width: Math.round($aside[0].getBoundingClientRect().width)
 				}, 'sidebar/updateWidth');
 			};
 		};
@@ -44,14 +45,18 @@
 		cmsModule.draginitFooterHeight = function (event) {
 			var $footer = $(event.element.closest('footer'));
 			var maxHeightInit = $footer.height();
+			// up to where the tree above stops giving way (its min-height)
+			var nav = $footer[0].previousElementSibling;
+			var limit = nav ? maxHeightInit + nav.offsetHeight - (parseFloat(getComputedStyle(nav).minHeight) || 0) : Infinity;
+			var height = () => Math.min(limit, maxHeightInit - drag.moveY);
 			var drag = event.drag;
 			drag.hasHelper = false;
 			drag.hooks.move = function () {
-				$footer.css('max-height', maxHeightInit - drag.moveY);
+				$footer.css('max-height', height());
 			};
 			drag.hooks.release = function () {
 				sys.core.server.sendCall({
-					height: maxHeightInit - drag.moveY
+					height: height()
 				}, 'mml/updateFooterHeight');
 			};
 		};

@@ -7,7 +7,8 @@ aside.cms{
     box-sizing: border-box;
     height: 100%;
     min-width: 260px;
-    max-width: 800px;
+    /* the page beside it keeps at least half of a tablet's width */
+    max-width: min(40rem, 45vw);
     background: var(--cmsCanvas);
     color: var(--cmsTextColor);
     border-left: 1px solid var(--cmsLineStrong);
@@ -128,6 +129,16 @@ aside.cms a.sidebarFlag{
     color: var(--cmsMuted);
     font-size: 0.6875rem;
     cursor: pointer;
+    touch-action: none;
+}
+
+/* a finger swipes the flag (pages panel.js): wide enough to catch */
+@media (any-pointer: coarse){
+    aside.cms a.sidebarFlag{
+        left: calc(-1.4rem - 1px);
+        width: 1.4rem;
+        height: 2.75rem;
+    }
 }
 
 aside.cms a.sidebarFlag:hover{

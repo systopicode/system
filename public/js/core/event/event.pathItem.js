@@ -138,7 +138,7 @@ sys.core.event.pathItem = function (element, event) {
 			elementData.method = 'get';
 		}
 		if (element.getAttribute('contenteditable')) {
-			elementData.html = element.innerHTML;
+			elementData.html = typeof wysiwyg === 'object' && wysiwygOf(element) === element ? wysiwyg.html(element) : element.innerHTML;
 		}
 		l('>>> pathItem.getElementData from ' + element.tagName, elementData);
 		return elementData;

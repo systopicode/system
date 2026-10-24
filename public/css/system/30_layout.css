@@ -49,6 +49,18 @@ body > main > div.pylon:after{
 }
 
 /********STATUSLEISTE***************/
+/* Debug: the CMS on a faint checkerboard, open at the bottom - the sides
+   hold the debug tool's tabs. */
+body:has(> main[data-debug]){
+    padding: 22px 32px 0;
+    background: repeating-conic-gradient(#e4e8ec 0 25%, #eef1f4 0 50%) 0 0 / 16px 16px;
+}
+
+body > main[data-debug]{
+    border-radius: var(--cmsRadiusLg) var(--cmsRadiusLg) 0 0;
+    overflow: clip;
+}
+
 footer.cmsStatusbar{
     flex: 0 0 var(--cmsStatusBar);
     position: relative;
@@ -209,11 +221,20 @@ body > main > div.main{
 }
 
 /********PYLON***************/
+/* --pylonWidth is the width the user pulled; the content keeps most of a
+   large screen, a small one gives the tree more of its room */
 body > main > div.pylon{
     display: flex;
     flex-direction: column;
     width: 100%;
     min-width: 200px;
+    max-width: min(var(--pylonWidth, 250px), 30rem);
+}
+
+@media (max-width: 1200px){
+    body > main > div.pylon{
+        max-width: min(var(--pylonWidth, 250px), 50vw);
+    }
 }
 
 body > main > div.pylon > header{
@@ -240,6 +261,13 @@ body > main > div.pylon footer{
     height: 100%;
     background: var(--cmsPanelAlt);
     border-top: 1px solid var(--cmsLineStrong);
+}
+
+/* The footer takes the height it was pulled to; the tree above gives way
+   down to a few rows, also on a short screen */
+body > main > div.pylon nav:has(+ footer){
+    flex-basis: 0;
+    min-height: 6rem;
 }
 
 /* Titelzeile einer Pylon-Spalte: Titel links, Aktionen rechts */
@@ -379,15 +407,21 @@ body.tools > main > div.content > header{
     background: var(--cmsBgColor);
 }
 
+/* min-width: a wide table scrolls in its box instead of widening the column */
 .flexColumn{
     display: flex;
     flex-direction: column;
     height: 100%;
+    min-width: 0;
 }
 
 .flexRow > *,
 .flexColumn > *{
     flex: 1 1 auto;
+}
+
+.flexColumn > .message{
+    flex: 0 0 auto;
 }
 
 /**************************SPALTEN***********************/

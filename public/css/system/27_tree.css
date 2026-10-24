@@ -85,7 +85,7 @@
     text-align: center;
 }
 
-.cms ul.tree span.label[contenteditable="true"]{
+.cms ul.tree span.label[contenteditable="plaintext-only"]{
     display: block;
     flex: 1 1 auto;
     min-width: 4rem;
@@ -139,6 +139,12 @@
     color: var(--cmsMuted);
 }
 
+.cms ul.tree label > a.alias{ color: var(--cmsAlias); }
+.cms ul.tree label > a.redirect{ color: var(--cmsRedirect); }
+
+.cms ul.tree label > a.unpublished{ cursor: pointer; }
+.cms ul.tree label > a.unpublished:hover{ color: var(--cmsTextColor); }
+
 /* Griff und Menü liegen rechts, gleiche Fläche, und nehmen ihren Platz
    immer ein. Sonst springt das Label beim Hover nach rechts. */
 .cms ul.tree i.treeGrip,
@@ -181,6 +187,22 @@
 .cms ul.tree li > label:hover button.treeMenu,
 .cms ul.tree li.menuTarget > label i.treeGrip,
 .cms ul.tree li.menuTarget > label button.treeMenu{
+    opacity: 1;
+}
+
+/* Touch drags the row after a long press: the grip only shows on the open
+   row, as a hint that rows can be moved. data-pointer is the input used last -
+   a desktop with a touch screen has both */
+:root[data-pointer="touch"] .cms ul.tree i.treeGrip{
+    display: none;
+}
+
+:root[data-pointer="touch"] .cms ul.tree li.active > label i.treeGrip{
+    display: flex;
+    opacity: 0.7;
+}
+
+:root[data-pointer="touch"] .cms ul.tree button.treeMenu{
     opacity: 1;
 }
 

@@ -59,6 +59,17 @@ switch ($this->action) {
 		$this->updateView('lightbox');
 		break;
 
+	case 'resetState':
+		if ((int) $user->id === (int) \Systopic\System\Auth\Session::id()) {
+			\Systopic\System\Auth\Session::resetState();
+			\http::refresh($this->href . '?user_id=' . (int) $user->id);
+			break;
+		}
+		$this->scope->save(\Systopic\System\Auth\Session::requestStateReset($user));
+		\message::confirm('The layout resets at the next click of this user.');
+		$this->updateView('lightbox');
+		break;
+
 	case 'removeUser':
 		if ((int) $user->id === (int) \Systopic\System\Auth\Session::id()) {
 			\message::error('You cannot delete your own account.');

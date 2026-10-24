@@ -276,6 +276,10 @@ class PanelTree implements RenderTree
     public function runAfterBuildHooks(PanelNode $root): void
     {
         $root->onLoad();
+        // through the loader, so a panel reached by ajax brings its class as well
+        if ($root->jsClass !== null) {
+            $root->loadJS();
+        }
 
         if (\obj::hasOwnMethod($root, 'onLoadThisClass')) {
             $root->onLoadThisClass();

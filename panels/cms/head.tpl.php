@@ -18,35 +18,36 @@
 		}
 	}
 	?>
-	<title><?php
-		$cmsProduct = 'fluxo cms';
-		$cmsTitle = defined('PUBLIC_PAGE_NAME') && trim((string) PUBLIC_PAGE_NAME) !== ''
-			? trim((string) PUBLIC_PAGE_NAME) . ' // ' . $cmsProduct
-			: $cmsProduct;
-		echo htmlspecialchars($cmsTitle, ENT_QUOTES, 'UTF-8');
-	?></title>
+	<title><?= htmlspecialchars(\Systopic\System\Sys\WebApp::stageMark() . \Systopic\System\Sys\WebApp::name(), ENT_QUOTES, 'UTF-8') ?></title>
 
 	<!-- +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+ META TAGS +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-->
-	<?php $faviconVersion = '?v=' . (int) @filemtime(fs::$sysRoot . 'public/img/system/favicons/favicon.ico'); ?>
-	<link rel="icon" type="image/svg+xml" href="<?= http::$sysRoot ?>public/img/system/icon.svg<?= $faviconVersion ?>">
-	<link rel="apple-touch-icon" href="<?= http::$sysRoot ?>public/img/system/favicons/apple-touch-icon.png<?= $faviconVersion ?>">
-    <link rel="icon" type="image/png" sizes="32x32" href="<?= http::$sysRoot ?>public/img/system/favicons/favicon-32x32.png<?= $faviconVersion ?>">
-    <link rel="icon" type="image/png" sizes="16x16" href="<?= http::$sysRoot ?>public/img/system/favicons/favicon-16x16.png<?= $faviconVersion ?>">
-    <link rel="manifest" href="<?= http::$sysRoot ?>public/img/system/favicons/site.webmanifest<?= $faviconVersion ?>">
-    <link rel="mask-icon" href="<?= http::$sysRoot ?>public/img/system/favicons/safari-pinned-tab.svg<?= $faviconVersion ?>" color="#243e48">
-    <link rel="shortcut icon" href="<?= http::$sysRoot ?>public/img/system/favicons/favicon.ico<?= $faviconVersion ?>">
-    <meta name="apple-mobile-web-app-title" content="fluxo cms">
+	<?php
+	$asset = static fn(string $file): string => htmlspecialchars(\Systopic\System\Sys\Packages::panelAssetHref($file), ENT_QUOTES);
+	$themeColor = '#' . \Systopic\System\Sys\Theme::color('cmsMainColor');
+	?>
+	<link rel="icon" type="image/svg+xml" href="<?= $asset('img/icon.svg') ?>">
+	<link rel="apple-touch-icon" href="<?= $asset('img/favicons/apple-touch-icon.png') ?>">
+    <link rel="icon" type="image/png" sizes="32x32" href="<?= $asset('img/favicons/favicon-32x32.png') ?>">
+    <link rel="icon" type="image/png" sizes="16x16" href="<?= $asset('img/favicons/favicon-16x16.png') ?>">
+    <link rel="manifest" href="<?= htmlspecialchars(\Systopic\System\Sys\WebApp::href(), ENT_QUOTES) ?>">
+    <link rel="mask-icon" href="<?= $asset('img/favicons/safari-pinned-tab.svg') ?>" color="<?= $themeColor ?>">
+    <link rel="shortcut icon" href="<?= $asset('img/favicons/favicon.ico') ?>">
+    <meta name="apple-mobile-web-app-title" content="<?= htmlspecialchars(\Systopic\System\Sys\WebApp::shortName(), ENT_QUOTES) ?>">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="application-name" content="fluxo cms">
     <meta name="description" content="fluxo cms">
     <meta name="author" content="systopic GmbH"/>
     <meta name="copyright" content="systopic GmbH"/>
     <meta name="abstract" content="fluxo cms"/>
-    <meta name="msapplication-config" content="<?= http::$sysRoot ?>public/img/system/favicons/browserconfig.xml">
-	<meta property='og:image' content='<?= http::$sysRoot ?>public/img/system/share_default.jpg' />
-	<meta itemprop='image' content='<?= http::$sysRoot ?>public/img/system/share_default.jpg' />
+    <meta name="msapplication-config" content="<?= $asset('img/favicons/browserconfig.xml') ?>">
+	<?php $shareImage = http::$hostUrl . $asset('img/share_default.jpg'); ?>
+	<meta property='og:image' content='<?= $shareImage ?>' />
+	<meta itemprop='image' content='<?= $shareImage ?>' />
 
-	<meta name="theme-color" content="#243e48">
-	<meta name="msapplication-TileColor" content="#243e48">
+	<meta name="theme-color" content="<?= $themeColor ?>">
+	<meta name="msapplication-TileColor" content="<?= $themeColor ?>">
 
     <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 
@@ -78,11 +79,14 @@
 	};
 
 	echo '<!-- +-+-+-+-+-+-+-+-+-+ CMS CSS +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-->';
-	echo $cmsCss(fs::$sysRoot . 'public/css/', 'cms');
-	echo $cmsCss(fs::$sysRoot . 'public/css/system/', 'cms');
-	echo $cmsCss(fs::$sysRoot . 'public/css/system/fixes/', 'cms', TRUE);
-	foreach (\Systopic\System\Sys\Packages::panelAssets() as $assetDir) {
-		echo $cmsCss(fs::toInternal($assetDir) . 'css/', 'cms');
+	// the system first, then each package: css/, then its subfolders by name -
+	// a recursive import would sort all files into one list
+	foreach ([fs::$sysRoot . 'public/', ...\Systopic\System\Sys\Packages::panelAssets()] as $assetDir) {
+		$cssDir = fs::toInternal($assetDir) . 'css/';
+		echo $cmsCss($cssDir, 'cms');
+		foreach (glob(fs::toNative($cssDir) . '*', GLOB_ONLYDIR) ?: [] as $subDir) {
+			echo $cmsCss(fs::toInternal($subDir) . '/', 'cms');
+		}
 	}
 	?>
 	<!-- +-+-+-+-+-+-+-+-+-+ MODULE CSS -+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-->
@@ -134,7 +138,7 @@
 	?>
 	<style>
 		article.cmsContent [contenteditable='true'],
-		article.cmsContent div.plaintext{
+		article.cmsContent .plaintext{
 			cursor: text;
 			border: 1px dashed rgba(151, 215, 249, .22);
 			border-radius: 4px;
@@ -143,13 +147,13 @@
 			overflow: visible;
 		}
 		article.cmsContent [contenteditable='true']:hover,
-		article.cmsContent div.plaintext:hover{
+		article.cmsContent .plaintext:hover{
 			border-style: solid;
 			border-color: rgba(151, 215, 249, .75);
 			background: rgba(151, 215, 249, .05);
 		}
 		article.cmsContent [contenteditable='true']:after,
-		article.cmsContent div.plaintext:after{
+		article.cmsContent .plaintext:after{
 			content: "EDITOR";
 			position: absolute;
 			top: 4px;
@@ -173,11 +177,20 @@
 		}
 		article.cmsContent [contenteditable='true']:hover:after,
 		article.cmsContent [contenteditable='true']:focus:after,
-		article.cmsContent div.plaintext:hover:after{
+		article.cmsContent .plaintext:focus:after,
+		article.cmsContent .plaintext:hover:after{
 			opacity: 1;
 		}
 		article.cmsContent div.editor.empty{
 			background: rgba(0, 0, 0, .15);
+		}
+		article.cmsContent [contenteditable='true'] :is(td, th){
+			outline: 1px dashed rgba(151, 215, 249, .35);
+			outline-offset: -1px;
+			min-width: 2em;
+		}
+		article.cmsContent [contenteditable='true'] :is(img, video){
+			-webkit-touch-callout: none;
 		}
 		/* Lightbox-Links bleiben klickbar, auch wenn der Seiteninhalt sie sperrt. */
 		.cmslightbox a,
@@ -189,9 +202,14 @@
 	<!-- +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+ JAVASCRIPT  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-->
 	<!-- +-+-+-+-+-+-+-+-+-+ SETTINGS USED IN JS  +-+-+-+-+-+-+-+-+-+-+-+-+-->
 	<script>
+		// data-pointer: the input used last - a desktop with a touch screen has both
+		document.documentElement.dataset.pointer = matchMedia('(hover: none)').matches ? 'touch' : 'mouse';
+		addEventListener('pointerdown', function (event) {
+			document.documentElement.dataset.pointer = event.pointerType === 'mouse' ? 'mouse' : 'touch';
+		}, true);
 		var contextMenusConfig = <?= '{}' //json_encode($contextMenus)                                    ?>;
 		var settings = <?= json_encode(client::$jsSettings) ?>;
-		var imageFormats = <?= json_encode(mediaFormats::get()) ?>;
+		var editorFormats = <?= json_encode(['image' => mediaFormats::editorImages(), 'video' => mediaFormats::editorVideos()], JSON_UNESCAPED_UNICODE | JSON_FORCE_OBJECT) ?>;
 	</script>
 
 	<!-- +-+-+-+-+-+-+-+-+-+ CMS JS -+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-->

@@ -95,14 +95,19 @@ final class Media
         }
     }
 
-    /** The url of this format. */
-    public string $src {
+    /** The address of this format, bare - to build other names from or to store. */
+    public string $url {
         get {
             $base = $this->isDerived()
                 ? \http::$root . "var/formats/{$this->format}/"
                 : \http::$root . 'var/original/';
             return $base . $this->folders . $this->filename . $this->appendix();
         }
+    }
+
+    /** The address to show: with the file time, files are cached as immutable and a new crop needs a new address. */
+    public string $src {
+        get => is_file($this->path) ? $this->url . '?v=' . filemtime($this->path) : $this->url;
     }
 
     /** The legacy `link` — the same as src. */

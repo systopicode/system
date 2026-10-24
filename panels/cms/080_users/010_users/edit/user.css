@@ -71,6 +71,11 @@
     margin: 0 0 0.75rem;
 }
 
+.cmslightbox .userEdit .profileEmpty{
+    color: var(--cmsMuted);
+    font-size: 0.875rem;
+}
+
 .userAccess .issuedCode{
     margin-top: 1rem;
     text-align: center;
@@ -98,16 +103,6 @@
     fill: none !important;
 }
 
-.userAccess .userDevice{
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 0.75rem;
-    padding: 0.55rem 0;
-    border-bottom: 1px solid var(--cmsLine);
-}
-
-.userAccess .userDevice small,
 .userEdit .userDevice small{
     display: block;
     color: var(--cmsMuted);
@@ -122,16 +117,39 @@
     border-bottom: 1px solid var(--cmsLine);
 }
 
-.userEdit .accessBar{
-    display: flex;
-    flex-wrap: wrap;
-    align-items: flex-end;
-    gap: 0.75rem 1rem;
+.userEdit .accountMeta{
+    display: grid;
+    gap: 0.6rem;
+    margin: 0;
 }
 
-.userEdit .accessBar > .field{
-    flex: 1 1 14rem;
+.userEdit .accountMeta dt{
+    color: var(--cmsMuted);
+    font-size: 0.8125rem;
+}
+
+.userEdit .accountMeta dd{
     margin: 0;
+}
+
+.userEdit .signInList{
+    margin: 0 0 0.75rem;
+    padding: 0;
+    list-style: none;
+}
+
+.userEdit .signInList li{
+    display: grid;
+    grid-template-columns: 8.5rem 1fr auto;
+    align-items: baseline;
+    gap: 0.75rem;
+    padding: 0.4rem 0;
+    font-size: 0.875rem;
+    border-bottom: 1px solid var(--cmsLine);
+}
+
+.userEdit .signInList small{
+    color: var(--cmsMuted);
 }
 
 .userEdit .accessButtons{
@@ -155,9 +173,56 @@
     border-left: 3px solid var(--cmsHighlightColor);
 }
 
+/* Who and what on the left, the ways in on the right */
+.userEdit .userColumns{
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0 1.25rem;
+    align-items: start;
+}
+
+.userEdit > .widget,
+.userEdit .userColumns > div > .widget{
+    margin: 0 0 1.25rem;
+}
+
+/* a hint with its button beside it */
+.userEdit .userRow{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem 1rem;
+    padding: 0.55rem 0;
+    border-top: 1px solid var(--cmsLine);
+}
+
+.userEdit .userRow:first-child{
+    padding-top: 0;
+    border-top: 0;
+}
+
+.userEdit .picks + .userRow{
+    margin-top: 0.85rem;
+    padding-top: 0.85rem;
+}
+
+.userEdit .userRow:last-child{
+    padding-bottom: 0;
+}
+
+.cmslightbox .userEdit .userRow .tagsHint{
+    margin: 0;
+}
+
+.userEdit .userRow .button{
+    flex: 0 0 auto;
+    margin: 0;
+}
+
 @media (max-width: 52rem){
     .cmslightbox .userEdit .userAccount > main,
-    .cmslightbox .userEdit .accountFields{
+    .cmslightbox .userEdit .accountFields,
+    .userEdit .userColumns{
         grid-template-columns: 1fr;
     }
 }

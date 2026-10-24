@@ -12,6 +12,7 @@ switch ($this->action) {
 	case 'license':
 	case 'imprint':
 	case 'privacy':
+	case 'releases':
 		$this->form = $this->action;
 		$this->updateView('main');
 		break;
@@ -73,21 +74,21 @@ switch ($this->action) {
 			break;
 		}
 		$this->scope->save(UserOperator::activate($user, (string) \http::posted('password')));
-		$this->signIn($user);
+		$this->signIn($user, \Systopic\System\Auth\LoginLog::EMAIL_LINK);
 		\message::confirm('Your new password has been set');
-		\http::refresh('./', [], 5);
+		$this->enterCms(5);
 		$this->updateView('main');
 		break;
 
 	case 'doLogin':
 		$user = \Systopic\System\Auth\Session::check((string) \http::posted('username', ''), (string) \http::posted('password', ''));
 		if ($user === NULL) {
-			\Systopic\System\Auth\LoginLog::write((string) \http::posted('username', ''), 'wrong username/password');
+			\Systopic\System\Auth\LoginLog::write((string) \http::posted('username', ''), 'wrong username/password', \Systopic\System\Auth\LoginLog::PASSWORD);
 			$this->refuse("We don't know this combination");
 			break;
 		}
-		$this->signIn($user);
-		\http::refresh('./');
+		$this->signIn($user, \Systopic\System\Auth\LoginLog::PASSWORD);
+		$this->enterCms();
 		break;
 
 	case 'logout':

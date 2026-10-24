@@ -17,7 +17,10 @@ main > div.pylon > header{
     color: #fff;
 }
 
+/* the signet gets room above and below, level with the page header */
 main > div.main > header{
+    flex-basis: 4.25rem;
+    min-height: 4.25rem;
     border-bottom: 1px solid var(--cmsFrameLine);
 }
 
@@ -122,56 +125,19 @@ main > div.content > header .submit{
 /****************************** SUCHE ***************************/
 .cms div.searchInput{
     position: relative;
-    width: 100%;
-    margin: 0 0.75rem 0 0.25rem;
-}
-
-main > div.pylon > header .searchInput{
     flex: 1 1 auto;
     min-width: 0;
-    width: auto;
 }
 
 .cms div.searchInput input[type='search']{
+    height: 2rem;
     min-height: 2rem;
     margin: 0;
-    padding: 0.3rem 0.75rem;
-}
-
-.cms div.searchInput .searchIcon{
-    position: absolute;
-    top: 50%;
-    left: 0.7rem;
-    z-index: 1;
-    transform: translateY(-50%);
     font-size: 0.8125rem;
-    color: rgba(255,255,255,.55);
-    pointer-events: none;
-}
-
-.cms div.searchInput .searchIcon ~ .inputGroup input[type='search']{
-    padding-left: 2rem;
-}
-
-main > div.pylon > header div.searchInput input[type='search']{
-    height: 2rem;
-    border: 1px solid transparent;
-    border-radius: 8px;
-    background: var(--cmsFrameField);
-    color: #fff;
-    font-size: 0.8125rem;
-}
-
-main > div.pylon > header div.searchInput input[type='search']::placeholder{
-    color: rgba(255,255,255,.55);
-}
-
-main > div.pylon > header div.searchInput input[type='search']:focus{
-    border-color: rgba(255,255,255,.25);
-    box-shadow: none;
 }
 
 .cms div.cmsSearchResults{
+    z-index: 20;
     position: absolute;
     top: calc(100% + 6px);
     left: 0;
@@ -185,14 +151,13 @@ main > div.pylon > header div.searchInput input[type='search']:focus{
     box-shadow: var(--cmsShadowLg);
 }
 
-.cms header input[type='search']:placeholder-shown ~ div.cmsSearchResults,
-.cms header input[type='search']:placeholder-shown:focus ~ div.cmsSearchResults,
-.cms header input[type='search']:not(:placeholder-shown):not(:focus) ~ div.cmsSearchResults{
+.cms div.searchInput input[type='search']:placeholder-shown ~ div.cmsSearchResults,
+.cms div.searchInput input[type='search']:not(:focus) ~ div.cmsSearchResults{
     display: none;
 }
 
-.cms header div.cmsSearchResults:active,
-.cms header div.cmsSearchResults.open{
+.cms div.searchInput div.cmsSearchResults:active,
+.cms div.searchInput div.cmsSearchResults.open{
     display: block !important;
 }
 
@@ -264,7 +229,8 @@ main > div.main nav{
     display: flex;
     flex-direction: column;
     width: 4.75rem;
-    height: calc(100% - var(--cmsBar));
+    /* div.main's bottom padding keeps it above the status bar */
+    height: calc(100% - 4.25rem);
     overflow: hidden;
     background: var(--cmsMainColor);
     user-select: none;

@@ -1,0 +1,22 @@
+<?php
+/** @var \Systopic\System\Panels\Root\Cms\Auth\Panel $this */
+$e = static fn(string $v): string => htmlspecialchars($v, ENT_QUOTES);
+?>
+<h1>Release notes</h1>
+<main class="authText">
+	<?php foreach ($this->releases as $version => $release) { ?>
+		<h2>GUI <?= $e((string) $version) ?> <small><?= $e($release['date']) ?></small></h2>
+		<?php foreach (['new' => 'New', 'fixed' => 'Fixed'] as $key => $title) {
+			if (empty($release[$key])) {
+				continue;
+			} ?>
+			<h3><?= $title ?></h3>
+			<ul>
+				<?php foreach ($release[$key] as $note) { ?>
+					<li><?= $e($note) ?></li>
+				<?php } ?>
+			</ul>
+		<?php } ?>
+	<?php } ?>
+	<p class="authLinks"><a href="login" class="ajax"><i class="fa-regular fa-chevron-left"></i> Back to sign in</a></p>
+</main>

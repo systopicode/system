@@ -41,7 +41,8 @@ class Panel extends PanelNode {
 		// children are built, which is exactly what this guard checks
 		$page = $this->child('page');
 		if ($page && $page->inPath() && empty($page->action)) {
-			$page->updateView();
+			// the path to the shown level sits in the controls
+			$page->updateViews(['main', 'controls']);
 		}
 	}
 

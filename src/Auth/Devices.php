@@ -98,6 +98,7 @@ final class Devices
         if (!Session::known()) {
             return;
         }
+        LoginLog::write((string) Session::current()->name, 'logged in', LoginLog::DEVICE);
         if ($verdict === Operator::OK && Operator::dueForRotation($device, $now)) {
             $secret = bin2hex(random_bytes(32));
             Operator::rotated($device, $secret, $now);

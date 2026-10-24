@@ -4,43 +4,46 @@
 use Systopic\System\Auth\LoginLog;
 
 $e = static fn($v): string => htmlspecialchars((string) $v, ENT_QUOTES);
-$file = LoginLog::file();
-$lines = is_file($file) ? file($file, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES) : [];
-$lines = array_reverse($lines ?: []);
+$lines = LoginLog::entries();
+// ?q= - a link from elsewhere (the user editor) opens the log filtered
+$query = trim((string) ($_GET['q'] ?? ''));
+$shown = static fn(array $parts): bool => $query === '' || mb_stripos(implode(' ', $parts) . ' ' . LoginLog::methodLabel($parts[4]), $query) !== false;
 ?>
 <h1>Login log</h1>
 <p class="tagsHint">Sign-ins, failed attempts and sign-outs. Newest first.</p>
 <section class="widget is-list logList">
 	<header>
 		<h2>Sign-ins</h2>
-		<input class="listSearch" type="search" placeholder="Search" data-on_input="filterLog" autocomplete="off">
+		<input class="listSearch" type="search" placeholder="Search" data-on_input="filterLog" autocomplete="off" value="<?= $e($query) ?>">
 		<a target="_self" href="<?= htmlspecialchars($this->getHref(\http::$root) . 'downloadLog') ?>" class="button"><i class="fa-regular fa-file-arrow-down"></i><span>Download</span></a>
 		<a data-on_click="userConfirm" data-action="?action=clearLog" data-confirm="Delete this log file?" class="button"><i class="fa-regular fa-broom"></i><span>Clear</span></a>
 	</header>
 	<?php if ($lines === []) { ?>
 		<main><p>The log is empty.</p></main>
 	<?php } else { ?>
-		<table>
-			<thead>
-				<tr>
-					<th>Date / time</th>
-					<th>User</th>
-					<th>Action</th>
-					<th>IP</th>
-				</tr>
-			</thead>
-			<tbody>
-				<?php foreach ($lines as $line) {
-					$parts = array_map('trim', explode(' ; ', $line));
-					?>
+		<div class="tableScroll">
+			<table>
+				<thead>
 					<tr>
-						<td><?= $e($parts[0] ?? '') ?></td>
-						<td><?= $e($parts[1] ?? '') ?></td>
-						<td><?= $e($parts[2] ?? '') ?></td>
-						<td><?= $e($parts[3] ?? '') ?></td>
+						<th>Date / time</th>
+						<th>User</th>
+						<th>Action</th>
+						<th>Method</th>
+						<th>IP</th>
 					</tr>
-				<?php } ?>
-			</tbody>
-		</table>
+				</thead>
+				<tbody>
+					<?php foreach ($lines as $parts) { ?>
+						<tr<?= $shown($parts) ? '' : ' hidden' ?>>
+							<td><?= $e($parts[0]) ?></td>
+							<td><?= $e($parts[1]) ?></td>
+							<td><?= $e($parts[2]) ?></td>
+							<td><?= $e(LoginLog::methodLabel($parts[4])) ?></td>
+							<td><?= $e($parts[3]) ?></td>
+						</tr>
+					<?php } ?>
+				</tbody>
+			</table>
+		</div>
 	<?php } ?>
 </section>

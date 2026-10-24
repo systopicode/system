@@ -1,5 +1,5 @@
 /****************************** TABLE ***************************/
-.cms table:not(.octalSelector){
+.cms table:not(.octalSelector, .editor table){
     width: 100%;
     border: none;
     border-spacing: 0;
@@ -8,7 +8,7 @@
     font-size: 0.875rem;
 }
 
-.cms table:not(.octalSelector) th{
+.cms table:not(.octalSelector, .editor table) th{
     padding: 0.6rem 2rem 0.6rem 0.75rem;
     text-align: left;
     white-space: nowrap;
@@ -21,21 +21,21 @@
     border-bottom: 1px solid var(--cmsLine);
 }
 
-.cms table:not(.octalSelector) tbody td{
+.cms table:not(.octalSelector, .editor table) tbody td{
     padding: 0.55rem 0.75rem;
     vertical-align: middle;
     border-bottom: 1px solid var(--cmsLine);
 }
 
-.cms table:not(.octalSelector) tbody tr:last-child td{
+.cms table:not(.octalSelector, .editor table) tbody tr:last-child td{
     border-bottom: none;
 }
 
-.cms table:not(.octalSelector) tbody tr:hover td{
+.cms table:not(.octalSelector, .editor table) tbody tr:hover td{
     background: color-mix(in srgb, var(--cmsHighlightColor) 24%, var(--cmsCanvas));
 }
 
-.cms table:not(.octalSelector) tbody tr:hover td:first-child{
+.cms table:not(.octalSelector, .editor table) tbody tr:hover td:first-child{
     box-shadow: inset 3px 0 0 var(--cmsHighlightColor);
 }
 
@@ -53,32 +53,32 @@
     text-overflow: ellipsis;
 }
 
-.cms table:not(.octalSelector) tbody td.icons{
+.cms table:not(.octalSelector, .editor table) tbody td.icons{
     width: 1%;
     white-space: nowrap;
     vertical-align: middle;
 }
 
-.cms table:not(.octalSelector) td.icons ul{
+.cms table:not(.octalSelector, .editor table) td.icons ul{
     display: flex;
     justify-content: flex-end;
     gap: 0.4rem;
 }
 
-.cms table:not(.octalSelector) td.icons .button{
+.cms table:not(.octalSelector, .editor table) td.icons .button{
     margin: 0;
 }
 
-.cms table:not(.octalSelector) td.muted{
+.cms table:not(.octalSelector, .editor table) td.muted{
     white-space: nowrap;
     color: var(--cmsMuted);
 }
 
-.cms table:not(.octalSelector) td.muted span + span{
+.cms table:not(.octalSelector, .editor table) td.muted span + span{
     margin-left: 0.4rem;
 }
 
-.cms table:not(.octalSelector) input{
+.cms table:not(.octalSelector, .editor table) input{
     background: var(--cmsCanvas);
 }
 
@@ -94,17 +94,17 @@
     font-size: 1rem;
 }
 
-.cms table:not(.octalSelector) ul{
+.cms table:not(.octalSelector, .editor table) ul{
     white-space: nowrap;
     text-align: right;
 }
 
-.cms table:not(.octalSelector) ul li{
+.cms table:not(.octalSelector, .editor table) ul li{
     display: inline-block;
     list-style-type: none;
 }
 
-.cms table:not(.octalSelector) ul li.seperator{
+.cms table:not(.octalSelector, .editor table) ul li.seperator{
     position: relative;
     width: 1px;
     height: 1.5rem;
@@ -130,6 +130,152 @@
     font-weight: 600;
     background: var(--cmsSelected);
     cursor: pointer;
+}
+
+/* A table wider than its box scrolls sideways in it; the action column
+   stays at the right edge in view */
+.tableScroll{
+    max-width: 100%;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+}
+
+.tableScroll > table td.icons,
+.tableScroll > table tr > th:last-child:empty{
+    position: sticky;
+    right: 0;
+    z-index: 2;
+    background: var(--cmsCanvas);
+    /* a shadow while columns lie under it; gone at the end of the scroll
+       and on a table that fits (no scroll, no timeline) */
+    animation: cmsScrollEdge linear both;
+    animation-timeline: scroll(x nearest);
+}
+
+@keyframes cmsScrollEdge{
+    from{ box-shadow: -1px 0 0 var(--cmsLine), -0.75rem 0 0.75rem -0.5rem rgb(0 0 0 / 0.2); }
+    to{ box-shadow: none; }
+}
+
+/* Marker columns - a status dot, a drag grip - as narrow as their mark */
+.cms table:not(.octalSelector, .editor table) :is(th, td):has(> .userStatus, > i[data-drag_type]),
+.cms table:not(.octalSelector, .editor table) th:first-child:empty{
+    width: 1%;
+    padding-right: 0;
+}
+
+@media (max-width: 1280px), (hover: none){
+    .cms table:not(.octalSelector, .editor table) th,
+    .cms table:not(.octalSelector, .editor table) tbody td{
+        padding-inline: 0.5rem;
+    }
+}
+
+/* A field keeps a width to type in: rather the table stacks (below) */
+.tableScroll > table td > :is(input:not([type="checkbox"], [type="radio"], [type="hidden"]), select, textarea){
+    min-width: 6rem;
+}
+
+/****************************** STACKED TABLE ***************************/
+/* A table whose columns do not fit (tableFit.js): each row a card. The
+   first line holds the mark (grip, status), the main cell and the
+   actions; the other cells follow, labelled, side by side as they fit. */
+.tableScroll.stacked{
+    overflow: visible;
+}
+
+.tableScroll.stacked > table,
+.tableScroll.stacked > table > tbody{
+    display: block;
+}
+
+.tableScroll.stacked > table > thead{
+    display: none;
+}
+
+.tableScroll.stacked > table > tbody > tr{
+    position: relative;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.6rem 0.75rem;
+    padding: 0.75rem 1.25rem;
+    border-bottom: 1px solid var(--cmsLine);
+}
+
+.tableScroll.stacked > table > tbody > tr:last-child{
+    border-bottom: none;
+}
+
+.tableScroll.stacked > table > tbody > tr::after{
+    content: '';
+    order: 3;
+    flex-basis: 100%;
+    margin-top: -0.6rem;
+}
+
+.tableScroll.stacked > table > tbody > tr:hover{
+    background: color-mix(in srgb, var(--cmsMainColor) 4%, var(--cmsCanvas));
+}
+
+/* :nth-child(n) outweighs the edge padding of a card's table */
+.cms .tableScroll.stacked > table > tbody > tr > td:nth-child(n){
+    order: 4;
+    flex: 1 1 9rem;
+    width: auto;
+    padding: 0;
+    border: none;
+    background: none;
+    box-shadow: none;
+    white-space: normal;
+}
+
+.cms .tableScroll.stacked > table > tbody > tr > td:has(> .userStatus, > i[data-drag_type]){
+    order: 0;
+    flex: 0 0 auto;
+}
+
+.cms .tableScroll.stacked > table > tbody > tr > :is(td:first-child:not(:has(> .userStatus, > i[data-drag_type])), td:has(> .userStatus, > i[data-drag_type]) + td){
+    order: 1;
+    flex: 1 1 0;
+    font-weight: 600;
+}
+
+.cms .tableScroll.stacked > table > tbody > tr > :is(td.icons, td.projectRemove, td.schemaApply){
+    position: static;
+    order: 2;
+    flex: 0 0 auto;
+    margin-left: auto;
+    animation: none;
+}
+
+.cms .tableScroll.stacked > table > tbody > tr > td[colspan]{
+    flex-basis: 100%;
+}
+
+.tableScroll.stacked > table > tbody > tr > td:empty{
+    display: none;
+}
+
+.tableScroll.stacked > table > tbody > tr > td[data-label]:not(:first-child, :has(> .userStatus, > i[data-drag_type]) + td, .icons, .projectRemove, .schemaApply)::before{
+    content: attr(data-label);
+    display: block;
+    margin-bottom: 0.2rem;
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--cmsMuted);
+}
+
+/* sorting: a card folds to its name, so a long list fits on the screen */
+.cms .tableScroll.stacked:has(.dragged) > table > tbody > tr > td:not(:first-child, :has(> .userStatus, > i[data-drag_type]), :has(> .userStatus, > i[data-drag_type]) + td, .icons, .projectRemove, .schemaApply){
+    display: none;
+}
+
+.tableScroll.stacked :is(input:not([type="checkbox"], [type="radio"]), select, textarea){
+    width: 100%;
+    min-width: 0;
 }
 
 /****************************** DIV TABLE ***************************/

@@ -107,12 +107,12 @@
 
 a.alias i,
 .cms .contextmenu a.alias i{
-    color: rgb(67,132,241);
+    color: var(--cmsAlias);
 }
 
 a.redirect i,
 .cms .contextmenu a.redirect i{
-    color: rgb(52,181,122);
+    color: var(--cmsRedirect);
 }
 
 /****************************** DROPDOWN ***************************/

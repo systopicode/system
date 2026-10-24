@@ -66,9 +66,13 @@
 	font-size: 0.9rem;
 }
 
+/* Title, search and button: on a narrow card the search drops to its
+   own line instead of squeezing the others */
 .widget.is-list > header{
 	flex-wrap: wrap;
 	row-gap: 0.35rem;
+	padding-block: 0.45rem;
+	container: cardHeader / inline-size;
 }
 
 .widget.is-list > header h2{
@@ -81,10 +85,17 @@
 }
 
 .widget.is-list > header .listSearch{
-	flex: 0 1 14rem;
+	flex: 0 0 14rem;
 	width: 14rem;
 	min-height: 2rem;
 	margin: 0;
+}
+
+@container cardHeader (max-width: 34rem){
+	.widget.is-list > header .listSearch{
+		order: 3;
+		flex: 1 1 100%;
+	}
 }
 
 .widget.is-list > header .button{
@@ -150,26 +161,20 @@
 	margin: 0;
 }
 
-.cms .widget > header + table th:first-child,
-.cms .widget > header + table td:first-child,
-.cms .widget > .tagsHint + table th:first-child,
-.cms .widget > .tagsHint + table td:first-child,
-section.cms > table th:first-child,
-section.cms > table td:first-child{
+.cms .widget > header + .tableScroll > table :is(th, td):first-child,
+.cms .widget > .tagsHint + .tableScroll > table :is(th, td):first-child,
+section.cms > .tableScroll > table :is(th, td):first-child{
 	padding-left: 1.25rem;
 }
 
-.cms .widget > header + table th:last-child,
-.cms .widget > header + table td:last-child,
-.cms .widget > .tagsHint + table th:last-child,
-.cms .widget > .tagsHint + table td:last-child,
-section.cms > table th:last-child,
-section.cms > table td:last-child{
+.cms .widget > header + .tableScroll > table :is(th, td):last-child,
+.cms .widget > .tagsHint + .tableScroll > table :is(th, td):last-child,
+section.cms > .tableScroll > table :is(th, td):last-child{
 	padding-right: 1.25rem;
 }
 
 /* A table that fills the content is the same card as a widget. */
-section.cms:has(> table){
+section.cms:has(> .tableScroll){
 	margin: 1.25rem;
 	padding: 0;
 	height: auto;

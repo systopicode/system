@@ -13,11 +13,19 @@ function openContextMenu(call) {
 	closeAllMenus();
 	var src = call.event && (call.event.sourceElement || call.event.element);
 	markContextTarget(src);
+	menuOpener = src && src.closest ? src.closest('button, a') : null;
 	$menu.css({
 		left: call.event.e.clientX,
 		top: call.event.e.clientY + window.scrollY,
 	});
-	$('div.main.cms').append($menu);
+	$(document.body).append($menu);
+	var rect = $menu[0].getBoundingClientRect();
+	if (rect.right > window.innerWidth) {
+		$menu.css('left', Math.max(0, window.innerWidth - rect.width - 8));
+	}
+	if (rect.bottom > window.innerHeight) {
+		$menu.css('top', Math.max(0, window.innerHeight - rect.height - 8) + window.scrollY);
+	}
 	$menu.bind('mouseup', () => {
 		setTimeout(closeAllMenus, 200);
 	});
@@ -48,8 +56,7 @@ function closeAllMenus() {
 	document.querySelectorAll('.menuTarget').forEach(function (row) {
 		row.classList.remove('menuTarget');
 	});
-	$('div.main.cms ul.contextmenu').off();
-	$('div.main.cms ul.contextmenu').remove();
+	$('body > ul.contextmenu').off().remove();
 	for (var key in contextMenus) {
 		contextMenus[key].domWrapper.remove();
 		delete(contextMenus[key].contextMenu);
@@ -59,6 +66,9 @@ function closeAllMenus() {
 
 // Most clicks in the CMS stop at the element (sys.processEvent) and never
 // reach the body handler that used to close the menu. Capture runs first.
+// A second press on the button that opened the menu only closes it.
+var menuOpener = null;
+var swallowClick = null;
 document.addEventListener('mousedown', function (event) {
 	if (!document.querySelector('ul.contextmenu, div.dropdown.contextMenu, .HTMLeditorMenu')) {
 		return;
@@ -66,7 +76,15 @@ document.addEventListener('mousedown', function (event) {
 	if (event.target.closest && event.target.closest('ul.contextmenu, div.dropdown.contextMenu, .HTMLeditorMenu')) {
 		return;
 	}
+	swallowClick = menuOpener && menuOpener.contains(event.target) ? menuOpener : null;
 	closeAllMenus();
+}, true);
+document.addEventListener('click', function (event) {
+	if (swallowClick && swallowClick.contains(event.target)) {
+		event.preventDefault();
+		event.stopPropagation();
+	}
+	swallowClick = null;
 }, true);
 function contextMenu2(config, e) {
 	$('div.cms.dropdown.contextMenu').parent().remove();

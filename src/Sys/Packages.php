@@ -75,6 +75,31 @@ final class Packages
         return self::$panelAssets;
     }
 
+    /**
+     * `$file` (`img/signet.svg`) in the first folder that has it: the
+     * project's overrides/, the panel asset folders, the system's own
+     * public/ last - NULL if none has it.
+     */
+    public static function panelAsset(string $file): ?string
+    {
+        foreach ([\fs::$siteRoot . 'overrides/', ...self::$panelAssets, \fs::$sysRoot . 'public/'] as $dir) {
+            if (is_file(\fs::toNative($dir . $file))) {
+                return $dir . $file;
+            }
+        }
+        return null;
+    }
+
+    /** The URL of panelAsset($file), with its version - '' if no package brings it. */
+    public static function panelAssetHref(string $file): string
+    {
+        $path = self::panelAsset($file);
+        if ($path === null) {
+            return '';
+        }
+        return \Systopic\System\Http\Assets::href((string) \httpHelper::filepathToHref(\fs::toInternal($path)), $path);
+    }
+
     /** @var list<Frontend> */
     private static array $frontends = [];
 

@@ -54,7 +54,7 @@
 						if (isset($image_format['width'])) {
 							$format_info = $image_format['width'] . ' × ' . $image_format['height'] . ' px';
 						} elseif (isset($image_format['autocrop'])) {
-							$format_info = $image_format['autocrop'] . ', ' . $image_format['autocrop_limit'];
+							$format_info = $image_format['autocrop'] . ', ' . mediaFormats::ratioLabel($image_format['autocrop_limit'] ?? 0);
 						} else {
 							$format_info = ($image_format['megapixels'] ?? '') . ' megapixels';
 						}

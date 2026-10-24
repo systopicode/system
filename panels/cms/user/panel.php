@@ -76,10 +76,10 @@ class Panel extends CmsPanel {
 		$fakeRole = count($this->fakeRoles);
 		return implode([
 					\html::create('li.menu_item' . ($this->inPath() ? '.selected' : ''))->doc('menu_item')
-					->append('a.ajax')->href($this->href)->append('i.far.fa-user')->class($fakeRole ? 'fakeRole' : NULL)
+					->append('a.ajax')->href($this->href)->append('i.fa-regular.fa-user')->class($fakeRole ? 'fakeRole' : NULL)
 					->end(),
 					\html::create('li.menu_item' . ($this->inPath() ? '.selected' : ''))
-					->append('a.ajax')->href($this->href . 'logout')->append('i.far.fa-sign-out')
+					->append('a.ajax')->href($this->href . 'logout')->append('i.fa-regular.fa-right-from-bracket')
 					->end()
 				])
 		;

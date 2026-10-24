@@ -3,12 +3,12 @@ $this->loadJS();
 ?>
 
 <body class="<?= 'CMS_VERSIONDATE' ?> <?= implode(' ', $this->path) ?> <?= 'system' ?>">
-	<main <?= DEBUG() ? ' style="border: 22px solid lightblue;border-bottom:none; height:calc(100% - 22px);"' : '' ?>>
+	<main<?= DEBUG() ? ' data-debug' : '' ?>>
 		<div class="main cms">
 			<header>
 				<a class="cmsBrand<?= $this->childSelected ? '' : ' is-home' ?>" href="<?= http::$root ?>cms/" title="fluxo cms">
-					<img class="brandMark" src="<?= http::$sysRoot ?>public/img/system/signet.svg" alt="fluxo">
-					<img class="brandFull" src="<?= http::$sysRoot ?>public/img/system/logo-horizontal-dark.png" alt="fluxo">
+					<img class="brandMark" src="<?= \Systopic\System\Sys\Packages::panelAssetHref('img/signet.svg') ?>" alt="fluxo">
+					<img class="brandFull" src="<?= \Systopic\System\Sys\Packages::panelAssetHref('img/logo-horizontal-dark.png') ?>" alt="fluxo">
 				</a>
 			</header>
 			<nav>
@@ -110,10 +110,6 @@ $this->loadJS();
 			var storedDevice = null;
 			try { storedDevice = localStorage.getItem('cmsDevice'); } catch (e) {}
 			root.setAttribute('data-cms-device', storedDevice || 'desktop');
-			var storedButton = document.querySelector('.deviceSwitch [data-cms-device="' + (storedDevice || 'desktop') + '"]');
-			if (storedButton && storedButton.getAttribute('data-cms-width')) {
-				root.style.setProperty('--cms-device-width', storedButton.getAttribute('data-cms-width') + 'px');
-			}
 
 			var tabScrollLeft = null;
 			var closedSections = [];
@@ -132,6 +128,13 @@ $this->loadJS();
 			}
 
 			function initTabs() {
+				// a width the site does not define (another project, a changed css) shows desktop
+				if (document.querySelector('.cmsPreview')) {
+					var wanted = null;
+					try { wanted = localStorage.getItem('cmsDevice'); } catch (e) {}
+					var devices = document.querySelector('.deviceSwitch');
+					root.setAttribute('data-cms-device', wanted && devices && devices.querySelector('[data-cms-device="' + wanted + '"]') ? wanted : 'desktop');
+				}
 				document.querySelectorAll('aside.cms nav.sidebarTabs:not([data-ready])').forEach(function (nav) {
 					nav.setAttribute('data-ready', '');
 					var list = nav.querySelector('ul');
@@ -155,7 +158,7 @@ $this->loadJS();
 					section.setAttribute('data-ready', '');
 					section.open = closedSections.indexOf(section.getAttribute('data-section')) === -1;
 				});
-				document.querySelectorAll('ul.tree span.label[contenteditable="true"]:not([data-ready])').forEach(function (label) {
+				document.querySelectorAll('ul.tree span.label[contenteditable="plaintext-only"]:not([data-ready])').forEach(function (label) {
 					label.setAttribute('data-ready', '');
 					label.focus();
 					var range = document.createRange();
@@ -181,7 +184,7 @@ $this->loadJS();
 
 			document.addEventListener('keydown', function (event) {
 				if (event.key !== 'Enter' || event.shiftKey) return;
-				var field = event.target.closest('[contenteditable="true"][data-on_blur="updateLabel"]');
+				var field = event.target.closest('[contenteditable="plaintext-only"][data-on_blur="updateLabel"]');
 				if (!field) return;
 				event.preventDefault();
 				if (field.classList.contains('pageTitle')) field.setAttribute('contenteditable', 'false');
@@ -198,7 +201,7 @@ $this->loadJS();
 				if (titleEdit) {
 					var title = titleEdit.parentNode.querySelector('.pageTitle');
 					if (title) {
-						title.setAttribute('contenteditable', 'true');
+						title.setAttribute('contenteditable', 'plaintext-only');
 						title.focus();
 					}
 					return;
@@ -212,10 +215,7 @@ $this->loadJS();
 				var deviceButton = event.target.closest('[data-cms-device]');
 				if (deviceButton && deviceButton !== root) {
 					var device = deviceButton.getAttribute('data-cms-device');
-					var width = deviceButton.getAttribute('data-cms-width');
 					root.setAttribute('data-cms-device', device);
-					if (width) root.style.setProperty('--cms-device-width', width + 'px');
-					else root.style.removeProperty('--cms-device-width');
 					try { localStorage.setItem('cmsDevice', device); } catch (e) {}
 				}
 			});

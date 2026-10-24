@@ -7,6 +7,10 @@
     font-display: swap;
 }
 
+.wf-loading *{
+    opacity: 0 !important;
+}
+
 /**************************ALLGEMEIN***********************/
 html{
     /* Eine Stufe für die ganze Oberfläche. rem hängt hieran, nicht an px. */
@@ -63,7 +67,8 @@ body{
     color: var(--cmsOnHighlight);
 }
 
-.cms hr{
+.cms hr,
+.cms div.specialContent hr{
     display: inline-block;
     clear: both;
     width: 100%;
@@ -88,6 +93,14 @@ section.cms{
 .cms .rightAlign{
     text-align: right;
     margin-left: auto;
+}
+
+.cms .floatRight{
+    float: right;
+}
+
+.cms .floatLeft{
+    float: left;
 }
 
 /****************************** PYLON-FOOTER (MEDIATHEK) ***************************/
@@ -115,6 +128,18 @@ footer.cms .widget main{
     flex: 1 1 auto;
 }
 
+footer.cms div.resizable-handle.resizable-n{
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 0 !important;
+    display: block;
+    width: 100%;
+    height: 12px;
+    background: transparent;
+    cursor: ns-resize;
+}
+
 footer.cms label{
     display: block;
     width: 100%;
@@ -135,6 +160,16 @@ footer.cms label b{
     letter-spacing: 0.06em;
     text-transform: uppercase;
     color: var(--cmsMuted);
+}
+
+section.cms.withFooter,
+section.cms.withFooter + footer{
+    height: auto;
+    overflow: hidden;
+}
+
+section.cms.withFooter + footer div.resizable-handle.resizable-n{
+    cursor: none;
 }
 
 /****************************** MELDUNGEN ***************************/
@@ -192,6 +227,7 @@ dialog.cms h2 + h2{
 
 .cms h2.error,
 .cms h2.error *,
+.cms div.dz-error-message span,
 .cms button:not(.transparent).error,
 .cms .button:not(.transparent).error,
 dialog.cms .error{
@@ -238,6 +274,23 @@ dialog.cms .warning{
 
 .cms a.confirm{
     color: var(--cmsSuccess);
+}
+
+div.formElementMessage{
+    display: inline-block;
+    vertical-align: top;
+}
+
+div.formElementMessage span{
+    display: block;
+    float: left;
+    clear: both;
+    width: 100%;
+    padding: 0.15rem 0.4rem;
+    border-radius: 4px;
+    background: var(--cmsError);
+    color: #fff;
+    font-size: 0.8125rem;
 }
 
 /* Meldungsblöcke: eine Fläche, der Text bleibt ungefärbt */

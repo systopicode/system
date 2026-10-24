@@ -148,7 +148,7 @@ class emailSmtp extends SMTPMailer {
     // Set email subject
     public function Subject($subject) {
         if ($this->redirected()) {
-            $subject = 'TESTMAIL // ' . $subject;
+            $subject = 'Test mail // ' . $subject;
         }
         parent::Subject($subject);
         return $this;

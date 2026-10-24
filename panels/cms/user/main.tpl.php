@@ -76,6 +76,13 @@ $preview = $this->fakeRoles;
 			</section>
 		<?php } ?>
 		<section class="widget">
+			<header><h2><i class="fa-regular fa-arrow-rotate-left"></i>Layout</h2></header>
+			<main>
+				<p class="tagsHint">Puts every module back to its defaults: open panes, folded trees, filters, sort orders.</p>
+				<button type="button" class="button" data-on_click="userConfirm" data-action="resetState" data-confirm="Reset the layout of every module to its defaults?"><i class="fa-regular fa-arrow-rotate-left"></i>Reset layout</button>
+			</main>
+		</section>
+		<section class="widget">
 			<header><h2><i class="fa-regular fa-key"></i>Passkeys</h2></header>
 			<main>
 				<p class="tagsHint">Sign in from a device without typing a password.</p>

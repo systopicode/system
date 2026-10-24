@@ -31,6 +31,8 @@
 	--cmsSuccess: #4fb95e;
 	--cmsError: #d6454c;
 	--cmsWarning: var(--cmsHighlightColor);
+	--cmsAlias: #4384f1;
+	--cmsRedirect: #34b57a;
 	--cmsHover: color-mix(in srgb, var(--cmsMainColor) 6%, transparent);
 	--cmsSelected: color-mix(in srgb, var(--cmsHighlightColor) 18%, transparent);
 	--cmsActive: hsl(from var(--cmsMainColor) h 28 82);
@@ -115,72 +117,117 @@ html.nprogress-busy{
 
 /****************************** DRAG ***************************/
 
+/* Touch: resize handles drag at once, rows and thumbs after a long press
+   (event.js), everything else scrolls */
+[data-on_draginit],
+div.imageEditor,
+div.imageEditorScrim {
+	touch-action: none;
+}
 
-.draghelper {
-	position: absolute;
-	z-index: 1000;
-	s {
-		pointer-events: none;
-		display: block;
+@media (any-pointer: coarse) {
+	[data-drag_type] {
+		-webkit-touch-callout: none;
+		-webkit-user-select: none;
+		user-select: none;
+	}
+	/* the whole row takes the long press (event.js) - no text selection;
+	   its fields stay editable (Safari blocks typing below user-select: none) */
+	tr:has(> td > [data-drag_type]) {
+		-webkit-touch-callout: none;
+		-webkit-user-select: none;
+		user-select: none;
+	}
+	tr:has(> td > [data-drag_type]) :is(input, textarea, [contenteditable]) {
+		-webkit-user-select: text;
+		user-select: text;
+	}
+	/* a grip in a table row: a target a finger finds, without a wider column */
+	td > i[data-drag_type] {
+		position: relative;
+	}
+	td > i[data-drag_type]::after {
+		content: '';
 		position: absolute;
-		border-color: var(--cmsHighlightColor);
-		border-style: dotted;
-		border-width: 0;
-		background-color: rgba(255,255,255,0.3);
-		&:nth-child(even) {
-			border-top-width: 2px;
-			width: 100%;
-			height: 2px;
-			top: 100%;
-			left: 100%;
-		}
-		&:nth-child(odd) {
-			border-left-width: 2px;
-			width: 2px;
-			height: 100%;
-			top: 100%;
-			left: 100%;
-		}
-		&:nth-child(3) {
-			left: 200%;
-		}
-		&:nth-child(4) {
-			left: 100%;
-			top: 200%;
-		}
-	}
-	&.accept {
-		transition-property: left, top, width, height;
-		transition-timing-function: ease-out;
-		transition-duration: 0.2s;
-		s {
-			border-color: var(--cmsHighlightColor);
-
-		}
-	}
-	&.ctrl {
-		&:after{
-			position: absolute;
-			left: calc(100% + 5px);
-			top: 100%;
-			display: block;
-			color:blue;
-			font-size: 30px;
-			content:'+';
-		}
-		s {
-			border-color: blue;
-		}
+		inset: -0.9rem -0.75rem;
 	}
 }
 
-.draghelper i {
-	
-	position: absolute;
-	left: calc(200% + 6px);
-	bottom: -18px;
-	color: var(--cmsHighlightColor);
-	font-size: 17px;
+/* Touch: a ring fills up while the finger holds, then the item lifts -
+   from then on it follows the finger (event.js longPress) */
+.pressing {
+	animation: cmsPress 0.3s 0.1s ease-in both;
+}
+
+.cms .longPressed {
+	position: relative;
+	z-index: 2;
+	transform: scale(0.96); /* smaller: a grown element at the edge of a scroll box would bring up a scrollbar */
+	outline: 2px solid var(--cmsHighlightColor);
+	outline-offset: 2px;
+	box-shadow: 0 0.5rem 1.25rem rgb(0 0 0 / 0.3);
+	transition: transform 0.15s ease-out, box-shadow 0.15s ease-out;
+}
+
+@keyframes cmsPress {
+	from { outline: 3px solid transparent; outline-offset: 2px; }
+	to { outline: 3px solid color-mix(in srgb, var(--cmsHighlightColor) 60%, transparent); outline-offset: 2px; }
+}
+
+/* A row is held by its grip: the whole row shows it (a tr itself takes
+   no shadow or transform in Safari, its cells take a background) */
+.cms td > :is(.pressing, .longPressed) {
+	animation: none;
+	outline: none;
+	box-shadow: none;
+}
+
+.cms td > .longPressed {
+	transform: scale(1.3);
+	color: var(--cmsHighlightText);
+}
+
+tr:has(> td > .pressing) > td {
+	animation: cmsPressRow 0.3s 0.1s ease-in both;
+}
+
+.cms tr:has(> td > .longPressed) > td {
+	background: color-mix(in srgb, var(--cmsHighlightColor) 24%, var(--cmsCanvas));
+}
+
+@keyframes cmsPressRow {
+	to { background: color-mix(in srgb, var(--cmsHighlightColor) 12%, var(--cmsCanvas)); }
+}
+
+
+/* fixed: a helper near the edge must not widen the page (scrollbar) */
+.draghelper {
+	position: fixed;
+	z-index: 1000;
+	box-sizing: border-box;
+	pointer-events: none;
+	border: 2px dashed var(--cmsHighlightColor);
+	background: color-mix(in srgb, var(--cmsHighlightColor) 10%, transparent);
+	&.line {
+		border: none;
+		background: var(--cmsHighlightColor);
+	}
+	&.accept {
+		transition-property: left, top, width, height, border-radius;
+		transition-timing-function: ease-out;
+		transition-duration: 0.2s;
+	}
+	&.ctrl {
+		border-color: blue;
+		&:after {
+			position: absolute;
+			left: calc(100% + 5px);
+			top: -0.5rem;
+			color: blue;
+			font-size: 30px;
+			content: '+';
+		}
+	}
 }
 
 
@@ -241,8 +288,12 @@ body.settingDragging div[data-drop_accept="setting"].sort
 {
 	display: block;
 }
-.dragged {
+.dragged:not([data-drag_type="none"]) {
 	opacity: 0.4;
+}
+body.dragging {
+	-webkit-user-select: none;
+	user-select: none;
 }
 body.dragging .dragged div.sort,
 body.dragging .afterDragged div.sort.insertBefore,

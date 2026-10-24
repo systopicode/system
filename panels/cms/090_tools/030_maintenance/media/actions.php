@@ -23,7 +23,7 @@ $table = static function (array $rows) use ($e): string {
 	if ($rows === []) {
 		return '<p class="tagsHint">Nothing to do.</p>';
 	}
-	$html = '<table><thead><tr>';
+	$html = '<div class="tableScroll"><table><thead><tr>';
 	foreach (array_keys($rows[0]) as $label) {
 		$html .= '<th>' . $e($label) . '</th>';
 	}
@@ -35,7 +35,7 @@ $table = static function (array $rows) use ($e): string {
 		}
 		$html .= '</tr>';
 	}
-	return $html . '</tbody></table>';
+	return $html . '</tbody></table></div>';
 };
 $chosenFormat = static function (): string {
 	$value = (string) (\http::dataset('value') ?: \http::params('value'));

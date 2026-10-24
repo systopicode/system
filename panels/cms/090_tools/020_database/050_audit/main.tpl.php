@@ -74,44 +74,46 @@ if ($shown === []): ?>
 				<?php if ($discard > 0): ?><span class="logPill is-bad"><?= $discard ?> discard data</span><?php endif; ?>
 				<?php if ($fail > 0): ?><span class="logPill"><?= $fail ?> would fail</span><?php endif; ?>
 			</header>
-			<table>
-				<thead>
-					<tr><th>Action</th><th>Finding</th><th></th></tr>
-				</thead>
-				<tbody>
-					<?php foreach ($group as $action):
-						$tail = explode('.', $action->subject, 2)[1] ?? '';
-						$row = trim(($action->destructive ? 'destructive' : '') . ' ' . ($action->blocked ? 'blocked' : ''));
-						$ask = 'Apply ' . $action->kind->value . ' on ' . $action->subject . '?'
-							. ($action->destructive ? ' This discards data.' : '');
-						?>
-						<tr class="<?= $row ?>">
-							<td>
-								<span class="auditKind"><?= $e($action->kind->value) ?></span>
-								<?php if ($tail !== ''): ?><span class="auditSubject"><?= $e($tail) ?></span><?php endif; ?>
-							</td>
-							<td>
-								<?= $e($action->describe) ?>
-								<?php if ($action->statements !== []): ?>
-									<details class="auditSql">
-										<summary>SQL</summary>
-										<?php foreach ($action->statements as $sql): ?>
-											<pre><?= $e($sql) ?></pre>
-										<?php endforeach; ?>
-									</details>
-								<?php else: ?>
-									<span class="auditNote">Runs as code, not as SQL.</span>
-								<?php endif; ?>
-							</td>
-							<td class="schemaApply">
-								<?php if ($action->statements !== []): ?>
-									<a class="button submit" data-on_click="userConfirm" data-action="applyAudit" data-key="<?= $e($action->key()) ?>" data-confirm="<?= $e($ask) ?>">Apply</a>
-								<?php endif; ?>
-							</td>
-						</tr>
-					<?php endforeach; ?>
-				</tbody>
-			</table>
+			<div class="tableScroll">
+				<table>
+					<thead>
+						<tr><th>Action</th><th>Finding</th><th></th></tr>
+					</thead>
+					<tbody>
+						<?php foreach ($group as $action):
+							$tail = explode('.', $action->subject, 2)[1] ?? '';
+							$row = trim(($action->destructive ? 'destructive' : '') . ' ' . ($action->blocked ? 'blocked' : ''));
+							$ask = 'Apply ' . $action->kind->value . ' on ' . $action->subject . '?'
+								. ($action->destructive ? ' This discards data.' : '');
+							?>
+							<tr class="<?= $row ?>">
+								<td>
+									<span class="auditKind"><?= $e($action->kind->value) ?></span>
+									<?php if ($tail !== ''): ?><span class="auditSubject"><?= $e($tail) ?></span><?php endif; ?>
+								</td>
+								<td>
+									<?= $e($action->describe) ?>
+									<?php if ($action->statements !== []): ?>
+										<details class="auditSql">
+											<summary>SQL</summary>
+											<?php foreach ($action->statements as $sql): ?>
+												<pre><?= $e($sql) ?></pre>
+											<?php endforeach; ?>
+										</details>
+									<?php else: ?>
+										<span class="auditNote">Runs as code, not as SQL.</span>
+									<?php endif; ?>
+								</td>
+								<td class="schemaApply">
+									<?php if ($action->statements !== []): ?>
+										<a class="button submit" data-on_click="userConfirm" data-action="applyAudit" data-key="<?= $e($action->key()) ?>" data-confirm="<?= $e($ask) ?>">Apply</a>
+									<?php endif; ?>
+								</td>
+							</tr>
+						<?php endforeach; ?>
+					</tbody>
+				</table>
+			</div>
 			<?php
 			$runnable = count(array_filter($group, static fn($action) => $action->statements !== [] && !$action->blocked));
 			if ($runnable > 0):

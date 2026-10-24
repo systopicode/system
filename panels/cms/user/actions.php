@@ -33,6 +33,11 @@ switch ($this->action) {
 		\http::redirect('./');
 		break;
 
+	case 'resetState':
+		\Systopic\System\Auth\Session::resetState();
+		\http::refresh($this->href);
+		break;
+
 	case 'unsetFakeRoles':
 		\Systopic\System\Auth\Session::current()->state->fakeRoles = [];
 		\http::redirect('./');
@@ -48,6 +53,7 @@ switch ($this->action) {
 			$this->state->hijackerId = NULL;
 			\Systopic\System\Auth\Session::logout(false);   // back to the superuser, same device
 			\Systopic\System\Auth\Session::login($hijacker);
+			\Systopic\System\Auth\LoginLog::write(\Systopic\System\Auth\Session::current()->name, 'logged in', \Systopic\System\Auth\LoginLog::SWITCH);
 			if (session_status() === PHP_SESSION_ACTIVE) {
 				session_write_close();
 			}

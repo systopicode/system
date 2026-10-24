@@ -53,7 +53,11 @@ final class Letter
             $svg = preg_replace('/<\?xml[^>]*\?>/', '', (string) \fs::file_get_contents($file)) ?? '';
             return '<div style="max-width:180px;margin:0 auto;">' . $svg . '</div>';
         }
-        $src = \http::$sysUrl . 'public/img/system/logo-horizontal-dark.png';
+        $href = \Systopic\System\Sys\Packages::panelAssetHref('img/logo-horizontal-dark.png');
+        if ($href === '') {
+            return '';
+        }
+        $src = \http::$hostUrl . $href;
         return '<img src="' . htmlspecialchars($src, ENT_QUOTES) . '" alt="fluxo" width="160" style="display:block;margin:0 auto;border:0;height:auto;">';
     }
 
@@ -65,8 +69,8 @@ final class Letter
         }
         $vars = [];
         $files = [];
-        $theme = (string) \fs::$sysRoot . 'public/css/theme.css';
-        if (is_file($theme)) {
+        $theme = \Systopic\System\Sys\Packages::panelAsset('css/theme.css');
+        if ($theme !== null) {
             $files[] = $theme;
         }
         $root = (string) \fs::$siteRoot;

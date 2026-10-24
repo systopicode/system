@@ -58,9 +58,19 @@ class Panel extends PanelNode {
 	}
 
 	/** Hand a user to the session service: from here on they are logged in. */
-	function signIn(User $user): void {
+	function signIn(User $user, string $method): void {
 		\Systopic\System\Auth\Session::login($user);
-		\Systopic\System\Auth\LoginLog::write((string) $user->name, 'logged in');
+		\Systopic\System\Auth\LoginLog::write((string) $user->name, 'logged in', $method);
+	}
+
+	/**
+	 * Into the CMS with a full load: the login's own css would stay in the
+	 * document. Back to the page that sent here, if one did.
+	 */
+	function enterCms(int $delay = 0): void {
+		\client::addCommand('redirect')
+			->data(['path' => \Systopic\System\Auth\Session::takeReturn() ?? \http::$root . 'cms/', 'action' => '', 'get' => [], 'method' => 'load'])
+			->delay($delay);
 	}
 
 	/** A form went wrong: say why, and let the button spin no more. */
@@ -72,11 +82,16 @@ class Panel extends PanelNode {
 	}
 
 	function sendActivation(User $user) {
-		return $this->sendEmail('emailActivation.tpl.php', 'YOUR ACTIVATION KEY', $user);
+		return $this->sendEmail('emailActivation.tpl.php', 'Your activation key', $user);
 	}
 
 	function sendResetPassword(User $user) {
-		return $this->sendEmail('emailResetPassword.tpl.php', 'RESET PASSWORD', $user);
+		return $this->sendEmail('emailResetPassword.tpl.php', 'Reset your password', $user);
+	}
+
+	/** @var array<string, array{date: string, notes: list<string>}> GUI versions, newest first */
+	public array $releases {
+		get => require __DIR__ . '/releases.php';
 	}
 
 	/**

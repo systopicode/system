@@ -1,139 +1,201 @@
-/****************************** WYSIWYG CONTROLS ***************************/
+/****************************** WYSIWYG BAR ***************************/
 div.HTMLeditorMenu{
+    --size: 2.25rem;
+    position: fixed;
+    z-index: 99999;
+    padding: 0.25rem;
+    background: var(--cmsMainColor);
+    border-radius: var(--cmsRadius);
+    box-shadow: var(--cmsShadowLg);
+    color: #fff;
+    font-family: var(--cmsFont);
     white-space: nowrap;
-    background: transparent !important;
-    padding-top:12px !important;
-    cursor: default !important;
-    position: absolute !important;
-    z-index: 99999 !important;
+    cursor: default;
+}
+
+div.HTMLeditorMenu.is-touch{
+    --size: 2.75rem;
 }
 
 div.HTMLeditorMenu:before{
-    content:"\25B8" !important;
-    color: var(--cmsMainColor) !important;
-    font-size: 40px !important;
-    left: 0;
-    padding-top: 20px !important;
-    position: absolute !important;
-    top: -9px;
-    transform: rotate(270deg) !important;
-    z-index:-1 !important;
+    content: '';
+    position: absolute;
+    top: -5px;
+    left: var(--arrow, 1rem);
+    width: 10px;
+    height: 10px;
+    margin-left: -5px;
+    background: inherit;
+    border-radius: 2px;
+    transform: rotate(45deg);
 }
 
-div.HTMLeditorMenu.outOfFocus:before{
-    left: calc(100% - 55px);
+div.HTMLeditorMenu.is-above:before{
+    top: auto;
+    bottom: -5px;
+}
+
+div.HTMLeditorMenu.no-arrow:before{
+    content: none;
+}
+
+div.HTMLeditorMenu ul{
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
 }
 
 div.HTMLeditorMenu li{
-    list-style-type: none !important;
-    margin:0 !important;
-    padding: 0 !important;
+    position: relative;
+    margin: 0;
+    padding: 0;
+    list-style: none;
 }
 
-div.HTMLeditorMenu li a{
-    text-decoration: none !important;
+div.HTMLeditorMenu > ul > li.sep{
+    margin-left: 0.25rem;
+    padding-left: 0.3rem;
+    border-left: 1px solid rgb(255 255 255 / 18%);
 }
 
-div.HTMLeditorMenu *,
-div.HTMLeditorMenu a:before{
-    color:#fff !important;
-}
-div.HTMLeditorMenu > ul{
-    background:transparent !important;
-    box-shadow: 0 2px 4px 2px rgba(0, 0, 0, 0.2) !important;
-    margin-left: -38px;
-    padding:0 !important;
-    list-style-type: none !important;
-	position: relative;
-	border-radius:4px;
-}
-
-div.HTMLeditorMenu.outOfFocus > ul{
-    margin-left: 0;
+div.HTMLeditorMenu a{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: var(--size);
+    height: var(--size);
+    border-radius: calc(var(--cmsRadius) - 2px);
+    color: #fff;
+    font-size: 0.95rem;
+    text-decoration: none;
+    transition: background-color .12s;
 }
 
-div.HTMLeditorMenu > ul > li{
-    display:inline-block !important;
-    white-space: nowrap !important;
-    margin-left: 0 !important;
+div.HTMLeditorMenu li.hasChildren > a{
+    gap: 0.3rem;
+    padding: 0 0.5rem;
 }
 
-div.HTMLeditorMenu .hasChildren,
-div.HTMLeditorMenu .hasChildren a,
-div.HTMLeditorMenu .hasChildren a:before{
-    cursor: default !important;
+div.HTMLeditorMenu li.hasChildren > a:after{
+    content: '';
+    border: 4px solid transparent;
+    border-top-color: currentColor;
+    border-bottom-width: 0;
+    opacity: .7;
 }
 
-div.HTMLeditorMenu > ul > li > a{
-    padding: 10px !important;
-    background:var(--cmsMainColor);
-    display:inline-block !important;
-    line-height: 0;
+div.HTMLeditorMenu a:hover,
+div.HTMLeditorMenu li.open > a{
+    background: rgb(255 255 255 / 14%);
 }
 
-div.HTMLeditorMenu > ul > li:first-child > a{
-	border-radius: 4px 0 0 4px;
+div.HTMLeditorMenu li.selected > a{
+    background: var(--cmsHighlightColor);
+    color: var(--cmsOnHighlight);
 }
 
-div.HTMLeditorMenu > ul > li:last-child > a{
-	border-radius: 0 4px 4px 0;
+div.HTMLeditorMenu li.disabled > a{
+    opacity: .35;
+    pointer-events: none;
 }
 
-div.HTMLeditorMenu > ul > li:first-child.hasChildren:hover a{
-	border-bottom-left-radius:0;
-}
-div.HTMLeditorMenu > ul > li:last-child.hasChildren:hover a{
-	border-bottom-right-radius:0;
-}
-
-div.HTMLeditorMenu ul li ul{
-    background: var(--cmsMainColor);
-    margin-top:-1px;
+div.HTMLeditorMenu li > ul{
     position: absolute;
+    top: calc(100% + 0.3rem);
+    left: 0;
+    flex-direction: column;
+    align-items: stretch;
+    min-width: 11rem;
+    padding: 0.25rem;
+    background: var(--cmsMainColor);
+    border-radius: var(--cmsRadius);
+    box-shadow: var(--cmsShadowLg);
     opacity: 0;
-    left:0;
-	min-width: 100%;
     visibility: hidden;
-    transition: opacity 0.25s ease-in-out 0s;
-	border-radius: 0 0 4px 4px;
+    transition: opacity .15s, visibility .15s;
 }
 
-div.HTMLeditorMenu ul li ul li:not(.selected):hover a{
-	background: var(--cmsHighlightColor);
+/* bridges the gap to the sub menu for the pointer */
+div.HTMLeditorMenu li.hasChildren:after{
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    height: 0.3rem;
 }
 
-div.HTMLeditorMenu > ul > li.selected > a,
-div.HTMLeditorMenu > ul > li > ul li.selected{
-	background: var(--cmsSecondaryColor);
+div.HTMLeditorMenu li > ul.toLeft{
+    left: auto;
+    right: 0;
 }
 
-div.HTMLeditorMenu > ul > li:hover > a{
-    background:var(--cmsHighlightColor);
+div.HTMLeditorMenu li > ul.toTop{
+    top: auto;
+    bottom: calc(100% + 0.3rem);
 }
 
-div.HTMLeditorMenu ul li.hasChildren:hover ul{
-    opacity: 1 !important;
-    visibility: visible !important;
+div.HTMLeditorMenu:not(.is-touch) li.hasChildren:hover > ul,
+div.HTMLeditorMenu li.hasChildren.open > ul{
+    opacity: 1;
+    visibility: visible;
 }
 
-div.HTMLeditorMenu ul li ul li{
-    padding:0 !important;
-    margin:0 !important;
+div.HTMLeditorMenu li > ul a{
+    justify-content: flex-start;
+    height: auto;
+    padding: 0.45rem 0.75rem;
+    font-size: 0.875rem;
 }
 
-
-div.HTMLeditorMenu ul li ul li a{
-    font-family: "Font" !important;
-    font-weight: 300;
-    padding:6px 20px !important;
-    margin:0 !important;
-    display:block !important;
+div.HTMLeditorMenu.is-touch li > ul a{
+    padding: 0.75rem 1rem;
+    font-size: 1rem;
 }
 
+div.HTMLeditorMenu form.HTMLeditorClass{
+    display: flex;
+    gap: 0.25rem;
+    margin: 0;
+}
+
+div.HTMLeditorMenu form.HTMLeditorClass input{
+    width: 15rem;
+    height: var(--size);
+    margin: 0;
+    padding: 0 0.6rem;
+    border: 0;
+    border-radius: calc(var(--cmsRadius) - 2px);
+    background: rgb(255 255 255 / 14%);
+    color: #fff;
+    font-size: 0.875rem;
+}
+
+div.HTMLeditorMenu.is-touch form.HTMLeditorClass input{
+    font-size: 16px;
+}
+
+div.HTMLeditorMenu form.HTMLeditorClass input::placeholder{
+    color: rgb(255 255 255 / 60%);
+}
+
+div.HTMLeditorMenu form.HTMLeditorClass button{
+    width: var(--size);
+    height: var(--size);
+    margin: 0;
+    padding: 0;
+    border: 0;
+    border-radius: calc(var(--cmsRadius) - 2px);
+    background: var(--cmsHighlightColor);
+    color: var(--cmsOnHighlight);
+}
 
 /****************************** editable content ***************************/
 body [contenteditable='true'],
-body div.plaintext
+body .plaintext
 {
     cursor:text !important;
     border:1px dashed rgba(151,215,249,.22);
@@ -158,6 +220,7 @@ div.plaintext input
 
 
 [contenteditable='true'].confirm,
+.plaintext.confirm,
 [data-showeditableareas='true'].confirm,
 [contenteditable=true].confirm:focus,
 [data-showeditableareas='true'].confirm:focus
@@ -168,6 +231,7 @@ div.plaintext input
 }
 
 [contenteditable='true'].error,
+.plaintext.error,
 [data-showeditableareas='true'].error,
 [contenteditable='true'].error:focus,
 [data-showeditableareas='true'].error:focus
@@ -207,7 +271,7 @@ div.editor[data-showeditableareas='true']:after,
 }
 
 [contenteditable='true']:hover,
-div.plaintext:hover{
+.plaintext:hover{
     border-style: solid;
     border-color: rgba(151,215,249,.75);
     background: rgba(151,215,249,.05);
@@ -236,25 +300,25 @@ div.plaintext{
 .plaintext:after{
     content: "PLAIN TEXT";
 }
-h1.editor[contenteditable="true"]:after{
+h1.editor:after{
     content: "HEADLINE H1";
 }
-h2.editor[contenteditable="true"]:after{
+h2.editor:after{
     content: "HEADLINE H2";
 }
-h3.editor[contenteditable="true"]:after{
+h3.editor:after{
     content: "HEADLINE H3";
 }
-h4.editor[contenteditable="true"]:after{
+h4.editor:after{
     content: "HEADLINE H4";
 }
-h5.editor[contenteditable="true"]:after{
+h5.editor:after{
     content: "HEADLINE H5";
 }
-h6.editor[contenteditable="true"]:after{
+h6.editor:after{
     content: "HEADLINE H6";
 }
-p.editor[contenteditable="true"]:after{
+p.editor:after{
     content: "PARAGRAPH p";
 }
 
@@ -264,6 +328,7 @@ p.editor[contenteditable="true"]:after{
 }
 
 [contenteditable="true"]:focus,
+.plaintext[contenteditable]:focus,
 [data-showeditableareas="true"]:focus
 {
     outline:1px solid var(--cmsHighlightColor);
@@ -309,20 +374,7 @@ body .objectContainer > input.ajax{
 }
 
 
-span.insertHTMLeditorPlaceholder{
-    user-select:none;
-    -moz-user-select: none;
-}
-textarea.olink{
-    display:none;
-}
-
 
 .editor table{
 	width:100%;
-}
-
-.editor table td{
-	border:1px solid rgb(52,52,52);
-	min-height: 16px;
 }

@@ -45,7 +45,8 @@ function runImageEditor(iParams) {
 					origin_x, origin_y,
 					crop_box_w, crop_box_h, crop_box_w_new, crop_box_h_new,
 					x_dir, y_dir,
-					move // true on move else scale
+					move, // true on move else scale
+					downOnFlex
 					;
 			var scrim = $('<div class="imageEditorScrim"></div>');
 			$('body').append(scrim);
@@ -53,33 +54,66 @@ function runImageEditor(iParams) {
 				visibility: 'hidden'
 			});
 			$('body').append(imageEditor);
-			var frame = imageEditor.children('div').not('.cropTools').first();
-			var frameW = frame.outerWidth() || 480;
-			var frameH = frame.outerHeight() || 320;
 			imageEditor.css({
-				left: Math.max(16, (window.innerWidth - frameW) / 2),
-				top: Math.max(56, (window.innerHeight - frameH) / 2)
+				left: iParams.offset_left,
+				top: iParams.offset_top
 			});
 			function dismiss() {
+				window.removeEventListener('resize', onResize);
 				imageEditor.remove();
 				scrim.remove();
 				$('div.imageEditorRaster').remove();
 				iParams.domObj.css({visibility: 'visible'});
 			}
 
+			// The editor is drawn in pixels for one image size: the same size
+			// only moves along, a new size draws it again.
+			var resizeTimer;
+			function onResize() {
+				clearTimeout(resizeTimer);
+				resizeTimer = setTimeout(function () {
+					var rect = iParams.domObj[0].getBoundingClientRect();
+					var size = {
+						display_width: Math.round(rect.width),
+						display_height: Math.round(rect.height),
+						offset_left: rect.left + window.scrollX,
+						offset_top: rect.top + window.scrollY
+					};
+					if (size.display_width === iParams.display_width && size.display_height === iParams.display_height) {
+						imageEditor.css({left: size.offset_left, top: size.offset_top});
+						return;
+					}
+					$('body').unbind('pointermove pointerover pointerdown pointerup pointerleave keyup keydown');
+					dismiss();
+					runImageEditor($.extend({}, iParams, size));
+				}, 150);
+			}
+			window.addEventListener('resize', onResize);
+
 			var drag_image = imageEditor.children('div.dragimage');
 			var crop_image = imageEditor.find('img.cropimage');
 			var flex_handle = imageEditor.find('div.flexHandle');
 			var crop_box = crop_image.parent();
 			drag_image.children('img').css({opacity: 0.35});
-			$('body').bind('mousemove mouseover mousedown mouseup mouseleave keyup keydown', function (event) {
+			$('body').bind('pointermove pointerover pointerdown pointerup pointerleave keyup keydown', function (event) {
 				if (event.type === 'keydown' && event.key === 'Escape') {
-					$('body').unbind('mousemove mouseover mousedown mouseup mouseleave keyup keydown');
+					$('body').unbind('pointermove pointerover pointerdown pointerup pointerleave keyup keydown');
 					dismiss();
 					return;
 				}
 				event.preventDefault();
+				// pointer events cover mouse, touch and pen; the states below speak mouse
+				var type = event.type.replace('pointer', 'mouse');
+				var touch = event.originalEvent && event.originalEvent.pointerType === 'touch';
+				// a finger is wide and never still
+				b = touch ? 32 : 10;
+				dragThreshold = touch ? 8 : 3;
 				editorTargeted = $(event.target).parents('div.imageEditor').length;
+				if (type === 'mousedown' && $(event.target).closest('[data-crop_cancel]').length) {
+					$('body').unbind('pointermove pointerover pointerdown pointerup pointerleave keyup keydown');
+					dismiss();
+					return;
+				}
 				if (event.ctrlKey && event.type === 'keydown') {
 					if ($(".imageEditorRaster").length === 0 && $(".imageEditor").length === 1) {
 						$raster = $("<div class='imageEditorRaster' style='height:" + $(document).outerHeight() + "px;'></div>");
@@ -94,13 +128,14 @@ function runImageEditor(iParams) {
 				}
 				x = (event.pageX - drag_image.offset().left);
 				y = (event.pageY - drag_image.offset().top);
-				w = drag_image.width();
-				h = drag_image.height();
+				// the image's size: its dashed border lies inside it
+				w = drag_image.outerWidth();
+				h = drag_image.outerHeight();
 
 				var crop_w = data.display_scale * crop_box_w;
 				var crop_h = data.display_scale * crop_box_h;
-				var crop_l = -parseInt(drag_image.css('margin-left'));
-				var crop_t = -parseInt(drag_image.css('margin-top'));
+				var crop_l = -parseFloat(drag_image.css('margin-left'));
+				var crop_t = -parseFloat(drag_image.css('margin-top'));
 
 				/*p({
 				 crop_w: crop_w,
@@ -122,8 +157,16 @@ function runImageEditor(iParams) {
 						shiftKeyPressed = event.shiftKey;
 						break;
 				}
-				switch (mode + '.' + event.type) {
+				switch (mode + '.' + type) {
 					case 'idle.mousedown':
+						// outside the editor a mouse cancels; a finger that missed changes nothing
+						if (!editorTargeted) {
+							if (!touch) {
+								$('body').unbind('pointermove pointerover pointerdown pointerup pointerleave keyup keydown');
+								dismiss();
+							}
+							break;
+						}
 						crop_box_w = crop_box.width();
 						crop_box_h = crop_box.height();
 						if ($(event.target).parents('div.aspectRatioSelector').length) {
@@ -139,10 +182,10 @@ function runImageEditor(iParams) {
 						mousedown_x = event.pageX;
 						mousedown_y = event.pageY;
 						drag_image_mousedown = {
-							left: parseInt(drag_image.css('margin-left')),
-							top: parseInt(drag_image.css('margin-top')),
-							width: parseInt(drag_image.css('width')),
-							height: parseInt(drag_image.css('height'))
+							left: parseFloat(drag_image.css('margin-left')),
+							top: parseFloat(drag_image.css('margin-top')),
+							width: parseFloat(drag_image.css('width')),
+							height: parseFloat(drag_image.css('height'))
 						}
 						origin_x = (x < b) ? 1 : ((x < (w - b)) ? 0.5 : 0);
 						origin_y = (y < b) ? 1 : ((y < (h - b)) ? 0.5 : 0);
@@ -152,13 +195,11 @@ function runImageEditor(iParams) {
 
 						mode = 'down';
 						move = cursor === 'move';
-						if (!editorTargeted) {
-							dismiss();
-						}
+						downOnFlex = $(event.target).hasClass('flexHandle');
 						break;
-					case 'down.mouseup': // click to confirm or cancel
-						$('body').unbind('mousemove mouseover mousedown mouseup mouseleave keyup keydown');
-						if (editorTargeted) { // update image
+					case 'down.mouseup': // only Apply saves - a tap on the image is no answer
+						if ($(event.target).closest('.cropBar .submit').length) {
+							$('body').unbind('pointermove pointerover pointerdown pointerup pointerleave keyup keydown');
 							var src = iParams.src.split("?")[0]
 							drag_image.css({cursor: 'wait'});
 							if (iParams.is_backgroundimage) {
@@ -188,9 +229,6 @@ function runImageEditor(iParams) {
 									iParams.domObj[0].src = updatesrc;
 								}
 							});
-
-						} else { // do nothing
-							dismiss();
 						}
 
 					case 'drag.mouseup':
@@ -203,18 +241,13 @@ function runImageEditor(iParams) {
 						mousedragoffset_x = event.pageX - mousedown_x;
 						mousedragoffset_y = event.pageY - mousedown_y;
 						if (mousedragoffset_x * mousedragoffset_x + mousedragoffset_y * mousedragoffset_y > dragThreshold * dragThreshold) {
-							mode = $(event.target).hasClass('flexHandle') ? 'flex' : 'drag';
-							p(mode);
+							mode = downOnFlex ? 'flex' : 'drag';
 						}
 						break;
 					case 'flex.mousemove':
-						move_y = event.pageY - mousedown_y;
-						flex_handle.css({
-							top: crop_box_h + move_y
-						});
-						crop_box.css({
-							height: crop_box_h + move_y
-						});
+						var flexHeight = Math.max(48, crop_box_h + event.pageY - mousedown_y);
+						flex_handle.css({top: flexHeight});
+						crop_box.css({height: flexHeight});
 						break;
 					case 'drag.mousemove':
 						//jp('origin_x:' + origin_x);

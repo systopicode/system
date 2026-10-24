@@ -100,7 +100,6 @@
 	body.cmsPane-editor > main > div.content .flexColumn {
 		display: flex;
 		flex: 1 1 auto;
-		min-width: 0;
 	}
 
 	body.cmsPane-editor > main > div.content aside,

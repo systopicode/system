@@ -71,6 +71,14 @@ sys.core.server.command = function (call) {
 		case cmd.skipRefresh ?? 'redirect':
 			var url = (response.data && response.data.path ? response.data.path : '')
 				+ (response.data && response.data.action ? response.data.action : '');
+			// A relative path is relative to the panel that answered, not to
+			// the address bar: a lightbox call does not change the address.
+			if (url && !/^(\/|https?:)/.test(url) && call.url && call.url.fullpath) {
+				var parts = url.match(/^(.*\/|)(.*)$/);
+				url = sys.http.root
+					+ sys.http.path2pathStr(sys.http.simplifyPath(call.url.fullpath.concat(sys.http.pathStr2path(parts[1]))))
+					+ parts[2];
+			}
 			if (url) {
 				// The request URL must not be written back afterwards, or the
 				// address bar stays on the page this redirect is leaving.
@@ -80,6 +88,10 @@ sys.core.server.command = function (call) {
 				var redirectMethod = (response.data && response.data.method) || 'get';
 				if (redirectMethod === 'get') {
 					sys.core.server.sendGet(url, (response.data && response.data.get) || {});
+				} else if (response.delay > 0) {
+					setTimeout(function () {
+						location.href = url;
+					}, 1000 * response.delay);
 				} else {
 					location.href = url;
 				}
