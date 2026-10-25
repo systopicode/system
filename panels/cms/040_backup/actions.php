@@ -8,7 +8,9 @@ switch ($this->action) {
 		// (public/.htaccess): a whole database and the media, admins only
 		$filename = (string) $this->backupName(http::get('name'));
 		$file = fs::toNative(fs::$siteRoot . 'var/backups/' . $filename);
-		if ($filename === '' || !str_ends_with($filename, '.zip') || !\Systopic\System\Auth\Session::hasRole('admin') || !is_file($file)) {
+		$isZip = str_ends_with($filename, '.zip');
+		$isLog = $filename === 'backup.log';
+		if ($filename === '' || (!$isZip && !$isLog) || !\Systopic\System\Auth\Session::hasRole('admin') || !is_file($file)) {
 			http_response_code(404);
 			exit;
 		}
@@ -39,7 +41,7 @@ switch ($this->action) {
 			http_response_code(206);
 			header("Content-Range: bytes $from-$to/$size");
 		}
-		header('Content-Type: application/zip');
+		header('Content-Type: ' . ($isLog ? 'text/plain; charset=UTF-8' : 'application/zip'));
 		header('Content-Disposition: attachment; filename="' . $filename . '"');
 		header('Content-Length: ' . ($to - $from + 1));
 		header('Accept-Ranges: bytes');

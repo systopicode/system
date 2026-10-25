@@ -141,6 +141,17 @@ var wysiwyg = (function () {
 			node.remove();
 			return;
 		}
+		// media: / page: (Cms\Refs). The cleaning stays; a reference is part of it.
+		// Otherwise the save stores the shown text and the reference is gone.
+		var refAttr = node.getAttributeNames().some(function (name) {
+			return name === 'data-ref' || name.indexOf('data-ref-') === 0;
+		});
+		var refUrl = ['src', 'href', 'poster'].some(function (name) {
+			return /^(media|page):/i.test(node.getAttribute(name) || '');
+		});
+		if (refAttr || refUrl) {
+			return;
+		}
 		if (paste && node.matches(PASTE_DROP)) {
 			node.remove();
 			return;
@@ -175,7 +186,7 @@ var wysiwyg = (function () {
 				}
 			}
 			Array.from(node.attributes).forEach(function (attr) {
-				if (PASTE[name].indexOf(attr.name) < 0) {
+				if (PASTE[name].indexOf(attr.name) < 0 && attr.name.indexOf('data-ref') !== 0) {
 					node.removeAttribute(attr.name);
 				}
 			});
@@ -217,7 +228,7 @@ var wysiwyg = (function () {
 			node = rename(node, 'P');
 			name = 'P';
 		}
-		if (name === 'A' && !node.hasAttribute('href') && !node.id && !node.hasAttribute('name')) {
+		if (name === 'A' && !node.hasAttribute('href') && !node.hasAttribute('data-ref-href') && !node.id && !node.hasAttribute('name')) {
 			unwrap(node);
 			return;
 		}

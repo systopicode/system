@@ -4,7 +4,7 @@
 			<h1>Backup Log</h1>
 			<ul class="barmenu">
 				<li>
-					<a download target="self" href="<?= http::$siteUrl . 'var/backups/backup.log' ?>"  title="Download log"><i class="fa-regular fa-arrow-down-to-line"></i></a>
+					<a download target="_self" href="<?= http::$siteUrl . 'cms/backup/download?name=backup.log' ?>" title="Download log"><i class="fa-regular fa-arrow-down-to-line"></i></a>
 				</li>
 				<li>
 					<a data-on_click='userConfirm' href="clear" data-confirm='Clear this log?' title="Clear log"><i class="fa-regular fa-trash"></i></a>
