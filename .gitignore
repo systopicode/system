@@ -1,5 +1,7 @@
-# local only - never part of the package
-/.cursor/
+# local only - never part of the package. The docs are the exception:
+# they travel with the repo, plans and tools stay on the machine.
+/.cursor/*
+!/.cursor/docs/
 /.vscode/
 /vendor/
 /composer.lock
