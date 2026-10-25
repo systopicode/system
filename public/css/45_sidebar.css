@@ -116,6 +116,7 @@ aside.cms a.sidebarFlag{
     position: absolute;
     top: 0.75rem;
     left: calc(-1.25rem - 1px);
+    z-index: 4;   /* above the width handle, which straddles the edge */
     display: flex;
     align-items: center;
     justify-content: center;
@@ -130,6 +131,9 @@ aside.cms a.sidebarFlag{
     font-size: 0.6875rem;
     cursor: pointer;
     touch-action: none;
+    -webkit-user-drag: none;   /* a link: the browser would lift it as a drag ghost */
+    -webkit-touch-callout: none;
+    user-select: none;
 }
 
 /* a finger swipes the flag (pages panel.js): wide enough to catch */

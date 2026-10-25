@@ -7,7 +7,7 @@
 	<div class="row">
 		<form method=get action=activate  onsubmit='this.classList.add("loading")'>
 			<div class="row">
-				<div class='inputGroup'>
+				<div class='inputGroup'><i class="fa-regular fa-hashtag"></i>
 					<input type=text name=key placeholder="Activation code" required spellcheck="false" autocapitalize="off"
 						   autocomplete="off"/>
 					<span class='bar'></span>

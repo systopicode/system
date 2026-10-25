@@ -58,4 +58,17 @@ class Panel extends PanelNode {
 					'hiddenViews' => ['lightbox'],
 		];
 	}
+
+	public function searchHits(\Systopic\System\Sys\Search $search): void {
+		$tags = \Systopic\Db\Schema\Schema::tableNameOf(Tag::class);
+		$groups = \Systopic\Db\Schema\Schema::tableNameOf(TagGroup::class);
+		$rows = $search->scope->connection->all(
+			"SELECT tag_id, tag_name, taggroup_name FROM $tags LEFT JOIN $groups ON taggroup_id = tag_taggroup_id
+			 WHERE LOWER(tag_name) LIKE ? ORDER BY tag_name LIMIT " . $search::PER_GROUP,
+			[$search->like()],
+		);
+		foreach ($rows as $row) {
+			$search->add('Tags', 'fa-tag', (string) $row['tag_name'], (string) $row['taggroup_name'], $this->getHref(\http::$root) . 'edit/?id=' . (int) $row['tag_id']);
+		}
+	}
 }

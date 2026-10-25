@@ -7,6 +7,7 @@ namespace Systopic\System\Auth;
 use DateTimeImmutable;
 use Systopic\Db\Scope;
 use Systopic\System\Queries\Devices\Devices as DeviceQuery;
+use Systopic\System\Queries\UserLookup\UserLookup;
 use Systopic\System\Tables\Devices\Model as Device;
 use Systopic\System\Tables\Devices\Operator;
 use Systopic\System\Tables\Users\Model as User;
@@ -91,6 +92,9 @@ final class Devices
             error_log("[devices] device $id revoked: a rotated secret came back");
         }
         if ($verdict !== Operator::OK && $verdict !== Operator::GRACED) {
+            if ($verdict === Operator::EXPIRED && ($user = UserLookup::byId($scope, (int) $device->relationId('user'))) !== null) {
+                LoginLog::write((string) $user->name, 'logged out', LoginLog::EXPIRED);
+            }
             self::clearCookie();
             return;
         }
@@ -204,6 +208,8 @@ final class Devices
         $scope = Scope::default();
         $device = DeviceQuery::byId($scope, $id);
         if ($device === null || $device->revokedAt !== null || ($device->expiresAt !== null && $device->expiresAt < $now)) {
+            $expired = $device !== null && $device->revokedAt === null;
+            LoginLog::write((string) Session::current()->name, 'logged out', $expired ? LoginLog::EXPIRED : LoginLog::REVOKED);
             self::forget();
             self::clearCookie();
             Session::logout(false);

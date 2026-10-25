@@ -106,7 +106,17 @@
 }
 
 html.nprogress-busy{
-	cursor:wait;
+	cursor:progress;
+}
+
+/* the button or tile a job (upload) started from: its progress along the bottom edge (gui/jobs.js) */
+.cms .is-busy{
+	background-image: linear-gradient(var(--cmsHighlightColor), var(--cmsHighlightColor)) !important;
+	background-repeat: no-repeat !important;
+	background-position: left bottom !important;
+	background-size: var(--jobProgress, 0%) 3px !important;
+	cursor: progress;
+	transition: background-size .3s;
 }
 
 @keyframes cmsBusy {

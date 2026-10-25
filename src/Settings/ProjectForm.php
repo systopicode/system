@@ -11,6 +11,9 @@ use Systopic\System\Panels\PanelNode;
  */
 final class ProjectForm
 {
+    /** Record fields that name page templates (`a;b`, empty for all) - ticked, not typed. */
+    private const TEMPLATE_FIELDS = ['var:media_groups' => 'templates'];
+
     public static function render(string $which): void
     {
         $e = static fn($value): string => htmlspecialchars((string) $value, ENT_QUOTES);
@@ -88,6 +91,7 @@ final class ProjectForm
             'addItem' => ProjectFile::addItem($path, $id),
             'removeItem' => ProjectFile::removeItem($path, $id, $key),
             'setField' => ProjectFile::setField($path, $id, $key, (string) \http::dataset('field'), $text),
+            'toggleTemplate' => self::toggleTemplate($path, $id, $key),
             'moveBefore' => self::relocate($path, false),
             'moveAfter' => self::relocate($path, true),
             default => null,
@@ -107,6 +111,52 @@ final class ProjectForm
         if (in_array($panel->action, ['renameItem', 'addItem', 'removeItem', 'setField', 'moveBefore', 'moveAfter'], true)) {
             $panel->updateView();
         }
+    }
+
+    private static function toggleTemplate(string $path, string $id, string $key): ?bool
+    {
+        $field = self::TEMPLATE_FIELDS[$id] ?? '';
+        $template = trim((string) \http::dataset('template'));
+        if ($field === '' || $template === '' || str_contains($template, ';')) {
+            return false;
+        }
+        $current = self::templatesOf($path, $id, $key, $field);
+        $current = array_values(array_diff($current, [$template]));
+        if (in_array(self::posted(), ['1', 'true', 'on'], true)) {
+            $current[] = $template;
+        }
+        return ProjectFile::setField($path, $id, $key, $field, implode(';', $current)) ?? true;
+    }
+
+    /** @return list<string> */
+    private static function templatesOf(string $path, string $id, string $key, string $field): array
+    {
+        foreach (ProjectFile::groups($path) as $group) {
+            foreach ($group->id === $id ? $group->items : [] as $item) {
+                foreach ($item->key === $key ? $item->fields : [] as $leaf) {
+                    if (ProjectFile::fieldName($group, $item, $leaf) === $field) {
+                        return array_values(array_filter(array_map('trim', explode(';', $leaf->text))));
+                    }
+                }
+            }
+        }
+        return [];
+    }
+
+    /** @param list<string> $picked */
+    private static function templatePicker(string $data, array $picked): void
+    {
+        $e = static fn($value): string => htmlspecialchars((string) $value, ENT_QUOTES);
+        $templates = class_exists('template') ? (array) \template::getAll() : [];
+        uksort($templates, 'strnatcmp');
+        $some = $picked !== [] ? ' data-some' : '';
+        echo '<details class="projectTemplates"' . $some . '><summary title="Choose templates"><span class="all">All templates</span><span class="some">Only the ticked</span><i class="fa-regular fa-pen"></i></summary><div class="projectTemplatesMenu">';
+        foreach ($templates as $name => $template) {
+            $checked = in_array((string) $name, $picked, true) ? ' checked' : '';
+            $shown = trim(str_replace(['_', '-'], ' ', (string) ($template->name ?? $name)));
+            echo '<label class="projectSwitch"><input type="checkbox" class="switch" data-on_change="toggleTemplate"' . $data . ' data-template="' . $e($name) . '" name="value"' . $checked . '><div><div></div></div><span>' . $e($shown) . '</span></label>';
+        }
+        echo '<small>No tick: on every template.</small></div></details>';
     }
 
     private static function relocate(string $path, bool $after): ?bool
@@ -173,6 +223,10 @@ final class ProjectForm
     {
         $e = static fn($value): string => htmlspecialchars((string) $value, ENT_QUOTES);
         $columns = ProjectFile::columns($group);
+        $templateField = self::TEMPLATE_FIELDS[$group->id] ?? null;
+        if ($templateField !== null) {
+            $columns = [...array_diff($columns, [$templateField]), $templateField];
+        }
         echo '<div class="tableScroll"><table class="projectRows"><thead><tr><th></th><th>Key</th>';
         foreach ($columns as $column) {
             echo '<th>' . $e(self::human($column)) . '</th>';
@@ -188,6 +242,17 @@ final class ProjectForm
             echo '</td><td><input data-on_blur="renameItem"' . $data . ' name="value" value="' . $e($item->key) . '" autocomplete="off"></td>';
             foreach ($columns as $column) {
                 echo '<td>';
+                if ($column === $templateField) {
+                    $picked = [];
+                    foreach ($item->fields as $field) {
+                        if (ProjectFile::fieldName($group, $item, $field) === $column) {
+                            $picked = array_values(array_filter(array_map('trim', explode(';', $field->text))));
+                        }
+                    }
+                    self::templatePicker($data, $picked);
+                    echo '</td>';
+                    continue;
+                }
                 $leaf = null;
                 foreach ($item->fields as $field) {
                     if (ProjectFile::fieldName($group, $item, $field) === $column) {
@@ -305,6 +370,18 @@ final class ProjectForm
             return (string) ($values['value'] ?? '');
         }
         return (string) $values;
+    }
+
+    public static function searchHits(\Systopic\System\Sys\Search $search, string $which, string $href): void
+    {
+        $path = ProjectFile::path($which);
+        $title = $which === 'media' ? 'Media Settings' : 'Page Settings';
+        foreach ($path === null ? [] : ProjectFile::groups($path) as $group) {
+            $label = self::human($group->label);
+            if ($search->matches($label) || $search->matches(ltrim($group->label, '$')) || $search->matches($group->category)) {
+                $search->add('Settings', 'fa-gear', $label, $group->category !== '' ? $title . ' › ' . $group->category : $title, $href);
+            }
+        }
     }
 
     public static function human(string $label): string

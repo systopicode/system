@@ -47,15 +47,19 @@ switch ($this->action) {
 		);
 		if ($problem !== null) {
 			message::error($problem);
+			client::done(['error' => $problem]);
+			http::put('away') ? $renderStyle = 'none' : $this->updateView('backups');
 			break;
 		}
-		if (!http::put('lastSpan')) {
+		// away: the user went on to another panel meanwhile, a render would land there
+		if (!http::put('lastSpan') || http::put('away')) {
 			$renderStyle = 'none';
 			break;
 		}
 		message::confirm('Backup uploaded.');
 		$this->backupfilestable = $this->getBackupfilestable($this->backupdirpath);
-		$this->updateView();
+		// the list and the message: the buttons above stay as they are
+		$this->updateView('backups');
 		break;
 	case 'clearTempdirs':
 		$tmpdirpaths =  ['var/backups/tmp/', 'var/original_replaced/'];

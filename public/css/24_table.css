@@ -228,6 +228,8 @@
     background: none;
     box-shadow: none;
     white-space: normal;
+    min-width: 0;
+    overflow-wrap: anywhere;
 }
 
 .cms .tableScroll.stacked > table > tbody > tr > td:has(> .userStatus, > i[data-drag_type]){

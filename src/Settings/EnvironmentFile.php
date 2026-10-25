@@ -91,22 +91,23 @@ final class EnvironmentFile
 
     public static function set(string $file, string $group, string $key, string $raw): bool
     {
-        $data = self::read($file);
-        if ($group === '') {
-            if (!in_array($key, self::SCALARS, true) && !self::isExtraScalar($data, $key)) {
-                return false;
+        return self::update($file, static function (array $data) use ($group, $key, $raw): ?array {
+            if ($group === '') {
+                if (!in_array($key, self::SCALARS, true) && !self::isExtraScalar($data, $key)) {
+                    return null;
+                }
+                $data[$key] = $raw;
+                return $data;
             }
-            $data[$key] = $raw;
-            return self::write($file, $data);
-        }
-        $kind = self::GROUPS[$group][$key] ?? null;
-        if ($kind === null) {
-            return false;
-        }
-        $bag = is_array($data[$group] ?? null) ? $data[$group] : [];
-        $bag[$key] = self::cast($raw, $kind);
-        $data[$group] = $bag;
-        return self::write($file, $data);
+            $kind = self::GROUPS[$group][$key] ?? null;
+            if ($kind === null) {
+                return null;
+            }
+            $bag = is_array($data[$group] ?? null) ? $data[$group] : [];
+            $bag[$key] = self::cast($raw, $kind);
+            $data[$group] = $bag;
+            return $data;
+        });
     }
 
     public static function setMatch(string $file, int $index, string $field, string $raw): bool
@@ -114,39 +115,42 @@ final class EnvironmentFile
         if (!in_array($field, self::MATCH, true)) {
             return false;
         }
-        $data = self::read($file);
-        $rules = array_values(is_array($data['matches'] ?? null) ? $data['matches'] : []);
-        if (!isset($rules[$index]) || !is_array($rules[$index])) {
-            return false;
-        }
-        if (trim($raw) === '') {
-            unset($rules[$index][$field]);
-        } else {
-            $rules[$index][$field] = $raw;
-        }
-        $data['matches'] = array_values($rules);
-        return self::write($file, $data);
+        return self::update($file, static function (array $data) use ($index, $field, $raw): ?array {
+            $rules = array_values(is_array($data['matches'] ?? null) ? $data['matches'] : []);
+            if (!isset($rules[$index]) || !is_array($rules[$index])) {
+                return null;
+            }
+            if (trim($raw) === '') {
+                unset($rules[$index][$field]);
+            } else {
+                $rules[$index][$field] = $raw;
+            }
+            $data['matches'] = array_values($rules);
+            return $data;
+        });
     }
 
     public static function addMatch(string $file): bool
     {
-        $data = self::read($file);
-        $rules = array_values(is_array($data['matches'] ?? null) ? $data['matches'] : []);
-        $rules[] = ['serverName' => '', 'path' => ''];
-        $data['matches'] = $rules;
-        return self::write($file, $data);
+        return self::update($file, static function (array $data): array {
+            $rules = array_values(is_array($data['matches'] ?? null) ? $data['matches'] : []);
+            $rules[] = ['serverName' => '', 'path' => ''];
+            $data['matches'] = $rules;
+            return $data;
+        });
     }
 
     public static function removeMatch(string $file, int $index): bool
     {
-        $data = self::read($file);
-        $rules = array_values(is_array($data['matches'] ?? null) ? $data['matches'] : []);
-        if (!isset($rules[$index])) {
-            return false;
-        }
-        array_splice($rules, $index, 1);
-        $data['matches'] = $rules;
-        return self::write($file, $data);
+        return self::update($file, static function (array $data) use ($index): ?array {
+            $rules = array_values(is_array($data['matches'] ?? null) ? $data['matches'] : []);
+            if (!isset($rules[$index])) {
+                return null;
+            }
+            array_splice($rules, $index, 1);
+            $data['matches'] = $rules;
+            return $data;
+        });
     }
 
     public static function path(string $file): ?string
@@ -178,17 +182,57 @@ final class EnvironmentFile
         };
     }
 
-    /** @param array<string, mixed> $data */
-    private static function write(string $file, array $data): bool
+    /**
+     * Read, change, write as one step: every field saves on its own request,
+     * and two overlapping saves would otherwise each write back the state they
+     * read - the later one dropping the earlier value. The lock lives outside
+     * config/ (the folder is synced); the file is replaced by rename, so a
+     * reader never sees it half written. A file that does not parse is left
+     * alone instead of being overwritten with what the form knows.
+     *
+     * @param callable(array<string, mixed>): ?array<string, mixed> $change null = nothing to write
+     */
+    private static function update(string $file, callable $change): bool
     {
         $path = self::path($file);
         if ($path === null) {
             return false;
         }
-        $json = json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
-        if ($json === false) {
+        $lock = fopen(sys_get_temp_dir() . '/fluxo-config-' . md5($path) . '.lock', 'c');
+        if ($lock === false || !flock($lock, LOCK_EX)) {
             return false;
         }
-        return file_put_contents($path, $json . "\n") !== false;
+        try {
+            $raw = file_get_contents($path);
+            try {
+                $data = $raw === false ? null : json_decode($raw, true, 512, JSON_THROW_ON_ERROR);
+            } catch (\JsonException) {
+                $data = null;
+            }
+            if (!is_array($data)) {
+                return false;
+            }
+            $data = $change($data);
+            if ($data === null) {
+                return false;
+            }
+            $json = json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+            $temp = $path . '.' . getmypid() . '.tmp';
+            if ($json === false || file_put_contents($temp, $json . "\n") === false) {
+                return false;
+            }
+            $perms = fileperms($path);
+            if ($perms !== false) {
+                chmod($temp, $perms & 0777);
+            }
+            if (!rename($temp, $path)) {
+                @unlink($temp);
+                return false;
+            }
+            return true;
+        } finally {
+            flock($lock, LOCK_UN);
+            fclose($lock);
+        }
     }
 }

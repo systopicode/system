@@ -29,6 +29,8 @@ function formatHTMLeditor(event) {
 			return wysiwyg.toggle('EM');
 		case 'underline':
 			return wysiwyg.toggle('U');
+		case 'strikethrough':
+			return wysiwyg.toggle('S');
 		case 'formatBlock':
 			return wysiwyg.setBlock(event.data.tag.toUpperCase());
 		case 'insertUnorderedList':

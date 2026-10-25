@@ -29,7 +29,8 @@ function HTMLeditorRightClick(clicktype, event, elements) {
 	var inline = {
 		bold: format('Bold', 'bold', {element: 'bold'}, {selected: wysiwyg.active('STRONG'), sep: true}),
 		italic: format('Italic', 'italic', {element: 'italic'}, {selected: wysiwyg.active('EM')}),
-		underline: format('Underline', 'underline', {element: 'underline'}, {selected: wysiwyg.active('U')})
+		underline: format('Underline', 'underline', {element: 'underline'}, {selected: wysiwyg.active('U')}),
+		strikethrough: format('Strikethrough', 'strikethrough', {element: 'strikethrough'}, {selected: wysiwyg.active('S')})
 	};
 	var headings = {};
 	[1, 2, 3, 4, 5, 6].forEach(function (n) {
@@ -69,7 +70,14 @@ function HTMLeditorRightClick(clicktype, event, elements) {
 	};
 
 	var items;
+	// a text field is one fixed tag: its words can be formatted, the tag stays
+	if (editor && wysiwyg.inline(editor) && (clicktype === 'selectedWord' || clicktype === 'selectedBlock')) {
+		clicktype = 'inline';
+	}
 	switch (clicktype) {
+		case 'inline':
+			items = Object.assign({}, history, inline, link, clear);
+			break;
 		case 'selectedWord':
 			items = Object.assign({}, history, inline, blocks, link, clear);
 			break;

@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Systopic\System\Mail;
 
+use Systopic\System\Sys\Theme;
+
 /**
  * The shell of a system mail: the project logo, like the login, and the
  * theme colours, including whatever the project overrides.
@@ -64,40 +66,12 @@ final class Letter
     /** @return array{main: string, highlight: string, bg: string, text: string} */
     private static function colors(): array
     {
-        if (self::$colors !== null) {
-            return self::$colors;
-        }
-        $vars = [];
-        $files = [];
-        $theme = \Systopic\System\Sys\Packages::panelAsset('css/00_theme.css');
-        if ($theme !== null) {
-            $files[] = $theme;
-        }
-        $root = (string) \fs::$siteRoot;
-        $named = $root . 'css/cms_overrides.css';
-        if (is_file($named)) {
-            $files[] = $named;
-        }
-        foreach (glob($root . 'overrides/css/*.css') ?: [] as $file) {
-            $files[] = $file;
-        }
-        foreach ($files as $file) {
-            $text = (string) @file_get_contents($file);
-            if (preg_match_all('/--(cmsMainColor|cmsHighlightColor|cmsBgColor|cmsTextColor)\s*:\s*#([0-9a-fA-F]{3,8})\b/', $text, $found, PREG_SET_ORDER)) {
-                foreach ($found as $hit) {
-                    $hex = strtolower($hit[2]);
-                    if (strlen($hex) === 3) {
-                        $hex = $hex[0] . $hex[0] . $hex[1] . $hex[1] . $hex[2] . $hex[2];
-                    }
-                    $vars[$hit[1]] = '#' . substr($hex, 0, 6);
-                }
-            }
-        }
-        return self::$colors = [
-            'main' => $vars['cmsMainColor'] ?? '#1f3a45',
-            'highlight' => $vars['cmsHighlightColor'] ?? '#fcb60c',
-            'bg' => $vars['cmsBgColor'] ?? '#f0f3f4',
-            'text' => $vars['cmsTextColor'] ?? '#161c1f',
+        $hex = static fn(string $name): string => '#' . Theme::color($name);
+        return self::$colors ??= [
+            'main' => $hex('cmsMainColor'),
+            'highlight' => $hex('cmsHighlightColor'),
+            'bg' => $hex('cmsBgColor'),
+            'text' => $hex('cmsTextColor'),
         ];
     }
 }

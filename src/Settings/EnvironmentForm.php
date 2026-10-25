@@ -7,7 +7,8 @@ namespace Systopic\System\Settings;
 use Systopic\System\Panels\PanelNode;
 
 /**
- * One card per environment file. Leaving a field writes that value.
+ * One widget per group, the groups of one file shown together. Leaving a
+ * field writes that value.
  */
 final class EnvironmentForm
 {
@@ -40,14 +41,13 @@ final class EnvironmentForm
         foreach ($files as $info) {
             $data = EnvironmentFile::read($info['file']);
             $hidden = $info['file'] === $selected ? '' : ' hidden';
-            echo '<section class="widget envFile"' . $hidden . ' data-env="' . $e($info['file']) . '">';
-            echo '<header><h2>' . $e($info['name']) . '</h2></header>';
+            echo '<div class="envFile"' . $hidden . ' data-env="' . $e($info['file']) . '">';
             self::scalars($info['file'], 'Database', 'db', EnvironmentFile::GROUPS['db'], is_array($data['db'] ?? null) ? $data['db'] : []);
             self::scalars($info['file'], 'Debug', 'debug', EnvironmentFile::GROUPS['debug'], is_array($data['debug'] ?? null) ? $data['debug'] : []);
             self::scalars($info['file'], 'Mail', 'mail', EnvironmentFile::GROUPS['mail'], is_array($data['mail'] ?? null) ? $data['mail'] : []);
             self::version($info['file'], $data);
             self::matches($info['file'], is_array($data['matches'] ?? null) ? $data['matches'] : []);
-            echo '</section>';
+            echo '</div>';
         }
         echo '</div>';
     }
@@ -83,7 +83,7 @@ final class EnvironmentForm
     private static function scalars(string $file, string $title, string $group, array $schema, array $values): void
     {
         $e = static fn($value): string => htmlspecialchars((string) $value, ENT_QUOTES);
-        echo '<div class="projectBar"><h3>' . $e($title) . '</h3></div>';
+        echo '<section class="widget"><header><h2>' . $e($title) . '</h2></header>';
         echo '<div class="tableScroll"><table class="scalars"><tbody>';
         foreach ($schema as $key => $kind) {
             $value = $values[$key] ?? ($kind === 'bool' ? false : '');
@@ -91,29 +91,29 @@ final class EnvironmentForm
             self::control($file, $group, $key, $kind, $value);
             echo '</td></tr>';
         }
-        echo '</tbody></table></div>';
+        echo '</tbody></table></div></section>';
     }
 
     /** @param array<string, mixed> $data */
     private static function version(string $file, array $data): void
     {
         $e = static fn($value): string => htmlspecialchars((string) $value, ENT_QUOTES);
-        echo '<div class="projectBar"><h3>Version</h3></div>';
+        echo '<section class="widget"><header><h2>Version</h2></header>';
         echo '<div class="tableScroll"><table class="scalars"><tbody>';
         foreach (EnvironmentFile::SCALARS as $key) {
             echo '<tr><td><span>' . $e(self::label($key)) . '<small>' . $e($key) . '</small></span></td><td>';
             self::control($file, '', $key, 'string', (string) ($data[$key] ?? ''));
             echo '</td></tr>';
         }
-        echo '</tbody></table></div>';
+        echo '</tbody></table></div></section>';
     }
 
     /** @param list<mixed> $rules */
     private static function matches(string $file, array $rules): void
     {
         $e = static fn($value): string => htmlspecialchars((string) $value, ENT_QUOTES);
-        echo '<div class="projectBar"><h3>Where this config applies</h3>';
-        echo '<button type="button" class="button" data-on_click="addMatch" data-file="' . $e($file) . '"><i class="fa-regular fa-plus"></i>Add</button></div>';
+        echo '<section class="widget"><header><h2>Where this config applies</h2>';
+        echo '<button type="button" class="button" data-on_click="addMatch" data-file="' . $e($file) . '"><i class="fa-regular fa-plus"></i>Add</button></header>';
         echo '<div class="tableScroll"><table class="projectRows"><thead><tr>';
         foreach (EnvironmentFile::MATCH as $field) {
             echo '<th>' . $e(self::label($field)) . '</th>';
@@ -134,7 +134,7 @@ final class EnvironmentForm
             echo '<td class="projectRemove"><button type="button" class="button transparent" title="Remove" data-on_click="userConfirm" data-action="removeMatch" data-confirm="Remove this address?" data-file="' . $e($file) . '" data-index="' . (int) $index . '"><i class="fa-regular fa-trash"></i></button></td>';
             echo '</tr>';
         }
-        echo '</tbody></table></div>';
+        echo '</tbody></table></div></section>';
     }
 
     private static function control(string $file, string $group, string $key, string $kind, mixed $value): void

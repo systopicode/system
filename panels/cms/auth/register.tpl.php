@@ -7,7 +7,7 @@
 	<div class="row">
 		<form method=post action=createAccount  onsubmit='this.classList.add("loading")'>
 			<div class="row">
-				<div class='inputGroup'>
+				<div class='inputGroup'><i class="fa-regular fa-envelope"></i>
 					<input required spellcheck="false" autocapitalize="off" placeholder="Email" type=email autocomplete="username"
 						   name=email_create
 						   value="<?= http::post('email_create') ?>"/>

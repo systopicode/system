@@ -1,12 +1,14 @@
 <?php
 $this->loadJS();
+// the dashboard shows when no child is selected, or one without main (a lightbox like cms/legal/)
+$home = !$this->withChildSelected('main', static fn() => null);
 ?>
 
 <body class="<?= 'CMS_VERSIONDATE' ?> <?= implode(' ', $this->path) ?> <?= 'system' ?>">
 	<main<?= DEBUG() ? ' data-debug' : '' ?>>
 		<div class="main cms">
 			<header>
-				<a class="cmsBrand<?= $this->childSelected ? '' : ' is-home' ?>" href="<?= http::$root ?>cms/" title="fluxo cms">
+				<a class="cmsBrand" href="<?= http::$root ?>cms/" title="fluxo cms">
 					<img class="brandMark" src="<?= \Systopic\System\Sys\Packages::panelAssetHref('img/signet.svg') ?>" alt="fluxo">
 					<img class="brandFull" src="<?= \Systopic\System\Sys\Packages::panelAssetHref('img/logo-horizontal-dark.png') ?>" alt="fluxo">
 				</a>
@@ -33,6 +35,10 @@ $this->loadJS();
 						}
 					}
 					?>
+					<?php $hotkey = \Systopic\System\Sys\Search::hotkey(); ?>
+					<a class="cmsHelp cmsSearchLink ajax" href="<?= http::$root ?>cms/search/" title="Search (<?= $hotkey ?>)">
+						<i class="fa-duotone fa-regular fa-magnifying-glass"></i><span>Search</span><kbd class="cmsKeys"><?= $hotkey ?></kbd>
+					</a>
 					<a class="cmsHelp" target="_blank" rel="noopener" href="https://fluxo-help.1f2c.de" title="Help">
 						<i class="fa-duotone fa-regular fa-circle-question"></i><span>Help</span>
 					</a>
@@ -56,7 +62,11 @@ $this->loadJS();
 			echo '<div class=flexRow>';
 			echo '	<div class=flexColumn>';
 
-			$this->withChildSelected();
+			if ($home) {
+				$this->withView('home');
+			} else {
+				$this->withChildSelected();
+			}
 
 			$this->withChildSelected('footer');
 
@@ -133,7 +143,9 @@ $this->loadJS();
 					var wanted = null;
 					try { wanted = localStorage.getItem('cmsDevice'); } catch (e) {}
 					var devices = document.querySelector('.deviceSwitch');
-					root.setAttribute('data-cms-device', wanted && devices && devices.querySelector('[data-cms-device="' + wanted + '"]') ? wanted : 'desktop');
+					var device = wanted && devices && devices.querySelector('[data-cms-device="' + wanted + '"]') ? wanted : 'desktop';
+					// called for every mutation (the observer below): a write each time restyles the page
+					root.getAttribute('data-cms-device') !== device && root.setAttribute('data-cms-device', device);
 				}
 				document.querySelectorAll('aside.cms nav.sidebarTabs:not([data-ready])').forEach(function (nav) {
 					nav.setAttribute('data-ready', '');

@@ -89,25 +89,13 @@ class Panel extends PanelNode {
 		return $this->sendEmail('emailResetPassword.tpl.php', 'Reset your password', $user);
 	}
 
-	/** @var array<string, array{date: string, notes: list<string>}> GUI versions, newest first */
+	/** @var array<string, array{date: string, new?: list<string>, fixed?: list<string>}> GUI versions, newest first */
 	public array $releases {
-		get => require __DIR__ . '/releases.php';
+		get => \Systopic\System\Sys\Release::notes();
 	}
 
-	/**
-	 * What the login footer shows. A released install sets versionDate in its
-	 * config; otherwise the system package's last git commit.
-	 */
 	public function revision(): string {
-		if (defined('PUBLIC_VERSIONDATE') && PUBLIC_VERSIONDATE !== '') {
-			return (string) PUBLIC_VERSIONDATE;
-		}
-		if (!function_exists('shell_exec')) {
-			return '';
-		}
-		$dir = rtrim((string) \fs::$sysRoot, '/');
-		$line = trim((string) shell_exec('git -C ' . escapeshellarg($dir) . ' log -1 --format=%cs\ %h 2>/dev/null'));
-		return $line;
+		return \Systopic\System\Sys\Release::revision();
 	}
 
 	function sendEmail($template, $subject, User $user) {

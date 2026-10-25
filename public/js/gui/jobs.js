@@ -8,40 +8,68 @@
 		});
 	}
 
+	// A line is built once and then only its numbers change: rebuilt on every
+	// slice of an upload, the spinner restarts and the bar flickers.
 	function paint() {
 		var el = document.querySelector('footer.cmsStatusbar .cmsJobs');
 		if (!el) {
 			return;
 		}
-		var html = '';
+		var any = false;
 		['upload', 'video'].forEach(function (id) {
 			var job = slots[id];
+			var line = el.querySelector('span.job[data-job="' + id + '"]');
 			if (!job) {
+				line && line.remove();
 				return;
+			}
+			any = true;
+			if (!line) {
+				line = document.createElement('span');
+				line.className = 'job';
+				line.dataset.job = id;
+				line.innerHTML = '<i class="spin"></i><b></b><span></span><span class="bar"><i></i></span>';
+				el.appendChild(line);
 			}
 			var total = Math.max(1, job.total || 0);
 			var done = job.done || 0;
-			var pct = Math.round((done / total) * 100);
-			var spin = done < job.total ? '<i class="spin"></i>' : '';
-			html += '<span class="job">' + spin
-				+ '<b>' + esc(job.title) + '</b>'
-				+ '<span>' + done + ' / ' + job.total + '</span>'
-				+ '<span class="bar"><i style="width:' + pct + '%"></i></span>'
-				+ '</span>';
+			// progress (0..1) for the bar when the count alone moves too seldom (one big file)
+			var pct = Math.round((job.progress !== undefined ? job.progress : done / total) * 100) + '%';
+			if (job.el) {
+				job.el.classList.add('is-busy');
+				job.el.style.setProperty('--jobProgress', pct);
+			}
+			line.querySelector('i.spin').hidden = done >= job.total;
+			line.querySelector('b').innerHTML = esc(job.title);
+			line.querySelector('b + span').textContent = done + ' / ' + job.total;
+			line.querySelector('.bar i').style.width = pct;
 		});
-		if (!html) {
-			el.classList.remove('on');
-			el.hidden = true;
-			el.innerHTML = '';
-			return;
+		el.hidden = !any;
+		el.classList.toggle('on', any);
+	}
+
+	// Closing or reloading the tab would cut a running upload off. Video formats
+	// are rendered on the server and carry on, so they do not ask.
+	window.addEventListener('beforeunload', function (event) {
+		var server = window.sys && sys.core && sys.core.server;
+		if (slots.upload || (server && server.uploading > 0)) {
+			event.preventDefault();
+			event.returnValue = '';
 		}
-		el.hidden = false;
-		el.classList.add('on');
-		el.innerHTML = html;
+	});
+
+	// state.el: the button or tile the job started from - it shows the progress too
+	function release(id, next) {
+		var el = slots[id] && slots[id].el;
+		if (el && (!next || next.el !== el)) {
+			el.classList.remove('is-busy');
+			el.style.removeProperty('--jobProgress');
+		}
 	}
 
 	window.cmsJobs = {
 		update: function (id, state) {
+			release(id, state);
 			if (!state) {
 				delete slots[id];
 			} else {
@@ -50,6 +78,7 @@
 			paint();
 		},
 		clear: function (id) {
+			release(id);
 			delete slots[id];
 			paint();
 		}

@@ -7,7 +7,7 @@
     <div class="row">
 		<form action=doLogin onsubmit='this.classList.add("loading")' >
 			<div class="row">
-				<div class='inputGroup'>
+				<div class='inputGroup'><i class="fa-regular fa-envelope"></i>
 					<input required spellcheck="false" placeholder="Email" autocapitalize="off" type="email" autocomplete="username"
 						   name=username
 						   value="<?= http::put('username', '') ?>"/>
@@ -15,7 +15,7 @@
 				</div>
 			</div>
 			<div class="row">
-				<div class='inputGroup'>
+				<div class='inputGroup'><i class="fa-regular fa-lock"></i>
 					<input required spellcheck="false" placeholder="Password" type=password name=password autocomplete="current-password"
 						   autocapitalize="off"/>
 					<span class='bar'></span>

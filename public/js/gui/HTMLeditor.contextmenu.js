@@ -203,10 +203,10 @@ function initContenteditableContextMenus() {
 // command runs on it: the last range in an editor comes back first.
 var editorRange = null;
 var editorPointer = 'mouse';
-/** The WYSIWYG editor around node - plain text fields have no formatting. */
+/** The WYSIWYG editor around node - a text field (.plaintext) too, with inline formats only. */
 var wysiwygOf = function (node) {
 	var el = node && (node.nodeType === 1 ? node : node.parentElement);
-	return el && el.closest('.editor[contenteditable=true]:not(.plaintext)');
+	return el && el.closest('.editor[contenteditable=true]');
 };
 /** The image or video a range holds alone - a click on an image selects it. */
 var selectedMedia = function (range) {

@@ -438,16 +438,16 @@ div.cms.message pre{
 }
 
 /* Wortmarke nur auf dem Dashboard. In den Modulen bleibt das Zeichen. */
-.cms a.cmsBrand.is-home{
+body > main:has(> div.content .dashboard) a.cmsBrand{
     justify-content: flex-start;
     padding-left: 0.85rem;
 }
 
-.cms a.cmsBrand.is-home img.brandMark{
+body > main:has(> div.content .dashboard) a.cmsBrand img.brandMark{
     display: none;
 }
 
-.cms a.cmsBrand.is-home img.brandFull{
+body > main:has(> div.content .dashboard) a.cmsBrand img.brandFull{
     display: block;
     position: relative;
     z-index: 2;
@@ -458,11 +458,112 @@ div.cms.message pre{
     transform: translateY(-5%);
 }
 
-main:has(a.cmsBrand.is-home) > div.main > header{
-    overflow: visible;
-    z-index: 1700;
+/* Dashboard: the rail opens up, icon and label side by side */
+body > main:has(> div.content .dashboard) > div.main{
+    flex-basis: 11.5rem;
+    width: 11.5rem;
+    min-width: 11.5rem;
+    max-width: 11.5rem;
 }
 
-main:has(a.cmsBrand.is-home) > div.content > header{
-    padding-left: 7.5rem;
+body > main:has(> div.content .dashboard) > div.main :is(nav, div.bottomMenu){
+    width: 100%;
+}
+
+body > main:has(> div.content .dashboard) > div.main nav ul li a,
+body > main:has(> div.content .dashboard) .cms div.bottomMenu a.cmsHelp{
+    flex-direction: row;
+    justify-content: flex-start;
+    gap: 0.75rem;
+    min-height: 2.6rem;
+    padding: 0.45rem 0.85rem;
+}
+
+body > main:has(> div.content .dashboard) > div.main nav ul li a i,
+body > main:has(> div.content .dashboard) .cms div.bottomMenu a.cmsHelp i{
+    width: 1.25rem;
+    font-size: 1.1rem;
+    text-align: center;
+}
+
+body > main:has(> div.content .dashboard) > div.main nav ul li a span{
+    width: auto;
+    font-size: 0.85rem;
+    text-align: left;
+}
+
+body > main:has(> div.content .dashboard) .cms div.bottomMenu a.cmsHelp{
+    font-size: 0.85rem;
+}
+
+html:not(.has-keyboard) .cmsKeys{
+    display: none;
+}
+
+.cms div.bottomMenu a.cmsSearchLink kbd{
+    padding: 0 0.3rem;
+    border: 1px solid currentColor;
+    border-radius: 4px;
+    font: inherit;
+    font-size: 0.65rem;
+    opacity: 0.6;
+}
+
+body > main:has(> div.content .dashboard) .cms div.bottomMenu a.cmsSearchLink kbd{
+    margin-left: auto;
+    font-size: 0.7rem;
+}
+
+.cms div.bottomMenu a.cmsAccountName{
+    display: none;
+}
+
+body > main:has(> div.content .dashboard) .cms div.bottomMenu div.cmsAccount{
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.2rem 0.6rem;
+    border-radius: var(--cmsRadius);
+}
+
+body > main:has(> div.content .dashboard) .cms div.bottomMenu div.cmsAccount:hover{
+    background: var(--cmsOnDark);
+}
+
+body > main:has(> div.content .dashboard) .cms div.bottomMenu div.cmsAccount:hover div.signet:after{
+    content: none;
+}
+
+body > main:has(> div.content .dashboard) .cms div.bottomMenu .signet{
+    flex: none;
+    margin: 0.5rem 0 0.25rem;
+}
+
+body > main:has(> div.content .dashboard) .cms div.bottomMenu a.cmsAccountName{
+    display: block;
+    flex: 1 1 auto;
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    font-size: 0.85rem;
+    line-height: 1.25;
+    color: inherit;
+    background: none;
+    text-align: left;
+    overflow-wrap: anywhere;
+}
+
+/* What the CMS itself puts into the page preview: site css and project
+   overrides stop at .cmsOwn (head.tpl.php), the inherited values are set
+   back here. */
+article.cmsContent .cmsOwn{
+    color: var(--cmsTextColor);
+    font: 400 0.875rem/1.45 var(--cmsFont);
+    letter-spacing: normal;
+    text-align: left;
+    text-transform: none;
+}
+article.cmsContent div.cmsOwn{
+    padding: 1.25rem;
 }

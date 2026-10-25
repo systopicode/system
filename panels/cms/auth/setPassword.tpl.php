@@ -8,14 +8,14 @@
 		<form method=post action=setPassword  onsubmit='this.classList.add("loading")'>
 			<input type=hidden name=key value="<?= http::get('key', http::post('key')) ?>"/>
 			<div class="row">
-				<div class='inputGroup'>
+				<div class='inputGroup'><i class="fa-regular fa-lock"></i>
 					<input type=password name="password" placeholder='New Password' required spellcheck="false" autocapitalize="off"
 						   autocomplete="new-password">
 					<span class='bar'></span>
 				</div>
 			</div>
 			<div class="row">
-				<div class='inputGroup'>
+				<div class='inputGroup'><i class="fa-regular fa-lock"></i>
 					<input type=password name="password_repeat" placeholder='Repeat New Password' required spellcheck="false" autocapitalize="off"
 						   autocomplete="new-password">
 					<span class='bar'></span>

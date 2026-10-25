@@ -58,4 +58,17 @@ class Panel extends CmsPanel {
 					'sortDesc' => FALSE,
 		];
 	}
+
+	public function searchHits(\Systopic\System\Sys\Search $search): void {
+		$users = \Systopic\Db\Schema\Schema::tableNameOf(User::class);
+		$rows = $search->scope->connection->all(
+			"SELECT user_id, user_name, user_fullname, user_email FROM $users
+			 WHERE LOWER(CONCAT_WS(' ', user_name, user_fullname, user_email)) LIKE ? ORDER BY user_fullname, user_name LIMIT " . $search::PER_GROUP,
+			[$search->like()],
+		);
+		foreach ($rows as $row) {
+			$name = trim((string) $row['user_fullname']) !== '' ? (string) $row['user_fullname'] : (string) $row['user_name'];
+			$search->add('Users', 'fa-user', $name, (string) $row['user_email'], $this->getHref(\http::$root) . 'edit/?user_id=' . (int) $row['user_id']);
+		}
+	}
 }

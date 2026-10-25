@@ -1,0 +1,565 @@
+/****************************** DASHBOARD ***************************/
+body > main:has(> div.content .dashboard) > div.content{
+	overflow: hidden;
+	border-radius: var(--cmsRadiusLg);
+}
+
+.flexColumn:has(> .dashboard){
+	min-height: 0;
+	overflow-y: auto;
+}
+
+.dashboard{
+	padding: 1.75rem 1.25rem 1.25rem;
+}
+
+.dashHead{
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	flex-wrap: wrap;
+	gap: 1rem;
+	margin: 0 0 1.5rem;
+}
+
+.dashHead h1{
+	margin: 0;
+	font-size: 1.6rem;
+}
+
+.dashHead p{
+	margin: 0.2rem 0 0;
+	color: var(--cmsSubText);
+}
+
+/* fixed columns (Panel::dashboardColumns): a moved widget leaves the others where they are */
+.dashboard .dashWidgets{
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(min(19rem, 100%), 1fr));
+	gap: 0 1.25rem;
+}
+
+.dashColumn{
+	display: flex;
+	flex-direction: column;
+	min-width: 0;
+}
+
+/* the end of a column, empty ones included */
+.dashDrop{
+	display: none;
+	flex: 1 0 4rem;
+	margin-bottom: 1.25rem;
+	border: 1px dashed var(--cmsLineStrong);
+	border-radius: var(--cmsRadiusLg);
+}
+
+body.widgetDragging .dashDrop{
+	display: block;
+}
+
+.dashDrop.dropTarget{
+	border-color: var(--cmsHighlightColor);
+	background: color-mix(in srgb, var(--cmsHighlightColor) 8%, transparent);
+}
+
+.dashWidget{
+	position: relative;
+}
+
+.dashHead nav{
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.5rem;
+}
+
+.dashHead nav .button{
+	margin: 0;
+}
+
+/* customize: drag by the title, the cross hides, hidden ones come back above */
+.dashCustomize{
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: space-between;
+	gap: 0.5rem 1rem;
+	margin: -0.5rem 0 1.25rem;
+	padding: 0.75rem 1rem;
+	border: 1px dashed var(--cmsLineStrong);
+	border-radius: var(--cmsRadiusLg);
+	color: var(--cmsSubText);
+	font-size: 0.85rem;
+}
+
+.dashCustomize > p{
+	margin: 0;
+}
+
+.dashWidgets.is-editing .dashWidget > header{
+	padding-right: 2.75rem;
+}
+
+.dashWidgets.is-editing .dashWidget{
+	cursor: grab;
+}
+
+body.widgetDragging,
+body.widgetDragging *{
+	cursor: grabbing;
+}
+
+.dashWidget > header h2{
+	gap: 0.5rem;
+}
+
+.dashWidgets.is-editing .dashWidget{
+	outline: 1px dashed var(--cmsLineStrong);
+	outline-offset: 2px;
+	-webkit-touch-callout: none;
+	-webkit-user-select: none;
+	user-select: none;
+}
+
+/* while customizing a widget is a tile: no links, no hover areas, only the
+   long press, the cross and the insert lines */
+.dashWidgets.is-editing .dashWidget > :not(div.sort, .dashHide){
+	pointer-events: none;
+}
+
+/* the widget header sits at 1600 for its popovers - here it would cover the drag helper */
+.dashWidget > header{
+	z-index: auto;
+}
+
+.dashWidget.dragged{
+	opacity: 0.4;
+}
+
+/* insert lines as in the tree: a wide catch area, the helper draws the line */
+body.widgetDragging .dashWidget > div.sort{
+	display: block;
+}
+
+body.dragging .dashWidgets .dashWidget > div.sort.v{
+	background: none;
+}
+
+.dashWidget > div.sort.v{
+	left: 0;
+	z-index: 5;
+}
+
+.dashWidget > div.sort.v.insertBefore{
+	top: -0.95rem;
+	padding-top: 0.5rem;
+	padding-bottom: 3rem;
+}
+
+.dashWidget > div.sort.v.insertAfter{
+	bottom: -0.95rem;
+	padding-top: 3rem;
+	padding-bottom: 0.5rem;
+}
+
+.dashboard .dashHide{
+	position: absolute;
+	top: 0.5rem;
+	right: 0.5rem;
+	z-index: 6;
+	display: grid;
+	place-items: center;
+	width: 2rem;
+	height: 2rem;
+	margin: 0;
+	padding: 0;
+	border: 0;
+	border-radius: 50%;
+	background: var(--cmsPanelAlt);
+	color: var(--cmsTextColor);
+	cursor: pointer;
+}
+
+.dashboard .dashHide:hover{
+	background: var(--cmsError);
+	color: #fff;
+}
+
+/* lists: pages, tasks, sign-ins */
+.dashList{
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.dashList li + li{
+	border-top: 1px solid var(--cmsLine);
+}
+
+.dashList li > :is(a, div){
+	display: flex;
+	align-items: center;
+	gap: 0.75rem;
+	padding: 0.6rem 1.25rem;
+	color: inherit;
+	text-decoration: none;
+}
+
+.dashList li > a:hover{
+	background: var(--cmsPanelAlt);
+}
+
+.dashList li > :is(a, div) > i{
+	flex: none;
+	width: 1.1rem;
+	color: var(--cmsMuted);
+	text-align: center;
+}
+
+.dashList li > :is(a, div) > span:not(.dashInitials){
+	display: flex;
+	flex: 1 1 auto;
+	flex-direction: column;
+	min-width: 0;
+}
+
+.dashList strong{
+	overflow: hidden;
+	font-weight: 600;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+}
+
+.dashList small,
+.dashBackup small{
+	color: var(--cmsSubText);
+	font-size: 0.78rem;
+}
+
+/* to do: one line per task, count first; a line opens to its pages */
+.dashTasks summary{
+	display: flex;
+	align-items: center;
+	gap: 0.75rem;
+	padding: 0.6rem 1.25rem;
+	cursor: pointer;
+	list-style: none;
+}
+
+.dashTasks summary::-webkit-details-marker{
+	display: none;
+}
+
+.dashTasks summary:hover{
+	background: var(--cmsPanelAlt);
+}
+
+.dashTasks :is(summary, li > a) > i:first-child{
+	flex: none;
+	width: 1.1rem;
+	color: var(--cmsMuted);
+	text-align: center;
+}
+
+.dashTasks :is(summary, li > a) > span{
+	flex: 1 1 auto;
+	min-width: 0;
+}
+
+.dashTasks :is(summary, li > a) > span small{
+	display: block;
+	line-height: 1.3;
+}
+
+.dashTasks li.is-fix .dashCount{
+	background: color-mix(in srgb, var(--cmsError) 16%, transparent);
+	color: var(--cmsError);
+}
+
+.dashTasks li.is-improve .dashCount{
+	background: color-mix(in srgb, var(--cmsWarning) 25%, transparent);
+}
+
+.dashTasks :is(summary, li > a) > i:last-child{
+	color: var(--cmsMuted);
+	font-size: 0.75rem;
+	transition: transform .15s;
+}
+
+.dashTasks details[open] > summary > i:last-child{
+	transform: rotate(180deg);
+}
+
+.dashCount{
+	min-width: 2.6rem;
+	padding: 0.1rem 0.5rem;
+	border-radius: 999px;
+	background: var(--cmsPanelAlt);
+	font-weight: 600;
+	text-align: center;
+}
+
+.dashTasks details > p{
+	margin: 0;
+	padding: 0 1.25rem 0.35rem 3.1rem;
+	color: var(--cmsSubText);
+	font-size: 0.78rem;
+}
+
+.dashTasks details > ul{
+	margin: 0;
+	padding: 0 1.25rem 0.6rem 3.1rem;
+	list-style: none;
+	font-size: 0.85rem;
+}
+
+.dashTasks details > ul li{
+	border: 0;
+	padding: 0.15rem 0;
+}
+
+.dashTasks details > ul li > a{
+	display: inline;
+	padding: 0;
+	color: var(--cmsMainColor);
+}
+
+.dashTasks details > ul li > a small{
+	display: block;
+	color: var(--cmsMuted);
+	font-size: 0.75rem;
+	overflow-wrap: anywhere;
+}
+
+.dashTasks details > p:last-child{
+	padding-bottom: 0.75rem;
+}
+
+.dashTasks details > ul li > a:hover{
+	background: none;
+	text-decoration: underline;
+}
+
+.dashBadge{
+	flex: none;
+	padding: 0.1rem 0.5rem;
+	border-radius: 999px;
+	background: var(--cmsPanelAlt);
+	color: var(--cmsSubText);
+	font-size: 0.7rem;
+	font-style: normal;
+}
+
+.dashInitials{
+	display: grid;
+	flex: none;
+	place-items: center;
+	width: 2rem;
+	height: 2rem;
+	border-radius: 50%;
+	background: var(--cmsPanelAlt);
+	overflow: hidden;
+	font-size: 0.75rem;
+	font-weight: 600;
+}
+
+.dashInitials img{
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+}
+
+/* tabs below the widget header (Panel::dashTab) */
+.dashTabs{
+	display: flex;
+	gap: 1rem;
+	padding: 0 1.25rem;
+	border-bottom: 1px solid var(--cmsLine);
+}
+
+.dashboard .dashTabs button{
+	margin: 0 0 -1px;
+	padding: 0.5rem 0;
+	border: 0;
+	border-bottom: 2px solid transparent;
+	border-radius: 0;
+	background: none;
+	color: var(--cmsMuted);
+	font-size: 0.8125rem;
+	font-weight: 500;
+	cursor: pointer;
+}
+
+.dashboard .dashTabs button[aria-selected="true"]{
+	border-bottom-color: var(--cmsHighlightColor);
+	color: var(--cmsTextColor);
+}
+
+/* figures */
+.dashFigures{
+	display: grid;
+	grid-template-columns: repeat(2, 1fr);
+	gap: 1px;
+	background: var(--cmsLine);
+}
+
+.dashFigures a{
+	display: grid;
+	grid-template-columns: auto 1fr;
+	align-items: center;
+	column-gap: 0.75rem;
+	padding: 1rem 1.25rem;
+	background: var(--cmsCanvas);
+	color: inherit;
+	text-decoration: none;
+}
+
+.dashFigures a:hover{
+	background: var(--cmsPanelAlt);
+}
+
+.dashFigures i{
+	grid-row: span 2;
+	color: var(--cmsMuted);
+	font-size: 1.1rem;
+}
+
+.dashFigures strong{
+	font-size: 1.4rem;
+	line-height: 1.2;
+}
+
+.dashFigures span{
+	color: var(--cmsSubText);
+	font-size: 0.78rem;
+}
+
+/* thumbs */
+.dashThumbs{
+	display: grid;
+	grid-template-columns: repeat(4, 1fr);
+	gap: 0.5rem;
+	padding: 1rem 1.25rem;
+}
+
+.dashThumbs a{
+	position: relative;
+	aspect-ratio: 1;
+	overflow: hidden;
+	border-radius: var(--cmsRadius);
+	background: var(--cmsPanelAlt);
+}
+
+.dashThumbs img{
+	display: block;
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+}
+
+.dashThumbs i{
+	position: absolute;
+	right: 0.35rem;
+	bottom: 0.35rem;
+	color: #fff;
+	text-shadow: 0 1px 3px rgba(0,0,0,.5);
+}
+
+/* the picture does not load (gui/ui.js) */
+.dashThumbs .thumbMissing{
+	border: 1px dashed var(--cmsLine);
+}
+.dashThumbs .thumbMissing > img,
+.dashThumbs .thumbMissing > i:not(.thumbBroken){
+	display: none;
+}
+.dashThumbs i.thumbBroken{
+	inset: 0;
+	width: 100%;   /* Font Awesome gives icons a fixed width */
+	height: 100%;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	font-size: 1.25rem;
+	color: var(--cmsMuted);
+	text-shadow: none;
+}
+
+/* facts */
+.dashFacts{
+	display: grid;
+	grid-template-columns: auto 1fr;
+	gap: 0.45rem 1rem;
+	margin: 0;
+}
+
+.dashFacts dt{
+	color: var(--cmsSubText);
+}
+
+.dashFacts dd{
+	margin: 0;
+	text-align: right;
+}
+
+.dashMeter{
+	height: 0.4rem;
+	margin-top: 1rem;
+	overflow: hidden;
+	border-radius: 999px;
+	background: var(--cmsPanelAlt);
+}
+
+.dashMeter span{
+	display: block;
+	height: 100%;
+	background: var(--cmsMainColor);
+}
+
+.dashMeter.dashWarn span{
+	background: var(--cmsError);
+}
+
+.dashBackup p strong,
+.dashBackup p small{
+	display: block;
+}
+
+.dashBackup .dashWarn strong{
+	color: var(--cmsError);
+}
+
+/* hidden widgets and the legal line */
+.dashHidden{
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 0.5rem;
+	margin: 0;
+}
+
+.dashHidden .button{
+	margin: 0;
+}
+
+.dashFooter{
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: space-between;
+	gap: 0.5rem 1rem;
+	margin-top: 2rem;
+	padding-top: 1rem;
+	border-top: 1px solid var(--cmsLine);
+	color: var(--cmsSubText);
+	font-size: 0.75rem;
+}
+
+.dashFooter nav{
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.25rem 1rem;
+}
+
+.dashFooter a{
+	color: inherit;
+}

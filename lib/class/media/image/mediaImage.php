@@ -119,6 +119,7 @@ class mediaImage {
 			'jpg',
 			'webp',
 			'png',
+			'gif',   // an animated one: its first frame
 			'pdf'
 		]);
 
@@ -134,9 +135,10 @@ class mediaImage {
 		}
 
 		if (!$fileexists || !$typeSupported) {
-			// Missing file or a type Imagick cannot read (mp4): the afternoon
-			// renderer paints this notice onto a gray canvas instead of 404ing.
-			$msg .= "Support $type:" . ($typeSupported ? 'TRUE' : 'FALSE');
+			// Missing file or a type Imagick cannot read: no picture of the
+			// notice - it would be stored as the format, and an <img> showing
+			// it never learns that it failed (media.php answers 404).
+			throw new \RuntimeException($msg . "Support $type:" . ($typeSupported ? 'TRUE' : 'FALSE'));
 		}
 
 		$lay_image = new Imagick();
@@ -344,17 +346,6 @@ class mediaImage {
 			}
 			$compoSiteWidth = ($cnv_width / 2) - ($lay_width / 2) + (0.5 - $crop_left) * $lay_width;
 			$cnv_image->compositeImage($lay_image, $originalCompose, (int) round($compoSiteWidth), (int) round(($cnv_height / 2) - ($lay_height / 2) + ((0.5 - $crop_top) * $lay_height)));
-		} else {
-			$pixel = new ImagickPixel("rgba(100,100,100,0.8)");
-			$cnv_image->newImage((int) round($cnv_width), (int) round($cnv_height), $pixel);
-			$draw = new ImagickDraw();
-			$draw->setFillColor('rgba(255,255,255,1)');
-			$scale = max(12, $cnv_height / 30, $cnv_width / 30);
-			$draw->setFontSize((float) $scale);
-			$draw->setTextAntialias(TRUE);
-			$cnv_image->annotateImage($draw, $scale, $scale * 2, 0, $msg);
-			$cnv_image->setImageFormat('png');
-			return $cnv_image;
 		}
 		$cnv_image->setImageFormat($filetype);
 		if ($filetype == 'png') {

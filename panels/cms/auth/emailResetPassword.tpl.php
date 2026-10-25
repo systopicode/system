@@ -5,7 +5,7 @@ use Systopic\System\Mail\Letter;
 
 $e = static fn($v): string => htmlspecialchars((string) $v, ENT_QUOTES);
 $link = \http::$siteUrl . 'cms/auth/reset?key=' . rawurlencode((string) $user->activationKey);
-$expires = $user->activationKeyExpire?->format('j M Y, H:i') ?? '';
+$expires = \Systopic\System\Sys\LocalTime::format($user->activationKeyExpire, 'j M Y, H:i');
 echo Letter::render('Reset your password',
 	'<p style="margin:0 0 12px;">Hello ' . $e($user->name) . ',</p>'
 	. '<p style="margin:0;">Follow the link to choose a new password.</p>'

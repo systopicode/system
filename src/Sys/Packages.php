@@ -76,13 +76,13 @@ final class Packages
     }
 
     /**
-     * `$file` (`img/signet.svg`) in the first folder that has it: the
-     * project's overrides/, the panel asset folders, the system's own
-     * public/ last - NULL if none has it.
+     * `$file` (`img/signet.svg`) in the first panel asset folder that has it, the system's own public/ last - NULL if none has it.
+     * Images come from the project's overrides/ first, so a project replaces the signet, the favicons or the share image by name.
      */
     public static function panelAsset(string $file): ?string
     {
-        foreach ([\fs::$siteRoot . 'overrides/', ...self::$panelAssets, \fs::$sysRoot . 'public/'] as $dir) {
+        $project = str_starts_with($file, 'img/') ? [(string) \fs::$siteRoot . 'overrides/'] : [];
+        foreach ([...$project, ...self::$panelAssets, \fs::$sysRoot . 'public/'] as $dir) {
             if (is_file(\fs::toNative($dir . $file))) {
                 return $dir . $file;
             }

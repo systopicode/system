@@ -71,6 +71,10 @@ body.cms {
 			letter-spacing: -0.03em;
 		}
 
+		h1 + main.authText {
+			margin-top: 1rem;
+		}
+
 		p.authLead {
 			flex: 0 0 auto;
 			margin: 0.35rem 0 1.25rem;
@@ -97,8 +101,32 @@ body.cms {
 			width: 100%;
 		}
 
+		.inputGroup {
+			position: relative;
+			margin: 0 0 0.6rem;
+
+			> i {
+				position: absolute;
+				top: 50%;
+				left: 0.85rem;
+				z-index: 1;
+				width: 1rem;
+				transform: translateY(-50%);
+				color: var(--cmsMuted);
+				text-align: center;
+				pointer-events: none;
+			}
+
+			&:focus-within > i {
+				color: var(--cmsMainColor);
+			}
+		}
+
 		.inputGroup input {
+			width: 100%;
 			min-height: 2.75rem;
+			margin: 0;
+			padding-left: 2.5rem;
 			border-radius: var(--cmsRadius);
 			font-size: 1rem;
 		}
@@ -148,78 +176,6 @@ body.cms {
 
 			a {
 				color: var(--cmsSubText);
-			}
-		}
-
-		main.authText {
-			display: flex;
-			flex-direction: column;
-			gap: 0.85rem;
-			font-size: 0.875rem;
-
-			p,
-			li {
-				font-size: inherit;
-				line-height: 1.45;
-				color: var(--cmsSubText);
-			}
-
-			ul {
-				margin: 0;
-				padding-left: 1.15rem;
-				display: flex;
-				flex-direction: column;
-				gap: 0.45rem;
-				list-style: disc outside;
-			}
-
-			li {
-				display: list-item;
-				list-style-type: disc;
-				padding-left: 0.2rem;
-				font-size: 0.875rem;
-				line-height: 1.45;
-			}
-
-			li::marker {
-				color: var(--cmsMainColor);
-			}
-
-			h2 {
-				margin: 0.4rem 0 -0.35rem;
-				font-size: 0.95rem;
-
-				small {
-					margin-left: 0.35rem;
-					font-size: 0.75rem;
-					font-weight: 400;
-					color: var(--cmsMuted);
-				}
-			}
-
-			h3 {
-				margin: 0 0 -0.45rem;
-				font-size: 0.6875rem;
-				font-weight: 600;
-				letter-spacing: 0.06em;
-				text-transform: uppercase;
-				color: var(--cmsMuted);
-			}
-
-			.authScroll {
-				display: flex;
-				flex-direction: column;
-				gap: 0.85rem;
-			}
-
-			pre {
-				margin: 0;
-				padding: 0.85rem 1rem;
-				background: var(--cmsFieldBg);
-				color: var(--cmsTextColor);
-				font-size: 0.75rem;
-				line-height: 1.45;
-				white-space: pre-wrap;
 			}
 		}
 	}

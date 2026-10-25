@@ -508,6 +508,7 @@ div.main select{
     background: color-mix(in srgb, var(--cmsMainColor) 22%, var(--cmsLine));
     transition: background-color .2s;
     cursor: pointer;
+    touch-action: pan-y;   /* a sideways swipe toggles it (cms panel.js), not the page */
 }
 
 .cms input[type="checkbox"].switch + div div{

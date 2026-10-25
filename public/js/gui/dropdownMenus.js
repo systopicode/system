@@ -286,10 +286,21 @@ document.addEventListener('click', function (event) {
 		}
 		return;
 	}
-	if (!(event.target.closest && event.target.closest('.splitApplyList')) || event.target.closest('.splitApplyList a, .splitApplyList button')) {
+	if (!(event.target.closest && event.target.closest('.splitApplyList'))) {
 		closeSplitMenus();
 	}
 });
+
+document.addEventListener('cms:rendered', function () {
+	closeSplitMenus();
+});
+
+// An entry closes its menu even when its own handler (ajax links) stops the click.
+document.addEventListener('click', function (event) {
+	if (event.target.closest && event.target.closest('.splitApplyList a, .splitApplyList button')) {
+		setTimeout(closeSplitMenus);
+	}
+}, true);
 
 function closeSplitMenus() {
 	document.querySelectorAll('.splitApplyList.is-open').forEach(function (list) {

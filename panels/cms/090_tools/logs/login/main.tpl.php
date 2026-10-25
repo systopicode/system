@@ -10,7 +10,7 @@ $query = trim((string) ($_GET['q'] ?? ''));
 $shown = static fn(array $parts): bool => $query === '' || mb_stripos(implode(' ', $parts) . ' ' . LoginLog::methodLabel($parts[4]), $query) !== false;
 ?>
 <h1>Login log</h1>
-<p class="tagsHint">Sign-ins, failed attempts and sign-outs. Newest first.</p>
+<p class="tagsHint">Sign-ins, failed attempts and sign-outs. Newest first. For data protection, entries are deleted after <?= LoginLog::KEEP_DAYS ?> days.</p>
 <section class="widget is-list logList">
 	<header>
 		<h2>Sign-ins</h2>
@@ -35,7 +35,7 @@ $shown = static fn(array $parts): bool => $query === '' || mb_stripos(implode(' 
 				<tbody>
 					<?php foreach ($lines as $parts) { ?>
 						<tr<?= $shown($parts) ? '' : ' hidden' ?>>
-							<td><?= $e($parts[0]) ?></td>
+							<td><?= $e(($d = DateTimeImmutable::createFromFormat('d.m.Y-H:i:s', $parts[0])) ? \Systopic\System\Sys\LocalTime::format($d, 'd.m.Y H:i:s') : $parts[0]) ?></td>
 							<td><?= $e($parts[1]) ?></td>
 							<td><?= $e($parts[2]) ?></td>
 							<td><?= $e(LoginLog::methodLabel($parts[4])) ?></td>

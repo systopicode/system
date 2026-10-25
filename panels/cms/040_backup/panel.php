@@ -154,7 +154,7 @@ class Panel extends CmsPanel
 	 */
 	public function acceptBackupSpan(string $original, int $spanIndex, bool $last, string $binary): ?string
 	{
-		$safe = str::getSafeName($original);
+		$safe = \str::getSafeName($original);
 		if ($safe === '' || $safe === '.') {
 			$safe = 'backup.zip';
 		}

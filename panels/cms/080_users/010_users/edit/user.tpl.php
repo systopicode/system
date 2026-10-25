@@ -13,7 +13,7 @@ $devices = $codes ? $this->devices : [];
 $issued = $this->issuedCode;
 $viewer = \Systopic\System\Auth\Session::isSuperuser();
 $e = static fn($v): string => htmlspecialchars((string) $v, ENT_QUOTES);
-$when = static fn(?DateTimeImmutable $d): string => $d?->format('j M Y, H:i') ?? '';
+$when = static fn(?DateTimeImmutable $d): string => \Systopic\System\Sys\LocalTime::format($d, 'j M Y, H:i');
 $field = static function (string $label, string $value, ?string $action = null, string $type = 'text', string $class = '') use ($e): string {
 	$input = $action === null
 		? '<input type="' . $type . '" readonly value="' . $e($value) . '">'
@@ -21,7 +21,7 @@ $field = static function (string $label, string $value, ?string $action = null, 
 	return '<label class="field' . ($class !== '' ? ' ' . $class : '') . '"><span>' . $label . '</span>' . $input . '</label>';
 };
 $signIns = array_slice(LoginLog::entries([(string) $user->name, (string) $user->email]), 0, 5);
-$logged = static fn(string $date): string => ($d = DateTimeImmutable::createFromFormat('d.m.Y-H:i:s', $date)) ? $d->format('j M Y, H:i') : $date;
+$logged = static fn(string $date): string => ($d = DateTimeImmutable::createFromFormat('d.m.Y-H:i:s', $date)) ? \Systopic\System\Sys\LocalTime::format($d, 'j M Y, H:i') : $date;
 ?>
 <header>
 	<h1><?= $e(trim((string) $user->fullname) !== '' ? $user->fullname : $user->name) ?></h1>
@@ -132,7 +132,7 @@ $logged = static fn(string $date): string => ($d = DateTimeImmutable::createFrom
 						<?php } ?>
 						<?php if ($issued !== null) {
 							$url = \http::$siteUrl . 'auth/?code=' . rawurlencode($issued['code']);
-							$until = (new DateTimeImmutable('@' . $issued['expires']))->setTimezone(new DateTimeZone('Europe/Berlin'))->format('j M, H:i');
+							$until = \Systopic\System\Sys\LocalTime::format((int) $issued['expires'], 'j M, H:i');
 						?>
 							<div class="issuedCode">
 								<p><?= $issued['purpose'] === 'invite' ? 'Invite' : 'Recovery' ?>, valid until <?= $e($until) ?>, once.</p>

@@ -7,7 +7,7 @@ use Systopic\System\Tables\Users\Operator as UserOperator;
 
 switch ($this->action) {
 	case 'logout':
-		\Systopic\System\Auth\LoginLog::write(\Systopic\System\Auth\Session::current()->name, 'logged out');
+		\Systopic\System\Auth\LoginLog::write(\Systopic\System\Auth\Session::current()->name, 'logged out', \Systopic\System\Auth\LoginLog::LOGOUT_BUTTON);
 		\Systopic\System\Auth\Session::logout();
 		\http::refresh('../auth/logout');
 		break;

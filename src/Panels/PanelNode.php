@@ -305,8 +305,19 @@ class PanelNode implements ClientExportable, RenderNode
         $state  = &$GLOBALS['state'];
         $action = $this->action;
         $user = \Systopic\System\Auth\Session::current();
+        $renderStyle = null;
         include $file;
+        if ($renderStyle === 'none') {
+            self::$quiet = true;
+        }
     }
+
+    /**
+     * An action answered with `$renderStyle = 'none'` (an upload span): app.php
+     * sends no render and none of the panel's css or js. Such a request may
+     * come from a page the user has left meanwhile - the answer would land there.
+     */
+    public static bool $quiet = false;
 
     // =========================================================================
     // Closure-based navigation — open / run fn / auto-close

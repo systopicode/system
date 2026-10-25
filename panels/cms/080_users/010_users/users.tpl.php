@@ -39,7 +39,7 @@ $superuser = \Systopic\System\Auth\Session::isSuperuser();
 						</td>
 						<td><?= $e($user->fullname) ?></td>
 						<td><?= $e($user->email) ?></td>
-						<td><?= $user->lastLogin ? $e($user->lastLogin->format('j M Y, H:i')) : 'Unknown' ?></td>
+						<td><?= $user->lastLogin ? $e(\Systopic\System\Sys\LocalTime::format($user->lastLogin, 'j M Y, H:i')) : 'Unknown' ?></td>
 						<td>
 							<div class="roles" data-drop_accept="role" data-on_drop="addRoleToUser">
 								<?php

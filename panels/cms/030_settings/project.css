@@ -105,3 +105,65 @@ body.settingDragging .projectFiles td label{
 .projectFiles .projectSwitch input.switch + div{
     margin-left: 0;
 }
+
+/* which page templates a row is for (ProjectForm::TEMPLATE_FIELDS) */
+.projectFiles details.projectTemplates summary{
+    display: flex;
+    align-items: center;
+    gap: .4rem;
+    min-height: 2rem;
+    cursor: pointer;
+    white-space: nowrap;
+    list-style: none;
+}
+.projectFiles details.projectTemplates summary::-webkit-details-marker{
+    display: none;
+}
+.projectFiles details.projectTemplates summary i{
+    color: var(--cmsMuted);
+    font-size: .8em;
+}
+.projectFiles details.projectTemplates summary:hover i,
+.projectFiles details.projectTemplates[open] summary i{
+    color: inherit;
+}
+.projectFiles details.projectTemplates[data-some] .all,
+.projectFiles details.projectTemplates:not([data-some]) .some{
+    display: none;
+}
+/* Hidden in the row. While open, panel.js parks it on the body: a row has a
+   transform, so it cannot cover the next card from inside, and overflow:visible
+   on the card would square its corners. */
+.projectFiles details.projectTemplates > .projectTemplatesMenu{
+    display: none;
+}
+.projectTemplatesMenu{
+    display: grid;
+    gap: .25rem;
+    min-width: 12rem;
+    overflow-y: auto;
+    padding: .5rem .75rem;
+    background: var(--cmsCanvas);
+    border: 1px solid var(--cmsLine);
+    border-radius: var(--cmsRadiusLg);
+    box-shadow: var(--cmsShadowLg);
+}
+body > .projectTemplatesMenu{
+    position: fixed;
+    z-index: 1900;
+}
+.projectTemplatesMenu small{
+    color: var(--cmsMuted);
+    white-space: nowrap;
+}
+.projectTemplatesMenu .projectSwitch{
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    min-height: 2rem;
+    white-space: nowrap;
+    cursor: pointer;
+}
+.cms .projectTemplatesMenu input[type="checkbox"].switch + div{
+    margin-left: 0;
+}

@@ -7,7 +7,7 @@
 	<div class="row">
 		<form method=post action=sendResetCode  onsubmit='this.classList.add("loading")'>
 			<div class="row">
-				<div class='inputGroup'>
+				<div class='inputGroup'><i class="fa-regular fa-envelope"></i>
 					<input required spellcheck=false autocapitalize=off placeholder="Email" type=email name=email_reset autocomplete="username"
 						   value="<?= http::post('email_reset') ?>"/>
 					<span class='bar'></span>

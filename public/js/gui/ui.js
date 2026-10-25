@@ -1,4 +1,34 @@
 
+// A thumb that does not load shows the crossed-out icon it names
+// (data-broken="image-slash") instead of the browser's broken picture. Its
+// parent gets .thumbMissing. Images that failed before this listener existed,
+// or before a render inserted them, are caught by the sweep.
+function markBrokenThumb(img) {
+	var tile = img.parentElement;
+	if (!tile || tile.classList.contains('thumbMissing')) {
+		return;
+	}
+	var icon = document.createElement('i');
+	icon.className = 'fa-regular fa-' + img.dataset.broken + ' thumbBroken';
+	icon.title = 'The picture cannot be shown';
+	tile.classList.add('thumbMissing');
+	img.after(icon);
+}
+document.addEventListener('error', function (event) {
+	if (event.target.tagName === 'IMG' && event.target.dataset.broken) {
+		markBrokenThumb(event.target);
+	}
+}, true);
+function sweepBrokenThumbs() {
+	document.querySelectorAll('img[data-broken]').forEach(function (img) {
+		if (img.complete && !img.naturalWidth) {
+			markBrokenThumb(img);
+		}
+	});
+}
+document.addEventListener('DOMContentLoaded', sweepBrokenThumbs);
+document.addEventListener('cms:rendered', sweepBrokenThumbs);
+
 /****************************** KEEPRESS FUNCTIONSs ***************************/
 document.addEventListener('click', function (event) {
 	var button = event.target.closest ? event.target.closest('[data-copy]') : null;

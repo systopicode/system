@@ -36,7 +36,7 @@ $preview = $this->fakeRoles;
 				<p><?= $e($me->email) ?></p>
 			<?php } ?>
 			<?php if ($me?->lastLogin) { ?>
-				<p><i class="fa-regular fa-user-clock"></i>Signed in <?= $e($me->lastLogin->format('j M Y, H:i')) ?></p>
+				<p><i class="fa-regular fa-user-clock"></i>Signed in <?= $e(\Systopic\System\Sys\LocalTime::format($me->lastLogin, 'j M Y, H:i')) ?></p>
 			<?php } ?>
 			<ul class="profileRoles">
 				<?php if (\Systopic\System\Auth\Session::isSuperuser(true)) { ?>

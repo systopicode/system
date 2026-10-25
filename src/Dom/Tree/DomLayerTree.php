@@ -140,6 +140,12 @@ class DomLayerTree
         $html = ob_get_clean();
         $layer->closeLastItem($html ?? '');
 
+        if ($layer->keepIfSame && $layer->type === 'keep' && $layer->reference !== null
+            && $layer->ownHtml() !== $layer->reference->ownHtml()) {
+            $layer->type = 'update';
+            $layer->reference->setRefStateRec('replaced');
+        }
+
         if (defined('DEBUG') && DEBUG()) {
             $layer->closeTime = \date::getUsecTimestamp();
         }

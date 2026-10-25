@@ -77,6 +77,9 @@ sys.initEvents = function ($set, oneventcomplete, exclude) {
 	if (typeof sys.fitTables === 'function') {
 		sys.fitTables($set);
 	}
+	if (typeof sys.fitWidgets === 'function') {
+		sys.fitWidgets($set);
+	}
 	// other events - under construction
 	var $onLoadAjax = $set.findInSet('[data-on_load]'); // experimental
 	$onLoadAjax.bind('load', sys.processEvent);

@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Systopic\System\Sys;
 
 /**
- * The CMS theme colours outside a stylesheet (portraits, the web app
- * manifest, theme-color): 00_theme.css, then whatever the project overrides
+ * The CMS theme colours outside a stylesheet (portraits, system mails, the
+ * web app manifest, the edit bar, theme-color): 00_theme.css, then whatever the project overrides
  * (css/cms_overrides.css, overrides/css/*.css) - the last value wins.
  */
 final class Theme
@@ -15,12 +15,13 @@ final class Theme
         'cmsMainColor' => '1f3a45',
         'cmsHighlightColor' => 'fcb60c',
         'cmsBgColor' => 'f0f3f4',
+        'cmsTextColor' => '161c1f',
     ];
 
     /** @var array<string, string>|null */
     private static ?array $colors = null;
 
-    /** `cmsMainColor`, `cmsHighlightColor` or `cmsBgColor` - six hex digits, no `#`. */
+    /** `cmsMainColor`, `cmsHighlightColor`, `cmsBgColor` or `cmsTextColor` - six hex digits, no `#`. */
     public static function color(string $name): string
     {
         return self::colors()[$name] ?? self::DEFAULTS[$name] ?? '000000';
@@ -62,6 +63,15 @@ final class Theme
             $files[] = $file;
         }
         return $files;
+    }
+
+    /** Text colour readable on a theme colour: dark on light colours, white on dark ones. */
+    public static function textOn(string $name): string
+    {
+        [$r, $g, $b] = array_map(static fn(string $c): float => hexdec($c) / 255, str_split(self::color($name), 2));
+        $linear = static fn(float $c): float => $c <= 0.03928 ? $c / 12.92 : (($c + 0.055) / 1.055) ** 2.4;
+        $luminance = 0.2126 * $linear($r) + 0.7152 * $linear($g) + 0.0722 * $linear($b);
+        return $luminance > 0.4 ? '1b1b1b' : 'ffffff';
     }
 
     public static function normalize(string $hex): string

@@ -18,6 +18,11 @@
 			var files = Array.prototype.slice.call(input.files);
 			input.value = '';
 			var index = 0;
+			backup.button = input.closest('label') || input;
+			// fixed at the start: a relative address would follow the user to another panel
+			backup.address = new URL('upload', location.href).pathname;
+			backup.from = location.pathname;
+			cmsJobs.update('upload', { title: files[0].name, done: 0, total: 1, el: backup.button });
 			var next = function () {
 				if (index >= files.length) {
 					cmsJobs.clear('upload');
@@ -45,21 +50,25 @@
 						name: file.name,
 						spanIndex: spanIndex,
 						spanCount: spanCount,
-						lastSpan: last
+						lastSpan: last,
+						away: location.pathname !== backup.from
 					});
 					call.binary = reader.result;
-					cmsJobs.update('upload', {
-						title: file.name,
-						done: spanIndex,
-						total: spanCount
-					});
-					call.send('upload').done(function () {
-						if (!last) {
-							spanIndex++;
-							send();
+					call.send(backup.address).done(function (data) {
+						if (data && data.error) {
+							cmsJobs.clear('upload');
 							return;
 						}
-						done();
+						spanIndex++;
+						cmsJobs.update('upload', {
+							title: file.name,
+							done: spanIndex,
+							total: spanCount,
+							el: backup.button
+						});
+						last ? done() : send();
+					}).fail(function () {
+						cmsJobs.clear('upload');
 					});
 				};
 				reader.readAsArrayBuffer(file.slice(start, end));

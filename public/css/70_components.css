@@ -210,6 +210,15 @@ section.cms:has(> .tableScroll){
 	column-span: all;
 }
 
+/* widgetColumns.js: each card keeps its column, the rows are 1px */
+.widgets.is-masonry{
+	display: grid;
+	grid-template-columns: repeat(var(--cols), minmax(0, 1fr));
+	grid-auto-rows: 1px;
+	row-gap: 0;
+	align-items: start;
+}
+
 @container cms-module (max-width: 52rem){
 	.widgets{
 		columns: 1;

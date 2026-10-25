@@ -543,10 +543,18 @@ class PanelNavigator
                 // runs, activePanel is already the just-opened child.
                 // The previous request stored references keyed by caller
                 // address (see registerReference() in createLayer).
+                $caller = end($this->panelStack) ?: $this->activePanel;
+                // a child of eachChild has no view to be found by: its name stands in
+                $byName = !is_string($args[0] ?? null) ? '#' . $this->activePanel->name : null;
+                if ($byName !== null) {
+                    $this->layerTree->registerReference($caller, $byName, $active);
+                }
                 if ($this->domRenderer->checkMode(['diff'])) {
-                    $caller = end($this->panelStack) ?: $this->activePanel;
-                    $refLayer = $this->getRefLayer($method, $args, $caller);
+                    $refLayer = $byName !== null
+                        ? $this->layerTree->getReference($caller, $byName)
+                        : $this->getRefLayer($method, $args, $caller);
                     $this->domRenderer->addReference($refLayer, $active, $this->tree);
+                    $active->keepIfSame = $byName !== null;
                 }
             }
             if (method_exists($this->activePanel, 'onRender')) {

@@ -10,12 +10,12 @@
 var wysiwyg = (function () {
 	var TEXT_BLOCKS = 'p,h1,h2,h3,h4,h5,h6';
 	var BLOCKS = TEXT_BLOCKS + ',li,td,th,div';
-	var FORMATS = {STRONG: 'strong,b', EM: 'em,i', U: 'u'};
+	var FORMATS = {STRONG: 'strong,b', EM: 'em,i', U: 'u', S: 's,strike,del'};
 	var INLINE_STYLES = 'strong,b,em,i,u,s,strike,sub,sup,mark,small,big,code,span,font';
 	var MEDIA = 'img,video,iframe';
 	var PASTE = {
 		P: [], H1: [], H2: [], H3: [], H4: [], H5: [], H6: [], UL: [], OL: [], LI: [], BR: [],
-		STRONG: [], EM: [], U: [], A: ['href', 'target'],
+		STRONG: [], EM: [], U: [], S: [], A: ['href', 'target'],
 		TABLE: [], THEAD: [], TBODY: [], TR: [], TD: ['colspan', 'rowspan'], TH: ['colspan', 'rowspan']
 	};
 	var PASTE_DROP = 'script,style,meta,link,title,template,svg,math,object,embed,iframe,img,video,audio,picture,canvas,form,input,button,select,textarea,noscript';
@@ -23,6 +23,10 @@ var wysiwyg = (function () {
 
 	var element = function (node) {
 		return node && (node.nodeType === 1 ? node : node.parentElement);
+	};
+	/** A text field: the field is the block, only words inside it are formatted. */
+	var inline = function (editor) {
+		return !!editor && editor.classList.contains('plaintext');
 	};
 	var rename = function (el, tag) {
 		var to = document.createElement(tag);
@@ -114,6 +118,7 @@ var wysiwyg = (function () {
 		/^(bold|bolder|[6-9]00)$/.test(style.fontWeight) && tags.push('STRONG');
 		style.fontStyle === 'italic' && tags.push('EM');
 		/underline/.test(style.textDecoration || style.textDecorationLine) && tags.push('U');
+		/line-through/.test(style.textDecoration || style.textDecorationLine) && tags.push('S');
 		return tags;
 	};
 	var wrapChildren = function (el, tags) {
@@ -154,8 +159,8 @@ var wysiwyg = (function () {
 			unwrap(node);
 			return;
 		}
-		if (name === 'B' || name === 'I') {
-			node = rename(node, name === 'B' ? 'STRONG' : 'EM');
+		if (name === 'B' || name === 'I' || name === 'STRIKE' || name === 'DEL') {
+			node = rename(node, {B: 'STRONG', I: 'EM'}[name] || 'S');
 			name = node.nodeName;
 		}
 		if (paste) {
@@ -201,7 +206,7 @@ var wysiwyg = (function () {
 					return;
 				}
 			}
-			if (/^(STRONG|EM|U|A)$/.test(name) && node.querySelector(TEXT_BLOCKS + ',ul,ol,li,table')) {
+			if (/^(STRONG|EM|U|S|A)$/.test(name) && node.querySelector(TEXT_BLOCKS + ',ul,ol,li,table')) {
 				unwrap(node);
 				return;
 			}
@@ -216,7 +221,7 @@ var wysiwyg = (function () {
 			unwrap(node);
 			return;
 		}
-		if (/^(STRONG|EM|U|A)$/.test(name)) {
+		if (/^(STRONG|EM|U|S|A)$/.test(name)) {
 			var same = name === 'A' ? 'a' : FORMATS[name] || name;
 			if (!visible(node) || (node.parentElement.closest(same) && root.contains(node.parentElement.closest(same)))) {
 				unwrap(node);
@@ -225,7 +230,7 @@ var wysiwyg = (function () {
 	};
 	/** Neighbouring <strong>a</strong><strong>b</strong> become one. */
 	var merge = function (root) {
-		root.querySelectorAll('strong,em,u').forEach(function (el) {
+		root.querySelectorAll('strong,em,u,s').forEach(function (el) {
 			if (!root.contains(el) || el.attributes.length) {
 				return;
 			}
@@ -420,6 +425,9 @@ var wysiwyg = (function () {
 	};
 	/** The block around node; loose text in the field becomes a paragraph first. */
 	var blockOf = function (node, editor) {
+		if (inline(editor)) {
+			return null;
+		}
 		var block = element(node).closest(BLOCKS);
 		if (block && block !== editor && editor.contains(block)) {
 			return block;
@@ -824,7 +832,21 @@ var wysiwyg = (function () {
 		});
 		return box;
 	};
+	/** Pasted blocks in a text field: their lines, separated by line breaks. */
+	var flatten = function (box) {
+		box.querySelectorAll(TEXT_BLOCKS + ',li,tr').forEach(function (b) {
+			b.nextSibling && b.after(document.createElement('br'));
+			unwrap(b);
+		});
+		box.querySelectorAll('td,th').forEach(function (cell) {
+			cell.nextSibling && cell.after(document.createTextNode(' '));
+			unwrap(cell);
+		});
+		box.querySelectorAll('ul,ol,table,thead,tbody,tfoot').forEach(unwrap);
+		return box;
+	};
 	var insert = function (editor, range, box) {
+		inline(editor) && flatten(box);
 		range.deleteContents();
 		var nodes = Array.from(box.childNodes);
 		if (!nodes.length) {
@@ -1037,7 +1059,7 @@ var wysiwyg = (function () {
 	// Enter in loose text: <p> like Safari, not Chrome's <div>
 	document.execCommand('defaultParagraphSeparator', false, 'p');
 	var KEYS = {b: 'STRONG', i: 'EM', u: 'U'};
-	var INPUT_FORMATS = {formatBold: 'STRONG', formatItalic: 'EM', formatUnderline: 'U'};
+	var INPUT_FORMATS = {formatBold: 'STRONG', formatItalic: 'EM', formatUnderline: 'U', formatStrikeThrough: 'S'};
 	document.addEventListener('focusin', function (e) {
 		var editor = wysiwygOf(e.target);
 		editor && record(editor);
@@ -1064,6 +1086,11 @@ var wysiwyg = (function () {
 			tabInTable(e, wysiwygOf(e.target));
 			return;
 		}
+		if (e.key === 'Enter' && !e.isComposing && inline(wysiwygOf(e.target))) {
+			e.preventDefault();
+			document.execCommand('insertLineBreak');
+			return;
+		}
 		var editor = (e.metaKey || e.ctrlKey) && !e.altKey && wysiwygOf(e.target);
 		if (!editor) {
 			return;
@@ -1075,6 +1102,9 @@ var wysiwyg = (function () {
 		} else if (KEYS[key] && !e.shiftKey) {
 			e.preventDefault();
 			toggle(KEYS[key]);
+		} else if (key === 'x' && e.shiftKey) {
+			e.preventDefault();
+			toggle('S');
 		}
 	}, true);
 	// the format buttons of the iOS keyboard and edit menu, and the shortcuts
@@ -1087,7 +1117,10 @@ var wysiwyg = (function () {
 			}
 			return;
 		}
-		if (INPUT_FORMATS[e.inputType]) {
+		if (e.inputType === 'insertParagraph' && inline(editor)) {
+			e.preventDefault();
+			document.execCommand('insertLineBreak');
+		} else if (INPUT_FORMATS[e.inputType]) {
 			e.preventDefault();
 			toggle(INPUT_FORMATS[e.inputType]);
 		} else if (/^format/.test(e.inputType)) {
@@ -1125,6 +1158,7 @@ var wysiwyg = (function () {
 
 	return {
 		toggle: toggle,
+		inline: inline,
 		setBlock: setBlock,
 		toggleList: toggleList,
 		clearFormat: clearFormat,

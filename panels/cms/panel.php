@@ -6,6 +6,7 @@ namespace Systopic\System\Panels\Root\Cms;
 use Systopic\Db\Scope;
 use Systopic\System\Panels\PanelNode;
 use Systopic\System\Queries\LastLogin\LastLogin;
+use Systopic\System\Queries\UserAdmin\UserAdmin;
 
 class Panel extends PanelNode {
 
@@ -70,6 +71,133 @@ class Panel extends PanelNode {
 		}
 	}
 
+	/**
+	 * The dashboard widgets of the panels one and two levels down, in tree
+	 * order: `dashboard.tpl.php` and `dashboard.<name>.tpl.php` in the panel's
+	 * folder, keyed `pages`, `pages.todo`, `settings/tags`.
+	 *
+	 * Call it while this panel renders: the navigator opens each child in its
+	 * own folder. Children it hides (no right to them) bring no widgets.
+	 *
+	 * @return array<string, array{panel: PanelNode, file: string}>
+	 */
+	public function dashboardWidgets(): array {
+		$widgets = [];
+		$collect = function (PanelNode $panel) use (&$widgets): void {
+			$files = array_filter(glob('dashboard*.tpl.php') ?: [], static fn(string $f): bool => (bool) preg_match('~^dashboard(\.\w+)?\.tpl\.php$~', $f));
+			usort($files, static fn(string $a, string $b): int => [strlen($a) > 17, $a] <=> [strlen($b) > 17, $b]);
+			foreach ($files as $file) {
+				$key = implode('/', array_slice($panel->path, 1)) . substr($file, 9, -8);
+				$widgets[$key] = ['panel' => $panel, 'file' => getcwd() . '/' . $file];
+			}
+		};
+		$this->eachChild(function (PanelNode $child) use ($collect): void {
+			$collect($child);
+			$child->eachChild($collect);
+		});
+		return $widgets;
+	}
+
+	/** "5 minutes ago", "yesterday", "12 Mar 2026" - for the lists of the dashboard. */
+	public static function ago(?string $datetime): string {
+		$time = $datetime ? strtotime($datetime) : false;
+		if ($time === false) {
+			return '';
+		}
+		$seconds = time() - $time;
+		$plural = static fn(int $n, string $unit): string => "$n $unit" . ($n === 1 ? '' : 's') . ' ago';
+		return match (true) {
+			$seconds < 60 => 'just now',
+			$seconds < 3600 => $plural(intdiv($seconds, 60), 'minute'),
+			$seconds < 86400 => $plural(intdiv($seconds, 3600), 'hour'),
+			$seconds < 172800 => 'yesterday',
+			$seconds < 604800 => $plural(intdiv($seconds, 86400), 'day'),
+			default => \Systopic\System\Sys\LocalTime::format($time, 'j M Y'),
+		};
+	}
+
+	/**
+	 * A widget with tabs (`nav.dashTabs`, action dashTab): the key of the open
+	 * one, the first until the user picks another in this session. Not named
+	 * like the action: app.php calls a method of that name instead of actions.php.
+	 *
+	 * @param array<string, string> $tabs key => label
+	 */
+	public static function widgetTab(PanelNode $widget, string $key, array $tabs): string {
+		$cms = $widget;
+		while ($cms->name !== 'cms' && $cms->parent !== null) {
+			$cms = $cms->parent;
+		}
+		foreach ((array) ($cms->state->dashTabs ?? []) as $entry) {
+			[$widget, $tab] = explode('=', (string) $entry, 2) + ['', ''];
+			if ($widget === $key && isset($tabs[$tab])) {
+				return $tab;
+			}
+		}
+		return (string) array_key_first($tabs);
+	}
+
+	/** @return array{order: list<string>, hidden: list<string>} how this user arranged the dashboard */
+	public function dashboardLayout(): array {
+		$user = \Systopic\System\Auth\Session::current()->user;
+		$data = $user === null ? null : json_decode((string) $user->sessiondata?->value, true);
+		$keys = static fn($list): array => array_values(array_filter((array) $list, 'is_string'));
+		return [
+			'order' => $keys($data['dashboard']['order'] ?? []),
+			'hidden' => $keys($data['dashboard']['hidden'] ?? []),
+		];
+	}
+
+	/** Columns of the dashboard; in the stored order a '|' closes one. */
+	public const DASH_COLUMNS = 3;
+
+	/**
+	 * The widgets column by column. An order from before the columns is dealt
+	 * out evenly, a widget new since the last save joins the shortest column.
+	 *
+	 * @param list<string> $keys
+	 * @param list<string> $order
+	 * @return list<list<string>>
+	 */
+	public function dashboardColumns(array $keys, array $order): array {
+		$columns = [[]];
+		foreach ($order as $entry) {
+			if ($entry === '|') {
+				count($columns) < self::DASH_COLUMNS && $columns[] = [];
+			} elseif (in_array($entry, $keys, true)) {
+				$columns[array_key_last($columns)][] = $entry;
+			}
+		}
+		$columns = array_pad($columns, self::DASH_COLUMNS, []);
+		$new = array_values(array_diff($keys, array_merge(...$columns)));
+		if (!in_array('|', $order, true)) {
+			$all = [...array_merge(...$columns), ...$new];
+			return array_pad(array_chunk($all, max(1, (int) ceil(count($all) / self::DASH_COLUMNS))), self::DASH_COLUMNS, []);
+		}
+		foreach ($new as $key) {
+			$sizes = array_map('count', $columns);
+			$columns[array_search(min($sizes), $sizes, true)][] = $key;
+		}
+		return $columns;
+	}
+
+	/** Kept with the account, so the arrangement follows the user to every device. */
+	public function saveDashboardLayout(array $order, array $hidden): void {
+		$user = UserAdmin::of($this->scope)->user((int) \Systopic\System\Auth\Session::id());
+		if ($user === null) {
+			return;
+		}
+		$data = json_decode((string) $user->sessiondata?->value, true);
+		$data = is_array($data) ? $data : [];
+		$seen = [];
+		$order = array_values(array_filter($order, static function (string $entry) use (&$seen): bool {
+			return $entry === '|' || !isset($seen[$entry]) && $seen[$entry] = true;
+		}));
+		$data['dashboard'] = ['order' => $order, 'hidden' => array_values(array_unique($hidden))];
+		$user->sessiondata = new \Systopic\Db\Type\Text((string) json_encode($data));
+		$this->scope->save($user);
+	}
+
 	function actionGranted($action = NULL) {
 		return parent::actionGranted($action) || STAGE === 'DEV';
 	}
@@ -80,6 +208,9 @@ class Panel extends PanelNode {
 						'childSelected' => FALSE,
 						'pylonWidth' => 180,
 						'submoduleName' => FALSE,
+						'dashboard' => [],
+						'dashTabs' => [],
+						'dashEdit' => false,
 			];
 		}
 		return parent::getDefaultState();

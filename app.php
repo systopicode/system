@@ -85,7 +85,11 @@ if (!fs::openDir($panelTree->getSelectedRoot())) {
 /* * **************************** LOAD TEMPLATE STRUCTURE / SEND AJAX RESPONSE ************************** */
 $domRenderer->beginRender(); // activate slices output
 $domRenderer->setBodyClasses($panelTree->getBodyClasses());
-\Systopic\System\Auth\Session::storeState();
+// a quiet answer (an upload span) renders nothing: storing would leave its panel
+// selected (cms/pages/upload) and the next render of the page would switch to it
+if (!\Systopic\System\Panels\PanelNode::$quiet) {
+	\Systopic\System\Auth\Session::storeState();
+}
 
 if (defined('OUTPUT_FORMAT') && OUTPUT_FORMAT === 'json') {
 	// AJAX + JSON: diff render against the previous request's reference
@@ -134,8 +138,9 @@ if (http::ajax()) {
 	// A PUT renders when an action marked views — or when data changed under
 	// what the window shows: named by the browser, or written by this very
 	// request (Dom\Dependencies, systopic/relay). One render for all of it.
-	if (http::$method === 'GET' || http::$method === 'POST' || $panelTree->getUpdateViewsCount()
-		|| \Systopic\System\Dom\Dependencies::changed() !== []) {
+	$quiet = \Systopic\System\Panels\PanelNode::$quiet;
+	if (!$quiet && (http::$method === 'GET' || http::$method === 'POST' || $panelTree->getUpdateViewsCount()
+		|| \Systopic\System\Dom\Dependencies::changed() !== [])) {
 		// Panel-Diff (PanelTree / DomLayer), not pages (site.php + renderPagesDiff.php).
 		// Uses the SAME closure-based template walk as the full render below —
 		// the navigator switches into 'diff' mode via beginDiff(), confirm()
@@ -162,7 +167,7 @@ if (http::ajax()) {
 		}
 	}
 	scripttime('begin flush response');
-	echo json_encode(client::flushResponse());
+	echo json_encode(client::flushResponse(!$quiet));
 } else {
 	$renderMode = $panelTree->getSelected()?->getRenderMode() ?? $panelTree->getRoot()?->getRenderMode() ?? 'slices';
 	if ($renderMode === 'slices') {

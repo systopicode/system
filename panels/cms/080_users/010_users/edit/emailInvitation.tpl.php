@@ -5,7 +5,7 @@ use Systopic\System\Mail\Letter;
 
 $e = static fn($v): string => htmlspecialchars((string) $v, ENT_QUOTES);
 $link = \http::$siteUrl . 'cms/auth/reset?key=' . rawurlencode((string) $user->activationKey);
-$expires = $user->activationKeyExpire?->format('j M Y, H:i') ?? '';
+$expires = \Systopic\System\Sys\LocalTime::format($user->activationKeyExpire, 'j M Y, H:i');
 echo Letter::render('Account activation',
 	'<p style="margin:0 0 12px;">Hello ' . $e($user->name) . ',</p>'
 	. '<p style="margin:0;">Welcome to the fluxo cms. Here is your access key. Follow the link to activate your account.</p>'

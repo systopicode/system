@@ -53,6 +53,12 @@
 
 	<meta name="robots" content="noindex,follow" />
 
+	<script>
+	try {
+		document.cookie = '<?= \Systopic\System\Sys\LocalTime::COOKIE ?>=' + encodeURIComponent(Intl.DateTimeFormat().resolvedOptions().timeZone) + ';path=/;max-age=31536000;samesite=lax';
+	} catch (e) {}
+	</script>
+
 	<?php
 	/*
 	 * Three cascade layers, in this order - later wins, whatever the
@@ -119,24 +125,42 @@
 	 * mobile on a narrow window and desktop on a wide one - neither being
 	 * what the visitor sees. Responsive css stays on the site.
 	 */
-	echo $cmsCss(fs::$siteRoot . 'css/cms_overrides.css', 'project');
+	echo fsLoader::includeCSSFilesScoped(fs::$siteRoot . 'css/cms_overrides.css', ':root', 'project', limit: '.cmsOwn');
 	echo fsLoader::includeCSSFilesScoped(
 		fs::$siteRoot . 'css/',
 		'article.cmsContent',
 		'preview',
 		['cms_overrides.css', 'fonts.css', 'animate.css', 'x_responsive.css'],
+		limit: '.cmsOwn',
 	);
 	$responsiveFile = fs::$siteRoot . 'css/x_responsive.css';
 	if (fs::isFile($responsiveFile)) {
 		$responsive = preg_replace('/@media\b/', '@container cms-preview', (string) file_get_contents($responsiveFile));
-		echo "<style>\n@layer preview {\n@scope (article.cmsContent) {\n$responsive\n}\n}\n</style>\n";
+		echo "<style>\n@layer preview {\n@scope (article.cmsContent) to (.cmsOwn) {\n$responsive\n}\n}\n</style>\n";
 	}
 	echo '<!-- +-+-+-+-+-+-+-+-+-+ PROJECT UI OVERRIDES +-+-+-+-+-+-+-+-+-+-+-->';
-	echo $cmsCss(fs::$siteRoot . 'overrides/css/', 'project');
+	// Overrides style the preview (`article p`), but never what the CMS itself
+	// puts in there - not even with !important.
+	echo fsLoader::includeCSSFilesScoped(fs::$siteRoot . 'overrides/css/', ':root', 'project', limit: '.cmsOwn');
 	// The site reset sits in the preview layer and zeros every border. These
 	// frames stay unlayered so they win inside the page preview.
 	?>
 	<style>
+		/* where a dropped or pasted file lands once it is uploaded (upload/panel.js) */
+		article.cmsContent span.cmsUploading{
+			display: inline-block;
+			margin: 0 2px;
+			padding: 2px 8px;
+			border: 1px dashed var(--cmsMainColor);
+			border-radius: 4px;
+			background-color: var(--cmsBgColor);
+			font: 400 12px/1.4 var(--cmsFont);
+			opacity: .85;
+			animation: cmsUploading 1s ease-in-out infinite alternate;
+		}
+		@keyframes cmsUploading{
+			to{ opacity: .35; }
+		}
 		article.cmsContent [contenteditable='true'],
 		article.cmsContent .plaintext{
 			cursor: text;

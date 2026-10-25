@@ -62,37 +62,47 @@ class fsLoader {
 	 * never matches, and stripped the letters "body" out of class names.
 	 *
 	 * Inlined rather than linked, because a stylesheet cannot be scoped from
-	 * the outside - the rules have to sit inside the block. That is safe for
-	 * relative url(), but only as long as the scoped files have none: an
-	 * inlined url() resolves against the DOCUMENT. Files that need @font-face,
-	 * :root or @keyframes belong in $skip and get loaded normally - none of
-	 * those three work inside @scope.
+	 * the outside - the rules have to sit inside the block. An inlined url()
+	 * resolves against the DOCUMENT, so relative ones are rewritten to the
+	 * file's address. @import cannot sit inside @scope: it is lifted out and
+	 * loaded unscoped, in the same layer. Files that need @font-face, :root or
+	 * @keyframes belong in $skip (or behind such an @import) - none of those
+	 * three work inside @scope.
 	 *
 	 * @param string   $scope css selector of the scoping root
 	 * @param string   $layer cascade layer to put it in, '' for none
 	 * @param string[] $skip  file names to leave out
+	 * @param string   $limit selector of what the rules stop at, '' for none
 	 */
-	static function includeCSSFilesScoped($dirFilesOrFile, string $scope, string $layer = '', array $skip = [], $recursive = FALSE): string
+	static function includeCSSFilesScoped($dirFilesOrFile, string $scope, string $layer = '', array $skip = [], $recursive = FALSE, string $limit = ''): string
 	{
 		$css = '';
+		$imports = '';
 		foreach (self::cssFilesOf($dirFilesOrFile, $recursive) as $file) {
 			if (in_array($file->name, $skip, TRUE)) {
 				continue;
 			}
-			$content = $file->contents;
-			if (trim((string) $content) === '') {
+			$content = (string) $file->contents;
+			if (trim($content) === '') {
 				continue;
 			}
+			$base = dirname((string) $file->href) . '/';
+			$absolute = static fn(string $url): string => preg_match('~^([a-z]+:|/|#)~i', $url) ? $url : $base . $url;
+			$content = preg_replace_callback('~@import\s+(?:url\(\s*)?([\'"]?)([^\'")\s;]+)\1\s*\)?([^;]*);~i', function ($m) use (&$imports, $absolute, $layer) {
+				$imports .= "@import url('" . $absolute($m[2]) . "')" . ($layer !== '' ? " layer($layer)" : '') . "$m[3];\n";
+				return '';
+			}, $content);
+			$content = preg_replace_callback('~url\(\s*([\'"]?)([^\'")]+)\1\s*\)~i', fn($m) => "url('" . $absolute(trim($m[2])) . "')", $content);
 			$css .= "\n/* $file->name */\n" . $content;
 		}
-		if (trim($css) === '') {
+		if (trim($css) === '' && $imports === '') {
 			return '';
 		}
-		$out = "@scope ($scope) {\n$css\n}\n";
+		$out = "@scope ($scope)" . ($limit !== '' ? " to ($limit)" : '') . " {\n$css\n}\n";
 		if ($layer !== '') {
 			$out = "@layer $layer {\n$out}\n";
 		}
-		return "<style>\n$out</style>\n";
+		return "<style>\n$imports$out</style>\n";
 	}
 
 	/**

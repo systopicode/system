@@ -4,12 +4,10 @@ declare(strict_types=1);
 
 namespace Systopic\System\Auth;
 
-use Systopic\System\Sys\Theme;
-
 /**
  * A user's picture: an uploaded file in `public/var/avatars/`,
  * or a generated portrait whose colours follow the CMS theme
- * (00_theme.css, then whatever the project overrides).
+ * (theme.css, then whatever the project overrides).
  */
 final class Portrait
 {
@@ -181,7 +179,7 @@ final class Portrait
 
     /**
      * Both theme colours: main draws the lines, highlight fills the figure.
-     * The backdrop stays a light tint of the page.
+     * The backdrop stays a light tint of the page. An override follows.
      *
      * @return array{ink: string, background: string, paper: string}
      */
@@ -190,12 +188,23 @@ final class Portrait
         if (self::$colors !== null) {
             return self::$colors;
         }
-        $accent = Theme::color('cmsHighlightColor');
+        $ink = \Systopic\System\Sys\Theme::color('cmsMainColor');
+        $accent = \Systopic\System\Sys\Theme::color('cmsHighlightColor');
+        $page = \Systopic\System\Sys\Theme::color('cmsBgColor');
         return self::$colors = [
-            'ink' => Theme::color('cmsMainColor'),
+            'ink' => $ink,
             'paper' => $accent,
-            'background' => self::mix($accent, Theme::color('cmsBgColor'), 0.28),
+            'background' => self::mix($accent, $page, 0.28),
         ];
+    }
+
+    private static function normalize(string $hex): string
+    {
+        $hex = strtolower($hex);
+        if (strlen($hex) === 3) {
+            $hex = $hex[0] . $hex[0] . $hex[1] . $hex[1] . $hex[2] . $hex[2];
+        }
+        return substr($hex, 0, 6);
     }
 
     private static function mix(string $hex, string $onto, float $amount): string
@@ -212,7 +221,7 @@ final class Portrait
     /** @return array{0: int, 1: int, 2: int} */
     private static function rgb(string $hex): array
     {
-        $hex = Theme::normalize($hex);
+        $hex = self::normalize($hex);
         return [hexdec(substr($hex, 0, 2)), hexdec(substr($hex, 2, 2)), hexdec(substr($hex, 4, 2))];
     }
 }

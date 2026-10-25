@@ -167,6 +167,7 @@ sys.core.server = new function () {
      * may make unnecessary).
      */
     server.inFlight = 0;
+    server.uploading = 0;   // file slices on their way - see the unload guard in gui/jobs.js
     server.idleHooks = [];
     server.onIdle = fn => {
         if (server.inFlight === 0) {
@@ -176,6 +177,7 @@ sys.core.server = new function () {
         server.idleHooks.push(fn);
     };
     server.showBusy = () => {
+        clearTimeout(server.busyTimer);
         var bar = document.getElementById('nprogress');
         if (!bar) {
             bar = document.createElement('div');
@@ -197,7 +199,13 @@ sys.core.server = new function () {
     server.settled = () => {
         server.inFlight = Math.max(0, server.inFlight - 1);
         if (server.inFlight === 0) {
-            server.hideBusy();
+            // an upload sends its slices one after the other: the bar stays instead of blinking
+            clearTimeout(server.busyTimer);
+            server.busyTimer = setTimeout(() => {
+                if (server.inFlight === 0) {
+                    server.hideBusy();
+                }
+            }, 250);
         }
         while (server.inFlight === 0 && server.idleHooks.length) {
             var fn = server.idleHooks.shift();
@@ -265,10 +273,15 @@ sys.core.server.call = function (data) {
     }, data);
 
     call.send = function (inputUrl) { // url object or string
-        var hooks, doneFunc, ondonefirstFunc, onloadstartFunc, onupdateFunc, changeLocation;
+        var hooks, doneFunc, failFunc, ondonefirstFunc, onloadstartFunc, onupdateFunc, changeLocation;
         hooks = {
             done: (func) => {
                 doneFunc = func;
+                return hooks;
+            },
+            // the answer was no 200 or no json - done() will not come
+            fail: (func) => {
+                failFunc = func;
                 return hooks;
             },
             ondonefirst: (func) => {
@@ -309,6 +322,9 @@ sys.core.server.call = function (data) {
                         if (typeof responseStr === 'string' && /class="authCard"|Sign in to fluxo cms/.test(responseStr)) {
                             location.href = sys.core.server.loginUrl();
                             return;
+                        }
+                        if (failFunc) {
+                            failFunc(xhr);
                         }
                     }
                     if (call.responses) {
@@ -373,6 +389,8 @@ sys.core.server.call = function (data) {
                     p('XHERRor! Status ' + xhr.status);
                     if (xhr.status === 401 || xhr.status === 403) {
                         location.href = sys.core.server.loginUrl();
+                    } else if (failFunc) {
+                        failFunc(xhr);
                     }
                 }
             }
@@ -548,6 +566,10 @@ sys.core.server.call = function (data) {
                     var headerBuf = (new TextEncoder()).encode(header)
                     var buf = bufConcat(headerBuf, jsonBuf, call.binary);
                     xhr.setRequestHeader('Content-type', 'application/octet-stream');
+                    sys.core.server.uploading++;
+                    xhr.addEventListener('loadend', () => {
+                        sys.core.server.uploading = Math.max(0, sys.core.server.uploading - 1);
+                    });
                     xhr.send(buf);
                     log();
                 }

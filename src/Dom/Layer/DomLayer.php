@@ -120,6 +120,13 @@ class DomLayer implements DomLayerItem
      */
     public array $dependencies = [];
 
+    /**
+     * Found by its panel's name, not by a view (a child of eachChild): what it
+     * prints is not known up front, so a keep holds only when its own html
+     * comes out the same as the browser's (DomLayerTree::close()).
+     */
+    public bool $keepIfSame = false;
+
     // -------------------------------------------------------------------------
     // Tree relations
     // -------------------------------------------------------------------------
@@ -208,6 +215,18 @@ class DomLayer implements DomLayerItem
     public function isLayer(): bool
     {
         return true;
+    }
+
+    /** The html of this layer itself, its sublayers left out. */
+    public function ownHtml(): string
+    {
+        $html = '';
+        foreach ($this->items as $item) {
+            if (!$item->isLayer()) {
+                $html .= (string) $item;
+            }
+        }
+        return $html;
     }
 
     // =========================================================================

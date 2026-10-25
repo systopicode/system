@@ -24,4 +24,9 @@ class Panel extends SettingsPanel
     function onLoad() {}
 
     function onLoadThisClass() {}
+
+    public function searchHits(\Systopic\System\Sys\Search $search): void
+    {
+        \Systopic\System\Settings\ProjectForm::searchHits($search, 'media', $this->getHref(\http::$root));
+    }
 }

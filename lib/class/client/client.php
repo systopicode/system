@@ -187,9 +187,14 @@ class client {
 		return $files;
 	}
 
-	static function flushResponse() {
+	/** $assets false: no module css and js - the answer renders nothing (PanelNode::$quiet). */
+	static function flushResponse(bool $assets = true) {
 		$queued   = self::$response;
-		$moduleCssFiles = self::collectActiveModuleCssFiles();
+		if (!$assets) {
+			self::$cssAppFiles = [];
+			self::$jsAppFiles = [];
+		}
+		$moduleCssFiles = $assets ? self::collectActiveModuleCssFiles() : [];
 		if (!empty($moduleCssFiles)) {
 			self::loadCSS($moduleCssFiles);
 		}

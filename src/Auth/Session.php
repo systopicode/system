@@ -164,7 +164,9 @@ final class Session
         // is worth nothing afterwards. The CLI agent keeps its own - it has no
         // cookie anybody could plant.
         if (PHP_SAPI !== 'cli' && session_status() === PHP_SESSION_ACTIVE && !headers_sent()) {
+            LoginLog::sessionClosed(session_id());
             session_regenerate_id(true);
+            LoginLog::sessionOpened(session_id(), (string) $row->name);
         }
         $_SESSION[self::USER_KEY] = (int) $row->id;
         $now = new \DateTimeImmutable();
@@ -204,6 +206,9 @@ final class Session
             Devices::logoutHere();
         }
         \http::sessionStartOnce();
+        if (session_status() === PHP_SESSION_ACTIVE) {
+            LoginLog::sessionClosed(session_id());
+        }
         unset($_SESSION[self::USER_KEY]);
         self::$current = self::load();
     }
@@ -325,6 +330,15 @@ final class Session
 
     // ------------------------------------------------------------------
 
+    /** The cookie still names a session PHP has thrown away: whose it was goes into the log. */
+    private static function noteLapsed(): void
+    {
+        $sid = PHP_SAPI === 'cli' || isset($_SESSION[self::USER_KEY]) ? '' : (string) ($_COOKIE[session_name()] ?? '');
+        if ($sid !== '' && ($name = LoginLog::sessionLapsed($sid)) !== null) {
+            LoginLog::write($name, 'logged out', LoginLog::TIMEOUT);
+        }
+    }
+
     private static function load(): Identity
     {
         \http::sessionStartOnce();
@@ -344,6 +358,7 @@ final class Session
             if ($id > 0 && ($user = UserLookup::byId($scope, $id)) !== null) {
                 return new Identity($scope, $user);
             }
+            self::noteLapsed();
             // nobody logged in: is there an account at all? Asked by row, not
             // by table — a lookup with the provisioner creates usm_users empty.
             $any = $scope->connection->value('SELECT 1 FROM ' . \Systopic\Db\Schema\Schema::tableNameOf(User::class) . ' WHERE user_id > 1 LIMIT 1');

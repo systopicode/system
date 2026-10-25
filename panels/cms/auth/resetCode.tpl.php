@@ -7,7 +7,7 @@
 	<div class="row">
 		<form method=get action=reset  onsubmit='this.classList.add("loading")'>
 			<div class="row">
-				<div class='inputGroup'>
+				<div class='inputGroup'><i class="fa-regular fa-hashtag"></i>
 					<input type=text name="key" placeholder="Reset Code" required autocapitalize="off"/>
 					<span class='bar'></span>
 				</div>
