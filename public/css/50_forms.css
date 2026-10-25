@@ -315,9 +315,16 @@ div.main select{
     display: none !important;
 }
 
-.cms button:hover,
-.cms .button:hover{
+.cms button:enabled:not(.disabled):hover,
+.cms .button:not([disabled]):not(.disabled):hover{
     background: color-mix(in srgb, var(--cmsButtonBg) 88%, var(--cmsMainColor));
+}
+
+/* Keyboard focus uses the same cue for primary and secondary actions. */
+.cms button:focus-visible,
+.cms .button:focus-visible {
+    outline: 2px solid var(--cmsInteractive);
+    outline-offset: 2px;
 }
 
 .cms button span,
@@ -343,9 +350,9 @@ div.main select{
     font-weight: 600;
 }
 
-.cms button.submit:hover,
-.cms .button.submit:hover,
-.cms .submit:hover{
+.cms button.submit:enabled:not(.disabled):hover,
+.cms .button.submit:not([disabled]):not(.disabled):hover,
+.cms .submit:not([disabled]):not(.disabled):hover{
     background: color-mix(in srgb, var(--cmsHighlightColor) 88%, #000);
 }
 
@@ -361,13 +368,13 @@ div.main select{
     color: var(--cmsMainColor);
 }
 
-.cms .button.transparent:hover,
-.cms button.transparent:hover{
+.cms .button.transparent:not([disabled]):not(.disabled):hover,
+.cms button.transparent:enabled:not(.disabled):hover{
     background: var(--cmsHover);
 }
 
-.cms .button.transparent:active,
-.cms button.transparent:active{
+.cms .button.transparent:not([disabled]):not(.disabled):active,
+.cms button.transparent:enabled:not(.disabled):active{
     background: color-mix(in srgb, var(--cmsMainColor) 14%, transparent);
 }
 
@@ -387,7 +394,7 @@ div.main select{
 .cms .button.disabled,
 .cms input[disabled]{
     cursor: not-allowed;
-    opacity: .45;
+    opacity: .6;
 }
 
 .cms .rightAlign button,
@@ -691,7 +698,7 @@ body.firefox .cms select:-moz-focusring{
 .cms .field > span{
     font-size: 0.75rem;
     font-weight: 600;
-    color: var(--cmsMuted);
+    color: var(--cmsSubText);
 }
 
 .cms .field > input,
@@ -702,7 +709,7 @@ body.firefox .cms select:-moz-focusring{
 
 .cms .field > small{
     font-size: 0.75rem;
-    line-height: 1.35;
+    line-height: 1.5;
     color: var(--cmsMuted);
 }
 

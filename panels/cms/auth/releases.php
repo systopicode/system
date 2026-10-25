@@ -8,6 +8,16 @@
  * @return array<string, array{date: string, new?: list<string>, fixed?: list<string>}>
  */
 return [
+    '0.5.1' => [
+        'date' => '2026-10-25',
+        'fixed' => [
+            'Tools: the Migration panel has its own navigation icon.',
+            'Cards and forms share consistent padding, quieter shadows and more readable labels and helper text.',
+            'Visible controls retain their standard size; drag and resize hit areas remain generous. Tablet dashboard gutters are more compact. Buttons share visible keyboard focus and clearer disabled states.',
+            'After signing in, cached login styles no longer centre the sidebar or hide the normal CMS layout.',
+            'Older passkey tables update automatically when a credential is added or renamed. Existing records are preserved.',
+        ],
+    ],
     '0.5' => [
         'date' => '2026-10-25',
         'new' => [

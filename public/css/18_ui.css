@@ -26,7 +26,7 @@
 	--cmsPanelAlt: hsl(from var(--cmsBgColor) h s calc(l - 3.5));
 
 	--cmsSubText: color-mix(in srgb, var(--cmsTextColor) 72%, var(--cmsCanvas));
-	--cmsMuted: color-mix(in srgb, var(--cmsTextColor) 48%, var(--cmsCanvas));
+	--cmsMuted: color-mix(in srgb, var(--cmsTextColor) 62%, var(--cmsCanvas));
 
 	--cmsSuccess: #4fb95e;
 	--cmsError: #d6454c;
@@ -46,8 +46,9 @@
 
 	--cmsRadiusLg: calc(var(--cmsRadius) + 4px);
 	--cmsControl: 2rem;
+	--cmsCardPadding: 1.25rem;
 	--cmsBar: 44px;
-	--cmsShadow: 0 1px 2px rgb(16 24 40 / .06), 0 1px 3px rgb(16 24 40 / .08);
+	--cmsShadow: 0 1px 3px rgb(16 24 40 / .055);
 	--cmsShadowLg: 0 16px 40px rgb(16 24 40 / .22);
 }
 
@@ -323,4 +324,9 @@ body.dragging.debug div.sort.insertInto {
 }
 body.dragging.debug .draghelper{
 	background: rgba(0,0,0,0.1);
+}
+
+/* Compact touch card spacing; visible controls keep their standard size. */
+@media (pointer: coarse) {
+	:root { --cmsCardPadding: 1rem; }
 }

@@ -1,10 +1,10 @@
 /****************************** ANMELDUNG ***************************/
-html:has(body.cms) {
+html:has(.authCard) {
 	height: auto;
 	min-height: 100%;
 }
 
-body.cms {
+body.cms:has(.authCard) {
 	align-items: center;
 	justify-content: safe center;
 	gap: 1.5rem;

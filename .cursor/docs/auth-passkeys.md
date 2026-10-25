@@ -35,11 +35,17 @@ werden Benutzer, Credential-ID, SHA-256-Digest (`passkey_credential_sha`),
 öffentlicher Schlüssel, RP-ID, Projekt, zufälliger User-Handle, Verwaltungsname,
 Signaturzähler und Zeitpunkte. Keine privaten Schlüssel oder Biometrie.
 
-Bei einer älteren, bereits vorhandenen Passkey-Tabelle einmal explizit
-`PasskeyUpgrade::run($connection)` ausführen. Das wiederholbare Update ergänzt
-die fehlenden Felder, erweitert den Namen und macht alte Pflichtfelder optional.
-Vorhandene Daten bleiben erhalten; ungebundene Legacy-Credentials werden niemals
-blind einem Projekt zugeordnet. Kein Schema-Scan bei jeder Anmeldung.
+Vor Hinzufügen oder Umbenennen prüft `PasskeyUpgrade::save()` die Struktur
+automatisch. Der vorhandene Provisioner legt eine fehlende Tabelle an; eine
+ältere Tabelle wird verlustfrei ergänzt. Namen werden nur erweitert, nie
+verkürzt. Ungebundene Legacy-Credentials werden keinem Projekt zugeordnet.
+
+Die Prüfung läuft ausschließlich bei diesen seltenen Schreibaktionen, nicht
+beim Seitenaufbau oder normalen Login. Bei aktueller Struktur wird kein DDL
+wiederholt. Ein datenbankgebundener MySQL-Lock serialisiert parallele Updates.
+DDL läuft vor dem ORM-Commit; innerhalb einer bereits offenen Transaktion
+wird die Operation abgewiesen, damit MySQL sie nicht implizit committet.
+`PasskeyUpgrade::run($connection)` bleibt für explizite Wartung verfügbar.
 
 ## Login und Rechte
 
@@ -133,6 +139,9 @@ FLUXO_TEST_LOGIN_HTML=/tmp/passkey-login.html \
 FLUXO_TEST_ONBOARDING_HTML=/tmp/passkey-onboarding.html \
 FLUXO_DOM_MODULE=/path/to/happy-dom/lib/index.js \
 node system/tests/passkeys-ui.mjs
+
+FLUXO_DOM_MODULE=/path/to/happy-dom/lib/index.js \
+node system/tests/auth-layout-ui.mjs
 
 FLUXO_TEST_DSN='mysql:unix_socket=/tmp/test/mysql.sock;dbname=fluxo_test_passkey_upgrade' \
 php system/tests/passkeys-upgrade.php

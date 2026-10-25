@@ -277,11 +277,13 @@ final class Passkeys
             $onboarding = self::setupPending();
             if (!$onboarding) self::confirmPassword($user, $data);
             else $_SESSION['systopic_passkey_offer']['expires'] = max($_SESSION['systopic_passkey_offer']['expires'], time() + 120);
+            PasskeyUpgrade::prepare($scope);
             $keys = Keys::ofUser($scope, (int) $user->id, self::project());
             if (count($keys) >= 20) {
                 throw new DomainException('Remove an old passkey before adding another.');
             }
-            $handle = $keys[0]->userHandle ?? bin2hex(random_bytes(32));
+            $handle = $keys[0]->userHandle ?? '';
+            if ($handle === '') $handle = bin2hex(random_bytes(32));
             $options = $web->getCreateArgs(hex2bin($handle), (string) ($user->email ?: $user->name) . ' · ' . self::label(),
                 self::label() . ' · ' . (string) ($user->fullname ?: $user->name), 120, true, 'required', null,
                 array_map(static fn(Key $k): string => self::decode($k->credentialId->value), $keys));
@@ -311,7 +313,7 @@ final class Passkeys
             $key->name = $challenge['data']['name'];
             $key->signCount = $verified->signatureCounter ?? 0;
             $key->createdAt = new DateTimeImmutable();
-            $scope->save($key);
+            PasskeyUpgrade::save($scope, $key);
             if ($challenge['data']['onboarding'] ?? false) return ['redirect' => self::completeSetup()];
             return ['html' => self::render($user)];
         }
@@ -327,7 +329,7 @@ final class Passkeys
                     $scope->remove($key);
                 } else {
                     $key->name = self::name($data['name'] ?? '');
-                    $scope->save($key);
+                    PasskeyUpgrade::save($scope, $key);
                 }
                 return ['html' => self::render($target), 'removedCredential' => $signal];
             }

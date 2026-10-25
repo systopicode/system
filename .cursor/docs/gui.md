@@ -183,6 +183,12 @@ Unknown addresses sends one to a page by adding it as a non-primary
 rewrite path, so the next visit redirects to that page's own address.
 Forgetting a row only drops the log. To do `misses`.
 
+**Migration** (`cms/tools/migration/`): the existing CMS panel previews older
+HTML links and images before converting them to `page:` / `media:` references.
+It uses the standard Tools navigation entry with the rotate-arrows icon,
+like System, Database, Maintenance and Logs. Access remains restricted by the
+parent Tools panel to superusers; rendering only previews changes.
+
 ## 4. Everything is AJAX
 
 No full page loads inside the GUI. The client sends the action, the server
@@ -312,6 +318,15 @@ Fonts in use (`system/public/fonts/`): `InterVariable.woff2` (GUI),
 `fontawesome/fa-regular-400.woff2`, `fontawesome/fa-duotone-regular-400.woff2`.
 Nothing else — placeholder images drawn by `mediaImage.php` use the Imagick
 default font.
+
+Shared GUI tokens in `18_ui.css`: muted text keeps a stronger contrast,
+`--cmsCardPadding` aligns widget, dialog and profile form interiors. Coarse
+pointers get 1rem card padding; visible controls keep their original size.
+Invisible drag/resize hit areas remain larger. Auth layout rules apply only
+while `.authCard` exists, so cached module CSS cannot centre or shrink the CMS. Widget shadows are deliberately soft. Primary actions use `submit`;
+disabled controls remain readable and do not react visually to hover. Buttons
+share a visible keyboard-focus outline. Tablet dashboard gutters use grid gaps
+rather than combining gaps with card margins.
 
 ## 6. JavaScript
 

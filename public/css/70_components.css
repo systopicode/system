@@ -31,7 +31,7 @@
 	position: relative;
 	min-height: 3rem;
 	margin: 0;
-	padding: 0 0.75rem 0 1.25rem;
+	padding: 0 var(--cmsCardPadding);
 	background: var(--cmsCanvas);
 	color: var(--cmsTextColor);
 	border: none;
@@ -61,9 +61,15 @@
 	margin: 0 0 0 0.4rem;
 }
 
-.widget > header h2 i{
+.widget > header h2 :is(i, .iconFingerprint){
 	color: var(--cmsMuted);
-	font-size: 0.9rem;
+	font-size: 1rem;
+	flex-shrink: 0;
+}
+
+.widget > header h2 .iconFingerprint{
+	width: 1rem;
+	height: 1rem;
 }
 
 /* Title, search and button: on a narrow card the search drops to its
@@ -151,7 +157,7 @@
 
 .widget > main,
 .cmslightbox section > main{
-	padding: 1.25rem;
+	padding: var(--cmsCardPadding);
 	background: var(--cmsCanvas);
 	overflow: auto;
 }

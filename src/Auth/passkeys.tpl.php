@@ -39,7 +39,7 @@ $noAutofill = 'autocomplete="off" data-1p-ignore data-lpignore="true" readonly o
                                     <?php if ($own) { ?><label class="field"><span>Name in this CMS</span><input data-passkey-name maxlength="100" value="<?= $escape($key->name) ?>" <?= $noAutofill ?>></label><?php } ?>
                                     <label class="field"><span>Your current password</span><input type="password" data-passkey-password <?= $noAutofill ?>></label>
                                     <div class="passkeyButtons">
-                                        <?php if ($own) { ?><button type="button" class="button" data-on_click="passkeyAction" data-passkey-mode="rename" data-key_id="<?= (int) $key->id ?>"><i class="fa-regular fa-check"></i>Save name</button><?php } ?>
+                                        <?php if ($own) { ?><button type="button" class="button submit" data-on_click="passkeyAction" data-passkey-mode="rename" data-key_id="<?= (int) $key->id ?>"><i class="fa-regular fa-check"></i>Save name</button><?php } ?>
                                         <button type="button" class="button" data-on_click="passkeyAction" data-passkey-mode="remove" data-key_id="<?= (int) $key->id ?>"><i class="fa-regular fa-trash"></i>Remove passkey</button>
                                     </div>
                                 </div>

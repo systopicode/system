@@ -187,14 +187,14 @@ header.cms .rightAlign form{
 }
 
 .profile .widget > form > main{
-    padding: 1.25rem;
+    padding: var(--cmsCardPadding);
 }
 
 .profile .widget > form > footer{
     display: flex;
     justify-content: flex-end;
     margin: 0;
-    padding: 0.75rem 1.25rem;
+    padding: .75rem var(--cmsCardPadding);
     border-top: 1px solid var(--cmsLine);
 }
 
