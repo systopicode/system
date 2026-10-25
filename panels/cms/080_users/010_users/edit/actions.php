@@ -85,6 +85,9 @@ switch ($this->action) {
 		foreach ($this->devices as $device) {
 			$gone[] = $device;
 		}
+		foreach (\Systopic\System\Queries\Passkeys\Passkeys::ofUser($this->scope, (int) $user->id) as $passkey) {
+			$gone[] = $passkey;
+		}
 		$gone[] = $user;
 		$this->scope->remove(...$gone);
 		\http::redirect('../');

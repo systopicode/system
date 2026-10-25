@@ -11,7 +11,7 @@
  * A rebuild of the group with the same cards takes the same columns again.
  */
 sys.fitWidgets = function ($set) {
-	$set.findInSet('.widgets').each(function () {
+	$set.findInSet('.widgets:not(.dashWidgets)').each(function () {
 		var box = this;
 		if (box.fitWidgets) {
 			sys.fitWidgets.queue(box);

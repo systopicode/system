@@ -15,3 +15,6 @@
 
 // The web app manifest, before the login redirect of the panel tree.
 \Systopic\System\Sys\Hooks\Hooks::on('afterConnect', static fn() => \Systopic\System\Sys\WebApp::serve());
+
+// Send account security notifications only after committed ORM changes.
+\Systopic\Db\Scope::addObserver(new \Systopic\System\Auth\SecurityNotice());

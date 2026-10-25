@@ -2,7 +2,7 @@
 <p class="authLead">We email you a code.</p>
 <main>
 	<div class="row">
-		<div class="message"><?= message::flush() ?></div>
+		<?= message::flush() ?>
 	</div>
 	<div class="row">
 		<form method=post action=sendResetCode  onsubmit='this.classList.add("loading")'>

@@ -5,6 +5,10 @@
 use Systopic\System\Auth\Portrait;
 use Systopic\System\Tables\Users\Operator as UserOperator;
 
+if (str_starts_with((string) $this->action, 'passkey')) {
+    \Systopic\System\Auth\Passkeys::respond($this->action, false);
+}
+
 switch ($this->action) {
 	case 'logout':
 		\Systopic\System\Auth\LoginLog::write(\Systopic\System\Auth\Session::current()->name, 'logged out', \Systopic\System\Auth\LoginLog::LOGOUT_BUTTON);

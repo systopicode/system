@@ -7,11 +7,11 @@ $me = $this->me;
 $e = static fn($v): string => htmlspecialchars((string) $v, ENT_QUOTES);
 $portrait = $me ? Portrait::src((int) $me->id, $me->email) : '';
 $field = static fn(string $label, string $type, string $action, ?string $value, string $caps = 'on'): string
-	=> "<label class='field'><span>$label</span><input type='$type' autocapitalize='$caps' name='value' data-on_blur='$action' value='{$e($value)}' autocomplete='off' spellcheck='off'></label>";
+	=> "<label class='field'><span>$label</span><input type='$type' autocapitalize='$caps' name='value' data-on_blur='$action' value='{$e($value)}' autocomplete='off' data-1p-ignore data-lpignore='true' readonly onpointerdown='this.readOnly=false' onkeydown='this.readOnly=false' spellcheck='off'></label>";
 $preview = $this->fakeRoles;
 ?>
 <section class="cms profile">
-	<?= \message::flush() ?>
+	<?= \message::flush([], true) ?>
 	<div class="profileHead">
 		<div class="profilePortrait">
 			<div class="portraitFrame">
@@ -82,13 +82,7 @@ $preview = $this->fakeRoles;
 				<button type="button" class="button" data-on_click="userConfirm" data-action="resetState" data-confirm="Reset the layout of every module to its defaults?"><i class="fa-regular fa-arrow-rotate-left"></i>Reset layout</button>
 			</main>
 		</section>
-		<section class="widget">
-			<header><h2><i class="fa-regular fa-key"></i>Passkeys</h2></header>
-			<main>
-				<p class="tagsHint">Sign in from a device without typing a password.</p>
-				<p class="profileEmpty">No passkeys yet.</p>
-			</main>
-		</section>
+		<?php if ($me) { echo \Systopic\System\Auth\Passkeys::render($me); } ?>
 		<section class="widget">
 			<header><h2><i class="fa-regular fa-phone-laptop"></i>Devices</h2></header>
 			<main>

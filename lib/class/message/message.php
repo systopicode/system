@@ -45,15 +45,15 @@ class message {
 		return !isset($_SESSION['messages']) || count($_SESSION['messages']) === 0;
 	}
 
-	public static function flush($targets = []) { // targets empty => flush all
+	public static function flush($targets = [], bool $keepEmpty = false) { // targets empty => flush all
 		if (is_string($targets)) {
 			$targets = [$targets];
 		}
-		if (self::empty()) {
+		if (self::empty() && !$keepEmpty) {
 			return '';
 		}
 		$html = '';
-		foreach ($_SESSION['messages'] AS $message) {
+		foreach (($_SESSION['messages'] ?? []) AS $message) {
 			if (count($targets)) {
 				if (!$message->target) {
 					continue;
@@ -63,7 +63,7 @@ class message {
 			}
 			$html .= $message;
 		}
-		return "<div class='cms message'>$html</div>";
+		return "<div class='cms message' data-system-messages role='status' aria-live='polite'>$html</div>";
 	}
 
 	public $target;
@@ -82,7 +82,7 @@ class message {
 		}
 		$links = count($this->links) ? '<p>' . implode('', $this->links) . '</p>' : '';
 		$info = DEBUG() ? "<pre><b>caller:</b>$this->callerInfo <br/><b>output:</b>" . debug::getCaller() . "</pre>" : '';
-		return "<div class='$this->type'><p class=message>$this->message</p>$links$info</p></div>";
+		return "<div class='$this->type'><p class=message>$this->message</p>$links$info</div>";
 	}
 
 	public function __construct($message = '', $type = 'notice') {

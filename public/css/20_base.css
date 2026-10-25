@@ -293,45 +293,47 @@ div.formElementMessage span{
     font-size: 0.8125rem;
 }
 
-/* Meldungsblöcke: eine Fläche, der Text bleibt ungefärbt */
-div.cms.message:empty{
-    display: none;
-}
-
-div.cms.message{
+/* Shared server and client messages in auth, CMS and dialogs. */
+div.cms.message:empty { display: none; }
+div.cms.message {
     margin: 1.25rem;
-
-    > div{
-        margin: 0 0 0.4rem;
-        padding: 0.7rem 0.85rem;
-        border-radius: var(--cmsRadius);
-        background: color-mix(in srgb, var(--cmsMainColor) 8%, var(--cmsCanvas));
-        color: var(--cmsTextColor);
+    font-size: 0.875rem;
+    line-height: 1.5;
+    > div {
+        --messageAccent: var(--cmsMainColor);
+        --messageIcon: "\f05a";
+        position: relative;
+        margin: 0 0 .6rem;
+        padding: .8rem 1rem .8rem 2.75rem;
+        border: 1px solid color-mix(in srgb, var(--messageAccent) 20%, var(--cmsCanvas));
+        border-radius: calc(var(--cmsRadius) + 2px);
+        background: color-mix(in srgb, var(--messageAccent) 5%, var(--cmsCanvas));
+        color: var(--cmsTextColor) !important;
+        overflow-wrap: anywhere;
+        &::before {
+            content: var(--messageIcon) / "";
+            position: absolute;
+            left: .95rem;
+            top: .85rem;
+            font-family: "CMS Font Awesome 7 Pro";
+            font-size: 1rem;
+            line-height: 1.3;
+            color: var(--messageAccent);
+        }
+        &:last-child { margin-bottom: 0; }
     }
-
-    p{
+    p {
         margin: 0;
         padding: 0;
+        font-size: inherit;
         background: none;
         color: inherit;
     }
-
-    > div.error{
-        background: color-mix(in srgb, var(--cmsError) 12%, var(--cmsCanvas));
-    }
-
-    > div.warning{
-        background: color-mix(in srgb, var(--cmsWarning) 28%, var(--cmsCanvas));
-    }
-
-    > div.confirm{
-        background: color-mix(in srgb, var(--cmsSuccess) 14%, var(--cmsCanvas));
-    }
-
-    > div.info,
-    > div.notice{
-        background: color-mix(in srgb, var(--cmsThirdColor) 14%, var(--cmsCanvas));
-    }
+    p + p { margin-top: .6rem; }
+    > div.error { --messageAccent: var(--cmsError); --messageIcon: "\f06a"; }
+    > div.warning { --messageAccent: var(--cmsWarning); --messageIcon: "\f071"; }
+    > div.confirm { --messageAccent: var(--cmsSuccess); --messageIcon: "\f058"; }
+    > div.info, > div.notice { --messageAccent: var(--cmsInteractive); }
 }
 
 div.cms.message pre,
@@ -341,6 +343,8 @@ div.cms.message pre b{
 }
 
 div.cms.message pre{
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
     padding: 0 3px;
     border-radius: 3px;
     background: rgba(0,0,0,.06);
@@ -399,6 +403,14 @@ div.cms.message pre{
 }
 
 .cms div.bottomMenu div.signet > a{
+    display: block;
+    width: 100%;
+    height: 100%;
+    min-height: 0;
+    padding: 0;
+    margin: 0;
+    border: 0;
+    border-radius: 50%;
     position: absolute;
     inset: 0;
     z-index: 2;

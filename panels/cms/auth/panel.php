@@ -33,6 +33,11 @@ class Panel extends PanelNode {
 	}
 
 	function buildGranted() {
+        if ((string) \app::request()->action === 'continueWithoutPasskey') return TRUE;
+		if (\Systopic\System\Auth\Passkeys::setupPending()) {
+			$this->form = 'passkeySetup';
+			return TRUE;
+		}
 		if (count(\app::request()->modulePath) > 1 && \app::request()->modulePath[1] === 'auth') {
 			if (\Systopic\System\Auth\Session::active()) {
 				if (\Systopic\System\Panels\Tree\PanelTree::getInstance()?->getRoot() && \Systopic\System\Panels\Tree\PanelTree::getInstance()?->getRoot()->hasChild('pages')) {

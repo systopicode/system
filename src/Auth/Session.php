@@ -189,7 +189,7 @@ final class Session
         }
         if (Password::needsRehash($user->passwordHash)) {
             $user->passwordHash = Password::hash($password);
-            $scope->save($user);
+            SecurityNotice::rehashing(static fn() => $scope->save($user));
         }
         return $user;
     }

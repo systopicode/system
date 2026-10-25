@@ -2,7 +2,7 @@
 <p class="authLead">Check your inbox, and the spam folder.</p>
 <main>
 	<div class="row">
-		<div class="message"><?= message::flush() ?></div>
+		<?= message::flush() ?>
 	</div>
 	<div class="row">
 		<form method=get action=reset  onsubmit='this.classList.add("loading")'>

@@ -2,7 +2,7 @@
 <p class="authLead">At least 5 characters, with an uppercase letter, a number and a symbol.</p>
 <main>
 	<div class="row">
-		<div class="message"><?= message::flush() ?></div>
+		<?= message::flush() ?>
 	</div>
 	<div class="row">
 		<form method=post action=setPassword  onsubmit='this.classList.add("loading")'>

@@ -35,7 +35,7 @@ body > main:has(> div.content .dashboard) > div.content{
 /* fixed columns (Panel::dashboardColumns): a moved widget leaves the others where they are */
 .dashboard .dashWidgets{
 	display: grid;
-	grid-template-columns: repeat(auto-fit, minmax(min(19rem, 100%), 1fr));
+	grid-template-columns: repeat(3, minmax(0, 1fr));
 	gap: 0 1.25rem;
 }
 
@@ -43,6 +43,16 @@ body > main:has(> div.content .dashboard) > div.content{
 	display: flex;
 	flex-direction: column;
 	min-width: 0;
+}
+
+/* At tablet widths the saved groups flow into two visual columns. */
+@media (max-width: 1279px){
+    .dashboard .dashWidgets { grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; }
+    .dashboard .dashColumn { display: contents; }
+}
+
+@media (max-width: 700px){
+    .dashboard .dashWidgets { grid-template-columns: minmax(0, 1fr); }
 }
 
 /* the end of a column, empty ones included */

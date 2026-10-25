@@ -2,7 +2,7 @@
 <p class="authLead">Use an email address your administrator has allowed.</p>
 <main>
 	<div class="row">
-		<div class="message"><?= message::flush() ?></div>
+		<?= message::flush() ?>
 	</div>
 	<div class="row">
 		<form method=post action=createAccount  onsubmit='this.classList.add("loading")'>

@@ -5,7 +5,19 @@
 use Systopic\System\Queries\UserLookup\UserLookup;
 use Systopic\System\Tables\Users\Operator as UserOperator;
 
+if (str_starts_with((string) $this->action, 'passkey')) {
+    \Systopic\System\Auth\Passkeys::respond($this->action, !\Systopic\System\Auth\Session::active());
+}
+
 switch ($this->action) {
+    case 'continueWithoutPasskey':
+        if (\Systopic\System\Auth\Session::active()) {
+            \http::redirect(\Systopic\System\Auth\Passkeys::completeSetup());
+        }
+        $this->form = 'login';
+        $this->updateView('main');
+        break;
+
 	case 'register':
 	case 'login':
 	case 'resetPassword':
@@ -88,7 +100,12 @@ switch ($this->action) {
 			break;
 		}
 		$this->signIn($user, \Systopic\System\Auth\LoginLog::PASSWORD);
-		$this->enterCms();
+		if (\Systopic\System\Auth\Passkeys::offerSetup($user)) {
+			$this->form = 'passkeySetup';
+			$this->updateView('main');
+		} else {
+			$this->enterCms();
+		}
 		break;
 
 	case 'logout':

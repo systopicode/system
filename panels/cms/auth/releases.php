@@ -8,6 +8,24 @@
  * @return array<string, array{date: string, new?: list<string>, fixed?: list<string>}>
  */
 return [
+    '0.5' => [
+        'date' => '2026-10-25',
+        'new' => [
+            'Passkeys: sign in with your fingerprint, face or device PIN, with autofill or the sign-in button. Email is optional.',
+            'Account: add, rename and remove passkeys. After password sign-in, accounts without a passkey can set one up or continue without it.',
+            'Security emails report password, email and passkey changes. Email changes also notify the previous address.',
+        ],
+        'fixed' => [
+            'Passkeys use the current HTTPS domain automatically. IP addresses show a clear explanation and keep password sign-in available.',
+            'Aborted passkey sign-ins can be retried. Continuing without a passkey also works after the setup step expires.',
+            'Superusers revoke another account’s passkeys using their own password; account editors avoid unwanted password autofill.',
+            'Passkey setup follows the existing lightbox design. The supplied fingerprint icon, biometric animation and shared message banners follow the theme.',
+            'Supported password managers are notified when a passkey is removed. CMS labels remain separate from password-manager names.',
+            'Dashboard: three columns on desktop, two at tablet widths and one on phones, without the widget layout applying a second grid.',
+            'Unused media checks preserve originals used through aliases and existing text references.',
+            'Unknown addresses keep accurate hit counts and only redirect to an existing live page.',
+        ],
+    ],
 	'0.4' => [
 		'date' => '2026-10-24',
 		'new' => [
@@ -43,6 +61,8 @@ return [
 			'Tools → Maintenance → Links: broken links inside the website, and a check of links to other websites.',
 			'Media Settings: a media group can be limited to some templates. The choice uses switches.',
 			'Text fields store images, videos and links as references (media:…, page:…). Tools → Migration converts older content.',
+			'Tools → Maintenance → Unused media: files no page uses, deleted for good like the trash.',
+			'Tools → Maintenance → Unknown addresses: an address that 404s can be sent to a page. The next visit goes there.',
 			'Debug mode: the CMS sits on a faint checkerboard.',
 		],
 		'fixed' => [

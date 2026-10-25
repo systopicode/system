@@ -18,6 +18,7 @@ final class ClientData
     public static function register(): void
     {
         \client::loadJS('sys', 'src/Auth/users.js', 'class', ['users']);
+        \client::loadJS('sys', 'src/Auth/passkeys.js', 'singleton', ['passkeys']);
         \clientInterfaces::$clientDataClasses[] = self::class;
     }
 

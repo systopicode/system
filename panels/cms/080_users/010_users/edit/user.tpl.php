@@ -17,7 +17,7 @@ $when = static fn(?DateTimeImmutable $d): string => \Systopic\System\Sys\LocalTi
 $field = static function (string $label, string $value, ?string $action = null, string $type = 'text', string $class = '') use ($e): string {
 	$input = $action === null
 		? '<input type="' . $type . '" readonly value="' . $e($value) . '">'
-		: '<input type="' . $type . '" autocapitalize="off" name="value" data-on_blur="' . $action . '" value="' . $e($value) . '" autocomplete="off" spellcheck="off">';
+		: '<input type="' . $type . '" autocapitalize="off" name="value" data-on_blur="' . $action . '" value="' . $e($value) . '" autocomplete="off" data-1p-ignore data-lpignore="true" readonly onpointerdown="this.readOnly=false" onkeydown="this.readOnly=false" spellcheck="off">';
 	return '<label class="field' . ($class !== '' ? ' ' . $class : '') . '"><span>' . $label . '</span>' . $input . '</label>';
 };
 $signIns = array_slice(LoginLog::entries([(string) $user->name, (string) $user->email]), 0, 5);
@@ -185,6 +185,8 @@ $logged = static fn(string $date): string => ($d = DateTimeImmutable::createFrom
 			</section>
 		</div>
 	</div>
+	<?= \Systopic\System\Auth\Passkeys::render($user) ?>
+
 	<section class="widget">
 		<header><h2><i class="fa-regular fa-screwdriver-wrench"></i>Maintenance</h2></header>
 		<main>

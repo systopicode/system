@@ -92,9 +92,8 @@ body.cms {
 			width: 100%;
 		}
 
-		div.cms.message,
-		div.message {
-			margin: 0.75rem 0 0;
+		div.cms.message {
+			margin: 0 0 0.75rem;
 		}
 
 		form {
@@ -131,7 +130,9 @@ body.cms {
 			font-size: 1rem;
 		}
 
-		button.submit {
+		button.submit,
+		button.passkeyLoginButton,
+		button.authPasswordButton {
 			display: inline-flex;
 			align-items: center;
 			justify-content: center;
@@ -160,7 +161,7 @@ body.cms {
 			display: none;
 		}
 
-		p {
+		p:where(:not(.message)) {
 			margin: 0;
 			font-size: 0.875rem;
 		}
@@ -236,3 +237,5 @@ body.cms {
 		}
 	}
 }
+
+.authCard .authPasswordAlternative { margin: 1rem 0 !important; color: var(--cmsMuted); text-align: center; }

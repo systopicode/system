@@ -29,7 +29,7 @@ final class Model extends TableRow
 {
     public const TABLE        = 'login_codes';
     public const TABLE_PREFIX = 'usm';
-    public const PREFIX       = 'logincode';
+    public const PREFIX       = 'login_code';
 
     public ?User $user {
         get => $this->__get__(__PROPERTY__);

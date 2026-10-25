@@ -2,6 +2,6 @@
 
 SELECT usm_login_codes.*
 FROM usm_login_codes
-WHERE logincode_code_hash = :hash
+WHERE login_code_code_hash = :hash
 
 -- :hash

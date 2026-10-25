@@ -95,6 +95,8 @@
 
 		};
 
+		node.passkeyAction = event => sys.passkeys.run(event);
+
 		// Shared client actions used by menu.php across all panels.
 		// Formerly only on panels.cms — PWK panels never inherited them, so
 		// data-on_click="toggleMenu" fell through to a no-op server PUT.

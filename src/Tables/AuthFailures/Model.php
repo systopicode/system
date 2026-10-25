@@ -19,7 +19,7 @@ final class Model extends TableRow
 {
     public const TABLE        = 'auth_failures';
     public const TABLE_PREFIX = 'usm';
-    public const PREFIX       = 'authfail';
+    public const PREFIX       = 'auth_failure';
 
     #[Col(length: 45, index: Index::Unique)]
     public ?string $ip {

@@ -6,7 +6,8 @@
   "require": {
     "php": "^8.4",
     "systopic/db": "^1.0",
-    "tecnickcom/tcpdf": "^6.11"
+    "tecnickcom/tcpdf": "^6.11",
+    "lbuchs/webauthn": "^2.2"
   },
   "autoload": {
     "psr-4": {

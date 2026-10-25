@@ -1,0 +1,79 @@
+/* Layout and controls come from the existing widgets, forms and cmslightbox. */
+.passkeys { --passkeyInk: var(--cms-main, var(--cmsMainColor)); --passkeyTone: color-mix(in srgb, var(--passkeyInk) 34%, var(--cmsCanvas)); }
+.passkeys .passkeyCount { color: var(--cmsMuted); font-size: .75rem; }
+.passkeys div.cms.passkeyStatus { margin: .75rem 0 0; overflow-wrap: anywhere; }
+.passkeys .passkeyStatus:empty { display: none; }
+.passkeys .passkeyEmpty { margin: 1rem 0; color: var(--cmsMuted); font-size: .875rem; }
+.passkeys .passkeyList { padding: 0; list-style: none; margin: 1rem 0; }
+.passkeys .passkeyList:empty { display: none; }
+.passkeys .passkeyList li + li { border-top: 1px solid var(--cmsLine); }
+.passkeys .passkeyItem > summary { display: flex; align-items: center; gap: .75rem; padding: .8rem 0; cursor: pointer; list-style: none; }
+.passkeys .passkeyItem > summary::-webkit-details-marker { display: none; }
+.passkeys .passkeyItem > summary > i { color: var(--cmsMuted); }
+.passkeys .passkeyItem > summary > i:last-child { font-size: .7rem; }
+.passkeys .passkeyItem[open] > summary > i:last-child { transform: rotate(180deg); }
+.passkeys .passkeyItem[data-readonly] > summary { pointer-events: none; cursor: default; }
+.passkeys .passkeyItemLabel { display: grid; flex: 1; min-width: 0; gap: .2rem; }
+.passkeys .passkeyItemLabel strong { font-size: .875rem; font-weight: 600; line-height: 1.4; overflow-wrap: anywhere; }
+.passkeys .passkeyItemLabel small { color: var(--cmsMuted); font-size: .75rem; }
+.passkeys .passkeyItemFields, .passkeys .passkeySetupFields { display: grid; gap: .75rem; padding: .5rem 0; }
+.passkeys .passkeyButtons { display: flex; flex-wrap: wrap; gap: .5rem; }
+.passkeys dialog.passkeySetup { position: fixed; inset: 0; box-sizing: border-box; padding: 1.5rem; overflow: hidden; text-align: left; user-select: auto; transition: none; width: 100%; height: 100%; max-width: none; max-height: none; margin: 0; border: 0; border-radius: 0; color: var(--cmsTextColor); }
+.passkeys dialog.passkeySetup[open] { display: flex; align-items: center; justify-content: center; }
+.passkeys .passkeySetup:not([open]) { display: none; }
+.passkeys .passkeySetup::backdrop { background: transparent; }
+.passkeys .passkeySetup > section { width: min(520px, 100%); min-width: 0; }
+.passkeys .passkeySetup .passkeySetupLead { margin: 0 0 1rem; }
+.passkeys .passkeySetup .passkeyArtwork { width: 72px; height: 72px; margin: .25rem auto 1rem; }
+.passkeys .passkeySetup[data-step="working"] .passkeySetupFields,
+.passkeys .passkeySetup[data-step="success"] .passkeySetupFields,
+.passkeys .passkeySetup[data-step="working"] .passkeyContinue,
+.passkeys .passkeySetup[data-step="success"] .passkeySetupActions { display: none; }
+.passkeys.passkeyLogin { margin-top: 1rem; }
+.passkeys .passkeyLoginCancel { display: none; }
+main.is-passkey-signing-in > :not(.passkeyLogin):not(.authMessages) { display: none; }
+.cms .authCard main.is-passkey-signing-in .passkeyLoginButton { display: none; }
+main.is-passkey-signing-in .passkeyLogin { margin-top: 0; text-align: center; }
+main.is-passkey-signing-in .passkeyAuthFeedback { display: flex; align-items: center; justify-content: center; min-height: 13rem; }
+main.is-passkey-signing-in .passkeyAuthFeedback .passkeyArtwork { width: 112px; height: 112px; }
+main.is-passkey-signing-in .passkeyStatus { text-align: left; }
+main.is-passkey-signing-in .passkeyLoginCancel { display: inline-flex; margin: 1.25rem 0 0; }
+main.is-passkey-signing-in .passkeyLogin[data-step="success"] .passkeyLoginCancel { display: none; }
+.passkeys .passkeyIcons { display: inline-grid; width: 100%; height: 100%; vertical-align: middle; }
+.passkeys .passkeyIcon { grid-area: 1 / 1; display: none; width: 100%; height: 100%; fill: var(--passkeyInk); }
+.passkeys .passkeyIcon-fingerprint { display: block; }
+.passkeys .passkeyIcon > path[opacity] { fill: var(--passkeyTone); opacity: 1; }
+.passkeys .passkeyArtwork { position: relative; width: 88px; height: 88px; margin: 1rem auto; }
+.passkeys .passkeyAuthFeedback[hidden] { display: none; }
+/* One shared biometric sequence in auth and the account setup dialog. */
+.passkeys :is(.passkeySetup, .passkeyAuthFeedback) .passkeyIcon,
+.passkeys.passkeyOnboarding .passkeyIcon {
+    display: block;
+    opacity: 0;
+    transform-origin: center;
+    animation: passkeySequence 9s ease-in-out infinite;
+}
+.passkeys :is(.passkeySetup, .passkeyAuthFeedback) .passkeyIcon-scan,
+.passkeys.passkeyOnboarding .passkeyIcon-scan { animation-delay: -6s; }
+.passkeys :is(.passkeySetup, .passkeyAuthFeedback) .passkeyIcon-success,
+.passkeys.passkeyOnboarding .passkeyIcon-success { animation-delay: -3s; }
+@keyframes passkeySequence {
+    0%, 33%, 100% { opacity: 0; transform: translateY(5px) scale(.94); filter: blur(2px); }
+    6%, 26% { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
+}
+.passkeys .passkeySetup[data-step="success"] .passkeyIcon,
+.passkeys:is(.passkeyLogin, .passkeyOnboarding)[data-step="success"] .passkeyIcon { animation: none; opacity: 0; }
+.passkeys .passkeySetup[data-step="success"] .passkeyIcon-success,
+.passkeys:is(.passkeyLogin, .passkeyOnboarding)[data-step="success"] .passkeyIcon-success { opacity: 1; transform: none; filter: none; }
+.passkeys.passkeyOnboarding .passkeyArtwork { margin: 1.75rem auto; }
+.passkeys .passkeySkip { margin-top: 1.25rem; padding-top: 1rem; border-top: 1px solid var(--cmsLine); }
+@media (prefers-reduced-motion: reduce) {
+    .passkeys .passkeyIcon { animation: none !important; transform: none !important; filter: none !important; opacity: 0; }
+    .passkeys :is(.passkeySetup, .passkeyAuthFeedback) .passkeyIcon-fingerprint,
+    .passkeys.passkeyOnboarding .passkeyIcon-fingerprint { opacity: 1; }
+    .passkeys .passkeySetup[data-step="success"] .passkeyIcon-fingerprint,
+    .passkeys:is(.passkeyLogin, .passkeyOnboarding)[data-step="success"] .passkeyIcon-fingerprint { opacity: 0; }
+}
+
+/* Supplied fingerprint is the one exception to the Font Awesome icon set. */
+.cms .iconFingerprint { display: inline-block; flex: 0 0 auto; width: 1.1rem; height: 1.1rem; vertical-align: -.15em; fill: currentColor; }

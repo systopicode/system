@@ -2,6 +2,6 @@
 
 SELECT usm_auth_failures.*
 FROM usm_auth_failures
-WHERE authfail_ip = :ip
+WHERE auth_failure_ip = :ip
 
 -- :ip

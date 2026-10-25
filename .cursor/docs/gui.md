@@ -152,15 +152,36 @@ project's groups next, Sections last. Classes are `cmsFind…`
 **Widget columns** (`public/js/gui/widgetColumns.js`): every `.widgets`
 group keeps each card in the column it got when built; a card that grows
 pushes down only its own column. The count comes from the CSS `columns`
-of the group.
+of the group. The dashboard `.dashWidgets` is excluded: its three saved
+groups use their own grid, with three desktop columns (1280px+), two tablet
+columns and one phone column (700px and below).
+
+**Authentication**: [auth-passkeys.md](auth-passkeys.md) covers automatic HTTPS
+origins, login/autofill, setup, rights, schema upgrades and security emails.
+Passkey messages use the regular server-rendered message container; global
+banner styling lives in `20_base.css`. The supplied fingerprint SVG is the
+explicit exception to Font Awesome.
 
 **Link check** (`Systopic\Cms\Queries\LinkCheck`): `broken()` lists links of
 live pages to pages, aliases or `var/` files that are gone (To do
 `brokenlinks`, Tools → Maintenance → Links). External URLs are tested in
 batches of 10 by `checkNext()` (curl, HEAD then GET), the result is
 `var/cache/linkcheck.json` (`lastCheck()`, To do `deadlinks`). Page links
-are stored as `?id=<node>&lang=<lang>`; `TextField::rendered` turns them into
-the page address on the site.
+are `page:` and `media:` references, and older texts still store
+`?id=<node>&lang=<lang>`, `data-node_id` and `var/` paths.
+
+**Unused media** (`Systopic\Cms\Queries\UnusedMedia`): files no live page
+uses — not in a page's library, not in a text (`media:`, `data-node_id`,
+`var/original` or `var/formats`), not a share image. Aliases are left out,
+because they share another file. Tools → Maintenance → Unused media deletes
+them for good, one or all, the same way as the trash. To do `unusedmedia`.
+
+**Unknown addresses** (`Systopic\Cms\Queries\Misses`, table `cms_strays`):
+when a request matches no page, the address is remembered with a hit count.
+The CMS, files and paths with a dot are skipped. Tools → Maintenance →
+Unknown addresses sends one to a page by adding it as a non-primary
+rewrite path, so the next visit redirects to that page's own address.
+Forgetting a row only drops the log. To do `misses`.
 
 ## 4. Everything is AJAX
 
