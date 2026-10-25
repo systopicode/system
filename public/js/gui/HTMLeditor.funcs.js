@@ -98,10 +98,22 @@ function editBlockClass(event) {
 	return false;
 }
 
+/** "media:293?format=collection" from data-ref-src, set beside the url by Cms\Refs. */
+function editorMediaRef(element) {
+	var ref = (element && (element.getAttribute('data-ref-src') || element.getAttribute('data-ref-href'))) || '';
+	var match = ref.match(/^media:(\d+)(?:\?format=([\w-]+))?/);
+	return match ? {node_id: match[1], format: match[2] || 'original'} : null;
+}
+
 /** The editor of the image or video, in the format it shows now. */
 function formatImage(event) {
 	var el = event.data.target;
-	sys.core.server.sendCall({method: 'get'}, settings.siteRoot + 'cms/pages/editor/file/?target_id=' + el.dataset.node_id + '&format=' + encodeURIComponent(mediaFormatOf(el)));
+	var media = editorMediaRef(el);
+	var id = media ? media.node_id : el.dataset.node_id;
+	if (!id) {
+		return;
+	}
+	sys.core.server.sendCall({method: 'get'}, settings.siteRoot + 'cms/pages/editor/file/?target_id=' + id + '&format=' + encodeURIComponent(media ? media.format : mediaFormatOf(el)));
 }
 
 function HTMLeditorHTMLMode(event) {
@@ -131,6 +143,10 @@ function mediaFormatParts(el) {
 }
 
 function mediaFormatOf(el) {
+	var media = editorMediaRef(el);
+	if (media) {
+		return media.format;
+	}
 	var parts = mediaFormatParts(el);
 	return parts ? parts.format : el.dataset.format || 'original';
 }
@@ -154,6 +170,11 @@ function changeMediaFormat(event) {
 	}
 	el.setAttribute('src', src);
 	el.dataset.format = format;
+	var media = editorMediaRef(el);
+	if (media) {
+		// the url only shows it; what is saved is the reference
+		el.setAttribute('data-ref-src', 'media:' + media.node_id + (format === 'original' ? '' : '?format=' + format));
+	}
 	wysiwyg.changed(el.closest('[contenteditable="true"]'));
 }
 
@@ -163,10 +184,11 @@ function createHTMLeditorLink(event) {
 	if (!state) {
 		return;
 	}
-	var post = state.image ? {image_node_id: state.image.dataset.node_id} : {text: state.text};
+	var imageRef = state.image && editorMediaRef(state.image);
+	var post = state.image ? {image_node_id: imageRef ? imageRef.node_id : state.image.dataset.node_id} : {text: state.text};
 	var anchor = state.anchor;
 	if (anchor) {
-		post.href = anchor.getAttribute('href') || '';
+		post.href = anchor.getAttribute('data-ref-href') || anchor.getAttribute('href') || '';
 		post.classNames = anchor.getAttribute('class') || '';
 		post.download = anchor.hasAttribute('download') ? 1 : '';
 		post.target = anchor.getAttribute('target') || '';

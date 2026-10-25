@@ -42,6 +42,7 @@ return [
 			'Trash: delete a page for good, or empty the trash.',
 			'Tools → Maintenance → Links: broken links inside the website, and a check of links to other websites.',
 			'Media Settings: a media group can be limited to some templates. The choice uses switches.',
+			'Text fields store images, videos and links as references (media:…, page:…). Tools → Migration converts older content.',
 			'Debug mode: the CMS sits on a faint checkerboard.',
 		],
 		'fixed' => [

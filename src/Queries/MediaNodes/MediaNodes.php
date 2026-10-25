@@ -43,6 +43,28 @@ final class MediaNodes
     }
 
     /**
+     * Media by their own ids, not their nodes' - for a path, whose folders
+     * name the medium (Media::$folders: 001/53/ is media 153).
+     *
+     * @param list<int> $mediaIds
+     * @return array<int, MediaRow> media id => media
+     */
+    public static function byMediaIds(Scope $scope, array $mediaIds): array
+    {
+        if ($mediaIds === []) {
+            return [];
+        }
+        Registry::register(MediaRow::class);
+        Registry::register(Node::class);
+        $out = [];
+        foreach ($scope->rows(__DIR__ . '/MediaNodes.byMediaIds.sql', ['mediaIds' => array_values($mediaIds)])->all(MediaRow::class) as $media) {
+            /** @var MediaRow $media */
+            $out[(int) $media->id] = $media;
+        }
+        return $out;
+    }
+
+    /**
      * @param list<int> $nodeIds
      * @return array<int, MediaRow> node id => media
      */

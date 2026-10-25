@@ -192,7 +192,11 @@ answers with the views to replace.
   addresses of the drag (another browser window) and `upload/fetch` loads
   them on the server. Text uploads go to the group `Panel::TEXT_GROUP`
   ("In text") of the page — the original's for an alias — and answer with the
-  editor tag (`Panel::editorTag()`); a placeholder `span.cmsUploading`
+  editor tag (`Panel::editorTag()`). The tag is a reference
+  (`src="media:293?format=…"`, `href="page:43"`) resolved for the editor by
+  `Cms\Refs\Resolver::renderForEditor()`; the url is what the browser shows,
+  `data-ref-*` is what `Resolver::normalize()` stores again. Older texts are
+  converted under Tools → Migration (`HtmlMigration`). A placeholder `span.cmsUploading`
   holds the spot meanwhile. The upload panel never renders: an answer from
   there would replace the page, the client reloads instead.
 - Large files: never read whole (`readAsDataURL`, one `ArrayBuffer`) - each

@@ -270,7 +270,8 @@ class domLayer {
 		foreach ($this->items AS $item) {
 			if ($item->isLayer()) {
 				$layers [] = $item->export();
-				$slices [] = "\n<div class=domLayerPlaceholder></div>\n";
+				// <template>: inert anchor, not counted by CSS selectors, allowed in tables (see src/Dom/Layer/DomLayer.php)
+				$slices [] = "\n<template class=domLayerPlaceholder></template>\n";
 			} else {
 				$slices [] = $item;
 			}

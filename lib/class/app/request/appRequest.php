@@ -112,7 +112,9 @@ class appRequest
 			return $this;
 		}
 		$this->httpInputParsed = true;
-		$this->parsePathString(str_replace(http::$root,'/',http::getUrlInfo($this->inputUrl)->path));
+		// decoded: REQUEST_URI carries non-ASCII rewritepaths percent-encoded
+		// (/jp/%E8%A3%BD%E5%93%81/ for /jp/製品/), cms_rewritepaths stores them as they are
+		$this->parsePathString(str_replace(http::$root,'/',rawurldecode(http::getUrlInfo($this->inputUrl)->path)));
 		// For PUT requests the action is in the JSON body, not the URL
 		if ($this->action_value === '' && http::method() === 'PUT') {
 			$this->action_value = (string) (http::put('action') ?? '');

@@ -27,7 +27,7 @@
 			// lt('createRootLayer');
 			layer.data = bodyLayerData.layers.data;
 			bodyLayerData.html = bodyLayerData.layers.html.replace(/<(\/?)body([^>]*)>/g, '');
-			var placeholderNode = document.createElement('div');
+			var placeholderNode = document.createElement('template');
 			// document.body.innerHTML = '';
 			document.getElementById('systemDomRendererPlaceholder').remove();
 			bodyLayerData.bodyClasses.forEach(className => {

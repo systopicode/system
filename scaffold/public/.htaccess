@@ -175,6 +175,10 @@ RewriteRule ^css/x_responsive.(css|php) css/x_responsive.php [L,QSA]
 
 
 ######################## media files handling ########################
+# backups of the cms: a whole database and the media - never served,
+# the backup panel sends them (admins only)
+RewriteRule ^var/backups/ - [F]
+
 # Nur definierte Dateitypen direkt aus /var/ erlauben, Rest verbieten
 RewriteCond %{REQUEST_URI} !^.*\.(ico|jpe?g|svg|png|gif|mp4|webm|pdf|doc|docx|vcf|tif|css|js|mjs|zip|log|ics|json|otf|woff|woff2|webp|xml|skp)$ [NC]
 RewriteRule ^var/ - [F]

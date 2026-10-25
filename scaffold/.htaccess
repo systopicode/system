@@ -6,3 +6,18 @@
 # (e.g. to a shared /packages/system/ directory): without this,
 # Apache returns 403 for all assets served from vendor/systopic/system/public/.
 Options +SymLinksIfOwnerMatch
+
+# Only public/ is the site - and the public/ folders of the packages, where
+# assets are served from the originals when vendor/ is a copy
+# (vendor/systopic/system/public/). Everything else of the project answers
+# 403 when the project lies inside the web root (DEV, Plesk:
+# httpdocs/projects/<name>/): config/ (database passwords), var/ (the setup
+# token), src/, templates/ ... public/ has a .htaccess with rewrite rules of
+# its own, so this rule never reaches a request below it.
+<IfModule mod_rewrite.c>
+	RewriteEngine On
+	RewriteRule !^(public|vendor/[^/]+/[^/]+/public)(/|$) - [F]
+</IfModule>
+<IfModule !mod_rewrite.c>
+	Require all denied
+</IfModule>

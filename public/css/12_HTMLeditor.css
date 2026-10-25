@@ -365,6 +365,18 @@ body .objectContainer > input.ajax{
     z-index: 5;
 }
 
+/* a text reference shows its value in a box; a missing target is marked (Cms\Refs) */
+.editor span.ref{
+    background: rgba(127,127,127,.18);
+    border-radius: 3px;
+    padding: 0 2px;
+    cursor: default;
+}
+.editor [data-ref-missing]{
+    outline: 2px dashed #d33;
+    outline-offset: 1px;
+}
+
 .objectPlaceholder:after{
     content:'OBJECT PLACEHOLDER'
 }

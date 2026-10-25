@@ -6,15 +6,6 @@ class fsFileOperators
 
 	static $existingOperators;
 
-	/**
-	 * Central conversion table: source=>target -> [operator, priority]
-	 * Priority: lower = better. Future: add quality, performance, features.
-	 */
-	static array $conversions = [
-		'pdf=>jpg' => ['operator' => 'magick', 'priority' => 1],
-		'pdf=>png' => ['operator' => 'magick', 'priority' => 1],
-	];
-
 	static function getExistingOperators()
 	{
 		if (self::$existingOperators) {
@@ -62,21 +53,59 @@ class fsFileOperators
 		return false;
 	}
 
-	static function findOperatorFor(string $sourceType, string $targetType): ?string {
-		$key = "$sourceType=>$targetType";
+	/** why the last firstOperator() found nothing - one reason per operator tried */
+	public string $lastError = '';
 
-		if (isset(self::$conversions[$key])) {
-			return self::$conversions[$key]['operator'];
-		}
-
-		foreach (self::getExistingOperators() as $name) {
+	/**
+	 * The first of the named operators that does the job.
+	 *
+	 * Tried in the given order: skipped when it is not available here or
+	 * cannot read the file, otherwise $job($operator) runs, and the operator
+	 * is returned as soon as it has a result. NULL when none had one;
+	 * lastError then lists the reason for each.
+	 *
+	 * The order is the caller's decision. Which tool is right depends on the
+	 * job - one resamples or composites better, the other is faster or runs
+	 * in its own process - so it is written where the job is, with the reason.
+	 *
+	 * @param list<string> $names operator names, in the order to try them
+	 * @param callable(fsFileOperator): mixed $job configures and renders
+	 */
+	function firstOperator(array $names, callable $job): ?fsFileOperator
+	{
+		$file = $this->file;
+		$type = (string) ($file->exists ? ($file->mimeext ?: $file->standardizedExtension) : $file->standardizedExtension);
+		$reasons = [];
+		foreach ($names as $name) {
 			$className = "fsFileOperator_$name";
-			if (!class_exists($className, true)) continue;
-			$caps = $className::$capabilities;
-			if (in_array($sourceType, $caps['read']) && in_array($targetType, $caps['write'])) {
-				return $name;
+			if (!class_exists($className, true)) {
+				$reasons[] = "$name: no such operator";
+				continue;
 			}
+			if (!$className::isAvailable()) {
+				$reasons[] = "$name: not available here";
+				continue;
+			}
+			if (!$className::canRead($type)) {
+				$reasons[] = "$name: cannot read '$type'";
+				continue;
+			}
+			// a fresh instance: one that mediainfo or an earlier job already
+			// read would ignore setMegapixels()/setPage() set now
+			if (isset($this->operators[$name])) {
+				$this->operators[$name]->destroy();
+			}
+			$operator = $this->getOperator($name);
+			$job($operator);
+			if ($operator->hasResult()) {
+				$this->lastError = '';
+				return $operator;
+			}
+			$reasons[] = "$name: " . ($operator->lastError ?: 'no result');
+			$operator->cleanup();
+			$operator->destroy();
 		}
+		$this->lastError = $reasons ? implode(' | ', $reasons) : 'no operator named';
 		return null;
 	}
 }

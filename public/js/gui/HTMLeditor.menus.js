@@ -114,7 +114,7 @@ function HTMLeditorRightClick(clicktype, event, elements) {
 		case 'image':
 			var linked = !!target.closest('a');
 			items = Object.assign({
-				formats: formatMenu('image', /^image\/(jpe?g|png|webp)$/.test(target.dataset.mimetype)),
+				formats: formatMenu('image', /^image\/(jpe?g|png|webp)$/.test(target.getAttribute('data-ref-mimetype') || target.dataset.mimetype || '')),
 				edit: cmd('Crop and adjust', 'crop-simple', 'formatImage'),
 				anchor: cmd(linked ? 'Edit link' : 'Insert link', linked ? 'pen' : 'link', 'createHTMLeditorLink', {selected: linked, sep: true}),
 				unlink: cmd('Remove link', 'link-slash', 'removeAnchor', {active: linked}),

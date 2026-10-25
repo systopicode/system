@@ -27,7 +27,8 @@
 						$i++;
 						echo html::create('a.button.transparent.icononly')->target('_self')
 							->download(basename($singlefile))
-							->href(http::$siteUrl . 'var/backups/' . basename($singlefile))
+							// through the panel (actions.php: download) - var/backups/ is not served
+							->href(http::$siteUrl . 'cms/backup/download?name=' . rawurlencode(basename($singlefile)))
 							->title('Download ' . basename($singlefile))
 							->append('i.fa-regular.fa-arrow-down-to-line');
 					}
