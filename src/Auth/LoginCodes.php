@@ -101,6 +101,23 @@ final class LoginCodes
         return ['code' => $code, 'poll' => $poll];
     }
 
+    /**
+     * A screen gives its code up - it shows a new one (a reload). The code is
+     * deleted, so nobody can approve it any more; one that was approved
+     * meanwhile stays for `pollScreen()`, which the caller asks first.
+     */
+    public static function cancelScreenPairing(string $poll): void
+    {
+        if ($poll === '') {
+            return;
+        }
+        $scope = Scope::default();
+        $code = CodeQuery::byPollHash($scope, hash('sha256', $poll));
+        if ($code !== null && $code->approvedAt === null) {
+            $scope->remove($code);
+        }
+    }
+
     /** A user admin approves the code a screen shows, for the screen account `$screen`. */
     public static function approveScreen(string $input, User $screen, int $approvedBy): bool
     {
