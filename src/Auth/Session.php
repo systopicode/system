@@ -310,6 +310,12 @@ final class Session
 
     private static function resetRequested(): int
     {
+        // Without a database there is nobody whose settings could ask for a
+        // reset - and an app without the db package (the project manager in
+        // packages/tools) could not even load the user to ask.
+        if (!class_exists(\Systopic\Db\Connection::class) || !\Systopic\Db\Connection::isOpen()) {
+            return 0;
+        }
         $user = self::current()->user;
         $data = $user === null ? null : json_decode((string) $user->sessiondata?->value, true);
         return (int) ($data['stateReset'] ?? 0);
