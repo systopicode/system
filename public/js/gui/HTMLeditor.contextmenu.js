@@ -1,11 +1,10 @@
 /****************************** WYSIWYG BAR ***************************/
-// One floating bar for everything in a field: the caret shows what its block,
-// cell or link offers, a selection adds the text formats, the pointer over a
-// link, image or video shows theirs. Touch has no hover and no right click:
-// a tap does what a click or hover does. The keyboard stays down (inputmode
-// none) until "Type" in the bar asks for it - it would cover half the page.
+// One floating bar for everything in a field. A click shows what was hit:
+// the caret its block or link, a selection the text formats, an image, video
+// or embed its own commands. The keyboard stays down (inputmode none) until
+// "Type" in the bar asks for it - it would cover half the page.
 function initContenteditableContextMenus() {
-	var selectionTimer, hoverTimer, leaveTimer, downInEditor = false;
+	var selectionTimer, downInEditor = false;
 
 	// the bar opens where the pointer pressed, not at the top of a large element
 	var lastPoint = null;
@@ -40,7 +39,29 @@ function initContenteditableContextMenus() {
 		return document.querySelector('.HTMLeditorMenu');
 	};
 
+	// In the editor a film stays on its still. Playback belongs on the website.
+	var editorVideo = function (node) {
+		var video = node && node.closest && node.closest('video');
+		return video && wysiwygOf(video) ? video : null;
+	};
+	var holdVideo = function (video) {
+		if (!video) {
+			return;
+		}
+		video.removeAttribute('controls');
+		video.pause();
+	};
+	document.addEventListener('play', function (e) {
+		holdVideo(editorVideo(e.target));
+	}, true);
+	document.addEventListener('playing', function (e) {
+		holdVideo(editorVideo(e.target));
+	}, true);
+	document.addEventListener('pointerover', function (e) {
+		holdVideo(editorVideo(e.target));
+	}, true);
 	document.addEventListener('pointerdown', function (e) {
+		holdVideo(editorVideo(e.target));
 		editorPointer = e.pointerType;
 		downInEditor = !!wysiwygOf(e.target);
 		lastPoint = downInEditor ? pointOf(e) : lastPoint;
@@ -51,7 +72,7 @@ function initContenteditableContextMenus() {
 	}, true);
 	// a pressed image would be selected, tinted and offered as text
 	document.addEventListener('mousedown', function (e) {
-		e.button === 0 && e.target.nodeName === 'IMG' && wysiwygOf(e.target) && e.preventDefault();
+		e.button === 0 && e.target.closest && e.target.closest('img, video, iframe') && wysiwygOf(e.target) && e.preventDefault();
 	}, true);
 	document.addEventListener('focusout', function (e) {
 		var editor = wysiwygOf(e.target);
@@ -80,6 +101,9 @@ function initContenteditableContextMenus() {
 	// touch: the tap waits for 'click' - the mousedown it emulates would close a bar opened earlier.
 	// A tap is the hover of touch: on a link, image or video it opens their bar.
 	document.addEventListener('click', function (e) {
+		if (editorVideo(e.target)) {
+			e.preventDefault();
+		}
 		// a link in a field is text to edit, never followed
 		wysiwygOf(e.target) && e.target.closest('a') && e.preventDefault();
 		var editor = editorPointer === 'touch' && wysiwygOf(e.target);
@@ -138,49 +162,6 @@ function initContenteditableContextMenus() {
 		var bar = openBar();
 		bar && !bar.contains(e.target) && closeAllMenus();
 	}, true);
-
-	// mouse: hovering a link, image or video shows its bar, leaving both hides it
-	var hoverable = function (node) {
-		var el = node && node.nodeType === 1 && wysiwygOf(node) && node.closest('a, img, video, iframe');
-		return el && wysiwygOf(el) ? el : null;
-	};
-	document.addEventListener('mouseover', function (e) {
-		if (editorPointer === 'touch') {
-			return;
-		}
-		var bar = openBar();
-		if (bar && bar.contains(e.target)) {
-			clearTimeout(leaveTimer);
-			return;
-		}
-		var el = hoverable(e.target);
-		clearTimeout(hoverTimer);
-		if (!el || (bar && !bar.hoverFor) || (bar && bar.hoverFor === el) || !getSelection().isCollapsed) {
-			bar && bar.hoverFor === el && clearTimeout(leaveTimer);
-			return;
-		}
-		var point = pointOf(e);
-		hoverTimer = setTimeout(function () {
-			var target = el.matches('a') && el.querySelector('img') || el;
-			openFor(target, point, true);
-			openBar() && (openBar().hoverFor = el);
-		}, 250);
-	});
-	document.addEventListener('mouseout', function (e) {
-		clearTimeout(hoverTimer);
-		var bar = openBar();
-		if (!bar || !bar.hoverFor) {
-			return;
-		}
-		var to = e.relatedTarget;
-		if (to && (bar.contains(to) || bar.hoverFor.contains(to))) {
-			return;
-		}
-		clearTimeout(leaveTimer);
-		leaveTimer = setTimeout(function () {
-			openBar() === bar && closeAllMenus();
-		}, 400);
-	});
 
 	editorBubble = show;
 	$("body").on("contextmenu", function (e) {
@@ -332,9 +313,21 @@ var contextMenuWW = function (params, event) {
 		if (item.active === false) {
 			return;
 		}
-		var li = $('<li></li>').toggleClass('selected', !!item.selected).toggleClass('disabled', !!item.disabled).toggleClass('sep', !!item.sep && ul.children().length > 0);
+		var li = $('<li></li>').toggleClass('selected', !!item.selected).toggleClass('disabled', !!item.disabled).toggleClass('is-drag', !!item.drag).toggleClass('sep', !!item.sep && ul.children().length > 0);
 		var a = $('<a href="javascript:void(0)"><i class="' + item.className + '"></i></a>').attr('title', item.title).attr('aria-label', item.title);
 		li.append(a).appendTo(ul);
+		if (item.drag) {
+			a.on('pointerdown', function (e) {
+				e.preventDefault();
+				e.stopPropagation();
+				var media = target && target.closest && target.closest('img, video, iframe');
+				closeAllMenus();
+				if (media && window.editorBeginMediaMove) {
+					editorBeginMediaMove(media, e.originalEvent || e);
+				}
+			});
+			return;
+		}
 		if (!item.subs) {
 			a.on('click', item.param, menuCommand(window[item.func], item.reopen));
 			return;

@@ -70,7 +70,7 @@
 	top: 0;
 	left: 0;
 	right: 0;
-	height: 3px;
+	height: 6px;
 	overflow: hidden;
 
 	&[hidden] {
@@ -84,6 +84,8 @@
 		left: 0;
 		width: 35%;
 		height: 100%;
+		border: 0;
+		box-shadow: none;
 		animation: cmsBusy 0.8s ease-in-out infinite;
 	}
 
@@ -95,15 +97,7 @@
 		background: var(--cmsError);
 	}
 
-	.peg {
-		display: block;
-		position: absolute;
-		right: 0;
-		width: 100px;
-		height: 100%;
-		opacity: 1;
-		transform: rotate(3deg) translate(0, -4px);
-	}
+	.peg { display: none; }
 }
 
 html.nprogress-busy{
@@ -245,6 +239,9 @@ tr:has(> td > .pressing) > td {
 div.sort {
 	position: absolute;
 	z-index: 1000;
+	/* The padding is the hit area. border-box would fold it into height: 0
+	   and the row could no longer be dropped on. */
+	box-sizing: content-box;
 }
 
 div.sort.h{
@@ -305,6 +302,7 @@ body.settingDragging div[data-drop_accept="setting"].sort
 body.dragging {
 	-webkit-user-select: none;
 	user-select: none;
+	overscroll-behavior: none;
 }
 body.dragging .dragged div.sort,
 body.dragging .afterDragged div.sort.insertBefore,

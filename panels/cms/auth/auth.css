@@ -20,7 +20,6 @@ body.cms:has(.authCard) {
 	}
 	background:
 		radial-gradient(40rem 24rem at 15% -10%, color-mix(in srgb, var(--cmsHighlightColor) 28%, transparent), transparent 70%),
-		radial-gradient(36rem 28rem at 110% 110%, var(--cmsSecondaryColor), transparent 60%),
 		var(--cmsMainColor);
 
 	div.authCard {
@@ -127,7 +126,7 @@ body.cms:has(.authCard) {
 			margin: 0;
 			padding-left: 2.5rem;
 			border-radius: var(--cmsRadius);
-			font-size: 1rem;
+			font-size: 16px;
 		}
 
 		button.submit,
@@ -216,10 +215,20 @@ body.cms:has(.authCard) {
 	}
 
 	@media (max-width: 40rem) {
-		padding: max(1rem, env(safe-area-inset-top)) 0.75rem max(1rem, env(safe-area-inset-bottom));
+		height: auto;
+		min-height: 100lvh;
+		overflow-x: hidden;
+		overflow-y: auto;
+		justify-content: safe center;
+		padding: max(1.25rem, env(safe-area-inset-top)) 1rem max(1.25rem, env(safe-area-inset-bottom));
 		gap: 1rem;
 
 		div.authCard {
+			height: auto;
+			max-height: none;
+			min-height: min(32rem, calc(100lvh - 6rem));
+			overflow: hidden;
+			flex-shrink: 0;
 			padding: 1.5rem 1.15rem 1.25rem;
 
 			h1 {
@@ -228,12 +237,33 @@ body.cms:has(.authCard) {
 
 			main {
 				overflow: auto;
+				min-height: 0;
 			}
 		}
 
 		footer.authFooter {
-			max-width: 100%;
-			padding-inline: 0.25rem;
+			align-self: center;
+			width: auto;
+			max-width: min(26rem, 100%);
+			min-width: 0;
+			overflow-x: clip;
+			overflow-y: visible;
+
+			span {
+				overflow-wrap: anywhere;
+			}
+
+			nav {
+				display: flex;
+				flex-direction: row;
+				flex-wrap: wrap;
+				justify-content: center;
+				align-items: center;
+				width: 100%;
+				min-width: 0;
+				gap: 0.35rem 0.9rem;
+				overflow: visible;
+			}
 		}
 	}
 }

@@ -176,7 +176,7 @@ class mediaImage {
 					$lay_image->setImageCompressionQuality(0);
 					$lay_image->setImageDepth(8);
 				} else {
-					$lay_image->setformat($filetype);
+					$lay_image->setImageFormat($filetype);
 				}
 				$lay_image->setIteratorIndex(0);
 				$lay_image->setResourceLimit(Imagick::RESOURCETYPE_TIME, (int) 30E+6); // microseconds

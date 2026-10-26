@@ -104,6 +104,10 @@
 			// later by ajax: a stand-in field takes the focus and hands it on. Outside body,
 			// where the renderer does not clear it away.
 			document.addEventListener('click', function (e) {
+				var navLink = e.target.closest && e.target.closest('main nav a[href]');
+				if (navLink && e.detail !== 0 && !navLink.classList.contains('cmsSearchLink')) {
+					navLink.blur();
+				}
 				if (!e.target.closest || !e.target.closest('a.cmsSearchLink')) {
 					return;
 				}
@@ -115,9 +119,11 @@
 				var tries = 0;
 				var handOn = setInterval(function () {
 					var field = document.querySelector('div.cmsFind input[name="query"]');
-					if (field || ++tries > 50) {
+					if (field) {
+						field.focus({preventScroll: true});
+					}
+					if ((field && document.activeElement === field) || ++tries > 40) {
 						clearInterval(handOn);
-						field && field.focus();
 						proxy.remove();
 					}
 				}, 50);
@@ -187,6 +193,20 @@
 					menu.picker && menu.picker.isConnected && menu.picker.open ? placeTemplateMenu(menu.picker) : menu.remove();
 				});
 			});
+
+			// The field stays focused across the redraw, so a typed name would
+			// remain. The value is already in the request by the time this runs.
+			document.addEventListener('submit', function (event) {
+				var form = event.target;
+				if (!form.matches || !form.matches('form.tagAdd')) {
+					return;
+				}
+				var field = form.querySelector('input[name="name"]');
+				if (!field) {
+					return;
+				}
+				setTimeout(function () { field.value = ''; }, 0);
+			}, true);
 
 			// a finger swipes a switch as on a phone: to the right on, to the left off
 			document.addEventListener('pointerdown', function (down) {

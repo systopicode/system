@@ -24,6 +24,12 @@ sys.processEvent = function (e) {
 		return;
 	}
 	var eventTarget = e.target || e.currentTarget;
+	if (e.type === 'click' && eventTarget && eventTarget.closest) {
+		var leaving = eventTarget.closest('a[href*="logout"]');
+		if (leaving) {
+			leaving.classList.add('loading');
+		}
+	}
 	// An element taken out of the document loses its focus, and the browser
 	// fires blur for it - Chrome while the element is still in the document.
 	// That is not the user leaving the field: a form that saves on blur would

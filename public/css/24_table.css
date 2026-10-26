@@ -140,6 +140,18 @@
     overscroll-behavior-x: contain;
 }
 
+/* Drop zones sit a few pixels past the row. That must not open a bar
+   on the table or the card around it. */
+.cms .tableScroll div.sort.v{
+    left: 0;
+    width: 100%;
+}
+body.dragging .tableScroll,
+body.dragging .widget,
+body.dragging section.cms{
+    overflow: hidden;
+}
+
 .tableScroll > table td.icons,
 .tableScroll > table tr > th:last-child:empty{
     position: sticky;
@@ -150,6 +162,11 @@
        and on a table that fits (no scroll, no timeline) */
     animation: cmsScrollEdge linear both;
     animation-timeline: scroll(x nearest);
+}
+
+.cms .tableScroll > table tbody tr:hover td.icons,
+.cms .tableScroll > table tbody tr:hover td:last-child{
+    background: color-mix(in srgb, var(--cmsHighlightColor) 24%, var(--cmsCanvas));
 }
 
 @keyframes cmsScrollEdge{
@@ -182,11 +199,32 @@
    actions; the other cells follow, labelled, side by side as they fit. */
 .tableScroll.stacked{
     overflow: visible;
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    scrollbar-gutter: auto;
 }
 
-.tableScroll.stacked > table,
-.tableScroll.stacked > table > tbody{
+.cms .tableScroll.stacked > table{
     display: block;
+    background: transparent;
+}
+
+.tableScroll.stacked,
+.cms .tableScroll.stacked > table,
+.tableScroll.stacked > table > tbody,
+.tableScroll.stacked > table > tbody > tr{
+    width: 100%;
+    max-width: 100%;
+    align-self: stretch;
+    box-sizing: border-box;
+}
+
+.tableScroll.stacked > table > tbody{
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.65rem;
 }
 
 .tableScroll.stacked > table > thead{
@@ -199,12 +237,16 @@
     flex-wrap: wrap;
     align-items: center;
     gap: 0.6rem 0.75rem;
-    padding: 0.75rem 1.25rem;
-    border-bottom: 1px solid var(--cmsLine);
+    margin: 0;
+    padding: 0.75rem 1rem;
+    border: 1px solid var(--cmsLine);
+    border-radius: var(--cmsRadiusLg);
+    background: var(--cmsCanvas);
+    box-shadow: var(--cmsShadow);
 }
 
 .tableScroll.stacked > table > tbody > tr:last-child{
-    border-bottom: none;
+    border-bottom: 1px solid var(--cmsLine);
 }
 
 .tableScroll.stacked > table > tbody > tr::after{
@@ -216,6 +258,17 @@
 
 .tableScroll.stacked > table > tbody > tr:hover{
     background: color-mix(in srgb, var(--cmsMainColor) 4%, var(--cmsCanvas));
+}
+
+/* The mark belongs to the card edge. A cell's own line would sit on whichever
+   cell is first in the row — a status dot, not the card. */
+.cms .tableScroll.stacked > table > tbody > tr.selected{
+    background: var(--cmsSelected);
+    box-shadow: inset 3px 0 0 var(--cmsHighlightColor);
+}
+.cms .tableScroll.stacked > table > tbody > tr:hover > td,
+.cms .tableScroll.stacked > table > tbody > tr.selected > td{
+    box-shadow: none !important;
 }
 
 /* :nth-child(n) outweighs the edge padding of a card's table */
@@ -273,6 +326,88 @@
 /* sorting: a card folds to its name, so a long list fits on the screen */
 .cms .tableScroll.stacked:has(.dragged) > table > tbody > tr > td:not(:first-child, :has(> .userStatus, > i[data-drag_type]), :has(> .userStatus, > i[data-drag_type]) + td, .icons, .projectRemove, .schemaApply){
     display: none;
+}
+
+/* A drag-sorted table on a phone starts as that one line. Tap the row to open it. */
+@media (max-width: 1024px) {
+    .cms .tableScroll.stacked.is-foldable > table > tbody > tr:not(.is-open) > td:not(:first-child, :has(> .userStatus, > i[data-drag_type]), :has(> .userStatus, > i[data-drag_type]) + td, .icons, .projectRemove, .schemaApply){
+        display: none;
+    }
+    .cms .tableScroll.stacked.is-foldable > table > tbody > tr:not(.is-open){
+        align-items: center;
+        min-height: 2.75rem;
+        padding-top: 0.45rem;
+        padding-bottom: 0.45rem;
+    }
+    .cms .tableScroll.stacked.is-foldable > table > tbody > tr:not(.is-open)::after{
+        display: none;
+    }
+    .cms .tableScroll.stacked.is-foldable > table > tbody > tr { cursor: pointer; }
+    .cms .tableScroll.stacked.is-foldable > table > tbody > tr.is-open > td:nth-child(n){
+        flex: 1 1 100%;
+    }
+    .cms .tableScroll.stacked.is-foldable > table > tbody > tr.is-open > td:has(> .userStatus, > i[data-drag_type]),
+    .cms .tableScroll.stacked.is-foldable > table > tbody > tr.is-open > :is(td:first-child:not(:has(> .userStatus, > i[data-drag_type])), td:has(> .userStatus, > i[data-drag_type]) + td),
+    .cms .tableScroll.stacked.is-foldable > table > tbody > tr.is-open > :is(td.icons, td.projectRemove, td.schemaApply){
+        flex: 0 0 auto;
+    }
+    /* The list is the stack of cards. The box around it is not a second card. */
+    section.cms:has(> .tableScroll.stacked),
+    .cms .widget:has(> .tableScroll.stacked),
+    .cms .widget:has(> header + .tableScroll.stacked){
+        background: transparent;
+        border: 0;
+        box-shadow: none;
+        overflow: visible;
+    }
+    .cms .widget:has(> .tableScroll.stacked) > header,
+    .cms .widget:has(> header + .tableScroll.stacked) > header{
+        margin-bottom: 0.65rem;
+        border: 1px solid var(--cmsLine);
+        border-radius: var(--cmsRadiusLg);
+        background: var(--cmsCanvas);
+        box-shadow: var(--cmsShadow);
+    }
+    /* The drop line belongs to the card, not to the grip cell. */
+    .cms .tableScroll.stacked > table > tbody > tr > td:has(> div.sort){
+        position: static;
+    }
+    .cms .tableScroll.stacked div.sort.v{
+        left: 0;
+        width: 100%;
+    }
+    /* The finger covers a line on the row. The mark sits in the gap. */
+    body.dragging .tableScroll.stacked > table > tbody > tr:has(> td > .sort.dropTarget)::before{
+        content: "";
+        position: absolute;
+        left: 0.75rem;
+        right: 0.75rem;
+        height: 3px;
+        border-radius: 2px;
+        background: var(--cmsHighlightColor);
+        z-index: 5;
+        pointer-events: none;
+    }
+    body.dragging .tableScroll.stacked > table > tbody > tr:has(> td > .sort.insertBefore.dropTarget)::before{
+        top: -0.45rem;
+    }
+    body.dragging .tableScroll.stacked > table > tbody > tr:has(> td > .sort.insertAfter.dropTarget)::before{
+        top: auto;
+        bottom: -0.45rem;
+    }
+    .cms .tableScroll.stacked.is-foldable > table > tbody > tr.is-open > td[data-label]:not(:first-child, :has(> .userStatus, > i[data-drag_type]) + td, .icons, .projectRemove, .schemaApply){
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: baseline;
+        gap: 1rem;
+        width: 100%;
+    }
+    .cms .tableScroll.stacked.is-foldable > table > tbody > tr.is-open > td[data-label]:not(:first-child, :has(> .userStatus, > i[data-drag_type]) + td, .icons, .projectRemove, .schemaApply)::before{
+        display: inline;
+        margin: 0;
+        flex: 0 0 auto;
+    }
 }
 
 .tableScroll.stacked :is(input:not([type="checkbox"], [type="radio"]), select, textarea){

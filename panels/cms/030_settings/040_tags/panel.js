@@ -48,11 +48,17 @@
 		tags.enterNewTag = event => {
 			if (!event.element.onkeydown) {
 				event.element.onkeydown = (e) => {
-					if (e.keyCode === 13) {
-						event.data.render = ['main'];
-						event.data.value = event.element.value;
-						sys.core.server.sendEventCall(event);
+					if (e.keyCode !== 13) {
+						return;
 					}
+					var value = event.element.value.trim();
+					if (value === '') {
+						return;
+					}
+					event.data.render = ['main'];
+					event.data.value = value;
+					event.element.value = '';
+					sys.core.server.sendEventCall(event);
 				};
 				event.element.onblur = () => {
 					event.element.onkeydown = null;
@@ -139,41 +145,62 @@
 			return chain;
 		};
 
-		tags.rename = (event) => {
-			tags.renameActive = true;
-			var h1 = event.element.closest('header').getElementsByTagName('h1')[0];
-			tags.oldName = h1.textContent;
-			h1.setAttribute("contenteditable", "true");
-
-			selectElementContents(h1);
-			h1.onkeydown = (e) => {
-				switch (e.keyCode) {
-					case 13:
-						h1.removeAttribute('contenteditable');
-						tags.updateName(h1).done(response => {
-							p(response);
-						});
-						return false;
-					case 27:
-						h1.removeAttribute('contenteditable');
-						h1.textContent = tags.oldName;
-						return false;
-				}
-			};
-
-			h1.oninput = (e) => {
+		tags.finishRename = (h1, save) => {
+			if (!h1 || h1.getAttribute('contenteditable') === 'false' || !h1.hasAttribute('contenteditable')) {
 				return;
-				if (h1.textContent.length > 50) {
-					var restore = saveCaretPosition(h1);
-					h1.textContent = h1.textContent.substr(0, 99);
-					restore();
+			}
+			var name = h1.textContent;
+			if (h1.renameStop) {
+				document.removeEventListener('pointerdown', h1.renameStop, true);
+				document.removeEventListener('keydown', h1.renameStop, true);
+				h1.renameStop = null;
+			}
+			h1.removeAttribute('contenteditable');
+			if (!save) {
+				h1.textContent = tags.oldName;
+				return;
+			}
+			if (name !== tags.oldName) {
+				tags.updateName(h1);
+			}
+		};
+
+		tags.rename = (event) => {
+			var h1 = event.element.closest('header').querySelector('h1');
+			if (tags.renameClosed) {
+				tags.renameClosed = false;
+				return;
+			}
+			if (h1.getAttribute('contenteditable') && h1.getAttribute('contenteditable') !== 'false') {
+				tags.finishRename(h1, true);
+				return;
+			}
+			tags.oldName = h1.textContent;
+			h1.setAttribute('contenteditable', 'plaintext-only');
+			var stop = (e) => {
+				if (e.type === 'keydown') {
+					if (e.key !== 'Enter' && e.key !== 'Escape') {
+						return;
+					}
+					e.preventDefault();
+					tags.finishRename(h1, e.key === 'Enter');
+					return;
 				}
-				while (!allowedStrings.test(h1.textContent)) {
-					var restore = saveCaretPosition(h1);
-					h1.textContent = h1.textContent.replace(forbiddenChars, '_');
-					restore();
+				if (h1.contains(e.target)) {
+					return;
 				}
+				var pencil = e.target.closest && e.target.closest('.tagGroupRename');
+				if (pencil && pencil.closest('header') === h1.parentElement) {
+					e.preventDefault();
+					tags.renameClosed = true;
+				}
+				tags.finishRename(h1, true);
 			};
+			h1.renameStop = stop;
+			document.addEventListener('pointerdown', stop, true);
+			document.addEventListener('keydown', stop, true);
+			h1.focus();
+			selectElementContents(h1);
 		};
 
 	});

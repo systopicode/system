@@ -28,8 +28,7 @@ body{
     display: flex;
     flex-direction: column;
     box-sizing: border-box;
-    margin-top: -1px; /* margin collapse */
-    border-top: 1px solid;
+    border-top: 0;
     background: var(--cmsMainColor);
     font-family: var(--cmsFont);
     font-size: 1rem;
@@ -80,6 +79,26 @@ body{
 body.cms > div.content > section{
     flex: 1 1 auto;
     overflow: auto;
+}
+
+/* The bar stays, so the column does not jump when a block folds away.
+   The page editor scrolls inside its own preview. */
+body.cms:not(.pages) > main > div.content section.cms{
+    overflow-y: scroll;
+}
+
+/* The layer tree is an overlay. Before its own stylesheet arrives it is
+   an ordinary flex item, and a long tree shrinks the page to nothing. */
+body.cms > div.sysdebug{
+    position: fixed;
+    z-index: 1000000000;
+    max-height: 80%;
+    max-width: 80%;
+}
+
+body.cms > div.sysdebug.closed > div.body,
+body.cms > div.sysdebug.closed > div.foot{
+    display: none;
 }
 
 section.cms{
@@ -538,12 +557,19 @@ body > main:has(> div.content .dashboard) .cms div.bottomMenu div.cmsAccount{
     border-radius: var(--cmsRadius);
 }
 
-body > main:has(> div.content .dashboard) .cms div.bottomMenu div.cmsAccount:hover{
+body > main:has(> div.content .dashboard) .cms div.bottomMenu div.cmsAccount:hover,
+body > main:has(> div.content .dashboard) .cms div.bottomMenu div.cmsAccount:focus-within{
     background: var(--cmsOnDark);
 }
 
-body > main:has(> div.content .dashboard) .cms div.bottomMenu div.cmsAccount:hover div.signet:after{
+body > main:has(> div.content .dashboard) .cms div.bottomMenu div.cmsAccount:hover div.signet:after,
+body > main:has(> div.content .dashboard) .cms div.bottomMenu div.cmsAccount:focus-within div.signet:after{
     content: none;
+}
+
+body > main:has(> div.content .dashboard) .cms div.bottomMenu div.cmsAccount a:is(:hover, :focus, :focus-visible){
+    background: none;
+    outline: none;
 }
 
 body > main:has(> div.content .dashboard) .cms div.bottomMenu .signet{

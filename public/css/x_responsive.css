@@ -1,141 +1,774 @@
-/* Phone: eine Fläche. Desktop ignoriert die Pane-Klassen. */
+/* Mobile shell: the pylon stays in place; existing views become bottom windows. */
+body.cms > .cmsMobileHeader, .cmsMobileBackdrop, .cmsMobileWindowBar, body.cms .cmsMobileOnly { display: none; }
+body.cms > .cmsMobileHeader > .cmsMobileMenuClose, body.cms > .cmsMobileHeader > .cmsMobileDashboardBrand { display: none; }
+.cmsPageTools, .cmsPageToolsMenu { display: contents; }
 
-.cmsPanes {
-	display: none;
-}
-
-@media (max-width: 860px) {
-	.cmsPanes {
-		display: flex;
-		position: fixed;
-		z-index: 1800;
-		left: 0;
-		right: 0;
-		bottom: 0;
-		min-height: 52px;
-		padding-bottom: env(safe-area-inset-bottom);
+@media (max-width: 1024px) {
+	body.cms:has(> .cmsMobileHeader) {
+		--mobileTop: calc(56px + env(safe-area-inset-top));
+		--mobileBottom: calc(8px + env(safe-area-inset-bottom) + var(--cmsKeyboard, 0px));
+		--sheetSide: env(safe-area-inset-right, 0px);
+		--sheetSideLeft: env(safe-area-inset-left, 0px);
+		/* Same inset as the burger glyph and the search glyph in the bar. */
+		--cmsInsetLeft: calc(max(8px, env(safe-area-inset-left)) + (44px - 1.35rem) / 2);
+		--cmsInsetRight: calc(max(8px, env(safe-area-inset-right)) + (44px - 1.35rem) / 2);
+		height: 100dvh;
+		padding: var(--mobileTop) 0 0 0;
+		margin: 0; border: 0;
+		background: var(--cmsBgColor);
+		overflow: hidden;
+	}
+	body.cms:has(> .cmsMobileHeader):has(.authCard) { background: unset; }
+	html:has(> body.cms > .cmsMobileHeader) { background: var(--cmsBgColor); height: 100%; overflow: hidden; }
+	html:has(> body.cms .authCard) {
+		height: auto; min-height: 100%; overflow-x: clip; margin: 0; padding: 0; max-width: 100%;
 		background: var(--cmsMainColor);
 	}
-
-	.cmsPanes button {
-		flex: 1 1 0;
+	body.cms:has(.authCard) {
+		height: auto; min-height: 100lvh; overflow-x: clip; overflow-y: auto;
+		max-width: 100%;
+		background: var(--cmsMainColor);
+		padding: max(1.25rem, env(safe-area-inset-top)) 1rem max(1.25rem, env(safe-area-inset-bottom));
+		justify-content: safe center; align-items: center;
+	}
+	body.cms:has(.authCard) > div.authCard,
+	body.cms:has(.authCard) > footer.authFooter {
+		max-width: min(26rem, 100%);
+		min-width: 0;
+	}
+	body.cms:has(.authCard) > footer.authFooter {
+		overflow-x: clip;
+		overflow-y: visible;
+	}
+	body.cms:has(.authCard) > footer.authFooter span {
+		display: block;
+		max-width: 100%;
+		overflow-wrap: anywhere;
+		text-align: center;
+	}
+	body.cms:has(.authCard) > footer.authFooter nav {
+		width: 100%;
+		min-width: 0;
+		flex-direction: row;
+		flex-wrap: wrap;
+		justify-content: center;
+		align-items: center;
+		overflow: visible;
+		gap: 0.35rem 0.9rem;
+	}
+	body.cms:has(.authCard) > .cmsMobileHeader { display: none; }
+	body.cms[data-cms-window="menu"]:has(> .cmsMobileHeader),
+	html:has(> body.cms[data-cms-window="menu"]) { background: var(--cmsMainColor); }
+	body.cms:has(> .cmsMobileHeader) > main {
+		--cmsStatusBar: 0px;
+		min-height: 0;
+		margin: 0;
+		border-radius: var(--cmsRadiusLg);
+		overflow: visible;
+		background: var(--cmsFrame);
+	}
+	body.cms:has(> .cmsMobileHeader) > main {
+		margin-bottom: 0;
+		border-radius: var(--cmsRadiusLg) var(--cmsRadiusLg) 0 0;
+		background: var(--cmsBgColor);
+		padding-bottom: env(safe-area-inset-bottom);
+	}
+	/* The tree is white to the bottom edge. The body colour is what the
+	   address bar samples, so it has to be the same white, not the page gray. */
+	body.cms:has(> .cmsMobileHeader):has(> main > div.pylon):not([data-cms-window="edit"]):not([data-cms-window="menu"]),
+	body.cms:has(> .cmsMobileHeader):has(> main > div.pylon):not([data-cms-window="edit"]):not([data-cms-window="menu"]) > main,
+	html:has(> body.cms:has(> .cmsMobileHeader):has(> main > div.pylon):not([data-cms-window="edit"]):not([data-cms-window="menu"])) {
+		background: var(--cmsCanvas);
+	}
+	/* Debug chrome belongs to desktop; keep the mobile viewport edge to edge. */
+	div.sysdebug, html:has(> body.cms > .cmsMobileHeader) > .shadow-host { display: none !important; }
+	body.cms > .cmsMobileHeader {
+		position: fixed;
+		left: 0;
+		right: 0;
+		z-index: 1900;
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		background: var(--cmsFrame);
+		color: #fff;
+	}
+	body.cms > .cmsMobileHeader {
+		top: 0;
+		height: var(--mobileTop);
+		padding: env(safe-area-inset-top) max(8px, env(safe-area-inset-right)) 0 max(8px, env(safe-area-inset-left));
+		border-bottom: 0;
+		flex: 0 0 var(--mobileTop);
+		min-height: var(--mobileTop);
+	}
+	.cmsMobileHeader strong { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+	.cmsMobileHeader .cmsStage {
+		display: inline-flex; align-items: center; justify-content: center;
+		position: static; flex: 0 0 auto; width: auto; height: 1rem;
+		margin: 0; padding: 0 0.28rem;
+		border: 1px solid currentColor; border-radius: 999px;
+		background: color-mix(in srgb, currentColor 14%, transparent);
+		font-size: 0; line-height: 0; letter-spacing: 0; overflow: hidden;
+	}
+	.cmsMobileHeader .cmsStage:before { content: ""; width: 0.38rem; height: 0.38rem; border-radius: 50%; background: currentColor; }
+	.cmsMobileHeader .cmsStage.DEV { color: var(--cmsSuccess); }
+	.cmsMobileHeader .cmsStage.STAGING { color: var(--cmsHighlightColor); }
+	.cmsMobileHeader .cmsStage.LIVE { color: var(--cmsError); }
+	.cmsMobileHeader button, .cmsMobileHeader a, .cmsMobileWindowBar button {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		flex: 0 0 44px;
+		width: 44px;
 		min-height: 44px;
 		margin: 0;
-		padding: 0.4rem 0.2rem;
+		padding: 0;
+		border: 0;
+		background: transparent;
+		color: inherit;
+	}
+	body.cms > main > div.main .cmsStage {
+		display: inline-flex; align-items: center; align-self: flex-start; gap: 0.4rem;
+		height: 1.375rem; margin: 8px 16px 16px; padding: 0 0.6rem 0 0.45rem;
+		border: 1px solid currentColor; border-radius: var(--cmsRadius);
+		background: color-mix(in srgb, currentColor 14%, transparent);
+		font-size: 0.6875rem; font-weight: 700; letter-spacing: 0.04em;
+		color: var(--cmsFrameText); white-space: nowrap;
+	}
+	body.cms > main > div.main .cmsStage:before {
+		content: ""; width: 0.5rem; height: 0.5rem; border-radius: 50%; background: currentColor;
+	}
+	body.cms > main > div.main .cmsStage.DEV { color: var(--cmsSuccess); }
+	body.cms > main > div.main .cmsStage.STAGING { color: var(--cmsHighlightColor); }
+	body.cms > main > div.main .cmsStage.LIVE { color: var(--cmsError); }
+	.cmsMobileBackdrop[hidden] { display: none; }
+	.cmsMobileBackdrop {
+		display: block;
+		position: fixed;
+		inset: var(--mobileTop) 0 var(--mobileBottom);
+		z-index: 2000;
+		width: auto;
+		margin: 0;
+		padding: 0;
 		border: 0;
 		border-radius: 0;
-		background: transparent;
-		color: #fff;
-		font-size: 0.68rem;
-		font-weight: 600;
-		letter-spacing: 0.06em;
-		text-transform: uppercase;
+		background: rgb(0 20 25 / 38%);
 	}
 
-	.cmsPanes button[aria-pressed="true"] {
-		color: var(--cmsHighlightColor);
-	}
-
-	body > main {
-		--cmsStatusBar: 0px;
-		margin-bottom: calc(52px + env(safe-area-inset-bottom));
-	}
-
-	footer.cmsStatusbar {
-		display: none;
-	}
-
-	body[class*="cmsPane-"]:not(.cmsPane-menu) > main > div.main,
-	body[class*="cmsPane-"]:not(.cmsPane-tree) > main > div.pylon,
-	body[class*="cmsPane-"]:not(.cmsPane-editor):not(.cmsPane-side) > main > div.content {
-		display: none;
-	}
-
-	body.cmsPane-menu > main > div.main,
-	body.cmsPane-tree > main > div.pylon,
-	body.cmsPane-editor > main > div.content,
-	body.cmsPane-side > main > div.content {
-		display: flex;
+	body.cms:has(> main > div.pylon) > main > div.pylon {
+		flex: 1 1 auto;
 		width: 100%;
-		max-width: none !important;
 		min-width: 0;
+		max-width: none;
+		margin: 0;
+		padding: 0;
+		border-radius: 0;
+		clip-path: none;
+		box-shadow: none;
+		background: transparent;
+		z-index: auto;
+	}
+	body > main > div.pylon > header { display: none; }
+	/* The dark bar continues behind every page. A rounded top lets that colour
+	   show in the corners, on the tree and on dashboard, backup and profile. */
+	body.cms:has(> .cmsMobileHeader) > main { position: relative; }
+	body.cms:has(> .cmsMobileHeader) > main::before {
+		content: "";
+		position: absolute;
+		z-index: 0;
+		top: 0;
+		left: 0;
+		right: 0;
+		height: var(--cmsRadiusLg);
+		background: var(--cmsFrame);
+		pointer-events: none;
+	}
+	body.cms:has(> .cmsMobileHeader) > main > div.content:not([data-cms-sheet="1"]) {
+		position: relative;
+		z-index: 1;
+		border-radius: var(--cmsRadiusLg) var(--cmsRadiusLg) 0 0;
+		background: var(--cmsBgColor);
+	}
+	body.cms:has(> .cmsMobileHeader) > main > div.content:not([data-cms-sheet="1"]) > header.cms {
+		flex: 0 0 auto;
+		height: auto;
+		min-height: 0;
+		padding: 0.65rem var(--cmsInsetRight) 0.65rem var(--cmsInsetLeft);
+	}
+	body.cms:has(> .cmsMobileHeader) > main > div.content:not([data-cms-sheet="1"]) > header.cms .rightAlign {
+		flex-wrap: wrap;
+		justify-content: flex-end;
+	}
+	body.cms:has(> main > div.pylon) > main > div.pylon { position: relative; z-index: 1; background: transparent; padding: 0; }
+	body.cms:has(> main > div.pylon) > main > div.pylon { background: transparent; }
+	body.cms:has(> main > div.pylon) > main > div.pylon > nav {
+		position: relative;
+		z-index: 1;
+		border-radius: var(--cmsRadiusLg) var(--cmsRadiusLg) 0 0;
+		background: var(--cmsCanvas);
+	}
+	body.cms:not([data-cms-window="edit"]):not([data-cms-window="menu"]):has(> main > div.pylon) > main > div.pylon > nav {
+		box-shadow: 0 100vh 0 0 var(--cmsCanvas);
+	}
+	body.cms:has(> main > div.pylon) > main > div.pylon nav > ul { padding: 0.5rem 0; }
+	body.cms:has(> main > div.pylon) > main > div.pylon nav > ul li a {
+		padding-left: var(--cmsInsetLeft);
+		padding-right: var(--cmsInsetRight);
+	}
+	/* Fixed descendants must escape desktop's clipping and stacking contexts. */
+	body > main > div.pylon, body > main > div.content { container-type: normal; }
+	body > main > div.main {
+		position: fixed;
+		inset: var(--mobileTop) 0 var(--mobileBottom);
+		z-index: 2200;
+		width: 100%;
+		max-width: none;
+		padding: 0 max(8px, env(safe-area-inset-right)) 0 max(8px, env(safe-area-inset-left));
+		transform: translateX(-105%);
+		visibility: hidden;
+		transition: transform 250ms ease, visibility 250ms;
+		overflow-y: auto;
+	}
+	body[data-cms-window="menu"] > main > div.main { transform: translateX(0); visibility: visible; }
+	/* The sheet starts above the header. Cover that strip, or the white card
+	   shows over the status bar while the drawer is open. */
+	body.cms[data-cms-window="menu"] > .cmsMobileHeader { z-index: 2400; }
+	body.cms[data-cms-window="menu"] > main > div.main {
+		top: 0; bottom: 0; z-index: 2300; padding-top: var(--mobileTop);
+	}
+	body > main > div.main nav, body > main > div.main .bottomMenu { width: 100%; }
+	body.cms.cmsMobile > main > div.main > header {
+		flex-basis: auto; min-height: 0; align-items: flex-start;
+		padding: 8px 0 12px; border: 0; background: transparent;
+	}
+	body.cms[data-cms-window="menu"] > .cmsMobileHeader { background: transparent; pointer-events: none; }
+	body.cms[data-cms-window="menu"] > .cmsMobileHeader > .cmsMobileMenuClose { pointer-events: auto; }
+	body.cms[data-cms-window="menu"] > main > div.main > header {
+		margin-top: calc(-1 * var(--mobileTop));
+		height: auto;
+		min-height: var(--mobileTop);
+		flex-basis: auto;
+		align-items: stretch;
+		justify-content: flex-start;
+		padding: 0 52px 1.25rem 16px;
+		box-sizing: border-box;
+	}
+	body.cms[data-cms-window="menu"] > main > div.main a.cmsBrand,
+	body.cms.cmsMobile[data-cms-window="menu"] > main > div.main a.cmsBrand {
+		flex: 0 0 auto;
+		display: flex;
+		align-items: center;
+		box-sizing: border-box;
+		width: auto;
+		height: var(--mobileTop);
+		margin: 0;
+		padding: env(safe-area-inset-top) 0 0;
+		justify-content: flex-start;
+	}
+	body.cms.cmsMobile > main > div.main a.cmsBrand img.brandFull { height: 36px; }
+	body.cms.cmsMobile > main > div.main nav > ul { padding: 1.15rem 0 0.15rem; }
+	body.cms[data-cms-window="menu"] > main > div.main nav > ul { padding-top: 0.35rem; }
+	body.cms.cmsMobile > main > div.main nav > ul li { margin: 0; }
+	body.cms.cmsMobile > main > div.main nav > ul li a,
+	body.cms.cmsMobile > main:has(> div.content .dashboard) > div.main nav ul li a {
+		flex-direction: row; justify-content: flex-start; gap: 12px; min-height: 0; padding: 8px 16px; line-height: 1;
+	}
+	body.cms.cmsMobile > main > div.main nav > ul li a i,
+	body.cms.cmsMobile > main:has(> div.content .dashboard) > div.main nav ul li a i {
+		flex: 0 0 2.25rem; width: 2.25rem; height: 2.25rem; font-size: 1.45rem; line-height: 1;
+		display: inline-flex; align-items: center; justify-content: center;
+	}
+	body.cms.cmsMobile > main > div.main nav > ul li.active > a:before,
+	body.cms.cmsMobile > main:has(> div.content .dashboard) > div.main nav ul li.active > a:before {
+		left: 0; top: 6px; bottom: 6px; width: 4px; border-radius: 4px;
+	}
+	body.cms.cmsMobile > main > div.main nav > ul li a span,
+	body.cms.cmsMobile > main:has(> div.content .dashboard) > div.main nav ul li a span { width: auto; font-size: 15px; line-height: 1.2; text-align: left; }
+	body.cms.cmsMobile > main > div.main a.cmsBrand,
+	body.cms.cmsMobile > main:has(> div.content .dashboard) > div.main a.cmsBrand { justify-content: flex-start; padding-left: 16px; }
+	body .cms a.cmsBrand img.brandMark { display: none; }
+	body .cms a.cmsBrand img.brandFull { display: block; width: auto; max-width: 100%; height: 30px; }
+	body > main > div.content, body > main > div.main + div.content {
+		width: 100%; min-width: 0; max-width: none;
+		margin: 0; border-radius: var(--cmsRadiusLg); box-shadow: none; clip-path: none;
+	}
+	body.cms:has(> main > div.pylon) > main > div.content,
+	body.cms > main > div.pylon > footer {
+		position: fixed;
+		inset: max(6px, env(safe-area-inset-top)) var(--sheetSide) max(6px, calc(env(safe-area-inset-bottom) + var(--cmsKeyboard, 0px))) var(--sheetSideLeft);
+		z-index: 2100;
+		display: flex;
+		flex: none !important;
+		flex-direction: column;
+		width: auto !important;
+		height: auto !important;
+		min-height: 0;
+		max-height: none !important;
+		margin: 0;
+		padding: 0;
+		border: 0;
+		border-radius: 24px;
+		overflow: hidden;
+		clip-path: none;
+		outline: none;
+		background: var(--cmsBgColor);
+		box-shadow: 0 120px 0 0 var(--cmsBgColor);
+		transform: translateY(calc(100% + var(--mobileBottom)));
+		visibility: hidden;
+		transition: transform 300ms ease, visibility 300ms;
+	}
+	body[data-cms-window="media"] > main > div.pylon > footer { z-index: 2300; }
+	body[data-cms-window="media"] > main > div.pylon > footer { transform: translateY(0); visibility: visible; }
+	/* Open from the HTML, so a direct address does not wait for the script.
+	   Swiping it shut sets data-cms-window="base" and hides it again. */
+	body[data-cms-window="edit"]:has(> main > div.pylon) > main > div.content[data-cms-sheet="1"] { transform: translateY(0); visibility: visible; }
+	body.cms:has(> main > div.pylon) > main > div.content:not([data-cms-sheet="1"]) {
+		position: relative; inset: auto; flex: 1 1 auto; width: auto; height: auto;
+		transform: none; visibility: visible; z-index: auto; border-radius: var(--cmsRadiusLg);
+		box-shadow: none;
+	}
+	/* Settings, users and tools pin a clip and a stacking level that would
+	   leave the sheet under the pylon, with the focus ring as a gold edge. */
+	body.cms:is(.settings, .users, .tools) > main > div.pylon {
+		position: relative; z-index: 0; clip-path: none; width: 100%; max-width: none;
+		min-width: 0; flex: 1 1 auto; margin: 0;
+	}
+	body.cms > main > div.content:focus,
+	body.cms > main > div.content:focus-visible { outline: none; }
+	.cmsMobileWindowBar {
+		position: relative;
+		display: flex;
+		align-items: center;
+		flex: 0 0 58px;
+		min-height: 58px;
+		padding: 8px 8px 0 16px;
+		border-radius: 18px 18px 0 0;
+		border-bottom: 1px solid var(--cmsLine);
+		touch-action: none;
+		user-select: none;
+	}
+	.cmsMobileWindowBar strong { flex: 1; font-size: 15px; }
+	.cmsMobileWindowBar button { font-size: 26px; }
+	.cmsMobileGrip, .cmsMobileWindowBar { cursor: grab; }
+	.cmsMobileGrip { position: absolute; top: 0; left: calc(50% - 60px); width: 120px; height: 44px; z-index: 2; }
+	.cmsMobileGrip:after { content: ""; position: absolute; top: 8px; left: calc(50% - 18px); width: 36px; height: 4px; background: var(--cmsMuted); border-radius: 4px; }
+	body[data-cms-window="menu"] .main > header { flex-shrink: 0; }
+	body.cms .cmsMobileDrawerHeader .cmsBrand { flex: 1; min-width: 0; width: auto; }
+	body.cms.cmsMobile[data-cms-window="base"] > main > div.pylon nav li.active > a {
+		background: transparent; color: inherit; font-weight: inherit;
+	}
+	body.cms.cmsMobile[data-cms-window="base"] > main > div.pylon nav li.active > a i { color: var(--cmsMuted); }
+	body.cms > main > div.content > header.cmsMobileEditHeader,
+	body.cms .cmslightbox > section > header.cmsMobileEditHeader {
+		display: flex; position: relative; flex: 0 0 auto;
+		height: auto; gap: 8px; flex-wrap: nowrap;
+		align-items: center;
+		box-sizing: border-box;
+		min-height: 3.25rem;
+		padding: 20px var(--cmsInsetRight) 8px var(--cmsInsetLeft);
+		border-radius: 24px 24px 0 0;
+		background: transparent; border-bottom: 0;
+	}
+	body.cms header.cmsMobileEditHeader:not(:has(a, button, .button, input, select, textarea, nav, form, label, h1)) {
+		padding: 10px var(--cmsInsetRight) 2px var(--cmsInsetLeft); min-height: 0; border-bottom: 0;
+	}
+	/* A flex heading does not ellipsis: the text runs out over the button.
+	   Block plus a zero basis lets the title shrink and end in an ellipsis. */
+	.cms .widget > header :is(h1, h2),
+	body.cms header.cmsMobileEditHeader > h1,
+	body.cms .cmslightbox > section > header h1 {
+		display: block;
+		flex: 1 1 0%;
+		min-width: 0;
+		margin: 0;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+	.cms .widget > header :is(.button, button, a.button),
+	body.cms header.cmsMobileEditHeader :is(.button, button, a.button, ul.barmenu),
+	body.cms .cmslightbox > section > header :is(.button, button, a.button, ul.barmenu) {
+		position: relative;
+		z-index: 1;
+		flex: 0 0 auto;
+	}
+	body.cms header.cmsMobileEditHeader { align-items: center; }
+	body.cms header.cmsMobileEditHeader .rightAlign { flex-wrap: nowrap; align-items: center; gap: 8px; min-width: 0; margin-left: auto; }
+	body.cms header.cmsMobileEditHeader .rightAlign > .button,
+	body.cms header.cmsMobileEditHeader .rightAlign > a.button,
+	body.cms header.cmsMobileEditHeader .rightAlign > button.button,
+	body.cms header.cmsMobileEditHeader .rightAlign > label.button,
+	body.cms .widget > header :is(a.button, button.button, .button):not(.tagGroupRename, .tagGroupDelete) {
+		flex: 0 0 auto; height: 2rem; min-height: 2rem;
+		padding: 0 0.75rem;
+		align-self: center; margin: 0;
+	}
+	.cms .layout.tags .widget > header .tagGroupRename,
+	.cms .layout.tags .widget > header .tagGroupDelete {
+		min-height: 0; height: 1.75rem; padding: 0;
+	}
+	.cms .layout.tags .widget > header h1 {
+		flex: 0 1 auto; align-self: center; height: auto;
+	}
+	.cms .layout.tags .widget > header h1[contenteditable="true"] {
+		min-height: 0; padding: 0 0.2rem; line-height: 1.3; font-size: max(16px, 1rem);
+	}
+	/* Under 16px iOS zooms the whole page when a field is focused. */
+	body.cms :is(input:not([type="checkbox"], [type="radio"], [type="range"], [type="button"], [type="submit"], [type="reset"], [type="color"], [type="file"], [type="hidden"], [type="image"]), select, textarea) {
+		font-size: max(16px, 1em);
+	}
+	body.cms header.cmsMobileEditHeader .cmsMobileMore {
+		flex: 0 0 var(--cmsControl); width: var(--cmsControl); height: var(--cmsControl);
+		min-height: var(--cmsControl); margin: 0; padding: 0;
+		background: var(--cmsCanvas); border: 1px solid var(--cmsLine); border-radius: 10px;
+	}
+	body.cms header.cmsMobileEditHeader .cmsPageToolsMenu,
+	body > .cmsPageToolsMenu.is-open {
+		display: none;
+		flex-direction: column; align-items: stretch; gap: 4px;
+		min-width: 14rem; margin: 0; padding: 6px; background: var(--cmsCanvas);
+		border: 1px solid var(--cmsLine); border-radius: 14px; box-shadow: var(--cmsShadowLg);
+	}
+	body > .cmsPageToolsMenu.is-open { display: flex; }
+	body.cms header.cmsMobileEditHeader:has([data-cms-more][aria-expanded="true"]) .cmsPageToolsMenu {
+		display: flex; flex-direction: column; align-items: stretch; gap: 2px;
+	}
+	body.cms header.cmsMobileEditHeader .cmsPageToolsMenu > .button,
+	body.cms header.cmsMobileEditHeader .cmsPageToolsMenu > a,
+	body.cms header.cmsMobileEditHeader .cmsPageToolsMenu > label,
+	body > .cmsPageToolsMenu.is-open > .button,
+	body > .cmsPageToolsMenu.is-open > a,
+	body > .cmsPageToolsMenu.is-open > label {
+		display: flex; align-items: center; justify-content: flex-start; gap: 10px;
+		width: 100%; height: auto; min-height: 44px; margin: 0; padding: 8px 12px;
+		border: 0; border-radius: 10px; background: transparent; color: var(--cmsTextColor);
+		font-size: 15px; line-height: 1.2; text-align: left;
+	}
+	body.cms header.cmsMobileEditHeader .cmsPageToolsMenu > :is(.button, a, label):hover,
+	body > .cmsPageToolsMenu.is-open > :is(.button, a, label):hover,
+	body.cms .cmsPageToolsMenu > .cmsMobileOnly:hover {
+		background: var(--cmsHover);
+	}
+	body.cms header.cmsMobileEditHeader .pageHead { flex: 1; min-width: 0; }
+	body.cms header.cmsMobileEditHeader .crumbs { display: none; }
+	body.cms header.cmsMobileEditHeader .pageTitleRow { min-height: 44px; }
+	body.cms header.cmsMobileEditHeader h1,
+	body.cms .cmslightbox > section > header h1 {
+		min-width: 0;
+		font-size: 1.25rem; font-weight: 600; line-height: 1.25; letter-spacing: -0.01em;
+		overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+	}
+	body.cms .cmsPageTools > .cmsMobileOnly {
+		display: inline-flex; align-items: center; justify-content: center;
+		flex: 0 0 var(--cmsControl); width: var(--cmsControl); height: var(--cmsControl);
+		min-height: var(--cmsControl);
+		margin: 0; padding: 0; border: 0; background: transparent; color: inherit;
+		font-size: 1.1rem; border-radius: 10px;
+	}
+	body.cms header.cmsMobileEditHeader > .cmsMobileGrip { display: block; height: 44px; width: 120px; min-height: 0; }
+	body.cms .cmsPageTools { display: block; flex: 0 0 auto; }
+	body.cms .cmsPageToolsMenu {
+		display: none; position: absolute; z-index: 1700;
+		top: calc(100% + 8px); right: 8px; width: min(300px, calc(100vw - 24px));
+		max-height: calc(100dvh - var(--mobileTop) - 120px); overflow-y: auto;
+		padding: 8px; border: 1px solid var(--cmsLine); border-radius: 14px;
+		background: var(--cmsCanvas); box-shadow: var(--cmsShadowLg);
+	}
+	body.cms .cmsPageTools:has(> [aria-expanded="true"]) > .cmsPageToolsMenu { display: flex; flex-direction: column; align-items: stretch; gap: 4px; }
+	body.cms header.cms .cmsPageToolsMenu > .leftAlign { flex: 0 0 auto; width: 100%; margin: 0; }
+	body.cms header.cms .cmsPageToolsMenu .langSwitch { width: 100%; }
+	body.cms header.cms .cmsPageToolsMenu .langSwitch > button { width: 100%; justify-content: flex-start; min-height: 44px; }
+	body.cms header.cms .cmsPageToolsMenu .langSwitch > button span { display: inline; }
+	body.cms header.cms .cmsPageToolsMenu .langMenu { position: static; width: 100%; box-shadow: none; }
+	body.cms header.cms .cmsPageToolsMenu .deviceSwitch { display: flex; margin: 0; padding: 4px 0; border: 0; justify-content: space-around; }
+	body.cms header.cms .cmsPageToolsMenu .deviceSwitch button { width: 44px; height: 44px; min-height: 44px; }
+	body.cms .cmsPageToolsMenu > .cmsMobileOnly { display: flex; align-items: center; justify-content: flex-start; gap: 12px; min-height: 44px; margin: 0; padding: 8px 12px; border: 0; border-radius: 8px; background: transparent; color: var(--cmsTextColor); text-align: left; font-size: 14px; }
+	body.cms .cmsPageToolsMenu > .cmsMobileOnly:hover { background: var(--cmsHover); }
+	body.cms .cmsPageToolsMenu > [hidden] { display: none; }
+	body.cms .content:not([data-cms-properties="true"]) aside.cms { display: none; }
+	body.cms .content[data-cms-properties="true"] .flexColumn { display: none; }
+	body.cms .content[data-cms-properties="true"] aside.cms { display: flex; }
+	body.cms header.cmsMobileEditHeader { touch-action: pan-y; }
+	body.cms header.cmsMobileEditHeader > .cmsMobileGrip { touch-action: none; }
+
+	body > main > div.content > .flexRow { overflow: auto; display: block; }
+	body > main > div.content .flexColumn { min-height: 50%; height: auto; overflow: visible; }
+	body > main > div.content aside.cms { width: 100%; min-width: 0; max-width: none !important; min-width: 0 !important; flex: 1 1 auto !important; height: auto; border-left: 0; border-top: 1px solid var(--cmsLine); }
+	body > main > div.content aside.cms .flexContainer, body > main > div.content aside.cms .scrollContainer { height: auto; overflow: visible; }
+	body > main > div.content aside.cms.collapsed { min-height: 44px; }
+	body > main > div.content aside.cms .sidebarFlag { position: static; min-height: 44px; width: 100%; }
+	body > main > div.pylon > footer .mml { position: relative; top: auto !important; flex: 1; min-height: 0; overflow: auto; }
+	body > main > div.pylon > footer .mmlContent { position: relative; height: 100%; }
+	body > main > div.pylon > footer .mmlContent > label { display: none; }
+	body > main > div.pylon > footer .mmlContent > div { height: 100%; }
+	body > main > div.pylon > footer .mmlResize { display: none; }
+	[data-on_draginit="draginitPylonwidth"], [data-on_draginit="draginitSidebarwidth"] { display: none; }
+	body > main > div.pylon > footer .mmlContent > label { pointer-events: none; }
+	body > footer.cmsStatusbar { display: none; }
+	/* Upload progress remains visible even though the desktop footer is gone. */
+	body > footer.cmsStatusbar:has(.cmsJobs.on) { display: flex; position: fixed; bottom: var(--mobileBottom); left: 0; right: 0; z-index: 2400; height: 28px; padding: 0 8px; background: var(--cmsFrame); }
+	body > footer.cmsStatusbar:has(.cmsJobs.on) > :not(.cmsJobs) { display: none; }
+	.cmslightbox { align-items: flex-end; padding: 0 max(8px, env(safe-area-inset-right)) 0 max(8px, env(safe-area-inset-left)); }
+	.cmslightbox > section, .cmslightbox[data-size] > section { width: 100%; min-width: 0; max-width: 100%; max-height: calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom)); border-radius: 18px 18px 0 0; }
+	.cmsMobileHeader button:focus-visible, .cmsMobileWindowBar button:focus-visible { outline: 2px solid var(--cmsHighlightColor); outline-offset: -3px; }
+	/* The menu always uses the wide desktop arrangement, including on Dashboard. */
+	body.cms.cmsMobile:has(> .cmsMobileHeader) > main > div.main {
+		display: flex; flex-direction: column; width: 100%; min-width: 0; max-width: none;
+	}
+	body.cms.cmsMobile > main > div.main nav {
+		width: 100%; flex: 1 1 auto; height: auto; min-height: 0; overflow-y: auto;
+	}
+	body.cms.cmsMobile > main > div.main .bottomMenu {
+		display: flex; flex-direction: column; align-items: stretch; width: 100%; padding: 0; text-align: left;
+	}
+	body.cms.cmsMobile > main > div.main .bottomMenu > div,
+	body.cms.cmsMobile > main > div.main .bottomMenu > div > a,
+	body.cms.cmsMobile > main > div.main .bottomMenu a.cmsHelp,
+	body.cms.cmsMobile > main:has(> div.content .dashboard) .cms div.bottomMenu a.cmsHelp {
+		display: flex; flex-direction: row; align-items: center; justify-content: flex-start;
+		gap: 12px; width: 100%; min-height: 0; padding: 2px 16px; text-align: left;
+		font-size: 15px; line-height: 1;
+	}
+	body.cms.cmsMobile > main > div.main .bottomMenu > div > a > img,
+	body.cms.cmsMobile > main > div.main .bottomMenu > div > a > i,
+	body.cms.cmsMobile > main > div.main .bottomMenu a.cmsHelp i,
+	body.cms.cmsMobile > main:has(> div.content .dashboard) .cms div.bottomMenu a.cmsHelp i {
+		flex: 0 0 2.25rem; width: 2.25rem; height: 2.25rem; font-size: 1.45rem; line-height: 1;
+		display: inline-flex; align-items: center; justify-content: center;
+	}
+	body.cms > main > div.main .cmsStage { margin-left: 16px; }
+	body.cms.cmsMobile > main > div.main nav > ul li a span,
+	body.cms.cmsMobile > main > div.main .bottomMenu .cmsHelp span { width: auto; text-align: left; font-size: 15px; }
+	body.cms.cmsMobile > main > div.main .bottomMenu div.cmsAccount,
+	body.cms.cmsMobile > main:has(> div.content .dashboard) .cms div.bottomMenu div.cmsAccount {
+		display: flex; flex-direction: row; align-items: center; justify-content: flex-start;
+		gap: 12px; width: 100%; margin: 0; padding: 2px 16px;
+	}
+	body.cms.cmsMobile > main > div.main .bottomMenu div.cmsAccount .signet,
+	body.cms.cmsMobile > main:has(> div.content .dashboard) .bottomMenu .signet {
+		flex: 0 0 2.25rem; width: 2.25rem; height: 2.25rem; margin: 0;
+	}
+	body.cms.cmsMobile > main > div.main .bottomMenu a.cmsAccountName,
+	body.cms.cmsMobile > main:has(> div.content .dashboard) .bottomMenu a.cmsAccountName {
+		display: flex; align-items: center; flex: 1 1 auto; min-width: 0;
+		height: 2.25rem; min-height: 0; margin: 0; padding: 0; line-height: 1.2; text-align: left;
+		background: none;
+	}
+	body.cms.cmsMobile .bottomMenu div.cmsAccount:is(:hover, :focus-within) {
+		background: var(--cmsOnDark);
+		border-radius: var(--cmsRadius);
+	}
+	body.cms.cmsMobile .bottomMenu div.cmsAccount:is(:hover, :focus-within) .signet:after { content: none; }
+	body.cms.cmsMobile .bottomMenu div.cmsAccount a:is(:hover, :focus, :focus-visible) {
+		background: none;
+		outline: none;
+	}
+	body.cms[data-cms-window="menu"] > .cmsMobileHeader > :not(.cmsMobileMenuClose) { display: none; }
+	body.cms[data-cms-window="menu"] > .cmsMobileHeader > .cmsMobileMenuClose {
+		display: inline-flex; margin-left: auto; font-size: 22px;
+	}
+	body.cms.cmsDashboard:not([data-cms-window="menu"]) > .cmsMobileHeader > .cmsMobileDashboardBrand {
+		display: flex; position: static; transform: none; height: 36px; width: auto; margin: 0;
+	}
+	.cmsMobileDashboardBrand img { display: block; width: auto; height: 28px; }
+	body.cms.cmsDashboard > .cmsMobileHeader > [data-cms-module] { visibility: hidden; }
+	body.cms.cmsDashboard > .cmsMobileHeader > a[aria-label="Search"] { margin-left: auto; }
+	/* Windows meet the lower edge; the frame and rounded shoulder remain above. */
+	body.cms:has(> main > div.pylon) > main > div.content,
+	body.cms > main > div.pylon > footer {
+		bottom: var(--cmsKeyboard, 0px); border-bottom: 0; border-radius: 24px 24px 0 0;
+	}
+	/* Match desktop dialog radii, including the more specific global search rules. */
+	body.cms .cmslightbox, body.cms .cmslightbox.cmsFind {
+		overscroll-behavior: contain;
+		align-items: flex-end;
+		padding: 0;
+	}
+	body.cms .cmslightbox > section, body.cms .cmslightbox.cmsFind > section {
+		position: fixed;
+		left: 0; right: 0;
+		bottom: var(--cmsKeyboard, 0px);
+		top: auto;
+		min-width: 0; width: 100%; max-width: 100%;
+		border-radius: 24px 24px 0 0;
+		height: fit-content;
+		max-height: min(80dvh, calc(100dvh - max(6px, env(safe-area-inset-top)) - var(--cmsKeyboard, 0px)));
+		padding-bottom: env(safe-area-inset-bottom);
+		touch-action: pan-y;
+		box-shadow: 0 -16px 40px rgb(0 20 25 / 28%), 0 100vh 0 0 var(--cmsCanvas);
+		transition: max-height 480ms cubic-bezier(.22, .8, .3, 1), height 480ms cubic-bezier(.22, .8, .3, 1);
+	}
+	body.cms .cmslightbox:not(.cmsFind) > section.is-expanded {
+		height: calc(100dvh - max(6px, env(safe-area-inset-top)) - var(--cmsKeyboard, 0px));
+		max-height: none;
+	}
+	body.cms .cmslightbox:not(.cmsFind) > section.is-expanded > main {
 		flex: 1 1 auto;
 	}
+	body.cms .cmslightbox > section > header {
+		position: sticky; top: 0; z-index: 2;
+		flex: 0 0 auto; min-height: 0;
+		align-items: center;
+		padding: 20px var(--cmsInsetRight) 8px var(--cmsInsetLeft);
+		background: transparent;
+		border-bottom: 0;
+	}
+	body.cms .cmslightbox > section > header h1 {
+		font-size: 1.25rem; font-weight: 600; line-height: 1.25; letter-spacing: -0.01em;
+	}
+	body.cms .cmslightbox > section > main {
+		min-height: 0;
+		flex: 0 1 auto;
+		overflow-y: auto;
+		overscroll-behavior: contain;
+		padding: 0.75rem var(--cmsInsetRight) 1rem var(--cmsInsetLeft);
+	}
+	body.cms:has(.cmslightbox.cmsFind) > .cmsMobileHeader {
+		background: var(--cmsBgColor);
+		color: var(--cmsTextColor);
+	}
+	body.cms .cmslightbox.cmsFind {
+		background: var(--cmsBgColor);
+		-webkit-backdrop-filter: none;
+		backdrop-filter: none;
+	}
+	body.cms .cmslightbox.cmsFind > section {
+		top: 0;
+		bottom: 0;
+		border-radius: 0;
+		height: auto;
+		max-height: none;
+		background: var(--cmsBgColor);
+		box-shadow: 0 100vh 0 0 var(--cmsBgColor);
+	}
+	body.cms .cmslightbox.cmsFind > section > header,
+	body.cms .cmslightbox.cmsFind > section > main { background: var(--cmsBgColor); }
+	body.cms .cmslightbox.cmsFind > section > main { flex: 1 1 auto; }
+	body.cms .cmslightbox.cmsFind > section > header { padding-top: 40px; }
+	body.cms .cmslightbox.cmsFind > section > header > .cmsMobileGrip { height: 36px; }
+	body.cms .cmslightbox > section > .cmsMobileGrip { z-index: 6; touch-action: none; }
+	body.cms .cmslightbox > section:before { content: none; }
+	body.cms > ul.contextmenu:before {
+		content: ""; position: absolute; top: 6px; left: calc(50% - 18px);
+		width: 36px; height: 4px; border-radius: 4px; background: var(--cmsMuted);
+	}
+	body.cms .cmslightbox section > header :is(a, li):has([class*="xmark"]) { display: none; }
+	body.cms .cmslightbox section > header .barmenu:not(:has(li:not(:has([class*="xmark"])))) { display: none; }
+	/* Tree actions are an in-viewport sheet, never a popover off the right edge. */
+	body.cms > ul.contextmenu {
+		position: fixed; z-index: 9000; left: var(--sheetSide) !important; right: var(--sheetSide);
+		top: auto !important; bottom: 0; width: auto; min-width: 0; max-width: none;
+		max-height: 75dvh; overflow: auto; padding-top: 18px;
+		border-radius: 24px 24px 0 0;
+		box-shadow: 0 0 0 100vmax rgb(0 20 25 / 35%);
+	}
+	body.cms > ul.contextmenu ul { flex-wrap: wrap; }
+	body.cms > ul.contextmenu li a { min-height: 44px; white-space: normal; }
 
-	body.cmsPane-menu main > div.main nav,
-	body.cmsPane-menu .cms div.bottomMenu {
+	body.cms > main > div.content,
+	body.cms .cmslightbox > section { --cmsCardPadding: 1rem; }
+	body.cms > main > div.content section.cms {
+		padding-left: var(--cmsInsetLeft);
+		padding-right: var(--cmsInsetRight);
+	}
+	body.cms > main > div.content section.cms:has(> .tableScroll.stacked) {
+		margin: 0;
+		padding: 0.35rem 8px 1rem;
+		width: 100%;
+		background: transparent;
+		border: 0;
+		box-shadow: none;
+		overflow: visible;
+	}
+	/* A stacked row's cells must not widen the page past the phone. */
+	body.cms:has(> .cmsMobileHeader) > main > div.content,
+	body.cms:has(> .cmsMobileHeader) > main > div.content :is(.flexRow, .flexColumn, section.cms, .projectFiles) {
+		min-width: 0;
+		max-width: 100%;
+	}
+	body.cms > main > div.content .tableScroll.stacked,
+	body.cms > main > div.content .tableScroll.stacked > table,
+	body.cms > main > div.content .tableScroll.stacked > table > tbody,
+	body.cms > main > div.content .tableScroll.stacked > table > tbody > tr {
+		width: 100%;
+		min-width: 0;
+		max-width: 100%;
+		align-self: stretch;
+		box-sizing: border-box;
+	}
+	body.cms > main > div.content .tableScroll.stacked > table > tbody {
+		align-items: stretch;
+	}
+	body.cms > main > div.content .tableScroll.stacked > table > tbody > tr > td {
+		min-width: 0;
+		max-width: 100%;
+		box-sizing: border-box;
+	}
+	/* A filter bar above a list: select, switch, button. Any panel. */
+	body.cms .schemaBar {
+		flex-direction: column;
+		align-items: stretch;
+		gap: 0.65rem;
 		width: 100%;
 	}
-
-	body.cmsPane-menu main > div.main nav > ul li a {
-		flex-direction: row;
-		justify-content: flex-start;
-		gap: 0.85rem;
-		padding: 0.65rem 1rem;
-		min-height: 44px;
+	body.cms .schemaBar .schemaFilters {
+		flex-direction: column;
+		align-items: stretch;
+		width: 100%;
 	}
-
-	body .cms a.cmsBrand{
-		justify-content: flex-start;
-		padding-left: 1rem;
+	body.cms .schemaBar .schemaFilters select {
+		width: 100%;
 	}
-
-	body .cms a.cmsBrand img.brandMark{
-		display: none;
-	}
-
-	body .cms a.cmsBrand img.brandFull{
-		display: block;
-		height: 1.7rem;
-		width: auto;
-		max-width: none;
-	}
-
-	body.cmsPane-menu main > div.main nav > ul li a span {
-		width: auto;
-		font-size: 0.85rem;
-		text-align: left;
-	}
-
-	body.cmsPane-editor > main > div.content .flexColumn {
+	body.cms .schemaBar .schemaFilters .checkbox {
 		display: flex;
-		flex: 1 1 auto;
+		align-items: center;
+		justify-content: space-between;
+		width: 100%;
 	}
-
-	body.cmsPane-editor > main > div.content aside,
-	body.cmsPane-side > main > div.content .flexColumn {
-		display: none;
-	}
-
-	body.cmsPane-side > main > div.content aside {
-		display: flex;
-		flex: 1 1 auto;
-		width: 100% !important;
-		max-width: none !important;
-	}
-
-	[data-on_draginit="draginitPylonwidth"],
-	[data-on_draginit="draginitSidebarwidth"],
-	[data-on_draginit="draginitFooterHeight"] {
-		display: none;
-	}
-
-	div.cms div.center_content,
-	div.cms div.login_content,
-	body.cms.login div.formContainer,
-	div.login_content form {
-		width: min(100% - 2rem, 22rem);
-	}
-
-	body.settings > main > div.pylon,
-	body.users > main > div.pylon,
-	body.tools > main > div.pylon,
-	body.settings > main > div.content,
-	body.users > main > div.content,
-	body.tools > main > div.content{
+	body.cms .schemaBar > .button {
+		align-self: flex-start;
+		width: auto;
 		margin: 0;
-		border-radius: 0;
-		box-shadow: none;
-		clip-path: none;
 	}
+	.cms nav a:focus:not(:focus-visible) {
+		outline: none;
+	}
+	body.cms > main > div.content[data-cms-sheet="1"] section.cms {
+		padding: 0.75rem var(--cmsInsetRight) 1rem var(--cmsInsetLeft);
+		height: auto;
+	}
+	body.cms .dashboard {
+		padding-left: var(--cmsInsetLeft);
+		padding-right: var(--cmsInsetRight);
+	}
+	body.cms > main > div.content[data-cms-sheet="1"] .flexColumn > .widget { margin: 0.75rem; }
+	body.cms > main > div.content .projectFiles { padding: 0.35rem 0 0.25rem; }
+	body.cms > main > div.content .projectFiles h1 { margin: 0 0 0.2rem; }
+	body.cms > main > div.content .projectFiles .tagsHint { margin: 0 0 0.35rem; }
+	body.cms > main > div.content .projectFiles .widget {
+		margin: 0 0 0.75rem; background: none; border: 0; border-radius: 0; box-shadow: none;
+	}
+	body.cms > main > div.content .projectFiles .widget > .tableScroll {
+		min-height: 0; padding: 0; background: none; border: 0;
+	}
+	body.cms > main > div.content .projectFiles :is(.widget > header, .projectBar) {
+		min-height: 0; margin: 1.15rem 0 0.45rem; padding: 0; background: none; border: 0;
+	}
+	body.cms > main > div.content .projectFiles .widget:first-of-type > header { margin-top: 0.2rem; }
+	body.cms > main > div.content .projectFiles :is(.widget > header h2, .projectBar h3) {
+		margin: 0; font-size: 1rem; font-weight: 600; line-height: 1.3;
+	}
+	body.cms > main > div.content .projectFiles .envPick {
+		width: 100%; max-width: none; margin: 0.15rem 0 0.35rem;
+	}
+	body.cms > main > div.content .projectFiles .envPick select,
+	body.cms > main > div.content .projectFiles :is(td, .envPick) :is(input, select, textarea) {
+		width: 100%; min-width: 0;
+	}
+
 }
+@media (max-width: 1024px) and (prefers-reduced-motion: reduce) {
+	body > main > div.main, body:has(> main > div.pylon) > main > div.content, body > main > div.pylon > footer,
+	body.cms .cmslightbox > section { transition: none; }
+}
+

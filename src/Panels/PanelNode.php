@@ -636,6 +636,15 @@ class PanelNode implements ClientExportable, RenderNode
         if (!$this->inPath()) {
             return;
         }
+        // Mobile opens a branch only to show its submenu. The leaf still opens.
+        if ($this->childSelected === null && (string) (\http::get('branch') ?? '') === '1') {
+            return;
+        }
+        // On a phone the stored child must not open by itself. A reload of
+        // that child's address still opens, because the child is in the URL.
+        if ($this->childSelected === null && (($_COOKIE['cmsMobile'] ?? '') === '1')) {
+            return;
+        }
         $selected = $this->childSelected;
         if ($selected !== null) {
             if ($selected->inNavi) {
@@ -764,15 +773,26 @@ class PanelNode implements ClientExportable, RenderNode
             return null;
         }
         $icon = $this->navIcon();
+        $kept = $this->parent !== null
+            && $this->parent->childSelected !== null
+            && !$this->parent->childSelected->inNavi
+            && isset($this->parent->state->submoduleName)
+            && $this->parent->state->submoduleName === $this->name;
         $li = \html::create('li.nav_' . $this->name)
             ->attr('data-name', $this->name)
-            ->class($this->inPath() ? 'active' : null);
+            ->class($this->inPath() || $kept ? 'active' : null);
 
         $a = $li->append('a')->href($this->getHref(\http::$root));
         if ($icon !== null) {
             $a->append('i')->class($icon);
         }
         $a->append('span')->text($this->label);
+        for ($child = $this->firstChild; $child !== null; $child = $child->next) {
+            if ($child->inNavi) {
+                $a->attr('data-cms-branch', '1');
+                break;
+            }
+        }
 
         return $li;
     }
@@ -794,7 +814,7 @@ class PanelNode implements ClientExportable, RenderNode
                 'system' => 'fa-regular fa-server',
                 'database' => 'fa-regular fa-database',
                 'maintenance' => 'fa-regular fa-wrench',
-                'migration' => 'fa-regular fa-arrows-rotate',
+                'migration' => 'fa-regular fa-repeat',
                 'logs' => 'fa-regular fa-file-text',
                 default => null,
             };

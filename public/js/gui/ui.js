@@ -19,6 +19,21 @@ document.addEventListener('error', function (event) {
 		markBrokenThumb(event.target);
 	}
 }, true);
+document.addEventListener('load', function (event) {
+	var img = event.target;
+	if (!img || img.tagName !== 'IMG' || !img.dataset.broken || !img.naturalWidth) {
+		return;
+	}
+	var tile = img.parentElement;
+	if (!tile) {
+		return;
+	}
+	tile.classList.remove('thumbMissing');
+	var icon = tile.querySelector(':scope > i.thumbBroken');
+	if (icon) {
+		icon.remove();
+	}
+}, true);
 function sweepBrokenThumbs() {
 	document.querySelectorAll('img[data-broken]').forEach(function (img) {
 		if (img.complete && !img.naturalWidth) {

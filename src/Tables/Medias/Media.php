@@ -113,11 +113,16 @@ final class Media
     /** The legacy `link` — the same as src. */
     public string $link { get => $this->src; }
 
-    /** The still of a video, beside its original (name.mp4 → name.webp) - '' for anything else. */
+    /** The still of a video, beside its original (name.mp4 → name.webp) - '' when there is none. */
     public string $poster {
-        get => str_starts_with((string) $this->mimetype, 'video/')
-            ? \http::$root . 'var/original/' . $this->folders . preg_replace('~\.[^.]+$~', '.webp', $this->filename)
-            : '';
+        get {
+            if (!str_starts_with((string) $this->mimetype, 'video/')) {
+                return '';
+            }
+            $name = (string) preg_replace('~\.[^.]+$~', '.webp', $this->filename);
+            $path = \fs::$siteRoot . 'var/original/' . $this->folders . $name;
+            return is_file($path) ? \http::$root . 'var/original/' . $this->folders . $name : '';
+        }
     }
 
     /** The folder of this format in the file system. */

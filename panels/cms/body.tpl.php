@@ -1,10 +1,63 @@
 <?php
 $this->loadJS();
-// the dashboard shows when no child is selected, or one without main (a lightbox like cms/legal/)
-$home = !$this->withChildSelected('main', static fn() => null);
+// Search has no page of its own. Keep the open module behind it. The footer
+// texts stay over the dashboard: another module there looks like a wrong page,
+// and closing it builds the dashboard again at the top.
+$selected = $this->childSelected;
+$behind = '';
+if ($selected !== null && !$selected->inNavi && $selected->name === 'search') {
+	$name = (string) ($this->state->submoduleName ?? '');
+	$keep = $name !== '' ? $this->child($name) : null;
+	if ($keep !== null && $keep->inNavi) {
+		$behind = $name;
+	}
+}
+$surface = function (string $view, ?callable $fn = null) use ($behind) {
+	if ($behind !== '') {
+		return $this->withChild($behind, $view, $fn);
+	}
+	return $fn === null ? $this->withChildSelected($view) : $this->withChildSelected($view, $fn);
+};
+$module = $behind !== '' ? $this->child($behind) : $this->childSelected;
+// Search stays over the open module. Do not render that module's page
+// preview here: it runs the public templates and can fail under this URL.
+$home = $behind !== '' ? false : !$surface('main', static fn() => null);
+// A sheet only where a list stays behind a leaf. A branch (Logs) only
+// unfolds its submenu. Dashboard, backup and the profile are the page.
+$deep = $module;
+if ($deep !== null) {
+	while ($deep->childSelected !== null && $deep->childSelected->inNavi) {
+		$deep = $deep->childSelected;
+	}
+}
+$deepHasChildren = false;
+if ($deep !== null && $deep !== $module) {
+	for ($child = $deep->firstChild; $child !== null; $child = $child->next) {
+		if ($child->inNavi) {
+			$deepHasChildren = true;
+			break;
+		}
+	}
+}
+$branchOnly = (string) (\http::get('branch') ?? '') === '1';
+$sheet = !$branchOnly
+	&& $module !== null && $module->inNavi
+	&& !in_array($module->name, ['backup', 'user'], true)
+	&& (
+		($module->name === 'pages' && (int) ($module->state->id ?? 0) > 1)
+		|| ($module->childSelected !== null && $deep !== $module && !$deepHasChildren)
+	);
 ?>
 
-<body class="<?= 'CMS_VERSIONDATE' ?> <?= implode(' ', $this->path) ?> <?= 'system' ?>">
+<body class="<?= 'CMS_VERSIONDATE' ?> <?= implode(' ', $this->path) ?> <?= 'system' ?>"<?= $sheet ? ' data-cms-window="edit"' : '' ?>>
+	<header class="cmsMobileHeader cms">
+		<button type="button" data-cms-window="menu" aria-label="Open navigation" aria-expanded="false"><i class="fa-regular fa-bars"></i></button>
+		<a class="cmsMobileDashboardBrand" href="<?= http::$root ?>cms/" aria-label="Dashboard"><img src="<?= \Systopic\System\Sys\Packages::panelAssetHref('img/logo-horizontal-dark.png') ?>" alt="fluxo"></a>
+		<strong data-cms-module><?= htmlspecialchars((string) ($module?->label ?? ''), ENT_QUOTES, 'UTF-8') ?></strong>
+		<span class="cmsStage <?= htmlspecialchars((string) STAGE, ENT_QUOTES, 'UTF-8') ?>"><?= htmlspecialchars((string) STAGE, ENT_QUOTES, 'UTF-8') ?></span>
+		<a class="ajax cmsSearchLink" href="<?= http::$root ?>cms/search/" aria-label="Search"><i class="fa-regular fa-magnifying-glass"></i></a>
+		<button type="button" class="cmsMobileMenuClose" data-cms-window="menu" aria-label="Close navigation"><i class="fa-regular fa-xmark"></i></button>
+	</header>
 	<main<?= DEBUG() ? ' data-debug' : '' ?>>
 		<div class="main cms">
 			<header>
@@ -43,13 +96,14 @@ $home = !$this->withChildSelected('main', static fn() => null);
 						<i class="fa-duotone fa-regular fa-circle-question"></i><span>Help</span>
 					</a>
 					<?php $this->withChild('user', 'signetmenu'); ?>
+					<span class="cmsMobileOnly cmsStage <?= htmlspecialchars((string) STAGE, ENT_QUOTES, 'UTF-8') ?>"><?= htmlspecialchars((string) STAGE, ENT_QUOTES, 'UTF-8') ?></span>
 				</div>
 			</nav>
 		</div>
-		<?php $this->withChildSelected('pylon'); ?>
-		<div class="content">
+		<?php $surface('pylon'); ?>
+		<div class="content"<?= $sheet ? ' data-cms-sheet="1"' : '' ?>>
 			<header class="cms">
-				<?php $this->withChildSelected('controls'); ?>
+				<?php $surface('controls'); ?>
 				<?php if (function_exists('appCmsPreviewUrl')): ?>
 				<a class="button cmsPreviewBtn" target="_blank" rel="noopener noreferrer"
 					href="<?= htmlspecialchars(appCmsPreviewUrl()) ?>" title="Vorschau in der App">
@@ -64,62 +118,44 @@ $home = !$this->withChildSelected('main', static fn() => null);
 
 			if ($home) {
 				$this->withView('home');
-			} else {
-				$this->withChildSelected();
+			} elseif ($behind === '') {
+				$surface('main');
 			}
 
-			$this->withChildSelected('footer');
+			// Search keeps the module list behind the dialog. The page
+			// preview, its sidebar and the media footer do not exist for
+			// that URL and only print include warnings.
+			if ($behind === '') {
+				$surface('footer');
+			}
 
 			echo '</div>';
-			$this->withChildSelected('sidebar');
+			if ($behind === '') {
+				$surface('sidebar');
+			}
 			echo '</div>';
 			?>
 		</div>
 	</main>
 	<footer class="cmsStatusbar cms">
 		<span class="cmsJobs" hidden></span>
-		<?php $this->withChildSelected('status'); ?>
+		<?php $surface('status'); ?>
 		<span class="cmsStage <?= htmlspecialchars((string) STAGE, ENT_QUOTES, 'UTF-8') ?>"><?= htmlspecialchars((string) STAGE, ENT_QUOTES, 'UTF-8') ?></span>
 	</footer>
 	<?php
 	$this->withSelected('lightbox');
 	echo message::flush();
 	?>
-	<nav class="cmsPanes" aria-label="Sections">
-		<button type="button" data-cms-pane="menu">Menu</button>
-		<button type="button" data-cms-pane="tree">Tree</button>
-		<button type="button" data-cms-pane="editor" aria-pressed="true">Edit</button>
-		<button type="button" data-cms-pane="side">Side</button>
-	</nav>
+	<button type="button" class="cmsMobileBackdrop" data-cms-close aria-label="Close window" tabindex="-1"></button>
 	<script>
 		(function () {
 			var root = document.body;
-			var bar = document.querySelector('.cmsPanes');
-			if (bar) {
-				function button(name) {
-					return bar.querySelector('[data-cms-pane="' + name + '"]');
-				}
-				if (!document.querySelector('main > div.pylon')) button('tree').hidden = true;
-				if (!document.querySelector('main > div.content aside')) button('side').hidden = true;
-				function setPane(name) {
-					['menu', 'tree', 'editor', 'side'].forEach(function (pane) {
-						root.classList.toggle('cmsPane-' + pane, pane === name);
-					});
-					bar.querySelectorAll('button').forEach(function (item) {
-						item.setAttribute('aria-pressed', item.getAttribute('data-cms-pane') === name ? 'true' : 'false');
-					});
-				}
-				bar.addEventListener('click', function (event) {
-					var item = event.target.closest('button');
-					if (!item || item.hidden) return;
-					setPane(item.getAttribute('data-cms-pane'));
-				});
-				setPane('editor');
-			}
+			var mobile = matchMedia('(max-width: 1024px)');
+			<?php include __DIR__ . '/mobile.js'; ?>
 
 			var storedDevice = null;
-			try { storedDevice = localStorage.getItem('cmsDevice'); } catch (e) {}
-			root.setAttribute('data-cms-device', storedDevice || 'desktop');
+			try { storedDevice = localStorage.getItem(mobile.matches ? 'cmsDeviceMobile' : 'cmsDevice'); } catch (e) {}
+			root.setAttribute('data-cms-device', storedDevice || (mobile.matches ? 'fit' : 'desktop'));
 
 			var tabScrollLeft = null;
 			var closedSections = [];
@@ -141,9 +177,9 @@ $home = !$this->withChildSelected('main', static fn() => null);
 				// a width the site does not define (another project, a changed css) shows desktop
 				if (document.querySelector('.cmsPreview')) {
 					var wanted = null;
-					try { wanted = localStorage.getItem('cmsDevice'); } catch (e) {}
+					try { wanted = localStorage.getItem(mobile.matches ? 'cmsDeviceMobile' : 'cmsDevice'); } catch (e) {}
 					var devices = document.querySelector('.deviceSwitch');
-					var device = wanted && devices && devices.querySelector('[data-cms-device="' + wanted + '"]') ? wanted : 'desktop';
+					var device = wanted && devices && devices.querySelector('[data-cms-device="' + wanted + '"]') ? wanted : (mobile.matches && devices?.querySelector('[data-cms-device="fit"]') ? 'fit' : 'desktop');
 					// called for every mutation (the observer below): a write each time restyles the page
 					root.getAttribute('data-cms-device') !== device && root.setAttribute('data-cms-device', device);
 				}
@@ -206,6 +242,8 @@ $home = !$this->withChildSelected('main', static fn() => null);
 			document.addEventListener('focusout', function (event) {
 				var title = event.target.closest && event.target.closest('.pageTitle');
 				if (title) title.setAttribute('contenteditable', 'false');
+				var back = event.relatedTarget && event.relatedTarget.closest && event.relatedTarget.closest('[data-page-title-edit]');
+				if (back) back.blur();
 			}, true);
 
 			document.addEventListener('click', function (event) {
@@ -216,6 +254,11 @@ $home = !$this->withChildSelected('main', static fn() => null);
 						title.setAttribute('contenteditable', 'plaintext-only');
 						title.focus();
 					}
+					// The pencil stays focused after the title is done, and
+					// keeps its ring. Leave it only when the title has the caret.
+					requestAnimationFrame(function () {
+						if (document.activeElement === title) titleEdit.blur();
+					});
 					return;
 				}
 				var scrollButton = event.target.closest('[data-tab-scroll]');
@@ -228,7 +271,7 @@ $home = !$this->withChildSelected('main', static fn() => null);
 				if (deviceButton && deviceButton !== root) {
 					var device = deviceButton.getAttribute('data-cms-device');
 					root.setAttribute('data-cms-device', device);
-					try { localStorage.setItem('cmsDevice', device); } catch (e) {}
+					try { localStorage.setItem(mobile.matches ? 'cmsDeviceMobile' : 'cmsDevice', device); } catch (e) {}
 				}
 			});
 

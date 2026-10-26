@@ -12,6 +12,11 @@ sys.core.server.command = function (call) {
 			$.extend(settings, response.updateSettings);
 			if (settings.bodyClasses) {
 				$('body').attr('class', settings.bodyClasses);
+				// The class string from the server has no mobile state. Putting
+				// it back keeps the phone layout after a drop or a navigation.
+				if (window.cmsMobile && typeof window.cmsMobile.sync === 'function') {
+					window.cmsMobile.sync();
+				}
 			}
 			break;
 		case 'remove':
@@ -33,14 +38,24 @@ sys.core.server.command = function (call) {
 			break;
 		case cmd.skipRefresh ?? 'refresh':
 			var refreshMethod = (response.data && response.data.method) || 'get';
-		if (refreshMethod === 'put') {
-			var sendPutRefresh = () => {
-				var call = new sys.core.server.call({
-					method: 'put',
-					get: response.data.get || {},
-				});
-				call.send(response.data.path + response.data.action);
-			};
+			if (refreshMethod === 'native') {
+				// Same address the ajax refresh would call, then a real
+				// document so the next page brings its own styles.
+				var nativeParsed = sys.http.parseURL((response.data && response.data.path) || '');
+				var nativeRoot = nativeParsed.absolute ? sys.http.root : '';
+				location.href = nativeRoot
+					+ sys.http.path2pathStr(nativeParsed.path)
+					+ (nativeParsed.action || '');
+				break;
+			}
+			if (refreshMethod === 'put') {
+				var sendPutRefresh = () => {
+					var call = new sys.core.server.call({
+						method: 'put',
+						get: response.data.get || {},
+					});
+					call.send(response.data.path + response.data.action);
+				};
 				if (response.delay != null && response.delay > 0) {
 					setTimeout(sendPutRefresh, 1000 * response.delay);
 				} else {

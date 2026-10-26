@@ -33,8 +33,11 @@ $revision = \Systopic\System\Sys\Release::revision();
 			<p><?= $e($now->format('l, j F Y')) ?></p>
 		</div>
 		<nav>
-			<button type="button" class="button" data-on_click="dashEdit"><i class="fa-regular <?= $editing ? 'fa-check' : 'fa-grid-2' ?>"></i><span><?= $editing ? 'Done' : 'Customize' ?></span></button>
-			<a class="button" href="<?= $e($site) ?>" target="_blank" rel="noopener"><i class="fa-regular fa-up-right-from-square"></i><span>View website</span></a>
+			<button type="button" class="button dashHeadMore" data-cms-more aria-label="More" aria-expanded="false"><i class="fa-regular fa-ellipsis"></i></button>
+			<div class="cmsPageToolsMenu dashHeadMenu">
+				<button type="button" class="button" data-on_click="dashEdit"><i class="fa-regular <?= $editing ? 'fa-check' : 'fa-grid-2' ?>"></i><span><?= $editing ? 'Done' : 'Customize' ?></span></button>
+				<a class="button" href="<?= $e($site) ?>" target="_blank" rel="noopener"><i class="fa-regular fa-up-right-from-square"></i><span>View website</span></a>
+			</div>
 		</nav>
 	</header>
 	<?php if ($editing) {

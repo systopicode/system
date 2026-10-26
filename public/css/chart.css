@@ -24,3 +24,12 @@ div.bar b{
 div.bar b:last-child{
 	color: white;
 }
+
+/* The load bar is also a div.bar. This rule is the dark frame around it. */
+#nprogress .bar{
+	border: 0;
+	margin: 0;
+	height: 100%;
+	border-radius: 0;
+	box-shadow: none;
+}

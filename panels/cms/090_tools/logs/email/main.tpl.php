@@ -5,7 +5,7 @@
 		<h2>Messages</h2>
 		<input class="listSearch" type="search" placeholder="Search" data-on_input="filterLog" autocomplete="off">
 		<a target="_self" href="<?= htmlspecialchars($this->getHref(\http::$root) . 'downloadLog') ?>" class="button" title="Download"><i class="fa-regular fa-file-arrow-down"></i><span>Download</span></a>
-		<a data-on_click="userConfirm" data-action="?action=clearLog&value=email" data-confirm="Delete this log file?" class="button" title="Clear"><i class="fa-regular fa-broom"></i><span>Clear</span></a>
+		<a data-on_click="userConfirm" data-action="clearLog" data-confirm="Delete this log file?" class="button" title="Clear"><i class="fa-regular fa-broom"></i><span>Clear</span></a>
 	</header>
     <?php
     // Define EMAILLOGFILE constant if not already defined
@@ -17,7 +17,7 @@
     
     if (empty($output)) {
 	?>
-	<p>The log is empty.</p>
+	<main><p>The log is empty.</p></main>
 	<?php
     } else {
 	// Split entries by separator line

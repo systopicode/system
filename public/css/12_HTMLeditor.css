@@ -61,6 +61,10 @@ div.HTMLeditorMenu > ul > li.sep{
     border-left: 1px solid rgb(255 255 255 / 18%);
 }
 
+div.HTMLeditorMenu li.is-drag a{
+    cursor: grab;
+}
+
 div.HTMLeditorMenu a{
     display: flex;
     align-items: center;
@@ -206,6 +210,9 @@ body .plaintext
     position: relative;
 }
 
+body [contenteditable='true'] :is(img, video, iframe){
+    cursor: default !important;
+}
 
 div.plaintext textarea,
 div.plaintext input
@@ -383,6 +390,31 @@ body .objectContainer > input.ajax{
 
 [contenteditable][data-field^="text"]:focus{
     text-transform: none;
+}
+
+/* The drop position is a yellow caret. The pointer itself is the drop cursor. */
+body.editorMediaDrop,
+body.editorMediaDrop *{
+    cursor: copy !important;
+}
+
+.editorMediaLine{
+    position: fixed;
+    z-index: 4000;
+    width: 2px;
+    margin-left: -1px;
+    background: var(--cmsHighlightColor);
+    pointer-events: none;
+    border-radius: 1px;
+}
+
+.editorMediaHold{
+    display: inline-block;
+    width: 2px;
+    height: 1.1em;
+    margin: 0 1px;
+    vertical-align: text-bottom;
+    background: var(--cmsHighlightColor);
 }
 
 

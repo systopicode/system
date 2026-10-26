@@ -13,7 +13,9 @@ switch ($this->action) {
 	case 'logout':
 		\Systopic\System\Auth\LoginLog::write(\Systopic\System\Auth\Session::current()->name, 'logged out', \Systopic\System\Auth\LoginLog::LOGOUT_BUTTON);
 		\Systopic\System\Auth\Session::logout();
-		\http::refresh('../auth/logout');
+		// A full document, so the sign-in page brings its own styles.
+		// An ajax answer only swaps the markup and leaves the auth sheet out.
+		\http::refresh(\http::$root . 'cms/auth/logout', '', [], 0, 'native');
 		break;
 
 	case 'changePassword':

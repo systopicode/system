@@ -18,8 +18,9 @@ switch ($this->action) {
 	}
 	break;
     case 'clearLog':
-	fs::file_put_contents(EMAILLOGFILE, '');
-	$ajaxresponse['functionName'] = 'reload';
-	$ajaxresponse['args'] = array(1);
+	if (is_file(EMAILLOGFILE)) {
+		file_put_contents(EMAILLOGFILE, '');
+	}
+	$this->updateView('main');
 	break;
 }

@@ -57,9 +57,11 @@ section.widget header > ul > li.spacer{
 ul.barmenu a{
     display: flex;
     align-items: center;
+    align-self: center;
     flex-wrap: nowrap;
     min-width: 2rem;
     height: 2rem;
+    min-height: 0;
     justify-content: center;
 }
 

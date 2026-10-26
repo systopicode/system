@@ -49,11 +49,14 @@ class Panel extends PanelNode {
 	function onLoad() {
 		\fs::load('fsUploader');
 		if ($this->path === ['cms']) { // update navi if change
-			if ($this->state->submoduleName !== ($this->childSelected->name ?? FALSE)) {
-				$this->updateView('menu');
+			$selected = $this->childSelected;
+			// A lightbox (search) is not a module. Remember the one that was open.
+			if ($selected !== null && $selected->inNavi) {
+				if ($this->state->submoduleName !== $selected->name) {
+					$this->updateView('menu');
+				}
+				$this->state->submoduleName = $selected->name;
 			}
-			$this->state->submoduleName = $this->childSelected->name ?? FALSE;
-
 			$this->checkReleaseNoteRedirect();
 		}
 	}

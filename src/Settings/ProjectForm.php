@@ -55,7 +55,7 @@ final class ProjectForm
             foreach ($collections as $group) {
                 if (!$only) {
                     $heading = self::human($group->label);
-                    $repeat = strcasecmp($heading, (string) $name) === 0 && count($collections) === 1;
+                    $repeat = strcasecmp($heading, (string) $name) === 0;
                     echo '<div class="projectBar">';
                     if (!$repeat) {
                         echo '<h3>' . $e($heading) . '</h3>';
@@ -108,7 +108,9 @@ final class ProjectForm
             return;
         }
         \message::confirm('Saved.');
-        if (in_array($panel->action, ['renameItem', 'addItem', 'removeItem', 'setField', 'moveBefore', 'moveAfter'], true)) {
+        // Reordering moves the row in the browser. A redraw would drop the
+        // scroll position and whatever had focus.
+        if (in_array($panel->action, ['renameItem', 'addItem', 'removeItem', 'setField'], true)) {
             $panel->updateView();
         }
     }

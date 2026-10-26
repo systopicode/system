@@ -1,4 +1,4 @@
-﻿/* global window,sys,settings,l,p,t */
+/* global window,sys,settings,l,p,t */
 function insertHtmlAtCursor(html) {
 	var range, node;
 	if (window.getSelection && window.getSelection().getRangeAt) {
@@ -310,7 +310,19 @@ function removeAttribute(e) {
 }
 
 function removeImageFromHTMLeditor(event) {
-	var $parent = $(event.data.target).closest('[contenteditable="true"]');
-	$(event.data.target).remove();
-	wysiwyg.changed($parent[0]);
+	var node = event.data && event.data.target;
+	var media = node && node.closest ? (node.closest('img, video, iframe') || (node.matches && node.matches('img, video, iframe') ? node : null)) : null;
+	var editor = media && media.closest('[contenteditable="true"]');
+	if (!media || !editor) {
+		return false;
+	}
+	var anchor = media.parentElement && media.parentElement.matches('a') ? media.parentElement : null;
+	var range = document.createRange();
+	range.selectNode(media);
+	range.deleteContents();
+	if (anchor && editor.contains(anchor) && !anchor.querySelector('img, video, iframe') && !/\S/.test(anchor.textContent || '')) {
+		anchor.remove();
+	}
+	getSelection().removeAllRanges();
+	wysiwyg.changed(editor);
 }

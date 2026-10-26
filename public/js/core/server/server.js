@@ -372,7 +372,8 @@ sys.core.server.call = function (data) {
                                     return;
                                 }
                                 document.body.scrollTop = document.documentElement.scrollTop = 0;
-                                if (call.url && (call.url.pathChanged || call.url.queryChanged || call.url.actionChanged)) {
+                                // A command on this page (reorder, save) must not jump to the top.
+                                if (call.url && (call.url.pathChanged || call.url.queryChanged)) {
                                     document.querySelectorAll('main > div.content, main > div.content *, .authCard main').forEach(function (node) {
                                         if (node.scrollTop) {
                                             node.scrollTop = 0;

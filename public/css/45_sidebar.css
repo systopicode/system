@@ -116,7 +116,7 @@ aside.cms a.sidebarFlag{
     position: absolute;
     top: 0.75rem;
     left: calc(-1.25rem - 1px);
-    z-index: 4;   /* above the width handle, which straddles the edge */
+    z-index: 6;   /* above the width handle and a scrolling preview */
     display: flex;
     align-items: center;
     justify-content: center;

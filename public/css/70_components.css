@@ -61,6 +61,15 @@
 	margin: 0 0 0 0.4rem;
 }
 
+.cms .widget > header :is(h1, h2),
+.cmslightbox section > header h1{
+	flex: 1 1 auto;
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
 .widget > header h2 :is(i, .iconFingerprint){
 	color: var(--cmsMuted);
 	font-size: 1rem;

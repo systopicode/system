@@ -16,7 +16,7 @@ $shown = static fn(array $parts): bool => $query === '' || mb_stripos(implode(' 
 		<h2>Sign-ins</h2>
 		<input class="listSearch" type="search" placeholder="Search" data-on_input="filterLog" autocomplete="off" value="<?= $e($query) ?>">
 		<a target="_self" href="<?= htmlspecialchars($this->getHref(\http::$root) . 'downloadLog') ?>" class="button"><i class="fa-regular fa-file-arrow-down"></i><span>Download</span></a>
-		<a data-on_click="userConfirm" data-action="?action=clearLog" data-confirm="Delete this log file?" class="button"><i class="fa-regular fa-broom"></i><span>Clear</span></a>
+		<a data-on_click="userConfirm" data-action="clearLog" data-confirm="Delete this log file?" class="button"><i class="fa-regular fa-broom"></i><span>Clear</span></a>
 	</header>
 	<?php if ($lines === []) { ?>
 		<main><p>The log is empty.</p></main>

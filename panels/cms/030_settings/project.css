@@ -85,11 +85,6 @@ body.settingDragging .projectFiles td label{
     text-align: right;
 }
 
-.cms .projectFiles table:not(.octalSelector) tbody tr:hover td{
-    background: color-mix(in srgb, var(--cmsMainColor) 4%, var(--cmsCanvas));
-    box-shadow: none;
-}
-
 .projectFiles td input,
 .projectFiles td textarea{
     margin: 0;
@@ -150,7 +145,7 @@ body.settingDragging .projectFiles td label{
 }
 body > .projectTemplatesMenu{
     position: fixed;
-    z-index: 1900;
+    z-index: 2600;
 }
 .projectTemplatesMenu small{
     color: var(--cmsMuted);

@@ -1,24 +1,11 @@
 <head lang="en">
 	<!-- +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+ TITLE -+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+ -->
-	<?php
-	$modulePathString = implode('/', \Systopic\System\Panels\Tree\PanelTree::getInstance()?->getPath() ?? []);
-	$titleModulePath = \Systopic\System\Panels\Tree\PanelTree::getInstance()?->getPath() ?? [];
-	unset($titleModulePath[0]);
-
-	if (defined('CMS_PAGE_TITLE_OVERRIDE')) {
-		if (defined('CMS_PAGE_TITLE_SHOW_PATH') && CMS_PAGE_TITLE_SHOW_PATH) {
-			if (isset($titleModulePath[2])) {
-				$path = $modules[$titleModulePath[1]]['submodules'][$titleModulePath[2]];
-			} else {
-				$path = isset($titleModulePath[1]) ? $modules[$titleModulePath[1]] : '';
-			}
-			$CMS_TITLE = str_replace('-<wbr>', '', isset($path['label']) ? $path['label'] : '') . '&nbsp;|&nbsp;' . CMS_PAGE_TITLE_OVERRIDE;
-		} else {
-			$CMS_TITLE = CMS_PAGE_TITLE_OVERRIDE;
-		}
+	<title><?= htmlspecialchars(\Systopic\System\Sys\WebApp::documentTitle(), ENT_QUOTES, 'UTF-8') ?></title>
+	<script>
+	if (matchMedia('(display-mode: standalone)').matches || window.navigator.standalone) {
+		document.title = <?= json_encode(\Systopic\System\Sys\WebApp::name(), JSON_UNESCAPED_UNICODE) ?>;
 	}
-	?>
-	<title><?= htmlspecialchars(\Systopic\System\Sys\WebApp::stageMark() . \Systopic\System\Sys\WebApp::name(), ENT_QUOTES, 'UTF-8') ?></title>
+	</script>
 
 	<!-- +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+ META TAGS +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-->
 	<?php
@@ -26,7 +13,7 @@
 	$themeColor = '#' . \Systopic\System\Sys\Theme::color('cmsMainColor');
 	?>
 	<link rel="icon" type="image/svg+xml" href="<?= $asset('img/icon.svg') ?>">
-	<link rel="apple-touch-icon" href="<?= $asset('img/favicons/apple-touch-icon.png') ?>">
+	<link rel="apple-touch-icon" sizes="180x180" href="<?= htmlspecialchars(\http::$root . 'cms/icon-180.png', ENT_QUOTES) ?>">
     <link rel="icon" type="image/png" sizes="32x32" href="<?= $asset('img/favicons/favicon-32x32.png') ?>">
     <link rel="icon" type="image/png" sizes="16x16" href="<?= $asset('img/favicons/favicon-16x16.png') ?>">
     <link rel="manifest" href="<?= htmlspecialchars(\Systopic\System\Sys\WebApp::href(), ENT_QUOTES) ?>">
@@ -49,7 +36,7 @@
 	<meta name="theme-color" content="<?= $themeColor ?>">
 	<meta name="msapplication-TileColor" content="<?= $themeColor ?>">
 
-    <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+    <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,interactive-widget=resizes-content">
 
 	<meta name="robots" content="noindex,follow" />
 
@@ -213,7 +200,8 @@
 			outline-offset: -1px;
 			min-width: 2em;
 		}
-		article.cmsContent [contenteditable='true'] :is(img, video){
+		article.cmsContent [contenteditable='true'] :is(img, video, iframe){
+			cursor: default;
 			-webkit-touch-callout: none;
 		}
 		/* Lightbox-Links bleiben klickbar, auch wenn der Seiteninhalt sie sperrt. */

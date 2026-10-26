@@ -14,7 +14,7 @@ $noAutofill = 'autocomplete="off" data-1p-ignore data-lpignore="true" readonly o
 ?>
 <section class="widget passkeys" data-passkey-user-id="<?= (int) $passkeyUser->id ?>" data-passkey-endpoint="<?= $escape(\http::$root . 'cms/user/') ?>" data-passkey-origin="<?= $escape(Passkeys::available() ? Passkeys::config()['origin'] : '') ?>" data-passkey-token="<?= $escape(PasskeyChallenge::token()) ?>">
     <header>
-        <h2><?php include __DIR__ . '/fingerprint.tpl.php'; ?>Passkeys</h2>
+        <h2><i class="fa-regular fa-user-key"></i>Passkeys</h2>
         <?php if ($enabled && $keys !== []) { ?><span class="passkeyCount"><?= count($keys) ?></span><?php } ?>
     </header>
     <main>

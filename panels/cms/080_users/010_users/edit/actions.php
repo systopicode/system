@@ -16,6 +16,20 @@ if ($user === NULL) {
 	return;
 }
 switch ($this->action) {
+	case 'userTab':
+		$tab = (string) \http::dataset('tab');
+		if (in_array($tab, ['general', 'roles', 'access', 'signins', 'maintenance'], true)) {
+			$this->state->userTab = $tab;
+		}
+		$this->updateView('user');
+		break;
+
+	case 'moreSignIns':
+		$this->state->userTab = 'signins';
+		$this->state->signInLimit = max(10, (int) ($this->state->signInLimit ?? 10)) + 10;
+		$this->updateView('user');
+		break;
+
 	case 'updateUserName':
 	case 'updateUserFullname':
 	case 'updateUserEmail':

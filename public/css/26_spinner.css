@@ -32,7 +32,7 @@ form.loading button:before,
 .cms .button.loading:before{
     content: '';
     border-radius: 50%;
-    border: 2px solid currentColor;
+    border: 2px solid var(--cmsHighlightColor);
     border-top-color: transparent;
     animation: spinner .6s linear infinite;
 }
@@ -68,5 +68,30 @@ form.loading button:before,
 
 .loading{
     cursor:wait;
+}
+
+/* Icon links, such as Log out in the menu, get the same spinner as a button. */
+a.ajax.loading{
+    position: relative;
+    pointer-events: none;
+    cursor: wait;
+}
+
+a.ajax.loading > i{
+    visibility: hidden;
+}
+
+a.ajax.loading:before{
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 14px;
+    height: 14px;
+    margin: -8px 0 0 -8px;
+    border-radius: 50%;
+    border: 2px solid currentColor;
+    border-top-color: transparent;
+    animation: spinner .6s linear infinite;
 }
 

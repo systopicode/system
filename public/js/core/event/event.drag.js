@@ -97,7 +97,22 @@ sys.core.event.drag = function (event, hooks) { // 2. param raus
 				}
 			}
 			if (drag.hasHelper) {
-				drag.$helper.toggleClass('line', css.line);
+				var ghost = drag.type === 'tag' && window.matchMedia('(pointer: coarse)').matches;
+				drag.$helper[0].classList.toggle('tagGhost', ghost);
+				if (ghost) {
+					var held = drag.dragObj.getBoundingClientRect();
+					drag.$helper[0].textContent = (drag.dragObj.dataset.label || '').trim();
+					css.line = false;
+					css.left = Math.round(e.clientX - held.width / 2);
+					css.top = Math.max(8, Math.round(e.clientY - held.height - 36));
+					css.width = Math.round(held.width);
+					css.height = Math.round(held.height);
+					css.borderRadius = 999;
+					css.padding = 0;
+				} else if (drag.$helper[0].textContent) {
+					drag.$helper[0].textContent = '';
+				}
+				drag.$helper.toggleClass('line', !!css.line);
 				delete css.line;
 				drag.$helper.css(css);
 			}
@@ -147,6 +162,22 @@ sys.core.event.drag = function (event, hooks) { // 2. param raus
 		}
 		drag.hooks.release();
 		if (drag.status === 'accept') {
+			// A medium dropped into a text lands where the finger is, not at
+			// the end: the selection is what the insert uses.
+			if (drag.type === 'media' && drag.e) {
+				placeEditorCaret(drag.e.clientX, drag.e.clientY);
+			}
+			// A table row is moved here. The answer only stores the order,
+			// so the list is not rebuilt and the place on the page stays.
+			var row = drag.dragObj && drag.dragObj.closest && drag.dragObj.closest('tr');
+			var target = drag.dropObj && drag.dropObj.closest && drag.dropObj.closest('tr');
+			if (row && target && row !== target && drag.dropObj.classList.contains('sort')) {
+				if (drag.dropObj.classList.contains('insertAfter')) {
+					target.after(row);
+				} else if (drag.dropObj.classList.contains('insertBefore')) {
+					target.before(row);
+				}
+			}
 			drag.hooks.accept();
 		}
 	}
@@ -224,6 +255,31 @@ sys.core.event.drag = function (event, hooks) { // 2. param raus
 			}
 		}
 		return drop;
+	}
+
+	function placeEditorCaret(x, y) {
+		var node = document.elementFromPoint(x, y);
+		var editor = node && node.closest && node.closest('.editor[contenteditable="true"]');
+		if (!editor) {
+			return;
+		}
+		var range = null;
+		if (document.caretRangeFromPoint) {
+			range = document.caretRangeFromPoint(x, y);
+		} else if (document.caretPositionFromPoint) {
+			var spot = document.caretPositionFromPoint(x, y);
+			if (spot) {
+				range = document.createRange();
+				range.setStart(spot.offsetNode, spot.offset);
+			}
+		}
+		if (!range || !editor.contains(range.startContainer)) {
+			return;
+		}
+		range.collapse(true);
+		var selection = getSelection();
+		selection.removeAllRanges();
+		selection.addRange(range);
 	}
 
 	function distance(zone) {

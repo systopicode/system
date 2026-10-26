@@ -16,15 +16,16 @@
     position: relative;
 }
 
-/* Sort bars sit in the gap, the way the media grid and the page tree do.
-   They must not cover the pill, or a drop never reaches the tag itself. */
+/* Desktop: a thin catch in the gap, the drag frame draws the line. */
 .cms .layout.tags .tag > div.sort.h{
+    position: absolute;
     width: 0;
     height: calc(100% + 0.45rem);
     top: -0.22rem;
     padding: 0 0.55rem;
     margin: 0;
     z-index: 4;
+    box-sizing: content-box;
 }
 .cms .layout.tags .tag > div.sort.h.insertBefore{
     left: calc(-0.45rem / 2);
@@ -37,6 +38,69 @@
     right: calc(-0.45rem / 2);
     margin-right: -0.55rem;
     padding-right: 0.55rem;
+}
+
+@media (pointer: coarse){
+    /* Wider catch for a finger, on a phone and on a tablet. The held tag
+       follows the finger, above it. A dot marks the gap. */
+    .cms .layout.tags .tag > div.sort.h{
+        width: min(1.75rem, 32%);
+        height: 100%;
+        top: 0;
+        padding: 0;
+        margin: 0;
+        box-sizing: border-box;
+    }
+    .cms .layout.tags .tag > div.sort.h.insertBefore,
+    .cms .layout.tags .tag > div.sort.h.insertAfter{
+        margin: 0;
+        padding: 0;
+    }
+    .cms .layout.tags .tag > div.sort.h.insertBefore{ left: 0; right: auto; }
+    .cms .layout.tags .tag > div.sort.h.insertAfter{ left: auto; right: 0; }
+    body.tagDragging .draghelper.tagGhost{
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 0;
+        background: var(--cmsMainColor);
+        color: #fff;
+        font-size: 0.75rem;
+        font-weight: 600;
+        line-height: 1;
+        white-space: nowrap;
+        box-shadow: 0 10px 24px rgb(0 20 25 / 28%);
+        transition: none;
+        z-index: 4000;
+    }
+    body.tagDragging .layout.tags .tag:has(> .sort.dropTarget)::after{
+        content: "";
+        position: absolute;
+        top: -0.7rem;
+        width: 0.55rem;
+        height: 0.55rem;
+        border-radius: 50%;
+        background: var(--cmsHighlightColor);
+        pointer-events: none;
+    }
+    body.tagDragging .layout.tags .tag:has(> .sort.insertBefore.dropTarget)::after{ left: -0.15rem; }
+    body.tagDragging .layout.tags .tag:has(> .sort.insertAfter.dropTarget)::after{ right: -0.15rem; left: auto; }
+}
+
+@media (max-width: 1024px){
+    section.cms:has(.layout.tags){
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+    }
+    section.cms:has(.layout.tags) > .tagsHint,
+    section.cms:has(.layout.tags) > .layout,
+    .cms .layout.tags,
+    .cms .layout.tags > .widget{
+        width: 100%;
+        max-width: none;
+        align-self: stretch;
+    }
 }
 
 body.tagDragging .layout.tags .tag.dropTarget{
@@ -133,8 +197,9 @@ body.tagDragging:has(.layout.tags .tag.dropTarget) .draghelper{
 }
 
 .cms .layout.tags > .widget{
-    width: auto;
-    max-width: none;
+    width: 100%;
+    max-width: 100%;
+    justify-self: stretch;
     margin: 0;
 }
 
@@ -184,11 +249,21 @@ body.tagDragging:has(.layout.tags .tag.dropTarget) .draghelper{
     margin-left: auto;
 }
 
-.cms .layout.tags .widget > main > .row > div{
+.cms .layout.tags .widget > main > .row > div,
+.cms .layout.tags .widget > main > .tagsRow{
     display: flex;
-    flex-wrap: wrap;
+    flex-flow: row wrap;
     align-items: center;
+    align-content: flex-start;
     gap: 0.45rem;
+    width: 100%;
+}
+
+.cms .layout.tags .widget > main > .row > div > .tag,
+.cms .layout.tags .tagsRow > .tag{
+    flex: 0 0 auto;
+    width: auto;
+    max-width: 100%;
 }
 
 .cms .layout.tags .tag{

@@ -5,11 +5,19 @@ body > main:has(> div.content .dashboard) > div.content{
 }
 
 .flexColumn:has(> .dashboard){
+	display: flex;
+	flex-direction: column;
 	min-height: 0;
-	overflow-y: auto;
+	overflow-y: scroll;
 }
 
 .dashboard{
+	display: flex;
+	flex-direction: column;
+	flex: 1 0 auto;
+	/* One pixel past the column, so the bar is there before anything folds. */
+	min-height: calc(100% + 1px);
+	box-sizing: border-box;
 	padding: 1.75rem 1.25rem 1.25rem;
 }
 
@@ -22,9 +30,19 @@ body > main:has(> div.content .dashboard) > div.content{
 	margin: 0 0 1.5rem;
 }
 
+.cms header.dashHead{
+	flex: 0 1 auto;
+	height: auto;
+	min-height: 0;
+}
+
 .dashHead h1{
 	margin: 0;
 	font-size: 1.6rem;
+	min-width: 0;
+	max-width: 100%;
+	hyphens: auto;
+	overflow-wrap: break-word;
 }
 
 .dashHead p{
@@ -37,6 +55,7 @@ body > main:has(> div.content .dashboard) > div.content{
 	display: grid;
 	grid-template-columns: repeat(3, minmax(0, 1fr));
 	gap: 0 1.25rem;
+	margin-bottom: 1.25rem;
 }
 
 .dashColumn{
@@ -45,17 +64,33 @@ body > main:has(> div.content .dashboard) > div.content{
 	min-width: 0;
 }
 
-/* At tablet widths the saved groups flow into two visual columns. */
+/* Narrower than three columns: the first two stay put, the third sits
+   underneath with its widgets side by side. Flattening them into one list
+   left System alone under Recent media. */
 @media (max-width: 1279px){
-    .dashboard .dashWidgets { grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; }
-    .dashboard .dashColumn { display: contents; }
-    .dashboard .dashWidget { margin-bottom: 0; }
-    .dashboard .dashWidgets { row-gap: 1.25rem; }
+    .dashboard .dashWidgets { grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; row-gap: 1.25rem; }
+    .dashboard .dashColumn { display: flex; flex-direction: column; gap: 1.25rem; }
+    .dashboard .dashColumn > .dashWidget { margin: 0; }
+    .dashboard .dashColumn:nth-child(3) {
+        grid-column: 1 / -1;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1.25rem;
+        align-items: start;
+    }
     .dashboard .dashDrop { margin-bottom: 0; }
 }
 
 @media (max-width: 700px){
     .dashboard .dashWidgets { grid-template-columns: minmax(0, 1fr); }
+    .dashboard .dashColumn,
+    .dashboard .dashColumn:nth-child(3) {
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        grid-template-columns: none;
+    }
+    .dashboard .dashWidget { width: 100%; align-self: stretch; }
 }
 
 /* the end of a column, empty ones included */
@@ -83,7 +118,12 @@ body.widgetDragging .dashDrop{
 .dashHead nav{
 	display: flex;
 	flex-wrap: wrap;
+	align-items: center;
 	gap: 0.5rem;
+}
+
+body.cms .dashHead .dashHeadMore{
+	display: none;
 }
 
 .dashHead nav .button{
@@ -109,8 +149,70 @@ body.widgetDragging .dashDrop{
 	margin: 0;
 }
 
+@media (max-width: 1024px){
+	.flexColumn:has(> .dashboard),
+	.dashboard{
+		max-width: 100%;
+		overflow-x: clip;
+	}
+	.cms header.dashHead{
+		flex-direction: row;
+		flex-wrap: nowrap;
+		align-items: flex-start;
+		gap: 0.75rem;
+	}
+	.dashHead > div{ flex: 1 1 auto; min-width: 0; max-width: 100%; }
+	.dashHead h1{
+		hyphens: auto;
+		-webkit-hyphens: auto;
+		overflow-wrap: break-word;
+	}
+	.dashHead nav{
+		width: auto;
+		flex: 0 0 auto;
+		margin-top: 0.15rem;
+	}
+	body.cmsMobile .dashHead .dashHeadMenu:not(.is-open){
+		display: none;
+	}
+	body.cmsMobile .dashHead .dashHeadMore{
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		flex: 0 0 2.25rem;
+		width: 2.25rem;
+		height: 2.25rem;
+		min-height: 2.25rem;
+		margin: 0;
+		padding: 0;
+		border: 0;
+		border-radius: 10px;
+		background: transparent;
+		color: var(--cmsSubText);
+		font-size: 1.15rem;
+	}
+	.dashCustomize{
+		flex-direction: column;
+		align-items: stretch;
+		margin-top: 0;
+	}
+	.dashCustomize > p{
+		flex: 1 1 auto;
+		min-width: 0;
+	}
+}
+
 .dashWidgets.is-editing .dashWidget > header{
 	padding-right: 2.75rem;
+}
+
+/* Sorting is a stack of titles. The body comes back when editing ends. */
+.dashWidgets.is-editing .dashWidget{
+	margin-bottom: 0.5rem;
+}
+
+.dashWidgets.is-editing .dashWidget > :not(header, .sort, .dashHide){
+	display: none;
 }
 
 .dashWidgets.is-editing .dashWidget{
@@ -320,28 +422,52 @@ body.dragging .dashWidgets .dashWidget > div.sort.v{
 }
 
 .dashTasks details > ul{
-	margin: 0;
-	padding: 0 1.25rem 0.6rem 3.1rem;
+	display: flex;
+	flex-direction: column;
+	gap: 0;
+	margin: 0.35rem 1.25rem 0.85rem 3.1rem;
+	padding: 0;
 	list-style: none;
+	overflow: hidden;
+	background: var(--cmsBgColor);
+	border: 1px solid var(--cmsLine);
+	border-radius: var(--cmsRadius);
 	font-size: 0.85rem;
 }
 
 .dashTasks details > ul li{
+	margin: 0;
 	border: 0;
-	padding: 0.15rem 0;
+	border-top: 1px solid var(--cmsLine);
+	padding: 0;
+}
+
+.dashTasks details > ul li:first-child{
+	border-top: 0;
 }
 
 .dashTasks details > ul li > a{
-	display: inline;
-	padding: 0;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 0.75rem;
+	margin: 0;
+	padding: 0.45rem 0.75rem;
 	color: var(--cmsMainColor);
+	overflow-wrap: anywhere;
+	text-decoration: none;
 }
 
 .dashTasks details > ul li > a small{
-	display: block;
+	display: inline;
+	flex: 0 0 auto;
+	padding: 0.05rem 0.45rem;
+	border-radius: 999px;
+	background: var(--cmsPanelAlt);
 	color: var(--cmsMuted);
-	font-size: 0.75rem;
-	overflow-wrap: anywhere;
+	font-size: 0.7rem;
+	line-height: 1.4;
+	white-space: nowrap;
 }
 
 .dashTasks details > p:last-child{
@@ -349,8 +475,8 @@ body.dragging .dashWidgets .dashWidget > div.sort.v{
 }
 
 .dashTasks details > ul li > a:hover{
-	background: none;
-	text-decoration: underline;
+	background: color-mix(in srgb, var(--cmsHighlightColor) 24%, var(--cmsCanvas));
+	text-decoration: none;
 }
 
 .dashBadge{
@@ -405,6 +531,11 @@ body.dragging .dashWidgets .dashWidget > div.sort.v{
 
 .dashboard .dashTabs button[aria-selected="true"]{
 	border-bottom-color: var(--cmsHighlightColor);
+	color: var(--cmsTextColor);
+}
+
+body.cms .dashboard .dashTabs button:hover{
+	background: none;
 	color: var(--cmsTextColor);
 }
 
@@ -560,8 +691,8 @@ body.dragging .dashWidgets .dashWidget > div.sort.v{
 	flex-wrap: wrap;
 	justify-content: space-between;
 	gap: 0.5rem 1rem;
-	margin-top: 2rem;
-	padding-top: 1rem;
+	margin-top: auto;
+	padding-top: 2rem;
 	border-top: 1px solid var(--cmsLine);
 	color: var(--cmsSubText);
 	font-size: 0.75rem;

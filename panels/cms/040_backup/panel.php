@@ -109,15 +109,23 @@ class Panel extends CmsPanel
 			foreach (array_reverse($files) as $backupfile) {
 				$backupfileNative = $backupfile;
 				$backupfile       = \fs::toInternal($backupfile);
-				preg_match('/^(.*\/backups\/((.{10})--(.{8})-(.*)))-0\.zip$/', $backupfile, $m);
+				if (!preg_match('/^(.*\/backups\/((.{10})--(.{8})-(.*)))-0\.zip$/', $backupfile, $m)) {
+					continue;
+				}
 				$timefinished = str_replace('-', ':', $m[4]);
 				$spanfiles    = \fs::glob($m[1] . '*.zip');
 				$totalsize    = array_sum(array_map('\fs::filesize', $spanfiles));
 				$zip          = new \ZipArchive();
-				$zip->open($backupfileNative);
-				$info_txt = unserialize($zip->getFromName($this->infoFilename));
+				if ($zip->open($backupfileNative) !== true) {
+					continue;
+				}
+				$raw = $zip->getFromName($this->infoFilename);
 				$zip->close();
-				$durationSeconds = strtotime($m[3] . ' ' . $timefinished) - strtotime($info_txt['created'] ?? '');
+				$info_txt = is_string($raw) ? @unserialize($raw) : false;
+				if (!is_array($info_txt) || !isset($info_txt['created'])) {
+					continue;
+				}
+				$durationSeconds = strtotime($m[3] . ' ' . $timefinished) - strtotime($info_txt['created']);
 				if (!is_int($durationSeconds) || $durationSeconds < 0) {
 					continue;
 				}

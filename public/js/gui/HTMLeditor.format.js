@@ -584,8 +584,26 @@ var wysiwyg = (function () {
 		var to = tag !== 'P' && blocks.every(function (b) {
 			return b.nodeName === tag;
 		}) ? 'P' : tag;
+		var lifted = [];
 		blocks.forEach(function (block) {
-			if (block.matches('li,td,th')) {
+			var li = block.closest('li');
+			// A bullet or a number becomes the paragraph or the headline.
+			// Leaving it inside the item kept the marker and the tag did nothing.
+			if (li && li !== ctx.editor && ctx.editor.contains(li)) {
+				if (lifted.indexOf(li) < 0) {
+					lifted.push(li);
+					var list = li.parentNode;
+					if (list && /^(UL|OL)$/.test(list.nodeName)) {
+						if (li.children.length === 1 && li.firstElementChild.matches(TEXT_BLOCKS)) {
+							unwrap(li.firstElementChild);
+						}
+						isolate(list, li);
+						list.replaceWith(rename(li, to));
+					}
+				}
+				return;
+			}
+			if (block.matches('td,th')) {
 				var heading = block.querySelector(':scope > :is(' + TEXT_BLOCKS + ')');
 				if (to === 'P') {
 					heading && unwrap(heading);
@@ -597,6 +615,9 @@ var wysiwyg = (function () {
 			} else if (block.nodeName !== to) {
 				rename(block, to).removeAttribute('style');
 			}
+		});
+		ctx.editor.querySelectorAll('ul:empty,ol:empty').forEach(function (empty) {
+			empty.remove();
 		});
 		restore(ctx.editor, mark);
 		changed(ctx.editor);

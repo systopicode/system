@@ -38,7 +38,7 @@
 		edit.removeBrand = event => {
 			event.element.parentNode.remove();
 			sys.core.server.sendEventCall(event).done(() => {
-				// nö
+				// nï¿½
 			});
 		};
 
@@ -58,25 +58,59 @@
 			return chain;
 		};
 
-		edit.rename = () => {
-			edit.renameActive = true;
-			edit.oldName = edit.doc.tagname.textContent;
-			edit.doc.tagname.setAttribute('contenteditable', true);
-			selectElementContents(edit.doc.tagname);
-			edit.doc.tagname.onkeydown = (e) => {
-				switch (e.keyCode) {
-					case 13:
-						edit.doc.tagname.removeAttribute('contenteditable');
-						edit.updateName().done(response => {
-						});
-						return false;
-					case 27:
-						edit.doc.tagname.removeAttribute('contenteditable');
-						edit.doc.tagname.textContent = edit.oldName;
-						return false;
-				}
-			};
+		edit.finishRename = (save) => {
+			var h1 = edit.doc.tagname;
+			if (!h1 || h1.getAttribute('contenteditable') === 'false' || !h1.hasAttribute('contenteditable')) {
+				return;
+			}
+			var name = h1.textContent;
+			if (h1.renameStop) {
+				document.removeEventListener('pointerdown', h1.renameStop, true);
+				document.removeEventListener('keydown', h1.renameStop, true);
+				h1.renameStop = null;
+			}
+			h1.removeAttribute('contenteditable');
+			if (!save) {
+				h1.textContent = edit.oldName;
+				return;
+			}
+			if (name !== edit.oldName) {
+				edit.updateName();
+			}
+		};
 
+		edit.rename = () => {
+			if (edit.renameClosed) {
+				edit.renameClosed = false;
+				return;
+			}
+			var h1 = edit.doc.tagname;
+			if (h1.getAttribute('contenteditable') && h1.getAttribute('contenteditable') !== 'false') {
+				edit.finishRename(true);
+				return;
+			}
+			edit.oldName = h1.textContent;
+			h1.setAttribute('contenteditable', 'plaintext-only');
+			var stop = (e) => {
+				if (e.type === 'keydown') {
+					if (e.key !== 'Enter' && e.key !== 'Escape') {
+						return;
+					}
+					e.preventDefault();
+					edit.finishRename(e.key === 'Enter');
+					return;
+				}
+				if (h1.contains(e.target)) {
+					return;
+				}
+				edit.renameClosed = true;
+				edit.finishRename(true);
+			};
+			h1.renameStop = stop;
+			document.addEventListener('pointerdown', stop, true);
+			document.addEventListener('keydown', stop, true);
+			h1.focus();
+			selectElementContents(h1);
 		};
 
 	});

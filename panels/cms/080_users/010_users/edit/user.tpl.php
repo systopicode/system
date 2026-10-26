@@ -20,8 +20,16 @@ $field = static function (string $label, string $value, ?string $action = null, 
 		: '<input type="' . $type . '" autocapitalize="off" name="value" data-on_blur="' . $action . '" value="' . $e($value) . '" autocomplete="off" data-1p-ignore data-lpignore="true" readonly onpointerdown="this.readOnly=false" onkeydown="this.readOnly=false" spellcheck="off">';
 	return '<label class="field' . ($class !== '' ? ' ' . $class : '') . '"><span>' . $label . '</span>' . $input . '</label>';
 };
-$signIns = array_slice(LoginLog::entries([(string) $user->name, (string) $user->email]), 0, 5);
 $logged = static fn(string $date): string => ($d = DateTimeImmutable::createFromFormat('d.m.Y-H:i:s', $date)) ? \Systopic\System\Sys\LocalTime::format($d, 'j M Y, H:i') : $date;
+$tabs = ['general' => 'General', 'roles' => 'Roles', 'access' => 'Access', 'signins' => 'Sign-ins', 'maintenance' => 'Maintenance'];
+$tab = (string) ($this->state->userTab ?? 'general');
+if (!isset($tabs[$tab])) {
+	$tab = 'general';
+}
+$signInLimit = max(10, (int) ($this->state->signInLimit ?? 10));
+$signInAll = $tab === 'signins' ? LoginLog::entries([(string) $user->name, (string) $user->email]) : [];
+$signInTotal = count($signInAll);
+$signIns = array_slice($signInAll, 0, $signInLimit);
 ?>
 <header>
 	<h1><?= $e(trim((string) $user->fullname) !== '' ? $user->fullname : $user->name) ?></h1>
@@ -29,8 +37,14 @@ $logged = static fn(string $date): string => ($d = DateTimeImmutable::createFrom
 		<li><a class="ajax" href="../" title="Close"><i class="fa-regular fa-xmark"></i></a></li>
 	</ul>
 </header>
+<nav class="dashTabs userTabs" role="tablist">
+	<?php foreach ($tabs as $key => $label) { ?>
+		<button type="button" role="tab" data-on_click="userTab" data-tab="<?= $key ?>" aria-selected="<?= $key === $tab ? 'true' : 'false' ?>"><?= $label ?></button>
+	<?php } ?>
+</nav>
 <main class="userEdit">
 	<?= \message::flush() ?>
+	<div class="userPane" data-user-pane="general"<?= $tab === 'general' ? '' : ' hidden' ?>>
 	<section class="widget userAccount">
 		<header><h2><i class="fa-regular fa-id-card"></i>Account</h2></header>
 		<main>
@@ -50,15 +64,15 @@ $logged = static fn(string $date): string => ($d = DateTimeImmutable::createFrom
 					<?= $field('Full name', (string) $user->fullname, 'updateUserFullname') ?>
 					<?= $field('Email', (string) $user->email, 'updateUserEmail', 'email') ?>
 				</div>
-				<dl class="accountMeta">
-					<div><dt>Created</dt><dd><?= $e(trim($when($user->createDate) . ($this->createdBy ? ' by ' . Users::userLabel($this->createdBy) : '')) ?: 'Unknown') ?></dd></div>
-					<div><dt>First sign-in</dt><dd><?= $e($when($user->firstLogin) ?: 'Not yet') ?></dd></div>
-				</dl>
+				<p class="accountLine">
+					<span>Created <?= $e($when($user->createDate) ?: 'unknown') ?><?= $this->createdBy ? ' by ' . $e(Users::userLabel($this->createdBy)) : '' ?></span>
+					<span>First sign-in <?= $e($when($user->firstLogin) ?: 'not yet') ?></span>
+				</p>
 			</div>
 		</main>
 	</section>
-	<div class="userColumns">
-		<div>
+	</div>
+	<div class="userPane" data-user-pane="roles"<?= $tab === 'roles' ? '' : ' hidden' ?>>
 			<section class="widget">
 				<header><h2><i class="fa-regular fa-user-tag"></i>Roles</h2></header>
 				<main>
@@ -77,15 +91,18 @@ $logged = static fn(string $date): string => ($d = DateTimeImmutable::createFrom
 							<?php if (!$isMe && $user->isSuperuser) { ?>
 								<button type="button" class="button" data-on_click="revokeSuperuser" data-user_id="<?= (int) $user->id ?>"><i class="fa-regular fa-user-shield"></i>Revoke superuser</button>
 							<?php } elseif (!$isMe) { ?>
-								<button type="button" class="button submit" data-on_click="makeSuperuser" data-user_id="<?= (int) $user->id ?>"><i class="fa-regular fa-user-shield"></i>Make superuser</button>
+								<button type="button" class="button" data-on_click="makeSuperuser" data-user_id="<?= (int) $user->id ?>"><i class="fa-regular fa-user-shield"></i>Make superuser</button>
 							<?php } ?>
 						</div>
 					<?php } ?>
 				</main>
 			</section>
+	</div>
+	<div class="userPane" data-user-pane="signins"<?= $tab === 'signins' ? '' : ' hidden' ?>>
 			<section class="widget">
 				<header><h2><i class="fa-regular fa-right-to-bracket"></i>Sign-ins</h2></header>
 				<main>
+					<p class="tagsHint">Sign-ins, failed attempts and sign-outs. Newest first. For data protection, entries are deleted after <?= (int) LoginLog::KEEP_DAYS ?> days.</p>
 					<?php if ($signIns === []) { ?>
 						<p class="profileEmpty">No sign-ins logged yet.</p>
 					<?php } else { ?>
@@ -98,12 +115,14 @@ $logged = static fn(string $date): string => ($d = DateTimeImmutable::createFrom
 								</li>
 							<?php } ?>
 						</ul>
-						<a class="ajax button" href="<?= $e(\http::$root . 'cms/tools/logs/login/?q=' . rawurlencode((string) $user->name)) ?>"><i class="fa-regular fa-list"></i>All sign-ins</a>
+						<?php if ($signInTotal > count($signIns)) { ?>
+							<button type="button" class="button" data-on_click="moreSignIns"><i class="fa-regular fa-list"></i>Show more</button>
+						<?php } ?>
 					<?php } ?>
 				</main>
 			</section>
-		</div>
-		<div>
+	</div>
+	<div class="userPane" data-user-pane="access"<?= $tab === 'access' ? '' : ' hidden' ?>>
 			<?php if ($codes) { ?>
 				<section class="widget userAccess">
 					<header><h2><i class="fa-regular fa-envelope"></i>Access</h2></header>
@@ -158,7 +177,6 @@ $logged = static fn(string $date): string => ($d = DateTimeImmutable::createFrom
 								<button type="button" class="button" data-copy="<?= $e($activationLink) ?>"><i class="fa-regular fa-link"></i>Copy activation link</button>
 							</div>
 						<?php } else { ?>
-							<p class="tagsHint">Sends a fresh activation link to this account.</p>
 							<button type="button" class="button" data-on_click="resendActivationEmail" data-user_id="<?= (int) $user->id ?>" <?= (string) $user->email === '' ? 'disabled' : '' ?>><i class="fa-regular fa-envelope"></i><?= $user->firstLogin ? 'Resend activation email' : 'Send activation email' ?></button>
 						<?php } ?>
 					</main>
@@ -167,7 +185,6 @@ $logged = static fn(string $date): string => ($d = DateTimeImmutable::createFrom
 			<section class="widget">
 				<header><h2><i class="fa-regular fa-phone-laptop"></i>Devices</h2></header>
 				<main>
-					<p class="tagsHint">Browsers and phones that stay signed in.</p>
 					<?php if ($devices === []) { ?>
 						<p class="profileEmpty">No devices yet.</p>
 					<?php } ?>
@@ -183,11 +200,10 @@ $logged = static fn(string $date): string => ($d = DateTimeImmutable::createFrom
 					<?php } ?>
 				</main>
 			</section>
-		</div>
+			<?= \Systopic\System\Auth\Passkeys::render($user) ?>
 	</div>
-	<?= \Systopic\System\Auth\Passkeys::render($user) ?>
-
-	<section class="widget">
+	<div class="userPane" data-user-pane="maintenance"<?= $tab === 'maintenance' ? '' : ' hidden' ?>>
+	<section class="widget userMaintain">
 		<header><h2><i class="fa-regular fa-screwdriver-wrench"></i>Maintenance</h2></header>
 		<main>
 			<div class="userRow">
@@ -202,4 +218,5 @@ $logged = static fn(string $date): string => ($d = DateTimeImmutable::createFrom
 			<?php } ?>
 		</main>
 	</section>
+	</div>
 </main>

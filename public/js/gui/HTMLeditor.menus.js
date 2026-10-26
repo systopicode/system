@@ -113,9 +113,12 @@ function HTMLeditorRightClick(clicktype, event, elements) {
 			break;
 		case 'image':
 			var linked = !!target.closest('a');
+			var imageFormats = formatMenu('image', /^image\/(jpe?g|png|webp)$/.test(target.getAttribute('data-ref-mimetype') || target.dataset.mimetype || ''));
+			imageFormats.sep = true;
 			items = Object.assign({
-				formats: formatMenu('image', /^image\/(jpe?g|png|webp)$/.test(target.getAttribute('data-ref-mimetype') || target.dataset.mimetype || '')),
-				edit: cmd('Crop and adjust', 'crop-simple', 'formatImage'),
+				move: cmd('Move', 'up-down-left-right', 'editorBeginMediaMove', {drag: true}),
+				formats: imageFormats,
+				edit: cmd('Crop and adjust', 'crop-simple', 'formatImage', {sep: imageFormats.active === false}),
 				anchor: cmd(linked ? 'Edit link' : 'Insert link', linked ? 'pen' : 'link', 'createHTMLeditorLink', {selected: linked, sep: true}),
 				unlink: cmd('Remove link', 'link-slash', 'removeAnchor', {active: linked}),
 				blockClass: classItem(target, true)
@@ -123,7 +126,8 @@ function HTMLeditorRightClick(clicktype, event, elements) {
 			break;
 		case 'video':
 			items = Object.assign({
-				formats: formatMenu('video', !!mediaFormatParts(target)),
+				move: cmd('Move', 'up-down-left-right', 'editorBeginMediaMove', {drag: true}),
+				formats: Object.assign(formatMenu('video', !!mediaFormatParts(target)), {sep: true}),
 				edit: cmd('Edit', 'pen', 'formatImage'),
 				controls: toggleAttr('controls', 'Controls', 'sliders'),
 				autoplay: toggleAttr('autoplay', 'Autoplay', 'play'),
@@ -135,7 +139,11 @@ function HTMLeditorRightClick(clicktype, event, elements) {
 			items.controls.sep = true;
 			break;
 		case 'iframe':
-			items = Object.assign({edit: cmd('Edit', 'pen', 'formatImage'), blockClass: classItem(target, true)}, removeMedia);
+			items = Object.assign({
+				move: cmd('Move', 'up-down-left-right', 'editorBeginMediaMove', {drag: true}),
+				edit: cmd('Edit', 'pen', 'formatImage', {sep: true}),
+				blockClass: classItem(target, true)
+			}, removeMedia);
 			break;
 	}
 	items && new contextMenuWW(items, event, elements);

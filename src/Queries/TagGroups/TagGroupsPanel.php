@@ -48,7 +48,7 @@ final class TagGroupsPanel
             ])
             ->append(self::header($group))
             ->get('widget')->append('main')->attr('onmousedown', 'event.stopPropagation()')
-            ->append('div.row div')->foreach($group->tags, static function ($div, Tag $tag) {
+            ->append('div.row div.tagsRow')->foreach($group->tags, static function ($div, Tag $tag) {
                 $div->append(self::item($tag));
             })->close()
             ->append('div.row input')->placeholder('Add tag')->data([
@@ -75,10 +75,12 @@ final class TagGroupsPanel
 				->append('div.sort.h.insertBefore')->data([
 					'drop_accept' => 'tag',
 					'on_drop'     => 'insertTagBefore',
+					'id'          => $tag->id,
 				])->close()
 				->append('div.sort.h.insertAfter')->data([
 					'drop_accept' => 'tag',
 					'on_drop'     => 'insertTagAfter',
+					'id'          => $tag->id,
 				])->close();
 
         // A tag that hangs on no page may go; one with usages shows their
@@ -113,16 +115,16 @@ final class TagGroupsPanel
      *        file editor)
      * @param string $pageBase href of a tag's own page, same idea
      */
-    public static function forPage(array $groups, int $nodeId, array $active, array $related = [], string $action = 'sidebar/', string $pageBase = '?id='): mixed
+    public static function forPage(array $groups, int $nodeId, array $active, array $related = [], string $action = 'sidebar/', string $pageBase = '?id=', string $query = ''): mixed
     {
-        return \html::create('div')->foreach($groups, static function ($div, TagGroup $group) use ($nodeId, $active, $related, $action, $pageBase) {
+        return \html::create('div')->foreach($groups, static function ($div, TagGroup $group) use ($nodeId, $active, $related, $action, $pageBase, $query) {
             $div->append('div.taggroup h6.taggroup')->text($group->name)->close()
                 ->append('div.tags')
-                ->foreach($group->tags, static function ($div, Tag $tag) use ($nodeId, $active, $related, $action, $pageBase) {
-                    $div->append(self::pageItem($tag, $nodeId, in_array((int) $tag->id, $active, true), $related[(int) $tag->id] ?? null, $action, $pageBase));
+                ->foreach($group->tags, static function ($div, Tag $tag) use ($nodeId, $active, $related, $action, $pageBase, $query) {
+                    $div->append(self::pageItem($tag, $nodeId, in_array((int) $tag->id, $active, true), $related[(int) $tag->id] ?? null, $action, $pageBase, $query));
                 })
                 ->close()
-                ->append('form.tagAdd')->attr('method', 'put')->attr('action', $action . 'addTag')
+                ->append('form.tagAdd')->attr('method', 'put')->attr('action', $action . 'addTag' . $query)
                 ->append('input[name=name]')->placeholder('Add tag')->attr('autocomplete', 'off')->close()
                 ->append('input[type=hidden][name=group_id]')->value((string) $group->id)->close()
                 ->append('input[type=hidden][name=node_id]')->value((string) $nodeId);
@@ -130,14 +132,14 @@ final class TagGroupsPanel
     }
 
     /** One tag in the page sidebar — `tag::toPagePanelItem()`. */
-    public static function pageItem(Tag $tag, int $nodeId, bool $active, ?int $relatedNodeId = null, string $action = 'sidebar/', string $pageBase = '?id='): mixed
+    public static function pageItem(Tag $tag, int $nodeId, bool $active, ?int $relatedNodeId = null, string $action = 'sidebar/', string $pageBase = '?id=', string $query = ''): mixed
     {
         $el = \html::create('div.tag')
             ->if($active)->class('active')
             ->style('background-color', $tag->colorStyle)
             ->style('border-color', $tag->colorStyle)
             ->style('color', $tag->colorStyle)
-            ->click($action . ($active ? 'removeTagFrom_page' : 'addTagTo_page'))
+            ->click($action . ($active ? 'removeTagFrom_page' : 'addTagTo_page') . $query)
             ->text($tag->label)
             ->data([
                 'id'     => $nodeId,
