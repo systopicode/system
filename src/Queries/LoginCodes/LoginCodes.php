@@ -11,7 +11,7 @@ use Systopic\System\Tables\LoginCodes\Model as LoginCode;
 
 /**
  * One-time codes — `LoginCodes.byHash.sql`, `LoginCodes.byPollHash.sql`.
- * Provisioning: the first read creates `usm_login_codes`.
+ * Provisioning: the first read creates `usm_logincodes`.
  */
 final class LoginCodes
 {

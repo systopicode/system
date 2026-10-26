@@ -10,16 +10,16 @@ use Systopic\Db\Schema\Index;
 use Systopic\Db\TableRow;
 
 /**
- * Failed code entries per IP — `usm_auth_failures`. A wrong code finds no
+ * Failed code entries per IP — `usm_authfailures`. A wrong code finds no
  * row (codes are looked up by their HMAC), so guessing can only be slowed
  * where it comes from: too many failures in a window block the IP for a
  * while (`Operator`).
  */
 final class Model extends TableRow
 {
-    public const TABLE        = 'auth_failures';
+    public const TABLE        = 'authfailures';
     public const TABLE_PREFIX = 'usm';
-    public const PREFIX       = 'auth_failure';
+    public const PREFIX       = 'authfailure';
 
     #[Col(length: 45, index: Index::Unique)]
     public ?string $ip {

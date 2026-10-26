@@ -11,7 +11,7 @@ Entscheidungen: [devices-auth.plan.md](../plans/devices-auth.plan.md).
 | **Screen** | Ein Konto ohne Menschen (Kiosk, Lobby). Hat weder Passwort noch Login-Formular und wird gekoppelt. |
 | **Gerät** | Eine Zeile in `usm_devices`: ein Browser, eine installierte Web-App oder ein Screen, auf dem ein User angemeldet ist. Ein User kann viele haben. |
 | **Session** | Die PHP-Session, kurz. Ist sie weg, meldet das Gerät still wieder an. |
-| **Einmal-Code** | 8 Zeichen (`K7Q4-M2XD`), gilt einmal, in `usm_login_codes` nur als HMAC. |
+| **Einmal-Code** | 8 Zeichen (`K7Q4-M2XD`), gilt einmal, in `usm_logincodes` nur als HMAC. |
 
 ## Wie ein Gerät angemeldet bleibt
 
@@ -41,14 +41,14 @@ Entscheidungen: [devices-auth.plan.md](../plans/devices-auth.plan.md).
 | `invite` | Benutzer-Admin im CMS (Mail oder Code/QR vorzeigen) | 24 h | in der App, Konto wird aktiv |
 | `recover` | Benutzer-Admin oder „Code anfordern“ per Mail | 10 min | in der App |
 | `pair` | „Gerät hinzufügen“ auf einem angemeldeten Gerät | 10 min | in der App des neuen Geräts |
-| `pair_screen` | der Screen selbst (`auth/screen/`) | 10 min | ein Benutzer-Admin bestätigt ihn im CMS, der Screen fragt alle 3 s nach |
+| `pair_screen` | der Screen selbst (Login-Seite oder `auth/screen/`) | 10 min | ein Benutzer-Admin bestätigt ihn im CMS oder in der App (Code oder QR), der Screen fragt alle 3 s nach |
 
 - **Eingabe immer in der App.** Ein Link (`auth/?code=`) oder QR-Code füllt
   das Feld nur vor. Grund: Eine installierte Web-App teilt auf iOS keine
   Cookies mit Safari, ein Login dort würde die App nicht anmelden.
 - Gespeichert wird der HMAC-SHA256 mit `auth.secret`. Codes werden über
   ihn gefunden, deshalb zählt nur die IP-Drossel: 10 Fehlversuche in
-  15 min → 15 min Sperre (`usm_auth_failures`).
+  15 min → 15 min Sperre (`usm_authfailures`).
 - Code-Mails (`Auth\CodeMail`, Template eines Projekts unter
   `panels/auth/emailCode.tpl.php`) landen ohne Inhalt in `var/log/email.log`.
 
@@ -76,11 +76,17 @@ Was spaceticker dafür tut:
 - Eine Seite „Meine Geräte“ (`Devices::revoke()`, `revokeAllOf()`,
   `LoginCodes::create(PAIR, …)`).
 - Eine Screen-Seite: `LoginCodes::startScreenPairing()` und
-  `pollScreen()`, Poll-Secret im Cookie.
+  `pollScreen()`, Poll-Secret im Cookie. spaceticker zeigt den Code auch auf
+  der Login-Seite (ein abgemeldeter Screen braucht nach dem Neustart keine
+  Tastatur) und koppelt in „Meine Geräte“ → „Screen koppeln“ mit
+  `LoginCodes::approveScreen()`. Der QR des Screens öffnet dort
+  `devices/?screen=<code>`, auf iOS liest der Scanner der App ihn
+  (Kamera-App öffnet Safari mit eigenen Cookies).
 
 ## Prüfen
 
 - `php .cursor/tools/devices-check.php unit`: die Regeln, ohne HTTP.
 - `php .cursor/tools/devices-check.php http`: 15 Szenarien gegen
-  spaceticker auf DEV. Mails liest der Test aus Mailpit; eines der
+  spaceticker auf DEV (Cookies je Projekt: `__Host-sys_device_<key>`,
+  `SID<key>`, Schlüssel = `http::projectCookieKey()`). Mails liest der Test aus Mailpit; eines der
   Szenarien wartet 61 s.
