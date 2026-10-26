@@ -1,5 +1,14 @@
 <?php
 
+/**
+ * File and directory functions.
+ *
+ * Paths here are internal (`/C/laragon/...` on Windows). Every file operation
+ * goes through fs (fs::isFile, fs::file_get_contents, fs::filesize, fs::glob …,
+ * see fsHelper), never PHP's own functions with an fs path - that only works
+ * where internal and native happen to be the same (Linux, macOS).
+ * Rule and table: .cursor/docs/fs-paths.md
+ */
 class fs
 { // file and directory functions
 	// *********************************** Method Forwarding ***************

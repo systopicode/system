@@ -135,7 +135,7 @@
 	);
 	$responsiveFile = fs::$siteRoot . 'css/x_responsive.css';
 	if (fs::isFile($responsiveFile)) {
-		$responsive = preg_replace('/@media\b/', '@container cms-preview', (string) file_get_contents($responsiveFile));
+		$responsive = preg_replace('/@media\b/', '@container cms-preview', fs::getFileContents($responsiveFile));
 		echo "<style>\n@layer preview {\n@scope (article.cmsContent) to (.cmsOwn) {\n$responsive\n}\n}\n</style>\n";
 	}
 	echo '<!-- +-+-+-+-+-+-+-+-+-+ PROJECT UI OVERRIDES +-+-+-+-+-+-+-+-+-+-+-->';

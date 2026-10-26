@@ -1,7 +1,7 @@
 <?php
 /** @var \Systopic\System\Panels\Root\Cms\Auth\Panel $this */
 $path = rtrim((string) fs::$sysRoot, '/') . '/LICENSE';
-$text = is_file($path) ? (string) file_get_contents($path) : 'MIT License. Copyright (c) systopic GmbH.';
+$text = fs::isFile($path) ? (string) fs::file_get_contents($path) :'MIT License. Copyright (c) systopic GmbH.';
 ?>
 <h1>License</h1>
 <main class="authText">
