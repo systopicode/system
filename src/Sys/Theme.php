@@ -36,7 +36,7 @@ final class Theme
         $vars = self::DEFAULTS;
         $names = implode('|', array_keys(self::DEFAULTS));
         foreach (self::stylesheets() as $file) {
-            $text = (string) @file_get_contents($file);
+            $text = (string) @\fs::file_get_contents($file);
             if (preg_match_all('/--(' . $names . ')\s*:\s*#([0-9a-fA-F]{3,8})\b/', $text, $found, PREG_SET_ORDER)) {
                 foreach ($found as $hit) {
                     $vars[$hit[1]] = self::normalize($hit[2]);
@@ -56,10 +56,10 @@ final class Theme
         }
         $root = (string) \fs::$siteRoot;
         $named = $root . 'css/cms_overrides.css';
-        if (is_file($named)) {
+        if (\fs::isFile($named)) {
             $files[] = $named;
         }
-        foreach (glob($root . 'overrides/css/*.css') ?: [] as $file) {
+        foreach (\fs::glob($root . 'overrides/css/*.css') ?: [] as $file) {
             $files[] = $file;
         }
         return $files;

@@ -11,7 +11,7 @@ use Systopic\System\Tables\AuthFailures\Model as AuthFailure;
 
 /**
  * The failed code entries of one IP — `AuthFailures.sql`. Provisioning: the
- * first read creates `usm_auth_failures`.
+ * first read creates `usm_authfailures`.
  */
 final class AuthFailures
 {

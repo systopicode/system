@@ -3,7 +3,7 @@
 
 $e = static fn($v): string => htmlspecialchars((string) $v, ENT_QUOTES);
 $path = rtrim((string) fs::$root, '/\\') . '/var/log/PHP_errors.log';
-$raw = is_file($path) ? (string) file_get_contents($path, false, null, max(0, filesize($path) - 512 * 1024)) : '';
+$raw = fs::isFile($path) ? (string) fs::file_get_contents($path, false, null, max(0, (int) fs::filesize($path) - 512 * 1024)) : '';
 
 $entries = [];
 $current = null;

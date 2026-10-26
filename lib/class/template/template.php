@@ -73,7 +73,7 @@ class template {
 	 */
 	private static function openTemplateRoot(): bool {
 		$projectRoot = rtrim(str_replace('\\', '/', (string) fs::$projectRoot), '/');
-		if ($projectRoot !== '' && (is_dir($projectRoot . '/templates/pages') || is_dir($projectRoot . '/templates'))) {
+		if ($projectRoot !== '' && (fs::isDir($projectRoot . '/templates/pages') || fs::isDir($projectRoot . '/templates'))) {
 			return fs::openDir($projectRoot, true);
 		}
 		return fs::openRootDir();
@@ -81,7 +81,7 @@ class template {
 
 	private static function projectHasTemplates(): bool {
 		$projectRoot = rtrim(str_replace('\\', '/', (string) fs::$projectRoot), '/');
-		return $projectRoot !== '' && (is_dir($projectRoot . '/templates/pages') || is_dir($projectRoot . '/templates'));
+		return $projectRoot !== '' && (fs::isDir($projectRoot . '/templates/pages') || fs::isDir($projectRoot . '/templates'));
 	}
 
 	static function scanDir() {

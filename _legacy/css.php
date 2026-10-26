@@ -12,7 +12,7 @@ $css = trim($css, '/');
 $css = preg_replace('~^css_parsed/~i', '/css/', $css);
 $css = preg_replace('~\?.*$~', '', $css); // remove query string
 $css = trim($css, '/');
-$css = file_get_contents(fs::$siteRoot . $css);
+$css = fs::file_get_contents(fs::$siteRoot . $css);
 
 header("Content-type: text/css");
 preg_match_all('/^[^\{]*\{[^\}]*\}/ms', $css, $matches);

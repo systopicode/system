@@ -11,7 +11,7 @@ use Systopic\Db\TableRow;
 use Systopic\System\Tables\Users\Model as User;
 
 /**
- * A one-time code — `usm_login_codes`. Typed into the app (a link or QR code
+ * A one-time code — `usm_logincodes`. Typed into the app (a link or QR code
  * only fills the field), so it also works in an installed iOS web app, which
  * does not share cookies with Safari.
  *
@@ -27,9 +27,9 @@ use Systopic\System\Tables\Users\Model as User;
  */
 final class Model extends TableRow
 {
-    public const TABLE        = 'login_codes';
+    public const TABLE        = 'logincodes';
     public const TABLE_PREFIX = 'usm';
-    public const PREFIX       = 'login_code';
+    public const PREFIX       = 'logincode';
 
     public ?User $user {
         get => $this->__get__(__PROPERTY__);

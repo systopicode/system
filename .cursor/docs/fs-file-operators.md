@@ -1,7 +1,7 @@
 # fsFileOperators
 
-Externe Werkzeuge (Imagick, ImageMagick-CLI, DOMDocument, TCPDF …) hinter einer
-einheitlichen API an `fsFile`. Ein Operator ist ein Adapter: er liest die
+Externe Werkzeuge (Imagick, ImageMagick-CLI, ffmpeg, DOMDocument, TCPDF …) hinter
+einer einheitlichen API an `fsFile`. Ein Operator ist ein Adapter: er liest die
 Quelldatei, macht daraus etwas Neues und legt das Ergebnis in einer gemeinsamen
 Result-API ab, aus der es gespeichert, ausgegeben oder verworfen wird.
 
@@ -9,42 +9,77 @@ Dateien: `lib/class/fs/file/operator/`. Schwesterfamilie (lesend):
 `lib/class/fs/file/mediainfo/`. Auflösung externer Binaries:
 `lib/class/shell/binary/shellBinary.php`.
 
+Stand 2026-10-23.
+
+## Grundsatz
+
+**Welches Werkzeug, entscheidet der Aufrufer.** Mehrere Werkzeuge können
+dasselbe, aber verschieden: das eine resampelt oder montiert besser, das andere
+ist schneller oder läuft im eigenen Prozess. Das ist eine Einzelfallentscheidung
+und steht dort, wo der Fall ist — mit der Begründung daneben. Es gibt keine
+zentrale Rangliste und keine automatische Auswahl.
+
+Was ein Werkzeug kann, fragt der Operator **das Werkzeug selbst** (eine neuere
+Version kann mehr, ohne dass jemand eine Liste pflegt).
+
 ## Schichten
 
 ```
 fsFile                    eine Datei
- +- fsFileOperators       Registry + Auswahl, eine Instanz je fsFile
+ +- fsFileOperators       Registry, firstOperator(), eine Instanz je fsFile
      +- fsFileOperator_x  Adapter auf ein Werkzeug, eine Instanz je Name und Datei
          +- helper/       Unterordner: Klassen, die die Fremdbibliothek erweitern
 ```
 
-Die Trennung Root-/Unterordner ist Absicht und im Klassenkommentar festgehalten:
-im Root stehen die Operatoren, die das fsFile-System kennen, im Unterordner die
+Im Root stehen die Operatoren, die das fsFile-System kennen, im Unterordner die
 Klassen, die von der Fremdbibliothek erben (`tcpdf/fsFileOperatorTcpdf extends
 TCPDF`) und deshalb nichts vom fsFile-System wissen dürfen.
 
-| Operator | Werkzeug | read | write | Status |
-|---|---|---|---|---|
-| `ffmpeg` | CLI `ffmpeg` über shellBinary | mp4, mov, webm, m4v | jpg, jpeg, png, webp | benutzt (CMS-Formate für Videos, pwk-Renderings über `videoFrame`) |
-| `imagick` | PHP-Extension Imagick | pdf, tif, tiff, jpg, png, gif, psd, eps, svg | jpg, png, gif, pdf, tif | benutzt (pwk renderings) |
-| `magick` | CLI `magick` über shellBinary | pdf, ps, eps, ai | jpg, png, gif, tif | benutzt (pwk patchwork thumb) |
-| `domdocsvg` | DOMDocument über `domdocsvg/fsFileOperatorDomdocsvg` | svg | svg | benutzt (patchworkItemBrand) |
-| `tcpdf` | TCPDF über `tcpdf/fsFileOperatorTcpdf` | – | – | leerer Rumpf; die Helper-Klasse wird direkt instanziiert (`pwk lib/class/pdf/pdf.php`) |
-| `meyfasvg` | meyfa/php-svg | – | – | Rumpf, nur `create()` |
+| Operator | Werkzeug | Formate erfragt über | benutzt von |
+|---|---|---|---|
+| `imagick` | PHP-Extension Imagick | `Imagick::queryFormats()` | mediaImage (Alias aus Pixelbildern, Rückfall für Seiten), pwk-Renderings |
+| `magick` | CLI `magick` über shellBinary | `magick -list format` (lesen/schreiben getrennt) | mediaImage (Alias aus Seiten), pwk patchwork thumb |
+| `ffmpeg` | CLI `ffmpeg` über shellBinary, proc_open | `ffmpeg -demuxers` (lesen) | mediaImage (Alias aus Videos), pwk über `videoFrame` |
+| `domdocsvg` | DOMDocument über `domdocsvg/fsFileOperatorDomdocsvg` | – (deklariert) | patchworkItemBrand, svg-Vorbereitung für imagick |
+| `tcpdf` | TCPDF über `tcpdf/fsFileOperatorTcpdf` | – | leerer Rumpf; die Helper-Klasse wird direkt instanziiert (pwk `lib/class/pdf/pdf.php`) |
+| `meyfasvg` | meyfa/php-svg | – | Rumpf, nur `create()` |
 
 ## Zugriff
 
-Drei Wege, zwei davon in Benutzung:
-
 ```php
-$file->getOperator('imagick')      // explizit - der reale Weg in pwk
-$file->imagick                     // dasselbe als Magic-Property (fsFile::delegateDynamic)
-$file->convertTo('jpg')            // Operator wird über Capabilities gesucht - ohne Aufrufer
+// ein Werkzeug, vom Aufrufer benannt
+$file->getOperator('imagick')->read()->scale($scale)->render('jpg')->store($path);
+$file->imagick                      // dasselbe als Magic-Property (fsFile::delegateDynamic)
+
+// mehrere, in der Reihenfolge, in der sie versucht werden - der erste mit Ergebnis
+// pdf-Seite: magick zuerst (eigener Prozess), imagick als Rückfall
+$op = $file->firstOperator(['magick', 'imagick'],
+    fn($op) => $op->setMegapixels(3)->setPage(0)->render('png'));
+if ($op === null) {
+    throw new RuntimeException($file->operators->lastError);   // ein Grund je Versuch
+}
 ```
+
+`firstOperator()` überspringt, was hier nicht verfügbar ist (`isAvailable()`) oder
+die Datei nicht lesen kann (`canRead()`), führt den Auftrag mit einer frischen
+Instanz aus und gibt den ersten Operator mit Ergebnis zurück. Der Aufrufer liest
+das Ergebnis und gibt den Operator frei (`cleanup()`, `destroy()`).
 
 `getOperator()` merkt sich die Instanz je Name am fsFile, `destroy()` nimmt sie
 wieder aus der Liste. Die Namen kommen aus `getExistingOperators()`: ein Glob
 über den Ordner, der Dateiname hinter dem Unterstrich ist der Name.
+
+## Was ein Operator bietet
+
+| Teil | Zweck |
+|---|---|
+| `static isAvailable()` | läuft das Werkzeug hier (Binary gefunden, Extension geladen)? |
+| `static formats()`, `canRead($typ)`, `canWrite($typ)` | was das Werkzeug kann: `queryFormats()` des Operators plus deklarierte `$capabilities`, klein geschrieben, `jpeg`/`jpg` und `tiff`/`tif` beide; je Request einmal gefragt |
+| `setMegapixels()`, `setPage()` | was herauskommen soll (Rasterformate) |
+| `render($format)` | der Umwandlungsschritt, gibt `static` zurück |
+| `hasResult()`, `getContents()`, `store()`, `output()`, `cleanup()` | ein Abschluss für alle Werkzeuge |
+| `lastError` | warum nichts herauskam — für den Aufrufer; `p()` darf zusätzlich |
+| `sourceSize` | `[breite, höhe]` der Quelle, wenn das Ergebnis skaliert ist (Original eines Fotos, Bildgröße eines Videos) |
 
 ## Ablauf und Result-API
 
@@ -63,50 +98,68 @@ weil `stream_set_blocking()` und `stream_select()` unter Windows auf Pipes nicht
 greifen. `proc_open()` bekommt die Argumente als Array: kein Shell, kein
 `escapeshellarg`, keine cmd.exe-Quoting-Regeln.
 
-Danach ist der Abschluss für beide gleich: `hasResult()`, `getContents()`,
-`store($pfad)` (legt den Zielordner an, verschiebt bzw. schreibt, `chmod 0664`,
-räumt auf), `output($mime)` oder `cleanup()`.
+## Seitenformate (pdf, ps, eps, ai)
 
-```php
-$source->file
-    ->getOperator('imagick')
-    ->read()
-    ->scale($scale)
-    ->render('jpg')
-    ->store($this->file->filepath);
-```
+* Immer **eine Seite** (`[n]`, `setPage()`), nie das ganze Dokument.
+* Die Dichte wird **vor** dem Rastern aus der Seitengröße berechnet
+  (`fsFileOperator::densityFor()`), so dass die Megapixel herauskommen — egal wie
+  groß das Druckformat ist. Die Seitengröße holt jeder Operator selbst: magick
+  über `magick identify -format "%w %h %x %y"`, imagick über `pingImage()`.
+* Imagick nie mit `readImageBlob()` für eine Seite: es rastert dann jede Seite mit
+  72 dpi, und eine danach gesetzte Auflösung wirkt nicht (gemessen: 596×842
+  statt 1190×1680). Das war die Erfahrung „bei Imagick kann man die dpi nicht
+  setzen“ — es liegt am Lesen. `fsFileOperator_imagick::readPage()` liest über
+  Pfad + Seite mit vorher gesetzter Auflösung, sobald `setMegapixels()` gesetzt
+  ist; ohne Megapixel liest `read()` wie bisher (pwk).
 
-`render()` ist der Konvertierungsschritt und gibt `static` zurück, damit die
-Kette bis `store()` durchläuft. Die Basisklasse implementiert `render()` und
-`export()` als "kann ich nicht" und meldet das über `d()`.
+## Einrichtungsfehler
 
-## Operator-Auswahl
+`fsFileOperator::explainMagickError()` macht aus einer ImageMagick-Meldung, was zu
+tun ist — für die beiden Fälle, die an der Installation liegen:
 
-Zwei Mechanismen nebeneinander:
+* **Sicherheitsrichtlinie** (IM7 CLI „not allowed by the security policy“, IM6
+  „not authorized“, Extension „NotAuthorized“): welche Zeile in policy.xml wie
+  zu ändern ist; der magick-Operator nennt die policy.xml-Dateien, die gerade
+  gelten (`magick -list policy`).
+* **Ghostscript fehlt**: installieren, PHP / Webserver neu starten.
 
-1. **Capabilities** — jeder Operator deklariert `static $capabilities` mit
-   `read`/`write`. `fsFileOperators::findOperatorFor($von, $nach)` fragt zuerst
-   eine zentrale Tabelle `$conversions` (`'pdf=>jpg' => ['operator' => 'magick',
-   'priority' => 1]`) und geht sonst die Operatoren durch, bis einer beides kann.
-2. **Aufrufer wählt** — `getOperator('magick')` benennt das Werkzeug direkt.
-   Das ist der Weg, den der gesamte produktive Code geht.
+## mediaImage (CMS-Bildpfad)
+
+`mediaImage::renderAlias()` lässt das Alias — das Raster in Alias-Megapixeln, aus
+dem jedes Format geschnitten wird — von einem Operator machen; die Reihenfolge
+steht dort mit Begründung:
+
+| Quelle | Operatoren | warum |
+|---|---|---|
+| Video | `ffmpeg` | Standbild, von ffmpeg auf die Megapixel skaliert (Lanczos) |
+| pdf (ps, eps, ai) | `magick`, `imagick` | magick im eigenen Prozess; imagick als Rückfall, gleiche Dichte |
+| Pixelbild | `imagick` | liest und resampelt (`resample()`, Sinc — wie zuvor in mediaImage) |
+
+Zwischen Operator und mediaImage geht PNG (verlustfrei, mit Transparenz). Zuschnitt,
+Fokus und das Schreiben der Formate bleiben in mediaImage.
 
 ## Externe Binaries
 
 `shellBinary::find('name')` liefert den Pfad oder `NULL`. Reihenfolge: Konstante
-`NAME_BIN` (z. B. `FFMPEG_BIN`) aus der Projekt-`index.php`, sonst `where`
-(Windows) bzw. `command -v`. Das Ergebnis wird je Request gecacht.
+`NAME_BIN` (z. B. `FFMPEG_BIN`, über config `constants`), sonst `where`
+(Windows) bzw. `command -v`, sonst die PATH-Ordner von PHP direkt durchsucht.
+Das Ergebnis wird je Request gecacht.
 
 Windows-Fallstricke, die in dieser Codebase real vorkommen:
 
 * Ein blankes `convert` ist unter Windows **nicht** ImageMagick, sondern
-  `System32/convert.exe` (FAT nach NTFS). `mediaImage.php` ruft
-  `shell_exec("convert …")` und `shell_exec("identify …")` ohne shellBinary auf.
-* `magick` ist auf dieser Maschine nicht installiert — `shellBinary::find('magick')`
-  gibt `NULL`. Betroffen: `fsFileOperator_magick` und `fsFileMediainfo_identify`
-  (beide melden es sauber), sowie die Legacy-Aufrufe oben (melden es nicht).
-* Pfade immer durch `fs::toNative()`, Argumente durch `escapeshellarg()`.
-  So gebaut funktionieren die Aufrufe unter Windows — nachgemessen mit ffmpeg.
+  `System32/convert.exe` (FAT nach NTFS). Deshalb immer `magick` über
+  `shellBinary`.
+* Unter FastCGI erben Kindprozesse die Umgebung des Webservers, nicht den PATH,
+  den PHP mit `getenv()` sieht: ein nach dem Serverstart installiertes
+  ImageMagick fand `where` nicht, der volle Pfad lief. `shellBinary` sucht
+  deshalb zuletzt selbst in den PATH-Ordnern und liefert den vollen Pfad.
+* Pfade durch `fs::toNative()`, Argumente durch `escapeshellarg()` — außer
+  Formatstrings mit `%`: `escapeshellarg()` macht unter Windows aus `%` ein
+  Leerzeichen.
+
+LIVE: Shell ist erlaubt; benötigt werden ImageMagick 7 (`magick`), Ghostscript,
+ffmpeg/ffprobe, die imagick-Extension als Rückfall.
 
 ## Schwesterfamilie: fsFileMediainfo
 
@@ -114,112 +167,28 @@ Gleiches Namensschema, andere Mechanik — lesend statt schreibend:
 
 | | Operators | Mediainfo |
 |---|---|---|
-| Auswahl | Name vom Aufrufer, oder Capabilities | `fsFileMediainfo::create()`, `switch` über mimeext |
+| Auswahl | Name(n) vom Aufrufer | `fsFileMediainfo::create()`, `switch` über mimeext |
 | Instanz | je Name, lazy über `getOperator()` | genau eine je fsFile |
 | Ergebnis | Blob oder Tempfile | Array mit festen Schlüsseln (`$defaultMediainfo`) |
-| Fehler | `p()` / `d()` | Array plus `error`-Schlüssel |
+| Fehler | `lastError` | Array plus `error`-Schlüssel |
 
 Beide adressieren dieselben Werkzeuge (imagick, magick/identify, ffprobe,
-DOMDocument), aber über getrennte Registries.
+DOMDocument). Überschneidungen — ein Operator misst selbst, was mediainfo auch
+wüsste — sind in Kauf genommen: der Operator bekommt so den Grund eines
+Fehlschlags (policy, Ghostscript) mit, mediainfo liefert dann nur Leerwerte.
 
-## Vorteile dieses Aufbaus
+## Offene Punkte
 
-* **Ein Abschluss für alle Werkzeuge.** Ob Imagick einen Blob im Speicher hält
-  oder `magick` in eine Tempdatei schreibt, sieht der Aufrufer nicht:
-  `store()`/`output()` sind identisch. Das ist der stärkste Teil des Entwurfs.
-* **Lazy und je Datei.** Ein Operator entsteht erst beim Zugriff; ein
-  Imagick-Objekt wird nie gebaut, wenn niemand rendert.
-* **Fluent.** `read()->scale()->render()->store()` liest sich wie die Pipeline,
-  die es beschreibt.
-* **Erweiterbar ohne Registrierung.** Datei anlegen, fertig — der Glob findet
-  sie, und `$file->neuername` funktioniert sofort.
-* **Fremdbibliotheken bleiben draußen.** Vererbung von TCPDF und Co. passiert im
-  Unterordner, der Root-Operator bleibt an der fsFile-Welt.
-
-## Nachteile und Inkonsistenzen
-
-1. **Zwei Auswahlmechanismen, einer tot.** `convertTo()`, `findOperatorFor()` und
-   die Tabelle `$conversions` haben im gesamten Repo keinen Aufrufer. Produktiv
-   benennt jeder Aufrufer sein Werkzeug selbst — genau das, was die Capabilities
-   ablösen sollten.
-2. **Capabilities und `$conversions` sind Redundanz.** Der Plan
-   (`.cursor/plans/fsFileOperator_conversion.plan.md`) sah die Prioritäten
-   *innerhalb* der Capabilities vor (`'pdf=>jpg' => 5`). Implementiert wurde eine
-   zweite Tabelle daneben. Beide Quellen können auseinanderlaufen.
-3. **Verfügbarkeit ist kein Kriterium.** `findOperatorFor('pdf', 'jpg')` liefert
-   `magick`, auch wenn das Binary fehlt — `imagick` könnte es hier auch.
-   `isAvailable()` gibt es bisher nur an `fsFileOperator_ffmpeg`, nicht in der
-   Basisklasse und nicht in der Auswahl.
-4. **Drei Begriffe von "Typ".** `extension` (roh, wie auf der Platte),
-   `standardizedExtension` (nur `strtolower`) und `mimeext` (gesnifft, `jpeg`
-   wird zu `jpg`). `convertTo()` fragt mit `extension`, die Capabilities sind in
-   `mimeext`-Schreibweise notiert: eine Datei `Foto.JPEG` findet nichts.
-5. **Discovery per Regex.** `filepath2name()` nimmt das Stück hinter dem
-   *letzten* Unterstrich. `fsFileOperator_video_frame.php` hieße `frame`.
-   Unterstriche im Operatornamen sind verboten, ohne dass es irgendwo steht.
-6. **Operatornamen sind fsFile-Properties.** Jeder neue Operator belegt
-   automatisch `$file-><name>`. Ein Operator namens `size` oder `contents` würde
-   still mit einer echten Property kollidieren.
-7. **Basisklasse ist kein Vertrag.** `fsFileOperator` ist nicht abstrakt,
-   `render()` meldet den Fehlschlag über `d()` (Debug-Ausgabe) statt über
-   Rückgabewert oder Exception. Signaturen driften: `read()` gibt in der Basis
-   nichts zurück, in `imagick` `static`; `create()` hat je Operator eine andere
-   Signatur.
-8. **Fehler landen im Debug-Panel, nicht beim Aufrufer.** `p()`/`d()` in
-   `magick::render()` und `imagick::read()`. Der Aufrufer sieht nur
-   `hasResult() === false` und weiß nicht, warum. `videoFrame::$lastError` macht
-   es besser — außerhalb der Familie.
-9. **Leere Rümpfe zählen als Operatoren.** `tcpdf` und `meyfasvg` haben keine
-   Capabilities und kein `render()`, tauchen aber in `getExistingOperators()` und
-   damit als Magic-Property auf.
-10. **Tempdateien ohne Lebenszyklus.** `var/temp/<operator>/` wird nur von
-    `store()`/`cleanup()` aufgeräumt. Ein Fatal dazwischen lässt die Datei liegen;
-    niemand sammelt sie ein.
-11. **Der Legacy-Bildpfad benutzt nichts davon.** `mediaImage::createImageFormat()`
-    macht Imagick, `identify` und `convert` selbst, inklusive eigener
-    Tempdatei-Logik und eigener Megapixel-Rechnung. Dieselbe Aufgabe, zwei
-    Implementierungen — und nur eine davon ist Windows-fest.
-12. **Flache Sonderfaelle neben der Familie.** `videoFrame` war eine eigene
-    Klasse mit eigenem Fehlerkanal, obwohl sie dasselbe tut wie ein Operator;
-    inzwischen delegiert sie an `fsFileOperator_ffmpeg` und bleibt nur als
-    flacher Einstiegspunkt der pwk-Renderings bestehen. Vergleichbare Reste
-    stecken noch in `mediaImage` (siehe 11).
-
-## Strukturvorschläge
-
-In der Reihenfolge, in der sie sich lohnen:
-
-1. ~~**`fsFileOperator_ffmpeg`**~~ — **umgesetzt.** Der Operator rendert
-   `jpg/jpeg/png/webp` aus `mp4/mov/webm/m4v` durch die Pipe in einen
-   `resultBlob` (`setStream(FALSE)` für den Weg über eine Tempdatei),
-   `videoFrame::extract()` delegiert dorthin (Signatur und `$lastError`
-   unverändert), und `mediaImage::createImageFormat()` zieht für eine
-   Video-Quelle erst ein Standbild, bevor die Bildpipeline läuft — erst beim
-   Bauen des Alias, ein vorhandener Alias kostet also keinen ffmpeg-Lauf. Die
-   Position kommt von `setSeconds()` oder, ohne Angabe, aus der ffprobe-Dauer
-   (Frame 0 ist zu oft schwarz).
-2. **Eine Quelle für die Auswahl.** Prioritäten in die Capabilities (wie im Plan),
-   `$conversions` wird daraus abgeleiteter Cache oder fällt weg.
-3. **`isAvailable()` je Operator**, in `findOperatorFor()` berücksichtigt:
-   `magick` fehlt, `imagick` übernimmt pdf=>jpg. Das macht die Auswahl erst
-   wirklich automatisch.
-4. **Typ-Schlüssel vereinheitlichen.** Überall `mimeext`, mit
-   `standardizedExtension` als Fallback für nicht existierende Dateien.
-5. **Vertrag schärfen.** `fsFileOperator` abstrakt, `render()`/`export()` mit
-   definiertem Rückgabewert, Fehler über `lastError` oder Exception statt `d()`.
-6. **Discovery explizit.** Entweder eine Liste in `fsFileOperators` oder der Glob
-   mit strengerem Muster, plus eine Sperrliste gegen Kollisionen mit
-   fsFile-Properties.
-7. **Legacy zusammenführen.** `mediaImage` auf die Operator-API heben — dann erbt
-   der alte CMS-Pfad Windows-Festigkeit, Tempfile-Handling und die
-   Werkzeugauflösung, statt sie ein zweites Mal zu haben.
-8. **Tempfiles aufräumen.** `getTempPath()` registriert den Pfad, ein
-   Shutdown-Handler räumt auf, was liegen geblieben ist.
-
-## Status gegenüber dem Plan
-
-`.cursor/plans/fsFileOperator_conversion.plan.md` ist teilweise umgesetzt:
-Capabilities und `findOperatorFor()` existieren (an `fsFileOperators`, nicht an
-`fsFileOperator`), `convertTo()` existiert und gibt den Operator zurück statt
-eines temporären `fsFile`. Offen: Prioritäten in den Capabilities, der
-Capabilities-Cache und Aufrufer für die automatische Auswahl.
+1. **Discovery per Regex.** `filepath2name()` nimmt das Stück hinter dem
+   *letzten* Unterstrich; Unterstriche im Operatornamen sind damit verboten.
+2. **Operatornamen sind fsFile-Properties.** Jeder Operator belegt `$file-><name>`;
+   ein Operator namens `size` oder `contents` kollidierte still.
+3. **Basisklasse ist kein strenger Vertrag.** Nicht abstrakt; `read()` und
+   `create()` haben je Operator andere Signaturen.
+4. **Leere Rümpfe zählen als Operatoren.** `tcpdf`, `meyfasvg`.
+5. **Tempdateien ohne Lebenszyklus.** `var/temp/<operator>/` räumen nur
+   `store()`/`cleanup()` auf; nach einem Fatal bleibt die Datei liegen.
+6. **ps/eps/ai im CMS.** Die Operatoren können es, `mediaImage` lässt in
+   `$typeSupported` nur pdf durch.
+7. **Zuschnitt.** Ob Fokus, Zuschnitt und Formate aus mediaImage in
+   `fsFileOperator_imagick` wandern — offen.

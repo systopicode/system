@@ -62,6 +62,10 @@ class Panel extends PanelNode {
 				$this->state->submoduleName = $selected->name;
 				$this->state->submodulePath = $deep !== null ? $deep->path : $selected->path;
 			}
+			// "Vorschau" follows the open record, also within one panel (preview.tpl.php).
+			// submoduleName stays the module behind a search dialog.
+			$this->updateView('preview');
+
 			$this->checkReleaseNoteRedirect();
 		}
 	}

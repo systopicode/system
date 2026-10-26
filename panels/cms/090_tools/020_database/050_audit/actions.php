@@ -1,82 +1,103 @@
 <?php
 
 /**
- * Run what was confirmed in the list — and nothing else.
+ * Run what was confirmed in the list - and nothing else.
  *
  * The audit runs **again** here. What gets applied is not the plan the browser
- * saw but the current one; the selection only travels as a list of names.
- * Anything meanwhile done or gone is not found again and is passed over
- * silently — the right answer to the fact that time passes between showing a
- * list and clicking on it.
+ * saw but the current one; the selection only travels as names. Anything done
+ * or gone meanwhile is not found again and is passed over.
  *
- * Three ways in, one body: what differs is only which actions end up selected.
+ * Four ways in, one body: what differs is only which actions end up selected.
  *
  * @var \Systopic\System\Panels\PanelNode $this
  */
 
 use Systopic\Db\Connection;
 use Systopic\Db\Schema\Audit;
-use Systopic\Db\Schema\AuditKind;
 use Systopic\Db\Schema\Registry;
 
 switch ($this->action) {
-    case 'runAudit':
-        // The list is built in main.tpl.php from $this->action — all there is
-        // to do here is say that this view has to be drawn again. Without it
-        // the answer to the button comes back without anything visibly
-        // changing.
-        $this->updateView('main');
-        break;
+	case 'runAudit':
+		// the list is built in main.tpl.php - it only has to be drawn again
+		$this->updateViews(['message', 'main']);
+		break;
 
-    case 'applyAudit':
-        Registry::scanTables();
+	case 'applyAudit':
+	case 'applyLossless':
+	case 'applyAll':
+		Registry::scanTables();
 
-        $audit   = new Audit(Connection::default());
-        $current = $audit->run();
-        $single  = (string) (http::dataset('key') ?? '');
-        $table   = (string) (http::dataset('table') ?? '');
+		$audit   = new Audit(Connection::default());
+		$current = $audit->run();
 
-        $selected = array_values(array_filter(
-            $current,
-            static function ($action) use ($single, $table): bool {
-                if ($action->blocked || $action->statements === []) {
-                    return false;
-                }
-                if ($single !== '') {
-                    return $action->key() === $single;
-                }
-                if ($table === 'Migrations') {
-                    return $action->kind === AuditKind::Migration;
-                }
-                return $table !== ''
-                    && ($action->subject === $table || str_starts_with($action->subject, $table . '.'));
-            },
-        ));
+		// A single button in a row beats the ticks: "run" means that one action.
+		$single = (string) (http::dataset('key') ?? '');
 
-        $where = $single !== '' ? $single : $table;
-        if ($selected === []) {
-            message::error($where === ''
-                ? 'Database and model agree. Nothing to apply.'
-                : 'Nothing pending for ' . $where . '.');
-            $this->updateView('message');
-            $this->updateView('main');
-            break;
-        }
+		$missing = 0;
+		if ($single !== '') {
+			$selected = array_values(array_filter($current, static fn($action) => $action->key() === $single));
+			$missing = 1 - count($selected);
+		} elseif ($this->action === 'applyAll') {
+			$selected = $current;
+		} elseif ($this->action === 'applyLossless') {
+			// Ignores the checkboxes on purpose: "everything that cannot go wrong".
+			// Blocked actions are out too - they lose nothing, but they cannot run.
+			$selected = array_values(array_filter($current, static fn($action) => !$action->destructive && !$action->blocked));
+		} else {
+			// The boxes are called `run:<key>` and send 1 or 0.
+			$wanted = [];
+			foreach ((array) (http::form() ?: []) as $name => $value) {
+				if (str_starts_with((string) $name, 'run:') && (string) $value !== '0') {
+					$wanted[] = substr((string) $name, 4);
+				}
+			}
+			if ($wanted === []) {
+				message::error('Nothing checked - nothing was run.');
+				$this->updateViews(['message']);
+				break;
+			}
+			$selected = array_values(array_filter($current, static fn($action) => in_array($action->key(), $wanted, true)));
+			$missing = count($wanted) - count($selected);
+		}
 
-        $audit->apply($selected);
-        $failures = $audit->failures();
-        $ok       = count($selected) - count($failures);
+		if ($selected === []) {
+			message::error($current === []
+				? 'Database and model agree - nothing to run.'
+				: 'None of the chosen actions is still pending - nothing was run.');
+			$this->updateViews(['message', 'main']);
+			break;
+		}
 
-        if ($ok > 0) {
-            message::confirm('Applied ' . $ok . ' action' . ($ok === 1 ? '' : 's')
-                . ($where !== '' ? ' for ' . $where : '') . '.');
-        }
-        foreach ($failures as $failure) {
-            message::error($failure['action']->subject . ': ' . $failure['message']);
-        }
+		// Only from its own button: a column a foreign key points at can be
+		// changed at all (MySQL 1833), and a new foreign key is added without
+		// validating the rows already there.
+		$skipFk = (string) (http::dataset('nofk') ?? '0') !== '0';
 
-        // Both: the message, and the list that just changed.
-        $this->updateView('message');
-        $this->updateView('main');
-        break;
+		$done     = $audit->apply($selected, withoutForeignKeyChecks: $skipFk);
+		$failures = $audit->failures();
+		$ok       = count($selected) - count($failures);
+
+		if ($ok > 0) {
+			message::confirm(sprintf(
+				'Ran %d of %d action%s, %d statement%s.%s%s',
+				$ok, count($selected), count($selected) === 1 ? '' : 's',
+				count($done), count($done) === 1 ? '' : 's',
+				$missing > 0 ? " $missing no longer pending." : '',
+				$skipFk ? ' Foreign key checks were off.' : '',
+			));
+		}
+		// Every failure by name - one error and silence about the other thirty is no answer.
+		foreach ($failures as $failure) {
+			$fkBlocked = !$skipFk && preg_match('~\b1833\b~', $failure['message']);
+			message::error(sprintf(
+				'%s %s: %s%s',
+				$failure['action']->kind->value,
+				$failure['action']->subject,
+				$failure['message'],
+				$fkBlocked ? ' - use "Run checked without FK checks".' : '',
+			));
+		}
+
+		$this->updateViews(['message', 'main']);
+		break;
 }

@@ -57,39 +57,50 @@ Always prefer `@file` or `-` (STDIN). Inline JSON breaks on Windows
 
 ---
 
-## 2. Storage convention — `public/var/cursor/`
+## 2. Storage convention — `C:/laragon/www/agents/tmp/<project>/`
 
-All ephemeral CLI artefacts (request payloads, captured stdout/stderr,
-rendered HTML, cookies, intermediate dumps) live in the project's
-`public/var/cursor/` directory:
+Since 2026-10-23 all ephemeral agent artefacts (request payloads, captured
+stdout/stderr, rendered HTML, cookies, comparison runs, intermediate dumps)
+live **outside every project and package**, one folder per project:
 
 ```
-<projectRoot>/public/var/cursor/
+C:/laragon/www/agents/tmp/<project>/
 ├── cli-test-<name>.json          – request payload
 ├── cli-test-<name>-result.txt    – captured stdout (any output mode)
 ├── cli-test-<name>-result.html   – rendered HTML response
 ├── cli-test-<name>-result.json   – JSON response
 ├── cli-stderr.txt                – last captured stderr
-├── cli-cookies.txt               – session cookies (curl --cookie-jar style)
-├── cli-step1.html, cli-step2.html – multi-step flows
+├── compare-reference/            – compare-reference.php (its default)
 └── …
 ```
 
 Rationale:
 
-- Under `public/var/` → same convention as all other runtime-generated data
-  (`var/backups/`, `var/original/`, `var/ical/`, `var/cache/`).
-- The `var/` folder lives inside `public/` for this project.
-- Single, predictable folder so cleanup is one `Remove-Item public\var\cursor\cli-* -Force`.
+- Nothing of it travels with sync or lands in a repository, and nothing
+  has to be cleaned out of a project before a deployment.
+- One place for everything an agent left behind: `agents/tmp/` can be
+  emptied at any time, nothing reads from it.
+- `<project>` is the folder name under `projects/` (`smp.de`); for package
+  work the package name (`system`).
+
+Pass the payload with its absolute path:
+
+```
+php public/index.php @C:/laragon/www/agents/tmp/smp.de/cli-test-search.json
+```
 
 `public/index.php` resolves `@<file>` lookups in this order:
 
-1. literal path (relative to current cwd or absolute)
-2. `<publicDir>/var/cursor/<file>` ← **always works regardless of cwd**
+1. literal path (relative to current cwd or absolute) ← **use this**
+2. `<publicDir>/var/cursor/<file>` (the convention before 2026-10-23)
 3. `<publicDir>/<file>` (legacy fallback)
 
-So `@cli-test-cms.json` Just Works from anywhere as long as the file lives
-in `public/var/cursor/`.
+The check scripts in `.cursor/tools/` follow this (since 2026-10-23): they
+get their folder from `agent-tmp.php` — `agentTmp(<project>, <sub>)` creates
+it when missing — and read hand-written payloads from
+`.cursor/tools/fixtures/<project>/` (`agentFixture()`), which is a source
+next to the tools and survives emptying `agents/tmp/`. A new script does the
+same: `require_once __DIR__ . '/agent-tmp.php';`.
 
 ---
 
@@ -128,7 +139,7 @@ in `public/var/cursor/`.
 
   // Optional: PHP session control.
   "sessionId":       "abc123…",          // resume an existing session
-  "sessionSavePath": "public/var/cursor/sess",   // override session.save_path
+  "sessionSavePath": "C:/laragon/www/agents/tmp/<project>/sess",   // override session.save_path
   "session":         { "foo": "bar" },    // pre-populate $_SESSION (merged in loader)
 
   // Optional: extra $_SERVER overrides (merged last → wins).
@@ -169,7 +180,7 @@ artefacts don't clobber each other (`cms`, `pages`, `events`, `contacts`,
 ### Render a panel as JSON (ajax-style slices)
 
 ```jsonc
-// public/var/cursor/cli-test-pages.json
+// C:/laragon/www/agents/tmp/spaceticker.app/cli-test-pages.json
 { "path": "/projects/spaceticker.app/public/cms/pages/", "user": 2, "output": "json" }
 ```
 
@@ -214,12 +225,12 @@ cmd /c "php index.php @cli-test-cms.json > var\cursor\cli-test-cms-result.json 2
 
 ```jsonc
 // step 1: log in
-// public/var/cursor/cli-test-login.json
+// C:/laragon/www/agents/tmp/<project>/cli-test-login.json
 { "path": "/login", "method": "POST", "sessionId": "agent-session-1",
   "server": { "QUERY_STRING": "user=oj&pw=…" } }
 
 // step 2: visit a protected page on the same session
-// public/var/cursor/cli-test-after-login.json
+// C:/laragon/www/agents/tmp/<project>/cli-test-after-login.json
 { "path": "/cms/pages/", "sessionId": "agent-session-1", "output": "html" }
 ```
 
@@ -298,8 +309,9 @@ Without it, `http::refresh()` emits a `Refresh:` HTTP header instead of a
   the loader once the session is started. Don't expect the keys to be
   visible before that.
 - **`@file` resolution order.** Literal cwd-path → `public/var/cursor/` →
-  `public/`. If your file is found in an earlier slot than expected, you
-  may be picking up a stale copy. Delete or rename to disambiguate.
+  `public/`. Pass the absolute path under `agents/tmp/` (§2) and there is
+  nothing to disambiguate; a relative name may pick up a stale copy in an
+  old `public/var/cursor/`.
 
 ---
 
@@ -308,15 +320,12 @@ Without it, `http::refresh()` emits a `Refresh:` HTTP header instead of a
 ```
 <projectRoot>/
 ├── public/
-│   ├── index.php                   ← CLI entry; @file resolver here
-│   └── var/cursor/                 ← all CLI test artefacts (this folder)
-│       ├── cli-test-<name>.json
-│       ├── cli-test-<name>-result.{txt,html,json}
-│       ├── cli-stderr.txt
-│       └── …
+│   └── index.php                   ← CLI entry; @file resolver here
 └── vendor/systopic/system/
     ├── src/Http.php                ← getCliEnvironment(), $_SERVER seeding
     └── .cursor/docs/cli-testing.md ← this document
+
+C:/laragon/www/agents/tmp/<project>/ ← all CLI test artefacts (§2)
 ```
 
 ---

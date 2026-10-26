@@ -1,112 +1,115 @@
 <?php
 
 /**
- * Database against model. Each difference is database, then the model.
- * Apply writes the pending column changes for that table.
+ * Database against model, side by side - every table, every column.
+ *
+ * Database, then model. The colours follow from that: the database value of
+ * a differing column is what would change, the model value is the reference
+ * it would change towards. A row without colour is a row nobody has to think
+ * about. Compared through `Column::comparable()`, the rule the audit uses, so
+ * this view cannot show a column as matching that the audit then changes.
+ *
+ * The only actions: remove an orphaned column, remove an orphaned table
+ * (actions.php). Everything else is applied in the audit.
  *
  * @var \Systopic\System\Panels\Root\Cms\Tools\Database\Status\Panel $this
  */
 
+use Systopic\Db\Schema\StatusState;
+
+$this->withView('message');
 $state = $this->schemaState();
-$differ = $state['differ'];
-$agree = $state['agree'];
+$orphans = $this->orphans();
 
 $e = static fn($value): string => htmlspecialchars((string) $value, ENT_QUOTES);
-$show = static function (?string $text, string $empty) use ($e): string {
-	return $text === null || $text === '' ? $empty : $e($text);
+/** One side of a column: the value, coloured where it differs, a dash where there is none. */
+$cell = static function (?string $text, bool $differs, string $class) use ($e): string {
+	if ($text === null) {
+		return '<td class="schemaNothing">—</td>';
+	}
+	return '<td class="schemaValue' . ($differs ? ' ' . $class : '') . '">' . $e($text) . '</td>';
+};
+/** The remove button for an orphan the audit offers - with what it would discard. */
+$remove = static function (string $subject, string $label) use ($orphans, $e): string {
+	$action = $orphans[$subject] ?? null;
+	if ($action === null) {
+		return '';
+	}
+	$ask = $label . ' ' . $subject . '? ' . $action->describe . ($action->destructive ? '. This discards data.' : '.');
+	return '<a class="button" data-on_click="userConfirm" data-action="removeOrphan" data-key="' . $e($action->key())
+		. '" data-confirm="' . $e($ask) . '"><i class="fa-regular fa-trash"></i> ' . $e($label) . '</a>';
 };
 ?>
 <h1>Database status</h1>
-<p class="tagsHint"><?= count($state['tables']) ?> tables, <?= (int) $state['withModel'] ?> with a model. <?= (int) $state['totalDiffs'] ?> columns would change.</p>
-<div class="schemaBar">
-	<form class="schemaFilters" method="get" action="./">
-		<select name="table" class="onchangesubmit">
-			<option value="">All tables</option>
-			<?php foreach ($state['tables'] as $table): ?>
-				<option value="<?= $e($table->name) ?>"<?= $state['filter'] === $table->name ? ' selected' : '' ?>><?= $e($table->name) ?><?= $table->differences > 0 ? ' (' . (int) $table->differences . ')' : '' ?></option>
-			<?php endforeach; ?>
-		</select>
-		<label class="checkbox">
-			<span>Only differences</span>
-			<input type="checkbox" name="diffs" value="1" class="switch onchangesubmit"<?= $state['onlyDiffs'] ? ' checked' : '' ?>>
-			<div><div></div></div>
-		</label>
-	</form>
-	<a class="button" data-on_click="refreshStatus">Refresh</a>
-</div>
+<p class="tagsHint">
+	<?= count($state['tables']) ?> tables, <?= (int) $state['withModel'] ?> with a model class · <strong><?= (int) $state['totalDiffs'] ?></strong> differences.
+	<span class="schemaLegend schemaActual">database – would change</span>
+	<span class="schemaLegend schemaDeclared">model – the reference</span>
+</p>
+<?php // table filter, only differences and refresh: the header bar (controls.tpl.php) ?>
 <?php if ($state['shown'] === []): ?>
 	<p class="tagsHint">No table matches the selection.</p>
 <?php endif; ?>
 
-<?php foreach ($differ as $table):
-	$rows = $table->exists ? $table->rowCount . ' rows' : 'not in the database';
-	$diffColumns = array_values(array_filter($table->columns, static fn($column) => $column->differs));
-	?>
-	<section class="widget is-list">
-		<header>
-			<h2><?= $e($table->name) ?></h2>
-			<?php if (!$table->hasModel): ?>
-				<span class="logPill">No model</span>
-			<?php else: ?>
-				<span class="logPill is-bad"><?= (int) $table->differences ?> differences</span>
+<?php
+// One table for all of them, a tbody per database table: the browser sizes the
+// columns over everything, so they line up from card to card without a width.
+// The tbody is the card (white, line, radii - tools.css .schemaCard), an empty
+// tbody between two cards is the gap.
+if ($state['shown'] !== []): ?>
+<div class="schemaScroll"><?php // not .tableScroll: a section holding one turns into a white card (70_components.css) ?>
+	<table class="schemaAll">
+		<colgroup>
+			<col class="schemaColName"><col class="schemaColSide"><col class="schemaColSide"><col class="schemaColAction">
+		</colgroup>
+		<?php foreach ($state['shown'] as $i => $table): ?>
+			<?php if ($i > 0): ?>
+				<tbody class="schemaGap" aria-hidden="true"><tr><td colspan="4"></td></tr></tbody>
 			<?php endif; ?>
-		</header>
-		<?php if (!$table->hasModel): ?>
-			<main><p class="tagsHint"><?= $e($rows) ?>. Nothing is proposed for this table.</p></main>
-		<?php else: ?>
-			<?php $same = count($table->columns) - count($diffColumns); ?>
-			<p class="tagsHint"><?= $e($table->shortClass) ?> · <?= $e($rows) ?>. <?= $same === 1 ? '1 column already agrees' : $same . ' columns already agree' ?>.</p>
-			<div class="tableScroll">
-				<table>
-					<thead>
-						<tr><th>Column</th><th>Database → model</th><th></th></tr>
-					</thead>
-					<tbody>
-						<?php foreach ($diffColumns as $column): ?>
-							<tr class="schemaDiff">
-								<td><?= $e($column->name) ?></td>
-								<td>
-									<span class="schemaCompare">
-										<span class="schemaFrom"><?= $show($column->actual, 'missing') ?></span>
-										<i class="fa-regular fa-arrow-right"></i>
-										<span class="schemaTo"><?= $show($column->declared, 'not declared') ?></span>
-									</span>
-								</td>
-								<td class="schemaApply">
-									<?php if ($table->exists): ?>
-										<a class="button submit" data-on_click="userConfirm" data-action="applyTable" data-table="<?= $e($table->name) ?>" data-column="<?= $e($column->name) ?>" data-confirm="<?= $e('Apply the model to ' . $table->name . '.' . $column->name . '? The column can change.') ?>">Apply</a>
-									<?php endif; ?>
-								</td>
-							</tr>
-						<?php endforeach; ?>
-					</tbody>
-				</table>
-			</div>
-			<footer>
-				<a class="button submit" data-on_click="userConfirm" data-action="applyTable" data-table="<?= $e($table->name) ?>" data-confirm="<?= $e($table->exists ? 'Apply the model to ' . $table->name . '? Columns can change.' : 'Create ' . $table->name . ' from the model?') ?>">Apply all</a>
-			</footer>
-		<?php endif; ?>
-	</section>
-<?php endforeach; ?>
-
-<?php if ($agree !== []): ?>
-	<section class="widget is-list">
-		<header><h2>In agreement</h2><span class="logPill is-ok"><?= count($agree) ?></span></header>
-		<div class="tableScroll">
-			<table>
-				<thead>
-					<tr><th>Table</th><th>Rows</th><th>Model</th></tr>
-				</thead>
-				<tbody>
-					<?php foreach ($agree as $table): ?>
-						<tr>
-							<td><?= $e($table->name) ?></td>
-							<td class="muted"><?= $table->exists ? (int) $table->rowCount : '—' ?></td>
-							<td class="muted"><?= $e($table->shortClass) ?></td>
-						</tr>
-					<?php endforeach; ?>
-				</tbody>
-			</table>
-		</div>
-	</section>
+			<tbody class="schemaCard">
+				<tr class="schemaCardHead">
+					<th colspan="4">
+						<div class="schemaCardTitle">
+							<h2><?= $e($table->name) ?></h2>
+							<span class="logPill"><?= $table->exists ? (int) $table->rowCount . ' rows' : 'not in the database' ?></span>
+							<?php if (!$table->hasModel): ?>
+								<span class="logPill is-bad">no model class</span>
+							<?php elseif ($table->differences > 0): ?>
+								<span class="logPill"><?= $e($table->shortClass) ?></span>
+								<span class="logPill is-bad"><?= (int) $table->differences ?> difference<?= $table->differences === 1 ? '' : 's' ?></span>
+							<?php else: ?>
+								<span class="logPill"><?= $e($table->shortClass) ?></span>
+								<span class="logPill is-ok">identical</span>
+							<?php endif; ?>
+							<?= $remove($table->name, 'Remove table') ?>
+						</div>
+					</th>
+				</tr>
+				<?php if (!$table->hasModel): ?>
+					<tr class="schemaCardNote">
+						<td colspan="4">
+							No class describes this table.
+							<?= isset($orphans[$table->name])
+								? 'It sits under a prefix the model uses, so it is orphaned.'
+								: 'The audit proposes nothing for it: no primary key, or a prefix no class uses - out of scope, not orphaned.' ?>
+						</td>
+					</tr>
+				<?php endif; ?>
+				<tr class="schemaCardCols"><th>Column</th><th>Database</th><th>Model</th><th></th></tr>
+				<?php foreach ($table->columns as $column):
+					$differs = $column->differs;
+					?>
+					<tr<?= $differs ? ' class="schemaDiffers"' : '' ?>>
+						<td class="schemaName"><?= $e($column->name) ?></td>
+						<?= $cell($column->actual, $differs, 'schemaActual') ?>
+						<?= $table->hasModel ? $cell($column->declared, $differs, 'schemaDeclared') : '<td class="schemaNothing">—</td>' ?>
+						<td class="schemaApply">
+							<?= $column->state === StatusState::OnlyInDatabase ? $remove($table->name . '.' . $column->name, 'Remove column') : '' ?>
+						</td>
+					</tr>
+				<?php endforeach; ?>
+			</tbody>
+		<?php endforeach; ?>
+	</table>
+</div>
 <?php endif; ?>

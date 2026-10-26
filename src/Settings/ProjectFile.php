@@ -24,12 +24,14 @@ final class ProjectFile
      */
     public static function directory(): ?string
     {
-        $settings = (string) \fs::$projectRoot . 'settings.php';
+        // native from here on, like EnvironmentFile::directory(): every
+        // method of this class reads and writes with PHP's own functions
+        $settings = \fs::toNative((string) \fs::$projectRoot . 'settings.php');
         $real = realpath($settings);
         if ($real !== false) {
-            return dirname($real) . '/';
+            return dirname($real) . DIRECTORY_SEPARATOR;
         }
-        $root = rtrim((string) \fs::$projectRoot, '/') . '/';
+        $root = rtrim(\fs::toNative((string) \fs::$projectRoot), '\\/') . DIRECTORY_SEPARATOR;
         return is_dir($root) ? $root : null;
     }
 

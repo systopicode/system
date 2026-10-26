@@ -172,6 +172,23 @@ final class Devices
             self::forget();
             self::clearCookie();
         }
+        self::signalLogout((int) $device->id);
+    }
+
+    /**
+     * With systopic/relay: the revoked device hears "logout" in its channel,
+     * and its open pages go to the login now - not at their next request
+     * (a CMS page has no heartbeat, the app's is once a minute). Without
+     * relay this does nothing.
+     */
+    private static function signalLogout(int ...$deviceIds): void
+    {
+        if ($deviceIds === [] || !class_exists(\Systopic\Relay\Relay::class) || !\Systopic\Relay\Relay::enabled()) {
+            return;
+        }
+        foreach ($deviceIds as $id) {
+            \Systopic\Relay\Relay::tell(\Systopic\Relay\Relay::deviceTopic($id), ['op' => 'logout']);
+        }
     }
 
     /** Every device of a user but `$exceptId` ("log out everywhere else"). */
@@ -187,6 +204,7 @@ final class Devices
         }
         if ($revoked !== []) {
             $scope->save(...$revoked);
+            self::signalLogout(...array_map(static fn(Device $device) => (int) $device->id, $revoked));
         }
         return count($revoked);
     }

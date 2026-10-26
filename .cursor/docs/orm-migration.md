@@ -139,6 +139,34 @@ Query-Zahl, die steigt, ist ein Befund.
 - Vor dem ersten Panel: `db status` und `db audit` im CMS laufen lassen und
   die Abweichungen lesen. Die Zeilenklassen beschreiben die Tabelle, wie sie
   sein soll.
+- **Site-Aktionen** (`lib/actions.php`) laufen nur, wenn die Anfrage eine
+  Seite auflöst. `/search` tut das nicht — erst recht nicht auf der
+  Startseite, deren Pfad `''` ist. Die Aktions-URL nennt die Seite:
+  `search?id=<node>&lang=<lang>` (smp.de) oder relativ unter einem
+  Seitenpfad (`projekte/filter`, systopic.net). Formularwerte mit
+  `http::values('name')` lesen; `http::$values` ist leer, solange niemand
+  `readValues()` aufgerufen hat.
+- Eine Query mit abgeleiteter Tabelle (`FROM (…) sub`) liefert keine
+  Modellzeilen: der RowReader ordnet eine Spalte über ihre Quelltabelle zu,
+  und die heißt dann `sub`. Flach schreiben, `HAVING` auf die Ausdrücke
+  (`Smp\Queries\Search`).
+- Rewritepaths mit Nicht-ASCII-Zeichen (smp.de, jp): die Catch-all-Regel des
+  Scaffolds lässt nur ASCII durch → 403. Projektblock in `public/.htaccess`
+  mit einer Regel nur für Pfade mit mindestens einem Byte `\x80-\xFF` (Vorbild
+  smp.de). Seit 2026-10-23 dekodiert `appRequest` den Pfad (`rawurldecode`),
+  vorher fand der Resolver `/%E8%A3%BD…/` nicht.
+- **Ajax-Navigation**: der Client navigiert nur über `<a>` ohne `target`
+  (`initEvents.js`). Legacy-Templates mit `<a target href>` laden jede Seite
+  neu (smp.de bis 2026-10-23) — das nackte `target` entfernen, behalten nur
+  bei `target="_blank"` und JS-Schaltern mit `href="#"`. Projekt-JS, das am
+  Inhalt hängt (Slider, Grid), gehört dann in `cms.onDocumentUpdate()` und
+  muss mehrfach laufen können; `pagesRenderer.js` ruft diese Hooks erst seit
+  2026-10-23 auf (nach jeder Aktualisierung, nicht beim ersten Aufbau).
+- Numerische Rewritepaths (`1`, `2`) liest `UrlResolver::splitPath()` als
+  Alias-Id: die Seite ist unter diesem Pfad nicht erreichbar. Im CMS umbenennen.
+- **Mit laufender Legacy-Referenz** (smp.de: `projects.legacy/`): kein
+  Vorher-Stand nötig, die Referenz ist er. `compare-reference.php` (Abschnitt
+  5) vergleicht jede Seite gegen sie.
 
 ### Im Seiten-Template (Website)
 
@@ -234,7 +262,7 @@ systopic.net und galerie-lattemann.de vorkommt.
 4. Nachher-Stand rendern und vergleichen. Erwartete Unterschiede: Tags ohne
    `style=`, `&amp;` in Labels und Tags, Shuffle. Alles andere ist ein Befund.
 5. Actions mit Partials (Tag-Filter) per CLI fahren, zum Beispiel
-   `public/var/cursor/orm-filter.json`: Pfad `/projekte/filter`, `"ajax": true`,
+   `agents/tmp/systopic.net/orm-filter.json`: Pfad `/projekte/filter`, `"ajax": true`,
    `put.dataset`.
 6. CMS-Vorschau mit Editoren prüfen (`cms/pages/?id=…`, `"user": 2`): Das
    Editor-Markup muss gleich bleiben.
@@ -406,6 +434,14 @@ php settings-write-check.php C:/laragon/www/projects/galerie-lattemann.de/public
 php settings-check.php       galerie-lattemann.de systop systop
 php smoke-galerie.php        C:/laragon/www/projects/galerie-lattemann.de/public
 
+php compare-reference.php --legacy=<url> --new=<url> --db=<name> [--only=<pfad>,…] [--lang=de]
+   jede veröffentlichte Seite der neuen Datenbank in beiden Installationen
+   abrufen, Layer zusammensetzen, normalisieren, vergleichen; Bericht und
+   Paare in C:/laragon/www/agents/tmp/<db>/compare-reference/ (diff -u legacy/x.html new/x.html)
+
+node browser-check.mjs --net=1 --base=<url> "<pfad>|<js>"
+   wie bisher, dazu jede XHR mit Methode, URL, Body und Status
+
 php replay.php <public> "<Pfad aus dem Netzwerk-Tab, mit ~/>" --put='<json>' [--view=<name>]
    eine Browser-Anfrage nachspielen: mit einer Kopie der Browser-Sitzung und
    dem Referenzpfad vor `~/`, damit der Diff so rechnet wie im Browser.
@@ -414,7 +450,7 @@ php replay.php <public> "<Pfad aus dem Netzwerk-Tab, mit ~/>" --put='<json>' [--
    im Browser stehen bleibt, sieht dann richtig aus. Die Action schreibt echt.
 
 cd C:/laragon/www/projects/galerie-lattemann.de/public
-php -d auto_prepend_file=<tools>/<name>-check.php index.php @cli-front.json   (tags-check: @cli-tags.json)
+php -d auto_prepend_file=<tools>/<name>-check.php index.php "@<tools>/fixtures/galerie-lattemann.de/cli-front.json"   (tags-check: cli-tags.json)
   -> Bericht in ../var/golden/<name>-check.txt
 ```
 

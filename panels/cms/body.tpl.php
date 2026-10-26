@@ -115,12 +115,7 @@ if ($behind !== '') {
 		<div class="content"<?= $sheet ? ' data-cms-sheet="1"' : '' ?>>
 			<header class="cms">
 				<?php $surface('controls'); ?>
-				<?php if (function_exists('appCmsPreviewUrl')): ?>
-				<a class="button cmsPreviewBtn" target="_blank" rel="noopener noreferrer"
-					href="<?= htmlspecialchars(appCmsPreviewUrl()) ?>" title="Vorschau in der App">
-					<i class="fa-regular fa-eye"></i><span>Vorschau</span>
-				</a>
-				<?php endif; ?>
+				<?php $this->withView('preview'); ?>
 			</header>
 			<?php
 			echo message::flush(['template']);

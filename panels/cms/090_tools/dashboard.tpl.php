@@ -4,8 +4,10 @@
 use Systopic\System\Queries\SystemStatus\SystemStatus;
 
 $e = static fn($v): string => htmlspecialchars((string) $v, ENT_QUOTES);
-$free = @disk_free_space((string) \fs::$siteRoot);
-$total = @disk_total_space((string) \fs::$siteRoot);
+// no fs wrapper for these: converted once at the boundary (.cursor/docs/fs-paths.md)
+$disk = \fs::toNative((string) \fs::$siteRoot);
+$free = @disk_free_space($disk);
+$total = @disk_total_space($disk);
 $rows = [
 	'fluxo cms' => 'GUI ' . array_key_first(\Systopic\System\Sys\Release::notes()),
 	'PHP' => PHP_VERSION,
