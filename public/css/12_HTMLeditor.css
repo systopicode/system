@@ -63,6 +63,7 @@ div.HTMLeditorMenu > ul > li.sep{
 
 div.HTMLeditorMenu li.is-drag a{
     cursor: grab;
+    touch-action: none;
 }
 
 div.HTMLeditorMenu a{
@@ -396,6 +397,9 @@ body .objectContainer > input.ajax{
 body.editorMediaDrop,
 body.editorMediaDrop *{
     cursor: copy !important;
+    user-select: none !important;
+    -webkit-user-select: none !important;
+    touch-action: none;
 }
 
 .editorMediaLine{
@@ -415,6 +419,13 @@ body.editorMediaDrop *{
     margin: 0 1px;
     vertical-align: text-bottom;
     background: var(--cmsHighlightColor);
+}
+
+.editorMediaHold.is-gap{
+    background: transparent;
+    margin: 0;
+    vertical-align: top;
+    pointer-events: none;
 }
 
 

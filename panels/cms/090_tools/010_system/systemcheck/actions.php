@@ -282,7 +282,7 @@ foreach (array('ffmpeg' => 'video frames', 'ffprobe' => 'video info', 'identify'
         );
     } elseif (is_file($local)) {
         $var_binaries[$binary] = array(
-            'label' => "<b>{$binary}</b> is in public/var/bin but not on PATH, so the CMS does not use it.",
+            'label' => "<b>{$binary}</b> is in the project's var/bin but is not executable.",
             'status' => 'warning',
         );
     } else {

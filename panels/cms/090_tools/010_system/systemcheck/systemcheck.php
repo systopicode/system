@@ -76,6 +76,12 @@ foreach (['exec' => 'video frames', 'shell_exec' => 'finding programs', 'proc_op
 }
 
 $which = static function (string $name) use ($disabled): ?string {
+	foreach ([dirname(__DIR__) . '/var/bin', getcwd() . '/var/bin', dirname(getcwd()) . '/var/bin'] as $dir) {
+		$path = $dir . '/' . $name;
+		if (@is_file($path) && @is_executable($path)) {
+			return $path;
+		}
+	}
 	if (!function_exists('shell_exec') || in_array('shell_exec', $disabled, true)) {
 		return null;
 	}

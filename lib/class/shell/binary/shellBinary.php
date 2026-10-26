@@ -41,7 +41,32 @@ class shellBinary {
 				return $line;
 			}
 		}
-		return self::searchPath($name, $isWindows);
+		return self::searchPath($name, $isWindows) ?? self::projectBinary($name);
+	}
+
+	/**
+	 * A shared host has no ffmpeg on the PATH. The project keeps its own
+	 * copy in var/bin or bin, so the system package does not ship the binary.
+	 */
+	private static function projectBinary(string $name): ?string {
+		if (!class_exists('fs', false)) {
+			return null;
+		}
+		$roots = [];
+		foreach (['siteRoot', 'projectRoot'] as $prop) {
+			$root = rtrim((string) (fs::$$prop ?? ''), '/\\');
+			if ($root !== '') {
+				$roots[] = $root;
+			}
+		}
+		foreach (array_unique($roots) as $root) {
+			foreach ([$root . '/var/bin/' . $name, $root . '/bin/' . $name] as $candidate) {
+				if (@is_file($candidate) && @is_executable($candidate)) {
+					return $candidate;
+				}
+			}
+		}
+		return null;
 	}
 
 	/**

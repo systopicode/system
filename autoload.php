@@ -8,6 +8,9 @@
 // The tables of the system — scanned by the ORM on the first Scope.
 \Systopic\Db\Schema\Registry::addTables(__DIR__ . '/src/Tables', 'Systopic\System\Tables');
 
+// ffmpeg/ffprobe lookup, including a copy the project keeps in var/bin.
+require_once __DIR__ . '/lib/ffmpeg.bin.php';
+
 // Right after the database, before the panel tree is built (which already
 // sends an anonymous visitor to the login): a device cookie logs its user in
 // again, a live session's device is checked. Nothing happens without one.

@@ -305,7 +305,8 @@ var contextMenuWW = function (params, event) {
 	this.domWrapper = $("<div class='cms'></div>");
 	this.domObj = $('<div class="HTMLeditorMenu" role="toolbar"></div>');
 	var ul = $('<ul></ul>');
-	if (editorPointer === 'touch' && wysiwygOf(target)) {
+	var mediaBar = target && target.closest && target.closest('img, video, iframe');
+	if (editorPointer === 'touch' && wysiwygOf(target) && !mediaBar) {
 		$('<li><a href="javascript:void(0)" title="Type"><i class="fa-regular fa-keyboard"></i></a></li>')
 			.appendTo(ul).children('a').on('click', startTyping);
 	}

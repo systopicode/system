@@ -249,3 +249,27 @@
 
 	});
 })();
+
+// A gear on the debug frame, top right. It opens Environment, where debug is switched off.
+(function () {
+	var place = function () {
+		if (!document.body || !document.body.classList.contains('cms') || !window.sysdebug || !sysdebug.getShadowContainer) {
+			return;
+		}
+		var match = location.pathname.match(/^(.*\/cms\/)/);
+		var root = sysdebug.getShadowContainer();
+		if (!match || !root || root.querySelector('a.debugSettings')) {
+			return;
+		}
+		var style = document.createElement('style');
+		style.textContent = 'a.debugSettings{position:fixed;top:0;right:0;z-index:1000000002;display:flex;align-items:center;justify-content:center;width:22px;height:16px;box-sizing:content-box;border-top:4px solid #660066;border-radius:0 0 0 10px;background:rgba(0,0,0,.5);color:#fff;text-decoration:none}a.debugSettings:hover{background:#660066;color:#fff}';
+		var link = document.createElement('a');
+		link.className = 'debugSettings';
+		link.href = match[1] + 'settings/environment/';
+		link.title = 'Environment';
+		link.setAttribute('aria-label', 'Environment');
+		link.innerHTML = '<svg viewBox="0 0 24 24" width="12" height="12" aria-hidden="true"><path fill="currentColor" d="M19.4 13a7.8 7.8 0 0 0 .1-1 7.8 7.8 0 0 0-.1-1l2.1-1.6a.5.5 0 0 0 .1-.6l-2-3.5a.5.5 0 0 0-.6-.2l-2.5 1a7.4 7.4 0 0 0-1.7-1l-.4-2.6a.5.5 0 0 0-.5-.4h-4a.5.5 0 0 0-.5.4l-.4 2.6a7.4 7.4 0 0 0-1.7 1l-2.5-1a.5.5 0 0 0-.6.2l-2 3.5a.5.5 0 0 0 .1.6L4.6 11a7.8 7.8 0 0 0 0 2l-2.1 1.6a.5.5 0 0 0-.1.6l2 3.5a.5.5 0 0 0 .6.2l2.5-1a7.4 7.4 0 0 0 1.7 1l.4 2.6a.5.5 0 0 0 .5.4h4a.5.5 0 0 0 .5-.4l.4-2.6a7.4 7.4 0 0 0 1.7-1l2.5 1a.5.5 0 0 0 .6-.2l2-3.5a.5.5 0 0 0-.1-.6L19.4 13ZM12 15.5A3.5 3.5 0 1 1 12 8.5a3.5 3.5 0 0 1 0 7Z"/></svg>';
+		root.append(style, link);
+	};
+	document.readyState === 'loading' ? document.addEventListener('DOMContentLoaded', place, {once: true}) : place();
+})();
