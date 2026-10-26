@@ -87,7 +87,7 @@
     body.tagDragging .layout.tags .tag:has(> .sort.insertAfter.dropTarget)::after{ right: -0.15rem; left: auto; }
 }
 
-@media (max-width: 1024px){
+@media (max-width: 1024px), (orientation: portrait) and (max-width: 1400px) {
     section.cms:has(.layout.tags){
         display: flex;
         flex-direction: column;

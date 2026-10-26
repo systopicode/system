@@ -10,19 +10,21 @@
 	<!-- +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+ META TAGS +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-->
 	<?php
 	$asset = static fn(string $file): string => htmlspecialchars(\Systopic\System\Sys\Packages::panelAssetHref($file), ENT_QUOTES);
-	$themeColor = '#' . \Systopic\System\Sys\Theme::color('cmsMainColor');
+	$brandColor = '#' . \Systopic\System\Sys\Theme::color('cmsMainColor');
+	$onAuth = isset($headHost) && $headHost->name === 'auth';
+	$themeColor = $onAuth ? $brandColor : '#' . \Systopic\System\Sys\Theme::color('cmsBgColor');
 	?>
 	<link rel="icon" type="image/svg+xml" href="<?= $asset('img/icon.svg') ?>">
 	<link rel="apple-touch-icon" sizes="180x180" href="<?= htmlspecialchars(\http::$root . 'cms/icon-180.png', ENT_QUOTES) ?>">
     <link rel="icon" type="image/png" sizes="32x32" href="<?= $asset('img/favicons/favicon-32x32.png') ?>">
     <link rel="icon" type="image/png" sizes="16x16" href="<?= $asset('img/favicons/favicon-16x16.png') ?>">
     <link rel="manifest" href="<?= htmlspecialchars(\Systopic\System\Sys\WebApp::href(), ENT_QUOTES) ?>">
-    <link rel="mask-icon" href="<?= $asset('img/favicons/safari-pinned-tab.svg') ?>" color="<?= $themeColor ?>">
+    <link rel="mask-icon" href="<?= $asset('img/favicons/safari-pinned-tab.svg') ?>" color="<?= $brandColor ?>">
     <link rel="shortcut icon" href="<?= $asset('img/favicons/favicon.ico') ?>">
     <meta name="apple-mobile-web-app-title" content="<?= htmlspecialchars(\Systopic\System\Sys\WebApp::shortName(), ENT_QUOTES) ?>">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="application-name" content="fluxo cms">
     <meta name="description" content="fluxo cms">
     <meta name="author" content="systopic GmbH"/>
@@ -34,7 +36,8 @@
 	<meta itemprop='image' content='<?= $shareImage ?>' />
 
 	<meta name="theme-color" content="<?= $themeColor ?>">
-	<meta name="msapplication-TileColor" content="<?= $themeColor ?>">
+	<meta name="color-scheme" content="<?= $onAuth ? 'dark' : 'light' ?>">
+	<meta name="msapplication-TileColor" content="<?= $brandColor ?>">
 
     <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,interactive-widget=resizes-content">
 

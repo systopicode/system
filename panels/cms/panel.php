@@ -50,12 +50,17 @@ class Panel extends PanelNode {
 		\fs::load('fsUploader');
 		if ($this->path === ['cms']) { // update navi if change
 			$selected = $this->childSelected;
+			$deep = $selected;
+			while ($deep !== null && $deep->childSelected !== null && $deep->childSelected->inNavi) {
+				$deep = $deep->childSelected;
+			}
 			// A lightbox (search) is not a module. Remember the one that was open.
 			if ($selected !== null && $selected->inNavi) {
 				if ($this->state->submoduleName !== $selected->name) {
 					$this->updateView('menu');
 				}
 				$this->state->submoduleName = $selected->name;
+				$this->state->submodulePath = $deep !== null ? $deep->path : $selected->path;
 			}
 			$this->checkReleaseNoteRedirect();
 		}
@@ -211,6 +216,7 @@ class Panel extends PanelNode {
 						'childSelected' => FALSE,
 						'pylonWidth' => 180,
 						'submoduleName' => FALSE,
+						'submodulePath' => [],
 						'dashboard' => [],
 						'dashTabs' => [],
 						'dashEdit' => false,

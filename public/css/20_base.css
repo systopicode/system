@@ -460,12 +460,20 @@ div.cms.message pre{
 }
 
 .cms a.cmsBrand img.brandMark{
+    display: none;
     width: 2.5rem;
     height: 2.5rem;
 }
 
 .cms a.cmsBrand img.brandFull{
     display: none;
+}
+
+/* The signet in a module, only on the desktop. The phone always uses the wordmark. */
+@media (min-width: 1025px) and (orientation: landscape), (min-width: 1401px) {
+    body:not(:has(> main > div.content .dashboard)) > main a.cmsBrand img.brandMark{
+        display: block;
+    }
 }
 
 /* Wortmarke nur auf dem Dashboard. In den Modulen bleibt das Zeichen. */

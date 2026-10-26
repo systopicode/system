@@ -217,6 +217,10 @@ sys.core.server = new function () {
         }
     };
 
+    server.scrollHold = null;
+    server.pendingScroll = null;
+    server.pendingY = 0;
+
     /** The scrolled boxes of the page, each named by the tags and classes on its way down from body. */
     server.scrollPositions = () => {
         var selectorOf = el => {
@@ -226,18 +230,41 @@ sys.core.server = new function () {
             }
             return 'body > ' + parts.join(' > ');
         };
-        return [...document.body.querySelectorAll('*')].filter(el => el.scrollTop > 0)
+        var found = [...document.body.querySelectorAll('*')].filter(el => el.scrollTop > 0)
             .map(el => ({selector: selectorOf(el), top: el.scrollTop}));
+        // The phone sheet scrolls here. The long selector misses it after a redraw.
+        document.querySelectorAll('main > div.content, main > div.content > .flexRow').forEach(function (el) {
+            if (el.scrollTop > 0) {
+                found.push({
+                    selector: el.classList.contains('flexRow') ? 'main > div.content > .flexRow' : 'main > div.content',
+                    top: el.scrollTop
+                });
+            }
+        });
+        return found;
     };
     /** A box built anew gets its place back, also once its images have their height. */
     server.restoreScroll = positions => {
-        var apply = () => positions.forEach(position => {
-            var el = document.querySelector(position.selector);
-            el && el.scrollTop !== position.top && (el.scrollTop = position.top);
-        });
+        var apply = () => {
+            (positions || []).forEach(position => {
+                var el = document.querySelector(position.selector);
+                if (!el || !position.top) {
+                    return;
+                }
+                var min = el.style.minHeight;
+                el.style.minHeight = (position.top + el.clientHeight) + 'px';
+                el.scrollTop = position.top;
+                el.style.minHeight = min;
+            });
+            if (sys.core.server.pendingY) {
+                window.scrollTo(0, sys.core.server.pendingY);
+            }
+        };
         apply();
         requestAnimationFrame(apply);
+        setTimeout(apply, 50);
         setTimeout(apply, 300);
+        setTimeout(apply, 800);
     };
 
     server.startCommands = ['skipRefresh', 'done', 'updateClientData', 'updateDocument'];
@@ -299,7 +326,33 @@ sys.core.server.call = function (data) {
         };
 
         call.fromLightbox = !!document.querySelector('.cmslightbox');
-        call.scrolled = sys.core.server.scrollPositions();
+        var liveScroll = sys.core.server.scrollPositions();
+        var heldScroll = sys.core.server.scrollHold;
+        sys.core.server.scrollHold = null;
+        if (heldScroll && heldScroll.boxes) {
+            heldScroll.boxes.forEach(function (item) {
+                var found = null;
+                for (var i = 0; i < liveScroll.length; i++) {
+                    if (liveScroll[i].selector === item.selector) {
+                        found = liveScroll[i];
+                        break;
+                    }
+                }
+                if (!found) {
+                    liveScroll.push(item);
+                } else if (item.top > found.top) {
+                    found.top = item.top;
+                }
+            });
+            call.scrollY = heldScroll.y || 0;
+            // Only a prompt remembers a place. A real navigation still starts at the top.
+            sys.core.server.pendingScroll = liveScroll;
+            sys.core.server.pendingY = call.scrollY;
+        } else {
+            sys.core.server.pendingScroll = null;
+            sys.core.server.pendingY = 0;
+        }
+        call.scrolled = liveScroll;
         var xhr = new XMLHttpRequest();
         xhr.onreadystatechange = () => {
 
@@ -366,22 +419,17 @@ sys.core.server.call = function (data) {
                                 if (typeof onAfterHisotryPush === "function") {
                                     onAfterHisotryPush(call.url);
                                 }
-                                // opening or closing a lightbox keeps the page under it where it was
-                                if (call.fromLightbox || document.querySelector('.cmslightbox')) {
-                                    sys.core.server.restoreScroll(call.scrolled);
-                                    return;
-                                }
-                                document.body.scrollTop = document.documentElement.scrollTop = 0;
-                                // A command on this page (reorder, save) must not jump to the top.
-                                if (call.url && (call.url.pathChanged || call.url.queryChanged)) {
-                                    document.querySelectorAll('main > div.content, main > div.content *, .authCard main').forEach(function (node) {
-                                        if (node.scrollTop) {
-                                            node.scrollTop = 0;
-                                        }
-                                        if (node.scrollLeft) {
-                                            node.scrollLeft = 0;
-                                        }
+                                // A new page starts at the top. Add, delete and save stay
+                                // where the list was; only a different address scrolls up.
+                                var navigation = call.url && call.url.pathChanged && !call.url.actionChanged;
+                                if (navigation && !call.fromLightbox && !document.querySelector('.cmslightbox')) {
+                                    document.body.scrollTop = document.documentElement.scrollTop = 0;
+                                    document.querySelectorAll('main > div.content, main > div.content *').forEach(function (node) {
+                                        if (node.scrollTop) node.scrollTop = 0;
+                                        if (node.scrollLeft) node.scrollLeft = 0;
                                     });
+                                } else {
+                                    sys.core.server.restoreScroll(call.scrolled);
                                 }
                             }
                         }

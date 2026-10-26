@@ -27,8 +27,10 @@ div.pylon nav > ul li.active > a i{
     color: var(--cmsMainColor);
 }
 
-div.pylon nav > ul li:hover > a{
-    background: var(--cmsHover);
+@media (hover: hover) and (pointer: fine) {
+    div.pylon nav > ul li:hover > a{
+        background: var(--cmsHover);
+    }
 }
 
 div.pylon nav > ul li.active > a{
@@ -40,7 +42,7 @@ div.pylon nav > ul li.active > a{
 div.pylon nav > ul li ul{
     margin: 0.15rem 0 0 0.9rem;
     padding-left: 0.5rem;
-    border-left: 1px solid var(--cmsLine);
+    border-left: 1px solid var(--cmsLineStrong);
 }
 
 div.pylon nav > ul li ul:not(:empty){

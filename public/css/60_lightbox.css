@@ -16,6 +16,44 @@
     flex: 1 1 auto;
 }
 
+/* The phone grip is inserted on every viewport. On the desktop it is a
+   zero-size flex item, and the header gap then shifts the title off the content. */
+.cmslightbox .cmsMobileGrip{
+    display: none;
+}
+
+/* The title box shares the content's left and right edge. The bar sits on
+   that edge instead of making the title a shorter flex item beside it. */
+@media (min-width: 1025px) and (orientation: landscape), (min-width: 1401px){
+    body.cms .cmslightbox > section > header > :is(a, ul.barmenu){
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        right: var(--cmsCardPadding);
+        z-index: 2;
+        display: flex;
+        align-items: center;
+        margin: 0;
+    }
+    body.cms .cmslightbox > section > header > h1{
+        padding-right: 8rem;
+    }
+}
+
+/* Same title as the sheet underneath, on the sheet colour, not a bar of its own. */
+body.cms .cmslightbox > section > header{
+    background: transparent;
+    border-bottom: 0;
+}
+
+body.cms .cmslightbox > section > header h1{
+    margin: 0;
+    font-size: 1.25rem;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    line-height: 1.3;
+}
+
 .cmslightbox section > header > a,
 .cmslightbox section > header > ul{
     margin-left: auto;

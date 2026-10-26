@@ -15,7 +15,7 @@ sys.fitTables.known = new Map();
 // the row is tapped. Desktop stays a table, so a drag never toggles a
 // scrollbar on the parent.
 sys.fitTables.fit = function (box) {
-	var phone = window.matchMedia('(max-width: 1024px)').matches;
+	var phone = window.matchMedia('(max-width: 1024px), (orientation: portrait) and (max-width: 1400px)').matches;
 	box.classList.toggle('stacked', phone);
 	box.classList.toggle('is-foldable', phone);
 	if (!phone) return;
@@ -35,7 +35,7 @@ sys.fitTables.fit = function (box) {
 };
 
 if (!sys.fitTables.media) {
-	sys.fitTables.media = window.matchMedia('(max-width: 1024px)');
+	sys.fitTables.media = window.matchMedia('(max-width: 1024px), (orientation: portrait) and (max-width: 1400px)');
 	sys.fitTables.media.addEventListener('change', function () {
 		document.querySelectorAll('.tableScroll').forEach(sys.fitTables.fit);
 	});
@@ -45,10 +45,15 @@ sys.fitTables.observer = new ResizeObserver(function () {});
 
 document.addEventListener('click', function (event) {
 	var row = event.target.closest && event.target.closest('.tableScroll.stacked.is-foldable > table > tbody > tr');
-	if (!row || !window.matchMedia('(max-width: 1024px)').matches) {
+	if (!row || !window.matchMedia('(max-width: 1024px), (orientation: portrait) and (max-width: 1400px)').matches) {
 		return;
 	}
-	if (event.target.closest('a, button, input, select, textarea, label, [data-drag_type]')) {
+	// The grip is the place that opens the row. Fields and the template
+	// list keep their own tap. A drag in progress must not toggle it.
+	if (document.body.classList.contains('dragging') || document.body.classList.contains('settingDragging')) {
+		return;
+	}
+	if (event.target.closest('a, button, input, select, textarea, label, summary, details')) {
 		return;
 	}
 	row.classList.toggle('is-open');

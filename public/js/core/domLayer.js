@@ -280,22 +280,91 @@
 		 * the document and morphed in around that element, which never leaves
 		 * the document (core/focus.js).
 		 */
+		/**
+		 * The list scrolls in a parent the layer does not replace. Removing the
+		 * old nodes collapses that parent, the browser clamps it to the top,
+		 * and the new nodes then open there. Hold its height across the swap
+		 * and put the place back in the same turn, from the position taken
+		 * before the prompt.
+		 */
+		layer.holdScroll = () => {
+			var pins = [];
+			var seen = new Set();
+			var saved = (window.sys && sys.core && sys.core.server && sys.core.server.pendingScroll) || [];
+			layer.rootNodes.forEach(node => {
+				var el = node && node.parentElement;
+				while (el && el !== document.body && el !== document.documentElement) {
+					if (seen.has(el)) {
+						break;
+					}
+					seen.add(el);
+					var oy = getComputedStyle(el).overflowY;
+					var top = el.scrollTop;
+					if (oy === 'auto' || oy === 'scroll' || top > 0) {
+						saved.forEach(item => {
+							try {
+								if (el.matches(item.selector) && item.top > top) {
+									top = item.top;
+								}
+							} catch (error) {}
+						});
+						pins.push({el: el, top: top, min: el.style.minHeight});
+						if (top > 0) {
+							el.style.minHeight = (top + el.clientHeight) + 'px';
+						}
+					}
+					el = el.parentElement;
+				}
+			});
+			return () => {
+				pins.forEach(pin => {
+					if (!pin.el.isConnected) {
+						return;
+					}
+					pin.el.style.minHeight = pin.min;
+					if (pin.top) {
+						pin.el.scrollTop = pin.top;
+					}
+				});
+				saved.forEach(item => {
+					var el;
+					try {
+						el = document.querySelector(item.selector);
+					} catch (error) {
+						return;
+					}
+					if (!el || !item.top) {
+						return;
+					}
+					var min = el.style.minHeight;
+					el.style.minHeight = (item.top + el.clientHeight) + 'px';
+					el.scrollTop = item.top;
+					el.style.minHeight = min;
+				});
+			};
+		};
+
 		layer.rebuild = layerData => {
 			var focused = focusPath.focused();
 			var offsets = layer.scrollOffsets();
-			if (!focused || !layer.holds(focused)) {
-				var positionNode = layer.shiftOutRootNodes();
-				layer.createDomObjects(layerData);
-				layer.addToLibnode();
-				layer.appendDomObjects(positionNode);
-				layer.removeOutRootNodes();
-				layer.children.forEach(child => child.removeRootNodes());
-				layer.children = [];
-				layer.createChildren(layerData);
-				layer.applyScrollOffsets(offsets);
-				return;
+			var release = layer.holdScroll();
+			try {
+				if (!focused || !layer.holds(focused)) {
+					var positionNode = layer.shiftOutRootNodes();
+					layer.createDomObjects(layerData);
+					layer.addToLibnode();
+					layer.appendDomObjects(positionNode);
+					layer.removeOutRootNodes();
+					layer.children.forEach(child => child.removeRootNodes());
+					layer.children = [];
+					layer.createChildren(layerData);
+					layer.applyScrollOffsets(offsets);
+					return;
+				}
+				layer.rebuildAround(focused, layerData, offsets);
+			} finally {
+				release();
 			}
-			layer.rebuildAround(focused, layerData, offsets);
 		};
 
 		layer.rebuildAround = (focused, layerData, offsets) => {

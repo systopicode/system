@@ -100,34 +100,62 @@
 					hits[index].scrollIntoView({block: 'nearest'});
 				}
 			});
-			// iOS opens the keyboard only for a focus within the tap, the search field comes
-			// later by ajax: a stand-in field takes the focus and hands it on. Outside body,
-			// where the renderer does not clear it away.
-			document.addEventListener('click', function (e) {
-				var navLink = e.target.closest && e.target.closest('main nav a[href]');
-				if (navLink && e.detail !== 0 && !navLink.classList.contains('cmsSearchLink')) {
-					navLink.blur();
+			// iOS keeps the keyboard only for a focus inside the tap. pointerdown is
+			// that tap; the real field arrives with the ajax answer.
+			var searchProxy = null;
+			var searchHand = 0;
+			var handSearch = function () {
+				if (!searchProxy) {
+					searchProxy = document.createElement('input');
+					searchProxy.setAttribute('aria-hidden', 'true');
+					searchProxy.style.cssText = 'position:fixed;top:0;left:0;width:1px;height:1px;opacity:0;font-size:16px;border:0;padding:0';
+					document.documentElement.appendChild(searchProxy);
 				}
-				if (!e.target.closest || !e.target.closest('a.cmsSearchLink')) {
-					return;
-				}
-				var proxy = document.createElement('input');
-				proxy.setAttribute('aria-hidden', 'true');
-				proxy.style.cssText = 'position:fixed;top:0;left:0;width:1px;height:1px;opacity:0;font-size:16px;border:0;padding:0';
-				document.documentElement.appendChild(proxy);
-				proxy.focus({preventScroll: true});
+				searchProxy.focus({preventScroll: true});
+				clearInterval(searchHand);
 				var tries = 0;
-				var handOn = setInterval(function () {
+				searchHand = setInterval(function () {
 					var field = document.querySelector('div.cmsFind input[name="query"]');
-					if (field) {
-						field.focus({preventScroll: true});
+					if (field) field.focus({preventScroll: true});
+					if ((field && document.activeElement === field) || ++tries > 60) {
+						clearInterval(searchHand);
+						searchProxy.remove();
+						searchProxy = null;
 					}
-					if ((field && document.activeElement === field) || ++tries > 40) {
-						clearInterval(handOn);
-						proxy.remove();
-					}
-				}, 50);
+				}, 40);
+			};
+			document.addEventListener('pointerdown', function (e) {
+				var link = e.target.closest && e.target.closest('a.cmsSearchLink');
+				if (!link) return;
+				handSearch();
 			}, true);
+			// The header link would take the focus the stand-in just opened.
+			document.addEventListener('focusin', function (e) {
+				if (!searchProxy || !e.target.closest || !e.target.closest('a.cmsSearchLink')) return;
+				searchProxy.focus({preventScroll: true});
+			}, true);
+			// A click would focus the link and drop the keyboard the stand-in just opened.
+			document.addEventListener('mousedown', function (e) {
+				if (e.target.closest && e.target.closest('a.cmsSearchLink')) e.preventDefault();
+			}, true);
+			document.addEventListener('click', function (e) {
+				var navLink = e.target.closest && e.target.closest('main > .main nav a[href]');
+				if (!navLink || navLink.classList.contains('cmsSearchLink')) return;
+				if (e.detail !== 0) navLink.blur();
+				document.querySelectorAll('div.pylon nav a[href]').forEach(function (link) {
+					if (document.activeElement === link) link.blur();
+				});
+			}, true);
+			// A tap leaves the keyboard focus on the link. That reads as a second
+			// selection after the main nav has moved on.
+			var blurStaleNav = function () {
+				var node = document.activeElement;
+				var link = node && node.closest && node.closest('nav a[href]');
+				if (!link || link.classList.contains('cmsSearchLink')) return;
+				var item = link.parentElement;
+				if (!item || !item.classList.contains('active')) link.blur();
+			};
+			document.addEventListener('cms:rendered', blurStaleNav);
 
 			// The list leaves the row while it is open. The row's transform would
 			// keep it under the next card, and the card clips anything inside it.
@@ -142,6 +170,16 @@
 				menu.picker = picker;
 				picker.toggleAttribute('data-some', !!menu.querySelector('input:checked'));
 				menu.parentElement !== document.body && document.body.appendChild(menu);
+				var phone = window.matchMedia('(max-width: 1024px), (orientation: portrait) and (max-width: 1400px)').matches;
+				menu.classList.toggle('is-sheet', phone);
+				if (phone) {
+					menu.style.left = '0';
+					menu.style.right = '0';
+					menu.style.top = 'auto';
+					menu.style.bottom = '0';
+					menu.style.maxHeight = 'min(80lvh, calc(100lvh - env(safe-area-inset-top) - 12px))';
+					return;
+				}
 				var rect = summary.getBoundingClientRect();
 				var gap = 3;
 				var below = window.innerHeight - rect.bottom - gap - 8;
@@ -158,14 +196,12 @@
 				if (!menu) {
 					return;
 				}
+				menu.classList.remove('is-sheet');
 				menu.style.top = menu.style.bottom = menu.style.left = menu.style.right = menu.style.maxHeight = '';
 				picker.isConnected && menu.parentElement !== picker && picker.appendChild(menu);
 			};
-			document.addEventListener('toggle', function (e) {
-				var picker = e.target;
-				if (!picker.matches || !picker.matches('details.projectTemplates')) {
-					return;
-				}
+			var syncTemplateMenu = function (picker) {
+				if (!picker || !picker.matches || !picker.matches('details.projectTemplates')) return;
 				if (!picker.open) {
 					stashTemplateMenu(picker);
 					return;
@@ -174,7 +210,18 @@
 					other !== picker && other.removeAttribute('open');
 				});
 				placeTemplateMenu(picker);
+			};
+			document.addEventListener('toggle', function (e) {
+				syncTemplateMenu(e.target);
 			}, true);
+			// Some taps toggle the row and never deliver toggle. Place the menu
+			// once the details has settled.
+			document.addEventListener('click', function (e) {
+				var summary = e.target.closest && e.target.closest('details.projectTemplates > summary');
+				if (!summary) return;
+				var picker = summary.parentElement;
+				requestAnimationFrame(function () { syncTemplateMenu(picker); });
+			});
 			document.addEventListener('click', function (e) {
 				document.querySelectorAll('details.projectTemplates[open]').forEach(function (picker) {
 					var menu = templateMenu(picker);

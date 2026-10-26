@@ -369,6 +369,24 @@ class PanelTree implements RenderTree
             return [];
         }
 
+        // Search is a dialog. Its name must not become a body class, or the
+        // page under it is restyled as if it were another module.
+        if ($selected->name === 'search' && $selected->parent !== null) {
+            $remembered = $selected->parent->state->submodulePath ?? [];
+            if (is_array($remembered) && count($remembered) > 1) {
+                $classes = [];
+                foreach ($remembered as $segment) {
+                    $segment = (string) $segment;
+                    if ($segment !== '') {
+                        $classes[] = $segment;
+                    }
+                }
+                $classes[] = 'main';
+                return array_values(array_unique($classes));
+            }
+            return ['cms', 'home'];
+        }
+
         $classes = [];
         foreach ($selected->path as $segment) {
             $segment = (string) $segment;

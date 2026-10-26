@@ -49,7 +49,18 @@ $sheet = !$branchOnly
 	);
 ?>
 
-<body class="<?= 'CMS_VERSIONDATE' ?> <?= implode(' ', $this->path) ?> <?= 'system' ?>"<?= $sheet ? ' data-cms-window="edit"' : '' ?>>
+<?php
+// Search is only the dialog. The shell keeps the module that was open,
+// so the pylon and the page do not switch to another one.
+$shellPath = $this->path;
+if ($behind !== '') {
+	$remembered = $this->state->submodulePath ?? [];
+	if (is_array($remembered) && $remembered !== []) {
+		$shellPath = $remembered;
+	}
+}
+?>
+<body class="<?= 'CMS_VERSIONDATE' ?> <?= implode(' ', $shellPath) ?> <?= 'system' ?>"<?= $sheet ? ' data-cms-window="edit"' : '' ?>>
 	<header class="cmsMobileHeader cms">
 		<button type="button" data-cms-window="menu" aria-label="Open navigation" aria-expanded="false"><i class="fa-regular fa-bars"></i></button>
 		<a class="cmsMobileDashboardBrand" href="<?= http::$root ?>cms/" aria-label="Dashboard"><img src="<?= \Systopic\System\Sys\Packages::panelAssetHref('img/logo-horizontal-dark.png') ?>" alt="fluxo"></a>
@@ -118,13 +129,34 @@ $sheet = !$branchOnly
 
 			if ($home) {
 				$this->withView('home');
-			} elseif ($behind === '') {
+			} elseif ($behind !== '') {
+				// Pages stays out: its preview runs the public templates.
+				// Every other module is opened for real. A bare include runs
+				// the views in the wrong folder and the page stays empty.
+				if ($behind !== 'pages') {
+					$path = is_array($this->state->submodulePath ?? null) ? array_values($this->state->submodulePath) : [];
+					if ($path !== [] && ($path[0] ?? '') === 'cms') {
+						array_shift($path);
+					}
+					if ($path === [] || $path[0] !== $behind) {
+						$path = [$behind];
+					}
+					$draw = function ($panel, array $rest) use (&$draw) {
+						if ($rest === []) {
+							$panel->withView('main');
+							return;
+						}
+						$name = array_shift($rest);
+						$panel->withChild($name, 'main', function ($child) use ($rest, $draw) {
+							$draw($child, $rest);
+						});
+					};
+					$draw($this, $path);
+				}
+			} else {
 				$surface('main');
 			}
 
-			// Search keeps the module list behind the dialog. The page
-			// preview, its sidebar and the media footer do not exist for
-			// that URL and only print include warnings.
 			if ($behind === '') {
 				$surface('footer');
 			}
@@ -139,7 +171,7 @@ $sheet = !$branchOnly
 	</main>
 	<footer class="cmsStatusbar cms">
 		<span class="cmsJobs" hidden></span>
-		<?php $surface('status'); ?>
+		<?php if ($behind === '') { $surface('status'); } ?>
 		<span class="cmsStage <?= htmlspecialchars((string) STAGE, ENT_QUOTES, 'UTF-8') ?>"><?= htmlspecialchars((string) STAGE, ENT_QUOTES, 'UTF-8') ?></span>
 	</footer>
 	<?php

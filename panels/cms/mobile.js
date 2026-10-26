@@ -8,7 +8,8 @@ var previousMobile = window.cmsMobile;
 previousMobile?.destroy();
 var mobileEvents = new AbortController();
 var mobileState = window.cmsMobile = {active: previousMobile?.active || 'base'};
-var mobile = matchMedia('(max-width: 1024px)');
+/* Phone, and a tablet held upright. A tablet on its side stays the desktop. */
+var mobile = matchMedia('(max-width: 1024px), (orientation: portrait) and (max-width: 1400px)');
 var activeWindow = mobileState.active;
 var returnFocus = previousMobile?.returnFocus || null;
 var previousWindow = previousMobile?.previousWindow || 'base';
@@ -61,23 +62,31 @@ function closeMore() {
 	if (typeof closeAllMenus === 'function') closeAllMenus();
 }
 function chromeColor() {
-	// The address bar takes the colour of whatever meets the bottom edge:
-	// the white tree, a white dialog, or the gray page. The menu is the dark bar.
-	var pylon = document.querySelector('main > div.pylon');
-	var pylonOn = root.dataset.cmsWindow === 'base' && pylon && getComputedStyle(pylon).display !== 'none';
-	var find = !!document.querySelector('.cmslightbox.cmsFind');
-	var dialog = document.querySelector('.cmslightbox:not(.cmsFind)');
-	var dark = !find && (root.dataset.cmsWindow === 'menu' || !!document.querySelector('.authCard'));
-	// Search is the gray page, whether it was opened from the top bar or the menu.
-	var name = find ? '--cmsBgColor' : (dark ? '--cmsMainColor' : (dialog || pylonOn ? '--cmsCanvas' : '--cmsBgColor'));
-	var color = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
-	if (!color) return;
-	// The address bar reads the body, not the root. A white tree on a gray
-	// body leaves a gray strip under the toolbar.
+	// The bar, the page and the overscroll are one colour, written together.
+	// A dialog on top does not get a colour of its own.
+	if (!mobile.matches || !document.body) return;
+	var petrol = document.body.dataset.cmsWindow === 'menu' || !!document.querySelector('.authCard');
+	var color = petrol ? '#1f3a45' : '#f0f3f4';
+	var node = document.getElementById('cmsChromeColor');
+	if (!node) {
+		node = document.createElement('style');
+		node.id = 'cmsChromeColor';
+		document.head.appendChild(node);
+	}
+	node.textContent = 'html, body { background: ' + color + ' !important; color-scheme: ' + (petrol ? 'dark' : 'light') + '; }';
 	document.documentElement.style.background = color;
 	document.body.style.background = color;
+	var edge = document.getElementById('cmsChromeEdge');
+	if (!edge) {
+		edge = document.createElement('div');
+		edge.id = 'cmsChromeEdge';
+		edge.setAttribute('aria-hidden', 'true');
+		edge.style.cssText = 'position:fixed;left:0;right:0;bottom:0;height:max(env(safe-area-inset-bottom), 34px);pointer-events:none;z-index:1';
+		document.body.appendChild(edge);
+	}
+	edge.style.background = color;
 	var meta = document.querySelector('meta[name="theme-color"]');
-	if (meta) meta.setAttribute('content', color);
+	if (meta && meta.getAttribute('content') !== color) meta.setAttribute('content', color);
 }
 function showWindow(name) {
 	if (!mobile.matches) return;
@@ -499,6 +508,12 @@ document.addEventListener('click', function (event) {
 		button.hasAttribute('data-cms-close') ? closeWindow() : (button.dataset.cmsWindow === 'menu' && activeWindow === 'menu' ? closeWindow() : showWindow(button.dataset.cmsWindow));
 		return;
 	}
+	if (event.target.closest('.cmsMobileHeader a.cmsSearchLink')) {
+		queueMicrotask(function () {
+			var field = document.querySelector('.cmslightbox.cmsFind input[name="query"]');
+			if (field) field.focus({preventScroll: true});
+		});
+	}
 	if (event.target.closest('main > .main a[href]:not([target]):not([download])')) {
 		// The link owns navigation. Closing the menu in this same click makes
 		// it inert, and the browser then drops the tap. Close on the next turn.
@@ -506,6 +521,8 @@ document.addEventListener('click', function (event) {
 		queueMicrotask(function () {
 			activeWindow = 'base';
 			syncMobile();
+			var field = document.querySelector('.cmslightbox.cmsFind input[name="query"]');
+			if (field) field.focus({preventScroll: true});
 		});
 	}
 	// Only a selection opens Edit; folds, rename, context actions and drags keep the tree.
@@ -568,7 +585,8 @@ function shutSheet(sheet) {
 		sliding = false;
 		if (lightbox) {
 			var live = document.querySelector('.cmslightbox') || lightbox;
-			live.querySelector('header a[href]')?.click();
+			// The first link can be a download. Close is the plain ajax link.
+			(live.querySelector('header a.ajax[href]') || live.querySelector('header a[href]:not([download])'))?.click();
 			return;
 		}
 		if (sheet.matches && sheet.matches('ul.contextmenu') && typeof closeAllMenus === 'function') {

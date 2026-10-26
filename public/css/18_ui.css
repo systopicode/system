@@ -68,10 +68,11 @@
 	position: fixed;
 	z-index: 100000;
 	top: 0;
-	left: 0;
-	right: 0;
-	height: 6px;
+	left: 10px;
+	right: 10px;
+	height: 3px;
 	overflow: hidden;
+	border-radius: 999px;
 
 	&[hidden] {
 		display: none !important;
@@ -85,6 +86,7 @@
 		width: 35%;
 		height: 100%;
 		border: 0;
+		border-radius: 999px;
 		box-shadow: none;
 		animation: cmsBusy 0.8s ease-in-out infinite;
 	}
@@ -102,6 +104,13 @@
 
 html.nprogress-busy{
 	cursor:progress;
+}
+
+@media (max-width: 1024px), (orientation: portrait) and (max-width: 1400px) {
+	#nprogress {
+		top: env(safe-area-inset-top, 0px);
+		height: 2px;
+	}
 }
 
 /* the button or tile a job (upload) started from: its progress along the bottom edge (gui/jobs.js) */
@@ -179,8 +188,13 @@ div.imageEditorScrim {
 	to { outline: 3px solid color-mix(in srgb, var(--cmsHighlightColor) 60%, transparent); outline-offset: 2px; }
 }
 
-/* A row is held by its grip: the whole row shows it (a tr itself takes
-   no shadow or transform in Safari, its cells take a background) */
+/* A row is held by its grip. The ring follows the card's radius.
+   An outline with an offset sits off the rounded edge and reads as a second border. */
+.cms tr:has(> td > .pressing),
+.cms tr:has(> td > .longPressed) {
+	outline: none;
+	box-shadow: 0 0 0 2px var(--cmsHighlightColor);
+}
 .cms td > :is(.pressing, .longPressed) {
 	animation: none;
 	outline: none;
@@ -208,7 +222,7 @@ tr:has(> td > .pressing) > td {
 /* fixed: a helper near the edge must not widen the page (scrollbar) */
 .draghelper {
 	position: fixed;
-	z-index: 1000;
+	z-index: 12000;
 	box-sizing: border-box;
 	pointer-events: none;
 	border: 2px dashed var(--cmsHighlightColor);
@@ -216,6 +230,7 @@ tr:has(> td > .pressing) > td {
 	&.line {
 		border: none;
 		background: var(--cmsHighlightColor);
+		transition: none;
 	}
 	&.accept {
 		transition-property: left, top, width, height, border-radius;

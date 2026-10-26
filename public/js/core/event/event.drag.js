@@ -300,6 +300,20 @@ sys.core.event.drag = function (event, hooks) { // 2. param raus
 		var style = getComputedStyle(obj);
 		var px = name => zone ? parseFloat(style[name]) || 0 : 0;
 		var rect = obj.getBoundingClientRect();
+		// A vertical gap is a line. Its padding is only the area the finger hits.
+		// A column end on a phone is the same line, not a box.
+		if ((zone && obj.classList.contains('v') && !obj.classList.contains('insertInto')) || obj.classList.contains('dashDrop')) {
+			var after = obj.classList.contains('insertAfter');
+			var edge = after ? rect.bottom - px('paddingBottom') : rect.top + px('paddingTop');
+			return {
+				left: rect.left + 12,
+				top: edge - 1,
+				width: Math.max(0, rect.width - 24),
+				height: 2,
+				line: true,
+				borderRadius: 1
+			};
+		}
 		var pad = drag.helperPadding;
 		var box = {
 			left: rect.left + px('borderLeftWidth') + px('paddingLeft'),
@@ -338,6 +352,14 @@ sys.core.event.drag = function (event, hooks) { // 2. param raus
 		var acceptbleClasses = drag.dropObj.dataset.drop_accept.split(' ');
 		if (!acceptbleClasses.includes(drag.type)) {
 			return false;
+		}
+		// A settings row stays in its own group.
+		if (drag.type === 'setting') {
+			var fromId = drag.dragObj.dataset.id || '';
+			var toId = drag.dropObj.dataset.id || '';
+			if (fromId !== '' && toId !== '' && fromId !== toId) {
+				return false;
+			}
 		}
 		// Drop-Zone der gleichen Gruppe nicht als Ziel (nur andere Gruppen)
 		var dragGroup = drag.dragObj.dataset.media_group || drag.dragObj.dataset.mediaGroup;

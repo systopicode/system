@@ -37,10 +37,19 @@ final class ProjectForm
             $scalars = array_values(array_filter($groups, static fn(Group $group): bool => $group->shape === 'scalar'));
             $collections = array_values(array_filter($groups, static fn(Group $group): bool => $group->shape !== 'scalar'));
             $only = $scalars === [] && count($collections) === 1;
+            $headerButton = null;
+            if ($only) {
+                $headerButton = $collections[0];
+            } elseif ($collections !== []) {
+                $firstHeading = self::human($collections[0]->label);
+                if (strcasecmp($firstHeading, (string) $name) === 0) {
+                    $headerButton = $collections[0];
+                }
+            }
             echo '<section class="widget">';
             echo '<header><h2>' . $e($name) . '</h2>';
-            if ($only) {
-                self::addButton($which, $collections[0]);
+            if ($headerButton !== null) {
+                self::addButton($which, $headerButton);
             }
             echo '</header>';
             if ($scalars !== []) {
@@ -53,7 +62,7 @@ final class ProjectForm
                 self::scalarTable($which, $scalars, $languages);
             }
             foreach ($collections as $group) {
-                if (!$only) {
+                if (!$only && $group !== $headerButton) {
                     $heading = self::human($group->label);
                     $repeat = strcasecmp($heading, (string) $name) === 0;
                     echo '<div class="projectBar">';

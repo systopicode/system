@@ -149,7 +149,7 @@ body.cms .dashHead .dashHeadMore{
 	margin: 0;
 }
 
-@media (max-width: 1024px){
+@media (max-width: 1024px), (orientation: portrait) and (max-width: 1400px) {
 	.flexColumn:has(> .dashboard),
 	.dashboard{
 		max-width: 100%;
@@ -711,4 +711,48 @@ body.cms .dashboard .dashTabs button:hover{
 @media (pointer: coarse){
     .dashboard { padding: 1.25rem 1rem; }
     .dashboard .dashWidgets { column-gap: 1rem; row-gap: 1rem; }
+}
+
+/* The phone rule makes a heading a block so it can ellipsis, and the icon
+   then sits on the word. Flex keeps the same gap the card headers use. */
+@media (max-width: 1024px), (orientation: portrait) and (max-width: 1400px) {
+    .dashboard .dashWidget > header h2{
+        display: flex;
+        align-items: center;
+        gap: 0.65rem;
+    }
+    .dashboard .dashWidget > header h2 i{
+        flex: 0 0 auto;
+    }
+    body.widgetDragging .dashboard .dashWidget{
+        overflow: visible;
+    }
+    body.widgetDragging .dashboard .dashDrop{
+        display: block;
+        position: relative;
+        flex: 0 0 1.25rem;
+        margin: 0;
+        border: 0;
+        background: none;
+    }
+    /* One place between two widgets. insertAfter of the one above and
+       insertBefore of the one below are the same gap; only the latter draws. */
+    body.widgetDragging .dashboard .dashWidget > div.sort.v.insertAfter{
+        display: none;
+    }
+    body.widgetDragging .dashboard .dashWidget > div.sort.v.insertBefore.dropTarget::after,
+    body.widgetDragging .dashboard .dashDrop.dropTarget::before{
+        content: "";
+        position: absolute;
+        left: 12px;
+        right: 12px;
+        top: 0;
+        height: 2px;
+        border-radius: 1px;
+        background: var(--cmsHighlightColor);
+        pointer-events: none;
+    }
+    body.widgetDragging > .draghelper{
+        visibility: hidden;
+    }
 }

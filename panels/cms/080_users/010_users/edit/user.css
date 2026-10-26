@@ -1,9 +1,14 @@
 .cmslightbox .userTabs{
     display: flex;
     gap: 0.25rem 1.25rem;
+    margin: 0;
     padding: 0 1.25rem;
     border-bottom: 1px solid var(--cmsLine);
     overflow-x: auto;
+}
+
+body.cms .cmslightbox > section > .userTabs + main{
+    padding-top: 1.35rem;
 }
 
 body.cms .cmslightbox .userTabs button{

@@ -271,8 +271,10 @@ main > div.main nav ul li a{
     transition: background-color .15s;
 }
 
-main > div.main nav ul li a:hover{
-    background: var(--cmsOnDark);
+@media (hover: hover) and (pointer: fine) {
+    main > div.main nav ul li a:hover{
+        background: var(--cmsOnDark);
+    }
 }
 
 main > div.main nav ul li a span{

@@ -26,7 +26,7 @@ body.cms:has(.authCard) {
 		display: flex;
 		flex-direction: column;
 		width: min(100%, 26rem);
-		height: min(38rem, calc(100dvh - 8rem));
+		height: min(38rem, calc(100lvh - 8rem));
 		padding: 2.25rem 2rem 1.75rem;
 		background: var(--cmsCanvas);
 		border-radius: calc(var(--cmsRadius) + 10px);
@@ -81,10 +81,37 @@ body.cms:has(.authCard) {
 			font-size: 0.9375rem;
 		}
 
-		main {
+		main:not(.authText) {
 			flex: 1 1 auto;
 			min-height: 0;
 			overflow: auto;
+		}
+
+		/* The link is the foot of the card. Long text scrolls above it.
+		   lvh stays put when the keyboard opens, so the card does not collapse. */
+		&:has(main.authText) {
+			height: auto;
+			max-height: min(34rem, calc(100lvh - 11rem));
+		}
+
+		main.authText {
+			display: flex;
+			flex-direction: column;
+			flex: 1 1 auto;
+			min-height: 0;
+			overflow: hidden;
+		}
+
+		main.authText > .authScroll {
+			flex: 1 1 auto;
+			min-height: 0;
+			overflow: auto;
+		}
+
+		main.authText > .authLinks {
+			position: static;
+			flex: 0 0 auto;
+			margin-top: auto;
 		}
 
 		main > .row {
@@ -225,8 +252,7 @@ body.cms:has(.authCard) {
 
 		div.authCard {
 			height: auto;
-			max-height: none;
-			min-height: min(32rem, calc(100lvh - 6rem));
+			max-height: min(38rem, calc(100lvh - 6rem));
 			overflow: hidden;
 			flex-shrink: 0;
 			padding: 1.5rem 1.15rem 1.25rem;
@@ -235,7 +261,7 @@ body.cms:has(.authCard) {
 				font-size: 1.5rem;
 			}
 
-			main {
+			main:not(.authText) {
 				overflow: auto;
 				min-height: 0;
 			}
@@ -269,3 +295,53 @@ body.cms:has(.authCard) {
 }
 
 .authCard .authPasswordAlternative { margin: 1rem 0 !important; color: var(--cmsMuted); text-align: center; }
+
+/* Long texts scroll inside the card. "Back to sign in" stays the foot of the
+   card. lvh does not shrink when the keyboard opens, so Android does not
+   collapse the card. */
+div.authCard:has(main.authText) {
+	display: flex;
+	flex-direction: column;
+	height: auto;
+	max-height: min(38rem, calc(100lvh - 6rem));
+}
+
+div.authCard main.authText {
+	flex: 1 1 auto;
+	min-height: 0;
+	overflow: hidden;
+}
+
+div.authCard main.authText > .authScroll {
+	flex: 1 1 auto;
+	min-height: 0;
+	overflow: auto;
+}
+
+div.authCard main.authText > .authLinks {
+	position: static;
+	flex: 0 0 auto;
+	margin: 0;
+}
+
+/* The top of the gradient sits in the safe area, under the status bar.
+   A negative margin pulls the body up by that inset; the padding puts the
+   card back where it was. */
+@media (max-width: 1024px), (orientation: portrait) and (max-width: 1400px) {
+	html:has(.authCard) {
+		background: var(--cmsMainColor);
+		overflow-x: clip;
+		overflow-y: auto;
+	}
+	body.cms:has(.authCard) {
+		margin-top: calc(-1 * env(safe-area-inset-top, 0px));
+		padding-top: calc(env(safe-area-inset-top, 0px) + 1.25rem);
+		padding-right: 1rem;
+		padding-bottom: max(1.25rem, env(safe-area-inset-bottom, 0px));
+		padding-left: 1rem;
+		min-height: calc(100lvh + env(safe-area-inset-top, 0px));
+		background:
+			radial-gradient(40rem 24rem at 15% 0, color-mix(in srgb, var(--cmsHighlightColor) 28%, transparent), transparent 70%),
+			var(--cmsMainColor);
+	}
+}

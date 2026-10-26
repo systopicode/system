@@ -116,8 +116,19 @@
 			var data = event.data.dataset;
 			if (data.action) {
 				var query = data.confirm || "run '" + data.action + "' Are you sure?";
-				if (confirm(query)) {
+				// Taken before the prompt. iOS scrolls to the top when it closes,
+				// and that can land after confirm() has already returned.
+				sys.core.server.scrollHold = {
+					y: window.scrollY || document.documentElement.scrollTop || 0,
+					boxes: sys.core.server.scrollPositions()
+				};
+				var yes = confirm(query);
+				sys.core.server.restoreScroll(sys.core.server.scrollHold.boxes);
+				window.scrollTo(0, sys.core.server.scrollHold.y);
+				if (yes) {
 					event.executeAction(data.action);
+				} else {
+					sys.core.server.scrollHold = null;
 				}
 			} else {
 				l('no action specified in data-action');
