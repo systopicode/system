@@ -53,6 +53,8 @@ class Panel extends PanelNode {
 				$this->updateView('menu');
 			}
 			$this->state->submoduleName = $this->childSelected->name ?? FALSE;
+			// "Vorschau" follows the open record, also within one panel (preview.tpl.php)
+			$this->updateView('preview');
 
 			$this->checkReleaseNoteRedirect();
 		}
