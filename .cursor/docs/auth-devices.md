@@ -24,6 +24,13 @@ Entscheidungen: [devices-auth.plan.md](../plans/devices-auth.plan.md).
   - Ohne Session meldet das Cookie seinen User an.
   - Mit Session wird das Gerät alle 60 s geprüft. Ist es gesperrt oder
     abgelaufen, endet die Session.
+  - **Mit relay sofort:** `Devices::revoke()`/`revokeAllOf()` schicken
+    `{"op": "logout"}` in den Gerätekanal (`Relay::deviceTopic()`,
+    Hub-Namespace `device`). Jede offene Seite des Geräts (App, CMS, Screen)
+    fragt dann mit `X-Session-Check` nach (erzwingt die Prüfung) und lädt neu:
+    Anmeldung. Ohne relay bleibt es bei den 60 s bzw. dem nächsten Request.
+- Jeder Login legt ein Gerät an, auch der im CMS (Passwort, Code, Passkey) -
+  sonst stünde die Session in keiner Liste, und keine Sperre erreichte sie.
 - Das Secret rotiert höchstens einmal am Tag. Das alte bleibt 60 s gültig
   (parallele Requests). Kommt es danach wieder, war das Cookie kopiert →
   das Gerät wird gesperrt (`revoked_reason = reuse`).
