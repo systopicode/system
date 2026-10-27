@@ -21,14 +21,16 @@ und die übrigen Projekte (noch nicht).
 ## Pull und Push: immer alle Repos
 
 **Regel des Benutzers (2026-10-27):** Wer pullt oder pusht, nimmt alle Repos
-mit, nicht nur das, in dem gerade gearbeitet wird. Ein Projekt hängt an
-`system`, `db`, `cms` und `relay`, und ein halb aktualisierter Stand passt
-nicht zusammen.
+**des aktuellen Workspace** mit, nicht nur das, in dem gerade gearbeitet
+wird. Ein Projekt hängt an seinen Paketen, und ein halb aktualisierter Stand
+passt nicht zusammen.
 
-- **Welche Repos:** jeder Ordner unter `packages/*` und `projects/*` mit
-  `.git`, also nicht nur die Tabelle oben. Wurzel ist die des Arbeitsplatzes
-  (`V:\www` auf DEV.ojoffice, `C:\laragon\www` anderswo). Die Schleife unten
-  findet die Repos selbst.
+- **Welche Repos:** die Ordner des Workspace, die ein `.git` haben, und nicht
+  alles unter `packages/`. Für Claude sind das das Arbeitsverzeichnis und die
+  „Additional working directories“. Die Quelle ist
+  `<Wurzel>\ide\cursor.files\<name>.code-workspace` (`"path"`-Einträge). So
+  gehört `cms` zu `spaceticker.app.src`, aber nicht zu `spaceticker.app`.
+  Ordner ohne `.git` (z. B. `tools`) überspringen.
 - **Pull:** in jedem Repo erst `fetch`, dann `status`. Ohne lokale Änderungen
   geht `pull --ff-only`. Mit lokalen Änderungen siehe
   [Nach einem Sync](#nach-einem-sync-git-nachziehen).
@@ -96,11 +98,12 @@ git status -sb                    # sauber
   gibt es keine gemeinsame Basis mehr. Der `reset` ist dann trotzdem richtig.
   Der alte lokale Commit bleibt nur im Reflog.
 
-Alle Repos auf einmal (Git-Bash; die Wurzel ist die des Arbeitsplatzes):
+Alle Repos eines Workspace auf einmal (Git-Bash, Wurzel des Arbeitsplatzes):
 
 ```bash
 cd /v/www                          # DEV.ojoffice; sonst /c/laragon/www
-for d in packages/* projects/*; do
+ws=ide/cursor.files/spaceticker.app.code-workspace
+for d in $(grep -o '"path": *"[^"]*"' $ws | sed 's/.*"\.\.\/\.\.\/\(.*\)"/\1/'); do
   [ -d "$d/.git" ] || continue
   git -C $d fetch -q
   echo "== $d $(git -C $d status -sb | head -1)  lokal geändert: $(git -C $d status --porcelain | wc -l)"
