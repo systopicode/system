@@ -18,6 +18,27 @@ Pakete sind öffentlich, Projekte privat. Kein Repo haben `packages/tools`
 (Entwicklerwerkzeug, `sync.php` kommt per Rollout), `packages/system-legacy`
 und die übrigen Projekte (noch nicht).
 
+## Pull und Push: immer alle Repos
+
+**Regel des Benutzers (2026-10-27):** Wer pullt oder pusht, nimmt alle Repos
+**des aktuellen Workspace** mit, nicht nur das, in dem gerade gearbeitet
+wird. Ein Projekt hängt an seinen Paketen, und ein halb aktualisierter Stand
+passt nicht zusammen.
+
+- **Welche Repos:** die Ordner des Workspace, die ein `.git` haben, und nicht
+  alles unter `packages/`. Für Claude sind das das Arbeitsverzeichnis und die
+  „Additional working directories“. Die Quelle ist
+  `<Wurzel>\ide\cursor.files\<name>.code-workspace` (`"path"`-Einträge). So
+  gehört `cms` zu `spaceticker.app.src`, aber nicht zu `spaceticker.app`.
+  Ordner ohne `.git` (z. B. `tools`) überspringen.
+- **Pull:** in jedem Repo erst `fetch`, dann `status`. Ohne lokale Änderungen
+  geht `pull --ff-only`. Mit lokalen Änderungen siehe
+  [Nach einem Sync](#nach-einem-sync-git-nachziehen).
+- **Push:** alle Repos mit ungepushten Commits zeigen und dann auf einmal
+  pushen, sobald der Benutzer es sagt (siehe unten, „Pushen nur nach
+  Rücksprache“).
+- Am Ende immer eine Tabelle: Repo, Stand vorher, Stand nachher.
+
 `.cursor/docs/` liegt im Repo. Pläne, Regeln und Prüfskripte unter `.cursor/`
 bleiben lokal und wandern nur per Sync zwischen den Arbeitsplätzen.
 
@@ -63,23 +84,33 @@ git status -sb                    # sauber
   ob hier oder auf dem Platz, von dem der Sync kam. Dann nicht zurücksetzen.
   Entweder dort pushen, `fetch` und nochmal prüfen, oder hier committen, wenn
   die Arbeit von hier stammt.
+- **Ist der lokale Stand ein älterer Zwischenstand** derselben Arbeit, hat
+  GitHub also alles davon und mehr, dann ist das kein Grund zum Committen.
+  So war es am 2026-10-27 in `spaceticker.app` und `relay`. Prüfen lässt sich
+  das so: `git diff --ignore-cr-at-eol origin/main`. Sind die `+`-Zeilen nur
+  Vorfassungen dessen, was oben steht, ist der lokale Stand veraltet. Dann
+  `git stash push -u -m "…" -- . ':!<eigene Testdateien>'` und
+  `git pull --ff-only`. Der Stash hebt den Stand auf, bis der Benutzer ihn
+  verwirft.
 - `reset` ohne `--hard` fasst keine Datei an. Geht etwas schief, steht der
   alte HEAD im Reflog (`git reflog`).
 - Wurde die Historie auf GitHub neu angelegt (so bei `relay` am 2026-10-15),
   gibt es keine gemeinsame Basis mehr. Der `reset` ist dann trotzdem richtig.
   Der alte lokale Commit bleibt nur im Reflog.
 
-Alle Repos auf einmal (Git-Bash):
+Alle Repos eines Workspace auf einmal (Git-Bash, Wurzel des Arbeitsplatzes):
 
 ```bash
-cd /c/laragon/www
-for d in packages/system packages/db packages/cms packages/relay projects/spaceticker.app; do
+cd /v/www                          # DEV.ojoffice; sonst /c/laragon/www
+ws=ide/cursor.files/spaceticker.app.code-workspace
+for d in $(grep -o '"path": *"[^"]*"' $ws | sed 's/.*"\.\.\/\.\.\/\(.*\)"/\1/'); do
+  [ -d "$d/.git" ] || continue
   git -C $d fetch -q
-  echo "== $d $(git -C $d status -sb | head -1)"
-  git -C $d diff --stat origin/main | tail -1
+  echo "== $d $(git -C $d status -sb | head -1)  lokal geändert: $(git -C $d status --porcelain | wc -l)"
+  git -C $d log --oneline origin/main..HEAD   # ungepushte Commits
 done
-# erst wenn überall nur der Zeiger fehlt:
-# for d in …; do git -C $d reset -q origin/main; done
+# ohne lokale Änderungen:   git -C $d pull --ff-only -q
+# nur der Zeiger fehlt:     git -C $d reset -q origin/main
 ```
 
 ## Repo fehlt auf einem Arbeitsplatz
@@ -136,6 +167,12 @@ Packagist zieht sich das automatisch, danach auf dem Server
 eines anderen, hebt es die Anforderung an (z. B. `relay` → `systopic/system`
 `^1.2`). Mehr dazu in [composer.md](composer.md) und
 [package-publishing.plan.md](../plans/package-publishing.plan.md).
+
+## Stand 2026-10-27 (DEV.ojoffice, `V:\www`)
+
+Alle Repos stehen auf `origin/main`, `core.autocrlf input`. `system`, `db`,
+`cms`, `relay` und `spaceticker.app` sind gepullt, `tools` hat kein Repo.
+Die Git-Bash hier ist 2.27, für `git init -b` also das Laragon-Git nehmen.
 
 ## Stand 2026-10-16 (DEV.ojhome)
 
