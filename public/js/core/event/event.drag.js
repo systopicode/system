@@ -40,6 +40,7 @@ sys.core.event.drag = function (event, hooks) { // 2. param raus
 	var noNativeDrag = ev => ev.preventDefault();
 	document.addEventListener('dragstart', noNativeDrag, true);
 
+	var lineKey = '';
 	function mousemove(e) {
 		drag.e = e;
 
@@ -70,6 +71,9 @@ sys.core.event.drag = function (event, hooks) { // 2. param raus
 			keysHoldable.forEach(key => drag.$helper[0].classList.remove(key));
 			drag.keysheld.forEach(key => drag.$helper[0].classList.add(key));
 			var nextDrop = nearestZone(e.target, e.target.closest('[data-drop_accept]'));
+			if (drag.dropObj && nextDrop && drag.dropObj !== nextDrop && distance(nextDrop) + 10 > distance(drag.dropObj)) {
+				nextDrop = drag.dropObj;
+			}
 			if (drag.dropObj && drag.dropObj !== nextDrop) {
 				drag.dropObj.classList.remove('dropTarget');
 			}
@@ -113,8 +117,18 @@ sys.core.event.drag = function (event, hooks) { // 2. param raus
 					drag.$helper[0].textContent = '';
 				}
 				drag.$helper.toggleClass('line', !!css.line);
+				var isLine = !!css.line;
 				delete css.line;
-				drag.$helper.css(css);
+				if (isLine) {
+					var key = css.top + '|' + css.left + '|' + css.width;
+					if (key !== lineKey) {
+						lineKey = key;
+						drag.$helper.css(css);
+					}
+				} else {
+					lineKey = '';
+					drag.$helper.css(css);
+				}
 			}
 			if (!edgeFrame) {
 				edgeFrame = requestAnimationFrame(edgeScroll);
@@ -247,6 +261,18 @@ sys.core.event.drag = function (event, hooks) { // 2. param raus
 	// nearer of them is meant, not the list around the item - otherwise the
 	// helper jumps between the list and a thin line at every gap.
 	function nearestZone(target, drop) {
+		// A table row's zones sit in the grip cell. The pointer is usually on
+		// another cell of that row, so the zone is not the element under it.
+		var row = target && target.closest && target.closest('tr');
+		var ownRow = drag.dragObj && drag.dragObj.closest && drag.dragObj.closest('tr');
+		if (row && row !== ownRow) {
+			var inRow = Array.prototype.filter.call(row.querySelectorAll('div.sort'), function (zone) {
+				return (zone.dataset.drop_accept || '').split(' ').includes(drag.type) && zone.getClientRects().length;
+			});
+			if (inRow.length) {
+				return inRow.reduce(function (a, b) { return distance(a) <= distance(b) ? a : b; });
+			}
+		}
 		for (var el = target; el && el !== drop; el = el.parentElement) {
 			var zones = Array.prototype.filter.call(el.children, zone => zone.classList.contains('sort')
 				&& (zone.dataset.drop_accept || '').split(' ').includes(drag.type) && zone.getClientRects().length);
@@ -304,11 +330,13 @@ sys.core.event.drag = function (event, hooks) { // 2. param raus
 		// A column end on a phone is the same line, not a box.
 		if ((zone && obj.classList.contains('v') && !obj.classList.contains('insertInto')) || obj.classList.contains('dashDrop')) {
 			var after = obj.classList.contains('insertAfter');
-			var edge = after ? rect.bottom - px('paddingBottom') : rect.top + px('paddingTop');
+			var rowBox = obj.closest && obj.closest('tr');
+			var span = rowBox ? rowBox.getBoundingClientRect() : rect;
+			var edge = after ? span.bottom : span.top;
 			return {
-				left: rect.left + 12,
+				left: span.left,
 				top: edge - 1,
-				width: Math.max(0, rect.width - 24),
+				width: span.width,
 				height: 2,
 				line: true,
 				borderRadius: 1
@@ -353,11 +381,14 @@ sys.core.event.drag = function (event, hooks) { // 2. param raus
 		if (!acceptbleClasses.includes(drag.type)) {
 			return false;
 		}
-		// A settings row stays in its own group.
+		// A project-list row carries a key and stays in its group. Template
+		// settings use the id as the row, so a different id is a valid place.
 		if (drag.type === 'setting') {
+			var fromKey = drag.dragObj.dataset.key || '';
+			var toKey = drag.dropObj.dataset.key || '';
 			var fromId = drag.dragObj.dataset.id || '';
 			var toId = drag.dropObj.dataset.id || '';
-			if (fromId !== '' && toId !== '' && fromId !== toId) {
+			if (fromKey !== '' && toKey !== '' && fromId !== '' && toId !== '' && fromId !== toId) {
 				return false;
 			}
 		}

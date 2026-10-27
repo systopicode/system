@@ -12,7 +12,9 @@
 	$asset = static fn(string $file): string => htmlspecialchars(\Systopic\System\Sys\Packages::panelAssetHref($file), ENT_QUOTES);
 	$brandColor = '#' . \Systopic\System\Sys\Theme::color('cmsMainColor');
 	$onAuth = isset($headHost) && $headHost->name === 'auth';
-	$themeColor = $onAuth ? $brandColor : '#' . \Systopic\System\Sys\Theme::color('cmsBgColor');
+	// The status bar sits on the petrol header. The page grey is the background
+	// behind the address bar, set on html/body, not on this tag.
+	$themeColor = $brandColor;
 	?>
 	<link rel="icon" type="image/svg+xml" href="<?= $asset('img/icon.svg') ?>">
 	<link rel="apple-touch-icon" sizes="180x180" href="<?= htmlspecialchars(\http::$root . 'cms/icon-180.png', ENT_QUOTES) ?>">
@@ -35,7 +37,8 @@
 	<meta property='og:image' content='<?= $shareImage ?>' />
 	<meta itemprop='image' content='<?= $shareImage ?>' />
 
-	<meta name="theme-color" content="<?= $themeColor ?>">
+	<meta name="theme-color" content="<?= $themeColor ?>" media="(prefers-color-scheme: light)">
+	<meta name="theme-color" content="<?= $themeColor ?>" media="(prefers-color-scheme: dark)">
 	<meta name="color-scheme" content="<?= $onAuth ? 'dark' : 'light' ?>">
 	<meta name="msapplication-TileColor" content="<?= $brandColor ?>">
 
@@ -115,7 +118,7 @@
 	 * mobile on a narrow window and desktop on a wide one - neither being
 	 * what the visitor sees. Responsive css stays on the site.
 	 */
-	echo fsLoader::includeCSSFilesScoped(fs::$siteRoot . 'css/cms_overrides.css', ':root', 'project', limit: '.cmsOwn');
+	echo fsLoader::includeCSSFilesScoped(fs::$siteRoot . 'css/cms_overrides.css', ':root', 'project', limit: '.cmsOwn', liftDocument: true);
 	echo fsLoader::includeCSSFilesScoped(
 		fs::$siteRoot . 'css/',
 		'article.cmsContent',
@@ -131,7 +134,7 @@
 	echo '<!-- +-+-+-+-+-+-+-+-+-+ PROJECT UI OVERRIDES +-+-+-+-+-+-+-+-+-+-+-->';
 	// Overrides style the preview (`article p`), but never what the CMS itself
 	// puts in there - not even with !important.
-	echo fsLoader::includeCSSFilesScoped(fs::$siteRoot . 'overrides/css/', ':root', 'project', limit: '.cmsOwn');
+	echo fsLoader::includeCSSFilesScoped(fs::$siteRoot . 'overrides/css/', ':root', 'project', limit: '.cmsOwn', liftDocument: true);
 	// The site reset sits in the preview layer and zeros every border. These
 	// frames stay unlayered so they win inside the page preview.
 	?>

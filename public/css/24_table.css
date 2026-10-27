@@ -140,16 +140,20 @@
     overscroll-behavior-x: contain;
 }
 
-/* Drop zones sit a few pixels past the row. That must not open a bar
-   on the table or the card around it. */
+/* The grip cell is the containing block. A zone positioned against the
+   table piles every gap at the top, and the line no longer follows the row. */
+.cms .tableScroll td:has(> div.sort){
+    position: relative;
+}
 .cms .tableScroll div.sort.v{
     left: 0;
-    width: 100%;
+    right: 0;
+    width: auto;
 }
 body.dragging .tableScroll,
 body.dragging .widget,
 body.dragging section.cms{
-    overflow: hidden;
+    overflow-x: hidden;
 }
 
 .tableScroll > table td.icons,
@@ -371,11 +375,14 @@ body.dragging section.cms{
     .cms .tableScroll.stacked.is-foldable > table > tbody > tr.is-open > :is(td.icons, td.projectRemove, td.schemaApply){
         flex: 0 0 auto;
     }
-    /* Settings lists are a stack of cards. Other widgets keep their card. */
+    /* A stacked list is cards on the page. The widget behind them stays clear,
+       or the gaps between the rows are white. */
     .projectFiles .widget:has(> .tableScroll.stacked),
     .projectFiles .widget:has(> header + .tableScroll.stacked),
     .pageSettings.widget:has(> .tableScroll.stacked),
-    .pageSettings.widget:has(> header + .tableScroll.stacked){
+    .pageSettings.widget:has(> header + .tableScroll.stacked),
+    .widget.is-list:has(> .tableScroll.stacked),
+    .widget.is-list:has(> header + .tableScroll.stacked){
         background: transparent;
         border: 0;
         box-shadow: none;
@@ -384,7 +391,9 @@ body.dragging section.cms{
     .projectFiles .widget:has(> .tableScroll.stacked) > header,
     .projectFiles .widget:has(> header + .tableScroll.stacked) > header,
     .pageSettings.widget:has(> .tableScroll.stacked) > header,
-    .pageSettings.widget:has(> header + .tableScroll.stacked) > header{
+    .pageSettings.widget:has(> header + .tableScroll.stacked) > header,
+    .widget.is-list:has(> .tableScroll.stacked) > header,
+    .widget.is-list:has(> header + .tableScroll.stacked) > header{
         margin-bottom: 0.35rem;
         padding-left: 0;
         padding-right: 0;
@@ -393,55 +402,64 @@ body.dragging section.cms{
         background: transparent;
         box-shadow: none;
     }
-    /* The drop line belongs to the card, not to the grip cell. */
-    .cms .tableScroll.stacked > table > tbody > tr > td:has(> div.sort){
-        position: static;
-    }
     .cms .tableScroll.stacked div.sort.v{
         left: 0;
-        width: 100%;
+        right: 0;
+        width: auto;
     }
-    body.dragging .tableScroll.stacked > table > tbody > tr:has(> td > .sort.dropTarget)::before{
-        content: "";
-        position: absolute;
-        left: 0.75rem;
-        right: 0.75rem;
-        height: 3px;
-        border-radius: 2px;
-        background: var(--cmsHighlightColor);
-        z-index: 5;
-        pointer-events: none;
+    /* The insert mark is the dragged line snapping into the gap, as everywhere else. */
+    .cms .tableScroll.stacked tr:has(> td > .pressing),
+    .cms .tableScroll.stacked tr:has(> td > .longPressed){
+        outline: none;
+        box-shadow: 0 0.45rem 1.1rem rgb(16 24 40 / 0.16);
+        z-index: 3;
     }
-    body.dragging .tableScroll.stacked > table > tbody > tr:has(> td > .sort.insertBefore.dropTarget)::before{
-        top: -0.45rem;
-    }
-    body.dragging .tableScroll.stacked > table > tbody > tr:has(> td > .sort.insertAfter.dropTarget)::before{
-        top: auto;
-        bottom: -0.45rem;
-    }
-    /* The held card keeps its own fill. A tinted cell reads as a second frame. */
     .cms .tableScroll.stacked tr:has(> td > .pressing) > td,
     .cms .tableScroll.stacked tr:has(> td > .longPressed) > td{
         background: transparent;
         animation: none;
     }
-    /* A report inside a card is a row of that card, not a card of its own. */
+    /* A report stays a table: each record is a labelled block, not one loose line. */
     .widget.is-list > .tableScroll.reportRows.stacked > table > tbody{
-        gap: 0;
+        gap: 0.65rem;
+        padding: 0 var(--cmsCardPadding) 0.85rem;
     }
     .widget.is-list > .tableScroll.reportRows.stacked > table > tbody > tr{
-        border: 0;
-        border-radius: 0;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0.55rem 1rem;
+        align-items: start;
+        border: 1px solid var(--cmsLine);
+        border-radius: var(--cmsRadius);
         box-shadow: none;
-        background: transparent;
-        padding: 0.75rem var(--cmsCardPadding);
-        border-top: 1px solid var(--cmsLine);
+        background: color-mix(in srgb, var(--cmsMainColor) 3.5%, var(--cmsCanvas));
+        padding: 0.8rem 0.9rem;
     }
     .widget.is-list > .tableScroll.reportRows.stacked > table > tbody > tr::after{
         display: none;
     }
-    .widget.is-list > .tableScroll.reportRows.stacked > table > tbody > tr:hover{
-        background: color-mix(in srgb, var(--cmsMainColor) 4%, transparent);
+    .widget.is-list > .tableScroll.reportRows.stacked > table > tbody > tr > td{
+        display: block;
+        flex: none;
+        width: auto;
+        font-weight: 500;
+    }
+    .widget.is-list > .tableScroll.reportRows.stacked > table > tbody > tr > td::before{
+        content: attr(data-label);
+        display: block;
+        margin-bottom: 0.15rem;
+        font-size: 0.6875rem;
+        font-weight: 600;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        color: var(--cmsMuted);
+    }
+    .widget.is-list > .tableScroll.reportRows.stacked > table > tbody > tr > td:first-child{
+        grid-column: 1 / -1;
+        font-weight: 600;
+    }
+    .widget.is-list > .tableScroll.reportRows.stacked > table > tbody > tr > td:empty{
+        display: none;
     }
     .cms .tableScroll.stacked.is-foldable > table > tbody > tr.is-open > td[data-label]:not(:first-child, :has(> .userStatus, > i[data-drag_type]) + td, .icons, .projectRemove, .schemaApply){
         display: flex;

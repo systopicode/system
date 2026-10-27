@@ -5,7 +5,9 @@ $text = fs::isFile($path) ? (string) fs::file_get_contents($path) :'MIT License.
 ?>
 <h1>License</h1>
 <main class="authText">
+	<div class="authScroll">
 	<p>fluxo cms is published under the MIT License.</p>
 	<pre><?= htmlspecialchars($text, ENT_QUOTES) ?></pre>
+	</div>
 	<p class="authLinks"><a href="login" class="ajax"><i class="fa-regular fa-chevron-left"></i> Back to sign in</a></p>
 </main>

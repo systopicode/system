@@ -19,6 +19,10 @@ final class EnvironmentFile
             'host' => 'string', 'port' => 'int', 'secure' => 'string',
             'user' => 'string', 'password' => 'string', 'from' => 'string', 'fromName' => 'string',
         ],
+        'auth' => [
+            'deviceDays' => 'int',
+            'screenDays' => 'nullint',
+        ],
     ];
 
     /** @var list<string> */
@@ -140,6 +144,88 @@ final class EnvironmentFile
         });
     }
 
+    /**
+     * Writes the auth block when it is missing, and a sign-in key when there
+     * is none. `$replace` rotates a key that is already there. The key is
+     * random and is not returned.
+     */
+    public static function createAuth(string $file, bool $replace = false): bool
+    {
+        return self::update($file, static function (array $data) use ($replace): ?array {
+            $auth = is_array($data['auth'] ?? null) ? $data['auth'] : [];
+            $secret = (string) ($auth['secret'] ?? '');
+            if (strlen($secret) >= 32 && !$replace) {
+                return null;
+            }
+            if (!array_key_exists('deviceDays', $auth)) {
+                $auth['deviceDays'] = \Systopic\System\Auth\AuthConfig::DEVICE_DAYS;
+            }
+            if (!array_key_exists('screenDays', $auth)) {
+                $auth['screenDays'] = null;
+            }
+            $auth['secret'] = bin2hex(random_bytes(32));
+            $data['auth'] = $auth;
+            return $data;
+        });
+    }
+
+    /**
+     * The environment file as it may be stored in a backup: the sign-in key
+     * is removed. Null when the file cannot be made safe to archive.
+     */
+    public static function forArchive(string $json): ?string
+    {
+        try {
+            $data = json_decode($json, true, 512, JSON_THROW_ON_ERROR);
+        } catch (\JsonException) {
+            return self::secretGone($json) ? $json : null;
+        }
+        if (!is_array($data)) {
+            return null;
+        }
+        if (is_array($data['auth'] ?? null)) {
+            unset($data['auth']['secret']);
+        }
+        $out = json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+        return $out === false ? null : $out . "\n";
+    }
+
+    /**
+     * A restored environment keeps this machine's sign-in key. A key that
+     * arrived inside the archive is dropped.
+     */
+    public static function restoreArchive(string $target, string $json): ?string
+    {
+        try {
+            $incoming = json_decode($json, true, 512, JSON_THROW_ON_ERROR);
+        } catch (\JsonException) {
+            if (self::secretGone($json)) {
+                return $json;
+            }
+            $stripped = self::withoutSecretText($json);
+            return $stripped === '' ? null : $stripped;
+        }
+        if (!is_array($incoming)) {
+            return $json;
+        }
+        $auth = is_array($incoming['auth'] ?? null) ? $incoming['auth'] : null;
+        if (is_array($auth)) {
+            unset($auth['secret']);
+        }
+        $localSecret = self::localSecret($target);
+        if (strlen($localSecret) >= 32) {
+            if (!is_array($auth)) {
+                $auth = [];
+            }
+            $auth['secret'] = $localSecret;
+        }
+        if (is_array($auth)) {
+            $incoming['auth'] = $auth;
+        }
+        $out = json_encode($incoming, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+        return $out === false ? $json : $out . "\n";
+    }
+
     public static function removeMatch(string $file, int $index): bool
     {
         return self::update($file, static function (array $data) use ($index): ?array {
@@ -173,13 +259,47 @@ final class EnvironmentFile
         return !in_array($key, ['matches', 'db', 'debug', 'mail', ...self::SCALARS], true);
     }
 
-    private static function cast(string $raw, string $kind): string|int|bool
+    private static function cast(string $raw, string $kind): string|int|bool|null
     {
         return match ($kind) {
             'bool' => $raw === '1' || strcasecmp($raw, 'true') === 0,
             'int' => (int) $raw,
+            'nullint' => trim($raw) === '' ? null : max(1, (int) $raw),
             default => $raw,
         };
+    }
+
+    private static function localSecret(string $target): string
+    {
+        if (!is_file($target)) {
+            return '';
+        }
+        try {
+            $local = json_decode((string) file_get_contents($target), true, 512, JSON_THROW_ON_ERROR);
+        } catch (\JsonException) {
+            return '';
+        }
+        if (!is_array($local) || !is_array($local['auth'] ?? null)) {
+            return '';
+        }
+        return (string) ($local['auth']['secret'] ?? '');
+    }
+
+    /** True when no sign-in key value is still in the text. */
+    public static function archiveIsSafe(string $json): bool
+    {
+        return preg_match('/"secret"\s*:\s*"[^"]{8,}"/', $json) !== 1;
+    }
+
+    private static function secretGone(string $json): bool
+    {
+        return self::archiveIsSafe($json);
+    }
+
+    private static function withoutSecretText(string $json): string
+    {
+        $stripped = preg_replace('/("secret"\s*:\s*)"(?:\\\\.|[^"\\\\])*"/', '$1""', $json) ?? $json;
+        return self::secretGone($stripped) ? $stripped : '';
     }
 
     /**

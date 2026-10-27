@@ -539,6 +539,23 @@ div.main select{
     left: 18px;
 }
 
+/* Locked on or off. The track stays readable; only the click is gone. */
+.cms label.checkbox:has(input.switch:disabled),
+.cms label.checkbox:has(input.switch[readonly]){
+    cursor: not-allowed;
+}
+
+.cms input[type="checkbox"].switch:disabled + div,
+.cms input[type="checkbox"].switch[readonly] + div{
+    cursor: not-allowed;
+    opacity: .65;
+}
+
+.cms input[type="checkbox"].switch:disabled + div div,
+.cms input[type="checkbox"].switch[readonly] + div div{
+    cursor: not-allowed;
+}
+
 .cms input[type="checkbox"].switch.confirm + div{
     background: var(--cmsSuccess);
 }

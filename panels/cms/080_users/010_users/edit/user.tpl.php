@@ -1,6 +1,7 @@
 <?php
 /** @var \Systopic\System\Panels\Root\Cms\Users\Users\Edit\Panel $this */
 
+use Systopic\System\Auth\DeviceName;
 use Systopic\System\Auth\LoginLog;
 use Systopic\System\Auth\Portrait;
 use Systopic\System\Panels\Root\Cms\Users\Panel as Users;
@@ -144,10 +145,18 @@ $signIns = array_slice($signInAll, 0, $signInLimit);
 								<input type="text" name="value" autocapitalize="characters" spellcheck="off" maxlength="12" data-on_change="approveScreen" autocomplete="off">
 							</label>
 						<?php } else { ?>
-							<button type="button" class="button" data-on_click="inviteMail" <?= (string) $user->email === '' ? 'disabled' : '' ?>><i class="fa-regular fa-envelope"></i>Email invite</button>
-							<button type="button" class="button" data-on_click="inviteCode"><i class="fa-regular fa-qrcode"></i>Invite code</button>
-							<button type="button" class="button" data-on_click="recoverCode"><i class="fa-regular fa-key"></i>Recovery code</button>
-							<button type="button" class="button" data-on_click="resendActivationEmail" <?= (string) $user->email === '' ? 'disabled' : '' ?>><i class="fa-regular fa-envelope"></i><?= $user->firstLogin ? 'Resend activation email' : 'Send activation email' ?></button>
+							<p class="tagsHint">A one-time code signs this person in. It works once.</p>
+							<div class="accessButtons">
+								<button type="button" class="button" data-on_click="inviteMail" <?= (string) $user->email === '' ? 'disabled' : '' ?>><i class="fa-regular fa-envelope"></i> Email the code</button>
+								<button type="button" class="button" data-on_click="inviteCode"><i class="fa-regular fa-qrcode"></i> Show the code</button>
+								<button type="button" class="button" data-on_click="recoverCode"><i class="fa-regular fa-key"></i> Recovery code</button>
+							</div>
+							<?php if (!$user->firstLogin) { ?>
+								<p class="tagsHint">No sign-in yet. This email sends a link to set a password.</p>
+								<div class="accessButtons">
+									<button type="button" class="button" data-on_click="resendActivationEmail" <?= (string) $user->email === '' ? 'disabled' : '' ?>><i class="fa-regular fa-link"></i> Email a password link</button>
+								</div>
+							<?php } ?>
 						<?php } ?>
 						<?php if ($issued !== null) {
 							$url = \http::$siteUrl . 'auth/?code=' . rawurlencode($issued['code']);
@@ -173,11 +182,11 @@ $signIns = array_slice($signInAll, 0, $signInLimit);
 						?>
 							<p class="tagsHint">An activation link is out, valid until <?= $e($when($user->activationKeyExpire)) ?>.</p>
 							<div class="accessButtons">
-								<button type="button" class="button" data-on_click="resendActivationEmail" data-user_id="<?= (int) $user->id ?>" <?= (string) $user->email === '' ? 'disabled' : '' ?>><i class="fa-regular fa-envelope"></i><?= $user->firstLogin ? 'Resend activation email' : 'Send activation email' ?></button>
+								<button type="button" class="button" data-on_click="resendActivationEmail" data-user_id="<?= (int) $user->id ?>" <?= (string) $user->email === '' ? 'disabled' : '' ?>><i class="fa-regular fa-link"></i> <?= $user->firstLogin ? 'Email a new password link' : 'Email a password link' ?></button>
 								<button type="button" class="button" data-copy="<?= $e($activationLink) ?>"><i class="fa-regular fa-link"></i>Copy activation link</button>
 							</div>
 						<?php } else { ?>
-							<button type="button" class="button" data-on_click="resendActivationEmail" data-user_id="<?= (int) $user->id ?>" <?= (string) $user->email === '' ? 'disabled' : '' ?>><i class="fa-regular fa-envelope"></i><?= $user->firstLogin ? 'Resend activation email' : 'Send activation email' ?></button>
+							<button type="button" class="button" data-on_click="resendActivationEmail" data-user_id="<?= (int) $user->id ?>" <?= (string) $user->email === '' ? 'disabled' : '' ?>><i class="fa-regular fa-link"></i> <?= $user->firstLogin ? 'Email a new password link' : 'Email a password link' ?></button>
 						<?php } ?>
 					</main>
 				</section>
@@ -190,6 +199,7 @@ $signIns = array_slice($signInAll, 0, $signInLimit);
 					<?php } ?>
 					<?php foreach ($devices as $device) { ?>
 						<div class="userDevice">
+							<i class="<?= $e(DeviceName::icon((string) $device->userAgent)) ?>" aria-hidden="true"></i>
 							<span>
 								<b><?= $e($device->name) ?></b>
 								<?= $device->client === 'app' ? 'App' : 'Browser' ?>

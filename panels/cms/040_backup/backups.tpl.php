@@ -17,7 +17,7 @@ if (empty($this->backupfilestable)) {
 					<th>Database Name</th>
 					<th>User</th>
 					<th>Note</th>
-					<th>Files</th>
+					<th>Contents</th>
 					<th></th>
 				</tr>
 			</thead>

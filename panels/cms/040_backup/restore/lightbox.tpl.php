@@ -6,7 +6,16 @@ switch ($this->action) {
 		$close = TRUE;
 		break;
 	case 'createTaskList':
+		if (($this->parent->state->restoreNotice ?? '') === 'nothing') {
+			$this->parent->state->restoreNotice = '';
+			$include = 'confirm.tpl.php';
+			$title = 'Restore backup';
+			$close = TRUE;
+			break;
+		}
 	case 'extractMysqldump':
+	case 'extractSettings':
+	case 'extractEnvironment':
 	case 'extractMediaDir':
 		$title = 'Restoring';
 		$include = 'progress.tpl.php';

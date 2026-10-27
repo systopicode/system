@@ -61,21 +61,65 @@ function closeMore() {
 	});
 	if (typeof closeAllMenus === 'function') closeAllMenus();
 }
+function hexColor(color) {
+	var text = String(color).trim();
+	var hex = text.match(/^#([0-9a-f]{6})$/i);
+	if (hex) return '#' + hex[1].toLowerCase();
+	var rgb = text.match(/rgba?\(\s*(\d+)[,\s]+(\d+)[,\s]+(\d+)/i);
+	if (rgb) {
+		return '#' + rgb.slice(1, 4).map(function (n) {
+			return ('0' + Number(n).toString(16)).slice(-2);
+		}).join('');
+	}
+	// Safari reports a custom property as color(srgb …). That string is not a
+	// valid theme-color, and the status bar falls back to white.
+	var srgb = text.match(/color\(\s*srgb\s+([0-9.]+)\s+([0-9.]+)\s+([0-9.]+)/i);
+	if (!srgb) return '';
+	return '#' + srgb.slice(1, 4).map(function (n) {
+		return ('0' + Math.max(0, Math.min(255, Math.round(Number(n) * 255))).toString(16)).slice(-2);
+	}).join('');
+}
+function themeColor(name) {
+	var probe = document.getElementById('cmsThemeProbe');
+	if (!probe) {
+		probe = document.createElement('span');
+		probe.id = 'cmsThemeProbe';
+		probe.style.cssText = 'position:absolute;left:-9999px;width:1px;height:1px;pointer-events:none';
+		document.documentElement.appendChild(probe);
+	}
+	probe.style.backgroundColor = 'var(' + name + ')';
+	return getComputedStyle(probe).backgroundColor;
+}
 function chromeColor() {
-	// The bar, the page and the overscroll are one colour, written together.
-	// A dialog on top does not get a colour of its own.
-	if (!mobile.matches || !document.body) return;
-	var petrol = document.body.dataset.cmsWindow === 'menu' || !!document.querySelector('.authCard');
-	var color = petrol ? '#1f3a45' : '#f0f3f4';
+	// The status bar follows the theme. A fixed hex would ignore a project
+	// that changes --cmsMainColor. The nav is not the only surface that colour.
+	var ink = hexColor(themeColor('--cmsMainColor'));
+	if (ink) {
+		document.querySelectorAll('meta[name="theme-color"]').forEach(function (bar) {
+			bar.setAttribute('content', ink);
+		});
+	}
+	if (!mobile.matches || !document.body) {
+		var stale = document.getElementById('cmsChromeColor');
+		if (stale) stale.remove();
+		if (document.documentElement) document.documentElement.style.background = '';
+		if (document.body) document.body.style.background = '';
+		return;
+	}
+	var login = !!document.querySelector('.authCard');
+	var menu = document.body.dataset.cmsWindow === 'menu';
 	var node = document.getElementById('cmsChromeColor');
 	if (!node) {
 		node = document.createElement('style');
 		node.id = 'cmsChromeColor';
 		document.head.appendChild(node);
 	}
-	node.textContent = 'html, body { background: ' + color + ' !important; color-scheme: ' + (petrol ? 'dark' : 'light') + '; }';
-	document.documentElement.style.background = color;
-	document.body.style.background = color;
+	// The status bar samples the top, the address bar the bottom. Petrol only
+	// in the top strip, so the bar above stays on the theme and the bottom
+	// does not flash petrol in front of the address bar.
+	node.textContent = login ? '' : 'html{background-color:var(--cmsMainColor)!important}body{background-color:var(--cmsBgColor)!important;background-image:linear-gradient(var(--cmsMainColor),var(--cmsMainColor))!important;background-size:100% var(--mobileTop,103px)!important;background-repeat:no-repeat!important}';
+	document.documentElement.style.background = '';
+	document.body.style.background = '';
 	var edge = document.getElementById('cmsChromeEdge');
 	if (!edge) {
 		edge = document.createElement('div');
@@ -84,9 +128,7 @@ function chromeColor() {
 		edge.style.cssText = 'position:fixed;left:0;right:0;bottom:0;height:max(env(safe-area-inset-bottom), 34px);pointer-events:none;z-index:1';
 		document.body.appendChild(edge);
 	}
-	edge.style.background = color;
-	var meta = document.querySelector('meta[name="theme-color"]');
-	if (meta && meta.getAttribute('content') !== color) meta.setAttribute('content', color);
+	edge.style.background = menu || login ? 'var(--cmsMainColor)' : 'var(--cmsBgColor)';
 }
 function showWindow(name) {
 	if (!mobile.matches) return;

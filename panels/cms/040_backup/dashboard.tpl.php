@@ -15,7 +15,7 @@ $days = $last === null ? null : (int) floor((time() - (int) strtotime((string) $
 	<?php } else { ?>
 		<p class="<?= $days > 7 ? 'dashWarn' : '' ?>">
 			<strong>Last backup <?= $e(Cms::ago((string) $last['date'])) ?></strong>
-			<small><?= $e(implode(' · ', array_filter([(string) $last['totalsize'], $last['filesincluded'] ? 'with files' : 'database only', (string) $last['user']]))) ?></small>
+			<small><?= $e(implode(' · ', array_filter([(string) $last['totalsize'], (string) ($last['contentsLabel'] ?? ''), (string) $last['user']]))) ?></small>
 		</p>
 		<p class="hint"><?= count($backups) ?> backup<?= count($backups) === 1 ? '' : 's' ?> kept.</p>
 	<?php } ?>

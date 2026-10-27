@@ -120,12 +120,18 @@ normal von Packagist.
 
 ## 4. Daten zwischen Stages (DEV → STAGING …)
 
-Datenbank **und** Mediendateien wandern zusammen über das Backup-Panel im CMS
-(`cms/backup`, `panels/cms/040_backup`): ein Backup enthält die Dateien unter
-`public/var/original/` (Spalte „Files“), das Zurückspielen auf der Ziel-Stage
-stellt sie wieder her. Dass `.sync` `var/` ignoriert, betrifft nur den
-Code-Sync, nicht diesen Weg — Mediendateien also nicht gesondert kopieren
-oder als fehlend melden (Benutzer, 2026-10-12, mehrfach gesagt).
+Datenbank, Page Settings (`page.settings.php`), Media Settings
+(`media.settings.php`) und die Environment-Dateien (`config/*.config.json`,
+`config.local.json`, nicht `config.json`) wandern über das Backup-Panel im CMS
+(`cms/backup`, `panels/cms/040_backup`). Mediendateien unter
+`public/var/original/` nur, wenn „Media files“ an ist. Die Liste zeigt unter
+Contents, was im Archiv liegt. Zurückspielen bietet dieselben Teile an, gelesen
+aus dem ZIP, und lässt sich einzeln abwählen. Die Datenbank bleibt beim
+Anlegen immer drin und ist beim Zurückspielen abwählbar. Datenbank, Settings
+und Environment stehen in der ersten Datei. Weitere Teile gibt es nur für
+Medien. Dass `.sync` `var/` ignoriert, betrifft nur den Code-Sync, nicht diesen
+Weg. Mediendateien also nicht gesondert kopieren oder als fehlend melden
+(Benutzer, 2026-10-12, mehrfach gesagt).
 
 `composer update` auf dem Server führt der Benutzer selbst aus.
 

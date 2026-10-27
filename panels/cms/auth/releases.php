@@ -8,6 +8,18 @@
  * @return array<string, array{date: string, new?: list<string>, fixed?: list<string>}>
  */
 return [
+    '0.5.2' => [
+        'date' => '2026-10-27',
+        'new' => [
+            'Backup includes page settings, media settings and environment files, on by default. The list shows what an archive contains.',
+            'Restore offers those parts after reading the archive, so a backup can be restored in part. The database is always included when creating a backup and can be left out when restoring.',
+        ],
+        'fixed' => [
+            'Backup and restore show progress as a bar.',
+            'Leaving or reloading the page is blocked while a backup is created, restored or uploaded.',
+            'Cancelling a backup returns to the list. Restore says when nothing is selected.',
+        ],
+    ],
     '0.5.1' => [
         'date' => '2026-10-25',
         'fixed' => [

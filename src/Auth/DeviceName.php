@@ -41,6 +41,18 @@ final class DeviceName
         return implode(' · ', array_filter([$system, $browser])) ?: 'Unbekanntes Gerät';
     }
 
+    /** Small mark for the device list: phone, tablet or computer. */
+    public static function icon(string $userAgent): string
+    {
+        if (preg_match('~iPad|Tablet|Android(?!.*Mobile)~', $userAgent)) {
+            return 'fa-regular fa-tablet-screen';
+        }
+        if (preg_match('~iPhone|iPod|Android.*Mobile|Mobile~', $userAgent)) {
+            return 'fa-regular fa-mobile-screen';
+        }
+        return 'fa-regular fa-laptop';
+    }
+
     /** @param array<string, string> $patterns */
     private static function first(array $patterns, string $userAgent): string
     {

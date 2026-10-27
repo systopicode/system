@@ -43,6 +43,61 @@ $closeZip = function (ZipArchive $zip, string $path): bool {
 	return FALSE;
 };
 
+$addPlainFiles = function (array $files, string $done) use ($closeZip, $tmpdirpathNative): void {
+	if ($this->parent->state->cancel) {
+		return;
+	}
+	if ($files === []) {
+		message::error('Nothing to add.');
+		return;
+	}
+	$zip = new ZipArchive();
+	$zipname = $tmpdirpathNative . 'backup-0.zip';
+	if (($zipErr = $zip->open($zipname)) !== true) {
+		message::error("Cannot open zip (error $zipErr): $zipname");
+		$this->parent->log("ERROR add files: cannot open $zipname (err $zipErr)");
+		return;
+	}
+	$added = 0;
+	foreach ($files as $archive => $source) {
+		if (!is_string($archive) || !is_file($source)) {
+			continue;
+		}
+		if (str_starts_with($archive, 'config/')) {
+			$raw = file_get_contents($source);
+			$safe = is_string($raw) ? \Systopic\System\Settings\EnvironmentFile::forArchive($raw) : null;
+			if ($safe === null || !\Systopic\System\Settings\EnvironmentFile::archiveIsSafe($safe)) {
+				message::error('An environment file was left out of the backup because its sign-in key could not be removed.');
+				$this->parent->log('ERROR addEnvironment: refused ' . $archive);
+				continue;
+			}
+			$zip->addFromString($archive, $safe);
+			$added++;
+			continue;
+		}
+		$zip->addFile(fs::toNative($source), $archive);
+		$added++;
+	}
+	if ($added === 0) {
+		$zip->close();
+		message::error('Nothing to add.');
+		return;
+	}
+	if (!$closeZip($zip, $zipname)) {
+		return;
+	}
+	if ($this->parent->state->cancel) {
+		return;
+	}
+	message::confirm($done);
+	$this->parent->state->taskListNextIndex++;
+	$this->updateView('lightbox');
+	$next = $this->parent->state->taskList[$this->parent->state->taskListNextIndex]['action'] ?? null;
+	if (is_string($next) && $next !== '') {
+		http::refresh('./', $next);
+	}
+};
+
 switch ($this->action) {
 	case 'updateBackupSettings':
 		$this->parent->updateState(http::put()->values);
@@ -51,10 +106,11 @@ switch ($this->action) {
 		clearstatcache();
 		$tmpdir->unlink(TRUE);
 		$this->parent->state->cancel = TRUE;
-		message::info('Backup Stopped');
-		http::refresh('./');
+		message::info('Backup stopped.');
+		http::refresh('../');
 		break;
 	case 'createTaskList':
+		$this->parent->takePostedSelection();
 		$this->parent->state->cancel = FALSE;
 		clearstatcache();
 		$tmpdir->unlink(TRUE);
@@ -73,7 +129,19 @@ switch ($this->action) {
 			)
 		);
 		$this->parent->state->taskListNextIndex = 0;
-		if ($this->parent->state->backupFiles == 1) {
+		if ($this->chosenSettingsArchiveMap($this->parent->state) !== []) {
+			$this->parent->state->taskList[] = array(
+				'action' => 'addSettings',
+				'value' => 'settings'
+			);
+		}
+		if (\Systopic\System\Panels\Root\Cms\Backup\Panel::chosen($this->parent->state, 'backupEnvironment', true) && $this->environmentArchiveMap() !== []) {
+			$this->parent->state->taskList[] = array(
+				'action' => 'addEnvironment',
+				'value' => 'config'
+			);
+		}
+		if (\Systopic\System\Panels\Root\Cms\Backup\Panel::chosen($this->parent->state, 'backupFiles', false)) {
 			$mediadirs = fs::glob($mediadirpath . '*', GLOB_ONLYDIR);
 			foreach ($mediadirs as $mediadir) {
 				$mediadir = basename($mediadir);
@@ -107,15 +175,18 @@ switch ($this->action) {
 		}
 		message::confirm("task List created.");
 		$this->parent->log("task List created");
+		if ($this->parent->state->cancel) {
+			break;
+		}
 		$this->updateView('lightbox');
 		http::refresh('./', $this->parent->state->taskList[$this->parent->state->taskListNextIndex]['action']);
 		break;
 	case 'addMysqldump':
 		if ($this->parent->state->cancel) {
-			exit;
+			break;
 		}
 		$zip = new ZipArchive();
-		$zipname = $tmpdirpathNative . 'backup-' . $this->parent->state->spanindex . '.zip';
+		$zipname = $tmpdirpathNative . 'backup-0.zip';
 		if (($zipErr = $zip->open($zipname)) !== true) {
 			message::error("Cannot open zip (error $zipErr): $zipname");
 			$this->parent->log("ERROR addMysqldump: cannot open $zipname (err $zipErr)");
@@ -162,21 +233,31 @@ switch ($this->action) {
 					$this->parent->state->taskListNextIndex = $this->parent->state->taskListNextIndex - 1;
 				}
 			}
+			if ($this->parent->state->cancel) {
+				break;
+			}
 			$this->updateView('lightbox');
 			http::refresh('./', $this->parent->state->taskList[$this->parent->state->taskListNextIndex]['action']);
 		} else {
 			message::error("No Dump created (exit=$status) - command: '$command'");
 		}
 		break;
+	case 'addSettings':
+		$addPlainFiles($this->chosenSettingsArchiveMap($this->parent->state), 'Settings files added.');
+		break;
+	case 'addEnvironment':
+		$addPlainFiles($this->environmentArchiveMap(), 'Environment added.');
+		break;
 	case 'addMediaDir':
 		if ($this->parent->state->cancel) {
-			exit;
+			break;
 		}
 		$this->parent->log("*************** addMediaDir " . $this->parent->state->taskListNextIndex);
 		$mediaDir = $this->parent->state->taskList[$this->parent->state->taskListNextIndex];
 		$mediaDir = $mediaDir['value'];
 
 		$zip = new ZipArchive();
+		// Only media starts another part. The database and the config files stay in the first.
 		$zipname = $tmpdirpathNative . 'backup-' . $this->parent->state->spanindex . '.zip';
 		if (fs::filesize($tmpdirpath . 'backup-' . $this->parent->state->spanindex . '.zip') > 1.5 * 1024 * 1024 * 1024) { // start next span if larger then 1.5GB
 			$this->parent->state->spanindex++;
@@ -223,12 +304,15 @@ switch ($this->action) {
 		clearstatcache();
 		message::confirm("Media Dir [{$this->parent->state->taskListNextIndex}] added.");
 		$this->parent->state->taskListNextIndex++;
+		if ($this->parent->state->cancel) {
+			break;
+		}
 		$this->updateView('lightbox');
 		http::refresh('./', $this->parent->state->taskList[$this->parent->state->taskListNextIndex]['action']);
 		break;
 	case 'finishBackup':
 		if ($this->parent->state->cancel) {
-			exit;
+			break;
 		}
 		$backupfiles = fs::glob($tmpdirpath . 'backup*');
 		$backupfiletarget = $this->parent->backupdirpath . date('Y-m-d--H-i-s-') . DB_NAME . '-';

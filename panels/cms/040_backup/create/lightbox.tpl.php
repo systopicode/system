@@ -7,6 +7,8 @@ switch ($this->action) {
 		break;
 	case 'createTaskList':
 	case 'addMysqldump':
+	case 'addSettings':
+	case 'addEnvironment':
 	case 'addMediaDir':
 		$title = 'Backup running';
 		$include = 'progress.tpl.php';

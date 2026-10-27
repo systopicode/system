@@ -50,6 +50,13 @@ class Panel extends CmsPanel {
 	/** What the last access action did (mail sent, screen paired) - shown in the lightbox. */
 	public ?string $accessNote = NULL;
 
+	function getDefaultState() {
+		return (object) [
+			'userTab' => 'general',
+			'signInLimit' => 10,
+		];
+	}
+
 	/** Mail the user a fresh activation link; the key must be saved alongside. */
 	function mailActivation(User $user) {
 		$active = \Systopic\System\Auth\Session::current();

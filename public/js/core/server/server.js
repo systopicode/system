@@ -168,6 +168,31 @@ sys.core.server = new function () {
      */
     server.inFlight = 0;
     server.uploading = 0;   // file slices on their way - see the unload guard in gui/jobs.js
+    // A backup create or restore is a chain of requests. Leaving would cut it off.
+    server.backupBusy = false;
+    server.backupStep = function (url) {
+        var path = String(url || '').split('?')[0];
+        var name = path.replace(/\/+$/, '').split('/').pop();
+        if (name === 'cancel') {
+            return path.indexOf('backup') === -1 ? '' : name;
+        }
+        switch (name) {
+            case 'createTaskList':
+            case 'addMysqldump':
+            case 'addSettings':
+            case 'addEnvironment':
+            case 'addMediaDir':
+            case 'finishBackup':
+            case 'extractMysqldump':
+            case 'extractSettings':
+            case 'extractEnvironment':
+            case 'extractMediaDir':
+            case 'finishRestore':
+            case 'clearTempfiles':
+                return name;
+        }
+        return '';
+    };
     server.idleHooks = [];
     server.onIdle = fn => {
         if (server.inFlight === 0) {
@@ -379,6 +404,9 @@ sys.core.server.call = function (data) {
                         if (failFunc) {
                             failFunc(xhr);
                         }
+                        if (backupStep) {
+                            sys.core.server.backupBusy = false;
+                        }
                     }
                     if (call.responses) {
                         call.responses.sort(sys.core.server.sortCommands);
@@ -389,14 +417,22 @@ sys.core.server.call = function (data) {
                             //l('***************** ondonefirst call', doneResponse);
                             ondonefirstFunc(doneResponse);
                         }
+                        var backupContinues = false;
                         for (var index in call.responses) {
-                            call.response = call.responses[index];
+                            var queued = call.responses[index];
+                            if (queued && queued.command === 'refresh' && queued.data && queued.data.method === 'put' && sys.core.server.backupStep((queued.data.path || '') + (queued.data.action || ''))) {
+                                backupContinues = true;
+                            }
+                            call.response = queued;
                             call.response.index = index;
                             l(call.response.command);
                             new sys.core.server.command(call);
                             if (call.redirecting) {
                                 break;
                             }
+                        }
+                        if (backupStep && !backupContinues) {
+                            sys.core.server.backupBusy = false;
                         }
                         if (doneFunc) {
                             //l('***************** ondone call', call.dataPassedToCallbackFunction);
@@ -436,6 +472,9 @@ sys.core.server.call = function (data) {
                     }
                 } else {
                     p('XHERRor! Status ' + xhr.status);
+                    if (backupStep) {
+                        sys.core.server.backupBusy = false;
+                    }
                     if (xhr.status === 401 || xhr.status === 403) {
                         location.href = sys.core.server.loginUrl();
                     } else if (failFunc) {
@@ -516,6 +555,10 @@ sys.core.server.call = function (data) {
             query = obj.extend(obj.extend({}, call.data.get), call.url.query);
         }
         xhrRootHref += obj.getQueryString(query, '?');
+        var backupStep = sys.core.server.backupStep(xhrRootHref);
+        if (backupStep) {
+            sys.core.server.backupBusy = true;
+        }
 
         // A GET is a navigation here (anchor click, form with method get),
         // and a navigation is what the server diffs. Name the state this

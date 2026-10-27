@@ -65,19 +65,22 @@ class fsLoader {
 	 * the outside - the rules have to sit inside the block. An inlined url()
 	 * resolves against the DOCUMENT, so relative ones are rewritten to the
 	 * file's address. @import cannot sit inside @scope: it is lifted out and
-	 * loaded unscoped, in the same layer. Files that need @font-face, :root or
-	 * @keyframes belong in $skip (or behind such an @import) - none of those
-	 * three work inside @scope.
+	 * loaded unscoped, in the same layer. @font-face, :root and @keyframes do
+	 * not apply inside @scope (a :root rule looks for a :root *descendant* of
+	 * the scope and matches nothing). With $liftDocument they are taken out
+	 * and emitted in the same layer, ahead of the scope.
 	 *
 	 * @param string   $scope css selector of the scoping root
 	 * @param string   $layer cascade layer to put it in, '' for none
 	 * @param string[] $skip  file names to leave out
 	 * @param string   $limit selector of what the rules stop at, '' for none
+	 * @param bool     $liftDocument lift :root, @font-face and @keyframes out of the scope
 	 */
-	static function includeCSSFilesScoped($dirFilesOrFile, string $scope, string $layer = '', array $skip = [], $recursive = FALSE, string $limit = ''): string
+	static function includeCSSFilesScoped($dirFilesOrFile, string $scope, string $layer = '', array $skip = [], $recursive = FALSE, string $limit = '', bool $liftDocument = false): string
 	{
 		$css = '';
 		$imports = '';
+		$document = '';
 		foreach (self::cssFilesOf($dirFilesOrFile, $recursive) as $file) {
 			if (in_array($file->name, $skip, TRUE)) {
 				continue;
@@ -93,16 +96,142 @@ class fsLoader {
 				return '';
 			}, $content);
 			$content = preg_replace_callback('~url\(\s*([\'"]?)([^\'")]+)\1\s*\)~i', fn($m) => "url('" . $absolute(trim($m[2])) . "')", $content);
+			if ($liftDocument) {
+				[$wide, $content] = self::liftDocumentRules($content);
+				if (trim($wide) !== '') {
+					$document .= "\n/* $file->name */\n" . $wide;
+				}
+			}
 			$css .= "\n/* $file->name */\n" . $content;
 		}
-		if (trim($css) === '' && $imports === '') {
+		if (trim($css) === '' && trim($document) === '' && $imports === '') {
 			return '';
 		}
-		$out = "@scope ($scope)" . ($limit !== '' ? " to ($limit)" : '') . " {\n$css\n}\n";
+		$out = '';
+		if (trim($document) !== '') {
+			$out .= $document . "\n";
+		}
+		if (trim($css) !== '') {
+			$out .= "@scope ($scope)" . ($limit !== '' ? " to ($limit)" : '') . " {\n$css\n}\n";
+		}
 		if ($layer !== '') {
 			$out = "@layer $layer {\n$out}\n";
 		}
 		return "<style>\n$imports$out</style>\n";
+	}
+
+	/**
+	 * Top-level :root, @font-face and @keyframes, split off so they are not
+	 * buried in an @scope where they match nothing.
+	 *
+	 * @return array{0: string, 1: string} document-wide rules, then the rest
+	 */
+	private static function liftDocumentRules(string $css): array
+	{
+		$document = '';
+		$rest = '';
+		$len = strlen($css);
+		$i = 0;
+		$buf = '';
+		while ($i < $len) {
+			if ($css[$i] === '/' && ($css[$i + 1] ?? '') === '*') {
+				$end = strpos($css, '*/', $i + 2);
+				$end = $end === false ? $len : $end + 2;
+				$buf .= substr($css, $i, $end - $i);
+				$i = $end;
+				continue;
+			}
+			if ($css[$i] === '"' || $css[$i] === "'") {
+				$q = $css[$i];
+				$start = $i;
+				$i++;
+				while ($i < $len) {
+					if ($css[$i] === '\\') {
+						$i += 2;
+						continue;
+					}
+					if ($css[$i] === $q) {
+						$i++;
+						break;
+					}
+					$i++;
+				}
+				$buf .= substr($css, $start, $i - $start);
+				continue;
+			}
+			if ($css[$i] === '{') {
+				$end = self::matchingBrace($css, $i);
+				$block = substr($css, $i, $end - $i);
+				if (self::isDocumentWide($buf)) {
+					$document .= $buf . $block;
+				} else {
+					$rest .= $buf . $block;
+				}
+				$buf = '';
+				$i = $end;
+				continue;
+			}
+			$buf .= $css[$i];
+			$i++;
+		}
+		$rest .= $buf;
+		return [$document, $rest];
+	}
+
+	private static function isDocumentWide(string $prelude): bool
+	{
+		$head = preg_replace('~/\*.*?\*/~s', '', $prelude) ?? $prelude;
+		$head = trim($head);
+		if ($head === '') {
+			return false;
+		}
+		if (preg_match('/^@font-face\b/i', $head) === 1 || preg_match('/^@(-webkit-|-moz-)?keyframes\b/i', $head) === 1) {
+			return true;
+		}
+		$head = preg_replace('/\s+/', '', $head) ?? $head;
+		return preg_match('/^(?::root,)*:root$/i', $head) === 1;
+	}
+
+	/** Index just after the `}` that closes the `{` at `$open`. */
+	private static function matchingBrace(string $css, int $open): int
+	{
+		$len = strlen($css);
+		$depth = 0;
+		$i = $open;
+		while ($i < $len) {
+			$c = $css[$i];
+			if ($c === '/' && ($css[$i + 1] ?? '') === '*') {
+				$end = strpos($css, '*/', $i + 2);
+				$i = $end === false ? $len : $end + 2;
+				continue;
+			}
+			if ($c === '"' || $c === "'") {
+				$q = $c;
+				$i++;
+				while ($i < $len) {
+					if ($css[$i] === '\\') {
+						$i += 2;
+						continue;
+					}
+					if ($css[$i] === $q) {
+						$i++;
+						break;
+					}
+					$i++;
+				}
+				continue;
+			}
+			if ($c === '{') {
+				$depth++;
+			} elseif ($c === '}') {
+				$depth--;
+				if ($depth === 0) {
+					return $i + 1;
+				}
+			}
+			$i++;
+		}
+		return $len;
 	}
 
 	/**

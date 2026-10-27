@@ -45,6 +45,7 @@ final class EnvironmentForm
             self::scalars($info['file'], 'Database', 'db', EnvironmentFile::GROUPS['db'], is_array($data['db'] ?? null) ? $data['db'] : []);
             self::scalars($info['file'], 'Debug', 'debug', EnvironmentFile::GROUPS['debug'], is_array($data['debug'] ?? null) ? $data['debug'] : []);
             self::scalars($info['file'], 'Mail', 'mail', EnvironmentFile::GROUPS['mail'], is_array($data['mail'] ?? null) ? $data['mail'] : []);
+            self::auth($info['file'], $data);
             self::version($info['file'], $data);
             self::matches($info['file'], is_array($data['matches'] ?? null) ? $data['matches'] : []);
             echo '</div>';
@@ -64,6 +65,8 @@ final class EnvironmentForm
             'saveMatch' => EnvironmentFile::setMatch($file, (int) \http::dataset('index'), (string) \http::dataset('field'), self::posted()),
             'addMatch' => EnvironmentFile::addMatch($file),
             'removeMatch' => EnvironmentFile::removeMatch($file, (int) \http::dataset('index')),
+            'createAuth' => EnvironmentFile::createAuth($file),
+            'replaceAuth' => EnvironmentFile::createAuth($file, true),
             default => null,
         };
         if ($result === null || $panel->action === '') {
@@ -73,10 +76,42 @@ final class EnvironmentForm
             \message::error('That change was not saved.');
             return;
         }
-        \message::confirm('Saved.');
+        \message::confirm(match ($panel->action) {
+            'createAuth' => 'Sign-in key created.',
+            'replaceAuth' => 'Sign-in key replaced. Codes already sent stop working.',
+            default => 'Saved.',
+        });
         if ($panel->action !== 'save' && $panel->action !== 'saveMatch') {
             $panel->updateView();
         }
+    }
+
+    /** @param array<string, mixed> $data */
+    private static function auth(string $file, array $data): void
+    {
+        $e = static fn($value): string => htmlspecialchars((string) $value, ENT_QUOTES);
+        $auth = is_array($data['auth'] ?? null) ? $data['auth'] : [];
+        $ready = strlen((string) ($auth['secret'] ?? '')) >= 32;
+        echo '<section class="widget"><header><h2>Sign-in</h2></header>';
+        echo '<div class="tableScroll">';
+        if (!$ready) {
+            echo '<p class="tagsHint">One-time codes need a sign-in key. Creating it writes the whole auth block: the key, how long a device stays, and how long a screen stays. The key stays on this machine and is left out of backups.</p>';
+            echo '<button type="button" class="button" data-on_click="createAuth" data-file="' . $e($file) . '"><i class="fa-regular fa-key"></i> Create sign-in key</button>';
+            echo '</div></section>';
+            return;
+        }
+        echo '<p class="tagsHint">A sign-in key is set. It is not shown and is left out of backups. Empty screen days means a screen stays until it is revoked.</p>';
+        echo '<table class="scalars"><tbody>';
+        echo '<tr><td><span>Device days<small>deviceDays</small></span></td><td>';
+        self::control($file, 'auth', 'deviceDays', 'int', $auth['deviceDays'] ?? \Systopic\System\Auth\AuthConfig::DEVICE_DAYS);
+        echo '</td></tr>';
+        echo '<tr><td><span>Screen days<small>screenDays</small></span></td><td>';
+        self::control($file, 'auth', 'screenDays', 'string', $auth['screenDays'] ?? '');
+        echo '</td></tr>';
+        echo '</tbody></table>';
+        echo '<p class="tagsHint">Replacing the key makes codes already sent stop working.</p>';
+        echo '<button type="button" class="button" data-on_click="userConfirm" data-action="replaceAuth" data-confirm="Replace the sign-in key? Codes already sent stop working." data-file="' . $e($file) . '"><i class="fa-regular fa-rotate-right"></i> Replace sign-in key</button>';
+        echo '</div></section>';
     }
 
     /** @param array<string, string> $schema @param array<string, mixed> $values */

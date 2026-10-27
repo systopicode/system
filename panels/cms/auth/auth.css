@@ -26,8 +26,9 @@ body.cms:has(.authCard) {
 		display: flex;
 		flex-direction: column;
 		width: min(100%, 26rem);
-		height: min(38rem, calc(100lvh - 8rem));
-		padding: 2.25rem 2rem 1.75rem;
+		height: auto;
+		max-height: none;
+		padding: 2.25rem 2rem 0.9rem;
 		background: var(--cmsCanvas);
 		border-radius: calc(var(--cmsRadius) + 10px);
 		box-shadow: var(--cmsShadowLg);
@@ -81,19 +82,20 @@ body.cms:has(.authCard) {
 			font-size: 0.9375rem;
 		}
 
+		&:has(form[action="doLogin"]),
+		&:has(.passkeyLogin) {
+			height: min(38rem, calc(100lvh - 8rem));
+		}
+
 		main:not(.authText) {
 			flex: 1 1 auto;
 			min-height: 0;
 			overflow: auto;
 		}
 
-		/* The link is the foot of the card. Long text scrolls above it.
-		   lvh stays put when the keyboard opens, so the card does not collapse. */
-		&:has(main.authText) {
-			height: auto;
-			max-height: min(34rem, calc(100lvh - 11rem));
-		}
-
+		/* The link is the foot of the card. The text above it scrolls.
+		   The card itself stays as tall as that text, so a short page does
+		   not leave an empty band under the link. */
 		main.authText {
 			display: flex;
 			flex-direction: column;
@@ -105,13 +107,16 @@ body.cms:has(.authCard) {
 		main.authText > .authScroll {
 			flex: 1 1 auto;
 			min-height: 0;
+			max-height: max(8rem, min(22rem, calc(100lvh - 18rem)));
 			overflow: auto;
 		}
 
 		main.authText > .authLinks {
 			position: static;
 			flex: 0 0 auto;
-			margin-top: auto;
+			margin: 0.85rem 0 0;
+			padding-top: 0.85rem;
+			border-top: 1px solid var(--cmsLine);
 		}
 
 		main > .row {
@@ -252,10 +257,10 @@ body.cms:has(.authCard) {
 
 		div.authCard {
 			height: auto;
-			max-height: min(38rem, calc(100lvh - 6rem));
+			max-height: none;
 			overflow: hidden;
 			flex-shrink: 0;
-			padding: 1.5rem 1.15rem 1.25rem;
+			padding: 1.5rem 1.15rem 0.9rem;
 
 			h1 {
 				font-size: 1.5rem;
@@ -296,37 +301,9 @@ body.cms:has(.authCard) {
 
 .authCard .authPasswordAlternative { margin: 1rem 0 !important; color: var(--cmsMuted); text-align: center; }
 
-/* Long texts scroll inside the card. "Back to sign in" stays the foot of the
-   card. lvh does not shrink when the keyboard opens, so Android does not
-   collapse the card. */
-div.authCard:has(main.authText) {
-	display: flex;
-	flex-direction: column;
-	height: auto;
-	max-height: min(38rem, calc(100lvh - 6rem));
-}
-
-div.authCard main.authText {
-	flex: 1 1 auto;
-	min-height: 0;
-	overflow: hidden;
-}
-
-div.authCard main.authText > .authScroll {
-	flex: 1 1 auto;
-	min-height: 0;
-	overflow: auto;
-}
-
-div.authCard main.authText > .authLinks {
-	position: static;
-	flex: 0 0 auto;
-	margin: 0;
-}
-
-/* The top of the gradient sits in the safe area, under the status bar.
-   A negative margin pulls the body up by that inset; the padding puts the
-   card back where it was. */
+/* The bright part of the gradient sits above the screen. safe-area is often
+   0 on the first paint, so the lift is a fixed distance and the notch is
+   added on top. The card is padded back down by the same amount. */
 @media (max-width: 1024px), (orientation: portrait) and (max-width: 1400px) {
 	html:has(.authCard) {
 		background: var(--cmsMainColor);
@@ -334,14 +311,15 @@ div.authCard main.authText > .authLinks {
 		overflow-y: auto;
 	}
 	body.cms:has(.authCard) {
-		margin-top: calc(-1 * env(safe-area-inset-top, 0px));
-		padding-top: calc(env(safe-area-inset-top, 0px) + 1.25rem);
+		--authLift: 7rem;
+		margin-top: calc(-1 * var(--authLift));
+		padding-top: calc(var(--authLift) + env(safe-area-inset-top, 0px) + 1.25rem);
 		padding-right: 1rem;
 		padding-bottom: max(1.25rem, env(safe-area-inset-bottom, 0px));
 		padding-left: 1rem;
-		min-height: calc(100lvh + env(safe-area-inset-top, 0px));
+		min-height: calc(100lvh + var(--authLift));
 		background:
-			radial-gradient(40rem 24rem at 15% 0, color-mix(in srgb, var(--cmsHighlightColor) 28%, transparent), transparent 70%),
+			radial-gradient(42rem 26rem at 18% 0, color-mix(in srgb, var(--cmsHighlightColor) 32%, transparent), transparent 62%),
 			var(--cmsMainColor);
 	}
 }

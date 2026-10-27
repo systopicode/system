@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Systopic\System\Panels\Root\Cms\Backup;
 
 use Systopic\System\Panels\Root\Cms\Panel as CmsPanel;
+use Systopic\System\Settings\EnvironmentFile;
+use Systopic\System\Settings\ProjectFile;
 
 /**
  * Backup panel — manages database and media backups.
@@ -79,17 +81,336 @@ class Panel extends CmsPanel
 	{
 		return $this->name === 'backup'
 			? (object) [
-				'backupNotes'       => '',
-				'spanindex'         => 0,
-				'backupFiles'       => false,
-				'spanbasename'      => '',
+				'backupNotes'        => '',
+				'spanindex'          => 0,
+				'backupFiles'        => false,
+				'backupPageSettings' => true,
+				'backupMediaSettings' => true,
+				'backupEnvironment'  => true,
+				'spanbasename'       => '',
+				'restoreName'        => '',
+				'restoreDatabase'    => true,
+				'restoreMedia'       => false,
+				'restorePageSettings' => false,
+				'restoreMediaSettings' => false,
+				'restoreEnvironment' => false,
+				'restoreNotice'      => '',
 				'restoreMediaFolder' => false,
-				'date'              => '',
-				'taskListNextIndex' => 0,
-				'taskList'          => [],
-				'cancel'            => false,
+				'date'               => '',
+				'taskListNextIndex'  => 0,
+				'taskList'           => [],
+				'cancel'             => false,
 			]
 			: (object) [];
+	}
+
+	/** @var array<string, string> */
+	public const CONTENTS = [
+		'database' => 'Database',
+		'media' => 'Media',
+		'pageSettings' => 'Page Settings',
+		'mediaSettings' => 'Media Settings',
+		'environment' => 'Environment',
+	];
+
+	/** File settings, named like their panels. Template settings stay in the database. */
+	public const SETTING_LABELS = [
+		'page' => 'Page Settings',
+		'media' => 'Media Settings',
+	];
+
+	public static function settingKey(string $which, bool $restore): string
+	{
+		return ($restore ? 'restore' : 'backup') . ucfirst($which) . 'Settings';
+	}
+
+	/** A switch left untouched counts as its default. 0 from the client is off. */
+	public static function chosen(object $state, string $key, bool $default): bool
+	{
+		if (!property_exists($state, $key)) {
+			return $default;
+		}
+		return $state->$key == 1;
+	}
+
+	/**
+	 * The switches travel with the start request. A change that has not
+	 * landed yet cannot leave the run on the previous choice.
+	 */
+	public function takePostedSelection(): void
+	{
+		$form = \http::form();
+		if (!is_object($form)) {
+			return;
+		}
+		$patch = new \stdClass();
+		foreach ([
+			'backupNotes', 'backupFiles', 'backupPageSettings', 'backupMediaSettings', 'backupEnvironment',
+			'restoreDatabase', 'restoreMedia', 'restorePageSettings', 'restoreMediaSettings', 'restoreEnvironment',
+		] as $key) {
+			if (property_exists($form, $key)) {
+				$patch->$key = $form->$key;
+			}
+		}
+		if ((array) $patch !== []) {
+			$this->updateState($patch);
+		}
+	}
+
+	/**
+	 * What the archive actually holds, from entry names. Nothing is stored
+	 * beside the zip.
+	 *
+	 * @param list<string> $names
+	 * @return array<string, bool>
+	 */
+	public static function contentsFromNames(array $names): array
+	{
+		$contents = array_fill_keys(array_keys(self::CONTENTS), false);
+		foreach ($names as $name) {
+			$name = str_replace('\\', '/', $name);
+			if ($name === 'mysqldump_all.sql') {
+				$contents['database'] = true;
+			} elseif (!str_contains($name, '/') && str_ends_with(strtolower($name), '.zip')) {
+				$contents['media'] = true;
+			} elseif (self::isSettingsEntry($name)) {
+				foreach (ProjectFile::FILES as $which => $file) {
+					if ($name === 'settings/' . $file) {
+						$contents[$which . 'Settings'] = true;
+					}
+				}
+			} elseif (self::isEnvironmentEntry($name)) {
+				$contents['environment'] = true;
+			}
+		}
+		return $contents;
+	}
+
+	/** @param array<string, bool> $contents */
+	public static function contentLabels(array $contents): string
+	{
+		$labels = [];
+		foreach (self::CONTENTS as $key => $label) {
+			if (!empty($contents[$key])) {
+				$labels[] = $label;
+			}
+		}
+		return implode(' · ', $labels);
+	}
+
+	/**
+	 * Page and media settings files that exist next to settings.php.
+	 *
+	 * @return array<string, string> archive path => source path
+	 */
+	public function settingsArchiveMap(): array
+	{
+		$map = [];
+		foreach (ProjectFile::FILES as $which => $name) {
+			$path = ProjectFile::path($which);
+			if ($path !== null) {
+				$map['settings/' . $name] = $path;
+			}
+		}
+		return $map;
+	}
+
+	/**
+	 * Settings files whose switch is on.
+	 *
+	 * @return array<string, string> archive path => source path
+	 */
+	public function chosenSettingsArchiveMap(object $state): array
+	{
+		$map = [];
+		foreach ($this->settingsArchiveMap() as $archive => $path) {
+			$which = self::settingWhich($archive);
+			if ($which !== '' && self::chosen($state, self::settingKey($which, false), true)) {
+				$map[$archive] = $path;
+			}
+		}
+		return $map;
+	}
+
+	/**
+	 * Instance files the environment panel writes. config.json is not one of them.
+	 *
+	 * @return array<string, string> archive path => source path
+	 */
+	public function environmentArchiveMap(): array
+	{
+		$map = [];
+		foreach (EnvironmentFile::files() as $file) {
+			$base = (string) ($file['file'] ?? '');
+			$path = (string) ($file['path'] ?? '');
+			if ($path === '' || !is_file($path) || !self::isEnvironmentEntry('config/' . $base)) {
+				continue;
+			}
+			$map['config/' . $base] = $path;
+		}
+		return $map;
+	}
+
+	/**
+	 * @return array<string, bool>|null null when that backup is not in the folder
+	 */
+	public function contentsOfBackup(string $basename): ?array
+	{
+		if (self::backupName($basename) === null) {
+			return null;
+		}
+		foreach ($this->backupfilestable as $row) {
+			if (($row['filenamebase'] ?? '') === $basename && isset($row['contents']) && is_array($row['contents'])) {
+				return $row['contents'];
+			}
+		}
+		$spans = \fs::glob($this->backupdirpath . $basename . '*.zip') ?: [];
+		if ($spans === []) {
+			return null;
+		}
+		return self::contentsFromNames(self::entryNames($spans));
+	}
+
+	/** @param array{action?: string} $task */
+	public function restoreTaskKept(array $task): bool
+	{
+		return match ((string) ($task['action'] ?? '')) {
+			'extractMysqldump' => self::chosen($this->state, 'restoreDatabase', true),
+			'extractMediaDir' => self::chosen($this->state, 'restoreMedia', false),
+			'extractSettings' => self::chosen($this->state, 'restorePageSettings', false)
+				|| self::chosen($this->state, 'restoreMediaSettings', false),
+			'extractEnvironment' => self::chosen($this->state, 'restoreEnvironment', false),
+			default => true,
+		};
+	}
+
+	/** Write one group from the open backup back to its files. */
+	public function restoreGroup(string $prefix): bool
+	{
+		$basename = self::backupName($this->state->spanbasename ?? '');
+		if ($basename === null) {
+			return false;
+		}
+		$wrote = 0;
+		foreach (\fs::glob($this->backupdirpath . $basename . '*.zip') ?: [] as $span) {
+			$zip = new \ZipArchive();
+			if ($zip->open(\fs::toNative($span)) !== true) {
+				continue;
+			}
+			for ($i = 0; $i < $zip->numFiles; $i++) {
+				$name = str_replace('\\', '/', (string) $zip->getNameIndex($i));
+				if (!str_starts_with($name, $prefix)) {
+					continue;
+				}
+				$target = self::restoredTarget($name);
+				if ($target === null || ($prefix === 'settings/' && !self::chosen($this->state, self::settingKey(self::settingWhich($name), true), false))) {
+					continue;
+				}
+				$bytes = $zip->getFromIndex($i);
+				if (!is_string($bytes)) {
+					$zip->close();
+					return false;
+				}
+				if (str_starts_with($name, 'config/')) {
+					$bytes = EnvironmentFile::restoreArchive($target, $bytes);
+					if ($bytes === null) {
+						$zip->close();
+						return false;
+					}
+				}
+				if (!$this->replaceFile($target, $bytes)) {
+					$zip->close();
+					return false;
+				}
+				$wrote++;
+			}
+			$zip->close();
+		}
+		return $wrote > 0;
+	}
+
+	public static function restoredTarget(string $entry): ?string
+	{
+		$entry = str_replace('\\', '/', $entry);
+		if (self::isSettingsEntry($entry)) {
+			$dir = ProjectFile::directory();
+			return $dir === null ? null : $dir . basename($entry);
+		}
+		if (!self::isEnvironmentEntry($entry)) {
+			return null;
+		}
+		$dir = EnvironmentFile::directory();
+		if ($dir === null) {
+			$root = rtrim(\fs::toNative((string) \fs::$projectRoot), '\\/');
+			if ($root === '' || !is_dir($root)) {
+				return null;
+			}
+			$dir = $root . DIRECTORY_SEPARATOR . 'config';
+		}
+		return rtrim($dir, '\\/') . DIRECTORY_SEPARATOR . basename($entry);
+	}
+
+	/** @param list<string> $spans */
+	private static function entryNames(array $spans): array
+	{
+		$names = [];
+		foreach ($spans as $span) {
+			$zip = new \ZipArchive();
+			if ($zip->open(\fs::toNative($span)) !== true) {
+				continue;
+			}
+			for ($i = 0; $i < $zip->numFiles; $i++) {
+				$name = $zip->getNameIndex($i);
+				if (is_string($name)) {
+					$names[] = str_replace('\\', '/', $name);
+				}
+			}
+			$zip->close();
+		}
+		return $names;
+	}
+
+	private static function isSettingsEntry(string $name): bool
+	{
+		return self::settingWhich($name) !== '';
+	}
+
+	private static function settingWhich(string $name): string
+	{
+		foreach (ProjectFile::FILES as $which => $file) {
+			if ($name === 'settings/' . $file) {
+				return $which;
+			}
+		}
+		return '';
+	}
+
+	private static function isEnvironmentEntry(string $name): bool
+	{
+		return preg_match('#^config/(?:[A-Za-z0-9][A-Za-z0-9._-]*\.config\.json|config\.local\.json)$#', $name) === 1;
+	}
+
+	private function replaceFile(string $path, string $bytes): bool
+	{
+		$dir = dirname($path);
+		if (!is_dir($dir) && !mkdir($dir, 0775, true) && !is_dir($dir)) {
+			return false;
+		}
+		$temp = $path . '.' . getmypid() . '.tmp';
+		if (file_put_contents($temp, $bytes) === false) {
+			return false;
+		}
+		if (is_file($path)) {
+			$perms = fileperms($path);
+			if ($perms !== false) {
+				@chmod($temp, $perms & 0777);
+			}
+		}
+		if (!rename($temp, $path)) {
+			@unlink($temp);
+			return false;
+		}
+		return true;
 	}
 
 	function log(string $info): void
@@ -107,24 +428,36 @@ class Panel extends CmsPanel
 		$files = \fs::glob($backupdirpath . '*-0.zip');
 		if (!empty($files)) {
 			foreach (array_reverse($files) as $backupfile) {
-				$backupfileNative = $backupfile;
-				$backupfile       = \fs::toInternal($backupfile);
+				$backupfile = \fs::toInternal($backupfile);
 				if (!preg_match('/^(.*\/backups\/((.{10})--(.{8})-(.*)))-0\.zip$/', $backupfile, $m)) {
 					continue;
 				}
 				$timefinished = str_replace('-', ':', $m[4]);
-				$spanfiles    = \fs::glob($m[1] . '*.zip');
+				$spanfiles    = \fs::glob($m[1] . '*.zip') ?: [];
 				$totalsize    = array_sum(array_map('\fs::filesize', $spanfiles));
-				$zip          = new \ZipArchive();
-				if ($zip->open($backupfileNative) !== true) {
-					continue;
+				$names        = [];
+				$info_txt     = false;
+				foreach ($spanfiles as $span) {
+					$zip = new \ZipArchive();
+					if ($zip->open(\fs::toNative($span)) !== true) {
+						continue;
+					}
+					if (str_ends_with(\fs::toInternal($span), '-0.zip')) {
+						$raw = $zip->getFromName($this->infoFilename);
+						$info_txt = is_string($raw) ? @unserialize($raw) : false;
+					}
+					for ($i = 0; $i < $zip->numFiles; $i++) {
+						$name = $zip->getNameIndex($i);
+						if (is_string($name)) {
+							$names[] = str_replace('\\', '/', $name);
+						}
+					}
+					$zip->close();
 				}
-				$raw = $zip->getFromName($this->infoFilename);
-				$zip->close();
-				$info_txt = is_string($raw) ? @unserialize($raw) : false;
 				if (!is_array($info_txt) || !isset($info_txt['created'])) {
 					continue;
 				}
+				$contents = self::contentsFromNames($names);
 				$durationSeconds = strtotime($m[3] . ' ' . $timefinished) - strtotime($info_txt['created']);
 				if (!is_int($durationSeconds) || $durationSeconds < 0) {
 					continue;
@@ -141,7 +474,8 @@ class Panel extends CmsPanel
 					'databasename'   => $m[5],
 					'user'           => $info_txt['user'],
 					'note'           => $info_txt['settings']->backupNotes ?? '',
-					'filesincluded'  => $info_txt['settings']->backupFiles,
+					'contents'       => $contents,
+					'contentsLabel'  => self::contentLabels($contents),
 					'download'       => $spanfiles,
 				];
 			}

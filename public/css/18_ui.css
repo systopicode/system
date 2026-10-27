@@ -188,12 +188,11 @@ div.imageEditorScrim {
 	to { outline: 3px solid color-mix(in srgb, var(--cmsHighlightColor) 60%, transparent); outline-offset: 2px; }
 }
 
-/* A row is held by its grip. The ring follows the card's radius.
-   An outline with an offset sits off the rounded edge and reads as a second border. */
+/* Desktop rows: a ring on the row. Stacked cards override this with a lift. */
 .cms tr:has(> td > .pressing),
 .cms tr:has(> td > .longPressed) {
-	outline: none;
-	box-shadow: 0 0 0 2px var(--cmsHighlightColor);
+	outline: 2px solid var(--cmsHighlightColor);
+	outline-offset: -2px;
 }
 .cms td > :is(.pressing, .longPressed) {
 	animation: none;
@@ -231,6 +230,9 @@ tr:has(> td > .pressing) > td {
 		border: none;
 		background: var(--cmsHighlightColor);
 		transition: none;
+	}
+	&.line.accept {
+		transition: top .14s cubic-bezier(.2, .8, .2, 1), left .14s cubic-bezier(.2, .8, .2, 1), width .14s cubic-bezier(.2, .8, .2, 1);
 	}
 	&.accept {
 		transition-property: left, top, width, height, border-radius;

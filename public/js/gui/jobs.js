@@ -48,11 +48,11 @@
 		el.classList.toggle('on', any);
 	}
 
-	// Closing or reloading the tab would cut a running upload off. Video formats
-	// are rendered on the server and carry on, so they do not ask.
+	// Closing or reloading the tab would cut a running upload, backup or
+	// restore off. Video formats are rendered on the server and carry on.
 	window.addEventListener('beforeunload', function (event) {
 		var server = window.sys && sys.core && sys.core.server;
-		if (slots.upload || (server && server.uploading > 0)) {
+		if (slots.upload || (server && (server.uploading > 0 || server.backupBusy))) {
 			event.preventDefault();
 			event.returnValue = '';
 		}

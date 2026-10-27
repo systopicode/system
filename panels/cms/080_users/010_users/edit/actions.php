@@ -154,6 +154,7 @@ switch ($this->action) {
 		if ($user->type === User::SCREEN || !LoginCodes::available()) {
 			break;
 		}
+		$this->state->userTab = 'access';
 		$code = LoginCodes::create($purpose, $user, \Systopic\System\Auth\Session::id());
 		if ($this->action === 'inviteMail') {
 			$this->accessNote = match (TRUE) {

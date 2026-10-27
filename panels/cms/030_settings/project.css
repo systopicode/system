@@ -51,8 +51,18 @@
     margin: 0;
 }
 
-.projectFiles > .widget > .tableScroll,
-.pageSettings.widget > .tableScroll{
+/* The heading is loose. The table is the card, with the same radius as a widget.
+   A stacked phone list stays open so the grey sheet shows between the rows. */
+.projectFiles > .widget > .tableScroll:not(.stacked),
+.pageSettings.widget > .tableScroll:not(.stacked){
+    background: var(--cmsCanvas);
+    border: 1px solid var(--cmsLine);
+    border-radius: var(--cmsRadiusLg);
+    box-shadow: var(--cmsShadow);
+    overflow: hidden;
+}
+.projectFiles > .widget > .tableScroll.stacked,
+.pageSettings.widget > .tableScroll.stacked{
     background: transparent;
     border: 0;
     box-shadow: none;

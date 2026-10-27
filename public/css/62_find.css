@@ -20,6 +20,16 @@
     font-size: 1rem;
 }
 
+/* The close control sits beside the field. Inside it, it reads as clearing the search. */
+@media (min-width: 1025px) and (orientation: landscape), (min-width: 1401px) {
+    body.cms .cmslightbox.cmsFind > section > header > ul.barmenu {
+        position: static;
+        top: auto;
+        right: auto;
+        bottom: auto;
+    }
+}
+
 .cmsFindResults .hint{
     margin: 0;
     color: var(--cmsMuted);

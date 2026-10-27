@@ -19,4 +19,27 @@ class Panel extends BackupPanel
 	{
 		return \Systopic\System\Auth\Session::hasOneRole('admin', 'restore');
 	}
+
+	public function onLoad(): void
+	{
+		$name = self::backupName(\http::get('name'));
+		if ($name === null || ($this->action !== null && $this->action !== '')) {
+			return;
+		}
+		if (($this->parent->state->restoreName ?? '') === $name) {
+			return;
+		}
+		$contents = $this->parent->contentsOfBackup($name);
+		if ($contents === null) {
+			return;
+		}
+		$this->parent->updateState((object) [
+			'restoreName' => $name,
+			'restoreDatabase' => !empty($contents['database']),
+			'restoreMedia' => !empty($contents['media']),
+			'restorePageSettings' => !empty($contents['pageSettings']),
+			'restoreMediaSettings' => !empty($contents['mediaSettings']),
+			'restoreEnvironment' => !empty($contents['environment']),
+		]);
+	}
 }

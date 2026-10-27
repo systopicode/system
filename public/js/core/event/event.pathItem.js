@@ -179,15 +179,15 @@ sys.core.event.pathItem = function (element, event) {
 
 	pathItem.getFormData = function (form) {
 		var formData = {};
-		for (var index in form.elements) {
-			if (typeof form.elements[index] !== 'object') continue;
-			var el = form.elements[index];
+		for (var i = 0; i < form.elements.length; i++) {
+			var el = form.elements[i];
+			if (!el || typeof el !== 'object') continue;
 			var data = pathItem.getElementData(el);
 			if (data.files && data.files.length) {
 				formData.files = formData.files || {};
-				for (var i = 0; i < data.files.length; i++) {
-					var key = data.files.length > 1 ? el.name + '[' + i + ']' : el.name;
-					formData.files[key] = data.files[i];
+				for (var fileIndex = 0; fileIndex < data.files.length; fileIndex++) {
+					var key = data.files.length > 1 ? el.name + '[' + fileIndex + ']' : el.name;
+					formData.files[key] = data.files[fileIndex];
 				}
 			}
 			delete data.files; /* do not extend empty FileList – has non-Blob props (item, length) */

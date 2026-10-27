@@ -38,6 +38,9 @@ class qr {
 		if ($svg === '') {
 			return '';
 		}
+		// A prolog or doctype splits the fragment when the page is patched
+		// through innerHTML, and the rest of the dialog disappears.
+		$svg = preg_replace('~^\s*(?:<\?xml[^>]*\?>\s*)?(?:<!DOCTYPE[^>]*>\s*)?~i', '', $svg) ?? $svg;
 		$className = trim($className);
 		if ($className === '') {
 			return $svg;

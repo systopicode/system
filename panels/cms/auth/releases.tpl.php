@@ -4,6 +4,7 @@ $e = static fn(string $v): string => htmlspecialchars($v, ENT_QUOTES);
 ?>
 <h1>Release notes</h1>
 <main class="authText">
+	<div class="authScroll">
 	<?php foreach ($this->releases as $version => $release) { ?>
 		<h2>GUI <?= $e((string) $version) ?> <small><?= $e($release['date']) ?></small></h2>
 		<?php foreach (['new' => 'New', 'fixed' => 'Fixed'] as $key => $title) {
@@ -18,5 +19,6 @@ $e = static fn(string $v): string => htmlspecialchars($v, ENT_QUOTES);
 			</ul>
 		<?php } ?>
 	<?php } ?>
+	</div>
 	<p class="authLinks"><a href="login" class="ajax"><i class="fa-regular fa-chevron-left"></i> Back to sign in</a></p>
 </main>

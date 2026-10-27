@@ -229,11 +229,15 @@ body.widgetDragging *{
 }
 
 .dashWidgets.is-editing .dashWidget{
+	border-radius: var(--cmsRadiusLg);
 	outline: 1px dashed var(--cmsLineStrong);
-	outline-offset: 2px;
+	outline-offset: 0;
 	-webkit-touch-callout: none;
 	-webkit-user-select: none;
 	user-select: none;
+}
+.dashWidgets.is-editing .dashWidget > header{
+	border-radius: var(--cmsRadiusLg);
 }
 
 /* while customizing a widget is a tile: no links, no hover areas, only the

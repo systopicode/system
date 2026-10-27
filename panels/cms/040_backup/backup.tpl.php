@@ -7,7 +7,7 @@
 	<td><?= $backup['databasename']; ?></td>
 	<td><?= $backup['user'] ?></td>
 	<td><?= $backup['note'] ?></td>
-	<td style="vertical-align: middle"><?= $backup['filesincluded'] ? '<i class="fa-regular fa-check"></i>' : '&mdash;'; ?></td>
+	<td><?= ($backup['contentsLabel'] ?? '') !== '' ? htmlspecialchars((string) $backup['contentsLabel'], ENT_QUOTES) : '&mdash;' ?></td>
 	<td class="icons">
 		<ul>
 			<?php if (\Systopic\System\Auth\Session::hasOneRole('admin', 'restore', 'recovery')) { ?>

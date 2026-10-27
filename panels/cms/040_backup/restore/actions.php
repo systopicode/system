@@ -16,11 +16,15 @@ $tmpdirpathNative    = fs::toNative($tmpdirpath);
 $backupdirpathNative = fs::toNative($backupdirpath);
 
 switch ($this->action) {
+	case 'updateRestoreSelection':
+		$this->parent->updateState(http::put()->values);
+		break;
 	case 'createTaskList':
 		if ($this->backupName(http::get('name')) === null) {
 			message::error('This backup was not found.');
 			break;
 		}
+		$this->parent->takePostedSelection();
 		clearstatcache();
 		fsDir::get($tmpdirpath)->unlink(TRUE);
 		clearstatcache();
@@ -41,15 +45,27 @@ switch ($this->action) {
 		foreach ($this->parent->state->taskList as &$taskListItem) {
 			$taskListItem = str_replace(['add', 'Backup'], ['extract', 'Restore'], $taskListItem);
 		}
+		unset($taskListItem);
+		$this->parent->state->taskList = array_values(array_filter(
+			$this->parent->state->taskList,
+			fn(array $task): bool => $this->parent->restoreTaskKept($task)
+		));
 		$this->parent->state->taskListNextIndex = 0;
 		$this->parent->state->restoreMediaFolder = 0; // dont swap media folders on finishBackup
+		$next = (string) ($this->parent->state->taskList[0]['action'] ?? '');
+		if ($next === '' || $next === 'finishRestore') {
+			$this->parent->state->restoreNotice = 'nothing';
+			message::info('Nothing selected.');
+			$this->updateView('lightbox');
+			break;
+		}
 		message::confirm('Preparing restore.');
 		$this->updateView('lightbox');
 		http::refresh('./', $this->parent->state->taskList[$this->parent->state->taskListNextIndex]['action']);
 		break;
 	case 'extractMysqldump':
 		if ($this->parent->state->cancel) {
-			exit;
+			break;
 		}
 		$zip = new ZipArchive();
 		$zip->open($backupdirpathNative . $this->parent->state->spanbasename . '-0.zip');
@@ -62,14 +78,53 @@ switch ($this->action) {
 		$this->updateView('lightbox');
 		http::refresh('./', $this->parent->state->taskList[$this->parent->state->taskListNextIndex]['action']);
 		break;
+	case 'extractSettings':
+	case 'extractEnvironment':
+		if ($this->parent->state->cancel) {
+			break;
+		}
+		$prefix = $this->action === 'extractSettings' ? 'settings/' : 'config/';
+		$label = $this->action === 'extractSettings' ? 'Settings' : 'Environment';
+		if (!$this->parent->restoreGroup($prefix)) {
+			message::error($label . ' could not be restored.');
+			$this->parent->log('ERROR ' . $label . ' restore failed');
+			break;
+		}
+		$this->parent->state->taskListNextIndex++;
+		message::confirm($label . ' restored.');
+		$this->updateView('lightbox');
+		http::refresh('./', $this->parent->state->taskList[$this->parent->state->taskListNextIndex]['action']);
+		break;
 	case 'extractMediaDir':
 		if ($this->parent->state->cancel) {
-			exit;
+			break;
 		}
 		$this->parent->state->restoreMediaFolder = 1; // swap media folders on finishBackup
 		$mediaDir = $this->parent->state->taskList[$this->parent->state->taskListNextIndex]['value'];
+		$mediaZipName = $mediaDir . '.zip';
+		$zipFileName = null;
+		for ($part = 0; ; $part++) {
+			$candidate = $backupdirpathNative . $this->parent->state->spanbasename . '-' . $part . '.zip';
+			if (!is_file($candidate)) {
+				break;
+			}
+			$probe = new ZipArchive();
+			if ($probe->open($candidate) !== true) {
+				continue;
+			}
+			$located = $probe->locateName($mediaZipName);
+			$probe->close();
+			if ($located !== false) {
+				$zipFileName = $candidate;
+				break;
+			}
+		}
+		if ($zipFileName === null) {
+			message::error('Media files were not found in the backup.');
+			$this->parent->log('ERROR media zip missing: ' . $mediaZipName);
+			break;
+		}
 		$zip = new ZipArchive();
-		$zipFileName = $backupdirpathNative . $this->parent->state->spanbasename . '-' . $spanindex . '.zip';
 		$zip->open($zipFileName);
 		$zipname = $mediaDir . '.zip';
 		fs::fsMkdir($tmpdirpath . 'media/' . $mediaDir);
@@ -97,12 +152,18 @@ switch ($this->action) {
 		break;
 	case 'finishRestore':
 		if ($this->parent->state->cancel) {
-			exit;
+			break;
 		}
-		$restore = new Restore($this->scope->connection);
-		$restore->dropForeignKeys();
-		foreach ($restore->run((string) fs::file_get_contents($mysqlfile)) as $error) {
-			message::error('Database error during restore: ' . $error);
+		if (\Systopic\System\Panels\Root\Cms\Backup\Panel::chosen($this->parent->state, 'restoreDatabase', true)) {
+			if (!fs::isFile($mysqlfile)) {
+				message::error('The database dump is missing.');
+				break;
+			}
+			$restore = new Restore($this->scope->connection);
+			$restore->dropForeignKeys();
+			foreach ($restore->run((string) fs::file_get_contents($mysqlfile)) as $error) {
+				message::error('Database error during restore: ' . $error);
+			}
 		}
 
 		if ($this->parent->state->restoreMediaFolder && fs::isDir($tmpdirpath . '/media/')) {
@@ -118,7 +179,7 @@ switch ($this->action) {
 				$this->parent->log("rename('$tmpdirpath' . 'media/', '$mediadirpath') failed");
 				break;
 			}
-			message::confirm('Database and media files restored.');
+			message::confirm('Media files restored.');
 		}
 		$this->parent->log("Backup Restored");
 		$this->parent->state->taskListNextIndex++;
@@ -136,7 +197,7 @@ switch ($this->action) {
 		break;
 	case 'clearTempfiles':
 		if ($this->parent->state->cancel) {
-			exit;
+			break;
 		}
 		fsFile::get($mysqlfile)->unlink();
 		fsDir::get($replacedmediadirpath)->unlink(TRUE);
