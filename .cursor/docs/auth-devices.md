@@ -72,6 +72,28 @@ nie in Git oder im Sync. Ohne `auth.secret` ist das CMS wie vor 1.3
 (Aktivierungs-Mail), damit Projekte, deren Login keine Codes kennt,
 unverändert bleiben.
 
+**Auch jeder DEV-Platz braucht ein eigenes Secret**, in
+`config/config.local.json` des Projekts: `{"auth": {"secret": "<64 hex>"}}`
+(erzeugen mit `php -r "echo bin2hex(random_bytes(32));"`). Die Datei ist in
+git und im Sync ignoriert, kommt also auf keinem anderen Platz an.
+
+Seit `909e013` (Lars, 2026-10-27) geht es auch im CMS: Settings →
+Environment → Sign-in key anlegen (`EnvironmentFile::createAuth()`). Der
+Schlüssel landet dann aber in der **Instanzdatei**
+(`config/DEV.<platz>.config.json`). Ob die in git liegt, hängt vom Projekt
+ab (bei spaceticker ja). Dann wäre der Schlüssel im Repo. Ins Backup kommt
+er nicht. Für DEV daher `config.local.json` nehmen. Sie überschreibt die Instanzdatei
+(`Config::load()`, `LOCAL_INSTANCE_KEYS` enthält `auth`).
+
+- *Symptom:* Auf DEV fehlen Code und QR des Screens auf der Login-Seite,
+  Code-Login und „Code per E-Mail“ gehen nicht. Auf staging geht alles. Das
+  sieht aus wie ein verlorener Merge (so geschehen am 2026-10-27).
+- *Ursache:* `LoginCodes::available()` ist falsch, weil `auth.secret` fehlt.
+  `screenPairing()` kehrt dann still zurück, ohne Fehler und ohne Log.
+- *Lösung:* `config.local.json` wie oben anlegen. Prüfen per CLI:
+  `cd public && php index.php @auth.json` mit `{"path": "/projects/<p>/public/auth/", "output": "html"}`.
+  Im Ergebnis muss `appScreenCode` vorkommen.
+
 ## Ein Projekt anbinden
 
 Was spaceticker dafür tut:
