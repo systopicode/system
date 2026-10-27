@@ -137,6 +137,17 @@ umbenennen —, zeigt `Audit` als Liste von Aktionen (`db status` und `db
 audit` im CMS), und `Migrations` hängt Datenmigrationen an das Anlegen oder
 Verbreitern einer Spalte.
 
+**Falle MariaDB (2026-10-27, behoben in systopic/db):**
+- *Symptom:* `db status` zeigt auf staging für jede nullable Spalte
+  `DEFAULT 'NULL'` als Unterschied (spaceticker: 177). Lokal (MySQL) sind es 0
+  bei gleicher Datenbank. `db audit` führt alle Aktionen fehlerfrei aus, und
+  danach ist alles wie vorher.
+- *Ursache:* MariaDB liefert `information_schema.COLUMNS.COLUMN_DEFAULT` als
+  SQL-Text: `NULL` für keinen Default, Strings mit Quotes.
+- *Lösung:* `Column::schemaDefault()` normalisiert das, wenn
+  `Connection::isMariaDb()` zutrifft. Wer `COLUMN_DEFAULT` selbst liest, muss
+  es auch durch diese Funktion schicken.
+
 ---
 
 ## 2 · Lesen: die Scope
