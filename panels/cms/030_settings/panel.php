@@ -16,7 +16,7 @@ class Panel extends PanelNode {
 	public $icon = 'fa-duotone fa-regular fa-gear';
 	public ?int $naviOrder = 40;
 
-	/** Page Settings and Tags exist before onLoad, so the menu can open one. */
+	/** Global Settings and Tags exist before onLoad, so the menu can open one. */
 	public bool $buildChildPanels = true;
 
 	/** The request's scope — the settings children read and write through it. */

@@ -32,18 +32,19 @@ if (fs::isFile((string) fs::$projectRoot . 'lib/funcs.lib.php')) {
 // file defines at "global" scope becomes a local and is thrown away. That
 // silently dropped settings.php's $media_groups and $image_formats, and
 // medias::__get() then hit an unknown group and killed the request via d().
+$__projectSettings = \Systopic\System\Settings\ProjectSettings::boot();
 foreach ([
 	'lib/helper.funcs.php',
 	'lib/cms.funcs.php',
 	'lib/config/constants.config.php',
-	fs::toNative((string) fs::$projectRoot . 'settings.php'),
+	$__projectSettings ? '' : fs::toNative((string) fs::$projectRoot . 'settings.php'),
 	'lib/config/server.config.php'
 ] as $__configFile) {
-	if (is_file($__configFile)) {
+	if ($__configFile !== '' && is_file($__configFile)) {
 		include $__configFile;
 	}
 }
-unset($__configFile);
+unset($__configFile, $__projectSettings);
 /* * **************************** CHECK AND DEFINE CONSTANTS (AFTER SETTINGS.PHP) ************************** */
 
 defined('PUBLIC_PAGE_NAME') || define('PUBLIC_PAGE_NAME', 'fluxo cms');

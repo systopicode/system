@@ -5,24 +5,152 @@ declare(strict_types=1);
 namespace Systopic\System\Settings;
 
 /**
- * The project files settings.php includes: page.settings.php and
- * media.settings.php. The CMS edits the literals in place. A value is written
- * back only as a quoted string, a number, a bool, or a list of strings — never
- * as pasted PHP.
+ * Global Settings and Media Settings. The files are config/global.settings.json
+ * and config/media.settings.json. A project that still has page.settings.json
+ * or page.settings.php is read from that name, so older installations and
+ * backups keep working.
+ *
+ * JSON is rewritten as data. The PHP files are still edited as literals: a
+ * value goes back only as a quoted string, a number, a bool, or a list of
+ * strings — never as pasted PHP.
  */
 final class ProjectFile
 {
     /** @var array<string, string> */
     public const FILES = [
+        'page' => 'global.settings.json',
+        'media' => 'media.settings.json',
+    ];
+
+    /** @var array<string, list<string>> JSON names written before the current one */
+    private const EARLIER = [
+        'page' => ['page.settings.json'],
+    ];
+
+    /** @var array<string, string> the names a backup may still be carrying */
+    public const LEGACY_FILES = [
         'page' => 'page.settings.php',
         'media' => 'media.settings.php',
     ];
 
     /**
-     * The folder settings.php really lives in. The project root may only hold
-     * a symlink; the included files sit next to the target.
+     * config/ when a settings JSON file is there, otherwise the folder
+     * settings.php really lives in. The project root may only hold a symlink.
      */
     public static function directory(): ?string
+    {
+        if (self::configDirectory() !== null) {
+            foreach (array_keys(self::FILES) as $which) {
+                if (self::existingJson($which) !== null) {
+                    return self::configDirectory();
+                }
+            }
+        }
+        return self::legacyDirectory();
+    }
+
+    /** Where global.settings.json and media.settings.json are written. */
+    public static function configDirectory(): ?string
+    {
+        $dir = rtrim(\fs::toNative((string) \fs::$projectRoot . 'config'), '\\/');
+        return is_dir($dir) ? $dir . DIRECTORY_SEPARATOR : null;
+    }
+
+    /** Path of the JSON file, whether or not it exists yet. */
+    public static function jsonPath(string $which): ?string
+    {
+        $name = self::FILES[$which] ?? null;
+        $root = rtrim(\fs::toNative((string) \fs::$projectRoot), '\\/');
+        if ($name === null || $root === '') {
+            return null;
+        }
+        return $root . DIRECTORY_SEPARATOR . 'config' . DIRECTORY_SEPARATOR . $name;
+    }
+
+    /** @return list<string> */
+    public static function archiveBasenames(string $which): array
+    {
+        $names = [];
+        foreach ([...self::jsonNames($which), self::LEGACY_FILES[$which] ?? null] as $name) {
+            if (is_string($name) && $name !== '' && !in_array($name, $names, true)) {
+                $names[] = $name;
+            }
+        }
+        return $names;
+    }
+
+    /** The JSON file that is there: the current name, then an older one. */
+    public static function existingJson(string $which): ?string
+    {
+        $config = self::configDirectory();
+        if ($config === null) {
+            return null;
+        }
+        foreach (self::jsonNames($which) as $name) {
+            if (is_file($config . $name)) {
+                return $config . $name;
+            }
+        }
+        return null;
+    }
+
+    /** @return list<string> */
+    private static function jsonNames(string $which): array
+    {
+        $names = [];
+        foreach ([self::FILES[$which] ?? null, ...(self::EARLIER[$which] ?? [])] as $name) {
+            if (is_string($name) && $name !== '' && !in_array($name, $names, true)) {
+                $names[] = $name;
+            }
+        }
+        return $names;
+    }
+
+    public static function path(string $which): ?string
+    {
+        $json = self::existingJson($which);
+        if ($json !== null) {
+            return $json;
+        }
+        $php = self::LEGACY_FILES[$which] ?? null;
+        $dir = self::legacyDirectory();
+        if ($php === null || $dir === null) {
+            return null;
+        }
+        $path = $dir . $php;
+        return is_file($path) ? $path : null;
+    }
+
+    /**
+     * Read a legacy PHP settings file and write the JSON next to config/.
+     * The PHP source is tokenised, not executed.
+     */
+    public static function importLegacy(string $which, string $source, ?string $target = null): bool
+    {
+        if (!isset(self::FILES[$which])) {
+            return false;
+        }
+        try {
+            $data = ProjectJson::documentFromGroups($which, self::groupsFromSource($source));
+        } catch (\Throwable) {
+            return false;
+        }
+        if ($data === []) {
+            return false;
+        }
+        $target ??= self::jsonPath($which);
+        return $target !== null && ProjectJson::put($target, $data);
+    }
+
+    /** @return list<Group> */
+    public static function groupsFromSource(string $source): array
+    {
+        $parser = new self($source);
+        $parser->collect();
+        return $parser->groups;
+    }
+
+    private static function legacyDirectory(): ?string
     {
         // native from here on, like EnvironmentFile::directory(): every
         // method of this class reads and writes with PHP's own functions
@@ -35,15 +163,9 @@ final class ProjectFile
         return is_dir($root) ? $root : null;
     }
 
-    public static function path(string $which): ?string
+    private static function asJson(string $path): bool
     {
-        $name = self::FILES[$which] ?? null;
-        $dir = self::directory();
-        if ($name === null || $dir === null) {
-            return null;
-        }
-        $path = $dir . $name;
-        return is_file($path) ? $path : null;
+        return str_ends_with(strtolower($path), '.json');
     }
 
     /**
@@ -51,6 +173,20 @@ final class ProjectFile
      */
     public static function leaves(string $path): array
     {
+        if (self::asJson($path)) {
+            $leaves = [];
+            foreach (ProjectJson::groups($path) as $group) {
+                if ($group->shape === 'scalar') {
+                    $leaves[] = new Leaf($group->id, $group->category, $group->label, $group->kind, $group->text, $group->start, $group->end);
+                }
+                foreach ($group->items as $item) {
+                    foreach ($item->fields as $leaf) {
+                        $leaves[] = $leaf;
+                    }
+                }
+            }
+            return $leaves;
+        }
         return (new self(file_get_contents($path) ?: ''))->collect();
     }
 
@@ -61,6 +197,9 @@ final class ProjectFile
      */
     public static function groups(string $path): array
     {
+        if (self::asJson($path)) {
+            return ProjectJson::groups($path);
+        }
         $parser = new self(file_get_contents($path) ?: '');
         $parser->collect();
         return $parser->groups;
@@ -72,6 +211,9 @@ final class ProjectFile
      */
     public static function replace(string $path, string $id, string $text): ?string
     {
+        if (self::asJson($path)) {
+            return ProjectJson::replace($path, $id, $text);
+        }
         $parser = new self(file_get_contents($path) ?: '');
         $leaves = $parser->collect();
         foreach ($leaves as $leaf) {
@@ -516,6 +658,9 @@ final class ProjectFile
      */
     public static function saveItem(string $path, string $id, string $key, string $text): ?bool
     {
+        if (self::asJson($path)) {
+            return ProjectJson::saveItem($path, $id, $key, $text);
+        }
         $parser = self::open($path);
         $group = $parser?->find($id);
         if ($group === null || $group->shape !== 'list') {
@@ -540,6 +685,9 @@ final class ProjectFile
     /** @return null unchanged, true written, false refused */
     public static function renameItem(string $path, string $id, string $key, string $text): ?bool
     {
+        if (self::asJson($path)) {
+            return ProjectJson::renameItem($path, $id, $key, $text);
+        }
         $text = trim($text);
         if ($text === '' || str_contains($text, "\n") || str_contains($text, '/')) {
             return false;
@@ -567,6 +715,9 @@ final class ProjectFile
     /** @return null unchanged, true written, false refused */
     public static function addItem(string $path, string $id): ?bool
     {
+        if (self::asJson($path)) {
+            return ProjectJson::addItem($path, $id);
+        }
         $parser = self::open($path);
         $group = $parser?->find($id);
         if ($group === null || $group->shape === 'scalar') {
@@ -604,6 +755,9 @@ final class ProjectFile
     /** @return null unchanged, true written, false refused */
     public static function removeItem(string $path, string $id, string $key): ?bool
     {
+        if (self::asJson($path)) {
+            return ProjectJson::removeItem($path, $id, $key);
+        }
         $parser = self::open($path);
         $group = $parser?->find($id);
         if ($group === null || self::item($group, $key) === null) {
@@ -634,6 +788,9 @@ final class ProjectFile
     /** @return null unchanged, true written, false refused */
     public static function moveItem(string $path, string $id, string $from, string $to, bool $after): ?bool
     {
+        if (self::asJson($path)) {
+            return ProjectJson::moveItem($path, $id, $from, $to, $after);
+        }
         $parser = self::open($path);
         $group = $parser?->find($id);
         if ($group === null || $from === '' || $to === '') {
@@ -672,6 +829,9 @@ final class ProjectFile
      */
     public static function setField(string $path, string $id, string $key, string $field, string $text): ?bool
     {
+        if (self::asJson($path)) {
+            return ProjectJson::setField($path, $id, $key, $field, $text);
+        }
         if ($field === '' || str_contains($field, '/')) {
             return false;
         }

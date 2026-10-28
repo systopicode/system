@@ -805,13 +805,13 @@ class PanelNode implements ClientExportable, RenderNode
 
     /**
      * Icon for the side menu. Under Tools only the first level has one
-     * (System, Database, Maintenance, Migration, Logs). Deeper entries are text.
+     * (System, Database, Maintenance, Debug, Migration, Logs). Deeper entries are text.
      * Everywhere else a panel's own icon is used, or its name as before.
      */
     private function navIcon(): ?string
     {
         // The Tools item itself keeps its wrench. Only what hangs under it
-        // is limited to the first level (System, Database, Maintenance, Migration, Logs).
+        // is limited to the first level (System, Database, Maintenance, Debug, Migration, Logs).
         if ($this->name !== 'tools' && in_array('tools', $this->path, true)) {
             if ($this->parent?->name !== 'tools') {
                 return null;
@@ -820,6 +820,7 @@ class PanelNode implements ClientExportable, RenderNode
                 'system' => 'fa-regular fa-server',
                 'database' => 'fa-regular fa-database',
                 'maintenance' => 'fa-regular fa-wrench',
+                'debug' => 'fa-regular fa-bug',
                 'migration' => 'fa-regular fa-repeat',
                 'logs' => 'fa-regular fa-file-text',
                 default => null,

@@ -7,7 +7,7 @@ namespace Systopic\System\Panels\Root\Cms\Settings\Mediasettings;
 use Systopic\System\Panels\Root\Cms\Settings\Panel as SettingsPanel;
 
 /**
- * media.settings.php — one table per group.
+ * Media settings — one table per group. The file is config/media.settings.json.
  */
 class Panel extends SettingsPanel
 {

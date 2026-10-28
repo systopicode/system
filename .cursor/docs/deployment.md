@@ -120,8 +120,8 @@ normal von Packagist.
 
 ## 4. Daten zwischen Stages (DEV → STAGING …)
 
-Datenbank, Page Settings (`page.settings.php`), Media Settings
-(`media.settings.php`) und die Environment-Dateien (`config/*.config.json`,
+Datenbank, Global Settings (`config/global.settings.json`), Media Settings
+(`config/media.settings.json`) und die Environment-Dateien (`config/*.config.json`,
 `config.local.json`, nicht `config.json`) wandern über das Backup-Panel im CMS
 (`cms/backup`, `panels/cms/040_backup`). Mediendateien unter
 `public/var/original/` nur, wenn „Media files“ an ist. Die Liste zeigt unter

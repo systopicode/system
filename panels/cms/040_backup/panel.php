@@ -109,14 +109,14 @@ class Panel extends CmsPanel
 	public const CONTENTS = [
 		'database' => 'Database',
 		'media' => 'Media',
-		'pageSettings' => 'Page Settings',
+		'pageSettings' => 'Global Settings',
 		'mediaSettings' => 'Media Settings',
 		'environment' => 'Environment',
 	];
 
 	/** File settings, named like their panels. Template settings stay in the database. */
 	public const SETTING_LABELS = [
-		'page' => 'Page Settings',
+		'page' => 'Global Settings',
 		'media' => 'Media Settings',
 	];
 
@@ -174,12 +174,8 @@ class Panel extends CmsPanel
 				$contents['database'] = true;
 			} elseif (!str_contains($name, '/') && str_ends_with(strtolower($name), '.zip')) {
 				$contents['media'] = true;
-			} elseif (self::isSettingsEntry($name)) {
-				foreach (ProjectFile::FILES as $which => $file) {
-					if ($name === 'settings/' . $file) {
-						$contents[$which . 'Settings'] = true;
-					}
-				}
+			} elseif (($which = self::settingWhich($name)) !== '') {
+				$contents[$which . 'Settings'] = true;
 			} elseif (self::isEnvironmentEntry($name)) {
 				$contents['environment'] = true;
 			}
@@ -200,17 +196,18 @@ class Panel extends CmsPanel
 	}
 
 	/**
-	 * Page and media settings files that exist next to settings.php.
+	 * Page and media settings files. JSON lives in config/; an older project
+	 * still has the PHP files next to settings.php.
 	 *
 	 * @return array<string, string> archive path => source path
 	 */
 	public function settingsArchiveMap(): array
 	{
 		$map = [];
-		foreach (ProjectFile::FILES as $which => $name) {
+		foreach (array_keys(ProjectFile::FILES) as $which) {
 			$path = ProjectFile::path($which);
 			if ($path !== null) {
-				$map['settings/' . $name] = $path;
+				$map['settings/' . basename($path)] = $path;
 			}
 		}
 		return $map;
@@ -303,12 +300,40 @@ class Panel extends CmsPanel
 				if (!str_starts_with($name, $prefix)) {
 					continue;
 				}
-				$target = self::restoredTarget($name);
-				if ($target === null || ($prefix === 'settings/' && !self::chosen($this->state, self::settingKey(self::settingWhich($name), true), false))) {
+				if ($prefix === 'settings/' && !self::chosen($this->state, self::settingKey(self::settingWhich($name), true), false)) {
 					continue;
 				}
 				$bytes = $zip->getFromIndex($i);
-				if (!is_string($bytes) || !$this->replaceFile($target, $bytes)) {
+				if (!is_string($bytes)) {
+					$zip->close();
+					return false;
+				}
+				if ($prefix === 'settings/' && str_ends_with(strtolower($name), '.php')) {
+					$which = self::settingWhich($name);
+					if ($which === '' || !ProjectFile::importLegacy($which, $bytes)) {
+						$zip->close();
+						return false;
+					}
+					$wrote++;
+					continue;
+				}
+				if ($prefix === 'settings/' && str_ends_with(strtolower($name), '.json')) {
+					try {
+						$decoded = json_decode($bytes, true, 512, JSON_THROW_ON_ERROR);
+					} catch (\Throwable) {
+						$zip->close();
+						return false;
+					}
+					if (!is_array($decoded)) {
+						$zip->close();
+						return false;
+					}
+				}
+				$target = self::restoredTarget($name);
+				if ($target === null) {
+					continue;
+				}
+				if (!$this->replaceFile($target, $bytes)) {
 					$zip->close();
 					return false;
 				}
@@ -323,8 +348,11 @@ class Panel extends CmsPanel
 	{
 		$entry = str_replace('\\', '/', $entry);
 		if (self::isSettingsEntry($entry)) {
-			$dir = ProjectFile::directory();
-			return $dir === null ? null : $dir . basename($entry);
+			if (str_ends_with(strtolower($entry), '.php')) {
+				return null;
+			}
+			$which = self::settingWhich($entry);
+			return $which === '' ? null : ProjectFile::jsonPath($which);
 		}
 		if (!self::isEnvironmentEntry($entry)) {
 			return null;
@@ -367,9 +395,11 @@ class Panel extends CmsPanel
 
 	private static function settingWhich(string $name): string
 	{
-		foreach (ProjectFile::FILES as $which => $file) {
-			if ($name === 'settings/' . $file) {
-				return $which;
+		foreach (array_keys(ProjectFile::FILES) as $which) {
+			foreach (ProjectFile::archiveBasenames($which) as $basename) {
+				if ($name === 'settings/' . $basename) {
+					return $which;
+				}
 			}
 		}
 		return '';

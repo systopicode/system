@@ -7,7 +7,7 @@ namespace Systopic\System\Settings;
 use Systopic\System\Panels\PanelNode;
 
 /**
- * Page Settings and Media Settings: one table per group in the file.
+ * Global Settings and Media Settings: one table per group in the file.
  */
 final class ProjectForm
 {
@@ -17,9 +17,9 @@ final class ProjectForm
     public static function render(string $which): void
     {
         $e = static fn($value): string => htmlspecialchars((string) $value, ENT_QUOTES);
-        $title = $which === 'media' ? 'Media Settings' : 'Page Settings';
-        $filename = ProjectFile::FILES[$which] ?? '';
+        $title = $which === 'media' ? 'Media Settings' : 'Global Settings';
         $path = ProjectFile::path($which);
+        $filename = $path !== null ? basename($path) : (ProjectFile::FILES[$which] ?? '');
         echo '<div class="projectFiles">';
         echo '<h1>' . $e($title) . '</h1>';
         echo '<p class="tagsHint">Leave a field to write it into ' . $e($filename) . '. Drag the handle to change the order.</p>';
@@ -472,7 +472,7 @@ final class ProjectForm
     public static function searchHits(\Systopic\System\Sys\Search $search, string $which, string $href): void
     {
         $path = ProjectFile::path($which);
-        $title = $which === 'media' ? 'Media Settings' : 'Page Settings';
+        $title = $which === 'media' ? 'Media Settings' : 'Global Settings';
         foreach ($path === null ? [] : ProjectFile::groups($path) as $group) {
             $label = self::human($group->label);
             if ($search->matches($label) || $search->matches(ltrim($group->label, '$')) || $search->matches($group->category)) {
