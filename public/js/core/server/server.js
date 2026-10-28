@@ -3,6 +3,31 @@
 
 sys.core.server = new function () {
     var server = this;
+
+    // Dev prefixes ajax with a debug block. The login page does not load
+    // that client, and a click then dies in JSON.parse. The marker is cut
+    // off here; when the client is present it still receives the block.
+    server.stripDebug = function (responseText) {
+        if (window.sysdebug && sysdebug.trimXhrResponse) {
+            try {
+                return sysdebug.trimXhrResponse(responseText);
+            } catch (error) {}
+        }
+        if (!responseText) {
+            return responseText;
+        }
+        var marker = '/*sysdebug.json:';
+        var start = responseText.indexOf(marker);
+        if (start === -1) {
+            return responseText;
+        }
+        responseText = responseText.substring(start);
+        var match = responseText.match(/^\/\*sysdebug\.json:(\d+)\*\//);
+        if (!match) {
+            return responseText;
+        }
+        return responseText.substring(match[0].length + (parseInt(match[1], 10) || 0));
+    };
     // var lt = () => void 0;
 
     server.sendEventCall = function (event) {
@@ -326,6 +351,10 @@ sys.core.server.call = function (data) {
 
     call.send = function (inputUrl) { // url object or string
         var hooks, doneFunc, failFunc, ondonefirstFunc, onloadstartFunc, onupdateFunc, changeLocation;
+        // Back and forward already moved the address. Pushing it again
+        // stacks a copy, so the next back stays on the same page.
+        call.fromHistory = sys.core.server.historyMode === 'pop';
+        sys.core.server.historyMode = '';
         hooks = {
             done: (func) => {
                 doneFunc = func;
@@ -383,7 +412,7 @@ sys.core.server.call = function (data) {
 
             if (xhr.readyState === XMLHttpRequest.DONE) {
                 if (xhr.status === 200) {
-                    var responseStr = window.sysdebug ? sysdebug.trimXhrResponse(xhr.responseText) : xhr.responseText;
+                    var responseStr = sys.core.server.stripDebug(xhr.responseText);
                     try {
                         // A php file saved with a BOM prints three bytes before
                         // anything else. The xhr decoder drops one at the very
@@ -445,7 +474,9 @@ sys.core.server.call = function (data) {
                                 sys.http.markRendered(xhrRootHref);
                             }
                             // an action is a command, not an address - a reload would run it again
-                            sys.http.historyPush(sys.http.url2string(Object.assign({}, call.url, {action: ''})));
+                            if (!call.fromHistory) {
+                                sys.http.historyPush(sys.http.url2string(Object.assign({}, call.url, {action: ''})));
+                            }
                             if (call.url.hashChanged && call.url.hash !== '' && !call.url.pathChanged && !call.url.queryChanged) {
                                 var target = document.getElementById(call.url.hash.replace('#', ''));
                                 if (target) {
@@ -470,6 +501,12 @@ sys.core.server.call = function (data) {
                             }
                         }
                     }
+                } else if (xhr.status === 500 && method === 'get' && !call.retried) {
+                    // A lightbox close is one GET. The first answer is sometimes
+                    // empty (Apache 500, no headers). The same click a moment
+                    // later works, so this one is tried once more.
+                    call.retried = true;
+                    call.send(inputUrl);
                 } else {
                     p('XHERRor! Status ' + xhr.status);
                     if (backupStep) {

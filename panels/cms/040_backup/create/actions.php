@@ -63,18 +63,6 @@ $addPlainFiles = function (array $files, string $done) use ($closeZip, $tmpdirpa
 		if (!is_string($archive) || !is_file($source)) {
 			continue;
 		}
-		if (str_starts_with($archive, 'config/')) {
-			$raw = file_get_contents($source);
-			$safe = is_string($raw) ? \Systopic\System\Settings\EnvironmentFile::forArchive($raw) : null;
-			if ($safe === null || !\Systopic\System\Settings\EnvironmentFile::archiveIsSafe($safe)) {
-				message::error('An environment file was left out of the backup because its sign-in key could not be removed.');
-				$this->parent->log('ERROR addEnvironment: refused ' . $archive);
-				continue;
-			}
-			$zip->addFromString($archive, $safe);
-			$added++;
-			continue;
-		}
 		$zip->addFile(fs::toNative($source), $archive);
 		$added++;
 	}

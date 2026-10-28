@@ -2,19 +2,4 @@
 
 /** @var \Systopic\System\Panels\Root\Cms\Users\Panel $this */
 
-switch ($this->action) {
-	case 'hijackUser':
-		// Log in as someone else; cms/user's "back" button (state hijackerId)
-		// returns. Session handling is the legacy auth service's.
-		$target = \Systopic\System\Auth\Session::isSuperuser()
-			? \Systopic\System\Queries\UserLookup\UserLookup::byId($this->scope, (int) \http::dataset('user_id'))
-			: NULL;
-		if ($target !== NULL && !$target->isSuperuser) {
-			$this->parent->child('user')->state->hijackerId = \Systopic\System\Auth\Session::id();
-			\Systopic\System\Auth\Session::logout(false);   // the device stays the superuser's
-			\Systopic\System\Auth\Session::login($target);
-			\Systopic\System\Auth\LoginLog::write((string) $target->name, 'logged in', \Systopic\System\Auth\LoginLog::SWITCH);
-			\http::refresh('./');
-		}
-		break;
-}
+// Sign-in as another user was removed. A person signs in on their own device.

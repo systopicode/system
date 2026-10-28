@@ -15,6 +15,20 @@ $user = $this->user;
 if ($user === NULL) {
 	return;
 }
+$refreshSignet = function () use ($user): void {
+	if ((int) $user->id !== (int) \Systopic\System\Auth\Session::id()) {
+		return;
+	}
+	$node = $this;
+	while ($node !== null) {
+		$account = $node->child('user');
+		if ($account !== null) {
+			$account->updateView('signetmenu');
+			return;
+		}
+		$node = $node->parent;
+	}
+};
 switch ($this->action) {
 	case 'userTab':
 		$tab = (string) \http::dataset('tab');
@@ -26,14 +40,28 @@ switch ($this->action) {
 
 	case 'moreSignIns':
 		$this->state->userTab = 'signins';
-		$this->state->signInLimit = max(10, (int) ($this->state->signInLimit ?? 10)) + 10;
+		$this->state->signInsAll = true;
+		$this->updateView('user');
+		break;
+
+	case 'showAllDevices':
+		$this->state->userTab = 'access';
+		$this->state->devicesAll = true;
 		$this->updateView('user');
 		break;
 
 	case 'updateUserName':
 	case 'updateUserFullname':
 	case 'updateUserEmail':
-		$this->scope->save(UserOperator::assign($user, strtolower(substr($this->action, 10)), (string) \http::values('value')));
+		$field = strtolower(substr($this->action, 10));
+		$value = (string) \http::values('value');
+		$problem = UserOperator::conflict($this->scope, $user, $field, $value);
+		if ($problem !== null) {
+			\message::error($problem)->target('account');
+		} else {
+			$this->scope->save(UserOperator::assign($user, $field, $value));
+		}
+		$this->updateView('user');
 		$this->parent->updateView('main');
 		break;
 
@@ -64,13 +92,17 @@ switch ($this->action) {
 
 	case 'uploadPortrait':
 		$error = Portrait::store((int) $user->id);
-		$error === null ? \message::confirm('Photo updated.') : \message::error($error);
-		\http::redirect($this->href . '?user_id=' . (int) $user->id);
+		if ($error !== null) {
+			\message::error($error)->target('account');
+		}
+		$this->updateView('user');
+		$refreshSignet();
 		break;
 
 	case 'removePortrait':
 		Portrait::remove((int) $user->id);
-		$this->updateView('lightbox');
+		$this->updateView('user');
+		$refreshSignet();
 		break;
 
 	case 'resetState':
@@ -137,7 +169,8 @@ switch ($this->action) {
 
 	case 'updateUserType':
 		$type = (string) \http::values('value');
-		if (in_array($type, [User::PERSON, User::SCREEN], TRUE)) {
+		$this->state->userTab = 'access';
+		if (in_array($type, [User::PERSON, User::SCREEN], TRUE) && $type !== (string) $user->type) {
 			$user->type = $type;
 			if ($type === User::SCREEN) {
 				$user->passwordHash = NULL;   // a screen is paired, never logs in with a password
@@ -147,31 +180,69 @@ switch ($this->action) {
 		$this->updateView('lightbox');
 		break;
 
+	case 'createAuth':
+		$this->state->userTab = 'access';
+		if (!\Systopic\System\Auth\Session::hasOneRole('admin')) {
+			\message::error('Only an administrator can create the sign-in key.');
+		} elseif (!\Systopic\System\Settings\EnvironmentFile::createAuth((string) \http::dataset('file'))) {
+			\message::error('The sign-in key was not created.');
+		} else {
+			$file = (string) \http::dataset('file');
+			$written = \Systopic\System\Settings\EnvironmentFile::read($file);
+			$auth = is_array($written['auth'] ?? null) ? $written['auth'] : [];
+			\Systopic\System\Auth\AuthConfig::rememberSecret((string) ($auth['secret'] ?? ''));
+			\message::confirm('Sign-in key created.');
+		}
+		$this->updateView('lightbox');
+		break;
+
+	case 'clearSignIns':
+		$this->state->userTab = 'signins';
+		if (!\Systopic\System\Auth\Session::isSuperuser()) {
+			\message::error('Only a superuser can delete a sign-in log.');
+		} else {
+			\Systopic\System\Auth\LoginLog::forget([(string) $user->name, (string) $user->email]);
+			\message::confirm('Sign-in log deleted.');
+		}
+		$this->updateView('lightbox');
+		break;
+
 	case 'inviteCode':
 	case 'inviteMail':
 	case 'recoverCode':
-		$purpose = $this->action === 'recoverCode' ? Codes::RECOVER : Codes::INVITE;
+		$purpose = $this->action === 'inviteMail' ? Codes::INVITE : Codes::RECOVER;
 		if ($user->type === User::SCREEN || !LoginCodes::available()) {
 			break;
 		}
 		$this->state->userTab = 'access';
+		if ($this->action === 'inviteMail' && (string) $user->email === '') {
+			\message::error('No email address. Create a code instead.');
+			$this->updateView('lightbox');
+			break;
+		}
 		$code = LoginCodes::create($purpose, $user, \Systopic\System\Auth\Session::id());
 		if ($this->action === 'inviteMail') {
-			$this->accessNote = match (TRUE) {
-				(string) $user->email === ''         => 'Keine E-Mail-Adresse - zeig den Code oder den QR-Code vor.',
-				CodeMail::send($user, $purpose, $code) => 'Einladung an ' . $user->email . ' geschickt.',
-				default                              => 'Die Mail ging nicht raus - zeig den Code oder den QR-Code vor.',
-			};
+			if (CodeMail::send($user, $purpose, $code)) {
+				\message::confirm('Invitation sent to ' . $user->email . '.');
+			} else {
+				\message::error('The email could not be sent. Create a code instead.');
+			}
+		} else {
+			$this->issuedCode = ['purpose' => $purpose, 'code' => $code, 'expires' => time() + Codes::LIFETIMES[$purpose]];
 		}
-		$this->issuedCode = ['purpose' => $purpose, 'code' => $code, 'expires' => time() + Codes::LIFETIMES[$purpose]];
 		$this->updateView('lightbox');
 		break;
 
 	case 'approveScreen':
 		if ($user->type === User::SCREEN) {
 			$ok = LoginCodes::approveScreen((string) \http::values('value'), $user, (int) \Systopic\System\Auth\Session::id());
-			$this->accessNote = $ok ? 'Screen gekoppelt - er meldet sich in wenigen Sekunden an.'
-				: (LoginCodes::$error === LoginCodes::BLOCKED ? 'Zu viele falsche Codes von hier. Bitte in 15 Minuten noch einmal.' : 'Der Code stimmt nicht oder ist abgelaufen.');
+			if ($ok) {
+				\message::confirm('Screen paired. It signs in within a few seconds.');
+			} else {
+				\message::error(LoginCodes::$error === LoginCodes::BLOCKED
+					? 'Too many wrong codes from here. Try again in 15 minutes.'
+					: 'That code is wrong or has expired.');
+			}
 		}
 		$this->updateView('lightbox');
 		break;

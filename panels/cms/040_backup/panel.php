@@ -17,6 +17,7 @@ class Panel extends CmsPanel
 {
 	public bool $bequests = true;
 	public $icon = 'fa-duotone fa-regular fa-box-archive';
+	public ?int $naviOrder = 30;
 	public $infoFilename = 'info.txt';
 	public $dumpFilename = 'mysqldump_all.sql';
 
@@ -307,18 +308,7 @@ class Panel extends CmsPanel
 					continue;
 				}
 				$bytes = $zip->getFromIndex($i);
-				if (!is_string($bytes)) {
-					$zip->close();
-					return false;
-				}
-				if (str_starts_with($name, 'config/')) {
-					$bytes = EnvironmentFile::restoreArchive($target, $bytes);
-					if ($bytes === null) {
-						$zip->close();
-						return false;
-					}
-				}
-				if (!$this->replaceFile($target, $bytes)) {
+				if (!is_string($bytes) || !$this->replaceFile($target, $bytes)) {
 					$zip->close();
 					return false;
 				}

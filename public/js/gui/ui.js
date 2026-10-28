@@ -46,6 +46,29 @@ document.addEventListener('cms:rendered', sweepBrokenThumbs);
 
 /****************************** KEEPRESS FUNCTIONSs ***************************/
 document.addEventListener('click', function (event) {
+	var open = event.target.closest ? event.target.closest('[data-open-box]') : null;
+	if (open) {
+		var box = document.querySelector(open.getAttribute('data-open-box'));
+		if (box) {
+			box.hidden = false;
+			// Add device: a phone opens the camera from this click. A desktop
+			// stays on the QR. The click is the gesture the prompt needs.
+			var phone = window.matchMedia('(max-width: 720px), (hover: none) and (pointer: coarse)').matches;
+			if (phone && box.classList.contains('remoteLoginBox') && window.QrScan) {
+				var scanHost = box.querySelector('[data-qr-host="profile"]');
+				if (scanHost) window.QrScan.start(scanHost);
+			}
+		}
+		return;
+	}
+	var shut = event.target.closest ? event.target.closest('[data-box-close]') : null;
+	if (shut) {
+		var host = shut.closest('.cmslightbox');
+		if (host) host.hidden = true;
+	}
+});
+
+document.addEventListener('click', function (event) {
 	var button = event.target.closest ? event.target.closest('[data-copy]') : null;
 	if (!button || !navigator.clipboard) {
 		return;

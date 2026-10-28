@@ -13,7 +13,8 @@ $imprint = $site . '/impressum/';
 	<h2>Signing in</h2>
 	<ul>
 		<li>Your email address, and your password. The password is checked and not kept as you typed it. The account stores a hash.</li>
-		<li>If you use them: a passkey, of which the account keeps only the public part, or a one-time code by email or QR code, which is stored as a hash and can be used once.</li>
+		<li>A passkey, if you add one. The account keeps the public key, a name you choose, when it was last used and a counter that notices a copied key. The private key and your fingerprint or face stay in your password manager or on your device. They are not sent here.</li>
+		<li>A one-time code, if you use one. An invitation or reset code arrives by email. A QR code is shown on one screen and confirmed by an account that is already signed in on another device. The code is stored as a hash and can be used once.</li>
 		<li>A session cookie, so the following requests belong to the signed-in account. It ends when the session ends.</li>
 		<li>A device cookie in this browser, so a later visit is signed in again. The account lists the device with a name taken from the browser (for example “iPad · Safari”), the browser’s user agent, when it was last used and its last IP address. It stays 180 days unless this installation is set otherwise. Signing out or removing the device in your account ends it.</li>
 	</ul>
@@ -28,11 +29,10 @@ $imprint = $site . '/impressum/';
 	</ul>
 	<p>Gravatar is not used.</p>
 	<h2>Purpose and legal basis</h2>
-	<p>The purpose is access to fluxo cms for accounts that are allowed in, keeping that access limited to them, and being able to trace misuse. The legal bases are Art. 6 (1) (b) GDPR, where the account is used under an agreement, and Art. 6 (1) (f) GDPR, because the operator has a legitimate interest in letting only authorised people change the website and in keeping it secure. You cannot sign in without the email address and a way of signing in. Nothing else is required.</p>
+	<p>The purpose is access to fluxo cms for accounts that are allowed in, keeping that access limited to them, and being able to trace misuse. The legal bases are Art. 6 (1) (b) GDPR, where the account is used under an agreement, and Art. 6 (1) (f) GDPR, because the operator has a legitimate interest in letting only authorised people change the website and in keeping it secure. You cannot sign in without an account and a way of signing in. Nothing else is required.</p>
 	<h2>Recipients and storage</h2>
 	<p>Apart from the pictures above, the data stay on the systems of this website. Other recipients are only those named in the operator’s privacy policy, for example the host.</p>
-	<p>The account data are kept for as long as the account exists. The operator deletes the account. The cookies and devices last as set out above. Entries of the login log are deleted after 90 days.</p>
+	<p>The account data are kept for as long as the account exists. The operator deletes the account. The cookies and devices last as set out above. Entries of the login log are kept so misuse can be traced.</p>
 	<p>You can ask the operator for access, correction, deletion or restriction, and you can object to the processing based on legitimate interest. You can also complain to a supervisory authority. How to reach the operator is in the imprint. The authority is named in the operator’s privacy policy.</p>
 	</div>
-	<p class="authLinks"><a href="login" class="ajax"><i class="fa-regular fa-chevron-left"></i> Back to sign in</a></p>
 </main>

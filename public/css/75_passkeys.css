@@ -3,16 +3,23 @@
 .passkeys .passkeyCount { color: var(--cmsMuted); font-size: .75rem; }
 .passkeys div.cms.passkeyStatus { margin: .75rem 0 0; overflow-wrap: anywhere; }
 .passkeys .passkeyStatus:empty { display: none; }
-.passkeys .passkeyEmpty { margin: 1rem 0; color: var(--cmsMuted); font-size: .875rem; }
-.passkeys .passkeyList { padding: 0; list-style: none; margin: 1rem 0; }
+.passkeys .passkeyEmpty { display: flex; align-items: center; gap: .45rem; margin: .35rem 0 0; color: var(--cmsMuted); font-size: .875rem; }
+.passkeys .passkeyList { padding: 0; list-style: none; margin: 0.85rem 0 0; }
 .passkeys .passkeyList:empty { display: none; }
+.passkeys:not(.is-all) > main > .passkeyList > li:nth-child(n + 4),
+.passkeys.cmsBox:not(.is-all) > .cmsBoxBody > .passkeyList > li:nth-child(n + 4) { display: none; }
 .passkeys .passkeyList li + li { border-top: 1px solid var(--cmsLine); }
-.passkeys .passkeyItem > summary { display: flex; align-items: center; gap: .75rem; padding: .8rem 0; cursor: pointer; list-style: none; }
+.passkeys .passkeyItem > summary,
+.passkeys .passkeyItemHead { display: flex; align-items: center; gap: .75rem; padding: .8rem 0; list-style: none; }
+.passkeys .passkeyItem > summary { cursor: pointer; }
 .passkeys .passkeyItem > summary::-webkit-details-marker { display: none; }
-.passkeys .passkeyItem > summary > i { color: var(--cmsMuted); }
+.passkeys .passkeyItem > summary > i,
+.passkeys .passkeyItemHead > i { color: var(--cmsMuted); }
 .passkeys .passkeyItem > summary > i:last-child { font-size: .7rem; }
 .passkeys .passkeyItem[open] > summary > i:last-child { transform: rotate(180deg); }
-.passkeys .passkeyItem[data-readonly] > summary { pointer-events: none; cursor: default; }
+.passkeys .passkeyItem > summary > .button,
+.passkeys .passkeyItemHead > .button { flex: 0 0 auto; margin: 0 0 0 auto; }
+.passkeys .passkeyItem[data-readonly] > .passkeyItemHead { pointer-events: none; cursor: default; }
 .passkeys .passkeyItemLabel { display: grid; flex: 1; min-width: 0; gap: .2rem; }
 .passkeys .passkeyItemLabel strong { font-size: .875rem; font-weight: 600; line-height: 1.4; overflow-wrap: anywhere; }
 .passkeys .passkeyItemLabel small { color: var(--cmsMuted); font-size: .75rem; }
@@ -31,14 +38,14 @@
 .passkeys .passkeySetup[data-step="success"] .passkeySetupActions { display: none; }
 .passkeys.passkeyLogin { margin-top: 1rem; }
 .passkeys .passkeyLoginCancel { display: none; }
-main.is-passkey-signing-in > :not(.passkeyLogin):not(.authMessages) { display: none; }
-.cms .authCard main.is-passkey-signing-in .passkeyLoginButton { display: none; }
+main.is-passkey-signing-in > :not(.passkeyLogin):not(.authMessages):not(.authPane):not(.authFoot) { display: none; }
+main.is-passkey-signing-in > .authPane > :not(.passkeyLogin):not(.authMessages) { display: none; }
+main.is-passkey-signing-in .passkeyLoginButton { display: none; }
 main.is-passkey-signing-in .passkeyLogin { margin-top: 0; text-align: center; }
 main.is-passkey-signing-in .passkeyAuthFeedback { display: flex; align-items: center; justify-content: center; min-height: 13rem; }
 main.is-passkey-signing-in .passkeyAuthFeedback .passkeyArtwork { width: 112px; height: 112px; }
 main.is-passkey-signing-in .passkeyStatus { text-align: left; }
-main.is-passkey-signing-in .passkeyLoginCancel { display: inline-flex; margin: 1.25rem 0 0; }
-main.is-passkey-signing-in .passkeyLogin[data-step="success"] .passkeyLoginCancel { display: none; }
+main.is-passkey-signing-in .passkeyLoginCancel { display: none; }
 .passkeys .passkeyIcons { display: inline-grid; width: 100%; height: 100%; vertical-align: middle; }
 .passkeys .passkeyIcon { grid-area: 1 / 1; display: none; width: 100%; height: 100%; fill: var(--passkeyInk); }
 .passkeys .passkeyIcon-fingerprint { display: block; }
@@ -66,7 +73,6 @@ main.is-passkey-signing-in .passkeyLogin[data-step="success"] .passkeyLoginCance
 .passkeys .passkeySetup[data-step="success"] .passkeyIcon-success,
 .passkeys:is(.passkeyLogin, .passkeyOnboarding)[data-step="success"] .passkeyIcon-success { opacity: 1; transform: none; filter: none; }
 .passkeys.passkeyOnboarding .passkeyArtwork { margin: 1.75rem auto; }
-.passkeys .passkeySkip { margin-top: 1.25rem; padding-top: 1rem; border-top: 1px solid var(--cmsLine); }
 @media (prefers-reduced-motion: reduce) {
     .passkeys .passkeyIcon { animation: none !important; transform: none !important; filter: none !important; opacity: 0; }
     .passkeys :is(.passkeySetup, .passkeyAuthFeedback) .passkeyIcon-fingerprint,
@@ -75,5 +81,3 @@ main.is-passkey-signing-in .passkeyLogin[data-step="success"] .passkeyLoginCance
     .passkeys:is(.passkeyLogin, .passkeyOnboarding)[data-step="success"] .passkeyIcon-fingerprint { opacity: 0; }
 }
 
-/* Supplied fingerprint is the one exception to the Font Awesome icon set. */
-.cms .iconFingerprint { display: inline-block; flex: 0 0 auto; width: 1.1rem; height: 1.1rem; vertical-align: -.15em; fill: currentColor; }

@@ -4,7 +4,7 @@
     gap: 0.25rem 1.25rem;
     margin: 0;
     padding: 0 1.25rem;
-    border-bottom: 1px solid var(--cmsLine);
+    border-bottom: 1px solid var(--cmsLineStrong);
     overflow-x: auto;
     overflow-y: hidden;
 }
@@ -42,7 +42,7 @@ body.cms .cmslightbox .userTabs button:hover{
     display: none;
 }
 
-.cmslightbox .userEdit .userAccount > main{
+.cmslightbox .userEdit .userAccount > .cmsBoxBody{
     display: grid;
     grid-template-columns: 7.5rem 1fr;
     gap: 1.25rem 1.5rem;
@@ -125,64 +125,195 @@ body.cms .cmslightbox .userTabs button:hover{
     font-size: 0.875rem;
 }
 
-.userAccess .issuedCode{
-    margin-top: 1rem;
-    text-align: center;
+.cmslightbox.qrZoom{
+    z-index: 8100;
 }
 
-.userAccess .issuedCodeValue{
-    margin: 0.4rem 0;
-    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-    font-size: 1.6rem;
-    font-weight: 600;
-    letter-spacing: 0.18em;
+.cms .cmslightbox.qrZoom ul.barmenu button,
+.cms .cmslightbox.qrZoom ul.barmenu button:enabled:not(.disabled):hover{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    min-width: 2rem;
+    height: 2rem;
+    min-height: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    border-radius: var(--cmsRadius);
+    background: transparent;
+    color: var(--cmsMainColor);
+    font-size: 1.15rem;
+    cursor: pointer;
 }
 
-.userAccess .issuedCode svg{
-    width: 10rem;
-    height: 10rem;
+.cmslightbox.qrZoom[hidden]{
+    display: none !important;
+}
+
+.cmslightbox.qrZoom > section{
+    width: min(36rem, 100%);
+    max-width: 36rem;
+}
+
+@media (min-width: 1025px) and (orientation: landscape), (min-width: 1401px){
+    .cmslightbox.qrZoom > section{
+        height: auto;
+        max-height: calc(100dvh - 4rem);
+    }
+}
+
+.cmslightbox.qrZoom > section > main{
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    gap: 0.75rem;
+    min-height: 0;
+    padding: 1.15rem 1.25rem 1.25rem;
+}
+
+.cmslightbox.qrZoom > section > main > [data-code-live]{
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    gap: 0.85rem;
+    min-height: 0;
+}
+
+.cmslightbox.qrZoom > section > main > [data-code-live][hidden]{
+    display: none;
+}
+
+.cmslightbox.qrZoom .cmsBoxLead,
+.cmslightbox.qrZoom .tagsHint{
+    margin: 0;
+    max-width: none;
+    font-size: 0.9375rem;
+    line-height: 1.45;
+}
+
+.cmslightbox.qrZoom .tagsHint{
+    color: var(--cmsMuted);
+}
+
+.cmslightbox.qrZoom .qrZoomStage{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 0;
+    padding: 1.45rem 1rem;
+    border: 1px solid var(--cmsLine);
+    border-radius: var(--cmsRadiusLg);
     background: #fff;
 }
 
-.userAccess .issuedCode svg.qr-code *{
-    fill: #000 !important;
-}
-
-.userAccess .issuedCode svg.qr-code [fill="none"]{
-    fill: none !important;
-}
-
-.userEdit .userDevice small{
-    display: block;
-    color: var(--cmsMuted);
-}
-
-.userEdit .userDevice{
+.cmslightbox.qrZoom .qrCodeBar{
     display: flex;
     align-items: center;
-    justify-content: flex-start;
+    justify-content: space-between;
     gap: 0.75rem;
-    padding: 0.55rem 0;
-    border-bottom: 1px solid var(--cmsLine);
+    margin: 0;
+    padding: 0.55rem 0.7rem 0.55rem 0.9rem;
+    border: 1px solid var(--cmsLine);
+    border-radius: var(--cmsRadius);
+    background: var(--cmsCanvas);
 }
 
-.userEdit .userDevice > span{
+.cmslightbox.qrZoom .qrCodeBar strong{
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 1.35rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+}
+
+.cms .cmslightbox.qrZoom .qrCodeBar .button{
+    flex: 0 0 auto;
+    margin: 0;
+}
+
+.cmslightbox.qrZoom .fileFrame{
+    display: flex;
+    align-items: center;
+    justify-content: center;
     flex: 1 1 auto;
     min-width: 0;
+    min-height: 0;
+    padding: 0;
+    background: #fff;
+    background-image: none;
+}
+
+.cmslightbox.qrZoom .frameView{
+    width: min(100%, 24rem);
+    outline: none;
+    overflow: visible;
+    line-height: 0;
+}
+
+.cmslightbox.qrZoom .frameView svg{
+    display: block;
+    width: 100%;
+    height: auto;
+    max-height: min(24rem, 54dvh);
+    background: #fff;
+}
+
+.userEdit .userDevice > span:not(.presence){
     text-align: left;
 }
 
-.userEdit .userDevice > .button{
+.cms .userEdit .userRow > .button{
     flex: 0 0 auto;
-    margin-left: auto;
+    margin: 0 0 0 auto;
 }
 
-.userEdit .userDevice > i{
-    flex: 0 0 1.35rem;
-    width: 1.35rem;
-    font-size: 1.05rem;
-    text-align: center;
-    color: var(--cmsMuted);
+.userEdit .signInList li + li{
+    border-top: 1px solid var(--cmsLine);
+}
+
+.userEdit .signInTools{
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-top: 0.15rem;
+    border-top: 1px solid var(--cmsLine);
+}
+
+.userEdit .signInTools:not(:has(.cmsBoxMore)){
+    padding: 0.85rem 0 0.35rem;
+}
+
+.cms .userEdit .signInTools > button.cmsBoxMore,
+.cms .userEdit .signInTools > button.cmsBoxMore:enabled:not(.disabled):hover{
+    flex: 1 1 auto;
+    width: auto;
+    min-height: 0;
+    margin: 0;
+    padding: 0.75rem 0;
+    border: 0;
+    border-radius: 0;
+    background: none;
+    box-shadow: none;
+}
+
+.userEdit .signInTools > .button{
+    flex: 0 0 auto;
+    margin: 0 0 0 auto;
+}
+
+body.cms:has(.cmslightbox.userEdit) .userKeyWarn{
+    display: none;
+}
+
+.cmslightbox.userEdit > section > main{
+    scrollbar-width: none;
+}
+
+.cmslightbox.userEdit > section > main::-webkit-scrollbar{
+    display: none;
+    width: 0;
+    height: 0;
 }
 
 .userEdit .accountLine{
@@ -207,7 +338,6 @@ body.cms .cmslightbox .userTabs button:hover{
     gap: 0.1rem 0.75rem;
     padding: 0.45rem 0;
     font-size: 0.875rem;
-    border-bottom: 1px solid var(--cmsLine);
 }
 
 .userEdit .signInList li span:first-child{
@@ -224,11 +354,84 @@ body.cms .cmslightbox .userTabs button:hover{
     flex-wrap: wrap;
     align-items: center;
     gap: 0.4rem;
+}
+
+.userAccess .cmsBoxSplit{
+    align-items: center;
+}
+
+.userAccess .cmsBoxSplit .field{
+    max-width: none;
     margin-top: 0.85rem;
 }
 
-.userAccess > main > .field{
-    max-width: 24rem;
+.userAccess .accessStack{
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.45rem;
+    min-width: 0;
+}
+
+.userAccess .accessStack > div{
+    width: 100%;
+}
+
+.userAccess .accessStack > div .cmsBoxLead{
+    margin: 0.35rem 0 0.15rem;
+}
+
+.cms .userAccess .accessStack .button{
+    align-self: stretch;
+    width: 100%;
+    margin: 0;
+    justify-content: flex-start;
+}
+
+.userAccess .screenCode{
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.35rem;
+    width: max-content;
+    max-width: 100%;
+}
+
+.userAccess .screenCode > h2{
+    margin: 0;
+}
+
+.cms .cmsCodeSlots{
+    display: grid;
+    grid-template-columns: repeat(4, 2.15rem) 0.85rem repeat(4, 2.15rem);
+    justify-content: start;
+    align-items: center;
+    gap: 0.3rem;
+    width: max-content;
+    max-width: 100%;
+}
+
+.cms .cmsCodeSlots input{
+    box-sizing: border-box;
+    width: 2.15rem;
+    min-width: 0;
+    height: 2.6rem;
+    min-height: 0;
+    margin: 0;
+    padding: 0;
+    border-radius: var(--cmsRadius);
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 1.05rem;
+    line-height: 2.6rem;
+    text-align: center;
+    text-transform: uppercase;
+}
+
+.cms .cmsCodeSlots .cmsCodeDash{
+    color: var(--cmsMuted);
+    font-size: 1.15rem;
+    line-height: 1;
+    text-align: center;
 }
 
 .userEdit .accessButtons .button{
@@ -237,13 +440,6 @@ body.cms .cmslightbox .userTabs button:hover{
 
 .userEdit .accessButtons .button.is-copied{
     color: var(--cmsSuccess);
-}
-
-.userAccess .accessNote{
-    margin: 0 0 0.75rem;
-    padding: 0.45rem 0.7rem;
-    background: var(--cmsSelected);
-    border-left: 3px solid var(--cmsHighlightColor);
 }
 
 /* Who and what on the left, the ways in on the right */
@@ -265,7 +461,7 @@ body.cms .cmslightbox .userTabs button:hover{
     .cmslightbox.userEdit > section{
         width: min(100%, 100%);
     }
-    .cmslightbox .userEdit .userAccount > main,
+    .cmslightbox .userEdit .userAccount > .cmsBoxBody,
     .userEdit .signInList li,
     .userEdit .userColumns{
         grid-template-columns: 1fr;
@@ -289,7 +485,7 @@ body.cms .cmslightbox .userTabs button:hover{
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    justify-content: flex-start;
+    justify-content: space-between;
     gap: 0.45rem 0.75rem;
     padding: 0.7rem 0 0;
     border-top: 0;
@@ -335,6 +531,14 @@ body.cms .cmslightbox .userTabs button:hover{
 
 .userEdit .userRow .button{
     flex: 0 0 auto;
-    margin: 0;
+    margin: 0 0 0 auto;
+}
+
+@media (min-width: 1025px) and (orientation: landscape), (min-width: 1401px){
+    .cmslightbox.userEdit > section,
+    body.cms .cmslightbox.userEdit > section > header,
+    body.cms .cmslightbox.userEdit > section > main{
+        background: var(--cmsBgColor);
+    }
 }
 

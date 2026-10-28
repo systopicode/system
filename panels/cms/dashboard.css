@@ -9,6 +9,13 @@ body > main:has(> div.content .dashboard) > div.content{
 	flex-direction: column;
 	min-height: 0;
 	overflow-y: scroll;
+	scrollbar-width: none;
+}
+
+.flexColumn:has(> .dashboard)::-webkit-scrollbar{
+	display: none;
+	width: 0;
+	height: 0;
 }
 
 .dashboard{
@@ -335,7 +342,38 @@ body.dragging .dashWidgets .dashWidget > div.sort.v{
 	text-align: center;
 }
 
-.dashList li > :is(a, div) > span:not(.dashInitials){
+.dashList .presence{
+	flex: 0 0 0.55rem;
+	width: 0.55rem;
+	height: 0.55rem;
+	border-radius: 50%;
+	background: var(--cmsError);
+}
+
+.dashList .presence.is-on{
+	background: var(--cmsSuccess);
+	animation: presenceLive 1.6s ease-in-out infinite;
+}
+
+.dashList .presence.is-idle{
+	background: color-mix(in srgb, var(--cmsSuccess) 42%, var(--cmsCanvas));
+	box-shadow: inset 0 0 0 1px var(--cmsSuccess);
+}
+
+.dashList .presence.is-stale{
+	background: var(--cmsWarning);
+}
+
+@media (prefers-reduced-motion: reduce){
+	.dashList .presence{ animation: none; }
+}
+
+@keyframes presenceLive{
+	0%, 100%{ opacity: 1; transform: scale(1); }
+	50%{ opacity: 0.4; transform: scale(0.82); }
+}
+
+.dashList li > :is(a, div) > span:not(.dashInitials, .presence){
 	display: flex;
 	flex: 1 1 auto;
 	flex-direction: column;

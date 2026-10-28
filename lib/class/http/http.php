@@ -249,6 +249,15 @@ class http implements \Systopic\System\Client\Contracts\PreloadsClientScript
 
 		self::$referenceUrl = $reference;
 
+		// A document reload of a diff address is not a patch. Send the browser
+		// to the page it asked for. Ajax keeps the two-part url.
+		$method = strtoupper((string) ($server['REQUEST_METHOD'] ?? 'GET'));
+		$xhr = strtolower((string) ($server['HTTP_X_REQUESTED_WITH'] ?? '')) === 'xmlhttprequest';
+		if (!$xhr && ($method === 'GET' || $method === 'HEAD')) {
+			header('Location: ' . str_replace(["\r", "\n"], '', $target), true, 302);
+			exit;
+		}
+
 		$query = (string) parse_url($target, PHP_URL_QUERY);
 
 		// Keys that came from the url are replaced by the target's; keys that
@@ -633,7 +642,21 @@ class http implements \Systopic\System\Client\Contracts\PreloadsClientScript
 				'httponly' => TRUE,
 				'samesite' => $cookie['samesite'] ?: 'Lax',
 			]);
+			// A session that cannot be read warns from inside session_start, before
+			// this script has sent a header. Under FastCGI that warning is
+			// taken as the header block and the request dies empty. The
+			// buffer keeps it off the wire; the message goes to the log.
+			// PHP has already dropped that session and started a fresh one.
+			if (PHP_SAPI !== 'cli') {
+				ob_start();
+			}
 			session_start();
+			if (PHP_SAPI !== 'cli') {
+				$noise = ob_get_clean();
+				if (is_string($noise) && trim($noise) !== '') {
+					error_log('session_start: ' . trim(strip_tags($noise)));
+				}
+			}
 			scripttime('session start done');
 			if (!empty($GLOBALS['__cli_session_merge']) && is_array($GLOBALS['__cli_session_merge'])) {
 				foreach ($GLOBALS['__cli_session_merge'] as $k => $v) {

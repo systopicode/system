@@ -149,6 +149,12 @@ class PanelNode implements ClientExportable, RenderNode
     /** False for a lightbox: it is opened from the screen, not listed in the menu. */
     public bool $inNavi = true;
 
+    /**
+     * Main-menu position. Null keeps the folder prefix (010 before 040).
+     * Set on a panel when the menu order should not follow the folder name.
+     */
+    public ?int $naviOrder = null;
+
     // -------------------------------------------------------------------------
     // View / render state
     // -------------------------------------------------------------------------

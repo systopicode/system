@@ -1,4 +1,9 @@
 /****************************** LIGHTBOX ***************************/
+.cmslightbox[hidden],
+body.cms .cmslightbox[hidden]{
+    display: none;
+}
+
 .cmslightbox{
     position: fixed;
     inset: 0;
@@ -22,28 +27,61 @@
     display: none;
 }
 
-/* The title box shares the content's left and right edge. The bar sits on
-   that edge instead of making the title a shorter flex item beside it. */
+/* One close control, whatever the header was written as: a bar, a bare
+   link, or a button. It stays in the header row. The glyph is centred in a
+   fixed square, so hover and focus paint that square and do not move it. */
 @media (min-width: 1025px) and (orientation: landscape), (min-width: 1401px){
-    body.cms .cmslightbox > section > header > :is(a, ul.barmenu){
-        position: absolute;
-        top: 0;
-        bottom: 0;
-        right: var(--cmsCardPadding);
-        z-index: 2;
-        display: flex;
-        align-items: center;
-        margin: 0;
+    body.cms .cmslightbox section > header:has([class*="xmark"]){
+        padding-right: calc(var(--cmsCardPadding) / 2);
     }
-    body.cms .cmslightbox > section > header > h1{
-        padding-right: 8rem;
+    body.cms .cmslightbox section > header li:has([class*="xmark"]),
+    body.cms .cmslightbox section > header > a:has([class*="xmark"]){
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 2.25rem;
+        height: 2.25rem;
+        min-width: 2.25rem;
+        min-height: 2.25rem;
+        margin: 0;
+        padding: 0;
+    }
+    body.cms .cmslightbox section > header :is(a, button):has([class*="xmark"]){
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 2.25rem;
+        height: 2.25rem;
+        min-width: 2.25rem;
+        min-height: 2.25rem;
+        margin: 0;
+        padding: 0;
+        background: transparent;
+        font-size: 1.25rem;
+    }
+    body.cms .cmslightbox section > header :is(a, button):has([class*="xmark"]) i{
+        width: 1.25em;
+        font-size: 1.25rem;
+        text-align: center;
+    }
+    .cmslightbox.userEdit > section{
+        height: min(44rem, calc(100dvh - 4rem));
     }
 }
 
-/* Same title as the sheet underneath, on the sheet colour, not a bar of its own. */
 body.cms .cmslightbox > section > header{
     background: transparent;
     border-bottom: 0;
+}
+
+@media (min-width: 1025px) and (orientation: landscape), (min-width: 1401px){
+    body.cms .cmslightbox > section > header{
+        border-bottom: 1px solid var(--cmsLineStrong);
+    }
+    /* Tabs already draw the line. A second one under the title would sit above them. */
+    body.cms .cmslightbox > section > header:has(+ .userTabs){
+        border-bottom: 0;
+    }
 }
 
 body.cms .cmslightbox > section > header h1{
@@ -70,7 +108,7 @@ body.cms .cmslightbox > section > header h1{
     margin: 0;
     padding: 0;
     overflow: hidden;
-    background: var(--cmsCanvas);
+    background: var(--cmsBgColor);
     border-radius: var(--cmsRadiusLg);
     box-shadow: var(--cmsShadowLg);
 }

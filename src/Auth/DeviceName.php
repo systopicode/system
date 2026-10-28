@@ -38,7 +38,7 @@ final class DeviceName
         $browser = self::first(self::BROWSERS, $userAgent);
         // an iPad asking for the desktop site says Macintosh, but has touch:
         // that is not visible here, so it stays "Mac"
-        return implode(' · ', array_filter([$system, $browser])) ?: 'Unbekanntes Gerät';
+        return implode(' · ', array_filter([$system, $browser])) ?: 'Unknown device';
     }
 
     /** Small mark for the device list: phone, tablet or computer. */
@@ -51,6 +51,18 @@ final class DeviceName
             return 'fa-regular fa-mobile-screen';
         }
         return 'fa-regular fa-laptop';
+    }
+
+    /** The same device, crossed out: the control that signs it out. */
+    public static function slash(string $userAgent): string
+    {
+        if (preg_match('~iPad|Tablet|Android(?!.*Mobile)~', $userAgent)) {
+            return 'fa-regular fa-display-slash';
+        }
+        if (preg_match('~iPhone|iPod|Android.*Mobile|Mobile~', $userAgent)) {
+            return 'fa-regular fa-mobile-slash';
+        }
+        return 'fa-regular fa-laptop-slash';
     }
 
     /** @param array<string, string> $patterns */

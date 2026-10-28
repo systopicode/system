@@ -131,17 +131,19 @@ final class Passkeys
         return Session::takeReturn() ?? \http::$root . 'cms/';
     }
 
-    public static function render(User $user): string
+    /** box: the user lightbox. widget: the same block in the profile grid. */
+    public static function render(User $user, string $layout = 'box'): string
     {
         \http::sessionStartOnce();
         $passkeyUser = $user;
+        $passkeyLayout = $layout === 'widget' ? 'widget' : 'box';
         ob_start();
         include __DIR__ . '/passkeys.tpl.php';
         return (string) ob_get_clean();
     }
 
     /** Raw JSON actions use the existing auth/profile routes, never a second login service. */
-    public static function respond(string $action, bool $login = false): never
+    public static function respond(string $action, bool $login = false, ?string $afterLogin = null): never
     {
         header('Content-Type: application/json; charset=utf-8');
         header('Cache-Control: no-store');
@@ -176,7 +178,7 @@ final class Passkeys
                 throw new DomainException('Too many attempts. Please try again later.');
             }
             try {
-                $result = self::execute($action, $data, $login);
+                $result = self::execute($action, $data, $login, $afterLogin);
             } catch (\Throwable $e) {
                 $scope->save(Failures::failed($failures, $ip, new DateTimeImmutable()));
                 throw $e;
@@ -194,7 +196,7 @@ final class Passkeys
         exit;
     }
 
-    public static function execute(string $action, array $data, bool $login): array
+    public static function execute(string $action, array $data, bool $login, ?string $afterLogin = null): array
     {
         $scope = Scope::default();
         $user = Session::current()->user;
@@ -202,7 +204,7 @@ final class Passkeys
             if (Session::known() || !in_array($action, ['passkeyBeginLogin', 'passkeyFinishLogin', 'passkeyCancel'], true)) {
                 throw new DomainException('Invalid sign-in request.');
             }
-        } elseif (!in_array($action, ['passkeyBeginCreate', 'passkeyFinishCreate', 'passkeyRename', 'passkeyRemove', 'passkeyCancel'], true)) {
+        } elseif (!in_array($action, ['passkeyBeginCreate', 'passkeyFinishCreate', 'passkeyBeginConfirm', 'passkeyRename', 'passkeyRemove', 'passkeyCancel'], true)) {
             throw new DomainException('Invalid passkey action.');
         } elseif ($user === null || !$user->isActive || $user->type === User::SCREEN) {
             throw new DomainException('Sign in to your own account first.');
@@ -259,7 +261,7 @@ final class Passkeys
             // with a device, like every other login: otherwise no list shows it and no revocation reaches it
             Devices::issue($key->user);
             LoginLog::write((string) $key->user->name, 'logged in', LoginLog::PASSKEY);
-            return ['redirect' => Session::takeReturn() ?? \http::$root . 'cms/'];
+            return ['redirect' => Session::takeReturn() ?? $afterLogin ?? \http::$root . 'cms/'];
         }
         if ($user === null || $login) {
             throw new DomainException('Invalid passkey request.');
@@ -275,14 +277,30 @@ final class Passkeys
                 throw new DomainException('This account no longer exists.');
             }
         }
+        if ($action === 'passkeyBeginConfirm') {
+            $keys = Keys::ofUser($scope, (int) $user->id, self::project());
+            if ($keys === []) {
+                throw new DomainException('Add a passkey before confirming with one.');
+            }
+            $ids = array_map(static fn(Key $key): string => self::decode($key->credentialId->value), $keys);
+            $options = $web->getGetArgs($ids, 120, true, true, true, true, true, 'required');
+            $ceremony = PasskeyChallenge::issue('confirm', (int) $user->id, $web->getChallenge()->getBinaryString(), ['project' => self::project()]);
+            return ['options' => $options->publicKey, 'ceremony' => $ceremony];
+        }
         if ($action === 'passkeyBeginCreate') {
             $onboarding = self::setupPending();
-            if (!$onboarding) self::confirmPassword($user, $data);
-            else $_SESSION['systopic_passkey_offer']['expires'] = max($_SESSION['systopic_passkey_offer']['expires'], time() + 120);
+            if ($onboarding) $_SESSION['systopic_passkey_offer']['expires'] = max($_SESSION['systopic_passkey_offer']['expires'], time() + 120);
             PasskeyUpgrade::prepare($scope);
             $keys = Keys::ofUser($scope, (int) $user->id, self::project());
             if (count($keys) >= 20) {
                 throw new DomainException('Remove an old passkey before adding another.');
+            }
+            if ($keys !== []) {
+                self::assertOwnKey($web, $scope, $user, $data);
+            } elseif (!$onboarding && !Session::passkeyGrant()) {
+                throw new DomainException('Sign in again before adding a passkey.');
+            } elseif (!self::onOwnDevice($user)) {
+                throw new DomainException('Add the passkey from the browser you are signed in on.');
             }
             $handle = $keys[0]->userHandle ?? '';
             if ($handle === '') $handle = bin2hex(random_bytes(32));
@@ -320,7 +338,9 @@ final class Passkeys
             return ['html' => self::render($user)];
         }
         if (in_array($action, ['passkeyRename', 'passkeyRemove'], true)) {
-            self::confirmPassword($user, $data);
+            if ($action === 'passkeyRemove' && (int) $target->id === (int) $user->id && !Session::passkeyGrant() && !self::setupPending()) {
+                self::assertOwnKey($web, $scope, $user, $data);
+            }
             foreach (Keys::ofUser($scope, (int) $target->id, self::project()) as $key) {
                 if ((int) $key->id !== (int) ($data['keyId'] ?? 0)) {
                     continue;
@@ -342,18 +362,54 @@ final class Passkeys
 
     private static function ceremony(array $data): string
     {
-        $ticket = (string) ($data['ceremony'] ?? '');
+        return self::ticket($data, 'ceremony');
+    }
+
+    private static function ticket(array $data, string $field): string
+    {
+        $ticket = (string) ($data[$field] ?? '');
         if (preg_match('~^[a-f0-9]{32}$~D', $ticket) !== 1) {
             throw new DomainException('This passkey request expired. Please try again.');
         }
         return $ticket;
     }
 
-    private static function confirmPassword(User $user, array $data): void
+    /** A passkey already on this account, proved in this request. A stolen session cannot do this. */
+    private static function assertOwnKey(WebAuthn $web, Scope $scope, User $user, array $data): void
     {
-        if (!Password::verify($user->passwordHash, (string) ($data['password'] ?? ''))) {
-            throw new DomainException('Your current password is incorrect.');
+        $challenge = PasskeyChallenge::take('confirm', (int) $user->id, self::ticket($data, 'confirm'));
+        if (($challenge['data']['project'] ?? '') !== self::project()) {
+            throw new DomainException('This passkey request belongs to another project.');
         }
+        $id = self::decode((string) ($data['id'] ?? ''));
+        $lock = 'passkey-' . substr(hash('sha256', (string) $scope->connection->database . ':' . $id), 0, 48);
+        if ((int) $scope->connection->value('SELECT GET_LOCK(?, 5)', [$lock]) !== 1) {
+            throw new DomainException('This passkey is busy. Please try again.');
+        }
+        try {
+            $key = Keys::byCredential($scope, $id);
+            if ($key === null || (int) $key->relationId('user') !== (int) $user->id
+                || $key->rpId !== self::config()['rpId'] || $key->project !== self::project()
+                || !hash_equals($key->credentialId->value, self::encode($id))
+                || (!empty($data['userHandle']) && !hash_equals(hex2bin($key->userHandle), self::decode((string) $data['userHandle'])))) {
+                throw new DomainException('The passkey could not be verified.');
+            }
+            self::verifyAssertion($web, $key, $data, $challenge['challenge']);
+            $key->signCount = $web->getSignatureCounter() ?? 0;
+            $key->lastUsedAt = new DateTimeImmutable();
+            $scope->save($key);
+        } finally {
+            $scope->connection->value('SELECT RELEASE_LOCK(?)', [$lock]);
+        }
+    }
+
+    private static function onOwnDevice(User $user): bool
+    {
+        if (PHP_SAPI === 'cli') {
+            return true;
+        }
+        $device = Devices::current();
+        return $device !== null && $device->revokedAt === null && (int) $device->relationId('user') === (int) $user->id;
     }
 
     private static function name(mixed $name): string

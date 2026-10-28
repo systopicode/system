@@ -10,7 +10,7 @@ $query = trim((string) ($_GET['q'] ?? ''));
 $shown = static fn(array $parts): bool => $query === '' || mb_stripos(implode(' ', $parts) . ' ' . LoginLog::methodLabel($parts[4]), $query) !== false;
 ?>
 <h1>Login log</h1>
-<p class="tagsHint">Sign-ins, failed attempts and sign-outs. Newest first. For data protection, entries are deleted after <?= LoginLog::KEEP_DAYS ?> days.</p>
+<p class="tagsHint">Sign-ins, failed attempts and sign-outs. Newest first.</p>
 <section class="widget is-list logList">
 	<header>
 		<h2>Sign-ins</h2>

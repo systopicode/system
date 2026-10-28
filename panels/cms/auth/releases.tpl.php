@@ -20,5 +20,4 @@ $e = static fn(string $v): string => htmlspecialchars($v, ENT_QUOTES);
 		<?php } ?>
 	<?php } ?>
 	</div>
-	<p class="authLinks"><a href="login" class="ajax"><i class="fa-regular fa-chevron-left"></i> Back to sign in</a></p>
 </main>

@@ -7,7 +7,8 @@ namespace Systopic\System\Sys;
 /**
  * The CMS theme colours outside a stylesheet (portraits, system mails, the
  * web app manifest, the edit bar, theme-color): 00_theme.css, then whatever the project overrides
- * (css/cms_overrides.css, overrides/css/*.css) - the last value wins.
+ * (css/system_overrides.css, or css/cms_overrides.css while that name is still
+ * the one on disk, then overrides/css/*.css) - the last value wins.
  */
 final class Theme
 {
@@ -54,15 +55,38 @@ final class Theme
         if ($theme !== null) {
             $files[] = $theme;
         }
-        $root = (string) \fs::$siteRoot;
-        $named = $root . 'css/cms_overrides.css';
-        if (\fs::isFile($named)) {
+        $named = self::projectStylesheet();
+        if ($named !== null) {
             $files[] = $named;
         }
-        foreach (\fs::glob($root . 'overrides/css/*.css') ?: [] as $file) {
+        $root = (string) \fs::$siteRoot;
+        $overrides = \fs::glob($root . 'overrides/css/*.css') ?: [];
+        sort($overrides, SORT_STRING);
+        foreach ($overrides as $file) {
             $files[] = $file;
         }
         return $files;
+    }
+
+    /**
+     * The project's GUI stylesheet. `system_overrides.css` is the name;
+     * `cms_overrides.css` is read while a project still has only that file.
+     */
+    public static function projectStylesheet(): ?string
+    {
+        $root = (string) \fs::$siteRoot;
+        foreach (['css/system_overrides.css', 'css/cms_overrides.css'] as $name) {
+            if (\fs::isFile($root . $name)) {
+                return $root . $name;
+            }
+        }
+        return null;
+    }
+
+    /** Drop the cached read so a theme just written is what the next render uses. */
+    public static function flush(): void
+    {
+        self::$colors = null;
     }
 
     /** Text colour readable on a theme colour: dark on light colours, white on dark ones. */

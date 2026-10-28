@@ -10,8 +10,8 @@ Everything lives in the project, never in the packages:
 
 | Project path | What it does |
 |---|---|
-| `overrides/css/*.css` | GUI overrides, loaded after the system CSS in the `project` layer. Theme colours go here. |
-| `css/cms_overrides.css` | Same layer. Also the place for `@font-face`/`@import` of fonts (they cannot be scoped, see `cms-preview-css.md`). |
+| `overrides/css/*.css` | GUI overrides, loaded after the system CSS in the `project` layer. Theme colours go here. The theme editor writes `overrides/css/system_overrides.css` (it renames `cms_overrides.css` on save). |
+| `css/system_overrides.css` | Same layer, when a project keeps the file next to the site CSS. Also the place for `@font-face`/`@import` of fonts (they cannot be scoped, see `cms-preview-css.md`). `css/cms_overrides.css` is still read while the new file does not exist yet. |
 | `overrides/img/logo.svg` | Logo on the login card and at the top of every system mail. |
 | `overrides/img/<name>` | Replaces the system image of the same name, see the table below. |
 | `overrides/js/*.js` | Extra GUI scripts, loaded last. |
@@ -50,7 +50,7 @@ from these in `18_ui.css`, so a theme stays four colours.
 
 The same four colours also reach places without the GUI stylesheet.
 `Systopic\System\Sys\Theme` reads them on the server from `00_theme.css`,
-`css/cms_overrides.css` and `overrides/css/*.css` (the last value wins):
+`css/system_overrides.css` (or `css/cms_overrides.css` until that file is saved under the new name) and `overrides/css/*.css` (the last value wins):
 
 - system mails (`Systopic\System\Mail\Letter`: top line, heading, button),
 - drawn portraits of accounts without a photo (`Auth\Portrait`),

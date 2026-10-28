@@ -10,5 +10,4 @@ $imprint = rtrim((string) http::$root, '/') . '/impressum/';
 	<p>That page carries the name, the address, a way to make contact and, where the law requires them, the register, the registration number, the VAT id and the person responsible for the content. Those details are not repeated here.</p>
 	<p>fluxo cms is the software used to edit the website. It is published by systopic GmbH. The operator named in the imprint is responsible for this installation.</p>
 	</div>
-	<p class="authLinks"><a href="login" class="ajax"><i class="fa-regular fa-chevron-left"></i> Back to sign in</a></p>
 </main>

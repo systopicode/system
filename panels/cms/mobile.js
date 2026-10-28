@@ -114,10 +114,17 @@ function chromeColor() {
 		node.id = 'cmsChromeColor';
 		document.head.appendChild(node);
 	}
-	// The status bar samples the top, the address bar the bottom. Petrol only
-	// in the top strip, so the bar above stays on the theme and the bottom
-	// does not flash petrol in front of the address bar.
-	node.textContent = login ? '' : 'html{background-color:var(--cmsMainColor)!important}body{background-color:var(--cmsBgColor)!important;background-image:linear-gradient(var(--cmsMainColor),var(--cmsMainColor))!important;background-size:100% var(--mobileTop,103px)!important;background-repeat:no-repeat!important}';
+	// Safari 26 tints the status bar from background-color, not from theme-color
+	// and not from the background shorthand. A hex, so a variable is not skipped.
+	var chrome = document.getElementById('cmsSafariChrome');
+	if (!login && ink) {
+		var rule = 'html{background-color:' + ink + '}';
+		if (!menu) rule += 'body.cms>.cmsMobileHeader{background-color:' + ink + '}';
+		if (chrome) chrome.textContent = rule;
+		node.textContent = '';
+	} else {
+		node.textContent = '';
+	}
 	document.documentElement.style.background = '';
 	document.body.style.background = '';
 	var edge = document.getElementById('cmsChromeEdge');
@@ -128,7 +135,8 @@ function chromeColor() {
 		edge.style.cssText = 'position:fixed;left:0;right:0;bottom:0;height:max(env(safe-area-inset-bottom), 34px);pointer-events:none;z-index:1';
 		document.body.appendChild(edge);
 	}
-	edge.style.background = menu || login ? 'var(--cmsMainColor)' : 'var(--cmsBgColor)';
+	var paper = hexColor(themeColor('--cmsBgColor'));
+	edge.style.backgroundColor = menu || login ? (ink || paper) : (paper || '#f0f3f4');
 }
 function showWindow(name) {
 	if (!mobile.matches) return;
@@ -626,9 +634,10 @@ function shutSheet(sheet) {
 		sheetMotion = null;
 		sliding = false;
 		if (lightbox) {
-			var live = document.querySelector('.cmslightbox') || lightbox;
-			// The first link can be a download. Close is the plain ajax link.
-			(live.querySelector('header a.ajax[href]') || live.querySelector('header a[href]:not([download])'))?.click();
+			var live = lightbox.isConnected ? lightbox : (document.querySelector('.cmslightbox') || lightbox);
+			// The first link can be a download. Close is the plain ajax link,
+			// or a control marked for a lightbox that is not its own address.
+			(live.querySelector('header a.ajax[href]') || live.querySelector('header a[href]:not([download])') || live.querySelector('[data-lightbox-close]'))?.click();
 			return;
 		}
 		if (sheet.matches && sheet.matches('ul.contextmenu') && typeof closeAllMenus === 'function') {

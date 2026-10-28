@@ -2,7 +2,11 @@
 
 /** @var \Systopic\System\Panels\Root\Cms\Auth\Panel $this */
 
+use Systopic\System\Auth\LoginCodes;
+use Systopic\System\Auth\ScreenPair;
 use Systopic\System\Queries\UserLookup\UserLookup;
+use Systopic\System\Tables\LoginCodes\Operator as Codes;
+use Systopic\System\Tables\Users\Model as User;
 use Systopic\System\Tables\Users\Operator as UserOperator;
 
 if (str_starts_with((string) $this->action, 'passkey')) {
@@ -53,8 +57,12 @@ switch ($this->action) {
 			$this->refuse('The email address is not registered', 'resetPassword');
 			break;
 		}
-		$this->scope->save(UserOperator::newActivationKey($user));
-		$this->sendResetPassword($user);
+		UserOperator::newActivationKey($user);
+		if (!$this->sendResetPassword($user)) {
+			$this->refuse('The email could not be sent. Try again in a moment.', 'resetPassword');
+			break;
+		}
+		$this->scope->save($user);
 		\message::confirm('A code to reset your password has been sent to your email address - please check your inbox');
 		$this->form = 'resetCode';
 		$this->updateView('main');
@@ -92,6 +100,45 @@ switch ($this->action) {
 		$this->updateView('main');
 		break;
 
+	case 'loginMethod':
+		$method = (string) \http::dataset('method');
+		$this->state->loginMethod = in_array($method, ['code', 'device', 'passkey', 'password', 'choose'], true) ? $method : 'choose';
+		$this->form = 'login';
+		if ($this->loginMethod() === 'device' && ScreenPair::current() === null) {
+			$screen = (string) \http::get('pair') === 'screen';
+			ScreenPair::begin(
+				$screen ? \http::$root : \http::$root . 'cms/',
+				$screen ? Codes::PAIR_SCREEN : Codes::PAIR_USER
+			);
+		}
+		$this->updateView('main');
+		break;
+
+	case 'redeemCode':
+		$code = LoginCodes::redeem((string) (\http::posted('code') ?: \http::post('code', '')), [Codes::INVITE, Codes::RECOVER, Codes::PAIR]);
+		$user = $code !== null ? UserLookup::byId($this->scope, (int) $code->relationId('user')) : null;
+		if ($user === null || $user->type === User::SCREEN) {
+			$this->refuse(match (LoginCodes::$error) {
+				LoginCodes::BLOCKED => 'Too many attempts. Please try again in 15 minutes.',
+				LoginCodes::UNAVAILABLE => 'Codes are not set up on this server.',
+				default => 'That code is wrong or has expired.',
+			});
+			break;
+		}
+		if ($code->purpose === Codes::INVITE || !$user->isActive) {
+			$this->scope->save(UserOperator::joined($user));
+		}
+		$this->signIn($user, match ($code->purpose) {
+			Codes::INVITE => \Systopic\System\Auth\LoginLog::INVITATION,
+			Codes::RECOVER => \Systopic\System\Auth\LoginLog::RECOVERY,
+			Codes::PAIR => \Systopic\System\Auth\LoginLog::DEVICE,
+			default => \Systopic\System\Auth\LoginLog::EMAIL_CODE,
+		});
+		$this->form = 'signedIn';
+		$this->updateView('main');
+		$this->enterCms(2);
+		break;
+
 	case 'doLogin':
 		$user = \Systopic\System\Auth\Session::check((string) \http::posted('username', ''), (string) \http::posted('password', ''));
 		if ($user === NULL) {
@@ -104,11 +151,13 @@ switch ($this->action) {
 			$this->form = 'passkeySetup';
 			$this->updateView('main');
 		} else {
-			$this->enterCms();
+			$this->form = 'signedIn';
+			$this->updateView('main');
+			$this->enterCms(2);
 		}
 		break;
 
 	case 'logout':
-		\message::confirm('Logged out - Bye bye ... see you later');
+		$this->form = 'loggedOut';
 		break;
 }

@@ -24,6 +24,8 @@ use Systopic\System\Tables\Users\Model as User;
  *   pair_screen  a screen shows it, a user admin approves it, 10 min; the
  *                screen polls with its own secret (`pollHash`) and has no
  *                user until the approval names one
+ *   pair_user    remote login: the new device shows it, the signed-in person
+ *                allows it, 10 min. Same poll, and the approval names that person
  */
 final class Model extends TableRow
 {

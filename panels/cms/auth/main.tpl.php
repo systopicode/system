@@ -12,5 +12,8 @@ $logo = fs::isFile($logoFile) ? fs::file_get_contents($logoFile) : '';
 		</a>
 	<?php } ?>
 	<?php $this->withView($this->form ?: 'login'); ?>
+	<?php if (!in_array((string) ($this->form ?? 'login'), ['login', 'signedIn', 'passkeySetup', 'loggedOut'], true)) { ?>
+		<p class="authFoot"><a class="authBack ajax" href="<?= htmlspecialchars((string) $this->href, ENT_QUOTES) ?>"><i class="fa-regular fa-arrow-left"></i> Back to sign in</a></p>
+	<?php } ?>
 </div>
 <?php include('footer.tpl.php'); ?>

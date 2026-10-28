@@ -116,6 +116,28 @@ header.cms .rightAlign form{
     font-size: 1rem;
 }
 
+.profile .widget > header > .button{
+    flex: 0 0 auto;
+    margin: 0 0 0 auto;
+}
+
+.profile .cms.message{
+    margin: 0 0 0.75rem;
+}
+
+.profile .widget > footer .cmsBoxMore,
+.profile .widget > footer .cmsBoxMore:enabled:not(.disabled):hover{
+    width: auto;
+    margin: 0 auto 0 0;
+    padding: 0;
+    border: 0;
+    background: none;
+}
+
+.profile .widget > footer > .button{
+    margin: 0;
+}
+
 .profile .widget > header h2 i,
 .profile .profileHead p i{
     color: var(--cmsMuted);
@@ -210,4 +232,149 @@ header.cms .rightAlign form{
     margin: 0;
     font-size: 0.875rem;
     color: var(--cmsMuted);
+}
+
+.cmslightbox.remoteLoginBox > section{
+    width: min(24rem, calc(100vw - 3rem));
+    min-width: 0;
+    max-width: 24rem;
+    height: auto;
+}
+
+.cmslightbox.remoteLoginBox > section > main{
+    flex: 0 0 auto;
+}
+
+.remoteLogin{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.remoteLogin > .cmsBoxLead{
+    width: 100%;
+    margin: 0 0 1.25rem;
+    text-align: center;
+}
+
+.remoteLogin .cms.message{
+    width: 100%;
+    margin: 0 0 1rem;
+}
+
+.remoteLogin .qrScan,
+.remoteLogin .remoteCode,
+.remoteLogin .remoteOffer{
+    width: min(100%, 22rem);
+}
+
+.remoteOffer{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.remoteQr{
+    display: flex;
+    justify-content: center;
+    width: 100%;
+}
+
+.remoteQr svg.qr-code{
+    display: block;
+    width: 12.5rem;
+    max-width: 100%;
+    height: auto;
+}
+
+.remoteOffer .remoteCodeLine{
+    margin: 0.65rem 0 0;
+    text-align: center;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    letter-spacing: 0.14em;
+    font-weight: 600;
+}
+
+.remoteOffer > .tagsHint{
+    margin: 0.75rem 0 0;
+    max-width: none;
+    text-align: center;
+}
+
+.remoteOfferCopy{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+}
+
+.remoteOffer .cmsBoxLead{
+    margin: 1rem 0 0.25rem;
+    text-align: center;
+}
+
+.remoteExpiry{
+    margin: 0;
+    color: var(--cmsMuted);
+    font-size: 0.875rem;
+    text-align: center;
+}
+
+/* While the camera runs, the code stays out of the way. When it stops,
+   the code is the page again and the ten minutes go with the lead. */
+.remoteLogin:has(.qrScan:not([hidden]):not(.is-dim)) > .remoteOffer,
+.remoteLogin:has(.remoteCode:not([hidden])) > .remoteOffer{
+    display: none;
+}
+
+.remoteLogin:has(.qrScan.is-dim) .remoteOfferCopy{
+    display: none;
+}
+
+.remoteLogin .remoteAbort:not([hidden]){
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    align-items: stretch;
+    gap: 0.75rem;
+    width: 100%;
+}
+
+.remoteLogin .remoteAbort [data-qr-dim-text]{
+    grid-column: 1 / -1;
+    margin: 0;
+}
+
+.remoteLogin .authCodeSlots{
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr)) 0.85rem repeat(4, minmax(0, 1fr));
+    align-items: center;
+    gap: 0.3rem;
+    width: 100%;
+}
+
+.remoteLogin .authCodeSlots input{
+    width: 100%;
+    height: 2.6rem;
+    margin: 0;
+    padding: 0;
+    border: 1px solid var(--cmsLine);
+    border-radius: var(--cmsRadius);
+    background: var(--cmsCanvas);
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 1.05rem;
+    line-height: 2.6rem;
+    text-align: center;
+    text-transform: uppercase;
+}
+
+.remoteLogin .authCodeDash{
+    color: var(--cmsMuted);
+    font-size: 1.15rem;
+    text-align: center;
+}
+
+.cms .remoteOfferCopy .button,
+.cms .remoteLogin .remoteCode > .button{
+    width: 100%;
+    margin: 0.7rem 0 0;
 }

@@ -1,0 +1,7 @@
+{
+  "private": true,
+  "description": "Frontend libraries kept in public/js/ext. jsQR is the QR reader for sign-in and is loaded only when a scan starts.",
+  "dependencies": {
+    "jsqr": "1.4.0"
+  }
+}

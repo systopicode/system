@@ -24,6 +24,11 @@ sys.processEvent = function (e) {
 		return;
 	}
 	var eventTarget = e.target || e.currentTarget;
+	// focus.js sets this while it rebuilds a select. The rebuild moves the
+	// selection onto the first option and the browser fires change for that.
+	if (eventTarget && eventTarget.dataset && eventTarget.dataset.morphing) {
+		return;
+	}
 	if (e.type === 'click' && eventTarget && eventTarget.closest) {
 		var leaving = eventTarget.closest('a[href*="logout"]');
 		if (leaving) {
@@ -539,6 +544,7 @@ sys.core.event = function (e) {
 		lastURL = location.href;
 		event.url = url;
 		if (url.pathChanged || url.queryChanged || url.actionChanged) {
+			sys.core.server.historyMode = 'pop';
 			sys.core.server.sendGet(url);
 		} else if (url.hashChanged) {
 			l("scrollto " + url.hash);

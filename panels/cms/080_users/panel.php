@@ -15,6 +15,7 @@ class Panel extends CmsPanel {
 
 	public $showSubnavi = FALSE;
 	public $icon = 'fa-duotone fa-regular fa-users';
+	public ?int $naviOrder = 20;
 	public bool $buildChildPanels = true;
 
 	function buildGranted() {
@@ -34,7 +35,6 @@ class Panel extends CmsPanel {
 
 	function getDefaultState() {
 		$defaultState = parent::getDefaultState();
-		$defaultState->hijackerId = NULL;
 		$defaultState->openChild = NULL;
 		return $defaultState;
 	}

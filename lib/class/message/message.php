@@ -55,13 +55,17 @@ class message {
 		$html = '';
 		foreach (($_SESSION['messages'] ?? []) AS $message) {
 			if (count($targets)) {
-				if (!$message->target) {
-					continue;
-				} elseif (!in_array($message->target, $targets)) {
+				if (!$message->target || !in_array($message->target, $targets, true)) {
 					continue;
 				}
+			} elseif ($message->target) {
+				// A named place flushes this itself. The page flush leaves it.
+				continue;
 			}
 			$html .= $message;
+		}
+		if ($html === '' && !$keepEmpty) {
+			return '';
 		}
 		return "<div class='cms message' data-system-messages role='status' aria-live='polite'>$html</div>";
 	}

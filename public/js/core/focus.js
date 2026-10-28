@@ -227,16 +227,48 @@ var focusPath = (function () {
 		}
 	}
 
+	/** Same options, in the same order. Rebuilding those fires change in Firefox. */
+	function sameOptions(old, neu) {
+		var a = old.options;
+		var b = neu.options;
+		if (!a || !b || a.length !== b.length) {
+			return false;
+		}
+		for (var i = 0; i < a.length; i++) {
+			if (a[i].value !== b[i].value || a[i].text !== b[i].text) {
+				return false;
+			}
+		}
+		return true;
+	}
+
 	/**
 	 * The focused element itself: what one types in keeps its content
 	 * (textarea, contenteditable), anything else shows the new one - the label
 	 * of a button, the options of a select (with the choice, if still there).
+	 *
+	 * A select whose options did not change is left alone. Replacing them
+	 * moves the selection to the first option and Firefox fires change, so a
+	 * field that saves on change would save that first option.
 	 */
 	function content(old, neu) {
 		if (old.tagName === 'TEXTAREA' || old.isContentEditable) {
 			return;
 		}
-		var choice = old.tagName === 'SELECT' ? old.value : null;
+		if (old.tagName !== 'SELECT') {
+			while (old.firstChild) {
+				old.removeChild(old.firstChild);
+			}
+			while (neu.firstChild) {
+				old.appendChild(neu.firstChild);
+			}
+			return;
+		}
+		var choice = old.value;
+		if (sameOptions(old, neu) && choice === neu.value) {
+			return;
+		}
+		old.dataset.morphing = '1';
 		while (old.firstChild) {
 			old.removeChild(old.firstChild);
 		}
@@ -246,6 +278,9 @@ var focusPath = (function () {
 		if (choice !== null && Array.from(old.options).some(option => option.value === choice)) {
 			old.value = choice;
 		}
+		setTimeout(function () {
+			delete old.dataset.morphing;
+		}, 0);
 	}
 
 	/** Events are bound when an element is built - a kept one keeps the old ones. */

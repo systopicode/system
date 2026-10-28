@@ -23,7 +23,7 @@
 
 	document.addEventListener('drop', function (event) {
 		var form = zone(event.target);
-		if (!form) {
+		if (!form || form.hasAttribute('data-drop-files')) {
 			return;
 		}
 		event.preventDefault();

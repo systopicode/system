@@ -23,6 +23,83 @@ class Panel extends PanelNode {
 	 */
 	public string $form = 'login';
 
+	/** '' follows the config. choose is the method list. */
+	public function getDefaultState() {
+		return ['loginMethod' => ''];
+	}
+
+	/** '' follows the config. A code in the address opens the invitation view. */
+	public function loginMethod(): string {
+		$chosen = (string) ($this->state->loginMethod ?? '');
+		$code = preg_replace('~[^0-9A-Za-z\-]~', '', (string) \http::get('code', ''));
+		$get = (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'GET') && !isset($_SERVER['HTTP_X_SCREEN_POLL']);
+		$opening = $code !== '' && $get;
+		$action = (string) $this->action;
+		$fresh = $get && ($action === '' || $action === 'login');
+		if ((string) \http::get('pair') === 'screen' && $fresh) {
+			$this->state->loginMethod = 'device';
+			return 'device';
+		}
+		if ($opening) {
+			$this->state->loginMethod = 'code';
+			return 'code';
+		}
+		// The address is the history. Back returns to the previous method.
+		$asked = (string) \http::get('method', '');
+		if ($get && in_array($asked, ['choose', 'code', 'device', 'passkey', 'password'], true)) {
+			$this->state->loginMethod = $asked;
+			return \Systopic\System\Auth\AuthConfig::loginMethod($asked);
+		}
+		if ($get && (string) \http::get('choose', '') !== '') {
+			$this->state->loginMethod = 'choose';
+			return '';
+		}
+		$chosen = \Systopic\System\Auth\AuthConfig::openingChoice($chosen, $fresh, $opening);
+		$this->state->loginMethod = $chosen;
+		return \Systopic\System\Auth\AuthConfig::loginMethod($chosen === '' ? null : $chosen);
+	}
+
+	function onLoadThisClass() {
+		// A query change stays on this panel. The diff keeps the card on
+		// screen unless the view is marked, and the browser's back button
+		// is one of those changes.
+		$get = (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'GET') && !isset($_SERVER['HTTP_X_SCREEN_POLL']);
+		$view = (string) \http::get('view', '');
+		if ($get && in_array($view, ['login', 'resetPassword', 'license', 'imprint', 'privacy', 'releases'], true)) {
+			$this->form = $view;
+		}
+		if ($get) {
+			$this->updateView('main');
+			$this->updateView('login');
+		}
+		$action = (string) $this->action;
+		// selected() is still false while these hooks run: the tree reference
+		// they read is installed afterwards. The path is already known.
+		$path = \app::request()->modulePath;
+		$atLogin = array_slice($path, -2) === ['cms', 'auth'];
+		if (!$atLogin || $this->form !== 'login' || \Systopic\System\Auth\Session::active()) {
+			return;
+		}
+		if ($action !== '' && $action !== 'login') {
+			return;
+		}
+		if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'GET' && !isset($_SERVER['HTTP_X_SCREEN_POLL'])) {
+			return;
+		}
+		if ($this->loginMethod() !== 'device' && !isset($_SERVER['HTTP_X_SCREEN_POLL'])) {
+			return;
+		}
+		$screen = (string) \http::get('pair') === 'screen';
+		try {
+			\Systopic\System\Auth\ScreenPair::handle(
+				$screen ? \http::$root : \http::$root . 'cms/',
+				$screen ? \Systopic\System\Tables\LoginCodes\Operator::PAIR_SCREEN : \Systopic\System\Tables\LoginCodes\Operator::PAIR_USER
+			);
+		} catch (\Throwable $e) {
+			error_log('screen pairing: ' . $e->getMessage());
+		}
+	}
+
 	public Scope $scope {
 		get => Scope::default();
 	}
@@ -40,6 +117,10 @@ class Panel extends PanelNode {
 		}
 		if (count(\app::request()->modulePath) > 1 && \app::request()->modulePath[1] === 'auth') {
 			if (\Systopic\System\Auth\Session::active()) {
+				$back = \Systopic\System\Auth\Session::takeReturn();
+				if (is_string($back) && $back !== '') {
+					\http::redirect($back);
+				}
 				if (\Systopic\System\Panels\Tree\PanelTree::getInstance()?->getRoot() && \Systopic\System\Panels\Tree\PanelTree::getInstance()?->getRoot()->hasChild('pages')) {
 					\http::redirect('../pages/');
 				} else {
@@ -110,15 +191,19 @@ class Panel extends PanelNode {
 	}
 
 	function sendEmail($template, $subject, User $user) {
-		ob_start();
-		include \fs::toNative(rtrim($this->absPath, '/') . '/' . $template);
-		$body = ob_get_clean();
-
-		return (new \emailSmtp())
-						->To($user->email, $user->fullname)
-						->Subject($subject)
-						->Body($body)
-						->send()
-		;
+		try {
+			ob_start();
+			include \fs::toNative(rtrim($this->absPath, '/') . '/' . $template);
+			$body = ob_get_clean();
+			return (new \emailSmtp())
+				->sensitive()
+				->To($user->email, $user->fullname)
+				->Subject($subject)
+				->Body($body)
+				->send();
+		} catch (\Throwable $e) {
+			error_log('[auth] mail to user ' . (int) $user->id . ' failed: ' . $e->getMessage());
+			return false;
+		}
 	}
 }

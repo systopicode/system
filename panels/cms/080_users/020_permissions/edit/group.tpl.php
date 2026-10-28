@@ -11,7 +11,7 @@ $color = ($group->color !== null && $group->color !== '') ? $group->color : '#8a
 <header>
 	<h1><?= $e($group->name ?: 'Group') ?></h1>
 	<ul class="barmenu">
-		<li><a class="ajax" href="../" title="Close"><i class="fa-regular fa-xmark"></i></a></li>
+		<li><a class="ajax" href="../" aria-label="Close"><i class="fa-regular fa-xmark"></i></a></li>
 	</ul>
 </header>
 <main class="groupEdit">

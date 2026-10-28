@@ -97,6 +97,34 @@
     transition: border-color .15s, box-shadow .15s;
 }
 
+.cms .portraitDrop.dragover .signet,
+.cms .portraitDrop.is-over .signet,
+.cmslightbox .userEdit .portraitDrop.dragover{
+    box-shadow: 0 0 0 3px var(--cmsHighlightColor);
+}
+
+.cms .portraitDrop.loading .signet::after,
+.cms .portraitDrop.loading .portraitFace::after{
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    z-index: 4;
+    width: 1.35rem;
+    height: 1.35rem;
+    margin: -0.7rem 0 0 -0.7rem;
+    border-radius: 50%;
+    border: 2px solid var(--cmsHighlightColor);
+    border-top-color: transparent;
+    animation: spinner .6s linear infinite;
+    pointer-events: none;
+}
+
+.cms .portraitDrop.loading .signet img,
+.cms .portraitDrop.loading .portraitFace img{
+    opacity: 0.35;
+}
+
 .cms .portraitDrop input[type="file"]{
     position: absolute;
     inset: 0;

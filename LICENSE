@@ -1,21 +1,86 @@
-MIT License
+# systopic Software License
 
-Copyright (c) 2026 systopic GmbH
+Copyright (c) 2026 systopic GmbH. All rights reserved.
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+This license applies to software packages developed and distributed by systopic GmbH, including but not limited to `systopic/system` and `systopic/cms` (Fluxo CMS), where this license is included.
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
+## 1. Grant of License
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+systopic GmbH grants authorized users a non-exclusive, non-transferable license to use, install, integrate, and modify the software for their own websites, applications, and authorized projects, subject to applicable agreements.
+
+This license does not transfer ownership of the software or any intellectual property rights.
+
+## 2. Permitted Use
+
+Authorized users may:
+
+- Install and operate the software within authorized projects.
+- Use the software as a framework or component of websites and applications.
+- Modify, customize, and extend the software for project-specific requirements.
+- Develop custom modules, templates, integrations, and extensions.
+- Integrate the software with other libraries, frameworks, and applications.
+- Create copies necessary for development, testing, staging, deployment, backup, and operation.
+- Deploy and operate websites and applications built using the software.
+- Provide development, maintenance, and hosting services for authorized projects.
+
+## 3. Restrictions
+
+Unless expressly authorized in writing by systopic GmbH, users may not:
+
+- Redistribute, publish, sublicense, sell, or otherwise make the software available as a standalone software package, framework, CMS, or development platform.
+- Offer or distribute the software as an independent or competing software product or service.
+- Grant third parties independent rights to the underlying software.
+- Remove or alter copyright notices, license information, or proprietary notices.
+- Make the original or modified source code publicly available outside the scope of an explicitly authorized distribution.
+
+These restrictions do not prevent the development, deployment, delivery, hosting, or maintenance of authorized websites and applications built using the software.
+
+Access to the source code by developers, employees, contractors, or service providers working on an authorized project is permitted to the extent necessary for that project, provided they are bound by appropriate confidentiality and usage restrictions.
+
+## 4. Modifications and Extensions
+
+Authorized users may create modifications and extensions for their projects.
+
+Modifications to the original software do not transfer ownership of the underlying software.
+
+Independently developed extensions, custom application code, and project-specific materials remain subject to their respective ownership and contractual arrangements.
+
+No obligation to submit modifications or extensions to systopic GmbH is established by this license.
+
+## 5. Ownership
+
+The software, including its original source code, architecture, core components, and documentation, remains the intellectual property of systopic GmbH or its respective rights holders.
+
+All rights not expressly granted under this license are reserved.
+
+## 6. Third-Party Components
+
+The software may include third-party libraries, dependencies, and components governed by separate licenses.
+
+Those licenses remain applicable to their respective components.
+
+Nothing in this license restricts rights granted under applicable third-party open-source licenses.
+
+## 7. Warranty Disclaimer
+
+The software is provided "AS IS", without warranties of any kind, to the extent permitted by applicable law.
+
+Unless otherwise agreed, systopic GmbH does not guarantee uninterrupted operation, freedom from defects, or suitability for any particular purpose.
+
+## 8. Limitation of Liability
+
+Liability is limited to the extent permitted by applicable law.
+
+Nothing in this license excludes or limits liability where such exclusion or limitation is prohibited by law, including mandatory liability for intent, gross negligence, or injury to life, body, or health.
+
+## 9. Additional Agreements
+
+Individual license agreements, development agreements, service agreements, or other written arrangements with systopic GmbH may grant additional rights or establish different conditions.
+
+In the event of a conflict, such individually agreed terms shall prevail.
+
+---
+
+Developed by systopic GmbH.
+
+All rights reserved.

@@ -94,7 +94,46 @@ er nicht. Für DEV daher `config.local.json` nehmen. Sie überschreibt die Insta
   `cd public && php index.php @auth.json` mit `{"path": "/projects/<p>/public/auth/", "output": "html"}`.
   Im Ergebnis muss `appScreenCode` vorkommen.
 
+## Anmeldung im CMS
+
+Eine Karte (`src/Auth/login.card.tpl.php`), Englisch, ohne Sprachumschalter.
+`AuthConfig::loginMethod()` entscheidet den ersten Schritt. Leer oder
+`choose` zeigt die Methoden. Passwort bleibt immer erreichbar, „Use another
+method“ auch.
+
+| Methode | Was passiert |
+|---|---|
+| Passwort | wie bisher, Passwörter werden nicht neu gehasht |
+| Passkey | Fingerabdruck, Gesicht oder Geräte-PIN. Die RP-ID ist nur der Host, jede Datenbank hat ihre eigenen Schlüssel |
+| Code | acht Felder, oder die Kamera liest den QR. Ein Screen-QR (`?screen=`) führt auf das Profil und wartet auf Erlaubnis |
+| Gerät hinzufügen | das angemeldete Profil zeigt einen Recover-QR (`cms/auth/?code=…&auto=1`). Darunter steht der Code, zehn Minuten |
+| Screen | der Screen zeigt seinen QR. Ein angemeldetes Gerät erlaubt ihn. Sehen allein meldet niemanden an |
+
+Die Kamera startet aus dem Klick (`getUserMedia({video:true, audio:false})`
+in demselben Turn). Auf dem Handy öffnet „Add device“ die Kamera gleich,
+der Desktop bleibt beim QR. Eine gespeicherte Sperre (Chrome „Block“,
+Firefox mit „Remember“) fragt nicht noch einmal: der Knopf sagt das per
+Alert. Solange der Browser noch fragen darf, fragt der Knopf erneut. Ein
+Neuladen holt eine gespeicherte Sperre nicht zurück.
+
+`Devices::issue()` hängt einen neuen Browser als neue Zeile an. Derselbe
+Browser mit gültigem Cookie aktualisiert seine Zeile (Name, den der Nutzer
+vergeben hat, bleibt). Eine Zeile nennt das erste Koppeln: Datum, Methode
+und wer es ausgelöst hat (`LoginLog::paired()`, aus `var/log/login.log`).
+`Presence` färbt live, untätig oder offline, solange das Relay verbunden ist.
+Abmelden eines Geräts schickt `logout` über das Relay; die offene Seite
+prüft die Session und lädt neu.
+
+Ein verbrauchter Code schließt die Lightbox (`X-Code-Live`). Die Auth-Seite
+und die erste CMS-Seite nach einem neuen Gerät lassen das Web-App-Manifest
+weg (`sys_plain`, zehn Minuten), damit das Handy nicht sofort „CMS
+installieren“ fragt.
+
 ## Ein Projekt anbinden
+
+Die eigene Auth eines Projekts entfällt. Nicht angemeldet geht es nach
+`cms/auth/`, die Rückkehr merkt sich `Session::rememberReturn()`.
+spaceticker hat `panels/auth/` deshalb nicht mehr.
 
 Was spaceticker dafür tut:
 - Nach einem Passwort-Login `Devices::issue($user)`.

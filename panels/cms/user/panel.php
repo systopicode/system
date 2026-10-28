@@ -66,12 +66,6 @@ class Panel extends CmsPanel {
 		return null;
 	}
 
-	function getDefaultState() {
-		$state = parent::getDefaultState();
-		$state->hijackerId = NULL;
-		return $state;
-	}
-
 	function toNavi() {
 		$fakeRole = count($this->fakeRoles);
 		return implode([

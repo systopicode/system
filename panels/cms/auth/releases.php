@@ -8,16 +8,34 @@
  * @return array<string, array{date: string, new?: list<string>, fixed?: list<string>}>
  */
 return [
+    '0.5.3' => [
+        'date' => '2026-10-28',
+        'new' => [
+            'Sign-in offers a password, a passkey, a code or a screen. The code sits under its QR and is valid for 10 minutes.',
+            'Scan a QR on the sign-in card, or from Add device. On a phone, Add device opens the camera.',
+            'Trusted devices show online, idle or offline, and when they were first paired and by whom.',
+            'Drop a portrait on the account or on a user. It is stored as a square WebP.',
+            'Page settings, media settings, tags and the theme sit with the other settings.',
+        ],
+        'fixed' => [
+            'Signing in again from the same browser updates that device instead of adding another row.',
+            'A used code closes its lightbox. If the browser will not ask for the camera again, the button says so.',
+            'The first page after a new device signs in does not ask to install the CMS.',
+        ],
+    ],
     '0.5.2' => [
         'date' => '2026-10-27',
         'new' => [
             'Backup includes page settings, media settings and environment files, on by default. The list shows what an archive contains.',
+            'Development and staging show in the window title. Hammer, flask and globe mark the stage in the navigation.',
             'Restore offers those parts after reading the archive, so a backup can be restored in part. The database is always included when creating a backup and can be left out when restoring.',
         ],
         'fixed' => [
             'Backup and restore show progress as a bar.',
             'Leaving or reloading the page is blocked while a backup is created, restored or uploaded.',
             'Cancelling a backup returns to the list. Restore says when nothing is selected.',
+            'Lightbox close sits in the middle of its hover. The passkey offer after a password sign-in scrolls in the card, without the page footer. Trusted devices no longer show a count beside the title.',
+            'After signing out, "Sign in again" opens the method list. The list opens by itself after 30 seconds.',
         ],
     ],
     '0.5.1' => [
@@ -67,7 +85,7 @@ return [
 			'Page tree: the crossed-out eye publishes the page. Alias and redirect have their own colour. "New subpage" shows a page with a page below it.',
 			'Page preview: tablet and phone stay centred, widths come from the site CSS, "Fit" uses the column width.',
 			'The CMS can be installed as an app. A coloured dot in the window title shows the stage.',
-			'Signing in leads back to the page you came from. The sign-in log says how a session started and ended; entries older than 90 days are deleted.',
+			'Signing in leads back to the page you came from. The sign-in log says how a session started and ended.',
 			'User editor: the latest five sign-ins, and "All sign-ins" opens the log for that user.',
 			'Site settings: a private page sends visitors to sign in, the home page can follow the browser language, and the edit bar on the website can be switched off.',
 			'Website: signed-in editors get a small edit bar — this page in the CMS, the sections, and log out.',

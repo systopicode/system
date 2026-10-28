@@ -22,10 +22,4 @@
 			</div>
 		</form>
 	</div>
-	<div class="row">
-		<div>
-			 <br>
-			<p class="authLinks"><a href="login" class="ajax"><i class="fa-regular fa-chevron-left"></i> Back to sign in</a></p>
-		</div>
-	</div>
 </main>

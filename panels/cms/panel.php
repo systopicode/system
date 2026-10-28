@@ -32,6 +32,7 @@ class Panel extends PanelNode {
 					return TRUE;
 				}
 				if (!empty($reqPath) && $reqPath[0] === 'cms') {
+					\Systopic\System\Auth\Session::rememberReturn((string) ($_SERVER['REQUEST_URI'] ?? ''));
 					\http::redirect(\http::$root . 'cms/auth/');
 				}
 				return FALSE;
@@ -61,6 +62,11 @@ class Panel extends PanelNode {
 				}
 				$this->state->submoduleName = $selected->name;
 				$this->state->submodulePath = $deep !== null ? $deep->path : $selected->path;
+			} elseif ($selected === null && (string) ($this->state->submoduleName ?? '') !== '') {
+				// The logo opens the dashboard. The module that was open stays out of the menu.
+				$this->state->submoduleName = '';
+				$this->state->submodulePath = [];
+				$this->updateView('menu');
 			}
 			// "Vorschau" follows the open record, also within one panel (preview.tpl.php).
 			// submoduleName stays the module behind a search dialog.

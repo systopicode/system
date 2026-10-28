@@ -36,6 +36,7 @@
             return box.closest('.profile')?.querySelector('[data-system-messages]') || box.querySelector('.passkeyStatus');
         };
         const setStatus = (target, text, type = 'notice') => {
+            if (!target) return;
             target.replaceChildren();
             if (!text) return;
             const banner = document.createElement('div');
@@ -58,6 +59,13 @@
             box.dataset.step = 'ready';
             const feedback = box.querySelector('.passkeyAuthFeedback');
             if (feedback) feedback.hidden = true;
+        };
+        const revealSignedIn = box => {
+            const card = box.closest('.authSignin');
+            const done = card?.querySelector('[data-auth-success]');
+            if (!done) return;
+            [...card.children].forEach(child => { if (child !== done) child.hidden = true; });
+            done.hidden = false;
         };
         const notifyRemoval = async signal => {
             if (!signal || !window.PublicKeyCredential?.signalUnknownCredential) return false;
@@ -107,7 +115,8 @@
                         loginFeedback(state.box, 'working', 'Checking your passkey …');
                         const result = await request(state.box, 'passkeyFinishLogin', {...credentialData(credential), ceremony: begin.ceremony});
                         loginFeedback(state.box, 'success', 'Signed in.');
-                        await new Promise(resolve => setTimeout(resolve, 600));
+                        revealSignedIn(state.box);
+                        await new Promise(resolve => setTimeout(resolve, 2000));
                         if (state.box.isConnected && !controller.signal.aborted) window.location.assign(result.redirect);
                     } catch (error) {
                         // No selection/unsupported autofill is silent; the explicit button stays usable.
@@ -152,6 +161,22 @@
             dialog.dataset.step = step;
             dialog.querySelector('.passkeySetupTitle').textContent = content[0];
             dialog.querySelector('.passkeySetupLead').textContent = content[1];
+            if (step === 'ready') {
+                const host = dialog.closest('[data-passkey-count]');
+                const count = Number(host?.dataset.passkeyCount || 0);
+                const lead = count > 0
+                    ? 'A passkey already on this account confirms the new one.'
+                    : host?.dataset.passkeyGrant === '1' ? '' : 'Sign in again before adding a passkey.';
+                if (lead) dialog.querySelector('.passkeySetupLead').textContent = lead;
+            }
+        };
+        const confirmPasskey = async (box, data, controller, status) => {
+            setStatus(status, 'Confirm with a passkey …');
+            const begin = await request(box, 'passkeyBeginConfirm', {userId: data.userId}, controller.signal);
+            if (controller.signal.aborted || !box.isConnected) throw new DOMException('Cancelled', 'AbortError');
+            const credential = await navigator.credentials.get({publicKey: options(begin.options), signal: controller.signal});
+            if (!credential || !box.isConnected) throw new DOMException('Cancelled', 'AbortError');
+            return {...credentialData(credential), confirm: begin.ceremony};
         };
         this.run = async event => {
             const button = event.element.closest('[data-passkey-mode]');
@@ -187,7 +212,6 @@
                     };
                     dialog.onclose = () => {
                         if (pending?.dialog === dialog) pending.controller.abort();
-                        dialog.querySelector('[data-passkey-password]').value = '';
                     };
                     dialog.showModal();
                     return;
@@ -196,14 +220,8 @@
                 const creating = mode === 'create';
                 const status = creating && dialog ? dialog.querySelector('.passkeyStatus') : cardStatus;
                 const row = button.closest('[data-passkey-row]') || (creating && dialog ? dialog.querySelector('[data-passkey-row]') : null);
-                const password = row?.querySelector('[data-passkey-password]');
                 const username = box.closest('main')?.querySelector('[name=username]');
-                const data = {userId: Number(box.dataset.passkeyUserId || 0) || undefined, username: username?.value.trim() || '', password: password?.value || '', name: row?.querySelector('[data-passkey-name]')?.value || box.dataset.passkeyName || '', keyId: Number(button.dataset.key_id || 0)};
-                if (mode !== 'login' && !onboarding && !data.password) {
-                    setStatus(status, 'Enter your current password to confirm this change.', 'warning');
-                    password?.focus();
-                    return;
-                }
+                const data = {userId: Number(box.dataset.passkeyUserId || 0) || undefined, username: username?.value.trim() || '', name: row?.querySelector('[data-passkey-name]')?.value || box.dataset.passkeyName || '', keyId: Number(button.dataset.key_id || 0)};
                 if (mode === 'remove' && !window.confirm('Remove this passkey? Password sign-in stays available.')) return;
                 const controller = new AbortController();
                 pending = {box, controller, dialog: creating ? dialog : null};
@@ -222,10 +240,16 @@
                 try {
                     let result;
                     if (mode === 'login' || creating) {
-                        const begin = await request(box, creating ? 'passkeyBeginCreate' : 'passkeyBeginLogin', data);
+                        if (creating && !onboarding && Number(box.dataset.passkeyCount || 0) === 0 && box.dataset.passkeyGrant !== '1') {
+                            throw new Error('Sign in again before adding a passkey.');
+                        }
+                        if (creating && !onboarding && Number(box.dataset.passkeyCount || 0) > 0) {
+                            const proof = await confirmPasskey(box, data, controller, status);
+                            ceremony = proof.confirm;
+                            Object.assign(data, proof);
+                        }
+                        const begin = await request(box, creating ? 'passkeyBeginCreate' : 'passkeyBeginLogin', data, controller.signal);
                         ceremony = begin.ceremony;
-                        if (password) password.value = '';
-                        data.password = '';
                         if (controller.signal.aborted || !box.isConnected) throw new DOMException('Cancelled', 'AbortError');
                         if (mode === 'login') loginFeedback(box, 'working', 'Continue on your device …');
                         const args = {publicKey: options(begin.options), signal: controller.signal};
@@ -234,12 +258,18 @@
                         const payload = {...credentialData(credential), ceremony};
                         result = await request(box, creating ? 'passkeyFinishCreate' : 'passkeyFinishLogin', payload);
                     } else {
-                        result = await request(box, mode === 'rename' ? 'passkeyRename' : 'passkeyRemove', data);
+                        if (mode === 'remove' && box.dataset.passkeyOwn !== '0' && box.dataset.passkeyGrant !== '1') {
+                            const proof = await confirmPasskey(box, data, controller, status);
+                            ceremony = proof.confirm;
+                            Object.assign(data, proof);
+                        }
+                        result = await request(box, mode === 'rename' ? 'passkeyRename' : 'passkeyRemove', data, controller.signal);
                     }
                     if (result.redirect) {
                         completed = true;
                         loginFeedback(box, 'success', onboarding ? 'Passkey added.' : 'Signed in.');
-                        await new Promise(resolve => setTimeout(resolve, 600));
+                        if (mode === 'login' && !onboarding) revealSignedIn(box);
+                        await new Promise(resolve => setTimeout(resolve, mode === 'login' && !onboarding ? 2000 : 600));
                         if (box.isConnected && !controller.signal.aborted) window.location.assign(result.redirect);
                     } else if (result.html && box.isConnected) {
                         if (creating && dialog?.open) {
@@ -264,8 +294,6 @@
                     await request(box, 'passkeyCancel', {ceremony}).catch(() => {});
                 } finally {
                     observer.disconnect();
-                    if (password) password.value = '';
-                    data.password = '';
                     controls.forEach(([control, disabled]) => { control.disabled = disabled; });
                     box.classList.remove('is-pending');
                     box.removeAttribute('aria-busy');
@@ -273,6 +301,14 @@
                     if (!completed && mode === 'login' && box.isConnected) scheduleAutofill();
                 }
             } finally { starting = false; }
+        };
+        this.startIfAuto = () => {
+            const box = document.querySelector('.passkeyLogin[data-passkey-auto]');
+            if (!box || box.dataset.passkeyStarted) return;
+            const button = box.querySelector('[data-passkey-mode="login"]');
+            if (!button) return;
+            box.dataset.passkeyStarted = '1';
+            this.run({element: button});
         };
     });
 })();

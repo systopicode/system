@@ -30,7 +30,9 @@ class qr {
 			return '';
 		}
 		$moduleSize = max(1, $moduleSize);
-		return $barcode->getBarcodeSVGcode($moduleSize, $moduleSize, '#111111');
+		// currentColor, so the theme's main colour paints the modules.
+		// A hardcoded black read as text colour on one theme and brand on another.
+		return str_replace('#111111', 'currentColor', $barcode->getBarcodeSVGcode($moduleSize, $moduleSize, '#111111'));
 	}
 
 	static function svgMarkup(string $payload, int $moduleSize = 6, string $ecc = 'M', string $className = 'qr-code'): string {

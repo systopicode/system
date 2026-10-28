@@ -17,6 +17,13 @@ final class Release
      * A released install sets versionDate in its config; otherwise the
      * system package's last git commit.
      */
+    /** The system package LICENSE. Login and the dashboard read this, never another package. */
+    public static function license(): string
+    {
+        $path = dirname(__DIR__, 2) . '/LICENSE';
+        return is_file($path) ? (string) file_get_contents($path) : '';
+    }
+
     public static function revision(): string
     {
         if (defined('PUBLIC_VERSIONDATE') && PUBLIC_VERSIONDATE !== '') {

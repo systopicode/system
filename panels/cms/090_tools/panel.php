@@ -10,6 +10,7 @@ class Panel extends PanelNode {
 //		public $loadChildModules = TRUE;
 	public $showSubnavi = TRUE;
 	public $icon = 'fa-duotone fa-regular fa-wrench';
+	public ?int $naviOrder = 50;
 	public bool $buildChildPanels = true;
 
 	function getDefaultState() {

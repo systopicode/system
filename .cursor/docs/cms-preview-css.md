@@ -61,7 +61,7 @@ layer:
 | Layer | What goes in | Loaded by |
 |---|---|---|
 | `cms` | the system UI and panel CSS | `fsLoader::includeCSSFilesInLayer(…, 'cms')` |
-| `project` | `css/cms_overrides.css`, `overrides/css/` | `includeCSSFilesScoped(…, ':root', 'project', limit: '.cmsOwn')` |
+| `project` | `css/system_overrides.css` (`css/cms_overrides.css` until that file exists), `overrides/css/` | `includeCSSFilesScoped(…, ':root', 'project', limit: '.cmsOwn')` |
 | `preview` | the site's own CSS, scoped | `fsLoader::includeCSSFilesScoped()` |
 
 Two traps worth knowing about layers: **unlayered CSS beats every layer**, so
@@ -122,7 +122,7 @@ Three at-rules are document-wide by nature and do not work inside `@scope`:
 | `@keyframes` | `animate.css` |
 
 The project names what the CMS needs at document level in
-**`public/css/cms_overrides.css`** — today a single `@import 'fonts.css'`.
+**`public/css/system_overrides.css`** — fonts and project GUI CSS. `public/css/cms_overrides.css` is still read while the new file does not exist.
 That file is the hook; the import is lifted out of the scope and lands in the
 `project` layer, document-wide.
 

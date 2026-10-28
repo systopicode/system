@@ -12,7 +12,7 @@ a panel at a glance: `theming.md`.
 | Package | Role |
 |---|---|
 | `systopic/system` | The framework of every project: boot, database, auth, users, media, panels engine, assets — and the generic admin GUI (frame, menu, login, users, settings, backup, tools, tree, WYSIWYG, context menu, image editor, all shared CSS/JS). |
-| `systopic/cms` | The website: page tree, page editor, preview, sites, frontend rendering, and what only pages have (template and page settings, page trash, duplicates, URL rewrite) — plus the CSS/JS that only pages need. |
+| `systopic/cms` | The website: page tree, page editor, preview, sites, frontend rendering, and what only pages have (the page itself, page trash, duplicates, URL rewrite) — plus the CSS/JS that only pages need. |
 
 The line was drawn when the monolith was split (5 Oct 2026): **framework
 for every app** vs. **website feature** — not "core vs. GUI". Apps without
@@ -29,8 +29,9 @@ Example: `system/public/css/27_tree.css` defines the tree,
 differently. Same for `cms/public/css/pages.css` (page header, preview).
 
 `panels/cms/` in both packages is the URL `/cms/`, not the package: the two
-trees are merged by folder name (`030_settings` gets Media and Environment
-from system, Template and Page Settings from cms).
+trees are merged by folder name. Settings live in system: page settings,
+media settings, tags, theme and environment. The cms package only adds the
+page editor under `030_settings/010_page`.
 
 Projects that use only `systopic/system` (and so the GUI in it):
 `pwk.systopic.net` (loads `00_theme` … `18_ui` from `system/public/css/` and

@@ -99,6 +99,7 @@ final class Devices
             return;
         }
         Session::login((int) $device->relationId('user'));
+        Session::clearPasskeyGrant();
         if (!Session::known()) {
             return;
         }
@@ -113,18 +114,34 @@ final class Devices
     }
 
     /**
-     * After a login: a new device for this browser, cookie set. A device the
-     * browser held before (another login on it) is replaced.
+     * After a login: the browser's own device, if its cookie still belongs to
+     * this user. A cookie we cannot trust is a new row. The QR cannot say
+     * which device will scan it, so the cookie is the only reliable sign.
      */
     public static function issue(User $user, ?string $client = null): Device
     {
         $client ??= self::displayed() ?? 'browser';
         $scope = Scope::default();
         $now = new DateTimeImmutable();
-        [$oldId, $oldSecret] = self::cookie() ?? [0, ''];
-        if ($oldId !== 0 && ($old = DeviceQuery::byId($scope, $oldId)) !== null && $old->revokedAt === null
-            && Operator::verdict($old, $oldSecret, $now) !== Operator::WRONG) {
-            $scope->save(Operator::revoked($old, 'replaced', $now));
+        $cookie = self::cookie();
+        if ($cookie !== null) {
+            [$oldId, $oldSecret] = $cookie;
+            $old = DeviceQuery::byId($scope, $oldId);
+            if ($old !== null) {
+                $verdict = Operator::verdict($old, $oldSecret, $now);
+                $sameUser = (int) $old->relationId('user') === (int) $user->id;
+                if ($sameUser && ($verdict === Operator::OK || $verdict === Operator::GRACED)) {
+                    return self::reconnect($old, $oldSecret, $verdict, $user, $client, $now, $scope);
+                }
+                // A revoked row stays revoked: whoever still holds that cookie
+                // must not be let back in through it. A wrong secret proves
+                // nothing, so that row is left alone.
+                if ($verdict === Operator::REUSED) {
+                    $scope->save(Operator::revoked($old, 'reuse', $now));
+                } elseif ($verdict !== Operator::WRONG && $verdict !== Operator::REVOKED) {
+                    $scope->save(Operator::revoked($old, 'replaced', $now));
+                }
+            }
         }
         // a read first: writing provisions nothing, and the very first device
         // of an installation needs usm_devices to exist
@@ -135,6 +152,39 @@ final class Devices
             $user, $secret, DeviceName::from($userAgent), $client, $userAgent, self::ip(),
             self::expiresFor($user, $now), $now,
         );
+        $scope->save($device);
+        self::setCookie($device, $secret);
+        self::remember($device, $now);
+        // The next page is a fresh sign-in. It does not advertise the install
+        // banner; a later visit of the CMS still can.
+        self::markPlainLanding();
+        return $device;
+    }
+
+    /** The same browser signed in again. One row, the name the user gave it stays. */
+    private static function reconnect(
+        Device $device,
+        string $secret,
+        string $verdict,
+        User $user,
+        string $client,
+        DateTimeImmutable $now,
+        Scope $scope,
+    ): Device {
+        $userAgent = (string) ($_SERVER['HTTP_USER_AGENT'] ?? '');
+        $generated = DeviceName::from((string) $device->userAgent);
+        $device->userAgent = mb_substr($userAgent, 0, 255);
+        if ($device->name === null || trim($device->name) === '' || $device->name === $generated) {
+            $device->name = mb_substr(DeviceName::from($userAgent), 0, 100);
+        }
+        $device->client = $client;
+        Operator::touched($device, self::ip(), self::expiresFor($user, $now), $now);
+        // The grace secret is the previous one. It cannot be written back
+        // (only its hash is stored), so it is replaced.
+        if ($verdict === Operator::GRACED || Operator::dueForRotation($device, $now)) {
+            $secret = bin2hex(random_bytes(32));
+            Operator::rotated($device, $secret, $now);
+        }
         $scope->save($device);
         self::setCookie($device, $secret);
         self::remember($device, $now);
@@ -331,6 +381,21 @@ final class Devices
     private static function ip(): ?string
     {
         return isset($_SERVER['REMOTE_ADDR']) ? (string) $_SERVER['REMOTE_ADDR'] : null;
+    }
+
+    /** One response without the web-app manifest, so a QR sign-in does not ask to install the CMS. */
+    private static function markPlainLanding(): void
+    {
+        if (headers_sent()) {
+            return;
+        }
+        setcookie('sys_plain', '1', [
+            'expires' => time() + 600,
+            'path' => '/',
+            'secure' => self::https(),
+            'httponly' => true,
+            'samesite' => 'Lax',
+        ]);
     }
 
     private static function https(): bool

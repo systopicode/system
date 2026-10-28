@@ -29,7 +29,7 @@ if ($node !== null && $node !== $cms) {
 		<header>
 			<input type="search" name="query" data-on_input="search" value="<?= htmlspecialchars((string) $this->state->query, ENT_QUOTES) ?>" placeholder="Search everything" aria-label="Search" autocomplete="off" autofocus>
 			<ul class="barmenu">
-				<li><a href="<?= htmlspecialchars($back, ENT_QUOTES) ?>" data-on_click="closeSearch" title="Close"><i class="fa-regular fa-xmark"></i></a></li>
+				<li><a href="<?= htmlspecialchars($back, ENT_QUOTES) ?>" data-on_click="closeSearch" aria-label="Close"><i class="fa-regular fa-xmark"></i></a></li>
 			</ul>
 		</header>
 		<main>

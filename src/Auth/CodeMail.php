@@ -21,8 +21,8 @@ use Systopic\System\Tables\Users\Model as User;
 final class CodeMail
 {
     public const SUBJECTS = [
-        Codes::INVITE  => 'Deine Einladung',
-        Codes::RECOVER => 'Dein Anmelde-Code',
+        Codes::INVITE  => 'Your invitation',
+        Codes::RECOVER => 'Your sign-in code',
     ];
 
     public static function send(User $user, string $purpose, string $code): bool
@@ -31,7 +31,7 @@ final class CodeMail
             return false;
         }
         $appName = defined('PROJECT_NAMESPACE') ? (string) PROJECT_NAMESPACE : 'systopic';
-        $link = \http::$siteUrl . 'auth/?code=' . rawurlencode($code);
+        $link = self::link($code);
         $expires = self::lifetimeText(Codes::LIFETIMES[$purpose]);
         $template = \fs::toNative((string) \fs::$projectRoot . 'panels/auth/emailCode.tpl.php');
         if (!is_file($template)) {
@@ -53,9 +53,15 @@ final class CodeMail
         }
     }
 
-    /** "10 Minuten", "24 Stunden". */
+    /** The address that opens the invitation view and fills the code. */
+    public static function link(string $code): string
+    {
+        return \http::$siteUrl . 'cms/auth/?code=' . rawurlencode($code);
+    }
+
+    /** "10 minutes", "24 hours". */
     public static function lifetimeText(int $seconds): string
     {
-        return $seconds >= 3600 ? intdiv($seconds, 3600) . ' Stunden' : intdiv($seconds, 60) . ' Minuten';
+        return $seconds >= 3600 ? intdiv($seconds, 3600) . ' hours' : intdiv($seconds, 60) . ' minutes';
     }
 }

@@ -28,15 +28,19 @@ body.cms > .cmsMobileHeader > .cmsMobileMenuClose, body.cms > .cmsMobileHeader >
 		background: var(--cmsMainColor);
 	}
 	body.cms:has(.authCard) {
-		--authLift: max(env(safe-area-inset-top, 0px), 5rem);
-		height: auto; min-height: calc(100lvh + var(--authLift)); overflow-x: clip; overflow-y: visible;
+		height: 100dvh; min-height: 100dvh; overflow: hidden;
 		max-width: 100%;
-		margin-top: calc(-1 * var(--authLift));
-		padding: calc(var(--authLift) + 1.25rem) 1rem max(1.25rem, env(safe-area-inset-bottom));
+		margin-top: 0;
+		padding: max(1.25rem, env(safe-area-inset-top, 0px)) 1rem max(1.25rem, env(safe-area-inset-bottom));
 		background:
-			radial-gradient(42rem 26rem at 18% 0, color-mix(in srgb, var(--cmsHighlightColor) 32%, transparent), transparent 62%),
+			radial-gradient(42rem 26rem at 18% -7rem, color-mix(in srgb, var(--cmsHighlightColor) 32%, transparent), transparent 62%),
 			var(--cmsMainColor);
 		justify-content: safe center; align-items: center;
+	}
+	body.cms:has(.authCard) > div.authCard {
+		flex: 0 0 auto;
+		align-self: center;
+		min-height: 0;
 	}
 	body.cms:has(.authCard) > div.authCard,
 	body.cms:has(.authCard) > footer.authFooter {
@@ -95,11 +99,12 @@ body.cms > .cmsMobileHeader > .cmsMobileMenuClose, body.cms > .cmsMobileHeader >
 		position: fixed;
 		left: 0;
 		right: 0;
+		width: 100%;
 		z-index: 1900;
 		display: flex;
 		align-items: center;
 		gap: 8px;
-		background: var(--cmsFrame);
+		background-color: var(--cmsFrame);
 		color: #fff;
 	}
 	body.cms > .cmsMobileHeader {
@@ -111,18 +116,18 @@ body.cms > .cmsMobileHeader > .cmsMobileMenuClose, body.cms > .cmsMobileHeader >
 		min-height: var(--mobileTop);
 	}
 	.cmsMobileHeader strong { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+	/* Header: the icon tile, no word. */
 	.cmsMobileHeader .cmsStage {
 		display: inline-flex; align-items: center; justify-content: center;
-		position: static; flex: 0 0 auto; width: auto; height: 1rem;
-		margin: 0; padding: 0 0.28rem;
-		border: 1px solid currentColor; border-radius: 999px;
-		background: color-mix(in srgb, currentColor 14%, transparent);
-		font-size: 0; line-height: 0; letter-spacing: 0; overflow: hidden;
+		position: static; flex: 0 0 auto;
+		width: 2rem; height: 2rem; margin: 0; padding: 0;
+		border-style: solid; border-width: 1px; border-radius: 8px;
 	}
-	.cmsMobileHeader .cmsStage:before { content: ""; width: 0.38rem; height: 0.38rem; border-radius: 50%; background: currentColor; }
-	.cmsMobileHeader .cmsStage.DEV { color: var(--cmsSuccess); }
-	.cmsMobileHeader .cmsStage.STAGING { color: var(--cmsHighlightColor); }
-	.cmsMobileHeader .cmsStage.LIVE { color: var(--cmsError); }
+	.cmsMobileHeader .cmsStage > span {
+		position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0;
+		overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
+	}
+	.cmsMobileHeader .cmsStage > i { font-size: 0.95rem; }
 	.cmsMobileHeader button, .cmsMobileHeader a, .cmsMobileWindowBar button {
 		display: inline-flex;
 		align-items: center;
@@ -136,20 +141,11 @@ body.cms > .cmsMobileHeader > .cmsMobileMenuClose, body.cms > .cmsMobileHeader >
 		background: transparent;
 		color: inherit;
 	}
-	body.cms > main > div.main .cmsStage {
-		display: inline-flex; align-items: center; align-self: flex-start; gap: 0.4rem;
-		height: 1.375rem; margin: 8px 16px 16px; padding: 0 0.6rem 0 0.45rem;
-		border: 1px solid currentColor; border-radius: var(--cmsRadius);
-		background: color-mix(in srgb, currentColor 14%, transparent);
-		font-size: 0.6875rem; font-weight: 700; letter-spacing: 0.04em;
-		color: var(--cmsFrameText); white-space: nowrap;
+	/* Phone menu: the worded chip, same as the desktop status bar. */
+	body.cms > main > div.main nav .cmsStage {
+		display: inline-flex; align-self: flex-start; justify-content: flex-start;
+		width: fit-content; height: 1.75rem; margin: 8px 16px 16px; padding: 0 0.65rem 0 0.45rem;
 	}
-	body.cms > main > div.main .cmsStage:before {
-		content: ""; width: 0.5rem; height: 0.5rem; border-radius: 50%; background: currentColor;
-	}
-	body.cms > main > div.main .cmsStage.DEV { color: var(--cmsSuccess); }
-	body.cms > main > div.main .cmsStage.STAGING { color: var(--cmsHighlightColor); }
-	body.cms > main > div.main .cmsStage.LIVE { color: var(--cmsError); }
 	.cmsMobileBackdrop[hidden] { display: none; }
 	.cmsMobileBackdrop {
 		display: block;
@@ -264,7 +260,7 @@ body.cms > .cmsMobileHeader > .cmsMobileMenuClose, body.cms > .cmsMobileHeader >
 		flex-basis: auto; min-height: 0; align-items: flex-start;
 		padding: 8px 0 12px; border: 0; background: transparent;
 	}
-	body.cms[data-cms-window="menu"] > .cmsMobileHeader { background: transparent; pointer-events: none; }
+	body.cms[data-cms-window="menu"] > .cmsMobileHeader { background-color: transparent; pointer-events: none; }
 	body.cms[data-cms-window="menu"] > .cmsMobileHeader > .cmsMobileMenuClose { pointer-events: auto; }
 	body.cms[data-cms-window="menu"] > main > div.main > header {
 		margin-top: calc(-1 * var(--mobileTop));

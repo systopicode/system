@@ -18,11 +18,10 @@ final class Portrait
         'image/jpeg' => 'jpg',
         'image/png' => 'png',
         'image/webp' => 'webp',
-        'image/gif' => 'gif',
     ];
 
-    /** @var list<string> */
-    private const EXTENSIONS = ['webp', 'jpg', 'jpeg', 'png', 'gif'];
+    /** Older photos can still be a gif or an svg. New ones are webp. */
+    private const EXTENSIONS = ['webp', 'jpg', 'jpeg', 'png', 'gif', 'svg'];
 
     /** @var array{ink: string, background: string, paper: string}|null */
     private static ?array $colors = null;
@@ -60,38 +59,39 @@ final class Portrait
         if ($userId <= 0) {
             return 'No user to attach this photo to.';
         }
-        $upload = $_FILES['portrait'] ?? null;
-        if (!is_array($upload) || ($upload['error'] ?? UPLOAD_ERR_NO_FILE) === UPLOAD_ERR_NO_FILE) {
+        $upload = \fsUploader::postedFile('portrait');
+        $tmp = is_array($upload) ? (string) ($upload['tmp_name'] ?? '') : '';
+        $staged = is_array($upload) && ($upload['uploader'] ?? null) !== null;
+        if ($tmp === '' || !is_file($tmp) || (!$staged && !is_uploaded_file($tmp))) {
             return 'Choose an image first.';
         }
-        if (($upload['error'] ?? UPLOAD_ERR_OK) !== UPLOAD_ERR_OK) {
-            return 'The image could not be uploaded.';
-        }
-        if ((int) ($upload['size'] ?? 0) > self::MAX_BYTES) {
+        if (filesize($tmp) > self::MAX_BYTES) {
             return 'The image must be smaller than 8 MB.';
         }
-        $tmp = (string) ($upload['tmp_name'] ?? '');
-        $mime = $tmp !== '' ? (string) (new \finfo(FILEINFO_MIME_TYPE))->file($tmp) : '';
+        $mime = self::mime($tmp);
         if (!isset(self::ALLOWED[$mime])) {
-            return 'Use a JPEG, PNG, WebP or GIF.';
-        }
-        $binary = file_get_contents($tmp);
-        if ($binary === false || $binary === '') {
-            return 'The image could not be read.';
+            return 'Use a JPEG, PNG or WebP.';
         }
         $dir = self::dir();
         if ($dir === null) {
             return 'The photo folder could not be created.';
         }
-        $square = $dir . $userId . '.' . (function_exists('imagewebp') ? 'webp' : 'jpg');
-        if (!self::writeSquare($binary, $square)) {
-            $square = $dir . $userId . '.' . self::ALLOWED[$mime];
-            if (file_put_contents($square, $binary) === false) {
-                return 'The image could not be saved.';
-            }
+        $square = $dir . $userId . '.webp';
+        // A WebP is already the format we keep, so it is not encoded again.
+        if ($mime === 'image/webp') {
+            $saved = copy($tmp, $square);
+        } else {
+            $binary = file_get_contents($tmp);
+            $saved = is_string($binary) && $binary !== '' && self::writeSquare($binary, $square);
+        }
+        if (!$saved || !is_file($square)) {
+            return 'The image could not be saved.';
         }
         self::clearExcept($userId, $square);
         @chmod($square, 0664);
+        if ($staged && is_object($upload['uploader']) && method_exists($upload['uploader'], 'reset')) {
+            $upload['uploader']->reset();
+        }
         return null;
     }
 
@@ -142,9 +142,68 @@ final class Portrait
         }
     }
 
+    /** Centre square at the portrait format, as WebP. The upload itself is not kept. */
     private static function writeSquare(string $binary, string $dest): bool
     {
-        if (!function_exists('imagecreatefromstring')) {
+        $size = self::edge();
+        if (self::writeSquareMagick($binary, $dest, $size)) {
+            return true;
+        }
+        if (class_exists(\Imagick::class)) {
+            try {
+                $image = new \Imagick();
+                $image->readImageBlob($binary);
+                $image->setIteratorIndex(0);
+                $image->setImageBackgroundColor(new \ImagickPixel('white'));
+                $image->setImageAlphaChannel(\Imagick::ALPHACHANNEL_REMOVE);
+                $w = $image->getImageWidth();
+                $h = $image->getImageHeight();
+                $side = min($w, $h);
+                $image->cropImage($side, $side, (int) (($w - $side) / 2), (int) (($h - $side) / 2));
+                $image->setImagePage(0, 0, 0, 0);
+                $image->resizeImage($size, $size, \Imagick::FILTER_LANCZOS, 1);
+                $image->setImageFormat('webp');
+                $image->setImageCompressionQuality(86);
+                $image->writeImage($dest);
+                $image->clear();
+                return is_file($dest);
+            } catch (\Throwable) {
+            }
+        }
+        return self::writeSquareGd($binary, $dest, $size);
+    }
+
+    /** ImageMagick in its own process, so a bad file cannot take PHP down. */
+    private static function writeSquareMagick(string $binary, string $dest, int $size): bool
+    {
+        if (!class_exists(\shellBinary::class) || !\shellBinary::isAvailable('magick')) {
+            return false;
+        }
+        $binaryPath = \shellBinary::find('magick');
+        $tmp = tempnam(sys_get_temp_dir(), 'portrait');
+        if ($binaryPath === null || $tmp === false) {
+            return false;
+        }
+        $src = $tmp . '.img';
+        if (!rename($tmp, $src) || file_put_contents($src, $binary) === false) {
+            @unlink($tmp);
+            @unlink($src);
+            return false;
+        }
+        $edge = (string) $size;
+        $command = escapeshellarg($binaryPath)
+            . ' -background white ' . escapeshellarg($src)
+            . ' -flatten -gravity center -resize ' . escapeshellarg($edge . 'x' . $edge . '^')
+            . ' -extent ' . escapeshellarg($edge . 'x' . $edge)
+            . ' -quality 86 ' . escapeshellarg($dest);
+        exec($command . ' 2>&1', $output, $code);
+        @unlink($src);
+        return $code === 0 && is_file($dest) && filesize($dest) > 0;
+    }
+
+    private static function writeSquareGd(string $binary, string $dest, int $size): bool
+    {
+        if (!function_exists('imagecreatefromstring') || !function_exists('imagewebp')) {
             return false;
         }
         $src = @imagecreatefromstring($binary);
@@ -164,17 +223,27 @@ final class Portrait
         if ($crop === false) {
             return false;
         }
-        $size = 512;
         $out = imagecreatetruecolor($size, $size);
         $white = imagecolorallocate($out, 255, 255, 255);
         imagefilledrectangle($out, 0, 0, $size, $size, $white);
         imagecopyresampled($out, $crop, 0, 0, 0, 0, $size, $size, $side, $side);
         imagedestroy($crop);
-        $ok = str_ends_with($dest, '.webp') && function_exists('imagewebp')
-            ? imagewebp($out, $dest, 82)
-            : imagejpeg($out, $dest, 86);
+        $ok = imagewebp($out, $dest, 86);
         imagedestroy($out);
         return $ok && is_file($dest);
+    }
+
+    /** The portrait format's edge, from the same list the image editor reads. */
+    private static function edge(): int
+    {
+        $format = \mediaFormats::get()['portrait'] ?? [];
+        $edge = (int) ($format['width'] ?? 500);
+        return $edge > 0 ? $edge : 500;
+    }
+
+    private static function mime(string $path): string
+    {
+        return strtolower((string) (new \finfo(FILEINFO_MIME_TYPE))->file($path));
     }
 
     /**

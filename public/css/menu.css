@@ -71,6 +71,27 @@ ul.barmenu a i{
     color: var(--cmsMainColor);
 }
 
+/* A button in the bar is the same hit target as a link. Its own fill would
+   sit on top of the item hover and read as a second highlight. */
+.cms ul.barmenu > li > button,
+.cms ul.barmenu > li > button:enabled:not(.disabled):hover,
+.cms ul.barmenu > li > button:enabled:not(.disabled):active{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 2rem;
+    height: 2rem;
+    min-height: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    border-radius: var(--cmsRadius);
+    background: transparent;
+    color: var(--cmsMainColor);
+    font-size: 1.15rem;
+    box-shadow: none;
+}
+
 ul.barmenu li i{
     margin: 0;
     padding: 0;

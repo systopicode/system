@@ -2,7 +2,14 @@
 
 /** @var \Systopic\System\Panels\Root\Cms\User\Panel $this */
 
+use Systopic\System\Auth\Devices;
+use Systopic\System\Auth\LoginCodes;
 use Systopic\System\Auth\Portrait;
+use Systopic\System\Auth\Session;
+use Systopic\System\Queries\Devices\Devices as DeviceQuery;
+use Systopic\System\Queries\UserLookup\UserLookup;
+use Systopic\System\Tables\LoginCodes\Operator as Codes;
+use Systopic\System\Tables\Users\Model as User;
 use Systopic\System\Tables\Users\Operator as UserOperator;
 
 if (str_starts_with((string) $this->action, 'passkey')) {
@@ -22,9 +29,9 @@ switch ($this->action) {
 		$problems = UserOperator::passwordProblems((string) \http::posted('password'), (string) \http::posted('password_repeat'), STAGE === 'LIVE');
 		if ($this->me && $problems === []) {
 			$this->scope->save(UserOperator::setPassword($this->me, (string) \http::posted('password')));
-			\message::confirm('password has been changed.');
+			\message::confirm('Password has been changed.')->target('password');
 		} else {
-			\message::warning(implode('<br>', $problems));
+			\message::warning(implode('<br>', $problems))->target('password');
 		}
 		$this->updateView('main');
 		break;
@@ -49,45 +56,88 @@ switch ($this->action) {
 		\http::redirect('./');
 		break;
 
-	case 'ransomUser':
-		// Back from cms/users' hijackUser to the superuser who hijacked.
-		// A real form post, not an ajax click: the browser must store the
-		// new session cookie and only then follow the redirect. An ajax
-		// navigation kept the ghost session.
-		$hijacker = (int) ($this->state->hijackerId ?? 0);
-		if ($hijacker > 0) {
-			$this->state->hijackerId = NULL;
-			\Systopic\System\Auth\Session::logout(false);   // back to the superuser, same device
-			\Systopic\System\Auth\Session::login($hijacker);
-			\Systopic\System\Auth\LoginLog::write(\Systopic\System\Auth\Session::current()->name, 'logged in', \Systopic\System\Auth\LoginLog::SWITCH);
-			if (session_status() === PHP_SESSION_ACTIVE) {
-				session_write_close();
+	case 'approveRemote':
+		$me = $this->me;
+		$input = (string) \http::post('code', '');
+		$ok = false;
+		$told = false;
+		if (!$me || !LoginCodes::available()) {
+			\message::error('Codes are not set up on this server.')->target('devices');
+			$told = true;
+		} else {
+			$code = LoginCodes::peek($input, [Codes::PAIR_USER, Codes::PAIR_SCREEN]);
+			if ($code === null) {
+				\message::error(LoginCodes::$error === LoginCodes::BLOCKED
+					? 'Too many attempts. Please try again in 15 minutes.'
+					: 'That code is wrong or has expired.')->target('devices');
+				$told = true;
+			} elseif ($code->purpose === Codes::PAIR_SCREEN) {
+				$allowed = Session::isSuperuser(true) || Session::hasOneRole('userAdmin');
+				$screen = $allowed ? UserLookup::byId($this->scope, (int) \http::post('screen', 0)) : null;
+				if (!$allowed || $screen === null || $screen->type !== User::SCREEN) {
+					\message::error('A user admin confirms a screen.')->target('devices');
+					$told = true;
+				} else {
+					$ok = LoginCodes::approveScreen($input, $screen, (int) Session::id());
+				}
+			} else {
+				$ok = LoginCodes::approveSelf($input, $me);
 			}
-			\http::redirect($this->href);
 		}
+		if ($ok) {
+			\message::confirm('Allowed. The other device signs in within a few seconds.')->target('devices');
+			\http::redirect($this->href);
+			break;
+		}
+		if (!$told) {
+			\message::error(LoginCodes::$error === LoginCodes::BLOCKED
+				? 'Too many attempts. Please try again in 15 minutes.'
+				: 'That code is wrong or has expired.')->target('devices');
+		}
+		$this->updateView('main');
+		break;
+
+	case 'revokeOwnDevice':
+		$device = DeviceQuery::byId($this->scope, (int) \http::dataset('device_id'));
+		if ($device !== null && $this->me && (int) $device->relationId('user') === (int) $this->me->id) {
+			Devices::revoke($device, 'user');
+			\message::confirm('Device signed out.')->target('devices');
+		}
+		$this->updateView('main');
 		break;
 
 	case 'uploadPortrait':
 		if ($this->me) {
 			$error = Portrait::store((int) $this->me->id);
-			$error === null ? \message::confirm('Photo updated.') : \message::error($error);
+			if ($error !== null) {
+				\message::error($error)->target('portrait');
+			}
 		}
-		\http::redirect($this->href);
+		$this->updateView('main');
+		$this->updateView('signetmenu');
 		break;
 
 	case 'removePortrait':
 		if ($this->me) {
 			Portrait::remove((int) $this->me->id);
 		}
-		\http::redirect($this->href);
+		$this->updateView('main');
+		$this->updateView('signetmenu');
 		break;
 
 	case 'updateUserName':
 	case 'updateUserFullname':
 	case 'updateUserEmail':
 		if ($this->me) {
-			$this->scope->save(UserOperator::assign($this->me, strtolower(substr($this->action, 10)), (string) \http::values('value')));
+			$field = strtolower(substr($this->action, 10));
+			$value = (string) \http::values('value');
+			$problem = UserOperator::conflict($this->scope, $this->me, $field, $value);
+			if ($problem !== null) {
+				\message::error($problem)->target('account');
+			} else {
+				$this->scope->save(UserOperator::assign($this->me, $field, $value));
+			}
 		}
-		$this->parent->updateView();
+		$this->updateView('main');
 		break;
 }

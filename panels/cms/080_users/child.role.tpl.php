@@ -10,7 +10,7 @@ $field = static function (string $label, string $type, string $action, ?string $
 <header>
 	<h1><?= $e($role->name) ?></h1>
 	<ul class="barmenu">
-		<li><a class="ajax" href="../" title="Close"><i class="fa-regular fa-xmark"></i></a></li>
+		<li><a class="ajax" href="../" aria-label="Close"><i class="fa-regular fa-xmark"></i></a></li>
 	</ul>
 </header>
 <main class="roleEdit">

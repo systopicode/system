@@ -40,6 +40,9 @@ final class Session
     private const RECOVERY_KEY = 'systopic_recovery';
     private const RETURN_KEY = 'systopic_return_to';
 
+    /** An interactive sign-in. Restoring a device cookie does not set it. */
+    public const PASSKEY_GRANT = 'systopic_passkey_grant';
+
     private static ?Identity $current = null;
     private static ?object $state = null;
 
@@ -169,6 +172,7 @@ final class Session
             LoginLog::sessionOpened(session_id(), (string) $row->name);
         }
         $_SESSION[self::USER_KEY] = (int) $row->id;
+        $_SESSION[self::PASSKEY_GRANT] = ['user' => (int) $row->id, 'expires' => time() + 600];
         $now = new \DateTimeImmutable();
         $row->firstLogin ??= $now;
         $row->lastLogin = $now;
@@ -209,8 +213,21 @@ final class Session
         if (session_status() === PHP_SESSION_ACTIVE) {
             LoginLog::sessionClosed(session_id());
         }
-        unset($_SESSION[self::USER_KEY]);
+        unset($_SESSION[self::USER_KEY], $_SESSION[self::PASSKEY_GRANT]);
         self::$current = self::load();
+    }
+
+    /** True for ten minutes after an interactive sign-in, not after a device cookie. */
+    public static function passkeyGrant(): bool
+    {
+        \http::sessionStartOnce();
+        $grant = $_SESSION[self::PASSKEY_GRANT] ?? null;
+        return is_array($grant) && self::active() && (int) ($grant['user'] ?? 0) === self::id() && (int) ($grant['expires'] ?? 0) > time();
+    }
+
+    public static function clearPasskeyGrant(): void
+    {
+        unset($_SESSION[self::PASSKEY_GRANT]);
     }
 
     /**

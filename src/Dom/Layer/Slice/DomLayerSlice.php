@@ -96,10 +96,13 @@ class DomLayerSlice implements DomLayerItem
                 : $this->html;
         }
 
+        // The layer is not stored here. It already owns this slice, and
+        // putting it back in made every slice serialise the whole tree again.
+        // That grew without a bound (the same way $reference used to) and the
+        // next request died while reading the session, before any header.
         return [
             'html'     => $excerpt,
             'byteSize' => $this->byteSize,
-            'layer'    => $this->layer,
             'opener'   => $this->opener,
         ];
     }
@@ -108,7 +111,6 @@ class DomLayerSlice implements DomLayerItem
     {
         $this->html     = (string) ($data['html'] ?? '');
         $this->byteSize = (int) ($data['byteSize'] ?? 0);
-        $this->layer    = $data['layer'] ?? null;
         $this->opener   = $data['opener'] ?? null;
     }
 

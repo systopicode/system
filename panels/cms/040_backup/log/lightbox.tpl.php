@@ -10,7 +10,7 @@
 					<a data-on_click="userConfirm" data-action="clear" data-confirm="Clear this log?" title="Clear log"><i class="fa-regular fa-trash"></i></a>
 				</li>
 				<li>
-					<a class="ajax" href="../" title="Close"><i class="fa-regular fa-xmark"></i></a>
+					<a class="ajax" href="../" aria-label="Close"><i class="fa-regular fa-xmark"></i></a>
 				</li>
 			</ul>
 		</header>

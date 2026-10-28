@@ -1,3 +1,209 @@
+/* Settings strip the widget frame and let the table be the card.
+   Theme has no table, so these sections keep the frame. */
+.projectFiles.themeEditor > .widget{
+    background: var(--cmsCanvas);
+    border: 1px solid var(--cmsLine);
+    border-radius: var(--cmsRadiusLg);
+    box-shadow: var(--cmsShadow);
+    overflow: hidden;
+}
+
+.projectFiles.themeEditor > .widget > header{
+    background: var(--cmsCanvas);
+    border-bottom: 1px solid var(--cmsLine);
+    padding-left: var(--cmsCardPadding);
+    padding-right: var(--cmsCardPadding);
+}
+
+.projectFiles.themeEditor > .widget > form{
+    display: flex;
+    flex-direction: column;
+}
+
+.projectFiles.themeEditor > .widget form > main{
+    padding: var(--cmsCardPadding);
+    background: var(--cmsCanvas);
+}
+
+.projectFiles.themeEditor > .widget form > footer{
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    min-height: 3rem;
+    padding: 0 var(--cmsCardPadding);
+    border-top: 1px solid var(--cmsLine);
+    background: var(--cmsCanvas);
+}
+
+.projectFiles.themeEditor > .widget form > footer .button{
+    margin: 0;
+}
+
+section.cms:has(> .themeEditor){
+    padding-top: 0.5rem;
+}
+
+.themeEditor .themeSwatches{
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem 1.25rem;
+}
+
+.themeEditor .themeSwatches label{
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    min-width: 9rem;
+    margin: 0;
+    cursor: pointer;
+}
+
+.themeEditor .themeSwatches input[type="color"]{
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    cursor: pointer;
+    border: 0;
+    padding: 0;
+}
+
+.themeEditor .themeSwatches i{
+    flex: 0 0 auto;
+    width: 2.75rem;
+    height: 2.75rem;
+    border-radius: 50%;
+    box-shadow: inset 0 0 0 1px rgb(0 0 0 / 16%);
+}
+
+.themeEditor .themeSwatches span{
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+    font-weight: 600;
+}
+
+.themeEditor .themeSwatches small{
+    font-weight: 400;
+    color: var(--cmsMuted, #667);
+}
+
+.themeEditor .themeAssets{
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr));
+    gap: 1.25rem;
+    columns: unset;
+    margin-bottom: 1.25rem;
+}
+
+.themeEditor .themeAssets > .widget{
+    display: flex;
+    flex-direction: column;
+    width: auto;
+    height: 100%;
+    margin: 0;
+    break-inside: auto;
+}
+
+.themeEditor .themeAsset form{
+    width: 100%;
+    margin: 0;
+}
+
+.themeEditor .themePreview{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    min-height: 5.5rem;
+    margin: 0;
+    cursor: pointer;
+}
+
+.themeEditor .themePreview.dragover{
+    outline: 2px solid var(--cmsHighlightColor);
+    outline-offset: -2px;
+}
+
+.themeEditor .themeAsset.dark > main,
+.themeEditor .themeAsset.signet > main{
+    background: var(--cmsMainColor);
+}
+
+.themeEditor .themeAsset > footer{
+    flex-wrap: wrap;
+    height: auto;
+    margin-top: auto;
+    padding-top: 0.55rem;
+    padding-bottom: 0.55rem;
+}
+
+.themeEditor .themeAsset > footer .left{
+    flex: 1 1 100%;
+    min-width: 0;
+    white-space: nowrap;
+}
+
+.themeEditor .themeAsset > footer .button{
+    flex: 1 1 auto;
+    max-width: 100%;
+    margin: 0.35rem 0 0;
+}
+
+.themeEditor .themePreview svg,
+.themeEditor .themePreview img{
+    display: block;
+    width: auto;
+    height: auto;
+    max-width: 100%;
+    max-height: 2.75rem;
+}
+
+.themeEditor .themeAsset.signet .themePreview svg,
+.themeEditor .themeAsset.signet .themePreview img,
+.themeEditor .themeAsset.icon .themePreview svg,
+.themeEditor .themeAsset.icon .themePreview img{
+    width: 2.5rem;
+    height: 2.5rem;
+    max-height: 2.5rem;
+}
+
+.themeEditor .themeAsset.share .themePreview img{
+    width: 100%;
+    max-height: 6rem;
+    object-fit: contain;
+}
+
+.themeEditor .themeAsset > footer .left{
+    color: var(--cmsMuted, #667);
+    font-size: 0.8rem;
+}
+
+.themeEditor .themeCss{
+    display: block;
+    width: 100%;
+    min-height: 18rem;
+    margin: 0;
+    padding: 0.85rem 1rem;
+    border: 1px solid var(--cmsLine);
+    border-radius: var(--cmsRadius);
+    background: var(--cmsBgColor);
+    color: var(--cmsTextColor);
+    font: 400 0.82rem/1.45 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    tab-size: 2;
+    white-space: pre;
+    overflow: auto;
+    resize: vertical;
+}
+
+.themeEditor .themeCssBar{
+    display: flex;
+    justify-content: flex-end;
+    margin: 0.75rem 0 0;
+}
+
 .projectFiles .envPick{
     max-width: 24rem;
     margin: 0 0 1.25rem;
@@ -121,8 +327,21 @@
 .projectFiles td.pageSettingDrag{
     position: static;
     width: 2.25rem;
+    padding-right: 0;
     color: var(--cmsMuted);
+    text-align: center;
+    vertical-align: middle;
     cursor: grab;
+}
+
+.projectFiles td.pageSettingDrag > i{
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.25rem;
+    height: 1.25rem;
+    font-size: 0.8rem;
+    line-height: 1;
 }
 
 body.settingDragging .projectFiles div.sort{
@@ -137,9 +356,30 @@ body.settingDragging .projectFiles td label{
     pointer-events: none;
 }
 
+.cms .projectFiles .widget .tableScroll table :is(th:first-child, td.pageSettingDrag){
+    width: 2.5rem;
+    min-width: 2.5rem;
+    max-width: 2.5rem;
+    padding-left: 0.55rem;
+    padding-right: 0.15rem;
+    text-align: center;
+    vertical-align: middle;
+}
+
 .projectFiles td.projectRemove{
-    width: 3rem;
-    text-align: right;
+    width: 2.75rem;
+    text-align: center;
+    vertical-align: middle;
+}
+
+.cms .projectFiles td.projectRemove button.transparent,
+.cms .projectFiles td.projectRemove button.transparent:enabled:hover{
+    width: 2rem;
+    min-width: 2rem;
+    height: 2rem;
+    min-height: 0;
+    margin: 0;
+    padding: 0;
 }
 
 .projectFiles td input,
@@ -251,4 +491,103 @@ body:has(> .projectTemplatesMenu.is-sheet)::after{
 }
 .cms .projectTemplatesMenu input[type="checkbox"].switch + div{
     margin-left: 0;
+}
+
+.projectFiles .langBar{
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.7rem 1rem;
+    border-bottom: 1px solid var(--cmsLine);
+    background: var(--cmsCanvas);
+}
+
+.projectFiles .langBar span{
+    font-weight: 600;
+}
+
+.projectFiles .langBar select{
+    width: auto;
+    min-width: 12rem;
+    margin: 0;
+}
+
+.projectFiles .langDetect{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.7rem 1rem;
+    border-bottom: 1px solid var(--cmsLine);
+}
+
+.projectFiles .langDetect > span{
+    display: block;
+    font-weight: 600;
+}
+
+.projectFiles .langDetect small{
+    display: block;
+    margin-top: 0.15rem;
+    font-size: 0.6875rem;
+    font-weight: 500;
+    color: var(--cmsMuted);
+}
+
+.projectFiles .langDetect .langNote{
+    font-weight: 400;
+}
+
+.cms .projectFiles .widget .tableScroll:not(.stacked) table.languages{
+    table-layout: fixed;
+    width: 100%;
+}
+
+.cms .projectFiles .widget .tableScroll table.languages :is(th, td):nth-child(1){
+    width: 2.5rem;
+}
+
+.cms .projectFiles .widget .tableScroll table.languages :is(th, td):nth-child(2){
+    width: 5.5rem;
+}
+
+.cms .projectFiles .widget .tableScroll table.languages :is(th, td):nth-child(4){
+    width: 5.5rem;
+}
+
+.cms .projectFiles .widget .tableScroll table.languages :is(th.langOn, td.langOn){
+    width: 4.25rem;
+    text-align: center;
+}
+
+.cms .projectFiles .widget .tableScroll table.languages :is(th:last-child, td.projectRemove){
+    width: 2.75rem;
+    max-width: 2.75rem;
+    padding-left: 0;
+    padding-right: 0.45rem;
+    text-align: center;
+    vertical-align: middle;
+}
+
+.cms .projectFiles .widget .tableScroll table.languages td > input{
+    width: 100%;
+    min-width: 0;
+}
+
+.projectFiles tr.securityRow td{
+    vertical-align: top;
+}
+
+.projectFiles tr.securityRow td:first-child{
+    width: 22rem;
+}
+
+.projectFiles td span small.settingNote{
+    margin-top: 0.35rem;
+    font-weight: 400;
+    line-height: 1.35;
+}
+
+.projectFiles table.languages td.langOn .projectSwitch{
+    justify-content: center;
 }

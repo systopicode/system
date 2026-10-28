@@ -1,5 +1,10 @@
 <?php
 
+// From the first line. A notice, or the debug panel, printed before any
+// header is otherwise the start of the response, and Apache reads that as
+// a header ("End of script output before headers", "Bad header: sysdebug.update").
+ob_start();
+
 /**
  * The front controller of every project — <project>/public/index.php only
  * requires this file (written by bin/scaffold.php on composer install and

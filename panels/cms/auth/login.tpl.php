@@ -1,54 +1,32 @@
-<h1>Sign in</h1>
-<p>&nbsp;</p>
-<main>
-    <div class="row authMessages">
-		<?= message::flush([], true) ?>
-    </div>
-    <?php if (\Systopic\System\Auth\Passkeys::available()) {
-        \http::sessionStartOnce();
-        $passkeyEscape = static fn($value): string => htmlspecialchars((string) $value, ENT_QUOTES);
-    ?>
-    <div class="passkeys passkeyLogin" data-passkey-endpoint="<?= $passkeyEscape(\http::$root . 'cms/auth/') ?>" data-passkey-origin="<?= $passkeyEscape(\Systopic\System\Auth\Passkeys::config()['origin']) ?>" data-passkey-token="<?= $passkeyEscape(\Systopic\System\Auth\PasskeyChallenge::token()) ?>">
-        <button type="button" class="button submit passkeyLoginButton" data-on_click="passkeyAction" data-passkey-mode="login"><?php include dirname(__DIR__, 3) . '/src/Auth/fingerprint.tpl.php'; ?>Sign in with a passkey</button>
-        <div class="passkeyAuthFeedback" hidden>
-            <div class="passkeyArtwork"><?php include dirname(__DIR__, 3) . '/src/Auth/passkey-icons.tpl.php'; ?></div>
-        </div>
-        <button type="button" class="button passkeyLoginCancel" data-on_click="passkeyAction" data-passkey-mode="cancel">Cancel</button>
-    </div>
-    <?php } ?>
-    <p class="authPasswordAlternative"><?= \Systopic\System\Auth\Passkeys::available() ? 'Or sign in with email and password' : 'Sign in with email and password' ?></p>
-    <div class="row">
-		<form action=doLogin onsubmit='this.classList.add("loading")' >
-			<div class="row">
-				<div class='inputGroup'><i class="fa-regular fa-envelope"></i>
-					<input required spellcheck="false" placeholder="Email" autocapitalize="off" type="email" autocomplete="username webauthn"
-						   name=username
-						   value="<?= htmlspecialchars((string) http::put('username', ''), ENT_QUOTES) ?>"/>
-					<span class='bar'></span>
-				</div>
-			</div>
-			<div class="row">
-				<div class='inputGroup'><i class="fa-regular fa-lock"></i>
-					<input required spellcheck="false" placeholder="Password" type=password name=password autocomplete="current-password"
-						   autocapitalize="off"/>
-					<span class='bar'></span>
-				</div>
-			</div>
-			<div class="row">
-				<br>
-				<button class='button authPasswordButton'><i class="fa-regular fa-arrow-right"></i> Sign in</button>
-			</div>
-		</form>
-    </div>
-
-    <div class="row">
-		<div>
-			<br>
-			<p class="authLinks">
-				<a href="resetPassword" class="ajax"><i class="fa-regular fa-key"></i> Forgot password</a>
-				<a href="register" class="ajax"><i class="fa-regular fa-user-plus"></i> Create an account</a>
-			</p>
-			<?php //			<p><a href="root/" class="ajax">New Installation? Create Superuser</a></p> ?>
-		</div>
-    </div>
-</main>
+<?php
+/** @var \Systopic\System\Panels\Root\Cms\Auth\Panel $this */
+$authMethod = $this->loginMethod();
+$authPasskey = \Systopic\System\Auth\Passkeys::available();
+$authCodes = \Systopic\System\Auth\LoginCodes::available();
+$authScreen = (string) \http::get('pair') === 'screen';
+if ($authMethod === 'device' && $authCodes && \Systopic\System\Auth\ScreenPair::current() === null) {
+	try {
+		\Systopic\System\Auth\ScreenPair::begin(
+			$authScreen ? \http::$root : \http::$root . 'cms/',
+			$authScreen ? \Systopic\System\Tables\LoginCodes\Operator::PAIR_SCREEN : \Systopic\System\Tables\LoginCodes\Operator::PAIR_USER
+		);
+	} catch (\Throwable $e) {
+		error_log('screen pairing: ' . $e->getMessage());
+	}
+}
+$authPairTitle = $authScreen ? 'Screen' : 'Remote login';
+$authPairLead = $authScreen
+	? 'On a signed-in phone, scan this in the account or open the link, then choose the screen.'
+	: 'Scan this in the account on the phone that is already signed in, or open the link there.';
+$authPair = $authMethod === 'device' ? \Systopic\System\Auth\ScreenPair::current() : null;
+$authPairUrl = is_array($authPair) ? \Systopic\System\Auth\ScreenPair::url((string) $authPair['code']) : '';
+$code = preg_replace('~[^0-9A-Za-z\-]~', '', (string) \http::get('code', ''));
+$pending = $code !== '' ? \Systopic\System\Auth\LoginCodes::peek($code, ['invite', 'recover', 'pair']) : null;
+$authCode = $code;
+$authAuto = $pending !== null && (bool) \http::get('auto');
+$authUsername = (string) \http::put('username', '');
+$authForgot = '?view=resetPassword';
+$authRegister = null;
+$authForgotClass = 'ajax';
+$authEndpoint = \http::$root . 'cms/auth/';
+include \fs::toNative((string) \fs::$sysRoot . 'src/Auth/login.card.tpl.php');

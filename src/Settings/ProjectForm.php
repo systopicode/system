@@ -25,11 +25,23 @@ final class ProjectForm
         echo '<p class="tagsHint">Leave a field to write it into ' . $e($filename) . '. Drag the handle to change the order.</p>';
         echo \message::flush();
         if ($path === null) {
-            echo '<p>Missing ' . $e($filename) . '.</p></div>';
+            echo '<p>Missing ' . $e($filename) . '.</p>';
+            if ($which === 'page') {
+                self::security();
+            }
+            echo '</div>';
             return;
         }
         $sections = [];
+        $hasLanguages = false;
+        $autoLanguage = null;
         foreach (ProjectFile::groups($path) as $group) {
+            if ($group->id === 'define:LANGUAGES') {
+                $hasLanguages = true;
+            }
+            if ($group->id === 'define:AUTO_LANGUAGE_DETECTION') {
+                $autoLanguage = $group;
+            }
             $name = $group->category !== '' ? $group->category : $title;
             $sections[$name][] = $group;
         }
@@ -46,22 +58,41 @@ final class ProjectForm
                     $headerButton = $collections[0];
                 }
             }
+            $languageList = null;
+            foreach ($collections as $group) {
+                if ($group->id === 'define:LANGUAGES') {
+                    $languageList = $group;
+                }
+            }
+            $defaultLang = null;
+            $plainScalars = [];
+            foreach ($scalars as $group) {
+                if ($group->id === 'define:DEFAULT_LANG' && $languageList !== null) {
+                    $defaultLang = $group;
+                    continue;
+                }
+                if ($group->id === 'define:AUTO_LANGUAGE_DETECTION' && $hasLanguages) {
+                    continue;
+                }
+                $plainScalars[] = $group;
+            }
+            if ($plainScalars === [] && $collections === []) {
+                continue;
+            }
             echo '<section class="widget">';
             echo '<header><h2>' . $e($name) . '</h2>';
             if ($headerButton !== null) {
                 self::addButton($which, $headerButton);
             }
             echo '</header>';
-            if ($scalars !== []) {
-                $languages = null;
-                foreach ($collections as $group) {
-                    if ($group->id === 'define:LANGUAGES') {
-                        $languages = $group;
-                    }
-                }
-                self::scalarTable($which, $scalars, $languages);
+            if ($plainScalars !== []) {
+                self::scalarTable($which, $plainScalars, null);
             }
             foreach ($collections as $group) {
+                if ($group->id === 'define:LANGUAGES') {
+                    self::languageSection($which, $group, $defaultLang, $hasLanguages ? $autoLanguage : null);
+                    continue;
+                }
                 if (!$only && $group !== $headerButton) {
                     $heading = self::human($group->label);
                     $repeat = strcasecmp($heading, (string) $name) === 0;
@@ -79,6 +110,9 @@ final class ProjectForm
                 }
             }
             echo '</section>';
+        }
+        if ($which === 'page') {
+            self::security();
         }
         echo '</div>';
     }
@@ -230,7 +264,50 @@ final class ProjectForm
         echo '</select>';
     }
 
-    private static function recordTable(string $which, Group $group): void
+    private static function languageSection(string $which, Group $group, ?Group $defaultLang, ?Group $autoLanguage): void
+    {
+        $e = static fn($value): string => htmlspecialchars((string) $value, ENT_QUOTES);
+        echo '<div class="tableScroll">';
+        if ($defaultLang !== null) {
+            echo '<div class="langBar"><span>Default</span>';
+            self::languageSelect($which, $defaultLang, $group);
+            echo '</div>';
+        }
+        if ($autoLanguage !== null) {
+            $leaf = new Leaf($autoLanguage->id, $autoLanguage->category, $autoLanguage->label, $autoLanguage->kind, $autoLanguage->text, $autoLanguage->start, $autoLanguage->end);
+            echo '<div class="langDetect"><span>' . $e(self::human($autoLanguage->label)) . '<small>' . $e(ltrim($autoLanguage->label, '$')) . '</small><small class="langNote">Applies to the public website only, not to this system.</small></span>';
+            self::control($which, $leaf, 'save');
+            echo '</div>';
+        }
+        self::recordTable($which, $group, false);
+        echo '</div>';
+    }
+
+    /** Which sign-in opens first. Stored with the other sign-in settings. */
+    private static function security(): void
+    {
+        $e = static fn($value): string => htmlspecialchars((string) $value, ENT_QUOTES);
+        $file = EnvironmentFile::activeFile();
+        if ($file === null) {
+            return;
+        }
+        $data = EnvironmentFile::read($file);
+        $auth = is_array($data['auth'] ?? null) ? $data['auth'] : [];
+        $method = (string) ($auth['default_login_method'] ?? '');
+        if (!in_array($method, ['', 'code', 'device', 'passkey', 'password'], true)) {
+            $method = '';
+        }
+        echo '<section class="widget"><header><h2>Security</h2></header>';
+        echo '<div class="tableScroll">';
+        echo '<table class="scalars"><tbody><tr class="securityRow"><td><span>Default sign-in<small>default_login_method</small><small class="settingNote">Which sign-in opens first. Ask each time shows the method list.</small></span></td><td>';
+        echo '<select data-on_change="saveAuthMethod" data-file="' . $e($file) . '" data-group="auth" data-key="default_login_method" name="value">';
+        foreach (['' => 'Ask each time', 'code' => 'Sign-in code', 'device' => 'Remote login', 'passkey' => 'Passkey', 'password' => 'Username & password'] as $option => $label) {
+            echo '<option value="' . $e($option) . '"' . ($method === $option ? ' selected' : '') . '>' . $e($label) . '</option>';
+        }
+        echo '</select></td></tr></tbody></table></div></section>';
+    }
+
+    private static function recordTable(string $which, Group $group, bool $frame = true): void
     {
         $e = static fn($value): string => htmlspecialchars((string) $value, ENT_QUOTES);
         $columns = ProjectFile::columns($group);
@@ -238,9 +315,14 @@ final class ProjectForm
         if ($templateField !== null) {
             $columns = [...array_diff($columns, [$templateField]), $templateField];
         }
-        echo '<div class="tableScroll"><table class="projectRows"><thead><tr><th></th><th>Key</th>';
+        $languages = $group->id === 'define:LANGUAGES';
+        if ($frame) {
+            echo '<div class="tableScroll">';
+        }
+        echo '<table class="projectRows' . ($languages ? ' languages' : '') . '"><thead><tr><th></th><th>Key</th>';
         foreach ($columns as $column) {
-            echo '<th>' . $e(self::human($column)) . '</th>';
+            $heading = $languages && $column === 'activated' ? 'On' : self::human($column);
+            echo '<th' . ($languages && $column === 'activated' ? ' class="langOn"' : '') . '>' . $e($heading) . '</th>';
         }
         echo '<th></th></tr></thead><tbody>';
         if ($group->items === []) {
@@ -252,7 +334,8 @@ final class ProjectForm
             self::grip($data);
             echo '</td><td><input data-on_blur="renameItem"' . $data . ' name="value" value="' . $e($item->key) . '" autocomplete="off"></td>';
             foreach ($columns as $column) {
-                echo '<td>';
+                $on = $languages && $column === 'activated';
+                echo '<td' . ($on ? ' class="langOn"' : '') . '>';
                 if ($column === $templateField) {
                     $picked = [];
                     foreach ($item->fields as $field) {
@@ -288,7 +371,10 @@ final class ProjectForm
             self::removeButton($data);
             echo '</td></tr>';
         }
-        echo '</tbody></table></div>';
+        echo '</tbody></table>';
+        if ($frame) {
+            echo '</div>';
+        }
     }
 
     private static function listTable(string $which, Group $group): void
@@ -338,7 +424,7 @@ final class ProjectForm
 
     private static function grip(string $data): void
     {
-        echo '<i class="fa-regular fa-grip-vertical" title="Drag to reorder" data-drag_type="setting"' . $data . '></i>';
+        echo '<i class="fa-regular fa-grip-dots-vertical" aria-label="Drag to reorder" data-drag_type="setting"' . $data . '></i>';
         echo '<div class="sort v insertBefore" data-drop_accept="setting" data-on_drop="moveBefore"' . $data . '></div>';
         echo '<div class="sort v insertAfter" data-drop_accept="setting" data-on_drop="moveAfter"' . $data . '></div>';
     }

@@ -1,13 +1,17 @@
 <?php
 /** @var \Systopic\System\Panels\Root\Cms\Users\Users\Panel $this */
 
+use Systopic\System\Auth\LoginCodes;
+use Systopic\System\Auth\Presence;
 use Systopic\System\Panels\Root\Cms\Users\Panel as Users;
 
 $e = static fn($v): string => htmlspecialchars((string) $v, ENT_QUOTES);
-$superuser = \Systopic\System\Auth\Session::isSuperuser();
 ?>
 <h1>Users</h1>
 <p class="tagsHint">Search by username, full name or email. The pen opens the user.</p>
+<?php if (!LoginCodes::available()) { ?>
+<div class="cms message is-stay userKeyWarn"><div class="warning"><p>The sign-in key is missing. One-time codes no longer work, including codes already sent. Passwords, passkeys and trusted devices still do.</p></div></div>
+<?php } ?>
 <section class="widget is-list userList">
 	<header>
 		<h2>List of users</h2>
@@ -30,7 +34,8 @@ $superuser = \Systopic\System\Auth\Session::isSuperuser();
 			<tbody>
 				<?php foreach ($this->users as $user) { ?>
 					<tr data-user_id="<?= $user->id ?>">
-						<td class="userStatusCell"><span class="userStatus is-unknown" title="Unknown"></span></td>
+						<?php [$status, $statusTitle] = Presence::userMark((int) $user->id); ?>
+						<td class="userStatusCell"><span class="userStatus <?= $status ?>" title="<?= $statusTitle ?>"></span></td>
 						<td>
 							<?= $e($user->name) ?>
 							<?php if ($user->isSuperuser) { ?>
@@ -51,9 +56,6 @@ $superuser = \Systopic\System\Auth\Session::isSuperuser();
 						</td>
 						<td class="icons">
 							<ul>
-								<?php if ($superuser && !$user->isSuperuser) { ?>
-									<li><a class="button icononly" title="Sign in as this user" data-on_click="../hijackUser"><i class="fa-regular fa-ghost"></i></a></li>
-								<?php } ?>
 								<li><a class="ajax button icononly" title="Edit" href="<?= $e($this->href . 'edit/?user_id=' . (int) $user->id) ?>"><i class="fa-regular fa-pen"></i></a></li>
 								<?php if ((int) $user->id !== (int) \Systopic\System\Auth\Session::id()) { ?>
 									<li><a class="button icononly" title="Delete" data-on_click="userConfirm" data-action="removeUser" data-confirm="Delete this user? This cannot be undone." data-user_id="<?= (int) $user->id ?>"><i class="fa-regular fa-trash"></i></a></li>

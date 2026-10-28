@@ -69,15 +69,30 @@ final class WebApp
         return self::stageMark() . $public . ' | ' . self::name();
     }
 
-    /** Before a window title: the stage in the colour of the status bar badge, nothing on LIVE. */
+    /** Before a window title: the stage, nothing on LIVE. */
     public static function stageMark(): string
     {
         return match (defined('STAGE') ? (string) STAGE : '') {
-            'DEV' => '🟢 ',
-            'STAGING' => '🟡 ',
+            'DEV' => '🔨 ',
+            'STAGING' => '🧪 ',
             'RC' => '🟠 ',
             default => '',
         };
+    }
+
+    /** Hammer, flask or globe. The shell hides the word where there is no room. */
+    public static function stageBadge(): string
+    {
+        $stage = defined('STAGE') ? (string) STAGE : '';
+        $icon = match ($stage) {
+            'DEV' => 'fa-hammer',
+            'STAGING' => 'fa-flask',
+            'LIVE' => 'fa-globe',
+            default => '',
+        };
+        $safe = htmlspecialchars($stage, ENT_QUOTES, 'UTF-8');
+        $mark = $icon === '' ? '' : '<i class="fa-regular ' . $icon . '" aria-hidden="true"></i>';
+        return '<span class="cmsStage ' . $safe . '" title="' . $safe . '">' . $mark . '<span>' . $safe . '</span></span>';
     }
 
     /** What a home screen has room for under the icon. */

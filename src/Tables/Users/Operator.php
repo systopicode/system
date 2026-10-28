@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Systopic\System\Tables\Users;
 
 use DateTimeImmutable;
+use Systopic\Db\Schema\Schema;
+use Systopic\Db\Scope;
 use Systopic\System\Tables\Roles\Model as Role;
 use Systopic\System\Tables\UsersAtRoles\Model as UserAtRole;
 
@@ -75,6 +77,43 @@ final class Operator
         }
         $user->$field = trim($value);
         return $user;
+    }
+
+    /**
+     * Username and email are both a way in. Either one colliding with
+     * another account's username or email is refused. Null when the value
+     * may be stored.
+     */
+    public static function conflict(Scope $scope, Model $user, string $field, string $value): ?string
+    {
+        $value = trim($value);
+        if ($field === 'name') {
+            if ($value === '') {
+                return 'The username cannot be empty.';
+            }
+            if (self::identityTaken($scope, $value, (int) $user->id)) {
+                return 'That username is already in use.';
+            }
+        } elseif ($field === 'email' && $value !== '') {
+            if (filter_var($value, FILTER_VALIDATE_EMAIL) === false) {
+                return 'That email address is not valid.';
+            }
+            if (self::identityTaken($scope, $value, (int) $user->id)) {
+                return 'That email address is already in use.';
+            }
+        }
+        return null;
+    }
+
+    /** Another account already signs in with this username or email. */
+    private static function identityTaken(Scope $scope, string $value, int $exceptId): bool
+    {
+        $table = Schema::tableNameOf(Model::class);
+        $rows = $scope->connection->all(
+            "SELECT user_id FROM $table WHERE user_id != 1 AND user_id != ? AND (LOWER(user_name) = LOWER(?) OR LOWER(COALESCE(user_email, '')) = LOWER(?)) LIMIT 1",
+            [$exceptId, $value, $value],
+        );
+        return $rows !== [];
     }
 
     /** A fresh activation key, valid for `$days` days. */

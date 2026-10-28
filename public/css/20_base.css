@@ -13,8 +13,10 @@
 
 /**************************ALLGEMEIN***********************/
 html{
-    /* Eine Stufe für die ganze Oberfläche. rem hängt hieran, nicht an px. */
+    /* Eine Stufe für die ganze Oberfläche. rem hängt hieran, nicht an px.
+       The canvas behind the status bar is this colour. White here is a white bar. */
     font-size: 17.5px;
+    background: var(--cmsMainColor);
 }
 
 html,
@@ -22,6 +24,14 @@ body{
     height: 100%;
     width: 100%;
     margin: 0 auto;
+}
+
+/* The shell scrolls inside its columns. The document itself does not,
+   or a leftover pixel paints a bar on the window. The sign-in page is
+   the exception: it can be taller than the screen. */
+html:has(> body.cms):not(:has(.authCard)),
+body.cms:not(:has(.authCard)){
+    overflow: hidden;
 }
 
 body{
@@ -56,6 +66,14 @@ body{
     -webkit-overflow-scrolling: touch;
 }
 
+/* The reset above wins over the layered auth sheet. The line under a
+   loading bar needs this margin, and the note under it stays centered. */
+.cms .authCard .authProgress + .authWait{
+    display: block;
+    margin-top: 1.6rem;
+    text-align: center;
+}
+
 .cms *:focus-visible{
     outline: 2px solid var(--cmsHighlightColor);
     outline-offset: 2px;
@@ -81,10 +99,17 @@ body.cms > div.content > section{
     overflow: auto;
 }
 
-/* The bar stays, so the column does not jump when a block folds away.
-   The page editor scrolls inside its own preview. */
-body.cms:not(.pages) > main > div.content section.cms{
-    overflow-y: scroll;
+/* The column keeps scrolling. The bar stays hidden, so it does not
+   jump in when a block folds, and it is not drawn. */
+body.cms > main > div.content section.cms{
+    overflow-y: auto;
+    scrollbar-width: none;
+}
+
+body.cms > main > div.content section.cms::-webkit-scrollbar{
+    display: none;
+    width: 0;
+    height: 0;
 }
 
 /* The layer tree is an overlay. Before its own stylesheet arrives it is
@@ -324,9 +349,9 @@ div.cms.message {
         position: relative;
         margin: 0 0 .6rem;
         padding: .8rem 1rem .8rem 2.75rem;
-        border: 1px solid color-mix(in srgb, var(--messageAccent) 20%, var(--cmsCanvas));
+        border: 1px solid color-mix(in srgb, var(--messageAccent) 55%, var(--cmsTextColor));
         border-radius: calc(var(--cmsRadius) + 2px);
-        background: color-mix(in srgb, var(--messageAccent) 5%, var(--cmsCanvas));
+        background: color-mix(in srgb, var(--messageAccent) 18%, var(--cmsCanvas));
         color: var(--cmsTextColor) !important;
         overflow-wrap: anywhere;
         &::before {
@@ -353,6 +378,36 @@ div.cms.message {
     > div.warning { --messageAccent: var(--cmsWarning); --messageIcon: "\f071"; }
     > div.confirm { --messageAccent: var(--cmsSuccess); --messageIcon: "\f058"; }
     > div.info, > div.notice { --messageAccent: var(--cmsInteractive); }
+    > div:not(:has(a, button)) {
+        max-height: 40rem;
+        animation: cmsMessageRetire 0.45s ease 8s forwards;
+    }
+    &.is-stay {
+        margin: 0 0 1rem;
+        > div { animation: none; }
+    }
+    &:hover > div {
+        animation: none;
+    }
+}
+
+@keyframes cmsMessageRetire {
+    to {
+        opacity: 0;
+        max-height: 0;
+        margin-top: 0;
+        margin-bottom: 0;
+        padding-top: 0;
+        padding-bottom: 0;
+        border-width: 0;
+        overflow: hidden;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    div.cms.message > div {
+        animation: none;
+    }
 }
 
 div.cms.message pre,

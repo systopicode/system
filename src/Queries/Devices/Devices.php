@@ -25,6 +25,13 @@ final class Devices
     }
 
     /** @return list<Device> not revoked, newest use first */
+    public static function active(Scope $scope): array
+    {
+        Registry::register(Device::class);
+        return $scope->rows(__DIR__ . '/Devices.active.sql', [], provisioner: new Provisioner($scope->connection))->all(Device::class);
+    }
+
+    /** @return list<Device> not revoked, newest use first */
     public static function ofUser(Scope $scope, int $userId): array
     {
         Registry::register(Device::class);

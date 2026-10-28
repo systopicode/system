@@ -12,20 +12,46 @@
 	$asset = static fn(string $file): string => htmlspecialchars(\Systopic\System\Sys\Packages::panelAssetHref($file), ENT_QUOTES);
 	$brandColor = '#' . \Systopic\System\Sys\Theme::color('cmsMainColor');
 	$onAuth = isset($headHost) && $headHost->name === 'auth';
+	// A QR sign-in sets this for one landing. The page does not offer to
+	// install the CMS; the cookie is then gone, so a later visit still can.
+	$freshSignIn = (($_COOKIE['sys_plain'] ?? '') === '1');
+	$skipApp = $onAuth || $freshSignIn;
+	if (!$onAuth && $freshSignIn && !headers_sent()) {
+		$https = !empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off';
+		setcookie('sys_plain', '', [
+			'expires' => time() - 3600,
+			'path' => '/',
+			'secure' => $https,
+			'httponly' => true,
+			'samesite' => 'Lax',
+		]);
+	}
 	// The status bar sits on the petrol header. The page grey is the background
 	// behind the address bar, set on html/body, not on this tag.
 	$themeColor = $brandColor;
 	?>
+	<?php
+	$overrideRoot = \fs::toNative(rtrim((string) \fs::$siteRoot, '/\\') . '/overrides/');
+	$iconSvg = \Systopic\System\Sys\Packages::panelAsset('img/icon.svg');
+	$iconPng = \Systopic\System\Sys\Packages::panelAsset('img/favicons/favicon-32x32.png');
+	$svgOwn = $iconSvg !== null && str_starts_with(\fs::toNative($iconSvg), $overrideRoot);
+	$pngOwn = $iconPng !== null && str_starts_with(\fs::toNative($iconPng), $overrideRoot);
+	if ($svgOwn || !$pngOwn) { ?>
 	<link rel="icon" type="image/svg+xml" href="<?= $asset('img/icon.svg') ?>">
+	<?php } ?>
 	<link rel="apple-touch-icon" sizes="180x180" href="<?= htmlspecialchars(\http::$root . 'cms/icon-180.png', ENT_QUOTES) ?>">
     <link rel="icon" type="image/png" sizes="32x32" href="<?= $asset('img/favicons/favicon-32x32.png') ?>">
     <link rel="icon" type="image/png" sizes="16x16" href="<?= $asset('img/favicons/favicon-16x16.png') ?>">
+    <?php if (!$skipApp) { ?>
     <link rel="manifest" href="<?= htmlspecialchars(\Systopic\System\Sys\WebApp::href(), ENT_QUOTES) ?>">
+    <?php } ?>
     <link rel="mask-icon" href="<?= $asset('img/favicons/safari-pinned-tab.svg') ?>" color="<?= $brandColor ?>">
     <link rel="shortcut icon" href="<?= $asset('img/favicons/favicon.ico') ?>">
     <meta name="apple-mobile-web-app-title" content="<?= htmlspecialchars(\Systopic\System\Sys\WebApp::shortName(), ENT_QUOTES) ?>">
+    <?php if (!$skipApp) { ?>
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="mobile-web-app-capable" content="yes">
+    <?php } ?>
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="application-name" content="fluxo cms">
     <meta name="description" content="fluxo cms">
@@ -37,9 +63,8 @@
 	<meta property='og:image' content='<?= $shareImage ?>' />
 	<meta itemprop='image' content='<?= $shareImage ?>' />
 
-	<meta name="theme-color" content="<?= $themeColor ?>" media="(prefers-color-scheme: light)">
-	<meta name="theme-color" content="<?= $themeColor ?>" media="(prefers-color-scheme: dark)">
-	<meta name="color-scheme" content="<?= $onAuth ? 'dark' : 'light' ?>">
+	<meta name="theme-color" content="<?= $themeColor ?>">
+	<meta name="color-scheme" content="<?= $onAuth ? 'dark' : 'light dark' ?>">
 	<meta name="msapplication-TileColor" content="<?= $brandColor ?>">
 
     <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,interactive-widget=resizes-content">
@@ -110,20 +135,23 @@
 	 *
 	 * Two halves, because three at-rules cannot live inside @scope:
 	 * @font-face, :root and @keyframes are document-wide by nature. The
-	 * project names those in css/cms_overrides.css (today: an @import of
-	 * fonts.css); everything else is scoped.
+	 * project names those in css/system_overrides.css (css/cms_overrides.css
+	 * while a project has not saved the new name yet); everything else is scoped.
 	 *
 	 * Not scoped either: x_responsive.css. Its media queries would measure
 	 * the BROWSER window, not the preview pane, so the preview would claim
 	 * mobile on a narrow window and desktop on a wide one - neither being
 	 * what the visitor sees. Responsive css stays on the site.
 	 */
-	echo fsLoader::includeCSSFilesScoped(fs::$siteRoot . 'css/cms_overrides.css', ':root', 'project', limit: '.cmsOwn', liftDocument: true);
+	$projectCss = \Systopic\System\Sys\Theme::projectStylesheet();
+	if ($projectCss !== null) {
+		echo fsLoader::includeCSSFilesScoped($projectCss, ':root', 'project', limit: '.cmsOwn', liftDocument: true);
+	}
 	echo fsLoader::includeCSSFilesScoped(
 		fs::$siteRoot . 'css/',
 		'article.cmsContent',
 		'preview',
-		['cms_overrides.css', 'fonts.css', 'animate.css', 'x_responsive.css'],
+		['system_overrides.css', 'cms_overrides.css', 'fonts.css', 'animate.css', 'x_responsive.css'],
 		limit: '.cmsOwn',
 	);
 	$responsiveFile = fs::$siteRoot . 'css/x_responsive.css';
@@ -272,5 +300,11 @@
 	echo '<!-- +-+-+-+-+-+-+-+-+-+ PROJECT UI OVERRIDES +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+ -->';
 	echo fsLoader::includeScriptFiles(fs::$siteRoot . 'overrides/js/'); // overrides 
 	?>
+	<?php
+	// Safari 26 ignores theme-color. It tints the status bar from a fixed
+	// element's background-color (the shorthand is not read) or, failing that,
+	// from the root. A variable here is resolved; a missing color falls back to white.
+	?>
+	<style id="cmsSafariChrome">html{background-color:<?= $themeColor ?>}body.cms>.cmsMobileHeader{background-color:<?= $themeColor ?>}</style>
 	<!-- +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-->
 </head>

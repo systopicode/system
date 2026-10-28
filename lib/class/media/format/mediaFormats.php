@@ -76,7 +76,7 @@ class mediaFormats {
 		return $labels;
 	}
 
-	const SYSTEM = ['original', 'alias', 'mmlThumb', 'shareImage'];
+	const SYSTEM = ['original', 'alias', 'mmlThumb', 'shareImage', 'portrait'];
 
 	static $config = [ // system formats required for CMS operation
 		'original' => array(// instant creation if original exceeds 1,5 mp - not impemented yet
@@ -99,6 +99,14 @@ class mediaFormats {
 			'cms_display' => 'image',
 			'width' => 1200,
 			'height' => 630,
+		),
+		// A face in the account. JPEG and PNG are drawn to this square as WebP.
+		// A WebP is stored as it arrived. Not a crop in the image editor.
+		'portrait' => array(
+			'cms_display' => 'none',
+			'width' => 500,
+			'height' => 500,
+			'mime_type' => 'image/webp',
 		),
 	];
 

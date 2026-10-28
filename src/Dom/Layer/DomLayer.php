@@ -534,6 +534,21 @@ class DomLayer implements DomLayerItem
         return array_keys($vars);
     }
 
+    /**
+     * Slices no longer carry the layer into the session (that cycle duplicated
+     * the tree). The back-pointer is put back once the layer itself is restored.
+     */
+    public function __wakeup(): void
+    {
+        foreach ($this->items as $item) {
+            if ($item instanceof DomLayerSlice) {
+                $item->layer = $this;
+            } elseif ($item instanceof self) {
+                $item->parent = $this;
+            }
+        }
+    }
+
     // =========================================================================
     // Debug
     // =========================================================================

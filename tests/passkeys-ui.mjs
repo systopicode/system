@@ -14,21 +14,30 @@ Object.defineProperty(window, 'isSecureContext', {value:true});
 window.confirm = () => true;
 document.body.innerHTML = fixture;
 const bytes = Uint8Array.from([1,2,3,4]);
-let complete, lastSignal, calls = [], rejectPassword = false;
+let complete, completeGet, lastSignal, calls = [], rejectCreate = false;
+const credential = () => ({rawId:bytes.buffer,response:{clientDataJSON:bytes.buffer,attestationObject:bytes.buffer,authenticatorData:bytes.buffer,signature:bytes.buffer,userHandle:null}});
 Object.defineProperty(window.navigator, 'credentials', {value:{
     create({publicKey,signal}) {
         assert.ok(publicKey.challenge instanceof window.Uint8Array || publicKey.challenge instanceof Uint8Array);
         lastSignal = signal;
         return new Promise((resolve,reject) => {
-            complete = () => resolve({rawId:bytes.buffer,response:{clientDataJSON:bytes.buffer,attestationObject:bytes.buffer}});
+            complete = () => resolve(credential());
+            signal.addEventListener('abort', () => reject(new window.DOMException('Cancelled','AbortError')), {once:true});
+        });
+    },
+    get({publicKey,signal}) {
+        assert.ok(publicKey.challenge instanceof window.Uint8Array || publicKey.challenge instanceof Uint8Array);
+        lastSignal = signal;
+        return new Promise((resolve,reject) => {
+            completeGet = () => resolve(credential());
             signal.addEventListener('abort', () => reject(new window.DOMException('Cancelled','AbortError')), {once:true});
         });
     }
 }});
 window.fetch = async (url, init) => {
     const data = JSON.parse(init.body); calls.push({url,data});
-    if (rejectPassword && url.endsWith('passkeyBeginCreate')) return {ok:false,json:async()=>({error:'Your current password is incorrect.'})};
-    if (url.endsWith('passkeyBeginCreate')) return {ok:true,json:async()=>({options:{challenge:'AQIDBA',user:{id:'AQIDBA'}},ceremony:'a'.repeat(32)})};
+    if (rejectCreate && (url.endsWith('passkeyBeginCreate') || url.endsWith('passkeyBeginConfirm'))) return {ok:false,json:async()=>({error:'Sign in again before adding a passkey.'})};
+    if (url.endsWith('passkeyBeginCreate') || url.endsWith('passkeyBeginConfirm')) return {ok:true,json:async()=>({options:{challenge:'AQIDBA',user:{id:'AQIDBA'}},ceremony:'a'.repeat(32)})};
     if (url.endsWith('passkeyFinishCreate') || url.endsWith('passkeyRename') || url.endsWith('passkeyRemove')) return {ok:true,json:async()=>({html:fixture})};
     return {ok:true,json:async()=>({ok:true})};
 };
@@ -40,18 +49,16 @@ const check = (label, condition) => {assert.ok(condition,label);console.log('ok:
 
 await run('[data-passkey-mode=setup]');
 check('setup opens a modal with ready artwork', dialog().open && dialog().dataset.step === 'ready');
+check('the setup dialog has no password field', !dialog().querySelector('[data-passkey-password]'));
+rejectCreate=true;
 await run('[data-passkey-mode=create]');
-check('missing password does not start a ceremony', calls.length === 0 && dialog().querySelector('.passkeyStatus').textContent.includes('Enter your current password'));
-dialog().querySelector('[data-passkey-password]').value='Example!234';
-rejectPassword=true;
-await run('[data-passkey-mode=create]');
-check('server error restores setup and clears the password', dialog().dataset.step === 'ready' && !dialog().querySelector('[data-passkey-password]').value && !document.querySelector('.is-pending'));
-rejectPassword=false;
-dialog().querySelector('[data-passkey-password]').value='Example!234';
+check('server error restores setup', dialog().dataset.step === 'ready' && !document.querySelector('.is-pending') && dialog().querySelector('.passkeyStatus').textContent.includes('Sign in again'));
+rejectCreate=false;
 const creating=run('[data-passkey-mode=create]');
 await turn();
+if (calls.some(c => c.url.endsWith('passkeyBeginConfirm'))) { completeGet(); await turn(); }
 check('scan artwork appears only in the setup ceremony', dialog().dataset.step === 'working' && !document.querySelector('.passkeyHeadingIcon .passkeyIcon-scan'));
-check('password is cleared before the authenticator completes', dialog().querySelector('[data-passkey-password]').value === '');
+check('adding a passkey does not send a password', calls.some(c => c.url.endsWith('passkeyBeginCreate') && c.data.password === undefined));
 complete();
 await turn();
 check('registration sends the ceremony identifier', calls.some(c=>c.url.endsWith('passkeyFinishCreate')&&c.data.ceremony==='a'.repeat(32)));
@@ -60,37 +67,42 @@ await creating;
 check('successful setup replaces the component and removes the busy state', !dialog().open && !document.querySelector('.is-pending') && document.querySelector('.passkeyStatus').textContent === 'Passkey added.');
 
 await run('[data-passkey-mode=setup]');
-dialog().querySelector('[data-passkey-password]').value='Example!234';
 const cancelled=run('[data-passkey-mode=create]');
 await turn();
+if (calls.at(-1)?.url.endsWith('passkeyBeginConfirm')) { completeGet(); await turn(); }
 await run('[data-passkey-mode=cancel]');
 await cancelled;
 check('cancel closes the modal, aborts authentication and restores controls', !dialog().open && lastSignal.aborted && !document.querySelector('[data-passkey-mode=setup]').disabled);
 check('cancel consumes the server challenge', calls.at(-1).url.endsWith('passkeyCancel'));
 
 const item=document.querySelector('.passkeyItem');item.open=true;
-item.querySelector('[data-passkey-password]').value='Example!234';
 item.querySelector('[data-passkey-name]').value='Renamed key';
 await run('[data-passkey-mode=rename]');
-check('rename uses the password from the selected item', calls.at(-1).data.name === 'Renamed key' && calls.at(-1).data.password === 'Example!234');
+check('rename sends the name without a password', calls.at(-1).data.name === 'Renamed key' && calls.at(-1).data.password === undefined);
 let removalSignals=[];
 window.PublicKeyCredential.signalUnknownCredential=async signal=>removalSignals.push(signal);
 window.fetch=async(url,init)=>{
  const data=JSON.parse(init.body); calls.push({url,data});
- if(url.endsWith('passkeyBeginCreate')) return {ok:true,json:async()=>({options:{challenge:'AQIDBA',user:{id:'AQIDBA'}},ceremony:'a'.repeat(32)})};
+ if(url.endsWith('passkeyBeginCreate') || url.endsWith('passkeyBeginConfirm')) return {ok:true,json:async()=>({options:{challenge:'AQIDBA',user:{id:'AQIDBA'}},ceremony:'a'.repeat(32)})};
  return {ok:true,json:async()=>({html:fixture,removedCredential:{rpId:'cms.example.test',credentialId:'AQIDBA'}})};
 };
-document.querySelector('.passkeyItem [data-passkey-password]').value='Example!234';
-await run('[data-passkey-mode=remove]');
+const removing = run('[data-passkey-mode=remove]');
+await turn();
+if (calls.at(-1)?.url.endsWith('passkeyBeginConfirm')) { completeGet(); await turn(); }
+await removing;
+check('removal does not ask for a password', calls.at(-1).url.endsWith('passkeyRemove') && calls.at(-1).data.password === undefined);
 check('successful removal signals only the revoked credential to the manager',removalSignals.length===1&&removalSignals[0].credentialId==='AQIDBA'&&document.querySelector('.passkeyStatus').textContent.includes('was notified'));
 window.PublicKeyCredential.signalUnknownCredential=async()=>{throw new Error('Unsupported provider');};
-document.querySelector('.passkeyItem [data-passkey-password]').value='Example!234';
-await run('[data-passkey-mode=remove]');
+const removingAgain = run('[data-passkey-mode=remove]');
+await turn();
+if (calls.at(-1)?.url.endsWith('passkeyBeginConfirm')) { completeGet(); await turn(); }
+await removingAgain;
 check('manager failure preserves CMS removal and explains manual cleanup',document.querySelector('.passkeyStatus').textContent.includes('Also remove it'));
 await run('[data-passkey-mode=setup]');
-dialog().querySelector('[data-passkey-password]').value='Example!234';
 const detached=run('[data-passkey-mode=create]');
-await turn();document.querySelector('.passkeys').remove();await turn();await detached;
+await turn();
+if (calls.at(-1)?.url.endsWith('passkeyBeginConfirm')) { completeGet(); await turn(); }
+document.querySelector('.passkeys').remove();await turn();await detached;
 check('panel removal aborts the outstanding ceremony',lastSignal.aborted);
 // Both login paths share verification; automatic attempts must never cancel a button attempt.
 const loginFixture = await readFile(process.env.FLUXO_TEST_LOGIN_HTML, 'utf8');

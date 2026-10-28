@@ -41,7 +41,7 @@ switch ($this->action) {
 			<?php if ($close) { ?>
 				<ul class="barmenu">
 					<li>
-						<a class="ajax" href="../" title="Close"><i class="fa-regular fa-xmark"></i></a>
+						<a class="ajax" href="../" aria-label="Close"><i class="fa-regular fa-xmark"></i></a>
 					</li>
 				</ul>
 			<?php } ?>

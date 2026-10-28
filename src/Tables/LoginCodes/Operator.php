@@ -25,6 +25,8 @@ final class Operator
     public const RECOVER     = 'recover';
     public const PAIR        = 'pair';
     public const PAIR_SCREEN = 'pair_screen';
+    /** The new device shows it. The signed-in person allows it and becomes that device. */
+    public const PAIR_USER   = 'pair_user';
 
     /** Seconds a code of each purpose lives. */
     public const LIFETIMES = [
@@ -32,6 +34,7 @@ final class Operator
         self::RECOVER     => 600,
         self::PAIR        => 600,
         self::PAIR_SCREEN => 600,
+        self::PAIR_USER   => 600,
     ];
 
     public static function generate(): string
@@ -98,7 +101,7 @@ final class Operator
         return $code;
     }
 
-    /** pair_screen: a user admin names the screen account. */
+    /** pair_screen: a user admin names the screen. pair_user: the signed-in person names themselves. */
     public static function approved(Model $code, User $screen, int $approvedBy, DateTimeImmutable $now): Model
     {
         $code->user = $screen;

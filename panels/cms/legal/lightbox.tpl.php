@@ -11,7 +11,7 @@ if (!isset($pages[$page])) {
 		<header>
 			<h1><?= $pages[$page] ?></h1>
 			<ul class="barmenu">
-				<li><a class="ajax" href="../" title="Close"><i class="fa-regular fa-xmark"></i></a></li>
+				<li><a class="ajax" href="../" aria-label="Close"><i class="fa-regular fa-xmark"></i></a></li>
 			</ul>
 		</header>
 		<main>

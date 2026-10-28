@@ -65,7 +65,7 @@ if ($behind !== '') {
 		<button type="button" data-cms-window="menu" aria-label="Open navigation" aria-expanded="false"><i class="fa-regular fa-bars"></i></button>
 		<a class="cmsMobileDashboardBrand" href="<?= http::$root ?>cms/" aria-label="Dashboard"><img src="<?= \Systopic\System\Sys\Packages::panelAssetHref('img/logo-horizontal-dark.png') ?>" alt="fluxo"></a>
 		<strong data-cms-module><?= htmlspecialchars((string) ($module?->label ?? ''), ENT_QUOTES, 'UTF-8') ?></strong>
-		<span class="cmsStage <?= htmlspecialchars((string) STAGE, ENT_QUOTES, 'UTF-8') ?>"><?= htmlspecialchars((string) STAGE, ENT_QUOTES, 'UTF-8') ?></span>
+		<?= \Systopic\System\Sys\WebApp::stageBadge() ?>
 		<a class="ajax cmsSearchLink" href="<?= http::$root ?>cms/search/" aria-label="Search"><i class="fa-regular fa-magnifying-glass"></i></a>
 		<button type="button" class="cmsMobileMenuClose" data-cms-window="menu" aria-label="Close navigation"><i class="fa-regular fa-xmark"></i></button>
 	</header>
@@ -107,7 +107,7 @@ if ($behind !== '') {
 						<i class="fa-duotone fa-regular fa-circle-question"></i><span>Help</span>
 					</a>
 					<?php $this->withChild('user', 'signetmenu'); ?>
-					<span class="cmsMobileOnly cmsStage <?= htmlspecialchars((string) STAGE, ENT_QUOTES, 'UTF-8') ?>"><?= htmlspecialchars((string) STAGE, ENT_QUOTES, 'UTF-8') ?></span>
+					<?= \Systopic\System\Sys\WebApp::stageBadge() ?>
 				</div>
 			</nav>
 		</div>
@@ -167,7 +167,7 @@ if ($behind !== '') {
 	<footer class="cmsStatusbar cms">
 		<span class="cmsJobs" hidden></span>
 		<?php if ($behind === '') { $surface('status'); } ?>
-		<span class="cmsStage <?= htmlspecialchars((string) STAGE, ENT_QUOTES, 'UTF-8') ?>"><?= htmlspecialchars((string) STAGE, ENT_QUOTES, 'UTF-8') ?></span>
+		<?= \Systopic\System\Sys\WebApp::stageBadge() ?>
 	</footer>
 	<?php
 	$this->withSelected('lightbox');

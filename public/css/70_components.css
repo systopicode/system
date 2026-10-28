@@ -64,6 +64,10 @@
 	border-top: 1px solid var(--cmsLine);
 }
 
+.cmslightbox section > footer{
+	border-top-color: var(--cmsLineStrong);
+}
+
 .widget > footer > .left{
 	flex-grow: 1;
 }
@@ -86,15 +90,10 @@
 	white-space: nowrap;
 }
 
-.widget > header h2 :is(i, .iconFingerprint){
+.widget > header h2 i{
 	color: var(--cmsMuted);
 	font-size: 1rem;
 	flex-shrink: 0;
-}
-
-.widget > header h2 .iconFingerprint{
-	width: 1rem;
-	height: 1rem;
 }
 
 /* Title, search and button: on a narrow card the search drops to its
@@ -195,10 +194,15 @@
 	margin-left: auto;
 }
 
-.widget > main,
-.cmslightbox section > main{
+.widget > main{
 	padding: var(--cmsCardPadding);
 	background: var(--cmsCanvas);
+	overflow: auto;
+}
+
+.cmslightbox section > main{
+	padding: var(--cmsCardPadding);
+	background: var(--cmsBgColor);
 	overflow: auto;
 }
 
@@ -235,6 +239,174 @@ section.cms:has(> .tableScroll){
 .cmslightbox section > main .widget{
 	margin-left: 0;
 	margin-right: 0;
+}
+
+/* A quiet box for a dialog: title, a line of explanation, then the body.
+   An accordion is the same box as a <details>. Other lightboxes can use it. */
+.cmsBox{
+	margin: 0 0 0.85rem;
+	padding: 1rem 1.1rem;
+	background: var(--cmsCanvas);
+	border: 1px solid var(--cmsLine);
+	border-radius: var(--cmsRadiusLg);
+}
+
+.cmsBox > header,
+.cmsBox > summary{
+	display: flex;
+	flex-wrap: wrap;
+	align-items: flex-start;
+	justify-content: space-between;
+	gap: 0.75rem 1rem;
+}
+
+/* A box header is a section header, so the lightbox title rules would
+   pad it, pin it and paint it. The title has to share the body's edge. */
+body.cms .cmslightbox .cmsBox > header{
+	flex: 0 1 auto;
+	position: static;
+	min-height: 0;
+	padding: 0;
+	background: transparent;
+	border-radius: 0;
+	white-space: normal;
+	user-select: text;
+	z-index: auto;
+}
+
+.cmsBox > summary{
+	cursor: pointer;
+	list-style: none;
+}
+
+.cmsBox > summary::-webkit-details-marker{
+	display: none;
+}
+
+.cmsBox > summary::marker{
+	content: "";
+}
+
+.cmsBox > summary::after{
+	content: "\f078";
+	flex: 0 0 auto;
+	margin-left: auto;
+	font-family: "CMS Font Awesome 7 Pro";
+	font-size: 0.8rem;
+	font-weight: 400;
+	line-height: 1.4;
+	color: var(--cmsMuted);
+}
+
+.cmsBox[open] > summary::after{
+	transform: rotate(180deg);
+}
+
+.cmsBox .cmsBoxTitles{
+	flex: 1 1 0;
+	min-width: 0;
+}
+
+.cmslightbox section > main .cmsBox h2,
+.cmsBox h2{
+	margin: 0;
+	padding: 0;
+	border: 0;
+	font-size: 0.95rem;
+	font-weight: 700;
+	letter-spacing: 0;
+	line-height: 1.3;
+	text-transform: none;
+	color: var(--cmsTextColor);
+}
+
+.cmsBox .cmsBoxLead{
+	margin: 0.2rem 0 0;
+	color: var(--cmsMuted);
+	font-size: 0.8125rem;
+	line-height: 1.4;
+}
+
+.cmsBox .cmsCount{
+	display: inline-grid;
+	place-items: center;
+	min-width: 1.25rem;
+	height: 1.25rem;
+	margin-left: 0.35rem;
+	padding: 0 0.35rem;
+	border-radius: 999px;
+	background: color-mix(in srgb, var(--cmsMainColor) 12%, var(--cmsCanvas));
+	color: var(--cmsMainColor);
+	font-size: 0.75rem;
+	font-weight: 700;
+	vertical-align: 1px;
+}
+
+.cmsBox > .cmsBoxBody{
+	margin-top: 0.9rem;
+}
+
+.cmsBoxBody > .cmsBoxLead,
+.cmsBoxBody > .button{
+	margin-top: 0.75rem;
+}
+
+.cmsBox > header > .button,
+.cmsBox > summary > .button,
+.cmsBox > header > a.button,
+.cmsBox > summary > a.button{
+	flex: 0 0 auto;
+	align-self: center;
+	margin: 0;
+}
+
+.cmsBoxActions{
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: flex-end;
+	gap: 0.45rem;
+	margin-top: 0.85rem;
+}
+
+.cmsBoxActions.is-start{
+	justify-content: flex-start;
+}
+
+.cms .cmsBoxActions > .button{
+	margin: 0;
+}
+
+.cms button.cmsBoxMore,
+.cms button.cmsBoxMore:enabled:not(.disabled):hover{
+	display: flex;
+	justify-content: flex-start;
+	align-items: center;
+	gap: 0.35rem;
+	width: 100%;
+	min-height: 0;
+	margin: 0.15rem 0 0;
+	padding: 0.75rem 0 0;
+	border: 0;
+	border-top: 1px solid var(--cmsLine);
+	border-radius: 0;
+	background: none;
+	color: var(--cmsHighlightColor);
+	font-size: 0.875rem;
+	font-weight: 600;
+	text-align: left;
+}
+
+.cmsBoxSplit{
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+	gap: 1.15rem 1.75rem;
+	align-items: start;
+}
+
+@media (max-width: 1024px), (orientation: portrait) and (max-width: 1400px){
+	.cmsBoxSplit{
+		grid-template-columns: minmax(0, 1fr);
+	}
 }
 
 /* A group of cards. Columns, so a short card sits under the one above it
@@ -390,4 +562,72 @@ section.cms:has(> .tableScroll){
 
 [onclick]{
 	cursor:pointer;
+}
+
+.userDevice{
+	display: flex;
+	align-items: center;
+	gap: 0.75rem;
+	padding: 0.55rem 0;
+}
+
+.userDevice + .userDevice{
+	border-top: 1px solid var(--cmsLine);
+}
+
+.userDevice > i{
+	flex: 0 0 1.35rem;
+	width: 1.35rem;
+	font-size: 1.05rem;
+	text-align: center;
+	color: var(--cmsMuted);
+}
+
+.userDevice > .presence{
+	flex: 0 0 0.55rem;
+	width: 0.55rem;
+	height: 0.55rem;
+	min-width: 0.55rem;
+	max-width: 0.55rem;
+	border-radius: 50%;
+	background: var(--cmsError);
+	align-self: center;
+}
+
+.userDevice > .presence.is-stale{
+	background: var(--cmsWarning);
+}
+
+.userDevice > .presence.is-on{
+	background: var(--cmsSuccess);
+	animation: presenceLive 1.6s ease-in-out infinite;
+}
+
+.userDevice > .presence.is-idle{
+	background: color-mix(in srgb, var(--cmsSuccess) 42%, var(--cmsCanvas));
+	box-shadow: inset 0 0 0 1px var(--cmsSuccess);
+}
+
+.userDevice > span{
+	flex: 1 1 auto;
+	min-width: 0;
+}
+
+.userDevice small{
+	display: block;
+	color: var(--cmsMuted);
+}
+
+.userDevice > .button{
+	flex: 0 0 auto;
+	margin: 0 0 0 auto;
+}
+
+@keyframes presenceLive{
+	0%, 100%{ opacity: 1; transform: scale(1); }
+	50%{ opacity: 0.4; transform: scale(0.82); }
+}
+
+@media (prefers-reduced-motion: reduce){
+	.userDevice > .presence.is-on{ animation: none; }
 }

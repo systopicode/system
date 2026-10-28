@@ -8,7 +8,13 @@ use Systopic\System\Panels\PanelNode;
 
 class Panel extends PanelNode {
 
+	public function __construct($name, $parent = null) {
+		parent::__construct($name, $parent);
+		$this->label = 'Settings';
+	}
+
 	public $icon = 'fa-duotone fa-regular fa-gear';
+	public ?int $naviOrder = 40;
 
 	/** Page Settings and Tags exist before onLoad, so the menu can open one. */
 	public bool $buildChildPanels = true;

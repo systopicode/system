@@ -50,25 +50,46 @@ header.cms .rightAlign{
 }
 
 /****************************** STAGE ***************************/
+/* 5% inside, 20% on the border, both against the rail. The ink flips to the far side of the rail, so a light theme gets dark type and a dark theme keeps the light type. */
 .cmsStage{
+    --stageAccent: #eaeaea;
+    --stageInk: hsl(from var(--cmsFrame) h calc(s * .25) calc(50 + sign(50 - l) * 30));
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
     flex: 0 0 auto;
-    padding: 0.2rem 0.5rem;
-    border-radius: 4px;
+    box-sizing: border-box;
+    border: 1px solid color-mix(in srgb, var(--stageAccent) 20%, var(--cmsFrame));
+    border-radius: 6px;
+    background-color: color-mix(in srgb, var(--stageAccent) 5%, var(--cmsFrame));
+    color: var(--stageInk);
     font-size: 0.6875rem;
-    font-weight: 700;
-    letter-spacing: 0.08em;
-    line-height: 1.2;
-    color: #fff;
-    background: var(--cmsError);
+    font-weight: 600;
+    line-height: 1;
+    white-space: nowrap;
 }
 
-.cmsStage.DEV{
-    background: var(--cmsSuccess);
+.cmsStage > span{
+    letter-spacing: 0.02em;
+    color: var(--stageInk);
 }
 
-.cmsStage.STAGING{
-    background: var(--cmsWarning);
-    color: var(--cmsTextColor);
+.cmsStage > i{
+    font-size: 0.7rem;
+    line-height: 1;
+    color: var(--stageInk);
+}
+
+.cmsStage.STAGING{ --stageAccent: var(--cmsWarning); }
+.cmsStage.LIVE{ --stageAccent: var(--cmsSuccess); }
+
+body > main > div.main nav .cmsStage > span,
+.cmsMobileHeader .cmsStage > span,
+footer.cmsStatusbar .cmsStage > span,
+body > main > div.main nav .cmsStage > i,
+.cmsMobileHeader .cmsStage > i,
+footer.cmsStatusbar .cmsStage > i{
+    color: var(--stageInk);
 }
 
 /****************************** KOPF-TABS ***************************/
@@ -393,6 +414,11 @@ main > div.main nav > ul li.active i svg *{
 
 .cms div.bottomMenu a.cmsHelp:hover{
     background: var(--cmsOnDark);
+}
+
+/* Desktop keeps the worded chip in the status bar. The rail copy is for the phone menu. */
+body > main > div.main nav .cmsStage{
+    display: none;
 }
 
 /****************************** BENACHRICHTIGUNGEN ***************************/

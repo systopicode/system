@@ -75,7 +75,7 @@ footer.cmsStatusbar{
     gap: 1rem;
     box-sizing: border-box;
     padding: 0 0.75rem 0 calc(4.75rem + 0.75rem);
-    background: transparent;
+    background: var(--cmsFrame);
     pointer-events: none;
     color: var(--cmsFrameText);
     font-size: 0.75rem;
@@ -161,53 +161,15 @@ footer.cmsStatusbar .publishState.scheduled{ color: #8fc3dc; }
 footer.cmsStatusbar .publishState.offline,
 footer.cmsStatusbar .publishState.expired{ color: var(--cmsFrameText); }
 
-/* Stage als umrandetes Badge */
+/* Stage: icon and word, same chip as the wide navigation. */
 footer.cmsStatusbar .cmsStage{
     position: absolute;
     left: 0.7rem;
     top: 0;
     bottom: 0;
-    display: inline-flex;
-    align-items: center;
-    justify-content: flex-start;
-    gap: 0.4rem;
-    width: auto;
-    height: 1.375rem;
+    height: 1.25rem;
     margin: auto 0;
-    padding: 0 0.6rem 0 0.45rem;
-    border: 1px solid currentColor;
-    border-radius: var(--cmsRadius);
-    background: transparent;
-    color: #e46a70;
-    font-size: 0.6875rem;
-    letter-spacing: 0.04em;
-    white-space: nowrap;
-}
-
-footer.cmsStatusbar .cmsStage:before{
-    content: "";
-    width: 0.5rem;
-    height: 0.5rem;
-    border-radius: 50%;
-    background: currentColor;
-}
-
-footer.cmsStatusbar .cmsStage.DEV{
-    color: var(--cmsSuccess);
-    border-color: var(--cmsSuccess);
-    background: color-mix(in srgb, var(--cmsSuccess) 14%, transparent);
-}
-
-footer.cmsStatusbar .cmsStage.STAGING{
-    color: var(--cmsHighlightColor);
-    border-color: var(--cmsHighlightColor);
-    background: color-mix(in srgb, var(--cmsHighlightColor) 16%, transparent);
-}
-
-footer.cmsStatusbar .cmsStage.LIVE{
-    color: var(--cmsError);
-    border-color: var(--cmsError);
-    background: color-mix(in srgb, var(--cmsError) 14%, transparent);
+    padding: 0 0.45rem 0 0.35rem;
 }
 
 /********HAUPTNAVIGATION***************/
