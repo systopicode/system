@@ -169,6 +169,19 @@ body .cmslightbox section > main{
     overflow-y: auto;
 }
 
+/* Scrolling stays. The bar itself is hidden in every lightbox. */
+.cmslightbox,
+.cmslightbox *{
+    scrollbar-width: none;
+}
+
+.cmslightbox::-webkit-scrollbar,
+.cmslightbox *::-webkit-scrollbar{
+    display: none;
+    width: 0;
+    height: 0;
+}
+
 .cmslightbox div.message{
     margin: 0 0 1.25rem 0;
 }
@@ -681,6 +694,103 @@ body .cmslightbox section > div.layout > aside:not(.cms) > div > div{
     object-fit: fill;
 }
 
+.cmslightbox .fileFrame.fileMark{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    min-height: 12rem;
+    color: var(--cmsMuted);
+}
+
+.cmslightbox .fileFrame.fileMark > i{
+    font-size: 3rem;
+    color: var(--cmsMainColor);
+}
+
+.cmslightbox .cmsSkpStage{
+    position: relative;
+    width: 100%;
+    min-height: 18rem;
+    height: 100%;
+    overflow: hidden;
+    border-radius: var(--cmsRadius);
+    background-color: transparent;
+}
+
+.cmslightbox .cmsSkpStage .appSkpCanvas{
+    position: absolute;
+    inset: 0;
+}
+
+.cmslightbox .cmsSkpStage canvas{
+    display: block;
+    width: 100%;
+    height: 100%;
+    touch-action: none;
+}
+
+.cmslightbox .cmsSkpStage .appSkpStatus{
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    padding: 0.35rem 0.7rem;
+    border-radius: var(--cmsRadius);
+    background: var(--cmsCanvas);
+    color: var(--cmsTextColor);
+    font-size: 0.8125rem;
+}
+
+.cmslightbox .cmsSkpStage .appSkpStatus.is-error{
+    color: var(--cmsError);
+}
+
+.cmslightbox .cmsSkpStage .appSkpHint{
+    position: absolute;
+    left: 0.75rem;
+    top: 0.75rem;
+    bottom: auto;
+    transform: none;
+    padding: 0.2rem 0.55rem;
+    border-radius: var(--cmsRadius);
+    background: var(--cmsCanvas);
+    color: var(--cmsMuted);
+    font-size: 0.75rem;
+    pointer-events: none;
+}
+
+.cmslightbox .cmsSkpStage .appSkpTools{
+    position: absolute;
+    right: 0.75rem;
+    bottom: 0.75rem;
+    display: flex;
+    flex-direction: row;
+    gap: 0.35rem;
+}
+
+.cmslightbox .cmsSkpStage .appSkpTools button{
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    margin: 0;
+    padding: 0;
+    border: 1px solid var(--cmsLineStrong);
+    border-radius: var(--cmsRadius);
+    background: var(--cmsCanvas);
+    color: var(--cmsTextColor);
+    box-shadow: none;
+    cursor: pointer;
+}
+
+.cmslightbox .cmsSkpStage .appSkpTools button i{
+    font-size: 0.85rem;
+    line-height: 1;
+}
+
 .cmslightbox .fileFrame audio{
     display: block;
     width: min(100%, 36rem);
@@ -823,6 +933,17 @@ body .cmslightbox section > div.layout > aside:not(.cms) > div > div{
     object-fit: contain;
     border: 0;
     background: transparent;
+    display: none;
+}
+
+.cmslightbox.upload .cmsSkpStage{
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    min-height: 0;
+}
+
+.cmslightbox.upload .cmsSkpStage[hidden]{
     display: none;
 }
 

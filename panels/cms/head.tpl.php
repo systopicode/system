@@ -63,11 +63,13 @@
 	<meta property='og:image' content='<?= $shareImage ?>' />
 	<meta itemprop='image' content='<?= $shareImage ?>' />
 
+	<?php if (!$onAuth) { ?>
 	<meta name="theme-color" content="<?= $themeColor ?>">
+	<?php } ?>
 	<meta name="color-scheme" content="<?= $onAuth ? 'dark' : 'light dark' ?>">
 	<meta name="msapplication-TileColor" content="<?= $brandColor ?>">
 
-    <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,interactive-widget=resizes-content">
+    <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,interactive-widget=<?= $onAuth ? 'resizes-visual' : 'resizes-content' ?>">
 
 	<meta name="robots" content="noindex,follow" />
 
@@ -367,6 +369,8 @@
 	// element's background-color (the shorthand is not read) or, failing that,
 	// from the root. A variable here is resolved; a missing color falls back to white.
 	?>
+	<?php if (!$onAuth) { ?>
 	<style id="cmsSafariChrome">html{background-color:<?= $themeColor ?>}body.cms>.cmsMobileHeader{background-color:<?= $themeColor ?>}</style>
+	<?php } ?>
 	<!-- +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-->
 </head>

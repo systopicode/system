@@ -643,6 +643,21 @@ body.cms .dashboard .dashTabs button:hover{
 	object-fit: cover;
 }
 
+.dashThumbs a.is-mark{
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.dashThumbs a.is-mark > i.thumbType{
+	position: static;
+	width: auto;
+	height: auto;
+	background: none;
+	box-shadow: none;
+	font-size: 1.5rem;
+}
+
 .dashThumbs i.thumbType{
 	position: absolute;
 	right: 0.2rem;

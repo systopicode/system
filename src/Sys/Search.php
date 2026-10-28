@@ -22,7 +22,7 @@ final class Search
 
     private const ORDER = ['Pages' => 1, 'Media' => 2, 'Tags' => 3, 'Users' => 4, 'Settings' => 5, 'Sections' => 99];
 
-    /** @var array<string, array{icon: string, hits: list<array{title: string, context: string, href: string}>}> */
+    /** @var array<string, array{icon: string, hits: list<array{title: string, context: string, href: string, icon: string}>}> */
     public array $groups = [];
 
     /** @var array<string, true> */
@@ -60,7 +60,7 @@ final class Search
         $this->seen[$key] = true;
         $this->groups[$group] ??= ['icon' => $icon, 'hits' => []];
         if (count($this->groups[$group]['hits']) < self::PER_GROUP) {
-            $this->groups[$group]['hits'][] = ['title' => $title, 'context' => $context, 'href' => $href];
+            $this->groups[$group]['hits'][] = ['title' => $title, 'context' => $context, 'href' => $href, 'icon' => $icon];
         }
     }
 

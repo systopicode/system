@@ -141,4 +141,18 @@ svg.qr-code{
 	margin: 0;
 }
 
+/* The generic button margin and the shrink-to-text width pull this one
+   out of the card column. It sits full width, like the button under it. */
+body.cms .qrScan button.authSkip,
+body.appBody .qrScan button.authSkip{
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 0.5rem;
+	width: 100%;
+	min-height: 2.75rem;
+	margin: 0;
+	padding: 0 0.9rem;
+}
+
 

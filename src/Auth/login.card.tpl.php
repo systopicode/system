@@ -116,7 +116,7 @@ $codeChars = str_split(substr(strtoupper((string) preg_replace('/[^0-9A-Z]/', ''
                     <button type="button" class="qrScanTorch" data-qr-torch hidden aria-label="Light"><i class="fa-regular fa-bolt"></i></button>
                 </div>
                 <p class="qrScanHint" data-qr-hint>Hold the QR code steady and well lit in the frame.</p>
-                <button type="button" class="authSkip" data-qr-fields>Type the code</button>
+                <button type="button" class="button authSkip" data-qr-fields><i class="fa-regular fa-keyboard"></i><span>Type the code</span></button>
                 <div class="cms message qrScanMsg" data-qr-msg hidden></div>
                 <div class="qrScanDim" data-qr-dim hidden>
                     <strong data-qr-dim-title>Scanning timed out</strong>

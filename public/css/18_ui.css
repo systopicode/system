@@ -320,6 +320,14 @@ body.dragging {
 	-webkit-user-select: none;
 	user-select: none;
 	overscroll-behavior: none;
+	cursor: grabbing;
+}
+
+/* Links and buttons under the pointer keep their own cursor. While a row
+   is held, the hand stays closed wherever it moves. */
+body.dragging,
+body.dragging * {
+	cursor: grabbing !important;
 }
 body.dragging .dragged div.sort,
 body.dragging .afterDragged div.sort.insertBefore,

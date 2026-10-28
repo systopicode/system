@@ -12,10 +12,12 @@ $search = $this->results;
 		foreach ($search->groups as $group => ['icon' => $icon, 'hits' => $hits]) { ?>
 			<h3><?= $e($group) ?></h3>
 			<ul>
-				<?php foreach ($hits as $hit) { ?>
+				<?php foreach ($hits as $hit) {
+					$hitIcon = $hit['icon'] ?? $icon;
+					?>
 					<li>
 						<a class="ajax" href="<?= $e($hit['href']) ?>">
-							<i class="fa-regular <?= $e($icon) ?>"></i>
+							<i class="fa-regular <?= $e($hitIcon) ?>"></i>
 							<span><b><?= $e($hit['title']) ?></b><?php if ($hit['context'] !== '') { ?><small><?= $e($hit['context']) ?></small><?php } ?></span>
 						</a>
 					</li>

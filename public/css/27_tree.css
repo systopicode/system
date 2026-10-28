@@ -41,27 +41,82 @@
     background: var(--cmsHover);
 }
 
-/* Before takes the top half and the gap above, after the bottom half and the
-   gap below. The line is drawn on the row edge, the same as a table. */
+/* Dragging is not a hover. The line or the outline is the only cue. */
+body.pageDragging .cms ul.tree li > label:hover{
+    background: transparent;
+}
+
+/* The line catches a bit before the gap, not only on the hairline
+   between two rows. Nesting still waits in the middle of the row. */
+.cms ul.tree li > label > div.sort.v.insertBefore,
+.cms ul.tree li > label > div.sort.v.insertAfter{
+    height: 0;
+    padding: 0.62rem 0;
+    margin: -0.62rem 0;
+}
+
 .cms ul.tree li > label > div.sort.v.insertBefore{
-    top: -0.45rem;
-    bottom: 50%;
-    height: auto;
-    padding: 0;
+    top: 0;
+    bottom: auto;
 }
 
 .cms ul.tree li > label > div.sort.v.insertAfter{
-    top: 50%;
-    bottom: -0.45rem;
-    height: auto;
-    padding: 0;
+    top: auto;
+    bottom: 0;
 }
 
-.cms ul.tree li > label > div.sort.v.insertInto{
-    top: 30%;
-    bottom: 30%;
+.cms ul.tree li > label > div.sort.v.insertInto[data-drop_accept="page"]{
+    top: 0.35rem;
+    bottom: 0.35rem;
+    left: 0;
+    width: 1.75rem;
     height: auto;
     padding: 0;
+    z-index: 1001;
+}
+
+/* The helper box lags behind the row. The row itself draws the cue:
+   a line on the edge, or an outline when the page lands inside. */
+body.pageDragging .draghelper{
+    visibility: hidden;
+}
+
+body.pageDragging .cms ul.tree li > label:has(> .sort.insertBefore.dropTarget)::before,
+body.pageDragging .cms ul.tree li > label:has(> .sort.insertAfter.dropTarget)::after{
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: var(--cmsHighlightColor);
+    pointer-events: none;
+    z-index: 6;
+}
+
+body.pageDragging .cms ul.tree li > label:has(> .sort.insertBefore.dropTarget)::before{
+    top: -2px;
+}
+
+body.pageDragging .cms ul.tree li > label:has(> .sort.insertAfter.dropTarget)::after{
+    bottom: -2px;
+}
+
+body.dragging .cms ul.tree li > label.dropHover{
+    outline: 2px dashed color-mix(in srgb, var(--cmsHighlightColor) 62%, transparent);
+    outline-offset: -2px;
+    border-radius: var(--cmsRadius);
+    background: color-mix(in srgb, var(--cmsHighlightColor) 8%, transparent);
+}
+
+body.dragging .cms ul.tree li > label:has(> .sort.insertInto.dropTarget){
+    outline: 2px solid var(--cmsHighlightColor);
+    outline-offset: -2px;
+    border-radius: var(--cmsRadius);
+    background: color-mix(in srgb, var(--cmsHighlightColor) 16%, transparent);
+}
+
+body.dragging:has(ul.tree .sort.insertInto.dropTarget) .draghelper{
+    visibility: hidden;
 }
 
 .cms ul.tree li.active > label{
@@ -168,18 +223,26 @@
 .cms ul.tree label > a.unpublished{ cursor: pointer; }
 .cms ul.tree label > a.unpublished:hover{ color: var(--cmsTextColor); }
 
-/* Griff und Menü liegen rechts, gleiche Fläche, und nehmen ihren Platz
-   immer ein. Sonst springt das Label beim Hover nach rechts. */
+/* Status icons sit at the right. Grip and menu take no space until the
+   row is hovered, then they grow and the icons ease left. */
+.cms ul.tree label > a.alias,
+.cms ul.tree label > a.redirect,
+.cms ul.tree label > a.unpublished,
+.cms ul.tree label > a:not(.label):not(.fold){
+    order: 2;
+    margin-left: 0;
+}
+
 .cms ul.tree i.treeGrip,
 .cms ul.tree button.treeMenu{
     display: flex;
     align-items: center;
     justify-content: center;
-    flex: 0 0 1.25rem;
-    width: 1.25rem;
+    flex: 0 0 0;
+    width: 0;
     height: 1.25rem;
     min-height: 0;
-    margin: 0 0 0 0.1rem;
+    margin: 0;
     padding: 0;
     border: 0;
     border-radius: 4px;
@@ -188,11 +251,12 @@
     font-size: 0.8rem;
     line-height: 1;
     opacity: 0;
+    overflow: hidden;
+    transition: flex-basis .16s ease, width .16s ease, margin .16s ease, opacity .16s ease;
 }
 
 .cms ul.tree i.treeGrip{
-    order: 1;
-    margin-left: 0.45rem;
+    order: 3;
     cursor: grab;
 }
 
@@ -201,8 +265,7 @@
 }
 
 .cms ul.tree button.treeMenu{
-    order: 2;
-    margin-left: 0.35rem;
+    order: 4;
     cursor: pointer;
 }
 
@@ -210,6 +273,9 @@
 .cms ul.tree li > label:hover button.treeMenu,
 .cms ul.tree li.menuTarget > label i.treeGrip,
 .cms ul.tree li.menuTarget > label button.treeMenu{
+    flex-basis: 1.25rem;
+    width: 1.25rem;
+    margin-left: 0.15rem;
     opacity: 1;
 }
 
@@ -226,12 +292,27 @@
 }
 
 :root[data-pointer="touch"] .cms ul.tree button.treeMenu{
+    flex-basis: 1.25rem;
+    width: 1.25rem;
+    margin-left: 0.15rem;
     opacity: 1;
 }
 
-.cms ul.tree i.treeGrip:hover,
-.cms ul.tree button.treeMenu:hover{
-    background: var(--cmsButtonBg);
+body.cms ul.tree button.treeMenu,
+body.cms ul.tree button.treeMenu:enabled,
+body.cms ul.tree button.treeMenu:enabled:not(.disabled):active{
+    background: transparent;
+    box-shadow: none;
+}
+
+body.cms ul.tree button.treeMenu:hover,
+body.cms ul.tree li.menuTarget > label button.treeMenu{
+    background: var(--cmsHover);
+    color: var(--cmsTextColor);
+}
+
+.cms ul.tree i.treeGrip:hover{
+    background: var(--cmsHover);
     color: var(--cmsTextColor);
 }
 

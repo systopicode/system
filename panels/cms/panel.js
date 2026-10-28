@@ -9,6 +9,23 @@
 		sys.lib.applyParentConstructor(this, setup, []);
 		var cmsModule = this; // internal instance name
 
+		// The dialog is drawn onto the open page. A navigation would replace
+		// that page, and closing would have to find the way back.
+		cmsModule.openSearch = function () {
+			if (document.body.dataset.cmsWindow === 'menu') {
+				document.querySelector('.cmsMobileHeader button[data-cms-window="menu"]')?.click();
+			}
+			if (document.querySelector('.cmslightbox.cmsFind')) {
+				document.querySelector('.cmslightbox.cmsFind input[name="query"]')?.focus({preventScroll: true});
+				return;
+			}
+			var call = new sys.core.server.call();
+			call.data.method = 'put';
+			call.send(sys.http.root + 'cms/search/open').done(function () {
+				document.querySelector('.cmslightbox.cmsFind input[name="query"]')?.focus({preventScroll: true});
+			});
+		};
+
 		cmsModule.draginitPylonwidth = function (event) {
 			var $pylon = $(event.element.closest('div.pylon'));
 			var maxWidthInit = $pylon.width();
@@ -90,7 +107,7 @@
 				var index = hits.indexOf(current);
 				e.preventDefault();
 				if (e.key === 'Escape') {
-					history.length > 1 ? history.back() : box.querySelector('header a[href="../"]').click();
+					box.remove();
 				} else if (e.key === 'Enter') {
 					(current || hits[0])?.click();
 				} else if (hits.length) {
@@ -128,6 +145,20 @@
 				var link = e.target.closest && e.target.closest('a.cmsSearchLink');
 				if (!link) return;
 				handSearch();
+			}, true);
+			document.addEventListener('click', function (e) {
+				var link = e.target.closest && e.target.closest('a.cmsSearchLink');
+				if (link) {
+					e.preventDefault();
+					e.stopPropagation();
+					cmsModule.openSearch();
+					return;
+				}
+				var closer = e.target.closest && e.target.closest('[data-close-find]');
+				if (!closer) return;
+				e.preventDefault();
+				e.stopPropagation();
+				closer.closest('.cmslightbox.cmsFind')?.remove();
 			}, true);
 			// The header link would take the focus the stand-in just opened.
 			document.addEventListener('focusin', function (e) {

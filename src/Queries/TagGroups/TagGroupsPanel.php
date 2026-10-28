@@ -83,18 +83,21 @@ final class TagGroupsPanel
 					'id'          => $tag->id,
 				])->close();
 
-        // A tag that hangs on no page may go; one with usages shows their
-        // count.
-        //
-        // Deliberately with if/else instead of the legacy ->if() chain: there
-        // the condition only applies to the next ->append(), and the following
-        // ->text() runs regardless — which put a bare "0" into the markup for
-        // the number zero.
+        // The count stays in the pill. Drag and edit sit on the hover
+        // layer, so a short name does not grow to fit them.
         if ($tag->nodeCount > 0) {
             $el->append('number')->text($tag->nodeCount);
-        } else {
-            $el->append('i.far.fa-trash')->click('delete')->data(['label' => $tag->name]);
         }
+        $actions = $el->append('span.tagActions');
+        $grip = $actions->append('span.tagGrip')->attr('title', 'Drag');
+        for ($dot = 0; $dot < 6; $dot++) {
+            $grip->append('span');
+        }
+        $actions->append('button.tagPen')->attr('type', 'button')->title('Edit')
+            ->attr('onmousedown', 'event.stopPropagation()')
+            ->attr('onpointerdown', 'event.stopPropagation()')
+            ->click('edit')
+            ->append('i.fa-regular.fa-pen');
         return $el;
     }
 

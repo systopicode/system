@@ -16,28 +16,29 @@
     position: relative;
 }
 
-/* Desktop: a thin catch in the gap, the drag frame draws the line. */
+/* The line starts on the pill's edge and reaches into the gap, so it
+   catches before the pointer is exactly between two tags. */
 .cms .layout.tags .tag > div.sort.h{
     position: absolute;
-    width: 0;
-    height: calc(100% + 0.45rem);
-    top: -0.22rem;
-    padding: 0 0.55rem;
+    width: min(1rem, 36%);
+    height: calc(100% + 0.7rem);
+    top: -0.35rem;
+    padding: 0;
     margin: 0;
     z-index: 4;
-    box-sizing: content-box;
+    box-sizing: border-box;
 }
 .cms .layout.tags .tag > div.sort.h.insertBefore{
-    left: calc(-0.45rem / 2);
+    left: 0;
     right: auto;
-    margin-left: -0.55rem;
-    padding-left: 0.55rem;
+    margin-left: -0.7rem;
+    padding-left: 0.7rem;
 }
 .cms .layout.tags .tag > div.sort.h.insertAfter{
     left: auto;
-    right: calc(-0.45rem / 2);
-    margin-right: -0.55rem;
-    padding-right: 0.55rem;
+    right: 0;
+    margin-right: -0.7rem;
+    padding-right: 0.7rem;
 }
 
 @media (pointer: coarse){
@@ -103,9 +104,71 @@
     }
 }
 
+/* The thing that follows the pointer is the tag name, not the hover veil. */
+body.tagDragging .draghelper.tagGhost{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 0;
+    background: var(--cmsMainColor);
+    color: #fff;
+    font-size: 0.75rem;
+    font-weight: 600;
+    line-height: 1;
+    white-space: nowrap;
+    box-shadow: 0 10px 24px rgb(0 20 25 / 28%);
+    transition: none;
+    z-index: 4000;
+}
+
+body.tagDragging .layout.tags .tag.dropHover{
+    outline: 2px dashed color-mix(in srgb, var(--cmsHighlightColor) 62%, transparent);
+    outline-offset: 3px;
+    box-shadow: inset 0 0 0 999px color-mix(in srgb, var(--cmsHighlightColor) 12%, transparent);
+}
+
 body.tagDragging .layout.tags .tag.dropTarget{
     outline: 2px solid var(--cmsHighlightColor);
     outline-offset: 3px;
+    box-shadow: inset 0 0 0 999px color-mix(in srgb, var(--cmsHighlightColor) 28%, transparent);
+}
+
+body.tagDragging .layout.tags .widget.dropHover::before{
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 7;
+    border-radius: inherit;
+    pointer-events: none;
+    box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--cmsHighlightColor) 62%, transparent);
+    background: color-mix(in srgb, var(--cmsHighlightColor) 8%, transparent);
+}
+
+/* The card clips a normal outline, and the header paints over a veil on
+   the card itself. The frame is its own layer: 2px all round, including
+   the top of the header, plus the highlight tint. */
+body.tagDragging .layout.tags .widget:is(.dropHover, .dropTarget){
+    position: relative;
+    outline: none;
+}
+
+body.tagDragging .layout.tags .widget:is(.dropHover, .dropTarget) > header{
+    z-index: 1;
+}
+
+body.tagDragging .layout.tags .widget.dropTarget::after{
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 8;
+    border-radius: inherit;
+    pointer-events: none;
+    box-shadow: inset 0 0 0 2px var(--cmsHighlightColor);
+    background: color-mix(in srgb, var(--cmsHighlightColor) 16%, transparent);
+}
+
+body.tagDragging:has(.layout.tags .widget.dropTarget) .draghelper{
+    display: none !important;
 }
 
 /* Join: the pill's own outline is the target. The rectangular drag frame
@@ -274,6 +337,10 @@ body.tagDragging:has(.layout.tags .tag.dropTarget) .draghelper{
     color: contrast-color(var(--tag-color, #000));
 }
 
+.cms .layout.tags .tag:not(:has(number)){
+    padding-right: 0.75rem;
+}
+
 .cms .layout.tags .tag.active,
 .cms .layout.tags .tag.active number,
 .cms .layout.tags .tag.active i{
@@ -289,6 +356,100 @@ body.tagDragging:has(.layout.tags .tag.dropTarget) .draghelper{
     margin: 0;
     font-size: 0.62rem;
     line-height: 1;
+}
+
+/* Hover layer: a dark veil, so the marks stay readable on any tag colour.
+   Grip at the left edge, pen at the right. It does not travel with a drag. */
+.cms .layout.tags .tag > .tagActions{
+    position: absolute;
+    inset: 0;
+    z-index: 3;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 0.15rem 0 0.05rem;
+    border-radius: inherit;
+    background: color-mix(in srgb, #101418 84%, transparent);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .12s ease;
+}
+
+.cms .layout.tags .tag:hover > .tagActions,
+.cms .layout.tags .tag:focus-within > .tagActions{
+    opacity: 1;
+}
+
+.cms .layout.tags .tag > .tagActions .tagGrip{
+    display: grid;
+    grid-template-columns: repeat(3, 0.12rem);
+    align-content: center;
+    justify-content: center;
+    align-self: stretch;
+    height: 100%;
+    box-sizing: border-box;
+    gap: 0.09rem;
+    margin: 0;
+    padding: 0 0.4rem 0 0.22rem;
+    pointer-events: auto;
+    cursor: grab;
+}
+
+.cms .layout.tags .tag > .tagActions .tagGrip:active{
+    cursor: grabbing;
+}
+
+.cms .layout.tags .tag > .tagActions .tagGrip span{
+    width: 0.12rem;
+    height: 0.12rem;
+    border-radius: 50%;
+    background: #fff;
+}
+
+.cms .layout.tags .tag > .tagActions{
+    overflow: hidden;
+}
+
+.cms .layout.tags .tag > .tagActions button{
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 0.95rem;
+    appearance: none;
+    width: 0.95rem;
+    height: 0.95rem;
+    min-height: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: #fff;
+    color: #14181c;
+    box-shadow: none;
+    pointer-events: auto;
+    cursor: pointer;
+}
+
+.cms .layout.tags .tag > .tagActions button i{
+    font-size: 0.5rem;
+    line-height: 1;
+    color: #14181c !important;
+}
+
+.cms .layout.tags .tag > .tagActions button:hover{
+    background: var(--cmsHighlightColor);
+}
+
+.cms .layout.tags .tag > .tagActions button:hover i{
+    color: #14181c !important;
+}
+
+body.tagDragging .cms .layout.tags .tag > .tagActions,
+body.tagDragging .cms .layout.tags .tag:hover > .tagActions,
+body.tagDragging .cms .layout.tags .tag.dragged > .tagActions{
+    opacity: 0 !important;
+    pointer-events: none !important;
+    transition: none;
 }
 
 .cms .layout.tags .tag > i::before{

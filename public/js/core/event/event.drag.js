@@ -71,7 +71,12 @@ sys.core.event.drag = function (event, hooks) { // 2. param raus
 			keysHoldable.forEach(key => drag.$helper[0].classList.remove(key));
 			drag.keysheld.forEach(key => drag.$helper[0].classList.add(key));
 			var nextDrop = nearestZone(e.target, e.target.closest('[data-drop_accept]'));
-			if (drag.dropObj && nextDrop && drag.dropObj !== nextDrop && distance(nextDrop) + 10 > distance(drag.dropObj)) {
+			// Resting on a row that can take the item switches from the sort
+			// line to that row. Until then the line stays.
+			nextDrop = holdForOnto(e.target, nextDrop);
+			// Pages change cue at the midpoint. Other lists keep a few pixels
+			// so the line does not flicker between two neighbours.
+			if (drag.type !== 'page' && isLine(drag.dropObj) && isLine(nextDrop) && drag.dropObj !== nextDrop && distance(nextDrop) + 10 > distance(drag.dropObj)) {
 				nextDrop = drag.dropObj;
 			}
 			if (drag.dropObj && drag.dropObj !== nextDrop) {
@@ -101,7 +106,7 @@ sys.core.event.drag = function (event, hooks) { // 2. param raus
 				}
 			}
 			if (drag.hasHelper) {
-				var ghost = drag.type === 'tag' && window.matchMedia('(pointer: coarse)').matches;
+				var ghost = drag.type === 'tag' && !css.line;
 				drag.$helper[0].classList.toggle('tagGhost', ghost);
 				if (ghost) {
 					var held = drag.dragObj.getBoundingClientRect();
@@ -117,9 +122,9 @@ sys.core.event.drag = function (event, hooks) { // 2. param raus
 					drag.$helper[0].textContent = '';
 				}
 				drag.$helper.toggleClass('line', !!css.line);
-				var isLine = !!css.line;
+				var showLine = !!css.line;
 				delete css.line;
-				if (isLine) {
+				if (showLine) {
 					var key = css.top + '|' + css.left + '|' + css.width;
 					if (key !== lineKey) {
 						lineKey = key;
@@ -149,6 +154,7 @@ sys.core.event.drag = function (event, hooks) { // 2. param raus
 			return;
 		}
 		drag.e = e;
+		clearDwell();
 		cancelAnimationFrame(edgeFrame);
 		edgeFrame = 0;
 		// Always undo what mousemove set up: hooks may switch hasHelper off
@@ -160,6 +166,7 @@ sys.core.event.drag = function (event, hooks) { // 2. param raus
 		if (drag.dropObj) {
 			drag.dropObj.classList.remove('dropTarget');
 		}
+		setHover(null);
 		$('body').removeClass('dragging');
 		$('body').removeClass(drag.type + 'Dragging');
 		drag.dragObj.classList.remove('dragged');
@@ -175,6 +182,19 @@ sys.core.event.drag = function (event, hooks) { // 2. param raus
 			return;
 		}
 		drag.hooks.release();
+		// A finished drag must not become the click on the element it
+		// started on. The click is dispatched after mouseup.
+		if (drag.status !== 'down') {
+			var swallowClick = function (ev) {
+				ev.preventDefault();
+				ev.stopPropagation();
+				document.removeEventListener('click', swallowClick, true);
+			};
+			document.addEventListener('click', swallowClick, true);
+			setTimeout(function () {
+				document.removeEventListener('click', swallowClick, true);
+			}, 400);
+		}
 		if (drag.status === 'accept') {
 			// A medium dropped into a text lands where the finger is, not at
 			// the end: the selection is what the insert uses.
@@ -257,6 +277,169 @@ sys.core.event.drag = function (event, hooks) { // 2. param raus
 		}
 	}
 
+	// Sort lines win at once. Dropping onto the row (a child page, a group,
+	// a tag) waits until the pointer has stayed there, then the row draws
+	// the frame. Mouse and touch share this, both come through mousemove.
+	var dwell = { onto: null, ready: false, timer: 0 };
+
+	function clearDwell() {
+		if (dwell.timer) {
+			clearTimeout(dwell.timer);
+			dwell.timer = 0;
+		}
+		dwell.onto = null;
+		dwell.ready = false;
+	}
+
+	function armDwell(onto) {
+		if (dwell.onto === onto) {
+			return;
+		}
+		if (dwell.timer) {
+			clearTimeout(dwell.timer);
+		}
+		dwell.onto = onto;
+		dwell.ready = false;
+		dwell.timer = setTimeout(function () {
+			dwell.timer = 0;
+			if (dwell.onto !== onto || drag.status === 'down' || !drag.$helper) {
+				return;
+			}
+			dwell.ready = true;
+			if (drag.e) {
+				mousemove(drag.e);
+			}
+		}, 280);
+	}
+
+	function acceptsType(zone) {
+		return !!(zone && zone.dataset && (zone.dataset.drop_accept || '').split(' ').indexOf(drag.type) !== -1 && zone.getClientRects().length);
+	}
+
+	function isLine(zone) {
+		return !!(zone && zone.classList.contains('sort') && !zone.classList.contains('insertInto'));
+	}
+
+	function isSelf(node) {
+		if (!node || !drag.dragObj) {
+			return false;
+		}
+		return node === drag.dragObj || node.contains(drag.dragObj) || drag.dragObj.contains(node);
+	}
+
+	function dwellHost(target) {
+		if (!target || !target.closest) {
+			return null;
+		}
+		var label = target.closest('ul.tree li > label');
+		if (label && !isSelf(label)) {
+			var zones = label.children;
+			for (var i = 0; i < zones.length; i++) {
+				if (zones[i].classList.contains('insertInto') && acceptsType(zones[i])) {
+					return zones[i];
+				}
+			}
+		}
+		var tag = target.closest('.layout.tags .tag');
+		if (tag && !isSelf(tag) && acceptsType(tag)) {
+			return tag;
+		}
+		var title = target.closest('li.title');
+		if (title && acceptsType(title) && !target.closest('li.title li')) {
+			return title;
+		}
+		var widget = target.closest('.layout.tags .widget');
+		if (widget && !isSelf(widget) && acceptsType(widget) && !target.closest('.layout.tags .tag')) {
+			return widget;
+		}
+		return null;
+	}
+
+	// The sort line owns a band on the edge, wider than the hairline gap,
+	// so it answers before the pointer is exactly on the boundary. The
+	// middle of the item stays free for a drop onto it.
+	function edgeLine(target) {
+		if (!target || !target.closest || !drag.e) {
+			return null;
+		}
+		var item = target.closest('ul.tree li > label') || target.closest('.layout.tags .tag');
+		if (!item || isSelf(item)) {
+			return null;
+		}
+		var zones = Array.prototype.filter.call(item.children, function (zone) {
+			return zone.classList && zone.classList.contains('sort')
+				&& (zone.classList.contains('insertBefore') || zone.classList.contains('insertAfter'))
+				&& (zone.dataset.drop_accept || '').split(' ').indexOf(drag.type) !== -1
+				&& zone.getClientRects().length;
+		});
+		if (!zones.length) {
+			return null;
+		}
+		var before = null;
+		var after = null;
+		zones.forEach(function (zone) {
+			if (zone.classList.contains('insertBefore')) before = zone;
+			else if (zone.classList.contains('insertAfter')) after = zone;
+		});
+		var box = item.getBoundingClientRect();
+		var horizontal = zones[0].classList.contains('h');
+		if (horizontal) {
+			var reachX = Math.min(18, Math.max(12, box.width * 0.36));
+			if (drag.e.clientX <= box.left + reachX) return before || after;
+			if (drag.e.clientX >= box.right - reachX) return after || before;
+			return null;
+		}
+		var reachY = 10;
+		if (drag.e.clientY <= box.top + reachY) return before || after;
+		if (drag.e.clientY >= box.bottom - reachY) return after || before;
+		return null;
+	}
+
+	function hoverHost(onto) {
+		if (!onto) {
+			return null;
+		}
+		if (onto.classList.contains('insertInto')) {
+			return onto.closest('label') || onto.parentElement;
+		}
+		return onto;
+	}
+
+	function setHover(node) {
+		if (drag.hoverObj === node) {
+			return;
+		}
+		if (drag.hoverObj) {
+			drag.hoverObj.classList.remove('dropHover');
+		}
+		drag.hoverObj = node;
+		if (node) {
+			node.classList.add('dropHover');
+		}
+	}
+
+	function holdForOnto(target, chosen) {
+		var edge = edgeLine(target);
+		if (edge) {
+			clearDwell();
+			setHover(null);
+			return edge;
+		}
+		var onto = dwellHost(target);
+		if (!onto) {
+			clearDwell();
+			setHover(null);
+			return chosen;
+		}
+		var ready = dwell.ready && dwell.onto === onto;
+		setHover(ready ? null : hoverHost(onto));
+		armDwell(onto);
+		if (ready) {
+			return onto;
+		}
+		return isLine(chosen) ? chosen : null;
+	}
+
 	// Over an item that brings drop zones of its own (a thumb in a list) the
 	// nearer of them is meant, not the list around the item - otherwise the
 	// helper jumps between the list and a thin line at every gap.
@@ -277,7 +460,23 @@ sys.core.event.drag = function (event, hooks) { // 2. param raus
 			var zones = Array.prototype.filter.call(el.children, zone => zone.classList.contains('sort')
 				&& (zone.dataset.drop_accept || '').split(' ').includes(drag.type) && zone.getClientRects().length);
 			if (zones.length) {
-				return el === drag.dragObj ? null : zones.reduce((a, b) => distance(a) <= distance(b) ? a : b);
+				if (el === drag.dragObj) {
+					return null;
+				}
+				// A page moves onto the nearer edge. Dropping into the row is
+				// not this zone: it waits until the pointer rests (holdForOnto).
+				if (drag.type === 'page' && el.closest && el.closest('ul.tree')) {
+					var beforeZ = null;
+					var afterZ = null;
+					zones.forEach(function (zone) {
+						if (zone.classList.contains('insertBefore')) beforeZ = zone;
+						else if (zone.classList.contains('insertAfter')) afterZ = zone;
+					});
+					var box = el.getBoundingClientRect();
+					var mid = box.top + box.height / 2;
+					return (drag.e.clientY < mid ? beforeZ : afterZ) || beforeZ || afterZ;
+				}
+				return zones.reduce((a, b) => distance(a) <= distance(b) ? a : b);
 			}
 		}
 		return drop;
@@ -301,6 +500,13 @@ sys.core.event.drag = function (event, hooks) { // 2. param raus
 		}
 		if (!range || !editor.contains(range.startContainer)) {
 			return;
+		}
+		// A medium is not a container. The caret must not land inside a
+		// video, image or frame, or the dropped file is stored as its child.
+		var host = range.startContainer.nodeType === 1 ? range.startContainer : range.startContainer.parentElement;
+		var media = host && host.closest && host.closest('video, audio, img, iframe, figure');
+		if (media && editor.contains(media) && media !== editor) {
+			range.setStartAfter(media);
 		}
 		range.collapse(true);
 		var selection = getSelection();
@@ -328,6 +534,26 @@ sys.core.event.drag = function (event, hooks) { // 2. param raus
 		var rect = obj.getBoundingClientRect();
 		// A vertical gap is a line. Its padding is only the area the finger hits.
 		// A column end on a phone is the same line, not a box.
+		if (zone && obj.classList.contains('h') && !obj.classList.contains('insertInto')) {
+			var afterH = obj.classList.contains('insertAfter');
+			var pillEl = obj.parentElement;
+			var pill = pillEl ? pillEl.getBoundingClientRect() : rect;
+			var neighbour = pillEl && (afterH ? pillEl.nextElementSibling : pillEl.previousElementSibling);
+			var gap = 8;
+			if (neighbour && neighbour.getBoundingClientRect) {
+				var other = neighbour.getBoundingClientRect();
+				gap = Math.max(0, afterH ? other.left - pill.right : pill.left - other.right);
+			}
+			var mid = gap / 2;
+			return {
+				left: (afterH ? pill.right + mid : pill.left - mid) - 1,
+				top: pill.top,
+				width: 2,
+				height: pill.height,
+				line: true,
+				borderRadius: 1
+			};
+		}
 		if ((zone && obj.classList.contains('v') && !obj.classList.contains('insertInto')) || obj.classList.contains('dashDrop')) {
 			var after = obj.classList.contains('insertAfter');
 			var rowBox = obj.closest && obj.closest('tr');
@@ -377,6 +603,16 @@ sys.core.event.drag = function (event, hooks) { // 2. param raus
 		}
 		if (drag.dragObj === drag.dropObj) {
 			return false;
+		}
+		// A medium dropped onto its own tile is the click that follows the
+		// drag, not a new parent.
+		if (drag.type === 'media') {
+			var fromId = drag.dragObj.dataset.node_id || drag.dragObj.dataset.nodeId || '';
+			var host = drag.dropObj.closest && drag.dropObj.closest('[data-node_id]');
+			var toId = host ? (host.dataset.node_id || '') : '';
+			if (fromId !== '' && fromId === toId) {
+				return false;
+			}
 		}
 		var acceptbleClasses = drag.dropObj.dataset.drop_accept.split(' ');
 		if (!acceptbleClasses.includes(drag.type)) {

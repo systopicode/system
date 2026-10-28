@@ -66,6 +66,14 @@ div.HTMLeditorMenu li.is-drag a{
     touch-action: none;
 }
 
+div.cms div.HTMLeditorMenu a{
+    color: #fff;
+}
+
+div.cms div.HTMLeditorMenu li.selected > a{
+    color: var(--cmsOnHighlight);
+}
+
 div.HTMLeditorMenu a{
     display: flex;
     align-items: center;
@@ -349,7 +357,10 @@ p.editor:after{
     outline-offset: -1px;
 }
 
-[contenteditable=true] a{
+/* Marks a link in CMS text outside the page preview. Inside the preview
+   the site decides the underline. :not() stops at the article, so this
+   does not raise the colour of the floating bar. */
+[contenteditable="true"]:not(article.cmsContent *) a{
     text-decoration: underline !important;
 }
 

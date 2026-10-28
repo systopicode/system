@@ -181,12 +181,16 @@ aside.cms details.sidebarSection{
     border-bottom: 1px solid var(--cmsLine);
 }
 
+aside.cms details.sidebarSection:not([open]){
+    border-bottom: 1px solid var(--cmsLineStrong);
+}
+
 aside.cms details.sidebarSection > summary{
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: 0.35rem;
     margin: 0;
-    padding: 0.75rem 1rem;
+    padding: 0.35rem 0.55rem 0.35rem 0.85rem;
     list-style: none;
     background: var(--cmsPanelAlt);
     font-size: 0.875rem;
@@ -200,30 +204,37 @@ aside.cms details.sidebarSection > summary::-webkit-details-marker{
     display: none;
 }
 
-aside.cms details.sidebarSection > summary .sidebarInfo{
+aside.cms details.sidebarSection > summary .sidebarLabel{
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+aside.cms details.sidebarSection > summary .sidebarTools{
+    display: flex;
+    align-items: center;
+    gap: 0.1rem;
     margin-left: auto;
-    color: var(--cmsMuted);
 }
 
-aside.cms details.sidebarSection > summary .sidebarInfo:hover{
-    color: var(--cmsTextColor);
+aside.cms details.sidebarSection > summary .sidebarFold{
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.5rem;
+    height: 1.5rem;
+    border-radius: var(--cmsRadius);
+    color: var(--cmsMainColor);
+    font-size: 0.7rem;
+    transition: transform .15s, background-color .15s;
 }
 
-aside.cms details.sidebarSection > summary::after{
-    content: "\f078";
-    margin-left: auto;
-    font-family: "CMS Font Awesome 7 Pro";
-    font-weight: 400;
-    font-size: 0.6875rem;
-    color: var(--cmsMuted);
-    transition: transform .15s;
+aside.cms details.sidebarSection > summary:hover .sidebarFold{
+    background: var(--cmsHover);
 }
 
-aside.cms details.sidebarSection > summary:has(.sidebarInfo)::after{
-    margin-left: 0.65rem;
-}
-
-aside.cms details.sidebarSection:not([open]) > summary::after{
+aside.cms details.sidebarSection:not([open]) > summary .sidebarFold{
     transform: rotate(-90deg);
 }
 
@@ -533,23 +544,19 @@ aside.cms a.sideAction{
     padding: 0 0.9rem;
     border: 1px solid transparent;
     border-radius: var(--cmsRadius);
-    background: var(--cmsButtonBg);
+    background: transparent;
     color: var(--cmsTextColor);
     font-size: 0.8125rem;
     font-weight: 500;
     line-height: 1.2;
     text-decoration: none;
-    transition: background-color .15s, border-color .15s, color .15s;
+    transition: background-color .15s, color .15s;
 }
 
-aside.cms a.sideAction:hover{
-    background: color-mix(in srgb, var(--cmsButtonBg) 88%, var(--cmsMainColor));
-    color: var(--cmsTextColor);
-}
-
+aside.cms a.sideAction:hover,
 aside.cms a.sideAction:focus-visible{
-    outline: 2px solid var(--cmsInteractive);
-    outline-offset: 2px;
+    background: var(--cmsHover);
+    outline: none;
 }
 
 aside.cms a.sideAction i{
@@ -600,14 +607,23 @@ aside.cms ul.rewrite .pathMeta{
     color: var(--cmsMuted);
 }
 
-aside.cms ul li.seperator i{
-    float: right;
-    cursor: pointer;
-    color: var(--cmsMuted);
+aside.cms ul li.seperator{
+    position: relative;
+    display: block;
+    overflow: visible;
+    padding-bottom: 0.15rem;
 }
 
-aside.cms ul li.seperator i:hover{
-    color: var(--cmsTextColor);
+aside.cms ul li.seperator > .button.icononly{
+    position: absolute;
+    right: 0.55rem;
+    bottom: 0;
+    display: inline-flex;
+    width: 1.15rem;
+    height: 1.15rem;
+    min-height: 0;
+    margin: 0;
+    padding: 0;
 }
 
 aside.cms label.checkbox{

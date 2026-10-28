@@ -50,6 +50,26 @@
     color: var(--cmsMuted);
 }
 
+/* After the type rules above, so it wins inside the page and nowhere else.
+   The floating editor bar and the widgets sit outside the article. */
+article.cmsContent :where(:not(.cmsOwn, .cmsOwn *)){
+    margin: revert-layer;
+    padding: revert-layer;
+    border-width: revert-layer;
+    border-style: revert-layer;
+    border-color: revert-layer;
+    outline: revert-layer;
+    font-style: revert-layer;
+    font-weight: revert-layer;
+    font-size: revert-layer;
+    line-height: revert-layer;
+    letter-spacing: revert-layer;
+    color: revert-layer;
+    text-decoration: revert-layer;
+    list-style-type: revert-layer;
+    text-transform: revert-layer;
+}
+
 .cms [class*='Column'] ol.list li{
     list-style-type: decimal;
     margin: 0 0 0.3rem 1.1rem;

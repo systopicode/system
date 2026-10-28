@@ -40,6 +40,7 @@ ul.barmenu > li{
 }
 
 ul.barmenu > li:hover,
+ul.barmenu > li:focus-within,
 ul.barmenu li.open{
     background: var(--cmsHover);
 }
@@ -75,7 +76,8 @@ ul.barmenu a i{
    sit on top of the item hover and read as a second highlight. */
 .cms ul.barmenu > li > button,
 .cms ul.barmenu > li > button:enabled:not(.disabled):hover,
-.cms ul.barmenu > li > button:enabled:not(.disabled):active{
+.cms ul.barmenu > li > button:enabled:not(.disabled):active,
+.cms ul.barmenu > li > button:focus-visible{
     display: flex;
     align-items: center;
     justify-content: center;
@@ -90,6 +92,7 @@ ul.barmenu a i{
     color: var(--cmsMainColor);
     font-size: 1.15rem;
     box-shadow: none;
+    outline: none;
 }
 
 ul.barmenu li i{

@@ -39,6 +39,14 @@
     box-shadow: inset 3px 0 0 var(--cmsHighlightColor);
 }
 
+/* Dragging draws the yellow line. The row under the pointer is not a hover. */
+body.dragging .cms table:not(.octalSelector, .editor table) tbody tr:hover td,
+body.dragging .cms .tableScroll.stacked > table > tbody > tr:hover,
+body.dragging .cms .tableScroll.stacked > table > tbody > tr:hover > td{
+    background: transparent;
+    box-shadow: none;
+}
+
 .cms table tr.selected td{
     background: var(--cmsSelected);
 }

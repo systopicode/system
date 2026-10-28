@@ -135,6 +135,7 @@ final class External
             'video' => 'Video',
             'audio' => 'Audio',
             'pdf' => 'PDF',
+            'sketchup' => 'SketchUp',
             'file' => 'File',
         ] + self::types();
         if ($current !== '' && !isset($types[$current])) {

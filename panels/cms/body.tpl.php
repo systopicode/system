@@ -19,8 +19,9 @@ $surface = function (string $view, ?callable $fn = null) use ($behind) {
 	return $fn === null ? $this->withChildSelected($view) : $this->withChildSelected($view, $fn);
 };
 $module = $behind !== '' ? $this->child($behind) : $this->childSelected;
-// Search stays over the open module. Do not render that module's page
-// preview here: it runs the public templates and can fail under this URL.
+// A direct visit to the search address has no page of its own. The dialog
+// opened from the menu does not come through here: it is drawn onto the
+// page that is already open.
 $home = $behind !== '' ? false : !$surface('main', static fn() => null);
 // A sheet only where a list stays behind a leaf. A branch (Logs) only
 // unfolds its submenu. Dashboard, backup and the profile are the page.
@@ -124,31 +125,7 @@ if ($behind !== '') {
 
 			if ($home) {
 				$this->withView('home');
-			} elseif ($behind !== '') {
-				// Pages stays out: its preview runs the public templates.
-				// Every other module is opened for real. A bare include runs
-				// the views in the wrong folder and the page stays empty.
-				if ($behind !== 'pages') {
-					$path = is_array($this->state->submodulePath ?? null) ? array_values($this->state->submodulePath) : [];
-					if ($path !== [] && ($path[0] ?? '') === 'cms') {
-						array_shift($path);
-					}
-					if ($path === [] || $path[0] !== $behind) {
-						$path = [$behind];
-					}
-					$draw = function ($panel, array $rest) use (&$draw) {
-						if ($rest === []) {
-							$panel->withView('main');
-							return;
-						}
-						$name = array_shift($rest);
-						$panel->withChild($name, 'main', function ($child) use ($rest, $draw) {
-							$draw($child, $rest);
-						});
-					};
-					$draw($this, $path);
-				}
-			} else {
+			} elseif ($behind === '') {
 				$surface('main');
 			}
 
