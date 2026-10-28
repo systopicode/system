@@ -123,6 +123,9 @@ final class ProjectJson
     private function build(): array
     {
         $layout = $this->which === 'page' ? self::pageLayout() : self::mediaLayout();
+        if ($this->which === 'page') {
+            $this->data['legal'] = array_replace(['CMS_IMPRINT_URL' => '', 'CMS_PRIVACY_URL' => ''], is_array($this->data['legal'] ?? null) ? $this->data['legal'] : []);
+        }
         $groups = [];
         foreach ($layout as $section => $spec) {
             if (!isset($this->data[$section]) || !is_array($this->data[$section])) {
@@ -185,6 +188,13 @@ final class ProjectJson
             return null;
         }
         $name = substr($id, strlen('define:'));
+        if (in_array($name, ['CMS_IMPRINT_URL', 'CMS_PRIVACY_URL'], true)) {
+            $text = trim($text);
+            if (!LegalLinks::valid($text)) return null;
+            if (!is_array($this->data['legal'] ?? null)) $this->data['legal'] = [];
+            $this->data['legal'][$name] = $text;
+            return $this->save() ? $text : null;
+        }
         if (!ProjectSettings::scalarAllowed($name)) {
             return null;
         }
@@ -396,6 +406,7 @@ final class ProjectJson
             $section = match ($group->category) {
                 'Meta' => 'meta',
                 'Languages' => 'languages',
+                'CMS Legal Links' => 'legal',
                 default => 'general',
             };
             $data[$section][$name] = self::stored($group->kind, $group->text);
@@ -530,6 +541,7 @@ final class ProjectJson
         return [
             'general' => ['category' => 'General', 'mode' => 'scalars'],
             'meta' => ['category' => 'Meta', 'mode' => 'scalars'],
+            'legal' => ['category' => 'CMS Legal Links', 'mode' => 'scalars'],
             'languages' => ['category' => 'Languages', 'mode' => 'languages'],
         ];
     }
@@ -548,7 +560,7 @@ final class ProjectJson
 
     private function scalarSection(string $name): ?string
     {
-        foreach (['general', 'meta', 'languages', 'images'] as $section) {
+        foreach (['general', 'meta', 'languages', 'legal', 'images'] as $section) {
             if (!isset($this->data[$section]) || !is_array($this->data[$section])) {
                 continue;
             }

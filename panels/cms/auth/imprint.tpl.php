@@ -1,6 +1,6 @@
 <?php
 /** @var \Systopic\System\Panels\Root\Cms\Auth\Panel $this */
-$imprint = rtrim((string) http::$root, '/') . '/impressum/';
+$imprint = \Systopic\System\Settings\LegalLinks::url('imprint');
 ?>
 <h1>Imprint</h1>
 <main class="authText">

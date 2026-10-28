@@ -13,6 +13,8 @@ final class ProjectSettings
 {
     /** @var list<string> */
     private const SCALARS = [
+        'CMS_IMPRINT_URL',
+        'CMS_PRIVACY_URL',
         'PUBLIC_PAGE_NAME',
         'PUBLIC_APP_NAME',
         'PUBLIC_PAGE_TITLE',
@@ -87,7 +89,7 @@ final class ProjectSettings
     /** @param array<string, mixed> $data */
     private static function applyPage(array $data): void
     {
-        foreach (['general', 'meta', 'languages'] as $section) {
+        foreach (['general', 'meta', 'languages', 'legal'] as $section) {
             if (!is_array($data[$section] ?? null)) {
                 continue;
             }

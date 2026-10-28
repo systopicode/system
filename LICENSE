@@ -10,6 +10,8 @@ systopic GmbH grants authorized users a non-exclusive, non-transferable license 
 
 This license does not transfer ownership of the software or any intellectual property rights.
 
+The source code and packages may be published in public repositories and package registries by systopic GmbH. Public availability does not grant any additional license to use, modify, redistribute, or sublicense the software. Rights to view or fork a public repository under the hosting platform's terms remain unaffected. This license applies to versions distributed under it and does not revoke rights already granted for earlier versions distributed under a different license.
+
 ## 2. Permitted Use
 
 Authorized users may:
@@ -35,7 +37,7 @@ Unless expressly authorized in writing by systopic GmbH, users may not:
 
 These restrictions do not prevent the development, deployment, delivery, hosting, or maintenance of authorized websites and applications built using the software.
 
-Access to the source code by developers, employees, contractors, or service providers working on an authorized project is permitted to the extent necessary for that project, provided they are bound by appropriate confidentiality and usage restrictions.
+Access to the source code by developers, employees, contractors, or service providers working on an authorized project is permitted to the extent necessary for that project, provided they comply with the applicable usage restrictions and protect any non-public information made available for that project.
 
 ## 4. Modifications and Extensions
 

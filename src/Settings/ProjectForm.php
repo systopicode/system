@@ -27,15 +27,20 @@ final class ProjectForm
         if ($path === null) {
             echo '<p>Missing ' . $e($filename) . '.</p>';
             if ($which === 'page') {
-                self::security();
+                self::systemSettings();
             }
             echo '</div>';
             return;
         }
         $sections = [];
+        $legalSettings = [];
         $hasLanguages = false;
         $autoLanguage = null;
         foreach (ProjectFile::groups($path) as $group) {
+            if (in_array($group->id, ['define:CMS_IMPRINT_URL', 'define:CMS_PRIVACY_URL'], true)) {
+                $legalSettings[] = $group;
+                continue;
+            }
             if ($group->id === 'define:LANGUAGES') {
                 $hasLanguages = true;
             }
@@ -112,7 +117,7 @@ final class ProjectForm
             echo '</section>';
         }
         if ($which === 'page') {
-            self::security();
+            self::systemSettings($legalSettings);
         }
         echo '</div>';
     }
@@ -223,12 +228,17 @@ final class ProjectForm
     }
 
     /** @param list<Group> $scalars */
-    private static function scalarTable(string $which, array $scalars, ?Group $languages = null): void
+    private static function scalarTable(string $which, array $scalars, ?Group $languages = null, bool $frame = true): void
     {
         $e = static fn($value): string => htmlspecialchars((string) $value, ENT_QUOTES);
-        echo '<div class="tableScroll"><table class="scalars"><thead><tr><th>Setting</th><th>Value</th></tr></thead><tbody>';
+        if ($frame) echo '<div class="tableScroll"><table class="scalars"><thead><tr><th>Setting</th><th>Value</th></tr></thead><tbody>';
         foreach ($scalars as $group) {
-            echo '<tr><td><span>' . $e(self::human($group->label)) . '<small>' . $e(ltrim($group->label, '$')) . '</small></span></td><td>';
+            $legal = in_array($group->label, ['CMS_IMPRINT_URL', 'CMS_PRIVACY_URL'], true);
+            $label = $legal ? ($group->label === 'CMS_IMPRINT_URL' ? 'System imprint URL' : 'System privacy URL') : self::human($group->label);
+            echo '<tr><td><span>' . $e($label);
+            if (!$legal) echo '<small>' . $e(ltrim($group->label, '$')) . '</small>';
+            if ($legal) echo '<small class="settingNote">Optional HTTP(S) URL or path starting with /. Leave empty to use the frontend ' . ($group->label === 'CMS_IMPRINT_URL' ? '/imprint/' : '/privacy/') . ' page.</small>';
+            echo '</span></td><td>';
             if ($group->id === 'define:DEFAULT_LANG' && $languages !== null) {
                 self::languageSelect($which, $group, $languages);
             } else {
@@ -237,7 +247,7 @@ final class ProjectForm
             }
             echo '</td></tr>';
         }
-        echo '</tbody></table></div>';
+        if ($frame) echo '</tbody></table></div>';
     }
 
     private static function languageSelect(string $which, Group $setting, Group $languages): void
@@ -283,28 +293,31 @@ final class ProjectForm
         echo '</div>';
     }
 
-    /** Which sign-in opens first. Stored with the other sign-in settings. */
-    private static function security(): void
+    /** @param list<Group> $legalSettings Project-wide legal links beside the instance sign-in default. */
+    private static function systemSettings(array $legalSettings = []): void
     {
         $e = static fn($value): string => htmlspecialchars((string) $value, ENT_QUOTES);
         $file = EnvironmentFile::activeFile();
-        if ($file === null) {
-            return;
-        }
-        $data = EnvironmentFile::read($file);
+        if ($file === null && $legalSettings === []) return;
+        $data = $file !== null ? EnvironmentFile::read($file) : [];
         $auth = is_array($data['auth'] ?? null) ? $data['auth'] : [];
         $method = (string) ($auth['default_login_method'] ?? '');
         if (!in_array($method, ['', 'code', 'device', 'passkey', 'password'], true)) {
             $method = '';
         }
-        echo '<section class="widget"><header><h2>Security</h2></header>';
+        echo '<section class="widget"><header><h2>System</h2></header>';
         echo '<div class="tableScroll">';
-        echo '<table class="scalars"><tbody><tr class="securityRow"><td><span>Default sign-in<small>default_login_method</small><small class="settingNote">Which sign-in opens first. Ask each time shows the method list.</small></span></td><td>';
-        echo '<select data-on_change="saveAuthMethod" data-file="' . $e($file) . '" data-group="auth" data-key="default_login_method" name="value">';
-        foreach (['' => 'Ask each time', 'code' => 'Sign-in code', 'device' => 'Remote login', 'passkey' => 'Passkey', 'password' => 'Username & password'] as $option => $label) {
-            echo '<option value="' . $e($option) . '"' . ($method === $option ? ' selected' : '') . '>' . $e($label) . '</option>';
+        echo '<table class="scalars"><thead><tr><th>Setting</th><th>Value</th></tr></thead><tbody>';
+        if ($file !== null) {
+            echo '<tr class="securityRow"><td><span>Default sign-in<small>default_login_method</small><small class="settingNote">Which sign-in opens first. Ask each time shows the method list.</small></span></td><td>';
+            echo '<select data-on_change="saveAuthMethod" data-file="' . $e($file) . '" data-group="auth" data-key="default_login_method" name="value">';
+            foreach (['' => 'Ask each time', 'code' => 'Sign-in code', 'device' => 'Remote login', 'passkey' => 'Passkey', 'password' => 'Username & password'] as $option => $label) {
+                echo '<option value="' . $e($option) . '"' . ($method === $option ? ' selected' : '') . '>' . $e($label) . '</option>';
+            }
+            echo '</select></td></tr>';
         }
-        echo '</select></td></tr></tbody></table></div></section>';
+        self::scalarTable('page', $legalSettings, null, false);
+        echo '</tbody></table></div></section>';
     }
 
     private static function recordTable(string $which, Group $group, bool $frame = true): void
@@ -399,6 +412,11 @@ final class ProjectForm
     {
         $e = static fn($value): string => htmlspecialchars((string) $value, ENT_QUOTES);
         $attrs = ' data-file="' . $e($which) . '" data-id="' . $e($leaf->id) . '" name="value" autocomplete="off"';
+        if (in_array($leaf->id, ['define:CMS_IMPRINT_URL', 'define:CMS_PRIVACY_URL'], true)) {
+            $pattern = 'https?://[^\\x2f\\s\\\\@?#]+([\\x2f?#][^\\s\\\\]*)?|/(?!/)[^\\s\\\\]*';
+            echo '<input class="systemLegalUrl" type="text" inputmode="url" spellcheck="false" pattern="' . $e($pattern) . '" title="Use an HTTP(S) URL, a path starting with /, or leave empty." data-on_blur="' . $e($action) . '"' . $attrs . ' value="' . $e($leaf->text) . '">';
+            return;
+        }
         if (self::isFlag($leaf)) {
             $checked = self::isOn($leaf) ? ' checked' : '';
             echo '<label class="projectSwitch"><input type="checkbox" class="switch" data-on_change="' . $e($action) . '"' . $attrs . $checked . '><div><div></div></div></label>';

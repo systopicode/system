@@ -1,5 +1,6 @@
 /****************************** ANMELDUNG ***************************/
 html:has(.authCard) {
+	background: var(--cmsMainColor);
 	height: auto;
 	min-height: 100%;
 }
@@ -19,9 +20,29 @@ body.appBody:has(.authCard) {
 	footer.authFooter {
 		flex: 0 0 auto;
 	}
-	background:
-		radial-gradient(40rem 24rem at 15% -10%, color-mix(in srgb, var(--cmsHighlightColor) 28%, transparent), transparent 70%),
-		var(--cmsMainColor);
+	/* Liquid Petrol follows the installation's theme, including custom accents. */
+	--authLiquidGold: color-mix(in srgb, var(--cmsHighlightColor) 84%, var(--cmsMainColor));
+	--authLiquidLight: color-mix(in srgb, var(--cmsHighlightColor) 58%, var(--cmsBgColor));
+	--authLiquidCool: color-mix(in srgb, var(--cmsMainColor) 54%, var(--cmsBgColor));
+	--authLiquidTop: max(5rem, calc(env(safe-area-inset-top, 0px) + 3rem));
+	--authLiquidBottom: max(5rem, calc(env(safe-area-inset-bottom, 0px) + 3rem));
+	isolation: isolate;
+	background: var(--cmsMainColor);
+
+	/* Only the side lights are viewport-bound. Their paint fades to zero well
+	   before both safe areas; forms and the document retain their own scrolling. */
+	&::before {
+		content: "";
+		position: fixed;
+		inset: var(--authLiquidTop) 0 var(--authLiquidBottom);
+		z-index: -1;
+		pointer-events: none;
+		background:
+			radial-gradient(ellipse 17rem 25rem at -5rem 31%, color-mix(in srgb, var(--authLiquidLight) 66%, transparent), color-mix(in srgb, var(--authLiquidGold) 44%, transparent) 30%, transparent 72%),
+			radial-gradient(ellipse 25rem 33rem at -10rem 46%, color-mix(in srgb, var(--authLiquidGold) 30%, transparent), transparent 73%),
+			radial-gradient(ellipse 25rem 27rem at calc(100% + 7rem) 64%, color-mix(in srgb, var(--authLiquidCool) 78%, transparent), transparent 73%);
+		mask-image: linear-gradient(transparent, #000 22%, #000 78%, transparent);
+	}
 
 	div.authCard {
 		--authPadX: 2rem;
@@ -335,37 +356,38 @@ body.appBody:has(.authCard) {
 
 .authCard .authPasswordAlternative { margin: 1rem 0 !important; color: var(--cmsMuted); text-align: center; }
 
-/* The bright part of the gradient sits above the screen. safe-area is often
-   0 on the first paint, so the lift is a fixed distance and the notch is
-   added on top. The card is padded back down by the same amount. */
+/* Mobile document layout: stable card minimum, growing forms and legal text scrolling. */
 @media (max-width: 1024px), (orientation: portrait) and (max-width: 1400px) {
 	html:has(.authCard) {
-		background: var(--cmsMainColor);
+		--authSafeTop: max(1.25rem, env(safe-area-inset-top, 0px));
+		--authSafeBottom: max(1.25rem, env(safe-area-inset-bottom, 0px));
+		--authScreen: calc(100svh - var(--authSafeTop) - var(--authSafeBottom));
 		overflow-x: clip;
 		overflow-y: auto;
+		background: var(--cmsMainColor);
 	}
 	body.cms:has(.authCard),
 	body.appBody:has(.authCard) {
-		height: 100dvh;
+		height: auto;
+		min-height: 100svh;
 		margin-top: 0;
-		padding-top: max(1.25rem, env(safe-area-inset-top, 0px));
-		padding-right: 1rem;
-		padding-bottom: max(1.25rem, env(safe-area-inset-bottom, 0px));
-		padding-left: 1rem;
-		min-height: 100dvh;
-		justify-content: safe center;
-		overflow: hidden;
-		background:
-			radial-gradient(42rem 26rem at 18% -7rem, color-mix(in srgb, var(--cmsHighlightColor) 32%, transparent), transparent 62%),
-			var(--cmsMainColor);
+		padding: var(--authSafeTop) max(1rem, env(safe-area-inset-right, 0px)) var(--authSafeBottom) max(1rem, env(safe-area-inset-left, 0px));
+		justify-content: flex-start;
+		overflow: visible;
+		background: var(--cmsMainColor);
 
 		div.authCard {
 			flex: 0 0 auto;
 			align-self: center;
 			height: auto;
-			min-height: min(40rem, calc(100dvh - 7rem));
-			max-height: calc(100dvh - 7rem);
+			min-height: var(--authScreen);
+			max-height: none;
 			width: min(100%, 26rem);
+		}
+
+		/* Legal documents keep their existing inner text scroller and foot. */
+		div.authCard:has(main.authText) {
+			max-height: var(--authScreen);
 		}
 	}
 }

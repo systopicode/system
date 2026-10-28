@@ -14,9 +14,9 @@
 /**************************ALLGEMEIN***********************/
 html{
     /* Eine Stufe für die ganze Oberfläche. rem hängt hieran, nicht an px.
-       The canvas behind the status bar is this colour. White here is a white bar. */
+       Use the system canvas before the shell content has painted. Auth overrides it. */
     font-size: 17.5px;
-    background: var(--cmsMainColor);
+    background: var(--cmsBgColor);
 }
 
 html,
@@ -39,7 +39,7 @@ body{
     flex-direction: column;
     box-sizing: border-box;
     border-top: 0;
-    background: var(--cmsMainColor);
+    background: var(--cmsBgColor);
     font-family: var(--cmsFont);
     font-size: 1rem;
     -webkit-font-smoothing: antialiased;

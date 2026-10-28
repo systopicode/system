@@ -143,6 +143,7 @@ if ($heading === '') {
 					<div class="cmsBoxTitles"><h2>Sign-ins</h2><p class="cmsBoxLead">Sign-ins, failed attempts and sign-outs. Newest first.</p></div>
 				</header>
 				<div class="cmsBoxBody">
+					<p class="cmsBoxLead">This log has no automatic time-based deletion. Keep entries only while needed for a documented security or legal purpose. Review retention regularly and use Clean User Log when these entries are no longer required; include retained copies and backups in that process.</p>
 					<?php if ($signIns === []) { ?>
 						<p class="profileEmpty">No sign-ins logged yet.</p>
 					<?php } else { ?>
@@ -250,7 +251,7 @@ if ($heading === '') {
 			<?php if ($codes) { ?>
 			<section class="cmsBox">
 				<header>
-					<div class="cmsBoxTitles"><h2>Trusted devices</h2><p class="cmsBoxLead"><?= $isScreen ? 'Devices paired to this screen.' : 'Devices that can access this account.' ?></p></div>
+					<div class="cmsBoxTitles"><h2>Trusted devices</h2><p class="cmsBoxLead"><?= $isScreen ? 'Devices paired to this screen.' : 'Devices that can access this account.' ?> Expiry or revocation blocks access; it does not automatically erase the stored device record.</p></div>
 				</header>
 				<div class="cmsBoxBody">
 					<?php if ($devices === []) { ?>

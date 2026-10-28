@@ -23,25 +23,6 @@ body.cms > .cmsMobileHeader > .cmsMobileMenuClose, body.cms > .cmsMobileHeader >
 	}
 	body.cms:has(> .cmsMobileHeader):has(.authCard) { background: unset; }
 	html:has(> body.cms > .cmsMobileHeader) { background: var(--cmsMainColor); height: 100%; overflow: hidden; }
-	html:has(> body.cms .authCard) {
-		height: auto; min-height: 100%; overflow-x: clip; overflow-y: auto; margin: 0; padding: 0; max-width: 100%;
-		background: var(--cmsMainColor);
-	}
-	body.cms:has(.authCard) {
-		height: 100dvh; min-height: 100dvh; overflow: hidden;
-		max-width: 100%;
-		margin-top: 0;
-		padding: max(1.25rem, env(safe-area-inset-top, 0px)) 1rem max(1.25rem, env(safe-area-inset-bottom));
-		background:
-			radial-gradient(42rem 26rem at 18% -7rem, color-mix(in srgb, var(--cmsHighlightColor) 32%, transparent), transparent 62%),
-			var(--cmsMainColor);
-		justify-content: safe center; align-items: center;
-	}
-	body.cms:has(.authCard) > div.authCard {
-		flex: 0 0 auto;
-		align-self: center;
-		min-height: 0;
-	}
 	body.cms:has(.authCard) > div.authCard,
 	body.cms:has(.authCard) > footer.authFooter {
 		max-width: min(26rem, 100%);

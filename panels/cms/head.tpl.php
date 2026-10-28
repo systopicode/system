@@ -29,7 +29,9 @@
 	// The status bar sits on the petrol header. The page grey is the background
 	// behind the address bar, set on html/body, not on this tag.
 	$themeColor = $brandColor;
+	$canvasColor = '#' . \Systopic\System\Sys\Theme::color('cmsBgColor');
 	?>
+	<style id="systemInitialCanvas">html{background-color:<?= $onAuth ? $brandColor : $canvasColor ?>}html:has(>body.cms.system),body.cms.system{background-color:<?= $canvasColor ?>}</style>
 	<?php
 	$overrideRoot = \fs::toNative(rtrim((string) \fs::$siteRoot, '/\\') . '/overrides/');
 	$iconSvg = \Systopic\System\Sys\Packages::panelAsset('img/icon.svg');
@@ -370,7 +372,7 @@
 	// from the root. A variable here is resolved; a missing color falls back to white.
 	?>
 	<?php if (!$onAuth) { ?>
-	<style id="cmsSafariChrome">html{background-color:<?= $themeColor ?>}body.cms>.cmsMobileHeader{background-color:<?= $themeColor ?>}</style>
+	<style id="cmsSafariChrome">html{background-color:<?= $canvasColor ?>}body.cms>.cmsMobileHeader{background-color:<?= $themeColor ?>}</style>
 	<?php } ?>
 	<!-- +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-->
 </head>

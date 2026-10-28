@@ -902,3 +902,10 @@ body.cms ul.tree button.treeMenu:hover{
     background-color: var(--cmsHover) !important;
     color: var(--cmsTextColor);
 }
+
+/* Legal link overrides save on blur; make a refused format visible in place. */
+.cms input.systemLegalUrl:invalid {
+    border: 2px solid var(--cmsError) !important;
+    background-color: color-mix(in srgb, var(--cmsError) 10%, var(--cmsCanvas)) !important;
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--cmsError) 25%, transparent) !important;
+}
