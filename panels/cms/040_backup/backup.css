@@ -35,3 +35,12 @@ body.backup .backupProgress .bar{
     height: 2rem;
 }
 
+body.backup .cmslightbox:has(.backupLog) .barmenu > li > a{
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    margin: 0;
+}
+

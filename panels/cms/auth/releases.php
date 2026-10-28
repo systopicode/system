@@ -8,6 +8,23 @@
  * @return array<string, array{date: string, new?: list<string>, fixed?: list<string>}>
  */
 return [
+    '0.5.6' => [
+        'date' => '2026-10-28',
+        'new' => [
+            'The backup log is also under Tools, in Logs.',
+            'On a touch device, an open dialog moves into the space above the keyboard and returns when it closes.',
+        ],
+        'fixed' => [
+            'Add device on a phone starts with the camera and can switch to the QR or the code.',
+            'Actions in Tools show an icon. Run in the audit is the primary button.',
+            'A table shadow appears only when the table scrolls sideways.',
+            'An email log keeps the sender’s id and address from the time it was sent.',
+            'PHP log levels use the status colours. The backup log is a table and shows a date.',
+            'Show more uses the highlight colour. A list that opens in a dialog has no chevron.',
+            'The active tab mark is 2px on the 1px line. Read and write badges keep their width.',
+            'A QR in the user editor fits a short screen.',
+        ],
+    ],
     '0.5.5' => [
         'date' => '2026-10-28',
         'new' => [

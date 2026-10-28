@@ -35,7 +35,7 @@ class Panel extends PanelNode {
 	 * One row per node the tag is on. A page links into the page, a file into
 	 * its editor. The node id is what drops the assignment.
 	 *
-	 * @return list<array{nodeId:int, label:string, href:string}>
+	 * @return list<array{nodeId:int, label:string, href:string, media:bool}>
 	 */
 	public function assignments(): array
 	{
@@ -76,6 +76,7 @@ class Panel extends PanelNode {
 				'href'   => $media
 					? $pages . 'editor/file/?target_id=' . $nodeId
 					: $pages . '?id=' . $nodeId,
+				'media'  => $media,
 			];
 		}
 		usort($out, static fn(array $a, array $b): int => strcasecmp($a['label'], $b['label']));

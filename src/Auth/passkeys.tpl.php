@@ -92,7 +92,7 @@ $passkeyRow = static function ($key) use ($escape, $canRemove, $own, $noAutofill
                             <div class="cms message passkeyStatus" role="status" aria-live="polite"></div>
                         </main>
                         <footer class="passkeySetupActions">
-                            <button type="button" class="button" data-on_click="passkeyAction" data-passkey-mode="cancel">Cancel</button>
+                            <button type="button" class="button" data-on_click="passkeyAction" data-passkey-mode="cancel"><i class="fa-regular fa-xmark"></i>Cancel</button>
                             <button type="button" class="button submit passkeyContinue" data-on_click="passkeyAction" data-passkey-mode="create"><i class="fa-regular fa-check"></i>Continue</button>
                         </footer>
                     </section>
@@ -122,7 +122,7 @@ $passkeyRow = static function ($key) use ($escape, $canRemove, $own, $noAutofill
                         <div class="cms message passkeyStatus" role="status" aria-live="polite"></div>
                     </main>
                     <footer class="passkeySetupActions">
-                        <button type="button" class="button" data-on_click="passkeyAction" data-passkey-mode="cancel">Cancel</button>
+                        <button type="button" class="button" data-on_click="passkeyAction" data-passkey-mode="cancel"><i class="fa-regular fa-xmark"></i>Cancel</button>
                         <button type="button" class="button submit passkeyContinue" data-on_click="passkeyAction" data-passkey-mode="create"><i class="fa-regular fa-check"></i>Continue</button>
                     </footer>
                 </section>

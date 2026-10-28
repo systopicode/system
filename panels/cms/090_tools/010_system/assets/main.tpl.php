@@ -21,8 +21,8 @@ $hint = match ($mode) {
 			<div class="assetsStatus"><?= include __DIR__ . '/status.php' ?></div>
 		</main>
 		<footer>
-			<a class="button submit put" href="publishAll">Publish all</a>
-			<a class="button" data-on_click="userConfirm" data-action="clearAll" data-confirm="Remove all published copies? They are made again on first use.">Clear all</a>
+			<a class="button submit put" href="publishAll"><i class="fa-regular fa-cloud-arrow-up"></i><span>Publish all</span></a>
+			<a class="button" data-on_click="userConfirm" data-action="clearAll" data-confirm="Remove all published copies? They are made again on first use."><i class="fa-regular fa-broom"></i><span>Clear all</span></a>
 		</footer>
 	</section>
 	<section class="widget">

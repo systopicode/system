@@ -574,6 +574,7 @@ body.dragging .dashWidgets .dashWidget > div.sort.v{
 .dashboard .dashTabs button[aria-selected="true"]{
 	border-bottom-color: var(--cmsHighlightColor);
 	color: var(--cmsTextColor);
+	font-weight: 500;
 }
 
 body.cms .dashboard .dashTabs button:hover{
@@ -821,5 +822,14 @@ body.cms .dashboard .dashTabs button:hover{
     }
     body.widgetDragging > .draghelper{
         visibility: hidden;
+    }
+}
+
+/* Phone cards already form one column; let the title use that width. */
+@media (max-width: 1024px), (orientation: portrait) and (max-width: 1400px) {
+    .dashList strong {
+        white-space: normal;
+        overflow-wrap: anywhere;
+        text-overflow: clip;
     }
 }

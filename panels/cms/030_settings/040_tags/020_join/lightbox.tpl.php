@@ -35,7 +35,7 @@ $swatch = static function ($tag) use ($e): string {
 			<p class="tagsHint"><?= $e($source->name) ?> is removed. Its pages and files keep <?= $e($target->name) ?>.</p>
 		</main>
 		<footer>
-			<button type="button" class="button submit" data-on_click="join" data-id="<?= (int) $source->id ?>" data-into="<?= (int) $target->id ?>">Join</button>
+			<button type="button" class="button submit" data-on_click="join" data-id="<?= (int) $source->id ?>" data-into="<?= (int) $target->id ?>"><i class="fa-regular fa-code-merge"></i>Join</button>
 		</footer>
 	</section>
 </div>

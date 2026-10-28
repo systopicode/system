@@ -101,10 +101,10 @@ foreach ($actions as $action) {
 										// An <a>, not a <button>: every submit button in the form would
 										// send its value and the last would win. Only what discards data asks.
 										if ($action->destructive): ?>
-											<a class="button" data-on_click="userConfirm" data-action="applyAudit" data-key="<?= $e($action->key()) ?>"
-											   data-confirm="<?= $e('Run ' . $action->kind->value . ' on ' . $action->subject . '? ' . $action->describe . '. This discards data.') ?>">Run</a>
+											<a class="button submit" data-on_click="userConfirm" data-action="applyAudit" data-key="<?= $e($action->key()) ?>"
+											   data-confirm="<?= $e('Run ' . $action->kind->value . ' on ' . $action->subject . '? ' . $action->describe . '. This discards data.') ?>"><i class="fa-regular fa-play"></i><span>Run</span></a>
 										<?php else: ?>
-											<a class="button submit" data-on_click="applyAudit" data-key="<?= $e($action->key()) ?>">Run</a>
+											<a class="button submit" data-on_click="applyAudit" data-key="<?= $e($action->key()) ?>"><i class="fa-regular fa-play"></i><span>Run</span></a>
 										<?php endif;
 									endif; ?>
 								</td>
@@ -119,13 +119,13 @@ foreach ($actions as $action) {
 	<section class="widget auditRun">
 		<header><h2>Run</h2></header>
 		<div class="auditButtons">
-			<button type="submit" class="button submit">Run checked</button>
+			<button type="submit" class="button submit"><i class="fa-regular fa-play"></i><span>Run checked</span></button>
 			<?php // the same body as "Run checked", with FOREIGN_KEY_CHECKS = 0 for the run ?>
 			<a class="button" data-on_click="applyAudit" data-nofk="1"
-			   title="Runs the checked actions with FOREIGN_KEY_CHECKS = 0, switched back on afterwards.">Run checked without FK checks</a>
-			<a class="button" data-on_click="applyLossless">Run lossless only (<?= $lossless ?>)</a>
+			   title="Runs the checked actions with FOREIGN_KEY_CHECKS = 0, switched back on afterwards."><i class="fa-regular fa-link-slash"></i><span>Run checked without FK checks</span></a>
+			<a class="button" data-on_click="applyLossless"><i class="fa-regular fa-shield-check"></i><span>Run lossless only (<?= $lossless ?>)</span></a>
 			<a class="button" data-on_click="userConfirm" data-action="applyAll"
-			   data-confirm="<?= $e('Run all ' . count($actions) . ' actions, including ' . $destructive . ' that discard data?') ?>">Run all (<?= count($actions) ?>)</a>
+			   data-confirm="<?= $e('Run all ' . count($actions) . ' actions, including ' . $destructive . ' that discard data?') ?>"><i class="fa-regular fa-forward"></i><span>Run all (<?= count($actions) ?>)</span></a>
 		</div>
 		<p class="tagsHint">
 			Red rows discard data, amber ones would fail on the data as it stands - the finding says how many rows

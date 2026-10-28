@@ -131,12 +131,15 @@ header.cms .rightAlign form{
 }
 
 .profile .widget > footer .cmsBoxMore,
-.profile .widget > footer .cmsBoxMore:enabled:not(.disabled):hover{
+.profile .widget > footer .cmsBoxMore:enabled:not(.disabled):hover,
+.profile .widget > footer .cmsBoxMore:focus-visible{
     width: auto;
     margin: 0 auto 0 0;
-    padding: 0;
+    padding: 0.15rem 0;
     border: 0;
-    background: none;
+    background: transparent;
+    color: var(--cmsHighlightColor);
+    justify-content: flex-start;
 }
 
 .profile .widget > footer:has(.tagsHint){
@@ -321,10 +324,15 @@ header.cms .rightAlign form{
 }
 
 .remoteOfferCopy{
-    display: flex;
-    flex-direction: column;
-    align-items: center;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    align-items: stretch;
+    gap: 0.75rem;
     width: 100%;
+}
+
+.remoteOfferCopy > :not(.button){
+    grid-column: 1 / -1;
 }
 
 .remoteOffer .cmsBoxLead{
@@ -350,17 +358,90 @@ header.cms .rightAlign form{
     display: none;
 }
 
-.remoteLogin .remoteAbort:not([hidden]){
+.remoteLogin .remoteMethods{
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(0, 1fr);
+    gap: 0.75rem;
+    width: 100%;
+    margin-top: 0.75rem;
+}
+
+.qrScan.is-dim .remoteMethods{
+    display: none;
+}
+
+.remoteLogin .remoteAbort:not([hidden]){
+    display: flex;
+    flex-direction: column;
     align-items: stretch;
+    gap: 0;
+    width: 100%;
+    margin: 0.85rem 0 0;
+}
+
+.remoteLogin .remoteAbort [data-qr-dim-text]{
+    margin: 0.7rem 0;
+    text-align: center;
+}
+
+.remoteLogin .remoteSwitch{
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(0, 1fr);
     gap: 0.75rem;
     width: 100%;
 }
 
-.remoteLogin .remoteAbort [data-qr-dim-text]{
-    grid-column: 1 / -1;
+.cms .remoteLogin .remoteSwitch .button,
+.cms .remoteOfferCopy .button,
+.cms .remoteLogin .remoteMethods .button{
+    width: 100%;
+    min-width: 0;
     margin: 0;
+    white-space: normal;
+    justify-content: center;
+}
+
+.remoteLogin .remoteCodeEntry{
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 2.6rem;
+    align-items: stretch;
+    gap: 0.55rem;
+    width: 100%;
+    height: 2.6rem;
+}
+
+.remoteLogin .remoteCodeEntry .authCodeSlots{
+    min-width: 0;
+    height: 100%;
+}
+
+.cms .remoteLogin .remoteCodeEntry > .button{
+    appearance: none;
+    -webkit-appearance: none;
+    align-self: stretch;
+    width: 100%;
+    height: 100%;
+    min-width: 0;
+    min-height: 0;
+    max-width: none;
+    max-height: none;
+    margin: 0;
+    padding: 0;
+    border: 1px solid transparent;
+    line-height: 1;
+    box-sizing: border-box;
+    overflow: hidden;
+}
+
+.cms .remoteLogin .remoteCodeEntry > .button i{
+    font-size: 1rem;
+    line-height: 1;
+}
+
+.remoteLogin form.remoteCode .remoteSwitch{
+    margin-top: 0.9rem;
 }
 
 .remoteLogin .authCodeSlots{
@@ -373,7 +454,9 @@ header.cms .rightAlign form{
 
 .remoteLogin .authCodeSlots input{
     width: 100%;
-    height: 2.6rem;
+    height: 100%;
+    min-height: 0;
+    max-height: none;
     margin: 0;
     padding: 0;
     border: 1px solid var(--cmsLine);
@@ -381,19 +464,16 @@ header.cms .rightAlign form{
     background: var(--cmsCanvas);
     font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
     font-size: 1.05rem;
-    line-height: 2.6rem;
+    line-height: 1;
     text-align: center;
     text-transform: uppercase;
+    box-sizing: border-box;
+    appearance: none;
+    -webkit-appearance: none;
 }
 
 .remoteLogin .authCodeDash{
     color: var(--cmsMuted);
     font-size: 1.15rem;
     text-align: center;
-}
-
-.cms .remoteOfferCopy .button,
-.cms .remoteLogin .remoteCode > .button{
-    width: 100%;
-    margin: 0.7rem 0 0;
 }

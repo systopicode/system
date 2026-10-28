@@ -421,6 +421,21 @@
 			start(againHost, true);
 			return;
 		}
+		var showQr = event.target.closest && event.target.closest('[data-remote-offer]');
+		if (showQr) {
+			var offerScope = showQr.closest('.remoteLogin');
+			var offerHost = offerScope && offerScope.querySelector('[data-qr-host]');
+			if (offerHost) {
+				stop(offerHost);
+				offerHost.hidden = true;
+				offerHost.classList.remove('is-dim', 'is-on');
+				var offerDim = offerHost.querySelector('[data-qr-dim]');
+				if (offerDim) offerDim.hidden = true;
+			}
+			var offerForm = offerScope && offerScope.querySelector('[data-code-form]');
+			if (offerForm) offerForm.hidden = true;
+			return;
+		}
 		var useCode = event.target.closest && event.target.closest('[data-remote-code]');
 		if (useCode) {
 			var scope = useCode.closest('.remoteLogin');

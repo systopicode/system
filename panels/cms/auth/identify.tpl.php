@@ -13,16 +13,17 @@ if ($me === null) {
 $e = static fn($value): string => htmlspecialchars((string) $value, ENT_QUOTES);
 $mayPersons = SignInRights::allows($this->scope, $me, SignInRights::PERSONS);
 $mayScreens = SignInRights::allows($this->scope, $me, SignInRights::SCREENS);
+$screenRows = $mayScreens ? SignInRights::screens($this->scope, $me) : [];
 $step = (string) \http::get('as', '');
 if ($step === 'person' && !$mayPersons) {
 	$step = '';
 }
-if ($step === 'screen' && !$mayScreens) {
+if ($step === 'screen' && $screenRows === []) {
 	$step = '';
 }
 $meFull = trim((string) $me->fullname);
 $meLabel = $meFull !== '' ? $meFull : (string) $me->name;
-$rows = $step === 'person' ? SignInRights::persons($this->scope, $me) : ($step === 'screen' ? SignInRights::screens($this->scope, $me) : []);
+$rows = $step === 'person' ? SignInRights::persons($this->scope, $me) : ($step === 'screen' ? $screenRows : []);
 $lead = 'This code can sign in as more than one account.';
 if ($step === 'screen') {
 	$lead = $rows === [] ? 'There is no screen yet.' : 'Name and description.';
@@ -57,7 +58,7 @@ $line = static function (array $row) use ($e): string {
 							<i class="fa-regular fa-chevron-right"></i>
 						</button>
 					</form>
-					<?php if ($mayScreens) { ?>
+					<?php if ($screenRows !== []) { ?>
 						<a class="authMethod ajax" href="?as=screen">
 							<i class="fa-regular fa-tv"></i>
 							<span><b>Pair a screen</b><small>This device becomes that screen.</small></span>

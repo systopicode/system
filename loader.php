@@ -130,7 +130,7 @@ $_cliIsNewStyle = php_sapi_name() === 'cli'
 	&& (str_starts_with($argv[1], '@') || $argv[1] === '-');
 
 if (php_sapi_name() === "cli" && !$_cliIsNewStyle && (!defined('OUTPUT_FORMAT') || OUTPUT_FORMAT === 'html')) {
-	if (is_callable($argv[2])) {
+	if (isset($argv[2]) && is_callable($argv[2])) {
 		$aParams = array();
 		$aIndex = 3;
 		while (isset($argv[$aIndex])) {

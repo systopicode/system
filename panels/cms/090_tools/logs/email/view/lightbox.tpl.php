@@ -87,6 +87,27 @@ if (empty($output)) {
 	
 	preg_match('/User:\s*(.+?)(?:\s*\||$)/', $headerLine, $userMatch);
 	$user = trim($userMatch[1] ?? 'not logged in');
+	if ($user === 'not logged in' && is_array($jsonData) && !empty($jsonData['username'])) {
+	    $user = trim((string) $jsonData['username']);
+	}
+
+	preg_match('/UserId:\s*([^|]+)/', $headerLine, $userIdMatch);
+	$userId = trim($userIdMatch[1] ?? '');
+	if (($userId === '' || $userId === '-') && is_array($jsonData) && isset($jsonData['userId']) && $jsonData['userId'] !== '' && $jsonData['userId'] !== null) {
+	    $userId = (string) $jsonData['userId'];
+	}
+	if ($userId === '-') {
+	    $userId = '';
+	}
+
+	preg_match('/UserEmail:\s*([^|]+)/', $headerLine, $userEmailMatch);
+	$userEmail = trim($userEmailMatch[1] ?? '');
+	if (($userEmail === '' || $userEmail === '-') && is_array($jsonData) && !empty($jsonData['userEmail'])) {
+	    $userEmail = trim((string) $jsonData['userEmail']);
+	}
+	if ($userEmail === '-') {
+	    $userEmail = '';
+	}
 	
 	preg_match('/Error:\s*(.+?)(?:\s*\||$)/', $headerLine, $errorMatch);
 	$error = trim($errorMatch[1] ?? '');
@@ -126,7 +147,10 @@ if (empty($output)) {
 			<div><dt>Date</dt><dd><?= htmlspecialchars($timestamp) ?></dd></div>
 			<div><dt>Status</dt><dd><span class="logPill <?= $pill ?>"><?= htmlspecialchars($status) ?></span></dd></div>
 			<?php if ($user !== '' && $user !== 'not logged in') { ?>
-			    <div><dt>Sent by</dt><dd><?= htmlspecialchars($user) ?></dd></div>
+			    <div><dt>Sent by</dt><dd><?= htmlspecialchars($user) ?><?php if ($userId !== '') { ?> <span class="logActorId">#<?= htmlspecialchars($userId) ?></span><?php } ?></dd></div>
+			<?php } ?>
+			<?php if ($userEmail !== '') { ?>
+			    <div><dt>Email</dt><dd><?= htmlspecialchars($userEmail) ?></dd></div>
 			<?php } ?>
 			<?php if ($attachments !== []) { ?>
 			    <div><dt>Attachments</dt><dd><?= htmlspecialchars(implode(', ', $attachments)) ?></dd></div>

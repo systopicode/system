@@ -50,8 +50,15 @@
 	border-bottom: 0;
 }
 
-.cmslightbox section > footer{
-	background: var(--cmsBgColor);
+pre.backupLog{
+	margin: 0;
+	padding: 1rem 1.15rem 1.25rem;
+	font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+	font-size: 0.8125rem;
+	line-height: 1.55;
+	white-space: pre-wrap;
+	overflow-wrap: anywhere;
+	color: var(--cmsTextColor);
 }
 
 .widget > header{
@@ -376,24 +383,29 @@ body.cms .cmslightbox .cmsBox > header{
 	margin: 0;
 }
 
-.cms button.cmsBoxMore,
-.cms button.cmsBoxMore:enabled:not(.disabled):hover{
-	display: flex;
+.cms button.cmsBoxMore{
+	display: inline-flex;
 	justify-content: flex-start;
 	align-items: center;
-	gap: 0.35rem;
-	width: 100%;
+	gap: 0.4rem;
+	width: auto;
 	min-height: 0;
-	margin: 0.15rem 0 0;
-	padding: 0.75rem 0 0;
+	margin: 0;
+	padding: 0.15rem 0;
 	border: 0;
-	border-top: 1px solid var(--cmsLine);
-	border-radius: 0;
-	background: none;
+	border-radius: var(--cmsRadius);
+	background: transparent;
+	box-shadow: none;
 	color: var(--cmsHighlightColor);
 	font-size: 0.875rem;
 	font-weight: 600;
 	text-align: left;
+}
+
+.cms button.cmsBoxMore:enabled:not(.disabled):hover,
+.cms button.cmsBoxMore:focus-visible{
+	background: transparent;
+	color: var(--cmsHighlightColor);
 }
 
 .cmsBoxSplit{

@@ -15,7 +15,7 @@
 			</ul>
 		</header>
 		<main>
-			<pre><?= file_get_contents($this->parent->logfile->dir->dirpath . 'backup.log') ?></pre>
+			<?php include __DIR__ . '/text.inc.php'; ?>
 		</main>
     </section>
 </div>

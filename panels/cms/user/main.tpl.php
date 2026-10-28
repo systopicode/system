@@ -258,26 +258,44 @@ $preview = $this->fakeRoles;
 					<button type="button" class="qrScanTorch" data-qr-torch hidden aria-label="Light"><i class="fa-regular fa-bolt"></i></button>
 				</div>
 				<p class="qrScanHint" data-qr-hint>Hold the QR code steady and well lit in the frame.</p>
+				<div class="remoteMethods">
+					<?php if ($offerSvg !== '') { ?>
+						<button type="button" class="button" data-remote-offer><i class="fa-regular fa-qrcode"></i> Show QR</button>
+					<?php } ?>
+					<button type="button" class="button" data-remote-code><i class="fa-regular fa-input-numeric"></i> Use code</button>
+				</div>
 				<div class="cms message qrScanMsg" data-qr-msg hidden></div>
 				<div class="qrScanDim remoteAbort" data-qr-dim hidden>
 					<p data-qr-dim-text></p>
-					<button type="button" class="button submit" data-qr-again><i class="fa-regular fa-rotate-right"></i> <span data-qr-label>Try again</span></button>
-					<button type="button" class="button" data-remote-code><i class="fa-regular fa-input-numeric"></i> Or use code</button>
+					<div class="remoteSwitch">
+						<button type="button" class="button submit" data-qr-again><i class="fa-regular fa-rotate-right"></i> <span data-qr-label>Try again</span></button>
+						<?php if ($offerSvg !== '') { ?>
+							<button type="button" class="button" data-remote-offer><i class="fa-regular fa-qrcode"></i> Show QR</button>
+						<?php } ?>
+						<button type="button" class="button" data-remote-code><i class="fa-regular fa-input-numeric"></i> Use code</button>
+					</div>
 				</div>
 			</div>
 			<form class="remoteCode" data-code-form method="get" action="<?= $e($this->href) ?>"<?= ($remoteOpen || $offerSvg === '') ? '' : ' hidden' ?>>
-				<div class="authCodeSlots" data-code-slots>
-					<?php for ($slot = 0; $slot < 8; $slot++) {
-						if ($slot === 4) {
-							echo '<span class="authCodeDash" aria-hidden="true">-</span>';
-						}
-					?>
-					<input data-slot="<?= $slot ?>" inputmode="text" autocapitalize="characters" spellcheck="false" autocomplete="<?= $slot === 0 ? 'one-time-code' : 'off' ?>" aria-label="Character <?= $slot + 1 ?>">
-					<?php } ?>
-					<input type="hidden" name="screen" value="">
+				<div class="remoteCodeEntry">
+					<div class="authCodeSlots" data-code-slots>
+						<?php for ($slot = 0; $slot < 8; $slot++) {
+							if ($slot === 4) {
+								echo '<span class="authCodeDash" aria-hidden="true">-</span>';
+							}
+						?>
+						<input data-slot="<?= $slot ?>" inputmode="text" autocapitalize="characters" spellcheck="false" autocomplete="<?= $slot === 0 ? 'one-time-code' : 'off' ?>" aria-label="Character <?= $slot + 1 ?>">
+						<?php } ?>
+						<input type="hidden" name="screen" value="">
+					</div>
+					<button class="button submit" type="submit" aria-label="Continue" title="Continue"><i class="fa-regular fa-check"></i></button>
 				</div>
-				<button class="button submit" type="submit"><i class="fa-regular fa-check"></i> Continue</button>
-				<button type="button" class="button" data-qr-start><i class="fa-regular fa-camera"></i> Scan QR code</button>
+				<div class="remoteSwitch">
+					<?php if ($offerSvg !== '') { ?>
+						<button type="button" class="button" data-remote-offer><i class="fa-regular fa-qrcode"></i> Show QR</button>
+					<?php } ?>
+					<button type="button" class="button" data-qr-start><i class="fa-regular fa-camera"></i> Scan QR code</button>
+				</div>
 			</form>
 		</main>
 	</section>
@@ -327,7 +345,7 @@ $preview = $this->fakeRoles;
 						<p class="cmsBoxLead">Allow this device to sign in as you?</p>
 					<?php } ?>
 					<div class="cmsBoxActions">
-						<button class="button submit" type="submit">Allow</button>
+						<button class="button submit" type="submit"><i class="fa-regular fa-check"></i>Allow</button>
 					</div>
 				</form>
 			<?php } elseif (!$mayScreens) { ?>
@@ -349,7 +367,7 @@ $preview = $this->fakeRoles;
 						</select>
 					</label>
 					<div class="cmsBoxActions">
-						<button class="button submit" type="submit">Allow</button>
+						<button class="button submit" type="submit"><i class="fa-regular fa-check"></i>Allow</button>
 					</div>
 				</form>
 			<?php } ?>

@@ -221,8 +221,12 @@ class emailSmtp extends SMTPMailer {
             }
         }
         
-        // Get username if user is logged in
-        $username = \Systopic\System\Auth\Session::known() ? \Systopic\System\Auth\Session::current()->name : null;
+        // Who sent it, as it stood then. The id and the address stay in the log
+        // after the name or the address changes.
+        $actor = \Systopic\System\Auth\Session::known() ? \Systopic\System\Auth\Session::current() : null;
+        $username = $actor?->name;
+        $userId = $actor?->user?->id;
+        $userEmail = trim((string) ($actor?->user?->email ?? ''));
         
         // Try to send email
         $status = 'failed';
@@ -251,6 +255,8 @@ class emailSmtp extends SMTPMailer {
             'status' => $status,
             'error' => $error,
             'username' => $username,
+            'userId' => $userId,
+            'userEmail' => $userEmail,
             'timestamp' => date('Y-m-d H:i:s')
         ]);
         
@@ -282,6 +288,8 @@ class emailSmtp extends SMTPMailer {
             'recipients' => $data['recipients'],
             'subject' => $data['subject'],
             'username' => $data['username'] ?? 'not logged in',
+            'userId' => $data['userId'] ?? null,
+            'userEmail' => $data['userEmail'] ?? '',
             'error' => $data['error'] ?? null,
             'attachments' => $data['attachments'] ?? [],
             'htmlContent' => $data['htmlContent'] ?? '',
@@ -290,14 +298,18 @@ class emailSmtp extends SMTPMailer {
         ];
         
         // Format log entry (human readable header + JSON data)
+        $loggedId = $data['userId'] ?? null;
+        $loggedMail = trim((string) ($data['userEmail'] ?? ''));
         $logEntry = sprintf(
-            "[%s] Status: %s | From: %s | To: %s | Subject: %s | User: %s",
+            "[%s] Status: %s | From: %s | To: %s | Subject: %s | User: %s | UserId: %s | UserEmail: %s",
             $data['timestamp'],
             $data['status'],
             $data['sender'],
             implode(', ', $data['recipients']),
             $data['subject'],
-            $data['username'] ?? 'not logged in'
+            $data['username'] ?? 'not logged in',
+            $loggedId === null || $loggedId === '' ? '-' : (string) $loggedId,
+            $loggedMail !== '' ? $loggedMail : '-'
         );
         
         if (!empty($data['attachments'])) {

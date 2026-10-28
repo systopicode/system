@@ -51,11 +51,19 @@ $entries = array_reverse($entries);
 				</thead>
 				<tbody>
 					<?php foreach ($entries as $entry) {
-						$bad = preg_match('/fatal|error/i', $entry['level']) === 1;
+						$level = strtolower($entry['level']);
+						$pill = '';
+						if (preg_match('/fatal|error/', $level) === 1) {
+							$pill = ' is-bad';
+						} elseif (str_contains($level, 'warning')) {
+							$pill = ' is-warn';
+						} elseif (preg_match('/deprecated|notice|strict/', $level) === 1) {
+							$pill = ' is-quiet';
+						}
 						?>
 						<tr>
 							<td><?= $e($entry['time']) ?></td>
-							<td><span class="logPill<?= $bad ? ' is-bad' : '' ?>"><?= $e($entry['level']) ?></span></td>
+							<td><span class="logPill<?= $pill ?>"><?= $e($entry['level']) ?></span></td>
 							<td>
 								<?= $e($entry['message']) ?>
 								<?php if (trim($entry['trace']) !== '') { ?>

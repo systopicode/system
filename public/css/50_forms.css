@@ -382,7 +382,7 @@ body.cms :is(button, a)[role="tab"]:is(.selected, [aria-selected="true"]){
     background: none;
     border-bottom-color: var(--cmsHighlightColor);
     color: var(--cmsTextColor);
-    font-weight: 600;
+    font-weight: 500;
 }
 
 /* Keyboard focus uses the same cue for primary and secondary actions. */
@@ -842,7 +842,7 @@ body.firefox .cms select:-moz-focusring{
 }
 
 .cms .picks .tag.active{
-    border: 0;
+    border-color: transparent;
 }
 
 .cms .tag.is-plain{

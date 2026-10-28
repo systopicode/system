@@ -378,6 +378,18 @@ body.tools .logError{
 	color: var(--cmsError);
 }
 
+body.cms.tools .logList table tbody tr > td{
+	vertical-align: top;
+}
+
+body.tools .logList > header{
+	align-items: flex-start;
+}
+
+body.tools .logList > header .button{
+	margin-top: 0;
+}
+
 body.tools .logList td:first-child{
 	white-space: nowrap;
 	vertical-align: top;
@@ -412,20 +424,46 @@ body.tools .logPill.is-bad{
 	color: var(--cmsError);
 }
 
+body.tools .logPill.is-warn{
+	background: color-mix(in srgb, var(--cmsWarning) 28%, var(--cmsCanvas));
+	color: var(--cmsTextColor);
+}
+
+body.tools .logPill.is-quiet{
+	color: var(--cmsMuted);
+}
+
 body.tools .mailLog dl{
 	display: grid;
-	grid-template-columns: repeat(2, minmax(0, 1fr));
-	gap: 0.75rem 1.5rem;
+	grid-template-columns: 1fr;
+	gap: 0;
 	margin: 0 0 1.25rem;
+	border-top: 1px solid var(--cmsLine);
+}
+
+body.tools .mailLog dl > div{
+	display: grid;
+	grid-template-columns: 7.5rem minmax(0, 1fr);
+	gap: 0.75rem;
+	align-items: baseline;
+	padding: 0.7rem 0;
+	border-bottom: 1px solid var(--cmsLine);
 }
 
 body.tools .mailLog dt{
+	margin: 0;
 	font-size: 0.75rem;
 	color: var(--cmsMuted);
 }
 
 body.tools .mailLog dd{
-	margin: 0.1rem 0 0;
+	margin: 0;
+}
+
+body.tools .logActorId{
+	margin-left: 0.35rem;
+	color: var(--cmsMuted);
+	font-variant-numeric: tabular-nums;
 }
 
 body.tools .mailPreview{
@@ -435,7 +473,8 @@ body.tools .mailPreview{
 	overflow: auto;
 	border: 1px solid var(--cmsLine);
 	border-radius: var(--cmsRadius);
-	background: var(--cmsBgColor);
+	background: #fff;
+	color: #161c1f;
 }
 
 body.tools pre.mailPreview{

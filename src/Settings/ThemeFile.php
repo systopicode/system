@@ -244,14 +244,14 @@ final class ThemeFile
             echo '<form method="post" action="saveCss">';
             echo '<main><p class="tagsHint">pages_overrides.css. Only the page preview, and only while the pages panel is installed. Selectors are parsed into the page.</p>';
             echo '<textarea class="themeCss" name="css" spellcheck="false" autocomplete="off" autocapitalize="off">' . $e(self::readCss()) . '</textarea></main>';
-            echo '<footer><button type="submit" class="button submit">Save CSS</button></footer>';
+            echo '<footer><button type="submit" class="button submit"><i class="fa-regular fa-check"></i>Save CSS</button></footer>';
             echo '</form></section>';
         }
         echo '<section class="widget"><header><h2>System overrides</h2></header>';
         echo '<form method="post" action="saveSystemCss">';
         echo '<main><p class="tagsHint">system_overrides.css. Loaded in the CMS only, not on the public site, and not parsed into the page preview.</p>';
         echo '<textarea class="themeCss" name="css" spellcheck="false" autocomplete="off" autocapitalize="off">' . $e(self::readSystemCss()) . '</textarea></main>';
-        echo '<footer><button type="submit" class="button submit">Save CSS</button></footer>';
+        echo '<footer><button type="submit" class="button submit"><i class="fa-regular fa-check"></i>Save CSS</button></footer>';
         echo '</form></section></div>';
     }
 }

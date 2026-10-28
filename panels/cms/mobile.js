@@ -14,9 +14,9 @@ var activeWindow = mobileState.active;
 var returnFocus = previousMobile?.returnFocus || null;
 var previousWindow = previousMobile?.previousWindow || 'base';
 var overlayURL = previousMobile?.overlayURL || null;
-var dismissedHref = null;
-var introducedHref = null;
-var showSheet = false;
+var dismissedHref = previousMobile?.dismissedHref || null;
+var introducedHref = previousMobile?.introducedHref || null;
+var showSheet = !!previousMobile?.showSheet;
 var sheetGesture = false;
 var sliding = false;
 var dismissing = false;
@@ -279,9 +279,18 @@ function syncMobile() {
 	// wrapper the answer does not replace.
 	// The dialog sits on the sheet. A render that drops the flag would slide
 	// the page away and leave the tree when the dialog closes.
-	if (content && showSheet && document.querySelector('.cmslightbox') && content.dataset.cmsSheet !== '1' && new URL(location.href).searchParams.get('branch') !== '1' && !content.querySelector('.dashboard, section.profile') && !root.classList.contains('backup') && !root.classList.contains('user')) {
+	if (content && showSheet && (document.querySelector('.cmslightbox') || introducedHref === location.href) && content.dataset.cmsSheet !== '1' && new URL(location.href).searchParams.get('branch') !== '1' && !content.querySelector('.dashboard, section.profile') && !root.classList.contains('backup') && !root.classList.contains('user')) {
 		content.dataset.cmsSheet = '1';
 	}
+	// A non-page leaf can arrive through several partial renders. Recover the
+    // selected destination even if an intermediate script consumed the tap.
+    if (mobile.matches && pylon && content && !root.classList.contains('pages') && !autoOpen && content.dataset.cmsSheet !== '1' && dismissedHref !== location.href && !new URL(location.href).searchParams.has('branch') && content.querySelector('h1') && !content.querySelector('.dashboard, section.profile') && !root.classList.contains('backup') && !root.classList.contains('user')) {
+        var selectedLeaf = [...pylon.querySelectorAll('nav li.active > a[href]:not([data-cms-branch])')].find(function (link) {
+            var target = new URL(link.href, location.href);
+            return target.pathname === location.pathname && target.search === location.search;
+        });
+        if (selectedLeaf) { content.dataset.cmsSheet = '1'; openNow = true; }
+    }
 	var waiting = openNow && pendingHref && (location.pathname + location.search) !== pendingHref;
 	if (!waiting && openNow && mobile.matches && content && new URL(location.href).searchParams.get('branch') !== '1' && !content.querySelector('.dashboard, section.profile') && !root.classList.contains('backup') && !root.classList.contains('user')) {
 		content.dataset.cmsSheet = '1';
@@ -367,7 +376,7 @@ function syncMobile() {
 	}
 	root.dataset.cmsWindow = activeWindow;
 	chromeColor();
-	Object.assign(mobileState, {active: activeWindow, returnFocus: returnFocus, previousWindow: previousWindow, overlayURL: overlayURL, closingHistory: closingHistory});
+	Object.assign(mobileState, {active: activeWindow, returnFocus: returnFocus, previousWindow: previousWindow, overlayURL: overlayURL, closingHistory: closingHistory, showSheet: showSheet, introducedHref: introducedHref, dismissedHref: dismissedHref, openNow: openNow});
 	mobileHeader = document.querySelector('.cmsMobileHeader');
 	root.classList.toggle('cmsMobile', mobile.matches);
 	root.classList.toggle('cmsDashboard', !!document.querySelector('main > .content .dashboard'));
@@ -755,9 +764,29 @@ document.addEventListener('pointerdown', function (event) {
 mobile.addEventListener('change', syncMobile, {signal: mobileEvents.signal});
 if (window.visualViewport) {
 	var pinning = false;
+	var keyboardOpen = false;
 	function fitKeyboard() {
 		var vv = window.visualViewport;
-		root.style.setProperty('--cmsKeyboard', Math.max(0, document.documentElement.clientHeight - vv.height - vv.offsetTop) + 'px');
+		var covered = Math.max(0, document.documentElement.clientHeight - vv.height - vv.offsetTop);
+		root.style.setProperty('--cmsKeyboard', covered + 'px');
+		// A touch device, and the on-screen keyboard actually covering the page.
+		// A hardware keyboard does not shrink the visible area, so it stays put.
+		var touch = navigator.maxTouchPoints > 0;
+		var open = touch && covered > 120;
+		if (open) {
+			document.documentElement.classList.add('cms-keyboard');
+			document.documentElement.style.setProperty('--cmsVvTop', Math.max(0, vv.offsetTop) + 'px');
+			document.documentElement.style.setProperty('--cmsVvHeight', vv.height + 'px');
+			keyboardOpen = true;
+		} else if (keyboardOpen) {
+			document.documentElement.style.setProperty('--cmsVvTop', '0px');
+			document.documentElement.style.setProperty('--cmsVvHeight', window.innerHeight + 'px');
+			keyboardOpen = false;
+			window.setTimeout(function () {
+				if (keyboardOpen) return;
+				document.documentElement.classList.remove('cms-keyboard');
+			}, 340);
+		}
 		chromeColor();
 		// iOS pans the layout to the focused field. A sheet then sits with its
 		// header above the screen and the results in the middle.

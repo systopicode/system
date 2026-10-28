@@ -130,6 +130,7 @@ svg.qr-code{
 .qrScanHint{
 	margin: 0;
 	width: 100%;
+	min-height: 2.8rem;
 	text-align: center;
 	font-size: 0.9375rem;
 	line-height: 1.4;

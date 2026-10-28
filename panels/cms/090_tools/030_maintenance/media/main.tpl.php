@@ -9,8 +9,8 @@
 			<div class="mediaResult showPermissionsContainer"></div>
 		</main>
 		<footer>
-			<a class="button put" href="showMediaWithInsufficientPermissions">Show</a>
-			<a class="button submit" data-on_click="userConfirm" data-action="fixMediaPermissions" data-confirm="Make these files readable?">Fix</a>
+			<a class="button put" href="showMediaWithInsufficientPermissions"><i class="fa-regular fa-eye"></i><span>Show</span></a>
+			<a class="button submit" data-on_click="userConfirm" data-action="fixMediaPermissions" data-confirm="Make these files readable?"><i class="fa-regular fa-wrench"></i><span>Fix</span></a>
 		</footer>
 	</section>
 
@@ -21,8 +21,8 @@
 			<div class="mediaResult showMimeContainer"></div>
 		</main>
 		<footer>
-			<a class="button put" href="showMediaWithoutMimetype">Show</a>
-			<a class="button submit" data-on_click="userConfirm" data-action="updateMediaMimetype" data-confirm="Write the type for up to 2000 files?">Update</a>
+			<a class="button put" href="showMediaWithoutMimetype"><i class="fa-regular fa-eye"></i><span>Show</span></a>
+			<a class="button submit" data-on_click="userConfirm" data-action="updateMediaMimetype" data-confirm="Write the type for up to 2000 files?"><i class="fa-regular fa-arrows-rotate"></i><span>Update</span></a>
 		</footer>
 	</section>
 
@@ -33,8 +33,8 @@
 			<div class="mediaResult showMediaContainer"></div>
 		</main>
 		<footer>
-			<a class="button put" href="showMediaWithoutSize">Show</a>
-			<a class="button submit" data-on_click="userConfirm" data-action="updateMediaSize" data-confirm="Write the size for up to 2000 images?">Update</a>
+			<a class="button put" href="showMediaWithoutSize"><i class="fa-regular fa-eye"></i><span>Show</span></a>
+			<a class="button submit" data-on_click="userConfirm" data-action="updateMediaSize" data-confirm="Write the size for up to 2000 images?"><i class="fa-regular fa-arrows-rotate"></i><span>Update</span></a>
 		</footer>
 	</section>
 
@@ -76,8 +76,8 @@
 			</label>
 		</main>
 		<footer>
-			<a class="button" data-on_click="cropAction" data-action="removeCropCache" data-confirm="Clear the generated files for this format?">Clear cache</a>
-			<a class="button submit" data-on_click="cropAction" data-action="removeCropParams" data-confirm="Remove the saved crop frames for this format?">Remove frames</a>
+			<a class="button" data-on_click="cropAction" data-action="removeCropCache" data-confirm="Clear the generated files for this format?"><i class="fa-regular fa-broom"></i><span>Clear cache</span></a>
+			<a class="button submit" data-on_click="cropAction" data-action="removeCropParams" data-confirm="Remove the saved crop frames for this format?"><i class="fa-regular fa-frame"></i><span>Remove frames</span></a>
 		</footer>
 	</section>
 </div>

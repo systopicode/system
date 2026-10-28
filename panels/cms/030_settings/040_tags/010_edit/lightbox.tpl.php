@@ -35,8 +35,8 @@ $this->loadJS();
 								<li>
 									<span class="tagAssignmentLabel"><?= htmlspecialchars($page['label']) ?></span>
 									<span class="tagAssignmentActions">
-										<a class="ajax" href="<?= htmlspecialchars($page['href']) ?>" title="Open">
-											<i class="fa-regular fa-arrow-up-right-from-square"></i>
+										<a class="ajax" href="<?= htmlspecialchars($page['href']) ?>" title="<?= !empty($page['media']) ? 'View' : 'Open' ?>">
+											<i class="fa-regular <?= !empty($page['media']) ? 'fa-eye' : 'fa-arrow-up-right-from-square' ?>"></i>
 										</a>
 										<button type="button" title="Remove from this page"
 											data-on_click="detach"

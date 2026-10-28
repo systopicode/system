@@ -141,11 +141,17 @@ body.dragging .cms .tableScroll.stacked > table > tbody > tr:hover > td{
 }
 
 /* A table wider than its box scrolls sideways in it; the action column
-   stays at the right edge in view */
+   stays at the right edge in view. A couple of pixels is not a scroll:
+   the edge and its shadow stay off until the table is clearly wider. */
 .tableScroll{
     max-width: 100%;
+    overflow-x: hidden;
+    overflow-y: hidden;
+    overscroll-behavior: none;
+}
+
+.tableScroll.canScrollX{
     overflow-x: auto;
-    overscroll-behavior-x: contain;
 }
 
 /* The grip cell is the containing block. A zone positioned against the
@@ -164,26 +170,39 @@ body.dragging section.cms{
     overflow-x: hidden;
 }
 
-.tableScroll > table td.icons,
-.tableScroll > table tr > th:last-child:empty{
+.tableScroll.canScrollX > table td.icons,
+.tableScroll.canScrollX > table tr > th:last-child:empty{
     position: sticky;
     right: 0;
     z-index: 2;
     background: var(--cmsCanvas);
-    /* a shadow while columns lie under it; gone at the end of the scroll
-       and on a table that fits (no scroll, no timeline) */
+}
+
+/* The fade is painted from inside the cell, so it cannot make the table
+   a pixel wider. It only runs once the table actually scrolls. */
+.tableScroll.canScrollX > table td.icons::before{
+    content: "";
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: 0.85rem;
+    transform: translateX(-100%);
+    background: linear-gradient(to left, color-mix(in srgb, var(--cmsTextColor) 22%, transparent), transparent);
+    pointer-events: none;
+    opacity: 0;
     animation: cmsScrollEdge linear both;
     animation-timeline: scroll(x nearest);
+}
+
+@keyframes cmsScrollEdge{
+    from{ opacity: 1; }
+    to{ opacity: 0; }
 }
 
 .cms .tableScroll > table tbody tr:hover td.icons,
 .cms .tableScroll > table tbody tr:hover td:last-child{
     background: color-mix(in srgb, var(--cmsHighlightColor) 24%, var(--cmsCanvas));
-}
-
-@keyframes cmsScrollEdge{
-    from{ box-shadow: -1px 0 0 var(--cmsLine), -0.75rem 0 0.75rem -0.5rem rgb(0 0 0 / 0.2); }
-    to{ box-shadow: none; }
 }
 
 /* Marker columns - a status dot, a drag grip - as narrow as their mark */
@@ -501,4 +520,26 @@ div.table .tr{
 
 div.table .tc{
     display: table-cell;
+}
+
+.tableFoldToggle { display: none; }
+@media (max-width: 1024px), (orientation: portrait) and (max-width: 1400px) {
+    .cms .tableScroll.stacked.is-foldable td:has(> .tableFoldToggle) {
+        position: relative;
+        padding-right: 2.75rem;
+    }
+    .cms .tableFoldToggle {
+        display: inline-flex;
+        position: absolute;
+        right: 0;
+        top: 0;
+        align-items: center;
+        justify-content: center;
+        width: 2.5rem;
+        min-height: 2.75rem;
+        padding: 0;
+        background: transparent;
+        color: var(--cmsMuted);
+    }
+    .cms .tableFoldToggle[aria-expanded="true"] i { transform: rotate(180deg); }
 }

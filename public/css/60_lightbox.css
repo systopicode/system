@@ -15,6 +15,29 @@ body.cms .cmslightbox[hidden]{
     background-color: color-mix(in srgb, var(--cmsMainColor) 45%, transparent);
     -webkit-backdrop-filter: blur(3px);
     backdrop-filter: blur(3px);
+    transition: top 0.32s ease, height 0.32s ease;
+}
+
+@media (prefers-reduced-motion: reduce){
+    .cmslightbox{
+        transition: none;
+    }
+}
+
+/* Touch: while the on-screen keyboard is open, center in the space it leaves.
+   A dialog taller than that space sits at the top of it. */
+html.cms-keyboard .cmslightbox{
+    top: var(--cmsVvTop, 0px);
+    bottom: auto;
+    height: var(--cmsVvHeight, 100%);
+    align-items: safe center;
+    padding: 0.75rem;
+    overflow-y: auto;
+}
+
+html.cms-keyboard .cmslightbox > section{
+    max-height: none;
+    flex: 0 0 auto;
 }
 
 .cmslightbox section > header h1{
@@ -991,4 +1014,36 @@ body .cmslightbox section > div.layout > aside:not(.cms) > div > div{
 .cmslightbox.upload .idle [data-doc=upload],
 .cmslightbox.upload .reading [data-doc=upload]{
     opacity: 0;
+}
+
+/* Theme-tinted glass: the shell catches light, while form cards stay legible. */
+.cmslightbox {
+    --glassLight: color-mix(in srgb, var(--cmsCanvas) 40%, white);
+    --glassSurface: color-mix(in srgb, var(--cmsBgColor) 82%, transparent);
+    --glassEdge: color-mix(in srgb, var(--glassLight) 78%, transparent);
+    --glassShade: color-mix(in srgb, var(--cmsMainColor) 26%, transparent);
+    background: color-mix(in srgb, var(--cmsMainColor) 30%, transparent);
+    -webkit-backdrop-filter: blur(8px) saturate(115%);
+    backdrop-filter: blur(8px) saturate(115%);
+}
+body.cms .cmslightbox > section {
+    background: linear-gradient(135deg, color-mix(in srgb, var(--glassLight) 38%, transparent), transparent 42%), var(--glassSurface);
+    -webkit-backdrop-filter: blur(24px) saturate(145%);
+    backdrop-filter: blur(24px) saturate(145%);
+    box-shadow: inset 0 1px 0 var(--glassEdge), inset 1px 0 0 color-mix(in srgb, var(--glassLight) 38%, transparent), inset -1px 0 0 color-mix(in srgb, var(--glassLight) 24%, transparent), 0 24px 70px var(--glassShade);
+}
+body.cms .cmslightbox > section > header,
+body.cms .cmslightbox > section > footer,
+body.cms .cmslightbox > section > .userTabs {
+    background: color-mix(in srgb, var(--cmsBgColor) 62%, transparent);
+}
+body.cms .cmslightbox > section > main {
+    background: color-mix(in srgb, var(--cmsBgColor) 92%, transparent);
+}
+@supports not (backdrop-filter: blur(1px)) {
+    body.cms .cmslightbox > section { background-color: var(--cmsBgColor); }
+}
+@media (prefers-reduced-transparency: reduce) {
+    body.cms .cmslightbox > section { background: var(--cmsBgColor); -webkit-backdrop-filter: none; backdrop-filter: none; }
+    .cmslightbox { -webkit-backdrop-filter: none; backdrop-filter: none; }
 }
