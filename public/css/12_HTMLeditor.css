@@ -215,6 +215,12 @@ body [contenteditable='true'] :is(img, video, iframe){
     cursor: default !important;
 }
 
+article.cmsContent :is(img, video):is(:hover, .cmsMediaOn){
+    outline: 1px solid rgba(151, 215, 249, .75);
+    outline-offset: -1px;
+    box-shadow: inset 0 0 0 1px rgba(151, 215, 249, .75), inset 0 0 0 100vmax rgba(151, 215, 249, .05);
+}
+
 div.plaintext textarea,
 div.plaintext input
 {

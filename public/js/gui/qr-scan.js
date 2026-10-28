@@ -394,6 +394,15 @@
 		if (event.target.closest && event.target.closest('[data-on_click="loginMethod"], a.authSwitch, a.authMethod')) {
 			document.querySelectorAll('[data-qr-host]').forEach(stop);
 		}
+		var typeCode = event.target.closest && event.target.closest('[data-qr-fields]');
+		if (typeCode) {
+			var typeHost = typeCode.closest('[data-qr-host]');
+			if (typeHost) {
+				stop(typeHost);
+				showFields(typeHost, false);
+			}
+			return;
+		}
 		var openScan = event.target.closest && event.target.closest('[data-qr-start]');
 		if (openScan) {
 			var scope = openScan.closest('.authBody, .remoteLogin') || openScan.parentElement;
@@ -454,6 +463,20 @@
 		}
 		scanBox.hidden = true;
 	}, true);
+
+	document.addEventListener('change', function (event) {
+		var select = event.target && event.target.closest ? event.target.closest('[data-identify-select]') : null;
+		if (!select || !select.form) return;
+		var option = select.options[select.selectedIndex];
+		var mine = !!(option && option.getAttribute('data-self') === '1');
+		var own = select.form.querySelector('[data-identify-self]');
+		var other = select.form.querySelector('[data-identify-other]');
+		if (own) own.hidden = !mine;
+		if (!other) return;
+		other.hidden = !!mine;
+		var name = other.querySelector('[data-identify-name]');
+		if (name && option) name.textContent = (option.textContent || '').trim();
+	});
 
 	window.QrScan = { start: start, stop: stop };
 })();

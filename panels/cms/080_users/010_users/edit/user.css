@@ -356,49 +356,41 @@ body.cms:has(.cmslightbox.userEdit) .userKeyWarn{
     gap: 0.4rem;
 }
 
-.userAccess .cmsBoxSplit{
-    align-items: center;
-}
-
-.userAccess .cmsBoxSplit .field{
-    max-width: none;
+.userAccess .accessRow{
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.75rem 1rem;
+    align-items: start;
     margin-top: 0.85rem;
 }
 
-.userAccess .accessStack{
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0.45rem;
-    min-width: 0;
+.userAccess .accessRow:has(> :nth-child(3)){
+    grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
-.userAccess .accessStack > div{
-    width: 100%;
+.userAccess .accessRow .cmsBoxLead{
+    margin: 0.35rem 0 0;
 }
 
-.userAccess .accessStack > div .cmsBoxLead{
-    margin: 0.35rem 0 0.15rem;
-}
-
-.cms .userAccess .accessStack .button{
-    align-self: stretch;
+.cms .userAccess .accessRow .button{
     width: 100%;
     margin: 0;
     justify-content: flex-start;
+    white-space: normal;
 }
 
-.userAccess .screenCode{
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0.35rem;
-    width: max-content;
-    max-width: 100%;
+.cmslightbox .userEdit input.is-locked{
+    pointer-events: none;
 }
 
-.userAccess .screenCode > h2{
-    margin: 0;
+.userAccess .cmsBoxActions{
+    margin-top: 0.85rem;
+}
+
+@media (max-width: 720px){
+    .userAccess .accessRow{
+        grid-template-columns: minmax(0, 1fr);
+    }
 }
 
 .cms .cmsCodeSlots{

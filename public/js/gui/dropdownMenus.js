@@ -263,6 +263,9 @@ function initDropdownMenus($set) {
 // The arrow on a split button (image editor, language switch).
 document.addEventListener('click', function (event) {
 	var button = event.target.closest && event.target.closest('.splitApplyMenu');
+	if (button && button.disabled) {
+		return;
+	}
 	if (button) {
 		event.preventDefault();
 		event.stopPropagation();

@@ -40,13 +40,13 @@ switch ($this->action) {
 
 	case 'moreSignIns':
 		$this->state->userTab = 'signins';
-		$this->state->signInsAll = true;
+		$this->state->signInsAll = empty($this->state->signInsAll);
 		$this->updateView('user');
 		break;
 
 	case 'showAllDevices':
 		$this->state->userTab = 'access';
-		$this->state->devicesAll = true;
+		$this->state->devicesAll = empty($this->state->devicesAll);
 		$this->updateView('user');
 		break;
 
@@ -54,6 +54,10 @@ switch ($this->action) {
 	case 'updateUserFullname':
 	case 'updateUserEmail':
 		$field = strtolower(substr($this->action, 10));
+		if ($user->type === User::SCREEN && $field === 'email') {
+			$this->updateView('user');
+			break;
+		}
 		$value = (string) \http::values('value');
 		$problem = UserOperator::conflict($this->scope, $user, $field, $value);
 		if ($problem !== null) {
@@ -67,7 +71,9 @@ switch ($this->action) {
 
 	case 'makeSuperuser':
 	case 'revokeSuperuser':
-		if (\Systopic\System\Auth\Session::isSuperuser()) {
+		if ($this->action === 'makeSuperuser' && $user->type === User::SCREEN) {
+			\message::error('A screen cannot be a superuser.')->target('account');
+		} elseif (\Systopic\System\Auth\Session::isSuperuser()) {
 			$this->scope->save(...UserOperator::superuser($user, $this->action === 'makeSuperuser', \Systopic\System\Auth\Session::id()));
 		}
 		$this->updateView('lightbox');
@@ -136,10 +142,16 @@ switch ($this->action) {
 		}
 		$gone[] = $user;
 		$this->scope->remove(...$gone);
+		$this->parent->updateView('main');
 		\http::redirect('../');
 		break;
 
 	case 'resendActivationEmail':
+		if ($user->type === User::SCREEN) {
+			\message::error('A screen has no email address.')->target('account');
+			$this->updateView('lightbox');
+			break;
+		}
 		if ((string) $user->email === '') {
 			$this->accessNote = 'This account has no email address.';
 			\message::error($this->accessNote);
@@ -154,6 +166,10 @@ switch ($this->action) {
 			$this->accessNote = 'The email could not be sent. ' . $e->getMessage();
 		}
 		if ($sent) {
+			\Systopic\System\Auth\LoginLog::mailed(
+				\Systopic\System\Auth\LoginLog::MAILED_PASSWORD,
+				trim((string) ($user->name ?: $user->email)),
+			);
 			$this->accessNote = 'Activation email sent to ' . $user->email . '.';
 			\message::confirm($this->accessNote);
 		} elseif ($this->accessNote === null) {
@@ -168,15 +184,8 @@ switch ($this->action) {
 	// ---------------------------------------- codes and devices (Auth\LoginCodes, Auth\Devices)
 
 	case 'updateUserType':
-		$type = (string) \http::values('value');
-		$this->state->userTab = 'access';
-		if (in_array($type, [User::PERSON, User::SCREEN], TRUE) && $type !== (string) $user->type) {
-			$user->type = $type;
-			if ($type === User::SCREEN) {
-				$user->passwordHash = NULL;   // a screen is paired, never logs in with a password
-			}
-			$this->scope->save($user);
-		}
+		$this->state->userTab = 'general';
+		\message::error('The account type cannot be changed.')->target('account');
 		$this->updateView('lightbox');
 		break;
 
@@ -211,18 +220,22 @@ switch ($this->action) {
 	case 'inviteMail':
 	case 'recoverCode':
 		$purpose = $this->action === 'inviteMail' ? Codes::INVITE : Codes::RECOVER;
-		if ($user->type === User::SCREEN || !LoginCodes::available()) {
+		if (!LoginCodes::available()) {
 			break;
 		}
 		$this->state->userTab = 'access';
-		if ($this->action === 'inviteMail' && (string) $user->email === '') {
-			\message::error('No email address. Create a code instead.');
+		if ($user->type !== User::SCREEN && (string) $user->email === '') {
+			\message::error('Add an email address before creating a sign-in code.');
 			$this->updateView('lightbox');
 			break;
 		}
 		$code = LoginCodes::create($purpose, $user, \Systopic\System\Auth\Session::id());
 		if ($this->action === 'inviteMail') {
 			if (CodeMail::send($user, $purpose, $code)) {
+				\Systopic\System\Auth\LoginLog::mailed(
+					\Systopic\System\Auth\LoginLog::MAILED_INVITATION,
+					trim((string) ($user->name ?: $user->email)),
+				);
 				\message::confirm('Invitation sent to ' . $user->email . '.');
 			} else {
 				\message::error('The email could not be sent. Create a code instead.');

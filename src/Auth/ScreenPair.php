@@ -55,21 +55,23 @@ final class ScreenPair
     public static function begin(string $redirect, string $purpose = Codes::PAIR_SCREEN): ?array
     {
         \http::sessionStartOnce();
+        $kept = $_SESSION[self::SESSION]['redirect'] ?? '';
         unset($_SESSION[self::SESSION]);
         if (!LoginCodes::available()) {
             return null;
         }
         $poll = (string) ($_COOKIE[self::COOKIE] ?? '');
+        $again = $purpose !== Codes::PAIR_SCREEN && is_string($kept) && $kept !== '' ? $kept : $redirect;
         if ($poll !== '') {
             if (self::paired($poll)) {
-                \http::redirect($redirect);
+                self::leave($again, $purpose);
                 return null;
             }
             // The poll next to this load already spent the code. A new one
             // here would throw away a sign-in that is landing right now.
             if (LoginCodes::$error === LoginCodes::SPENT) {
                 if (Session::known()) {
-                    \http::redirect($redirect);
+                    self::leave($again, $purpose);
                 }
                 return null;
             }
@@ -82,8 +84,22 @@ final class ScreenPair
             'code' => $start['code'],
             'expires' => $expires,
             'redirect' => $redirect,
+            'follow' => $purpose !== Codes::PAIR_SCREEN,
         ];
         return $_SESSION[self::SESSION];
+    }
+
+    /** A person follows the remembered page. A screen stays on the address it was given. */
+    private static function leave(string $redirect, string $purpose): void
+    {
+        $go = $redirect;
+        if ($purpose !== Codes::PAIR_SCREEN) {
+            $back = Session::takeReturn();
+            if (is_string($back) && $back !== '') {
+                $go = $back;
+            }
+        }
+        \http::redirect($go);
     }
 
     private static function answerPoll(string $redirect): never
@@ -91,8 +107,9 @@ final class ScreenPair
         $poll = (string) ($_COOKIE[self::COOKIE] ?? '');
         $stored = self::current();
         $go = is_array($stored) && ($stored['redirect'] ?? '') !== '' ? (string) $stored['redirect'] : $redirect;
+        $follow = !is_array($stored) || ($stored['follow'] ?? true);
         $paired = self::paired($poll);
-        if ($paired) {
+        if ($paired && $follow) {
             $back = Session::takeReturn();
             if (is_string($back) && $back !== '') {
                 $go = $back;
@@ -119,7 +136,7 @@ final class ScreenPair
             return LoginCodes::$error === LoginCodes::SPENT && Session::known();
         }
         $user = UserLookup::byId(\Systopic\Db\Scope::default(), (int) $code->relationId('user'));
-        if ($user === null) {
+        if ($user === null || !$user->isActive || (int) $user->id <= 1) {
             return false;
         }
         $screen = $code->purpose === Codes::PAIR_SCREEN;

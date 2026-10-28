@@ -50,6 +50,17 @@
 			});
 		};
 
+		users.filterUsers = event => {
+			var query = String(event.element.value || '').trim().toLowerCase();
+			var table = event.element.closest('.userList');
+			if (!table) {
+				return;
+			}
+			table.querySelectorAll('tbody tr').forEach(row => {
+				row.hidden = query !== '' && !row.textContent.toLowerCase().includes(query);
+			});
+		};
+
 		users.filterRoles = event => {
 			var query = String(event.element.value || '').trim().toLowerCase();
 			var table = event.element.closest('.roleList');

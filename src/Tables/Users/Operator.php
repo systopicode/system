@@ -116,8 +116,11 @@ final class Operator
         return $rows !== [];
     }
 
+    /** Days a password link stays valid. The Access tab states this as hours. */
+    public const ACTIVATION_DAYS = 1;
+
     /** A fresh activation key, valid for `$days` days. */
-    public static function newActivationKey(Model $user, int $days = 1): Model
+    public static function newActivationKey(Model $user, int $days = self::ACTIVATION_DAYS): Model
     {
         $user->activationKey = bin2hex(random_bytes(16));
         $user->activationKeyExpire = new DateTimeImmutable("+$days day");

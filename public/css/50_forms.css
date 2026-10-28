@@ -207,6 +207,14 @@
     cursor: not-allowed;
 }
 
+/* Held readonly only until the first key or click, so a password manager
+   does not fill them. They are editable and should look it. */
+.cms input[readonly][data-1p-ignore],
+.cms textarea[readonly][data-1p-ignore]{
+    opacity: 1;
+    cursor: text;
+}
+
 .cms textarea{
     resize: vertical;
     min-height: 200px;
@@ -346,6 +354,35 @@ div.main select{
 .cms button:enabled:not(.disabled):hover,
 .cms .button:not([disabled]):not(.disabled):hover{
     background: color-mix(in srgb, var(--cmsButtonBg) 88%, var(--cmsMainColor));
+}
+
+/* Every tab list. A tab is a button or a link in the markup, and the
+   button rules above would otherwise paint it as one. */
+body.cms :is(button, a)[role="tab"]{
+    margin: 0 0 -1px;
+    padding: 0.5rem 0;
+    border: 0;
+    border-bottom: 2px solid transparent;
+    border-radius: 0;
+    background: none;
+    box-shadow: none;
+    color: var(--cmsMuted);
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: visible;
+}
+
+body.cms button[role="tab"]:enabled:not(.disabled):is(:hover, :focus-visible),
+body.cms a[role="tab"]:is(:hover, :focus-visible){
+    background: none;
+    color: var(--cmsTextColor);
+}
+
+body.cms :is(button, a)[role="tab"]:is(.selected, [aria-selected="true"]){
+    background: none;
+    border-bottom-color: var(--cmsHighlightColor);
+    color: var(--cmsTextColor);
+    font-weight: 600;
 }
 
 /* Keyboard focus uses the same cue for primary and secondary actions. */

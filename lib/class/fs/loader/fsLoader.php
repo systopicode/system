@@ -27,28 +27,28 @@ class fsLoader {
 	/**
 	 * The same stylesheets, but declared into a cascade layer.
 	 *
-	 * A <link> cannot name a layer - only @import can - so this emits one
-	 * <style> with an @import per file instead of a list of <link>s. The
-	 * imports sit side by side in that one sheet, so the browser still
-	 * fetches them in parallel, and url() inside each file still resolves
-	 * against that file rather than against the document.
+	 * A link names its layer with the layer attribute. An @import inside a
+	 * style tag is skipped when Chrome loads a fresh document (sign-in,
+	 * signed out), so the page kept the root colour and none of the card.
+	 * url() inside each file still resolves against that file.
 	 *
-	 * Why bother: a layer decides who wins WITHOUT touching specificity.
-	 * Everything the cms ui brings goes into the weaker layer, so the site
-	 * css can style the page preview without out-specifying `.cms .layout`
-	 * and without a single !important.
+	 * A layer decides who wins WITHOUT touching specificity. Everything the
+	 * cms ui brings goes into the weaker layer, so the site css can style
+	 * the page preview without out-specifying `.cms .layout` and without a
+	 * single !important.
 	 *
 	 * Layer order is declared once, by the caller, before any of this:
-	 *   <style>@layer cms, preview;</style>
+	 *   <style>@layer cms, project, preview;</style>
 	 */
 	static function includeCSSFilesInLayer($dirFilesOrFile, string $layer, $recursive = FALSE): string
 	{
-		$imports = '';
+		$html = '';
+		$layerName = htmlspecialchars($layer, ENT_QUOTES);
 		foreach (self::cssFilesOf($dirFilesOrFile, $recursive) as $file) {
-			$imports .= "@import url('" . \Systopic\System\Http\Assets::href($file->href, $file->filepath)
-				. "') layer($layer);\n";
+			$href = htmlspecialchars(\Systopic\System\Http\Assets::href($file->href, $file->filepath), ENT_QUOTES);
+			$html .= '<link rel="stylesheet" href="' . $href . '" layer="' . $layerName . '">' . "\n";
 		}
-		return $imports === '' ? '' : "<style>\n$imports</style>\n";
+		return $html;
 	}
 
 	/**
@@ -83,6 +83,12 @@ class fsLoader {
 		$document = '';
 		foreach (self::cssFilesOf($dirFilesOrFile, $recursive) as $file) {
 			if (in_array($file->name, $skip, TRUE)) {
+				// cssFilesOf already counts the file as included. A later plain
+				// link (system_overrides.css) would then be dropped.
+				$kept = array_search($file, self::$filesIncluded, true);
+				if ($kept !== false) {
+					unset(self::$filesIncluded[$kept]);
+				}
 				continue;
 			}
 			$content = (string) $file->contents;

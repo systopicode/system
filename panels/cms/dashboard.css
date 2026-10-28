@@ -643,12 +643,22 @@ body.cms .dashboard .dashTabs button:hover{
 	object-fit: cover;
 }
 
-.dashThumbs i{
+.dashThumbs i.thumbType{
 	position: absolute;
-	right: 0.35rem;
-	bottom: 0.35rem;
-	color: #fff;
-	text-shadow: 0 1px 3px rgba(0,0,0,.5);
+	right: 0.2rem;
+	bottom: 0.2rem;
+	z-index: 1;
+	width: 1.35rem;
+	height: 1.35rem;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	border-radius: 0.3rem;
+	background: var(--cmsCanvas);
+	color: var(--cmsMainColor);
+	font-size: 0.85rem;
+	pointer-events: none;
+	box-shadow: 0 0 0 1px color-mix(in srgb, var(--cmsMainColor) 12%, transparent);
 }
 
 /* the picture does not load (gui/ui.js) */

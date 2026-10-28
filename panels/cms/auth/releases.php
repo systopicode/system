@@ -8,6 +8,59 @@
  * @return array<string, array{date: string, new?: list<string>, fixed?: list<string>}>
  */
 return [
+    '0.5.5' => [
+        'date' => '2026-10-28',
+        'new' => [
+            'Users are persons or screens. A screen has a name, a description and a robot portrait in the highlight colour.',
+            'Signing a device in as another person, or as a screen, takes that permission. Signing in as a superuser still takes a superuser.',
+            'Logo, signet and both word marks take an SVG or a PNG. The favicon does too. The share image is a JPG.',
+        ],
+        'fixed' => [
+            'Back and forward keep only the open module\'s stylesheets. The page editor\'s dark ground no longer stays on other modules.',
+            'The word mark in the wide menu keeps space at the sides and sits in the middle of the bar.',
+            'An invitation or a password link says when it was last sent, and by whom.',
+        ],
+    ],
+    '0.5.4' => [
+        'date' => '2026-10-28',
+        'new' => [
+            'In the page editor, pointing at a picture or video shows its format. A finger does the same.',
+            'A click on a picture or video built into the page opens its editor. A film there does not play.',
+            'A plain text field shows its block, such as Headline H1, unless it has its own label. The page title has no format buttons.',
+            'Edit on a picture uses the pen.',
+            'An audio file can be uploaded and played in its editor.',
+            'Tags can be set on a file while it is uploaded.',
+            'Recent media carries the same type badge as the library. A click opens the editor.',
+            'Page CSS lives in pages_overrides.css and is parsed into the page preview. system_overrides.css loads in the CMS only, not on the public site.',
+            'A tag can be removed from its editor.',
+        ],
+        'fixed' => [
+            'A picture in the page gets the same frame as one in a text field. The frame sits on the picture, so a crop does not hide it.',
+            'Apply in the media editor stays off until the picture was changed. Crop and reset do not need it.',
+            'The sidebar tab no longer sits on the page scrollbar.',
+            'Closing the media editor keeps the page where it was and shows the edited pictures.',
+            'Show all on passkeys, devices and sign-ins can be closed again.',
+            'Add user opens on General.',
+            'Deleting a user, a role or a permission closes the lightbox. Joining tags does too.',
+            'Restore leaves settings and the environment off. Only a superuser can turn them on.',
+            'Theme colour swatches keep an even gap.',
+            'Database status keeps its filters with the page. The audit keeps Refresh with the page.',
+            'Opening a mail no longer reports a script error. A backup no longer does either.',
+            'Name and email fields no longer show a blocked cursor.',
+            'A file that is still opening no longer asks you to drop one.',
+            'The language control shows only the flag when the header is narrow.',
+            'Page settings in the sidebar open the template settings.',
+            'Site defaults name what they are. Edit defaults uses the pen.',
+            'Search and AI names that block. The page lists there are links.',
+            'Sidebar actions match the other buttons.',
+            'Reordering a page in the tree puts the line on the row.',
+            'Signed out keeps its layout.',
+            'Continuing without a passkey no longer shows the password form.',
+            'On a phone or tablet, a sign-in code opens the camera. A desktop opens the code.',
+            'A wrong password keeps what was typed.',
+            'Signing in shows the spinner on Sign in.',
+        ],
+    ],
     '0.5.3' => [
         'date' => '2026-10-28',
         'new' => [

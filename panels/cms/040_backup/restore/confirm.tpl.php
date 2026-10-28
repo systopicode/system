@@ -5,6 +5,7 @@ $contents = $this->parent->contentsOfBackup($name);
 $state = $this->parent->state;
 $chosen = [\Systopic\System\Panels\Root\Cms\Backup\Panel::class, 'chosen'];
 $e = static fn($v): string => htmlspecialchars((string) $v, ENT_QUOTES);
+$superuser = \Systopic\System\Auth\Session::isSuperuser();
 $showList = false;
 if (is_array($contents)) {
 	$showList = !empty($contents['database']) || !empty($contents['media']) || !empty($contents['environment']);
@@ -45,7 +46,7 @@ if (is_array($contents)) {
 						</li>
 					<?php } ?>
 					<?php foreach ($this::SETTING_LABELS as $which => $label) {
-						if (empty($contents[$which . 'Settings'])) {
+						if (!$superuser || empty($contents[$which . 'Settings'])) {
 							continue;
 						}
 						$key = $this::settingKey($which, true);
@@ -58,7 +59,7 @@ if (is_array($contents)) {
 							</label>
 						</li>
 					<?php } ?>
-					<?php if (!empty($contents['environment'])) { ?>
+					<?php if ($superuser && !empty($contents['environment'])) { ?>
 						<li>
 							<label class="checkbox">
 								<span>Environment</span>
@@ -68,6 +69,9 @@ if (is_array($contents)) {
 						</li>
 					<?php } ?>
 				</ul>
+				<?php if ($superuser && (!empty($contents['environment']) || !empty($contents['pageSettings']) || !empty($contents['mediaSettings']))) { ?>
+					<p class="tagsHint">Settings and the environment stay off. They replace sign-in, mail and the theme.</p>
+				<?php } ?>
 			<?php } ?>
 		</form>
 	<?php } ?>

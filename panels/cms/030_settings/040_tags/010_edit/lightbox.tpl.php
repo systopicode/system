@@ -2,7 +2,10 @@
 /** @var \Systopic\System\Panels\Root\Cms\Settings\Tags\Edit\Panel $this */
 
 $tag = $this->tag;
-$pages = $tag ? $this->assignments() : [];
+if (!$tag) {
+	return;
+}
+$pages = $this->assignments();
 $this->loadJS();
 ?>
 <div class="cmslightbox cms" data-doc=box>
@@ -14,6 +17,11 @@ $this->loadJS();
 					<i class="fa-regular fa-pen"></i>
 				</button>
 				<ul class="barmenu">
+					<li>
+						<button type="button" data-on_click="userConfirm" data-action="removeTag" data-tag_id="<?= (int) $tag->id ?>" data-confirm="Remove this tag? Pages and files lose it." aria-label="Remove">
+							<i class="fa-regular fa-trash"></i>
+						</button>
+					</li>
 					<li><a class="ajax" href="../" aria-label="Close"><i class="fa-regular fa-xmark"></i></a></li>
 				</ul>
 			</header>

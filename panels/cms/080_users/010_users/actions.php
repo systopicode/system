@@ -9,8 +9,43 @@ use Systopic\System\Tables\UsersAtRoles\Model as UserAtRole;
 switch ($this->action) {
 	case 'addUser':
 		$rows = UserOperator::create(\Systopic\System\Auth\Session::id(), $this->admin->roleNamed('user'));
+		$screen = ($this->accountKind ?? '') === \Systopic\System\Tables\Users\Model::SCREEN;
+		if ($screen) {
+			$rows[0]->type = \Systopic\System\Tables\Users\Model::SCREEN;
+			$rows[0]->isActive = true;
+		}
 		$this->scope->save(...$rows);
 		$this->scope->save(UserOperator::named($rows[0]));
+		if ($screen) {
+			$rows[0]->name = '##New Screen #' . $rows[0]->id;
+			$this->scope->save($rows[0]);
+		}
+		$editState = $this->child('edit')?->state;
+		if ($editState === null) {
+			$node = \Systopic\System\Auth\Session::state();
+			foreach ($this->path as $seg) {
+				if (!isset($node->children)) {
+					$node->children = new \stdClass();
+				}
+				if (!isset($node->children->$seg)) {
+					$node->children->$seg = new \stdClass();
+				}
+				$node = $node->children->$seg;
+			}
+			if (!isset($node->children)) {
+				$node->children = new \stdClass();
+			}
+			if (!isset($node->children->edit)) {
+				$node->children->edit = new \stdClass();
+			}
+			if (!isset($node->children->edit->data)) {
+				$node->children->edit->data = new \stdClass();
+			}
+			$editState = $node->children->edit->data;
+		}
+		$editState->userTab = 'general';
+		$editState->signInsAll = false;
+		$editState->devicesAll = false;
 		\http::redirect("edit/?user_id={$rows[0]->id}");
 		break;
 
@@ -61,6 +96,10 @@ switch ($this->action) {
 
 	case 'makeSuperuser':
 	case 'revokeSuperuser':
+		if ($this->action === 'makeSuperuser' && $this->user?->type === \Systopic\System\Tables\Users\Model::SCREEN) {
+			\message::error('A screen cannot be a superuser.');
+			break;
+		}
 		if (\Systopic\System\Auth\Session::isSuperuser() && $this->user) {
 			$this->scope->save(...UserOperator::superuser($this->user, $this->action === 'makeSuperuser', \Systopic\System\Auth\Session::id()));
 		}

@@ -40,9 +40,13 @@ function initContenteditableContextMenus() {
 	};
 
 	// In the editor a film stays on its still. Playback belongs on the website.
+	// The same for a film built into the page: a player would take the click.
 	var editorVideo = function (node) {
 		var video = node && node.closest && node.closest('video');
-		return video && wysiwygOf(video) ? video : null;
+		if (!video) {
+			return null;
+		}
+		return wysiwygOf(video) || video.closest('article.cmsContent') ? video : null;
 	};
 	var holdVideo = function (video) {
 		if (!video) {
@@ -70,9 +74,17 @@ function initContenteditableContextMenus() {
 			editor.setAttribute('inputmode', 'none');
 		}
 	}, true);
-	// a pressed image would be selected, tinted and offered as text
+	// a pressed image would be selected, tinted and offered as text.
+	// one built into the page would be dragged instead of opening the bar.
 	document.addEventListener('mousedown', function (e) {
-		e.button === 0 && e.target.closest && e.target.closest('img, video, iframe') && wysiwygOf(e.target) && e.preventDefault();
+		if (e.button !== 0 || editorPointer === 'touch' || !e.target.closest) {
+			return;
+		}
+		var media = e.target.closest('img, video, iframe');
+		var fixed = media && fixedMediaOf(media);
+		if (media && (wysiwygOf(media) || (fixed && fixedMediaNodeId(fixed)))) {
+			e.preventDefault();
+		}
 	}, true);
 	document.addEventListener('focusout', function (e) {
 		var editor = wysiwygOf(e.target);
@@ -106,6 +118,15 @@ function initContenteditableContextMenus() {
 		}
 		// a link in a field is text to edit, never followed
 		wysiwygOf(e.target) && e.target.closest('a') && e.preventDefault();
+		var fixed = fixedMediaOf(e.target);
+		if (fixed && fixedMediaNodeId(fixed)) {
+			e.preventDefault();
+			e.stopPropagation();
+			if (editorPointer === 'touch') {
+				openFixed(fixed, pointOf(e));
+			}
+			return;
+		}
 		var editor = editorPointer === 'touch' && wysiwygOf(e.target);
 		if (!editor) {
 			return;
@@ -135,7 +156,17 @@ function initContenteditableContextMenus() {
 	});
 	// mouse: a click places the caret, a drag or double click selects - both show the bar
 	document.addEventListener('mouseup', function (e) {
-		if (e.button !== 0 || editorPointer === 'touch' || !downInEditor) {
+		if (e.button !== 0 || editorPointer === 'touch') {
+			return;
+		}
+		var fixed = fixedMediaOf(e.target);
+		if (fixed) {
+			var fixedPoint = pointOf(e);
+			return setTimeout(function () {
+				openFixed(fixed, fixedPoint);
+			});
+		}
+		if (!downInEditor) {
 			return;
 		}
 		var media = e.target.closest('img, video, iframe');
@@ -163,8 +194,20 @@ function initContenteditableContextMenus() {
 		bar && !bar.contains(e.target) && closeAllMenus();
 	}, true);
 
+	var openFixed = function (el, rect) {
+		if (!fixedMediaNodeId(el)) {
+			return;
+		}
+		$(el).trigger($.Event('contextmenu', {target: el, anchorRect: rect, pointed: true}));
+	};
 	editorBubble = show;
 	$("body").on("contextmenu", function (e) {
+		var fixed = fixedMediaOf(e.target);
+		if (fixed) {
+			e.preventDefault();
+			fixedMediaNodeId(fixed) && HTMLeditorRightClick(fixed.nodeName === 'VIDEO' ? 'fixedVideo' : 'fixedImage', e, $(fixed));
+			return;
+		}
 		var editor = $(e.target).closest('[contenteditable=true]')[0];
 		if (!editor) {
 			return;
@@ -188,6 +231,20 @@ var editorPointer = 'mouse';
 var wysiwygOf = function (node) {
 	var el = node && (node.nodeType === 1 ? node : node.parentElement);
 	return el && el.closest('.editor[contenteditable=true]');
+};
+/**
+ * A picture or film drawn by the template, inside the page preview.
+ * An external film is a poster with a cover over it: the click lands on the
+ * cover, the picture underneath is the one to edit.
+ */
+var fixedMediaOf = function (node) {
+	var el = node && node.closest && node.closest('img, video');
+	if (el && !wysiwygOf(el) && el.closest('article.cmsContent')) {
+		return el;
+	}
+	var box = node && node.closest && node.closest('article.cmsContent .extVideo');
+	var poster = box && box.querySelector('img, video');
+	return poster && !wysiwygOf(poster) ? poster : null;
 };
 /** The image or video a range holds alone - a click on an image selects it. */
 var selectedMedia = function (range) {
@@ -364,8 +421,73 @@ var contextMenuWW = function (params, event) {
 	});
 };
 
+// The format of a picture or film in the page preview. One chip, no button.
+function initMediaFormatChip() {
+	var chip = document.createElement('div');
+	chip.className = 'cmsMediaFormat';
+	chip.hidden = true;
+	document.body.appendChild(chip);
+	var current = null;
+
+	var place = function (el) {
+		var rect = el.getBoundingClientRect();
+		if (rect.width < 2 || rect.height < 2) {
+			chip.hidden = true;
+			return;
+		}
+		chip.textContent = mediaFormatLabel(el);
+		chip.hidden = false;
+		chip.style.left = Math.max(4, rect.right - chip.offsetWidth - 4) + 'px';
+		chip.style.top = Math.max(4, rect.top + 4) + 'px';
+	};
+	var show = function (el) {
+		if (!el || !el.isConnected) return;
+		if (current && current !== el) current.classList.remove('cmsMediaOn');
+		current = el;
+		el.classList.add('cmsMediaOn');
+		place(el);
+	};
+	var hide = function () {
+		if (current) current.classList.remove('cmsMediaOn');
+		current = null;
+		chip.hidden = true;
+	};
+	window.cmsMediaFormatShow = function (el) {
+		show(el);
+	};
+	var mediaOf = function (node) {
+		var el = node && node.closest && node.closest('article.cmsContent img, article.cmsContent video');
+		return el || null;
+	};
+	document.addEventListener('pointerover', function (e) {
+		if (e.pointerType && e.pointerType !== 'mouse') return;
+		var el = mediaOf(e.target);
+		if (!el) return;
+		show(el);
+	}, true);
+	document.addEventListener('pointerout', function (e) {
+		if (e.pointerType && e.pointerType !== 'mouse') return;
+		var el = mediaOf(e.target);
+		if (!el || el !== current) return;
+		var to = e.relatedTarget;
+		if (to && el.contains(to)) return;
+		hide();
+	}, true);
+	// A finger has no hover. The frame stays until the next tap, so the format can be read.
+	document.addEventListener('pointerdown', function (e) {
+		if (!e.pointerType || e.pointerType === 'mouse') return;
+		var el = mediaOf(e.target);
+		el ? show(el) : hide();
+	}, true);
+	document.addEventListener('scroll', function () {
+		if (current && current.isConnected) place(current);
+		else chip.hidden = true;
+	}, true);
+}
+
 $(function () {
 	initContenteditableContextMenus();
+	initMediaFormatChip();
 	$('body').on('click', function (e) {
 		if (!$(e.target).closest('body.cms div.mmlContent ul li').length) {
 			$('body.cms div.mmlContent ul li').removeClass('selected');

@@ -73,7 +73,7 @@ $codeChars = str_split(substr(strtoupper((string) preg_replace('/[^0-9A-Z]/', ''
         <div class="authSuccess">
             <span class="authTick" aria-hidden="true"><i class="fa-regular fa-check"></i></span>
             <h1>Successfully signed in</h1>
-            <p>Welcome back!</p>
+            <p class="authLead">Welcome back!</p>
             <?= $authMessages ?>
             <div class="authProgress" aria-hidden="true"><span></span></div>
             <p class="authWait">Redirecting in 2 seconds …</p>
@@ -89,6 +89,7 @@ $codeChars = str_split(substr(strtoupper((string) preg_replace('/[^0-9A-Z]/', ''
     <?php } elseif ($authMethod === 'device' && $authCodes) { ?>
         <div class="authBody">
             <h1><?= $e($authPairTitle ?? 'Remote login') ?></h1>
+            <p class="authLead">&nbsp;</p>
             <?= $authMessages ?>
             <?php if ($qr !== '') { ?>
                 <div class="authQrWrap" data-screen-pairing data-code-until="<?= (int) ($authPair['expires'] ?? 0) ?>">
@@ -106,6 +107,7 @@ $codeChars = str_split(substr(strtoupper((string) preg_replace('/[^0-9A-Z]/', ''
     <?php } elseif ($authMethod === 'code' && $authCodes) { ?>
         <div class="authBody">
             <h1>Sign-in code</h1>
+            <p class="authLead">&nbsp;</p>
             <?= $authMessages ?>
             <div class="qrScan" data-qr-host="login" data-profile="<?= $e($authProfile) ?>" hidden>
                 <div class="qrScanStage">
@@ -114,6 +116,7 @@ $codeChars = str_split(substr(strtoupper((string) preg_replace('/[^0-9A-Z]/', ''
                     <button type="button" class="qrScanTorch" data-qr-torch hidden aria-label="Light"><i class="fa-regular fa-bolt"></i></button>
                 </div>
                 <p class="qrScanHint" data-qr-hint>Hold the QR code steady and well lit in the frame.</p>
+                <button type="button" class="authSkip" data-qr-fields>Type the code</button>
                 <div class="cms message qrScanMsg" data-qr-msg hidden></div>
                 <div class="qrScanDim" data-qr-dim hidden>
                     <strong data-qr-dim-title>Scanning timed out</strong>
@@ -137,9 +140,23 @@ $codeChars = str_split(substr(strtoupper((string) preg_replace('/[^0-9A-Z]/', ''
                 <button class="button submit" type="submit"><i class="fa-regular fa-right-to-bracket"></i> Sign in</button>
                 <button type="button" class="button authScan" data-qr-start><i class="fa-regular fa-camera"></i> Scan QR code</button>
             </form>
+            <script>
+                (function () {
+                    var desktop = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+                    if (desktop) return;
+                    var filled = document.querySelector('[data-code-form] input[name="code"]');
+                    if (filled && String(filled.value).replace(/[^0-9A-Za-z]/g, '').length >= 8) return;
+                    var host = document.querySelector('[data-qr-host="login"]');
+                    if (!host || host.getAttribute('data-qr-boot')) return;
+                    host.setAttribute('data-qr-boot', '1');
+                    var button = host.parentElement && host.parentElement.querySelector('[data-qr-start]');
+                    if (button) button.click();
+                })();
+            </script>
         </div>
     <?php } elseif ($authMethod === 'password') { ?>
         <h1>Sign in</h1>
+        <p class="authLead">&nbsp;</p>
         <?= $authMessages ?>
         <?= $passkeyBox ?>
         <form class="appLoginForm" method="post" action="doLogin" onsubmit='this.classList.add("loading")'>
@@ -151,7 +168,7 @@ $codeChars = str_split(substr(strtoupper((string) preg_replace('/[^0-9A-Z]/', ''
                 <span class="bar"></span>
             </div>
             <div class="inputGroup"><i class="fa-regular fa-lock"></i>
-                <input required spellcheck="false" placeholder="Password" type="password" name="password" autocomplete="current-password" autocapitalize="off">
+                <input required spellcheck="false" placeholder="Password" type="password" name="password" autocomplete="current-password" autocapitalize="off" value="<?= $e($authPassword ?? '') ?>">
                 <button type="button" class="authReveal" aria-label="Show password" onclick="var i=this.parentElement.querySelector('input');var show=i.type==='password';i.type=show?'text':'password';this.setAttribute('aria-label',show?'Hide password':'Show password');this.querySelector('i').className=show?'fa-regular fa-eye-slash':'fa-regular fa-eye';"><i class="fa-regular fa-eye"></i></button>
                 <span class="bar"></span>
             </div>
@@ -165,6 +182,7 @@ $codeChars = str_split(substr(strtoupper((string) preg_replace('/[^0-9A-Z]/', ''
         <?php } ?>
     <?php } else { ?>
         <h1>Sign in</h1>
+        <p class="authLead">&nbsp;</p>
         <?= $authMessages ?>
         <div class="authMethods">
             <?php if ($authPasskey) { ?>
@@ -199,7 +217,7 @@ $codeChars = str_split(substr(strtoupper((string) preg_replace('/[^0-9A-Z]/', ''
     <div class="authSuccess" data-auth-success hidden>
         <span class="authTick" aria-hidden="true"><i class="fa-regular fa-check"></i></span>
         <h1>Successfully signed in</h1>
-        <p>Welcome back!</p>
+        <p class="authLead">Welcome back!</p>
         <div class="authProgress" aria-hidden="true"><span></span></div>
         <p class="authWait">Redirecting in 2 seconds …</p>
     </div>

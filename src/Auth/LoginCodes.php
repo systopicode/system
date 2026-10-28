@@ -252,6 +252,10 @@ final class LoginCodes
         if ($screen->type !== User::SCREEN) {
             throw new \InvalidArgumentException('login code: only a screen account can be paired with a screen code');
         }
+        if (!$screen->isActive || (int) $screen->id <= 1) {
+            self::$error = self::INVALID;
+            return false;
+        }
         $code = self::find($input, [Operator::PAIR_SCREEN]);
         if ($code === null || $code->approvedAt !== null) {
             self::$error = $code === null ? self::$error : self::INVALID;
@@ -262,11 +266,24 @@ final class LoginCodes
         return true;
     }
 
-    /** The signed-in person allows a remote login. The other device becomes them, not anyone else. */
+    /** The signed-in person allows a remote login as themselves. */
     public static function approveSelf(string $input, User $me): bool
     {
+        return self::approvePerson($input, $me, $me);
+    }
+
+    /**
+     * The signed-in person `$by` allows the waiting device to become `$account`.
+     * `$account` is an active person. The approver's own session stays as it is.
+     */
+    public static function approvePerson(string $input, User $account, User $by): bool
+    {
         self::$error = '';
-        if ((int) $me->id <= 1 || $me->type === User::SCREEN) {
+        if ((int) $account->id <= 1 || !$account->isActive || ($account->type !== null && $account->type !== '' && $account->type !== User::PERSON)) {
+            self::$error = self::INVALID;
+            return false;
+        }
+        if ((int) $by->id <= 1 || $by->type === User::SCREEN || !$by->isActive) {
             self::$error = self::INVALID;
             return false;
         }
@@ -275,9 +292,8 @@ final class LoginCodes
             self::$error = $code === null ? self::$error : self::INVALID;
             return false;
         }
-        Scope::default()->save(Operator::approved($code, $me, (int) $me->id, new DateTimeImmutable()));
-        $name = self::label($me);
-        LoginLog::write($name, 'approved sign-in as ' . $name, LoginLog::REMOTE);
+        Scope::default()->save(Operator::approved($code, $account, (int) $by->id, new DateTimeImmutable()));
+        LoginLog::write(self::label($by), 'approved sign-in as ' . self::label($account), LoginLog::REMOTE);
         return true;
     }
 

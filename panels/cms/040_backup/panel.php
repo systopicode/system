@@ -145,10 +145,14 @@ class Panel extends CmsPanel
 			return;
 		}
 		$patch = new \stdClass();
+		$superuser = \Systopic\System\Auth\Session::isSuperuser();
 		foreach ([
 			'backupNotes', 'backupFiles', 'backupPageSettings', 'backupMediaSettings', 'backupEnvironment',
 			'restoreDatabase', 'restoreMedia', 'restorePageSettings', 'restoreMediaSettings', 'restoreEnvironment',
 		] as $key) {
+			if (!$superuser && in_array($key, ['restorePageSettings', 'restoreMediaSettings', 'restoreEnvironment'], true)) {
+				continue;
+			}
 			if (property_exists($form, $key)) {
 				$patch->$key = $form->$key;
 			}
@@ -275,9 +279,11 @@ class Panel extends CmsPanel
 		return match ((string) ($task['action'] ?? '')) {
 			'extractMysqldump' => self::chosen($this->state, 'restoreDatabase', true),
 			'extractMediaDir' => self::chosen($this->state, 'restoreMedia', false),
-			'extractSettings' => self::chosen($this->state, 'restorePageSettings', false)
-				|| self::chosen($this->state, 'restoreMediaSettings', false),
-			'extractEnvironment' => self::chosen($this->state, 'restoreEnvironment', false),
+			'extractSettings' => \Systopic\System\Auth\Session::isSuperuser()
+				&& (self::chosen($this->state, 'restorePageSettings', false)
+					|| self::chosen($this->state, 'restoreMediaSettings', false)),
+			'extractEnvironment' => \Systopic\System\Auth\Session::isSuperuser()
+				&& self::chosen($this->state, 'restoreEnvironment', false),
 			default => true,
 		};
 	}

@@ -74,6 +74,7 @@ foreach (['exec' => 'video frames', 'shell_exec' => 'finding programs', 'proc_op
 	$on = function_exists($function) && !in_array($function, $disabled, true);
 	$cards['Functions'][] = $row($on ? 'ok' : 'bad', "$function() " . ($on ? 'is available' : 'is disabled') . " ($why)");
 }
+$cards['Functions'][] = $row($disabled === [] ? 'ok' : 'warn', $disabled === [] ? 'disable_functions is empty.' : 'disable_functions: ' . implode(', ', $disabled));
 
 $which = static function (string $name) use ($disabled): ?string {
 	foreach ([dirname(__DIR__) . '/var/bin', getcwd() . '/var/bin', dirname(getcwd()) . '/var/bin'] as $dir) {
@@ -98,9 +99,23 @@ foreach (['ffmpeg' => 'video frames', 'ffprobe' => 'video info', 'identify' => '
 }
 
 $e = static fn(string $value): string => htmlspecialchars($value, ENT_QUOTES);
-echo '<!DOCTYPE html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>fluxo cms server check</title>';
-echo '<style>body{margin:0;background:#eef1f2;color:#1c2428;font:15px/1.45 system-ui,sans-serif}main{max-width:52rem;margin:0 auto;padding:1.5rem}h1{margin:0 0 .3rem;font-size:1.4rem}p{margin:0 0 1rem;color:#5c6b72}.grid{columns:2;column-gap:1rem}@media(max-width:40rem){.grid{columns:1}}section{break-inside:avoid;display:inline-block;width:100%;margin:0 0 1rem;background:#fff;border:1px solid #d5dee2;border-radius:10px}h2{margin:0;padding:.7rem 1rem;border-bottom:1px solid #e4eaec;font-size:1rem}ul{list-style:none;margin:0;padding:.8rem 1rem}li{margin:0 0 .4rem;padding:.4rem .7rem;border-radius:6px}li.ok{background:#e5f2d8}li.warn{background:#fff1cc}li.bad{background:#fde2e0}</style>';
-echo '<main><h1>Server check</h1><p>Nothing was installed. This only asks whether fluxo cms can run here. Database, mail and folders are checked after the project is in place. Delete this file when you are done.</p><div class="grid">';
+echo '<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>fluxo cms server check</title>';
+echo '<style>
+html{font-size:17.5px}
+body{margin:0;background:#f0f3f4;color:#161c1f;font:1rem/1.45 system-ui,sans-serif}
+main{max-width:52rem;margin:0 auto;padding:1.5rem}
+h1{margin:0 0 .35rem;font-size:1.6rem;font-weight:650;letter-spacing:-.02em}
+.lead{margin:0 0 1.25rem;color:#5c6b72}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(18rem,1fr));gap:1rem}
+section{background:#fff;border:1px solid #d7dee2;border-radius:.75rem;overflow:hidden}
+h2{margin:0;padding:.8rem 1rem;border-bottom:1px solid #e6ebed;font-size:1rem}
+ul{list-style:none;margin:0;padding:.8rem 1rem;display:flex;flex-direction:column;gap:.4rem}
+li{margin:0;padding:.4rem .7rem;border-radius:.45rem;font-size:.875rem;line-height:1.4}
+li.ok{background:color-mix(in srgb,#7cb249 18%,#fff)}
+li.warn{background:color-mix(in srgb,#fcb60c 32%,#fff)}
+li.bad{background:color-mix(in srgb,#c44536 14%,#fff)}
+</style></head><body>';
+echo '<main><h1>Server check</h1><p class="lead">Nothing was installed. This only asks whether fluxo cms can run here. Database, mail and folders are checked after the project is in place. Delete this file when you are done.</p><div class="grid">';
 foreach ($cards as $title => $rows) {
 	echo '<section><h2>' . $e($title) . '</h2><ul>';
 	foreach ($rows as $item) {
@@ -108,4 +123,4 @@ foreach ($cards as $title => $rows) {
 	}
 	echo '</ul></section>';
 }
-echo '</div></main>';
+echo '</div></main></body></html>';

@@ -37,9 +37,11 @@ class Panel extends BackupPanel
 			'restoreName' => $name,
 			'restoreDatabase' => !empty($contents['database']),
 			'restoreMedia' => !empty($contents['media']),
-			'restorePageSettings' => !empty($contents['pageSettings']),
-			'restoreMediaSettings' => !empty($contents['mediaSettings']),
-			'restoreEnvironment' => !empty($contents['environment']),
+			// Settings and the environment rewrite sign-in, mail and the theme.
+			// They stay off until a superuser turns them on.
+			'restorePageSettings' => false,
+			'restoreMediaSettings' => false,
+			'restoreEnvironment' => false,
 		]);
 	}
 }

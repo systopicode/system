@@ -31,7 +31,7 @@ final class Portrait
      * and lowercased — the same address draws the same face on every
      * system, and the address itself is not in the URL. No email: the user id.
      */
-    public static function src(int $userId, ?string $email): string
+    public static function src(int $userId, ?string $email, bool $screen = false): string
     {
         $file = $userId > 0 ? self::file($userId) : null;
         if ($file !== null) {
@@ -39,6 +39,15 @@ final class Portrait
             return \http::$siteUrl . 'var/avatars/' . $userId . '.' . $ext . '?v=' . filemtime($file);
         }
         $colors = self::colors();
+        if ($screen) {
+            return 'https://api.dicebear.com/10.x/bottts/svg?' . http_build_query([
+                'seed' => md5('screen-' . max($userId, 1)),
+                'backgroundColor' => $colors['background'],
+                // Persons draw the main colour as thin lines. A robot is a solid
+                // shape, so it takes the highlight, or the head is a dark block.
+                'baseColor' => $colors['paper'],
+            ]);
+        }
         $email = strtolower(trim((string) $email));
         return 'https://api.dicebear.com/10.x/notionists/svg?' . http_build_query([
             'seed' => $email !== '' ? md5($email) : 'user-' . max($userId, 1),

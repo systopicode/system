@@ -27,4 +27,16 @@ switch ($this->action) {
 			$this->parent->updateView('main');
 		}
 		break;
+
+	case 'removeTag':
+		if (!$this->tag) {
+			\http::redirect('../');
+			break;
+		}
+		$gone = TagLinks::linksOf($this->scope, (int) $this->tag->id);
+		$gone[] = $this->tag;
+		$this->scope->remove(...$gone);
+		$this->parent->updateView('main');
+		\http::redirect('../');
+		break;
 }

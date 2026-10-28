@@ -1,4 +1,8 @@
-<?php /** @var \Systopic\System\Panels\Root\Cms\Users\Users\Edit\Panel $this */ ?>
+<?php /** @var \Systopic\System\Panels\Root\Cms\Users\Users\Edit\Panel $this */
+if (!$this->user) {
+	return;
+}
+?>
 <div class="cms cmslightbox userEdit" data-size="2">
 	<section>
 		<?php
@@ -12,10 +16,13 @@
 $issued = $this->issuedCode;
 if ($issued !== null) {
 	$e = static fn($v): string => htmlspecialchars((string) $v, ENT_QUOTES);
-	$url = \Systopic\System\Auth\CodeMail::link((string) $issued['code']) . '&auto=1';
+	$url = \Systopic\System\Auth\CodeMail::link((string) $issued['code']);
 	$svg = class_exists('qr') ? \qr::svgMarkup(\qr::payload('url', ['url' => $url]), 4, 'M', 'qr-code') : '';
-	$heading = 'Sign-in code';
-	$lead = 'Valid for 10 minutes. On the new device, scan this on the sign-in page or open the link.';
+	$screenCode = $this->user->type === \Systopic\System\Tables\Users\Model::SCREEN;
+	$heading = $screenCode ? 'Pairing code' : 'Sign-in code';
+	$lead = $screenCode
+		? 'Valid for 10 minutes. On the new device, enter this code or open the link, then choose Sign in. That device becomes this screen.'
+		: 'Valid for 10 minutes. On the new device, enter this code or open the link, then choose Sign in. The account becomes active when the code is used.';
 ?>
 <div class="cms cmslightbox qrZoom" data-size="2" data-code-until="<?= (int) ($issued['expires'] ?? 0) ?>" data-code-value="<?= $e($issued['code']) ?>" hidden>
 	<section>
@@ -28,7 +35,7 @@ if ($issued !== null) {
 		<main>
 			<div data-code-live>
 				<p class="cmsBoxLead"><?= $e($lead) ?></p>
-				<p class="tagsHint">Anyone who can see this can sign in as this user. Close it when you are done.</p>
+				<p class="tagsHint">Anyone who can see this can sign in as this <?= $screenCode ? 'screen' : 'person' ?>. Close it when you are done.</p>
 				<div class="qrCodeBar">
 					<strong><?= $e($issued['code']) ?></strong>
 					<button type="button" class="button" data-copy="<?= $e($issued['code']) ?>"><i class="fa-regular fa-copy"></i> Copy code</button>

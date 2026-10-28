@@ -51,7 +51,9 @@ foreach ($actions as $action) {
 	<?= count($actions) ?> actions, <?= $destructive ?> of them discard data<?= $blocked > 0 ? ', ' . $blocked . ' would fail on the data as it is' : '' ?>.
 	Every action that would make the database match the model: tables, columns, indexes, foreign keys, orphaned rows and migrations.
 </p>
-<?php // refresh: the header bar (controls.tpl.php) ?>
+<div class="schemaBar">
+	<a class="button" data-on_click="runAudit" title="Run the audit again"><i class="fa-regular fa-arrows-rotate"></i><span>Refresh</span></a>
+</div>
 
 <?php if ($actions === []): ?>
 	<p class="tagsHint">Database and model agree. Nothing to do.</p>

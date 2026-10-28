@@ -72,16 +72,45 @@ switch ($this->action) {
 					: 'That code is wrong or has expired.')->target('devices');
 				$told = true;
 			} elseif ($code->purpose === Codes::PAIR_SCREEN) {
-				$allowed = Session::isSuperuser(true) || Session::hasOneRole('userAdmin');
+				$allowed = \Systopic\System\Auth\SignInRights::allows($this->scope, $me, \Systopic\System\Auth\SignInRights::SCREENS);
 				$screen = $allowed ? UserLookup::byId($this->scope, (int) \http::post('screen', 0)) : null;
-				if (!$allowed || $screen === null || $screen->type !== User::SCREEN) {
-					\message::error('A user admin confirms a screen.')->target('devices');
+				$screenOk = $screen !== null && $screen->type === User::SCREEN && $screen->isActive && (int) $screen->id > 1;
+				if (!$allowed) {
+					\message::error('Signing in a screen takes the authScreens permission.')->target('devices');
+					$told = true;
+				} elseif (!$screenOk) {
+					\message::error('That account cannot be signed in.')->target('devices');
 					$told = true;
 				} else {
 					$ok = LoginCodes::approveScreen($input, $screen, (int) Session::id());
 				}
 			} else {
-				$ok = LoginCodes::approveSelf($input, $me);
+				$posted = (int) \http::post('person', 0);
+				$target = $me;
+				if ($posted > 0 && $posted !== (int) $me->id) {
+					$allowed = \Systopic\System\Auth\SignInRights::allows($this->scope, $me, \Systopic\System\Auth\SignInRights::PERSONS);
+					$other = $allowed ? UserLookup::byId($this->scope, $posted) : null;
+					$personOk = $other !== null
+						&& (int) $other->id > 1
+						&& $other->isActive
+						&& ($other->type === null || $other->type === '' || $other->type === User::PERSON)
+						&& (!$other->isSuperuser || $me->isSuperuser);
+					if (!$allowed) {
+						\message::error('You can only sign this device in as yourself.')->target('devices');
+						$told = true;
+					} elseif ($other !== null && $other->isSuperuser && !$me->isSuperuser) {
+						\message::error('Only a superuser can sign in as a superuser.')->target('devices');
+						$told = true;
+					} elseif (!$personOk) {
+						\message::error('That account cannot be signed in.')->target('devices');
+						$told = true;
+					} else {
+						$target = $other;
+					}
+				}
+				if (!$told) {
+					$ok = LoginCodes::approvePerson($input, $target, $me);
+				}
 			}
 		}
 		if ($ok) {

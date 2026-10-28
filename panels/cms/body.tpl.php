@@ -63,7 +63,7 @@ if ($behind !== '') {
 <body class="<?= 'CMS_VERSIONDATE' ?> <?= implode(' ', $shellPath) ?> <?= 'system' ?>"<?= $sheet ? ' data-cms-window="edit"' : '' ?>>
 	<header class="cmsMobileHeader cms">
 		<button type="button" data-cms-window="menu" aria-label="Open navigation" aria-expanded="false"><i class="fa-regular fa-bars"></i></button>
-		<a class="cmsMobileDashboardBrand" href="<?= http::$root ?>cms/" aria-label="Dashboard"><img src="<?= \Systopic\System\Sys\Packages::panelAssetHref('img/logo-horizontal-dark.png') ?>" alt="fluxo"></a>
+		<a class="cmsMobileDashboardBrand" href="<?= http::$root ?>cms/" aria-label="Dashboard"><img src="<?= htmlspecialchars(\Systopic\System\Settings\ThemeAssets::href('wordDark'), ENT_QUOTES) ?>" alt="fluxo"></a>
 		<strong data-cms-module><?= htmlspecialchars((string) ($module?->label ?? ''), ENT_QUOTES, 'UTF-8') ?></strong>
 		<?= \Systopic\System\Sys\WebApp::stageBadge() ?>
 		<a class="ajax cmsSearchLink" href="<?= http::$root ?>cms/search/" aria-label="Search"><i class="fa-regular fa-magnifying-glass"></i></a>
@@ -73,8 +73,8 @@ if ($behind !== '') {
 		<div class="main cms">
 			<header>
 				<a class="cmsBrand" href="<?= http::$root ?>cms/" title="fluxo cms">
-					<img class="brandMark" src="<?= \Systopic\System\Sys\Packages::panelAssetHref('img/signet.svg') ?>" alt="fluxo">
-					<img class="brandFull" src="<?= \Systopic\System\Sys\Packages::panelAssetHref('img/logo-horizontal-dark.png') ?>" alt="fluxo">
+					<img class="brandMark" src="<?= htmlspecialchars(\Systopic\System\Settings\ThemeAssets::href('signet'), ENT_QUOTES) ?>" alt="fluxo">
+					<img class="brandFull" src="<?= htmlspecialchars(\Systopic\System\Settings\ThemeAssets::href('wordDark'), ENT_QUOTES) ?>" alt="fluxo">
 				</a>
 			</header>
 			<nav>

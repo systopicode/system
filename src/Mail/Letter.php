@@ -50,12 +50,13 @@ final class Letter
 
     private static function logo(): string
     {
-        $file = (string) \fs::$siteRoot . 'overrides/img/logo.svg';
-        if (\fs::isFile($file)) {
+        $file = \Systopic\System\Settings\ThemeAssets::path('logo');
+        $root = \fs::toNative(rtrim((string) \fs::$siteRoot, '/\\') . '/overrides/');
+        if ($file !== null && str_ends_with(strtolower($file), '.svg') && str_starts_with(\fs::toNative($file), $root)) {
             $svg = preg_replace('/<\?xml[^>]*\?>/', '', (string) \fs::file_get_contents($file)) ?? '';
             return '<div style="max-width:180px;margin:0 auto;">' . $svg . '</div>';
         }
-        $href = \Systopic\System\Sys\Packages::panelAssetHref('img/logo-horizontal-dark.png');
+        $href = \Systopic\System\Settings\ThemeAssets::href($file !== null && str_starts_with(\fs::toNative($file), $root) ? 'logo' : 'wordDark');
         if ($href === '') {
             return '';
         }

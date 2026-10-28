@@ -410,18 +410,35 @@ aside.cms ul li a{
     cursor: pointer;
 }
 
-aside.cms ul li a:not(.icon){
+aside.cms ul li a:not([role="tab"]):not(.icon):not(.sideAction):not(.cmsTextLink){
     margin-left: -0.5rem;
     padding: 0.3rem 0.5rem;
     border-radius: var(--cmsRadius);
     transition: background-color .15s;
 }
 
-aside.cms ul li a:not(.icon):hover{
+aside.cms ul li a:not([role="tab"]):not(.icon):not(.sideAction):not(.cmsTextLink):hover{
     background: var(--cmsHover);
 }
 
-aside.cms ul li a.selected{
+aside.cms ul li a.cmsTextLink{
+    display: inline;
+    margin: 0;
+    padding: 0;
+    border-radius: 0;
+    background: none;
+    color: var(--cmsInteractive);
+    font-weight: 600;
+    text-decoration: underline;
+    text-underline-offset: 0.15em;
+}
+
+aside.cms ul li a.cmsTextLink:hover{
+    background: none;
+    color: var(--cmsTextColor);
+}
+
+aside.cms ul li a.selected:not([role="tab"]){
     background: var(--cmsSelected);
     color: var(--cmsHighlightText);
     font-weight: 600;
@@ -507,15 +524,32 @@ aside.cms .sideActions{
 aside.cms a.sideAction{
     display: flex;
     align-items: center;
+    justify-content: flex-start;
     gap: 0.5rem;
+    box-sizing: border-box;
     width: 100%;
-    min-height: 0;
+    min-height: var(--cmsControl);
     margin: 0;
-    padding: 0.35rem 0.45rem;
+    padding: 0 0.9rem;
+    border: 1px solid transparent;
     border-radius: var(--cmsRadius);
+    background: var(--cmsButtonBg);
+    color: var(--cmsTextColor);
     font-size: 0.8125rem;
     font-weight: 500;
-    line-height: 1.25;
+    line-height: 1.2;
+    text-decoration: none;
+    transition: background-color .15s, border-color .15s, color .15s;
+}
+
+aside.cms a.sideAction:hover{
+    background: color-mix(in srgb, var(--cmsButtonBg) 88%, var(--cmsMainColor));
+    color: var(--cmsTextColor);
+}
+
+aside.cms a.sideAction:focus-visible{
+    outline: 2px solid var(--cmsInteractive);
+    outline-offset: 2px;
 }
 
 aside.cms a.sideAction i{

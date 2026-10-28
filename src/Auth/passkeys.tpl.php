@@ -72,7 +72,7 @@ $passkeyRow = static function ($key) use ($escape, $canRemove, $own, $noAutofill
                 <?php if ($passkeyWidget) { ?>
                     <button type="button" class="cmsBoxMore" data-open-box=".passkeyListBox">Show all passkeys (<?= count($keys) ?>)</button>
                 <?php } else { ?>
-                    <button type="button" class="cmsBoxMore" onclick="this.closest('.passkeys').classList.add('is-all');this.remove()">Show all passkeys (<?= count($keys) ?>) <i class="fa-regular fa-chevron-down" aria-hidden="true"></i></button>
+                    <button type="button" class="cmsBoxMore" onclick="var box=this.closest('.passkeys');var open=box.classList.toggle('is-all');this.innerHTML=open?'Show less <i class=&quot;fa-regular fa-chevron-up&quot; aria-hidden=&quot;true&quot;></i>':'Show all passkeys (<?= (int) count($keys) ?>) <i class=&quot;fa-regular fa-chevron-down&quot; aria-hidden=&quot;true&quot;></i>';">Show all passkeys (<?= count($keys) ?>) <i class="fa-regular fa-chevron-down" aria-hidden="true"></i></button>
                 <?php } ?>
             <?php } ?>
             <?php if ($own && !$passkeyWidget) { ?>

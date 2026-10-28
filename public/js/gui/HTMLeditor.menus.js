@@ -74,6 +74,10 @@ function HTMLeditorRightClick(clicktype, event, elements) {
 	if (editor && wysiwyg.inline(editor) && (clicktype === 'selectedWord' || clicktype === 'selectedBlock')) {
 		clicktype = 'inline';
 	}
+	// The page title is the name of the page. Nothing in it is formatted.
+	if (editor && editor.dataset.field === 'label' && (clicktype === 'inline' || clicktype === 'selectedWord' || clicktype === 'selectedBlock')) {
+		return false;
+	}
 	switch (clicktype) {
 		case 'inline':
 			items = Object.assign({}, history, inline, link, clear);
@@ -111,6 +115,19 @@ function HTMLeditorRightClick(clicktype, event, elements) {
 				removeanchor: cmd('Remove link', 'link-slash', 'removeAnchor')
 			};
 			break;
+		case 'fixedImage':
+		case 'fixedVideo':
+			// A picture built into the template is not the text field: move,
+			// format, link and remove would change the preview and then be
+			// forgotten. Crop and adjust writes the file, so it stays.
+			if (elements && elements[0]) {
+				target = elements[0];
+				param.target = target;
+			}
+			items = {
+				edit: cmd(clicktype === 'fixedVideo' ? 'Edit' : 'Crop and adjust', 'pen', 'formatImage')
+			};
+			break;
 		case 'image':
 			var linked = !!target.closest('a');
 			var imageFormats = formatMenu('image', /^image\/(jpe?g|png|webp)$/.test(target.getAttribute('data-ref-mimetype') || target.dataset.mimetype || ''));
@@ -118,7 +135,7 @@ function HTMLeditorRightClick(clicktype, event, elements) {
 			items = Object.assign({
 				move: cmd('Move', 'up-down-left-right', 'editorBeginMediaMove', {drag: true}),
 				formats: imageFormats,
-				edit: cmd('Crop and adjust', 'crop-simple', 'formatImage', {sep: imageFormats.active === false}),
+				edit: cmd('Crop and adjust', 'pen', 'formatImage', {sep: imageFormats.active === false}),
 				anchor: cmd(linked ? 'Edit link' : 'Insert link', linked ? 'pen' : 'link', 'createHTMLeditorLink', {selected: linked, sep: true}),
 				unlink: cmd('Remove link', 'link-slash', 'removeAnchor', {active: linked}),
 				blockClass: classItem(target, true)

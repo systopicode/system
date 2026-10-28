@@ -133,6 +133,7 @@ final class External
         $types = [
             'image' => 'Image',
             'video' => 'Video',
+            'audio' => 'Audio',
             'pdf' => 'PDF',
             'file' => 'File',
         ] + self::types();

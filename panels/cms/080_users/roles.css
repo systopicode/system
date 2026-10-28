@@ -7,3 +7,12 @@
     gap: 1.25rem;
     margin-top: 1.25rem;
 }
+
+.cmslightbox .groupRights > .rightsHead h2{
+    margin: 0 0 0.2rem;
+    font-size: 1rem;
+}
+
+.cmslightbox .groupRights > .rightsHead .tagsHint{
+    margin: 0;
+}

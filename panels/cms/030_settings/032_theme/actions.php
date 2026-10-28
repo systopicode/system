@@ -35,9 +35,12 @@ if ($this->action === 'clear') {
     return;
 }
 
-if ($this->action === 'saveCss') {
+if ($this->action === 'saveCss' || $this->action === 'saveSystemCss') {
     $posted = \http::posted('css');
-    if (!ThemeFile::saveCss(is_string($posted) ? $posted : '')) {
+    $saved = $this->action === 'saveSystemCss'
+        ? ThemeFile::saveSystemCss(is_string($posted) ? $posted : '')
+        : ThemeFile::saveCss(is_string($posted) ? $posted : '');
+    if (!$saved) {
         \message::error('That CSS was not saved.');
         return;
     }

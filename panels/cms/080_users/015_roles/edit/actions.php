@@ -27,5 +27,6 @@ if ($this->action === 'removeRole' && $this->role !== null && (int) $this->role-
 		$this->updateView('lightbox');
 		return;
 	}
+	$this->parent->updateView('main');
 	\http::redirect('../');
 }

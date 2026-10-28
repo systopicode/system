@@ -293,18 +293,55 @@ sys.core.server = new function () {
         });
         return found;
     };
+    /**
+     * Hold a scroller's place. A min-height stops a short box clamping to the
+     * top while its content is still arriving. A window that already has its
+     * height from the layout (the page preview) grows instead, and the place
+     * becomes the few pixels that are left — that min-height is not used.
+     * The returned function puts the place back and drops the hold.
+     */
+    server.pinScroll = (el, top) => {
+        var prev = el.style.minHeight;
+        var before = el.clientHeight;
+        var held = false;
+        if (top > 0) {
+            el.style.minHeight = (top + before) + 'px';
+            if (el.clientHeight > before + 1) {
+                el.style.minHeight = prev;
+            } else {
+                held = true;
+            }
+        }
+        return () => {
+            if (!el.isConnected) {
+                return;
+            }
+            if (held) {
+                if (top) {
+                    el.scrollTop = top;
+                }
+                el.style.minHeight = prev;
+            }
+            if (top) {
+                el.scrollTop = top;
+            }
+        };
+    };
+
     /** A box built anew gets its place back, also once its images have their height. */
     server.restoreScroll = positions => {
         var apply = () => {
             (positions || []).forEach(position => {
-                var el = document.querySelector(position.selector);
+                var el;
+                try {
+                    el = document.querySelector(position.selector);
+                } catch (error) {
+                    return;
+                }
                 if (!el || !position.top) {
                     return;
                 }
-                var min = el.style.minHeight;
-                el.style.minHeight = (position.top + el.clientHeight) + 'px';
-                el.scrollTop = position.top;
-                el.style.minHeight = min;
+                sys.core.server.pinScroll(el, position.top)();
             });
             if (sys.core.server.pendingY) {
                 window.scrollTo(0, sys.core.server.pendingY);

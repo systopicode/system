@@ -20,9 +20,19 @@ class Panel extends CmsPanel {
 
 	public $icon = 'fa-regular fa-users';
 
+	public function __construct($name, $parent = null) {
+		parent::__construct($name, $parent);
+		if ($this->accountKind !== User::SCREEN) {
+			$this->label = 'Persons';
+		}
+	}
+
 	public $showSubnavi = FALSE;
 
 	public bool $bequests = true;
+
+	/** person: this list. screen: the Screens panel, which is this class. */
+	public string $accountKind = User::PERSON;
 
 	public UserAdmin $admin {
 		get => UserAdmin::of($this->scope);
@@ -30,7 +40,16 @@ class Panel extends CmsPanel {
 
 	/** @var list<User> in the order the list is sorted by */
 	public array $users {
-		get => UserOperator::sort(array_values($this->admin->users), (string) $this->state->sortBy, (bool) $this->state->sortDesc);
+		get {
+			$kind = $this->accountKind;
+			$rows = array_values(array_filter(
+				$this->admin->users,
+				static fn(User $user): bool => $kind === User::SCREEN
+					? $user->type === User::SCREEN
+					: ($user->type === null || $user->type === '' || $user->type === User::PERSON),
+			));
+			return UserOperator::sort($rows, (string) $this->state->sortBy, (bool) $this->state->sortDesc);
+		}
 	}
 
 	/** @var list<Role> */
@@ -63,12 +82,14 @@ class Panel extends CmsPanel {
 		$users = \Systopic\Db\Schema\Schema::tableNameOf(User::class);
 		$rows = $search->scope->connection->all(
 			"SELECT user_id, user_name, user_fullname, user_email FROM $users
-			 WHERE LOWER(CONCAT_WS(' ', user_name, user_fullname, user_email)) LIKE ? ORDER BY user_fullname, user_name LIMIT " . $search::PER_GROUP,
-			[$search->like()],
+			 WHERE LOWER(CONCAT_WS(' ', user_name, user_fullname, user_email)) LIKE ?
+			 AND (user_type = ? OR user_type IS NULL OR user_type = '')
+			 ORDER BY user_fullname, user_name LIMIT " . $search::PER_GROUP,
+			[$search->like(), User::PERSON],
 		);
 		foreach ($rows as $row) {
 			$name = trim((string) $row['user_fullname']) !== '' ? (string) $row['user_fullname'] : (string) $row['user_name'];
-			$search->add('Users', 'fa-user', $name, (string) $row['user_email'], $this->getHref(\http::$root) . 'edit/?user_id=' . (int) $row['user_id']);
+			$search->add('Persons', 'fa-user', $name, (string) $row['user_email'], $this->getHref(\http::$root) . 'edit/?user_id=' . (int) $row['user_id']);
 		}
 	}
 }

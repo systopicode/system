@@ -10,9 +10,11 @@ Everything lives in the project, never in the packages:
 
 | Project path | What it does |
 |---|---|
-| `overrides/css/*.css` | GUI overrides, loaded after the system CSS in the `project` layer. Theme colours go here. The theme editor writes `overrides/css/system_overrides.css` (it renames `cms_overrides.css` on save). |
-| `css/system_overrides.css` | Same layer, when a project keeps the file next to the site CSS. Also the place for `@font-face`/`@import` of fonts (they cannot be scoped, see `cms-preview-css.md`). `css/cms_overrides.css` is still read while the new file does not exist yet. |
-| `overrides/img/logo.svg` | Logo on the login card and at the top of every system mail. |
+| `overrides/css/zz_system_theme.css` | The four theme colours. A link in the `project` layer, so it beats the system tokens. |
+| `overrides/css/system_overrides.css` | Extra CMS CSS. A plain stylesheet, so it beats the layers. Loaded in the CMS only, not on the public site, and not parsed into the page preview. |
+| `overrides/css/pages_overrides.css` | Page CSS, parsed into the preview. |
+| `css/system_overrides.css` | Fonts and project GUI CSS next to the site CSS, still loaded on the public site. `css/cms_overrides.css` is read while the new file does not exist. |
+| `overrides/img/logo.svg` or `logo.png` | Logo on the login card and at the top of every system mail. SVG is inlined, PNG is an image. |
 | `overrides/img/<name>` | Replaces the system image of the same name, see the table below. |
 | `overrides/js/*.js` | Extra GUI scripts, loaded last. |
 | `PUBLIC_PAGE_NAME` (config) | Site name in the window title and the installed web app ("Site // fluxo cms"). |
@@ -22,11 +24,11 @@ Images a project may replace by name (`Packages::panelAsset()` looks in
 
 | File | Where it shows |
 |---|---|
-| `img/signet.svg` | The mark in the menu, the edit bar on the website. |
-| `img/logo-horizontal-dark.png` | Word mark in the wide menu on the dashboard; mail logo without `logo.svg`. |
-| `img/logo-horizontal-light.png` | Login card without `logo.svg`. |
-| `img/share_default.jpg` | Share image (`og:image`) of the CMS pages. |
-| `img/favicons/*` | Favicons, home screen and web app icons. |
+| `img/signet.svg` or `signet.png` | The mark in the menu, the edit bar on the website. |
+| `img/logo-horizontal-dark.svg` or `.png` | Word mark in the wide menu on the dashboard; mail logo without a logo file. |
+| `img/logo-horizontal-light.svg` or `.png` | Login card without a logo file. |
+| `img/share_default.jpg` | Share image (`og:image`). The theme editor stores a JPG. |
+| `img/favicons/*` | Favicons, home screen and web app icons. A PNG favicon is written here. |
 | `img/icon.svg` | SVG favicon. |
 
 ## 2. Theme colours
@@ -35,7 +37,7 @@ The tokens are in `system/public/css/00_theme.css`. A project overrides
 only these:
 
 ```css
-/* overrides/css/theme.css */
+/* overrides/css/zz_system_theme.css */
 :root {
 	--cmsMainColor: #1f3a45;       /* menu, headings, lines */
 	--cmsHighlightColor: #fcb60c;  /* submit buttons, active marks */

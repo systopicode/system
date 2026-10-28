@@ -59,7 +59,7 @@
     <meta name="copyright" content="systopic GmbH"/>
     <meta name="abstract" content="fluxo cms"/>
     <meta name="msapplication-config" content="<?= $asset('img/favicons/browserconfig.xml') ?>">
-	<?php $shareImage = http::$hostUrl . $asset('img/share_default.jpg'); ?>
+	<?php $shareImage = http::$hostUrl . htmlspecialchars(\Systopic\System\Settings\ThemeAssets::href('share'), ENT_QUOTES); ?>
 	<meta property='og:image' content='<?= $shareImage ?>' />
 	<meta itemprop='image' content='<?= $shareImage ?>' />
 
@@ -92,12 +92,14 @@
 	 */
 	echo '<style>@layer cms, project, preview;</style>' . "\n";
 
-	// Chrome revalidates <link> styles on a normal reload and skips @import.
-	// On DEV the import URL changes every request, so a reload picks up CSS.
+	// The layer is named on the link itself. An @import in a style tag is
+	// skipped when Chrome opens a fresh document, which left sign-in and
+	// signed out unstyled. On DEV the URL changes every request, so a
+	// reload still picks up CSS.
 	$cmsCss = static function (string $path, string $layer, bool $recursive = false): string {
 		$html = fsLoader::includeCSSFilesInLayer($path, $layer, $recursive);
 		if ($html !== '' && defined('STAGE') && str_starts_with((string) STAGE, 'DEV')) {
-			$html = str_replace('?t=', '?r=' . time() . '&t=', $html);
+			$html = str_replace('?t=', '?r=' . time() . '&amp;t=', $html);
 		}
 		return $html;
 	};
@@ -115,15 +117,24 @@
 	?>
 	<!-- +-+-+-+-+-+-+-+-+-+ MODULE CSS -+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-->
 	<?php
+	// Marked so a later Ajax navigation can drop the sheets of the module
+	// that was just left. Unmarked links are the system UI and stay.
+	$moduleCss = static function (string $path) use ($cmsCss): string {
+		return preg_replace(
+			'/<link rel="stylesheet" href="([^"]+)" layer="cms">/',
+			'<link rel="stylesheet" href="$1" layer="cms" data-cms-module="$1">',
+			$cmsCss($path, 'cms'),
+		) ?? '';
+	};
 	$cssModulePath = \Systopic\System\Panels\Tree\PanelTree::getInstance()?->getRealPath() ?? [];
 	foreach (\Systopic\System\Panels\Tree\PanelTree::getInstance()?->getRealPath() ?? [] as $moduleName) {
 		$modulePathString = implode('/', $cssModulePath);
-		echo $cmsCss(fs::$sysRoot . "panels/$modulePathString/", 'cms');
+		echo $moduleCss(fs::$sysRoot . "panels/$modulePathString/");
 		foreach (\Systopic\System\Sys\Packages::panels() as $package) {   // systopic/cms …
-			echo $cmsCss(fs::toInternal($package['dir']) . "$modulePathString/", 'cms');
+			echo $moduleCss(fs::toInternal($package['dir']) . "$modulePathString/");
 		}
-		echo $cmsCss(fs::$projectRoot . "panels/$modulePathString/", 'cms');
-		echo $cmsCss(fs::$siteRoot . "panels/$modulePathString/", 'cms');
+		echo $moduleCss(fs::$projectRoot . "panels/$modulePathString/");
+		echo $moduleCss(fs::$siteRoot . "panels/$modulePathString/");
 		array_pop($cssModulePath);
 	}
 	?>
@@ -151,7 +162,7 @@
 		fs::$siteRoot . 'css/',
 		'article.cmsContent',
 		'preview',
-		['system_overrides.css', 'cms_overrides.css', 'fonts.css', 'animate.css', 'x_responsive.css'],
+		['system_overrides.css', 'cms_overrides.css', 'pages_overrides.css', 'fonts.css', 'animate.css', 'x_responsive.css'],
 		limit: '.cmsOwn',
 	);
 	$responsiveFile = fs::$siteRoot . 'css/x_responsive.css';
@@ -160,9 +171,33 @@
 		echo "<style>\n@layer preview {\n@scope (article.cmsContent) to (.cmsOwn) {\n$responsive\n}\n}\n</style>\n";
 	}
 	echo '<!-- +-+-+-+-+-+-+-+-+-+ PROJECT UI OVERRIDES +-+-+-+-+-+-+-+-+-+-+-->';
-	// Overrides style the preview (`article p`), but never what the CMS itself
-	// puts in there - not even with !important.
-	echo fsLoader::includeCSSFilesScoped(fs::$siteRoot . 'overrides/css/', ':root', 'project', limit: '.cmsOwn', liftDocument: true);
+	// Page CSS is parsed into the preview. System CSS is a plain stylesheet
+	// for the CMS only. The public site does not load it. The colour file is
+	// linked afterwards, in the project layer, so it beats the cms links.
+	\Systopic\System\Settings\ThemeFile::migratePagesFile();
+	$pagesCss = \Systopic\System\Settings\ThemeFile::pagesStylesheet();
+	if ($pagesCss !== null && \Systopic\System\Settings\ThemeFile::pagesPanelPresent()) {
+		echo fsLoader::includeCSSFilesScoped($pagesCss, ':root', 'project', limit: '.cmsOwn', liftDocument: true);
+	}
+	echo fsLoader::includeCSSFilesScoped(
+		fs::$siteRoot . 'overrides/css/',
+		':root',
+		'project',
+		['system_overrides.css', 'cms_overrides.css', 'pages_overrides.css', 'zz_system_theme.css', 'zz_cms_theme.css'],
+		limit: '.cmsOwn',
+		liftDocument: true,
+	);
+	$systemCss = \Systopic\System\Settings\ThemeFile::systemStylesheet();
+	if ($systemCss !== null) {
+		echo fsLoader::includeCSSFiles($systemCss);
+	}
+	// The colour file has to be a link in the project layer. A style tag
+	// that repeats "@layer project" does not join the layer named on the
+	// cms links, so those links kept the default colours.
+	$themeCss = \Systopic\System\Settings\ThemeFile::path();
+	if (is_file($themeCss)) {
+		echo $cmsCss($themeCss, 'project');
+	}
 	// The site reset sits in the preview layer and zeros every border. These
 	// frames stay unlayered so they win inside the page preview.
 	?>
@@ -191,11 +226,16 @@
 			position: relative;
 			overflow: visible;
 		}
-		article.cmsContent [contenteditable='true']:hover,
-		article.cmsContent .plaintext:hover{
+		article.cmsContent [contenteditable='true']:hover:not(:has(img:is(:hover, .cmsMediaOn), video:is(:hover, .cmsMediaOn))),
+		article.cmsContent .plaintext:hover:not(:has(img:is(:hover, .cmsMediaOn), video:is(:hover, .cmsMediaOn))){
 			border-style: solid;
 			border-color: rgba(151, 215, 249, .75);
 			background: rgba(151, 215, 249, .05);
+		}
+		article.cmsContent [contenteditable='true']:has(img:is(:hover, .cmsMediaOn), video:is(:hover, .cmsMediaOn)),
+		article.cmsContent .plaintext:has(img:is(:hover, .cmsMediaOn), video:is(:hover, .cmsMediaOn)){
+			border-color: transparent;
+			background: none;
 		}
 		article.cmsContent [contenteditable='true']:after,
 		article.cmsContent .plaintext:after{
@@ -220,10 +260,10 @@
 		article.cmsContent [data-editorlabel]:not([data-editorlabel='']):after{
 			content: attr(data-editorlabel);
 		}
-		article.cmsContent [contenteditable='true']:hover:after,
-		article.cmsContent [contenteditable='true']:focus:after,
-		article.cmsContent .plaintext:focus:after,
-		article.cmsContent .plaintext:hover:after{
+		article.cmsContent [contenteditable='true']:hover:not(:has(img:is(:hover, .cmsMediaOn), video:is(:hover, .cmsMediaOn))):after,
+		article.cmsContent [contenteditable='true']:focus:not(:has(img:is(:hover, .cmsMediaOn), video:is(:hover, .cmsMediaOn))):after,
+		article.cmsContent .plaintext:focus:not(:has(img:is(:hover, .cmsMediaOn), video:is(:hover, .cmsMediaOn))):after,
+		article.cmsContent .plaintext:hover:not(:has(img:is(:hover, .cmsMediaOn), video:is(:hover, .cmsMediaOn))):after{
 			opacity: 1;
 		}
 		article.cmsContent div.editor.empty{
@@ -234,9 +274,31 @@
 			outline-offset: -1px;
 			min-width: 2em;
 		}
+		article.cmsContent :is(img, video),
 		article.cmsContent [contenteditable='true'] :is(img, video, iframe){
 			cursor: default;
 			-webkit-touch-callout: none;
+		}
+		/* Inside the picture: a cropped tile hides a frame drawn outside it. */
+		article.cmsContent :is(img, video):is(:hover, .cmsMediaOn){
+			outline: 1px solid rgba(151, 215, 249, .75);
+			outline-offset: -1px;
+			box-shadow: inset 0 0 0 1px rgba(151, 215, 249, .75), inset 0 0 0 100vmax rgba(151, 215, 249, .05);
+		}
+		.cmsMediaFormat{
+			position: fixed;
+			z-index: 20;
+			padding: 2px 6px;
+			border-radius: 4px;
+			background: var(--cmsChip);
+			color: var(--cmsChipText);
+			font-family: var(--cmsFont);
+			font-size: 10px;
+			font-weight: 600;
+			line-height: 14px;
+			letter-spacing: 0.02em;
+			text-transform: uppercase;
+			pointer-events: none;
 		}
 		/* Lightbox-Links bleiben klickbar, auch wenn der Seiteninhalt sie sperrt. */
 		.cmslightbox a,

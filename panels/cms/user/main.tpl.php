@@ -19,18 +19,45 @@ $here = Devices::current();
 $codesOn = LoginCodes::available();
 $screenCode = preg_replace('~[^0-9A-Za-z\-]~', '', (string) \http::get('screen', ''));
 $pending = ($codesOn && $screenCode !== '') ? LoginCodes::peek($screenCode, [Codes::PAIR_USER, Codes::PAIR_SCREEN]) : null;
-$canScreens = Session::isSuperuser(true) || Session::hasOneRole('userAdmin');
+$mayPersons = $me && \Systopic\System\Auth\SignInRights::allows($this->scope, $me, \Systopic\System\Auth\SignInRights::PERSONS);
+$mayScreens = $me && \Systopic\System\Auth\SignInRights::allows($this->scope, $me, \Systopic\System\Auth\SignInRights::SCREENS);
+$actorIsSuper = Session::isSuperuser(true);
 $screens = [];
-if ($pending && $pending->purpose === Codes::PAIR_SCREEN && $canScreens) {
+if ($pending && $pending->purpose === Codes::PAIR_SCREEN && $mayScreens) {
 	try {
 		$table = Schema::tableNameOf(User::class);
 		$screens = $this->scope->connection->all(
-			"SELECT user_id, user_name, user_fullname FROM $table WHERE user_type = ? AND user_id > 1 ORDER BY user_name",
+			"SELECT user_id, user_name, user_fullname FROM $table WHERE user_type = ? AND user_id > 1 AND user_is_active = 1 ORDER BY user_name",
 			[User::SCREEN],
 		);
 	} catch (\Throwable) {
 		$screens = [];
 	}
+}
+$people = [];
+if ($pending && $pending->purpose === Codes::PAIR_USER && $mayPersons && $me) {
+	try {
+		$table = Schema::tableNameOf(User::class);
+		$peopleSql = "SELECT user_id, user_name, user_fullname FROM $table WHERE user_id > 1 AND user_is_active = 1 AND (user_type = ? OR user_type IS NULL OR user_type = '')";
+		$peopleArgs = [User::PERSON];
+		if (!$actorIsSuper) {
+			$peopleSql .= ' AND (user_id = ? OR user_is_superuser = 0 OR user_is_superuser IS NULL)';
+			$peopleArgs[] = (int) $me->id;
+		}
+		$peopleSql .= ' ORDER BY user_name';
+		$people = $this->scope->connection->all($peopleSql, $peopleArgs);
+	} catch (\Throwable) {
+		$people = [];
+	}
+	$mine = (int) $me->id;
+	usort($people, static function (array $a, array $b) use ($mine): int {
+		$aMine = (int) $a['user_id'] === $mine;
+		$bMine = (int) $b['user_id'] === $mine;
+		if ($aMine !== $bMine) {
+			return $aMine ? -1 : 1;
+		}
+		return strcasecmp((string) $a['user_name'], (string) $b['user_name']);
+	});
 }
 $when = static fn($time): string => \Systopic\System\Sys\LocalTime::format($time, 'j M Y, H:i');
 $e = static fn($v): string => htmlspecialchars((string) $v, ENT_QUOTES);
@@ -55,7 +82,7 @@ $deviceRow = static function ($device) use ($e, $when, $here, $me): void {
 	<?php
 };
 
-$portrait = $me ? Portrait::src((int) $me->id, $me->email) : '';
+$portrait = $me ? Portrait::src((int) $me->id, $me->email, $me->type === \Systopic\System\Tables\Users\Model::SCREEN) : '';
 $field = static fn(string $label, string $type, string $action, ?string $value, string $caps = 'on'): string
 	=> "<label class='field'><span>$label</span><input type='$type' autocapitalize='$caps' name='value' data-on_blur='$action' value='{$e($value)}' autocomplete='off' data-1p-ignore data-lpignore='true' readonly onpointerdown='this.readOnly=false' onkeydown='this.readOnly=false' spellcheck='off'></label>";
 $preview = $this->fakeRoles;
@@ -183,7 +210,7 @@ $preview = $this->fakeRoles;
 <?php if ($codesOn) {
 	$remoteOpen = $screenCode !== '' && $pending === null;
 	$offer = $me ? LoginCodes::shown($me) : null;
-	$offerUrl = $offer ? \Systopic\System\Auth\CodeMail::link($offer['code']) . '&auto=1' : '';
+	$offerUrl = $offer ? \Systopic\System\Auth\CodeMail::link($offer['code']) : '';
 	$offerSvg = ($offerUrl !== '' && class_exists('qr')) ? \qr::svgMarkup(\qr::payload('url', ['url' => $offerUrl]), 4, 'M', 'qr-code') : '';
 ?>
 <div class="cms cmslightbox remoteLoginBox"<?= $remoteOpen ? '' : ' hidden' ?><?= $offer ? ' data-code-value="' . $e($offer['code']) . '"' : '' ?>>
@@ -245,6 +272,15 @@ $preview = $this->fakeRoles;
 <?php } ?>
 <?php if ($pending) {
 	$asScreen = $pending->purpose === Codes::PAIR_SCREEN;
+	$accountLabel = static function (array $row) use ($e): string {
+		$full = trim((string) ($row['user_fullname'] ?? ''));
+		$name = trim((string) ($row['user_name'] ?? ''));
+		return $e($full !== '' ? $full : $name);
+	};
+	$meFull = $me ? trim((string) $me->fullname) : '';
+	$meLabel = $me ? $e($meFull !== '' ? $meFull : (string) $me->name) : '';
+	$otherPeople = $me ? array_values(array_filter($people, static fn(array $row): bool => (int) $row['user_id'] !== (int) $me->id)) : [];
+	$offerPeople = !$asScreen && $otherPeople !== [];
 ?>
 <div class="cms cmslightbox">
 	<section>
@@ -256,35 +292,50 @@ $preview = $this->fakeRoles;
 		</header>
 		<main>
 			<?php if (!$asScreen) { ?>
-				<p class="cmsBoxLead">Allow this device to sign in as you?</p>
 				<form method="post" action="approveRemote">
 					<input type="hidden" name="code" value="<?= $e($screenCode) ?>">
+					<?php if ($offerPeople) {
+						$firstSelf = (int) $people[0]['user_id'] === (int) $me->id;
+						$firstName = $accountLabel($people[0]);
+					?>
+						<p class="cmsBoxLead" data-identify-self<?= $firstSelf ? '' : ' hidden' ?>>Allow this device to sign in as you?</p>
+						<div data-identify-other<?= $firstSelf ? ' hidden' : '' ?>>
+							<p class="cmsBoxLead">You, <?= $meLabel ?>, are signing this device in. You identify the user on that device as <strong data-identify-name><?= $firstSelf ? '' : $firstName ?></strong>.</p>
+							<p class="tagsHint">This choice is written to the login log.</p>
+						</div>
+						<label class="field"><span>Person</span>
+							<select name="person" required data-identify-select>
+								<?php foreach ($people as $person) { ?>
+									<option value="<?= (int) $person['user_id'] ?>"<?= (int) $person['user_id'] === (int) $me->id ? ' data-self="1"' : '' ?>><?= $accountLabel($person) ?></option>
+								<?php } ?>
+							</select>
+						</label>
+					<?php } else { ?>
+						<p class="cmsBoxLead">Allow this device to sign in as you?</p>
+					<?php } ?>
 					<div class="cmsBoxActions">
-						<a class="button ajax" href="<?= $e($this->href) ?>">Cancel</a>
 						<button class="button submit" type="submit">Allow</button>
 					</div>
 				</form>
-			<?php } elseif (!$canScreens) { ?>
-				<p class="cmsBoxLead">A user admin confirms a screen.</p>
-				<p class="cmsBoxActions"><a class="button ajax" href="<?= $e($this->href) ?>">Cancel</a></p>
+			<?php } elseif (!$mayScreens) { ?>
+				<p class="cmsBoxLead">Signing in a screen takes the authScreens permission.</p>
 			<?php } elseif ($screens === []) { ?>
 				<p class="cmsBoxLead">There is no screen account yet.</p>
-				<p class="cmsBoxActions"><a class="button ajax" href="<?= $e($this->href) ?>">Cancel</a></p>
 			<?php } else { ?>
-				<p class="cmsBoxLead">Choose the screen this device signs in as.</p>
 				<form method="post" action="approveRemote">
 					<input type="hidden" name="code" value="<?= $e($screenCode) ?>">
+					<div data-identify-other>
+						<p class="cmsBoxLead">You, <?= $meLabel ?>, are signing this device in. You identify the user on that device as <strong data-identify-name><?= $accountLabel($screens[0]) ?></strong>.</p>
+						<p class="tagsHint">This choice is written to the login log.</p>
+					</div>
 					<label class="field"><span>Screen</span>
-						<select name="screen" required>
-							<?php foreach ($screens as $screen) {
-								$label = trim((string) $screen['user_fullname']) !== '' ? (string) $screen['user_fullname'] : (string) $screen['user_name'];
-							?>
-								<option value="<?= (int) $screen['user_id'] ?>"><?= $e($label) ?></option>
+						<select name="screen" required data-identify-select>
+							<?php foreach ($screens as $screen) { ?>
+								<option value="<?= (int) $screen['user_id'] ?>"><?= $accountLabel($screen) ?></option>
 							<?php } ?>
 						</select>
 					</label>
 					<div class="cmsBoxActions">
-						<a class="button ajax" href="<?= $e($this->href) ?>">Cancel</a>
 						<button class="button submit" type="submit">Allow</button>
 					</div>
 				</form>

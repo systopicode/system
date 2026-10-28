@@ -46,7 +46,22 @@ $remove = static function (string $subject, string $label) use ($orphans, $e): s
 	<span class="schemaLegend schemaActual">database – would change</span>
 	<span class="schemaLegend schemaDeclared">model – the reference</span>
 </p>
-<?php // table filter, only differences and refresh: the header bar (controls.tpl.php) ?>
+<div class="schemaBar">
+	<form class="schemaFilters" method="get" action="./">
+		<select name="table" class="onchangesubmit">
+			<option value="">All tables</option>
+			<?php foreach ($state['tables'] as $table): ?>
+				<option value="<?= $e($table->name) ?>"<?= $state['filter'] === $table->name ? ' selected' : '' ?>><?= $e($table->name) ?><?= $table->differences > 0 ? ' (' . (int) $table->differences . ')' : '' ?></option>
+			<?php endforeach; ?>
+		</select>
+		<label class="checkbox">
+			<span>Only differences</span>
+			<input type="checkbox" name="diffs" value="1" class="switch onchangesubmit"<?= $state['onlyDiffs'] ? ' checked' : '' ?>>
+			<div><div></div></div>
+		</label>
+	</form>
+	<a class="button" data-on_click="refreshStatus"><i class="fa-regular fa-arrows-rotate"></i><span>Refresh</span></a>
+</div>
 <?php if ($state['shown'] === []): ?>
 	<p class="tagsHint">No table matches the selection.</p>
 <?php endif; ?>

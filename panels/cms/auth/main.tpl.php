@@ -1,18 +1,19 @@
 <?php
 /** @var \Systopic\System\Panels\Root\Cms\Auth\Panel $this */
-$logoFile = fs::$siteRoot . 'overrides/img/logo.svg';
-$logo = fs::isFile($logoFile) ? fs::file_get_contents($logoFile) : '';
+$logoPath = \Systopic\System\Settings\ThemeAssets::path('logo');
+$logoOwn = $logoPath !== null && str_starts_with(\fs::toNative($logoPath), \fs::toNative(rtrim((string) \fs::$siteRoot, '/\\') . '/overrides/'));
+$logoSvg = $logoOwn && str_ends_with(strtolower($logoPath), '.svg') ? (string) fs::file_get_contents($logoPath) : '';
 ?>
 <div class="authCard cms">
-	<?php if ($logo !== null && $logo !== '') { ?>
-		<a class="logo override" href="<?= $this->href ?>"><?= $logo ?></a>
+	<?php if ($logoSvg !== '') { ?>
+		<a class="logo override" href="<?= $this->href ?>"><?= $logoSvg ?></a>
 	<?php } else { ?>
-		<a class="logo" href="<?= $this->href ?>">
-			<img src="<?= \Systopic\System\Sys\Packages::panelAssetHref('img/logo-horizontal-light.png') ?>" alt="fluxo">
+		<a class="logo<?= $logoOwn ? ' override' : '' ?>" href="<?= $this->href ?>">
+			<img src="<?= htmlspecialchars(\Systopic\System\Settings\ThemeAssets::href($logoOwn ? 'logo' : 'wordLight'), ENT_QUOTES) ?>" alt="fluxo">
 		</a>
 	<?php } ?>
 	<?php $this->withView($this->form ?: 'login'); ?>
-	<?php if (!in_array((string) ($this->form ?? 'login'), ['login', 'signedIn', 'passkeySetup', 'loggedOut'], true)) { ?>
+	<?php if (!in_array((string) ($this->form ?? 'login'), ['login', 'signedIn', 'passkeySetup', 'loggedOut', 'identify'], true)) { ?>
 		<p class="authFoot"><a class="authBack ajax" href="<?= htmlspecialchars((string) $this->href, ENT_QUOTES) ?>"><i class="fa-regular fa-arrow-left"></i> Back to sign in</a></p>
 	<?php } ?>
 </div>

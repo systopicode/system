@@ -25,7 +25,7 @@ class Panel extends PanelNode {
 
 	/** '' follows the config. choose is the method list. */
 	public function getDefaultState() {
-		return ['loginMethod' => ''];
+		return ['loginMethod' => '', 'pendingUser' => 0, 'pendingUntil' => 0, 'pendingMethod' => ''];
 	}
 
 	/** '' follows the config. A code in the address opens the invitation view. */
@@ -65,8 +65,15 @@ class Panel extends PanelNode {
 		// is one of those changes.
 		$get = (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'GET') && !isset($_SERVER['HTTP_X_SCREEN_POLL']);
 		$view = (string) \http::get('view', '');
+		if ($get && (string) \http::get('method', '') !== '') {
+			$this->state->pendingUser = 0;
+			$this->state->pendingUntil = 0;
+			$this->state->pendingMethod = '';
+		}
 		if ($get && in_array($view, ['login', 'resetPassword', 'license', 'imprint', 'privacy', 'releases'], true)) {
 			$this->form = $view;
+		} elseif ($get && $view === '' && (string) \http::get('method', '') === '' && $this->pendingAccount() !== null && !\Systopic\System\Auth\Session::active()) {
+			$this->form = 'identify';
 		}
 		if ($get) {
 			$this->updateView('main');
@@ -90,9 +97,10 @@ class Panel extends PanelNode {
 			return;
 		}
 		$screen = (string) \http::get('pair') === 'screen';
+		$back = $screen ? null : \Systopic\System\Auth\Session::peekReturn();
 		try {
 			\Systopic\System\Auth\ScreenPair::handle(
-				$screen ? \http::$root : \http::$root . 'cms/',
+				$screen ? \http::$root : ($back ?? \http::$root . 'cms/'),
 				$screen ? \Systopic\System\Tables\LoginCodes\Operator::PAIR_SCREEN : \Systopic\System\Tables\LoginCodes\Operator::PAIR_USER
 			);
 		} catch (\Throwable $e) {
@@ -102,6 +110,20 @@ class Panel extends PanelNode {
 
 	public Scope $scope {
 		get => Scope::default();
+	}
+
+	/** The account a code has proved, until the choice of who this device is has been made. */
+	public function pendingAccount(): ?User {
+		$id = (int) ($this->state->pendingUser ?? 0);
+		$until = (int) ($this->state->pendingUntil ?? 0);
+		if ($id <= 1 || $until < time()) {
+			return null;
+		}
+		$user = UserLookup::byId($this->scope, $id);
+		if ($user === null || !$user->isActive || (int) $user->id <= 1 || $user->type === User::SCREEN) {
+			return null;
+		}
+		return $user;
 	}
 
 	/** The user named by the key of an activation or reset mail. */

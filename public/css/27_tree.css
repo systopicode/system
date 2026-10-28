@@ -41,6 +41,29 @@
     background: var(--cmsHover);
 }
 
+/* Before takes the top half and the gap above, after the bottom half and the
+   gap below. The line is drawn on the row edge, the same as a table. */
+.cms ul.tree li > label > div.sort.v.insertBefore{
+    top: -0.45rem;
+    bottom: 50%;
+    height: auto;
+    padding: 0;
+}
+
+.cms ul.tree li > label > div.sort.v.insertAfter{
+    top: 50%;
+    bottom: -0.45rem;
+    height: auto;
+    padding: 0;
+}
+
+.cms ul.tree li > label > div.sort.v.insertInto{
+    top: 30%;
+    bottom: 30%;
+    height: auto;
+    padding: 0;
+}
+
 .cms ul.tree li.active > label{
     background: var(--cmsActive);
 }

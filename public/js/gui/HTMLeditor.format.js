@@ -28,6 +28,10 @@ var wysiwyg = (function () {
 	var inline = function (editor) {
 		return !!editor && editor.classList.contains('plaintext');
 	};
+	/** The page title. It is typed, not formatted. */
+	var pageLabel = function (editor) {
+		return !!editor && editor.dataset.field === 'label';
+	};
 	var rename = function (el, tag) {
 		var to = document.createElement(tag);
 		Array.from(el.attributes).forEach(function (attr) {
@@ -879,6 +883,9 @@ var wysiwyg = (function () {
 	};
 	var insert = function (editor, range, box) {
 		inline(editor) && flatten(box);
+		if (pageLabel(editor)) {
+			box.querySelectorAll('a,strong,b,em,i,u,s,strike,del,span,font,mark,code,sub,sup,small,big').forEach(unwrap);
+		}
 		range.deleteContents();
 		var nodes = Array.from(box.childNodes);
 		if (!nodes.length) {
@@ -1131,6 +1138,8 @@ var wysiwyg = (function () {
 		if (key === 'z' || key === 'y') {
 			e.preventDefault();
 			step(editor, key === 'y' || e.shiftKey ? 1 : -1);
+		} else if (pageLabel(editor) && ((KEYS[key] && !e.shiftKey) || (key === 'x' && e.shiftKey))) {
+			e.preventDefault();
 		} else if (KEYS[key] && !e.shiftKey) {
 			e.preventDefault();
 			toggle(KEYS[key]);
@@ -1154,7 +1163,7 @@ var wysiwyg = (function () {
 			document.execCommand('insertLineBreak');
 		} else if (INPUT_FORMATS[e.inputType]) {
 			e.preventDefault();
-			toggle(INPUT_FORMATS[e.inputType]);
+			pageLabel(editor) || toggle(INPUT_FORMATS[e.inputType]);
 		} else if (/^format/.test(e.inputType)) {
 			e.preventDefault();
 		} else if (e.inputType === 'historyUndo' || e.inputType === 'historyRedo') {

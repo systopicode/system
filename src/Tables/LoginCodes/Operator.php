@@ -101,7 +101,7 @@ final class Operator
         return $code;
     }
 
-    /** pair_screen: a user admin names the screen. pair_user: the signed-in person names themselves. */
+    /** pair_screen: a user admin names the screen. pair_user: the signed-in person names the account the device becomes. */
     public static function approved(Model $code, User $screen, int $approvedBy, DateTimeImmutable $now): Model
     {
         $code->user = $screen;

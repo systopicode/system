@@ -6,26 +6,27 @@ use Systopic\System\Auth\Presence;
 use Systopic\System\Panels\Root\Cms\Users\Panel as Users;
 
 $e = static fn($v): string => htmlspecialchars((string) $v, ENT_QUOTES);
+$screens = ($this->accountKind ?? '') === \Systopic\System\Tables\Users\Model::SCREEN;
 ?>
-<h1>Users</h1>
-<p class="tagsHint">Search by username, full name or email. The pen opens the user.</p>
+<h1><?= $screens ? 'Screens' : 'Persons' ?></h1>
+<p class="tagsHint"><?= $screens ? 'Search by name or description. The pen opens the screen.' : 'Search by username, full name or email. The pen opens the person.' ?></p>
 <?php if (!LoginCodes::available()) { ?>
 <div class="cms message is-stay userKeyWarn"><div class="warning"><p>The sign-in key is missing. One-time codes no longer work, including codes already sent. Passwords, passkeys and trusted devices still do.</p></div></div>
 <?php } ?>
 <section class="widget is-list userList">
 	<header>
-		<h2>List of users</h2>
+		<h2><?= $screens ? 'List of screens' : 'List of persons' ?></h2>
 		<input class="listSearch" type="search" placeholder="Search" data-on_input="filterUsers" autocomplete="off">
-		<a class="button submit" data-on_click="addUser"><i class="fa-regular fa-plus"></i><span>Add user</span></a>
+		<a class="button submit" data-on_click="addUser"><i class="fa-regular fa-plus"></i><span><?= $screens ? 'Add screen' : 'Add person' ?></span></a>
 	</header>
 	<div class="tableScroll">
 		<table>
 			<thead>
 				<tr>
 					<th></th>
-					<th>Username</th>
-					<th>Full name</th>
-					<th>Email</th>
+					<th><?= $screens ? 'Name' : 'Username' ?></th>
+					<th><?= $screens ? 'Description' : 'Full name' ?></th>
+					<?php if (!$screens) { ?><th>Email</th><?php } ?>
 					<th>Last sign-in</th>
 					<th>Roles</th>
 					<th></th>
@@ -43,7 +44,7 @@ $e = static fn($v): string => htmlspecialchars((string) $v, ENT_QUOTES);
 							<?php } ?>
 						</td>
 						<td><?= $e($user->fullname) ?></td>
-						<td><?= $e($user->email) ?></td>
+						<?php if (!$screens) { ?><td><?= $e($user->email) ?></td><?php } ?>
 						<td><?= $user->lastLogin ? $e(\Systopic\System\Sys\LocalTime::format($user->lastLogin, 'j M Y, H:i')) : 'Unknown' ?></td>
 						<td>
 							<div class="roles" data-drop_accept="role" data-on_drop="addRoleToUser">
@@ -58,7 +59,7 @@ $e = static fn($v): string => htmlspecialchars((string) $v, ENT_QUOTES);
 							<ul>
 								<li><a class="ajax button icononly" title="Edit" href="<?= $e($this->href . 'edit/?user_id=' . (int) $user->id) ?>"><i class="fa-regular fa-pen"></i></a></li>
 								<?php if ((int) $user->id !== (int) \Systopic\System\Auth\Session::id()) { ?>
-									<li><a class="button icononly" title="Delete" data-on_click="userConfirm" data-action="removeUser" data-confirm="Delete this user? This cannot be undone." data-user_id="<?= (int) $user->id ?>"><i class="fa-regular fa-trash"></i></a></li>
+									<li><a class="button icononly" title="Delete" data-on_click="userConfirm" data-action="removeUser" data-confirm="<?= $screens ? 'Delete this screen? This cannot be undone.' : 'Delete this user? This cannot be undone.' ?>" data-user_id="<?= (int) $user->id ?>"><i class="fa-regular fa-trash"></i></a></li>
 								<?php } ?>
 							</ul>
 						</td>

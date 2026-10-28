@@ -23,14 +23,14 @@ $color = ($group->color !== null && $group->color !== '') ? $group->color : '#8a
 			<span>Color</span>
 			<span class="colorChoice">
 				<input type="color" data-group_id="<?= (int) $group->id ?>" name="value" data-on_change="updateGroupColor" value="<?= $e($color) ?>">
-				<?php if ((string) $group->color !== '') { ?>
-					<button type="button" class="button" data-on_click="resetGroupColor" data-group_id="<?= (int) $group->id ?>">Clear</button>
-				<?php } ?>
 			</span>
 		</label>
 	</div>
 	<section class="groupRights">
-		<p class="tagsHint">Click a role to allow or remove it.</p>
+		<div class="rightsHead">
+			<h2>Roles</h2>
+			<p class="tagsHint">Click a role to allow or remove it.</p>
+		</div>
 		<div>
 			<h2>Read</h2>
 			<div class="picks">

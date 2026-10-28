@@ -331,7 +331,8 @@ sys.core.event.drag = function (event, hooks) { // 2. param raus
 		if ((zone && obj.classList.contains('v') && !obj.classList.contains('insertInto')) || obj.classList.contains('dashDrop')) {
 			var after = obj.classList.contains('insertAfter');
 			var rowBox = obj.closest && obj.closest('tr');
-			var span = rowBox ? rowBox.getBoundingClientRect() : rect;
+			var treeLabel = !rowBox && obj.parentElement && obj.closest && obj.closest('ul.tree') ? obj.parentElement : null;
+			var span = rowBox ? rowBox.getBoundingClientRect() : (treeLabel ? treeLabel.getBoundingClientRect() : rect);
 			var edge = after ? span.bottom : span.top;
 			return {
 				left: span.left,

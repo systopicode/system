@@ -287,62 +287,64 @@ sys.core.server.command = function (call) {
 			sys.loader.addScripts(response.scriptFiles, call);
 			break;
 		case 'loadCSS':
-			// Module sheets belong in the cms layer, same as the full page.
-			// A plain link has no layer and beats the preview. An @import
-			// written into a style tag after load is dropped by the browser,
-			// so the text is inlined into the layer instead.
+			// The answer lists every module sheet for the page now open.
+			// Sheets of the module just left are removed, including on back
+			// and forward. A link without this mark is the system UI.
+			// The link has to name layer="cms". A style tag that repeats
+			// "@layer cms" does not join the layer on the system links.
+			var sheetKey = (value) => {
+				var path = String(value || '').split('?')[0];
+				try {
+					return new URL(path, document.baseURI).pathname;
+				} catch (error) {
+					return path;
+				}
+			};
+			var wanted = new Set();
+			var items = [];
 			(response.cssFiles || []).forEach((item) => {
 				var href = typeof item === 'string' ? item : (item && item.href);
-				var css = typeof item === 'string' ? '' : (item && item.css) || '';
 				if (!href) {
 					return;
 				}
 				var path = String(href).split('?')[0];
-				var sheets = document.querySelectorAll('style[data-cms-module]');
-				var node = null;
-				for (var i = 0; i < sheets.length; i++) {
-					if (sheets[i].getAttribute('data-cms-module') === path) {
-						node = sheets[i];
-						break;
-					}
+				var key = sheetKey(path);
+				wanted.add(key);
+				items.push({href: href, path: path, key: key});
+			});
+			document.querySelectorAll('link[data-cms-module]').forEach((link) => {
+				if (!wanted.has(sheetKey(link.getAttribute('href')))) {
+					link.remove();
 				}
-				if (!node) {
-					var imported = false;
-					document.querySelectorAll('style:not([data-cms-module])').forEach((style) => {
-						if ((style.textContent || '').indexOf(path) !== -1) {
-							imported = true;
-						}
-					});
-					if (imported) {
-						return;
+			});
+			document.querySelectorAll('style[data-cms-module]').forEach((style) => {
+				if (!wanted.has(sheetKey(style.getAttribute('data-cms-module')))) {
+					style.remove();
+				}
+			});
+			items.forEach((item) => {
+				var existing = null;
+				document.querySelectorAll('link[rel="stylesheet"]').forEach((link) => {
+					if (!existing && sheetKey(link.getAttribute('href')) === item.key) {
+						existing = link;
 					}
-				} else if (node.getAttribute('data-cms-href') === href) {
+				});
+				// A sheet that came back without its layer paints over the
+				// system UI. Replace it so the new link joins the cms layer.
+				if (existing && existing.getAttribute('layer') !== 'cms') {
+					existing.remove();
+					existing = null;
+				}
+				if (existing) {
+					existing.setAttribute('data-cms-module', item.path);
 					return;
 				}
-				var apply = (text) => {
-					if (!text) {
-						return;
-					}
-					text = text.replace(/url\(\s*(['"]?)(?!data:|https?:|\/\/|#)([^'")]+)\1\s*\)/g, (_, quote, rel) => {
-						try {
-							return "url('" + new URL(rel, href).href + "')";
-						} catch (error) {
-							return 'url(' + quote + rel + quote + ')';
-						}
-					});
-					var target = node || document.createElement('style');
-					target.setAttribute('data-cms-module', path);
-					target.setAttribute('data-cms-href', href);
-					target.textContent = '@layer cms {\n' + text + '\n}\n';
-					if (!node) {
-						document.head.appendChild(target);
-					}
-				};
-				if (css) {
-					apply(css);
-					return;
-				}
-				fetch(href, {credentials: 'same-origin'}).then((res) => res.ok ? res.text() : '').then(apply);
+				var link = document.createElement('link');
+				link.rel = 'stylesheet';
+				link.href = item.href;
+				link.setAttribute('layer', 'cms');
+				link.setAttribute('data-cms-module', item.path);
+				document.head.appendChild(link);
 			});
 			break;
 		case 'updateClientData':

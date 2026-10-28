@@ -248,6 +248,14 @@ final class Session
         $_SESSION[self::RETURN_KEY] = $path . ($query !== '' ? '?' . $query : '');
     }
 
+    /** The remembered page, still there for a password or a passkey on the same card. */
+    public static function peekReturn(): ?string
+    {
+        \http::sessionStartOnce();
+        $url = $_SESSION[self::RETURN_KEY] ?? null;
+        return is_string($url) && $url !== '' ? $url : null;
+    }
+
     /** Where the sign-in leads, once. */
     public static function takeReturn(): ?string
     {

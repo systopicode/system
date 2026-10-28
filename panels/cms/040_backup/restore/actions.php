@@ -17,7 +17,17 @@ $backupdirpathNative = fs::toNative($backupdirpath);
 
 switch ($this->action) {
 	case 'updateRestoreSelection':
-		$this->parent->updateState(http::put()->values);
+		$values = http::put()->values;
+		if (!\Systopic\System\Auth\Session::isSuperuser()) {
+			foreach (['restorePageSettings', 'restoreMediaSettings', 'restoreEnvironment'] as $key) {
+				if (is_object($values)) {
+					unset($values->$key);
+				} elseif (is_array($values)) {
+					unset($values[$key]);
+				}
+			}
+		}
+		$this->parent->updateState($values);
 		break;
 	case 'createTaskList':
 		if ($this->backupName(http::get('name')) === null) {
@@ -81,6 +91,10 @@ switch ($this->action) {
 	case 'extractSettings':
 	case 'extractEnvironment':
 		if ($this->parent->state->cancel) {
+			break;
+		}
+		if (!\Systopic\System\Auth\Session::isSuperuser()) {
+			message::error('Only a superuser can restore settings and the environment.');
 			break;
 		}
 		$prefix = $this->action === 'extractSettings' ? 'settings/' : 'config/';

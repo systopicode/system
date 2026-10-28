@@ -534,7 +534,10 @@ div.cms.message pre{
 /* Wortmarke nur auf dem Dashboard. In den Modulen bleibt das Zeichen. */
 body > main:has(> div.content .dashboard) a.cmsBrand{
     justify-content: flex-start;
+    align-items: center;
+    box-sizing: border-box;
     padding-left: 0.85rem;
+    padding-right: 0.85rem;
 }
 
 body > main:has(> div.content .dashboard) a.cmsBrand img.brandMark{
@@ -545,11 +548,12 @@ body > main:has(> div.content .dashboard) a.cmsBrand img.brandFull{
     display: block;
     position: relative;
     z-index: 2;
-    flex: 0 0 auto;
-    height: 2rem;
+    flex: 0 1 auto;
+    height: auto;
+    max-height: 2rem;
     width: auto;
-    max-width: none;
-    transform: translateY(-5%);
+    max-width: 100%;
+    object-fit: contain;
 }
 
 /* Dashboard: the rail opens up, icon and label side by side */

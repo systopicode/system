@@ -6,6 +6,8 @@ echo fsLoader::includeScriptFiles(fs::$siteRoot . 'js/');
 
 echo fsLoader::includeCSSFiles(fs::$siteRoot . 'css/');
 
+// system_overrides.css is the CMS. The public site does not load it.
+
 // Packages add to the head here — the legacy shop (systopic/system-legacy)
 // its PayPal script.
 hooks::emit('headLoader');

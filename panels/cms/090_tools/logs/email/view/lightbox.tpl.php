@@ -136,10 +136,7 @@ if (empty($output)) {
 			<p class="logError"><?= htmlspecialchars($error) ?></p>
 		    <?php } ?>
 		    <?php if ($htmlContent !== '') { ?>
-			<iframe id="mailPreview" class="mailPreview" title="Message"></iframe>
-			<script>
-				document.getElementById('mailPreview').srcdoc = <?= json_encode($htmlContent, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>;
-			</script>
+			<iframe class="mailPreview" title="Message" srcdoc="<?= htmlspecialchars($htmlContent, ENT_QUOTES) ?>"></iframe>
 		    <?php } elseif ($textContent !== '') { ?>
 			<pre class="mailPreview"><?= htmlspecialchars($textContent) ?></pre>
 		    <?php } else { ?>

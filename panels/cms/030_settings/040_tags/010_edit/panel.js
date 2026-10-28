@@ -14,6 +14,9 @@
 		var forbiddenChars = new RegExp('[^' + safeNameSettings.allowedChars + ']');
 
 		edit.onUpdateLightbox = doc => {
+			if (!doc || !doc.box) {
+				return;
+			}
 			edit.tagdata = edit.__libnode.__data.tag;
 			doc.box.onclick = (e) => {
 				e.stopPropagation();

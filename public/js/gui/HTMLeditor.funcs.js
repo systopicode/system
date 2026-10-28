@@ -105,11 +105,41 @@ function editorMediaRef(element) {
 	return match ? {node_id: match[1], format: match[2] || 'original'} : null;
 }
 
+/**
+ * The media node of a picture that is fixed in the page, not stored in a
+ * text field. The address carries the media id (var/original/000/42/…), the
+ * library row next to the tree has the node the file editor wants.
+ */
+function fixedMediaNodeId(el) {
+	if (!el) {
+		return '';
+	}
+	var urls = [el.getAttribute('src'), el.getAttribute('data-src'), el.getAttribute('poster')];
+	for (var i = 0; i < urls.length; i++) {
+		var parts = mediaFormatFromUrl(urls[i] || '');
+		if (!parts) {
+			continue;
+		}
+		var id = parseInt(parts.folders.replace(/\//g, ''), 10);
+		if (!id) {
+			continue;
+		}
+		var row = document.querySelector('li[data-media_id="' + id + '"]');
+		if (row && row.dataset.node_id) {
+			return row.dataset.node_id;
+		}
+	}
+	return '';
+}
+
 /** The editor of the image or video, in the format it shows now. */
 function formatImage(event) {
 	var el = event.data.target;
 	var media = editorMediaRef(el);
 	var id = media ? media.node_id : el.dataset.node_id;
+	if (!id) {
+		id = fixedMediaNodeId(el);
+	}
 	if (!id) {
 		return;
 	}
@@ -138,8 +168,26 @@ function HTMLeditorHTMLMode(event) {
 
 /** var/original/… or var/formats/<format>/… of an image or video of the media library. */
 function mediaFormatParts(el) {
-	var m = (el.getAttribute('src') || '').split('?')[0].match(/^(.*\/var\/)(original|formats\/([^\/]+))\/(\d{3}\/\d{2}\/)([^\/]+)$/);
+	var urls = [el.getAttribute('src'), el.getAttribute('data-src'), el.getAttribute('poster')];
+	for (var i = 0; i < urls.length; i++) {
+		var parts = mediaFormatFromUrl(urls[i] || '');
+		if (parts) return parts;
+	}
+	return null;
+}
+
+function mediaFormatFromUrl(src) {
+	var m = String(src).split('?')[0].match(/^(.*\/var\/)(original|formats\/([^\/]+))\/(\d{3}\/\d{2}\/)([^\/]+)$/);
 	return m && {base: m[1], format: m[3] || 'original', folders: m[4], file: m[5]};
+}
+
+/** The name the format menu shows, for the hover chip. */
+function mediaFormatLabel(el) {
+	var key = mediaFormatOf(el);
+	var kind = el.nodeName === 'VIDEO' ? 'video' : 'image';
+	var table = (window.editorFormats && editorFormats[kind]) || {};
+	if (table[key]) return table[key];
+	return key === 'original' ? 'Original' : key;
 }
 
 function mediaFormatOf(el) {
@@ -170,6 +218,7 @@ function changeMediaFormat(event) {
 	}
 	el.setAttribute('src', src);
 	el.dataset.format = format;
+	if (window.cmsMediaFormatShow) window.cmsMediaFormatShow(el);
 	var media = editorMediaRef(el);
 	if (media) {
 		// the url only shows it; what is saved is the reference

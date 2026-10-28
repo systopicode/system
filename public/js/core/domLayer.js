@@ -308,24 +308,18 @@
 								}
 							} catch (error) {}
 						});
-						pins.push({el: el, top: top, min: el.style.minHeight});
-						if (top > 0) {
-							el.style.minHeight = (top + el.clientHeight) + 'px';
-						}
+						// pinScroll holds the place without enlarging a window
+						// that already has its height. The page preview is one.
+						var pin = sys.core.server.pinScroll
+							? sys.core.server.pinScroll(el, top)
+							: () => { if (el.isConnected && top) el.scrollTop = top; };
+						pins.push(pin);
 					}
 					el = el.parentElement;
 				}
 			});
 			return () => {
-				pins.forEach(pin => {
-					if (!pin.el.isConnected) {
-						return;
-					}
-					pin.el.style.minHeight = pin.min;
-					if (pin.top) {
-						pin.el.scrollTop = pin.top;
-					}
-				});
+				pins.forEach(pin => pin());
 				saved.forEach(item => {
 					var el;
 					try {
@@ -333,13 +327,10 @@
 					} catch (error) {
 						return;
 					}
-					if (!el || !item.top) {
+					if (!el || !item.top || !sys.core.server.pinScroll) {
 						return;
 					}
-					var min = el.style.minHeight;
-					el.style.minHeight = (item.top + el.clientHeight) + 'px';
-					el.scrollTop = item.top;
-					el.style.minHeight = min;
+					sys.core.server.pinScroll(el, item.top)();
 				});
 			};
 		};

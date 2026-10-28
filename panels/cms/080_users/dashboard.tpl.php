@@ -47,9 +47,9 @@ $tab = Cms::widgetTab($this, 'users', $tabs);
 			$open = $user !== null;
 			?>
 			<li>
-				<<?= $open ? 'a class="ajax" href="' . $e(\http::$root . 'cms/users/users/edit/?user_id=' . (int) $user->id) . '"' : 'div' ?>>
+				<<?= $open ? 'a class="ajax" href="' . $e(\http::$root . 'cms/users/' . ($user->type === \Systopic\System\Tables\Users\Model::SCREEN ? 'screens' : 'users') . '/edit/?user_id=' . (int) $user->id) . '"' : 'div' ?>>
 					<?php if ($user !== null) { ?>
-						<span class="dashInitials"><img src="<?= $e(Portrait::src((int) $user->id, $user->email)) ?>" alt=""></span>
+						<span class="dashInitials"><img src="<?= $e(Portrait::src((int) $user->id, $user->email, $user->type === \Systopic\System\Tables\Users\Model::SCREEN)) ?>" alt=""></span>
 					<?php } ?>
 					<?php [$presence, $presenceTitle] = Presence::deviceMark((int) $device->id); ?>
 					<span class="presence<?= $presence !== '' ? ' ' . $presence : '' ?>" title="<?= $presenceTitle ?>"></span>
@@ -86,7 +86,7 @@ $signIns = array_slice(array_values(array_filter(LoginLog::entries(), static fn(
 				<div>
 					<span class="presence <?= $dot ?>" title="<?= $dotTitle ?>"></span>
 					<?php if ($user !== null) { ?>
-						<span class="dashInitials"><img src="<?= $e(Portrait::src((int) $user->id, $user->email)) ?>" alt=""></span>
+						<span class="dashInitials"><img src="<?= $e(Portrait::src((int) $user->id, $user->email, $user->type === \Systopic\System\Tables\Users\Model::SCREEN)) ?>" alt=""></span>
 					<?php } else { ?>
 						<span class="dashInitials"><?= $e(mb_strtoupper(mb_substr($name, 0, 1))) ?></span>
 					<?php } ?>

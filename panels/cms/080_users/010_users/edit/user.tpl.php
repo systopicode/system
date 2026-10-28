@@ -22,6 +22,19 @@ $field = static function (string $label, string $value, ?string $action = null, 
 	return '<label class="field' . ($class !== '' ? ' ' . $class : '') . '"><span>' . $label . '</span>' . $input . '</label>';
 };
 $logged = static fn(string $date): string => ($d = DateTimeImmutable::createFromFormat('d.m.Y-H:i:s', $date)) ? \Systopic\System\Sys\LocalTime::format($d, 'j M Y, H:i') : $date;
+$accountLabel = trim((string) ($user->name ?: $user->email));
+$activationHours = \Systopic\System\Tables\Users\Operator::ACTIVATION_DAYS * 24;
+$mailNote = static function (string $kind) use ($accountLabel, $logged): string {
+	$sent = $accountLabel === '' ? null : LoginLog::lastMailed($kind, $accountLabel);
+	if ($sent === null) {
+		return '';
+	}
+	$line = 'Last sent ' . $logged($sent[0]);
+	if ($sent[1] !== '') {
+		$line .= ' by ' . $sent[1];
+	}
+	return $line . '.';
+};
 $tabs = ['general' => 'General', 'roles' => 'Roles', 'access' => 'Access', 'signins' => 'Sign-ins', 'maintenance' => 'Maintenance'];
 $tab = (string) ($this->state->userTab ?? 'general');
 if (!isset($tabs[$tab])) {
@@ -33,9 +46,9 @@ $signInsAll = !empty($this->state->signInsAll);
 $signIns = $signInsAll ? $signInAll : array_slice($signInAll, 0, 3);
 $devicesAll = !empty($this->state->devicesAll);
 $devicesShown = $devicesAll ? $devices : array_slice($devices, 0, 3);
-$heading = trim((string) $user->fullname);
+$heading = trim((string) ($isScreen ? $user->name : $user->fullname));
 if ($heading === '') {
-	$heading = trim((string) $user->name);
+	$heading = trim((string) ($isScreen ? $user->fullname : $user->name));
 }
 if ($heading === '') {
 	$heading = trim((string) $user->email);
@@ -56,12 +69,12 @@ if ($heading === '') {
 	<?= \message::flush() ?>
 	<div class="userPane" data-user-pane="general"<?= $tab === 'general' ? '' : ' hidden' ?>>
 	<section class="cmsBox userAccount">
-		<header><div class="cmsBoxTitles"><h2>Account</h2><p class="cmsBoxLead">Name, email and the portrait used in the CMS.</p></div></header>
+		<header><div class="cmsBoxTitles"><h2>Account</h2><p class="cmsBoxLead"><?= $isScreen ? 'Name, description and the picture used for this screen.' : 'Name, email and the portrait used in the CMS.' ?></p></div></header>
 		<div class="cmsBoxBody">
 			<?= \message::flush('account') ?>
 			<div class="accountPhoto">
 				<form class="ajax portraitDrop" method="post" enctype="multipart/form-data" action="<?= $e($this->href . 'uploadPortrait?user_id=' . (int) $user->id) ?>" data-drop-files data-upload="onsubmit">
-					<span class="portraitFace"><img src="<?= $e(Portrait::src((int) $user->id, $user->email)) ?>" alt=""></span>
+					<span class="portraitFace"><img src="<?= $e(Portrait::src((int) $user->id, $user->email, $isScreen)) ?>" alt=""></span>
 					<span>Drop or click</span>
 					<input type="file" name="portrait" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" onchange="this.form.requestSubmit()">
 				</form>
@@ -71,9 +84,18 @@ if ($heading === '') {
 			</div>
 			<div class="accountFields">
 				<div class="fieldGrid is-stack">
-					<?= $field('Username', (string) $user->name, 'updateUserName') ?>
-					<?= $field('Full name', (string) $user->fullname, 'updateUserFullname') ?>
-					<?= $field('Email', (string) $user->email, 'updateUserEmail', 'email') ?>
+					<?php if ($isScreen) { ?>
+						<?= $field('Name', (string) $user->name, 'updateUserName') ?>
+						<?= $field('Description', (string) $user->fullname, 'updateUserFullname') ?>
+					<?php } else { ?>
+						<?= $field('Username', (string) $user->name, 'updateUserName') ?>
+						<?= $field('Full name', (string) $user->fullname, 'updateUserFullname') ?>
+						<?= $field('Email', (string) $user->email, 'updateUserEmail', 'email') ?>
+					<?php } ?>
+					<label class="field">
+						<span>Account type</span>
+						<input type="text" class="is-locked" value="<?= $isScreen ? 'Screen' : 'Person' ?>" disabled tabindex="-1" aria-disabled="true">
+					</label>
 				</div>
 				<p class="accountLine">
 					<span>Created <?= $e($when($user->createDate) ?: 'unknown') ?><?= $this->createdBy ? ' by ' . $e(Users::userLabel($this->createdBy)) : '' ?></span>
@@ -95,7 +117,14 @@ if ($heading === '') {
 							echo '<div class="tag' . ($on ? ' active' : '') . '"' . $click . ' style="--tag-color:' . $e($color) . ';--tag-bg:' . $e($color) . ';background:' . $e($color) . ';border-color:' . $e($color) . '">' . $e($role->name) . '</div>';
 						} ?>
 					</div>
-					<?php if ($viewer) { ?>
+					<?php if ($viewer && $isScreen) { ?>
+						<div class="userRow">
+							<p class="tagsHint">A screen cannot be a superuser.</p>
+							<?php if ($user->isSuperuser) { ?>
+								<button type="button" class="button" data-on_click="revokeSuperuser" data-user_id="<?= (int) $user->id ?>"><i class="fa-regular fa-user-shield"></i>Revoke superuser</button>
+							<?php } ?>
+						</div>
+					<?php } elseif ($viewer) { ?>
 						<div class="userRow">
 							<p class="tagsHint"><?= $user->isSuperuser ? 'Superuser: manages every user.' : 'A normal user.' ?><?= $isMe ? ' Not to be changed on your own account.' : '' ?></p>
 							<?php if (!$isMe && $user->isSuperuser) { ?>
@@ -128,12 +157,12 @@ if ($heading === '') {
 						</ul>
 					<?php } ?>
 					<?php
-					$moreSignIns = !$signInsAll && $signInTotal > count($signIns);
+					$moreSignIns = $signInTotal > 3;
 					$cleanLog = $viewer && $signInTotal > 0;
 					if ($moreSignIns || $cleanLog) { ?>
 						<div class="signInTools">
 							<?php if ($moreSignIns) { ?>
-								<button type="button" class="cmsBoxMore" data-on_click="moreSignIns">Show all sign-ins (<?= (int) $signInTotal ?>) <i class="fa-regular fa-chevron-down"></i></button>
+								<button type="button" class="cmsBoxMore" data-on_click="moreSignIns"><?= $signInsAll ? 'Show less' : 'Show all sign-ins (' . (int) $signInTotal . ')' ?> <i class="fa-regular fa-chevron-<?= $signInsAll ? 'up' : 'down' ?>"></i></button>
 							<?php } ?>
 							<?php if ($cleanLog) { ?>
 								<button type="button" class="button" data-on_click="userConfirm" data-action="clearSignIns" data-confirm="Clean this user's sign-in log? Only this user's lines are removed." data-user_id="<?= (int) $user->id ?>"><i class="fa-regular fa-broom"></i> Clean User Log</button>
@@ -170,56 +199,41 @@ if ($heading === '') {
 					<?php } ?>
 				</section>
 			<?php } ?>
-			<?php if ($codes) { ?>
+			<?php if ($codes && $isScreen) { ?>
 				<section class="cmsBox userAccess">
-					<div class="cmsBoxSplit">
+					<header><div class="cmsBoxTitles"><h2>Pairing</h2><p class="cmsBoxLead">A code signs a device in as this screen. It is shown here and is not sent by email.</p></div></header>
+					<div class="accessRow">
 						<div>
-							<h2>Account type</h2>
-							<p class="cmsBoxLead">A person signs in. A screen is a device that is paired.</p>
-							<label class="field">
-								<select name="value" data-on_change="updateUserType" aria-label="Account type">
-									<option value="person" <?= $isScreen ? '' : 'selected' ?>>Person</option>
-									<option value="screen" <?= $isScreen ? 'selected' : '' ?>>Screen</option>
-								</select>
-							</label>
-							<?php if ($isScreen) { ?>
-								<p class="cmsBoxLead">On a signed-in phone, scan the code in the account or open the link, then choose the screen.</p>
-							<?php } else { ?>
-								<p class="cmsBoxLead">Use this when the account has no signed-in device yet.</p>
-							<?php } ?>
-						</div>
-						<div class="accessStack">
-							<?php if ($isScreen) { ?>
-								<div class="screenCode">
-									<h2>Code from the screen</h2>
-									<div class="cmsCodeSlots" data-code-slots>
-										<?php for ($slot = 0; $slot < 8; $slot++) {
-											if ($slot === 4) {
-												echo '<span class="cmsCodeDash" aria-hidden="true">-</span>';
-											}
-										?>
-										<input data-slot="<?= $slot ?>" inputmode="text" autocapitalize="characters" spellcheck="false" autocomplete="<?= $slot === 0 ? 'one-time-code' : 'off' ?>" aria-label="Character <?= $slot + 1 ?>" maxlength="8">
-										<?php } ?>
-										<input type="hidden" name="value" data-on_change="approveScreen" autocomplete="off">
-									</div>
-								</div>
-							<?php } else { ?>
-								<div>
-									<button type="button" class="button submit" data-on_click="inviteCode"><i class="fa-regular fa-qrcode"></i> Create code</button>
-									<p class="cmsBoxLead">The code is valid for 10 minutes.</p>
-								</div>
-								<div>
-									<button type="button" class="button" data-on_click="inviteMail" <?= (string) $user->email === '' ? 'disabled' : '' ?>><i class="fa-regular fa-envelope"></i> Send invitation code</button>
-									<p class="cmsBoxLead">The code in the email is valid for 24 hours.</p>
-								</div>
-								<?php if (!$user->firstLogin) { ?>
-									<button type="button" class="button" data-on_click="resendActivationEmail" <?= (string) $user->email === '' ? 'disabled' : '' ?>><i class="fa-regular fa-paper-plane"></i> Email a password link</button>
-								<?php } ?>
-							<?php } ?>
+							<button type="button" class="button submit" data-on_click="inviteCode"><i class="fa-regular fa-qrcode"></i> Create code</button>
+							<p class="cmsBoxLead">Valid for 10 minutes. Shown here.</p>
 						</div>
 					</div>
 				</section>
-			<?php } elseif (!$isScreen) { ?>
+			<?php } elseif ($codes && (string) $user->email === '') { ?>
+				<section class="cmsBox userAccess">
+					<header><div class="cmsBoxTitles"><h2>Sign-in code</h2><p class="cmsBoxLead">Add an email address before creating a sign-in code.</p></div></header>
+				</section>
+			<?php } elseif ($codes) { ?>
+				<section class="cmsBox userAccess">
+					<header><div class="cmsBoxTitles"><h2>Sign-in code</h2><p class="cmsBoxLead"><?php if (!$user->firstLogin) { ?>This person has not signed in yet. A code is the first way in and makes the account active.<?php } else { ?>A code signs this person in on another device. A signed-in account can confirm that device instead.<?php } ?></p></div></header>
+					<div class="accessRow">
+						<div>
+							<button type="button" class="button submit" data-on_click="inviteCode"><i class="fa-regular fa-qrcode"></i> Create code</button>
+							<p class="cmsBoxLead">Valid for 10 minutes. Shown here.</p>
+						</div>
+						<div>
+							<button type="button" class="button" data-on_click="inviteMail"><i class="fa-regular fa-paper-plane"></i> Send invitation code</button>
+							<p class="cmsBoxLead">Valid for 24 hours.<?= ($note = $mailNote(LoginLog::MAILED_INVITATION)) !== '' ? ' ' . $e($note) : '' ?></p>
+						</div>
+						<?php if (!$user->firstLogin) { ?>
+							<div>
+								<button type="button" class="button" data-on_click="resendActivationEmail"><i class="fa-regular fa-paper-plane"></i> Email a password link</button>
+								<p class="cmsBoxLead">Valid for <?= (int) $activationHours ?> hours.<?= ($note = $mailNote(LoginLog::MAILED_PASSWORD)) !== '' ? ' ' . $e($note) : '' ?></p>
+							</div>
+						<?php } ?>
+					</div>
+				</section>
+			<?php } elseif (!$isScreen && (string) $user->email !== '') { ?>
 				<section class="cmsBox">
 					<header><div class="cmsBoxTitles"><h2>Password link</h2><p class="cmsBoxLead"><?php if ((string) $user->activationKey !== '') { ?>An activation link is out, valid until <?= $e($when($user->activationKeyExpire)) ?>.<?php } else { ?>Sends a link to set a password.<?php } ?></p></div></header>
 					<div class="cmsBoxActions">
@@ -229,13 +243,14 @@ if ($heading === '') {
 							<button type="button" class="button" data-copy="<?= $e($activationLink) ?>"><i class="fa-regular fa-copy"></i> Copy activation link</button>
 						<?php } ?>
 						<button type="button" class="button" data-on_click="resendActivationEmail" data-user_id="<?= (int) $user->id ?>" <?= (string) $user->email === '' ? 'disabled' : '' ?>><i class="fa-regular fa-paper-plane"></i> <?= $user->firstLogin ? 'Email a new password link' : 'Email a password link' ?></button>
+						<p class="cmsBoxLead">Valid for <?= (int) $activationHours ?> hours.<?= ($note = $mailNote(LoginLog::MAILED_PASSWORD)) !== '' ? ' ' . $e($note) : '' ?></p>
 					</div>
 				</section>
 			<?php } ?>
 			<?php if ($codes) { ?>
 			<section class="cmsBox">
 				<header>
-					<div class="cmsBoxTitles"><h2>Trusted devices</h2><p class="cmsBoxLead">Devices that can access this account.</p></div>
+					<div class="cmsBoxTitles"><h2>Trusted devices</h2><p class="cmsBoxLead"><?= $isScreen ? 'Devices paired to this screen.' : 'Devices that can access this account.' ?></p></div>
 				</header>
 				<div class="cmsBoxBody">
 					<?php if ($devices === []) { ?>
@@ -260,13 +275,13 @@ if ($heading === '') {
 							<?php } ?>
 						</div>
 					<?php } ?>
-					<?php if (!$devicesAll && count($devices) > count($devicesShown)) { ?>
-						<button type="button" class="cmsBoxMore" data-on_click="showAllDevices">Show all devices (<?= count($devices) ?>) <i class="fa-regular fa-chevron-down"></i></button>
+					<?php if (count($devices) > 3) { ?>
+						<button type="button" class="cmsBoxMore" data-on_click="showAllDevices"><?= $devicesAll ? 'Show less' : 'Show all devices (' . count($devices) . ')' ?> <i class="fa-regular fa-chevron-<?= $devicesAll ? 'up' : 'down' ?>"></i></button>
 					<?php } ?>
 				</div>
 			</section>
 			<?php } ?>
-			<?= \Systopic\System\Auth\Passkeys::render($user) ?>
+			<?php if (!$isScreen) { echo \Systopic\System\Auth\Passkeys::render($user); } ?>
 	</div>
 	<div class="userPane" data-user-pane="maintenance"<?= $tab === 'maintenance' ? '' : ' hidden' ?>>
 		<section class="cmsBox">
@@ -284,12 +299,12 @@ if ($heading === '') {
 			<section class="cmsBox">
 				<header>
 					<div class="cmsBoxTitles">
-						<h2>Delete user</h2>
-						<p class="cmsBoxLead">Removes the account, its roles and its devices. This cannot be undone.</p>
+					<h2><?= $isScreen ? 'Delete screen' : 'Delete user' ?></h2>
+					<p class="cmsBoxLead"><?= $isScreen ? 'Removes the screen, its roles and its devices. This cannot be undone.' : 'Removes the account, its roles and its devices. This cannot be undone.' ?></p>
 					</div>
 				</header>
 				<div class="cmsBoxActions">
-					<button type="button" class="button" data-on_click="userConfirm" data-action="removeUser" data-confirm="Delete this user? This cannot be undone." data-user_id="<?= (int) $user->id ?>"><i class="fa-regular fa-trash"></i> Delete user</button>
+					<button type="button" class="button" data-on_click="userConfirm" data-action="removeUser" data-confirm="<?= $isScreen ? 'Delete this screen? This cannot be undone.' : 'Delete this user? This cannot be undone.' ?>" data-user_id="<?= (int) $user->id ?>"><i class="fa-regular fa-trash"></i> <?= $isScreen ? 'Delete screen' : 'Delete user' ?></button>
 				</div>
 			</section>
 		<?php } ?>

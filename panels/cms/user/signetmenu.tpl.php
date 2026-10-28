@@ -9,7 +9,7 @@ $name = trim((string) $identity->fullname) !== '' ? (string) $identity->fullname
 	<div class="signet">
 		<span class="initials<?= strlen($this->initials) > 2 ? '' : ' small' ?>"><?= htmlspecialchars($this->initials) ?></span>
 		<?php if ($id > 0) { ?>
-			<img src="<?= htmlspecialchars(Portrait::src($id, $this->email), ENT_QUOTES) ?>" alt="">
+			<img src="<?= htmlspecialchars(Portrait::src($id, $this->email, ($identity->user->type ?? '') === \Systopic\System\Tables\Users\Model::SCREEN), ENT_QUOTES) ?>" alt="">
 		<?php } ?>
 		<a class="ajax" href="<?= htmlspecialchars($this->href, ENT_QUOTES) ?>" title="Account"></a>
 	</div>

@@ -14,7 +14,7 @@
 
 .cms button.loading:before,
 .cms .button.loading:before,
-form.loading button:before,
+form.loading button:not(.authReveal):before,
 .spinner:before {
     content: 'Loading';
     position: absolute;
@@ -26,7 +26,7 @@ form.loading button:before,
     margin-left: -10px;
 }
 
-form.loading button:before,
+form.loading button:not(.authReveal):before,
 .spinner:not(:required):before,
 .cms button.loading:before,
 .cms .button.loading:before{
@@ -55,15 +55,24 @@ form.loading button:before,
 	pointer-events: none;
 }
 
-.cms form.loading button,
-.cms form.loading .button,
+.cms form.loading button:not(.authReveal),
+.cms form.loading .button:not(.authReveal),
 .cms button.loading,
 .cms .button.loading,
-.cms form.loading button i,
+.cms form.loading button:not(.authReveal) i,
 .cms button.loading i,
 .cms .button.loading i{
 	color: transparent;
 	pointer-events: none;
+}
+
+form.loading button.authReveal{
+	pointer-events: none;
+}
+
+form.loading button.authReveal:before{
+	content: none;
+	animation: none;
 }
 
 .loading{

@@ -3,7 +3,6 @@
 /** @var \Systopic\System\Panels\Root\Cms\Users\Permissions\Edit\Panel $this */
 
 use Systopic\System\Tables\Groups\Operator as GroupOperator;
-use Systopic\System\Tables\RolesOnGroups\Operator as PermissionOperator;
 
 include '../../child.role.actions.php';
 
@@ -48,17 +47,7 @@ switch ($this->action) {
 			$this->updateView('lightbox');
 			break;
 		}
+		$this->parent->updateView('main');
 		\http::redirect('../');
-		break;
-
-	case 'toggleGroupRole':
-		$right = (string) \http::dataset('right');
-		$role = $this->admin->role((int) \http::dataset('role_id'));
-		if ($role !== null && ($right === 'read' || $right === 'write')) {
-			$link = $this->admin->permission($group, $role);
-			$on = (bool) ($link?->$right ?? false);
-			$this->scope->write(...PermissionOperator::permit($link, $group, $role, $right, !$on));
-		}
-		$refresh();
 		break;
 }

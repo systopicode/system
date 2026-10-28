@@ -26,6 +26,32 @@ $field = static function (string $label, string $type, string $action, ?string $
 			</span>
 		</label>
 	</div>
+	<section class="groupRights">
+		<div class="rightsHead">
+			<h2>Permissions</h2>
+			<p class="tagsHint">Click a permission to allow or remove it.</p>
+		</div>
+		<div>
+			<h2>Read</h2>
+			<div class="picks">
+				<?php foreach ($this->admin->groups as $group) {
+					$on = (bool) ($this->admin->permission($group, $role)?->read ?? false);
+					$color = ($group->color !== null && $group->color !== '') ? $group->color : '#8a8f93';
+					echo '<div class="tag' . ($on ? ' active' : '') . '" data-on_click="toggleGroupRole" data-right="read" data-role_id="' . (int) $role->id . '" data-group_id="' . (int) $group->id . '" style="--tag-color:' . $e($color) . ';--tag-bg:' . $e($color) . ';background:' . $e($color) . '">' . $e($group->name ?: 'Group') . '</div>';
+				} ?>
+			</div>
+		</div>
+		<div>
+			<h2>Write</h2>
+			<div class="picks">
+				<?php foreach ($this->admin->groups as $group) {
+					$on = (bool) ($this->admin->permission($group, $role)?->write ?? false);
+					$color = ($group->color !== null && $group->color !== '') ? $group->color : '#8a8f93';
+					echo '<div class="tag' . ($on ? ' active' : '') . '" data-on_click="toggleGroupRole" data-right="write" data-role_id="' . (int) $role->id . '" data-group_id="' . (int) $group->id . '" style="--tag-color:' . $e($color) . ';--tag-bg:' . $e($color) . ';background:' . $e($color) . '">' . $e($group->name ?: 'Group') . '</div>';
+				} ?>
+			</div>
+		</div>
+	</section>
 </main>
 <footer>
 	<button type="button" class="button" data-on_click="userConfirm" data-action="removeRole" data-confirm="Delete this role? This cannot be undone." data-role_id="<?= (int) $role->id ?>"><i class="fa-regular fa-trash"></i>Remove role</button>

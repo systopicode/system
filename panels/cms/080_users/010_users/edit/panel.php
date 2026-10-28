@@ -54,6 +54,8 @@ class Panel extends CmsPanel {
 		return (object) [
 			'userTab' => 'general',
 			'signInLimit' => 10,
+			'signInsAll' => false,
+			'devicesAll' => false,
 		];
 	}
 

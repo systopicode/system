@@ -681,6 +681,12 @@ body .cmslightbox section > div.layout > aside:not(.cms) > div > div{
     object-fit: fill;
 }
 
+.cmslightbox .fileFrame audio{
+    display: block;
+    width: min(100%, 36rem);
+    margin: 2rem auto;
+}
+
 .cmslightbox .fileFrame video,
 .cmslightbox .fileFrame iframe{
     width: 100%;
@@ -786,9 +792,30 @@ body .cmslightbox section > div.layout > aside:not(.cms) > div > div{
     display: none;
 }
 
+.cmslightbox.upload .readingHint{
+    display: none;
+}
+
+.cmslightbox.upload .reading .readingHint{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    height: 100%;
+    margin: 0;
+    padding: 1.5rem;
+    text-align: center;
+    font-size: 0.9375rem;
+    font-weight: 600;
+    color: var(--cmsSubText);
+    pointer-events: none;
+}
+
 .cmslightbox.upload .uploader img,
 .cmslightbox.upload .uploader iframe,
-.cmslightbox.upload .uploader video{
+.cmslightbox.upload .uploader video,
+.cmslightbox.upload .uploader audio{
     position: absolute;
     inset: 0;
     width: 100%;
@@ -801,7 +828,8 @@ body .cmslightbox section > div.layout > aside:not(.cms) > div > div{
 
 .cmslightbox.upload .uploader img[src]:not([src=""]),
 .cmslightbox.upload .uploader iframe[src]:not([src=""]),
-.cmslightbox.upload .uploader video[src]:not([src=""]){
+.cmslightbox.upload .uploader video[src]:not([src=""]),
+.cmslightbox.upload .uploader audio[src]:not([src=""]){
     display: block;
     z-index: 1;
 }
