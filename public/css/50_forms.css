@@ -424,13 +424,13 @@ body.cms :is(button, a)[role="tab"]:is(.selected, [aria-selected="true"]){
 .cms .button.transparent,
 .cms button.transparent{
     background: transparent;
-    color: var(--cmsMainColor);
+    color: var(--cmsBrandInk);
     font-size: 0.875rem;
 }
 
 .cms .button.transparent i,
 .cms button.transparent i{
-    color: var(--cmsMainColor);
+    color: var(--cmsBrandInk);
 }
 
 .cms .button.transparent:not([disabled]):not(.disabled):hover,

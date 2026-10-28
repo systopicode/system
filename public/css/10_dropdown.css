@@ -60,7 +60,7 @@
 }
 
 .cms .contextmenu a i{
-    color: var(--cmsMainColor);
+    color: var(--cmsBrandInk);
     font-size: 1.05rem;
 }
 
@@ -256,7 +256,7 @@ a.redirect i,
     display: inline-block;
     margin: 2px 0.75rem 0 0;
     vertical-align: top;
-    color: var(--cmsMainColor);
+    color: var(--cmsBrandInk);
 }
 
 .cms div.dropdownContent ul:not(.iconsonly) > li i + span{

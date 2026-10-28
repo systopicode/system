@@ -1,5 +1,9 @@
 /* Layout and controls come from the existing widgets, forms and cmslightbox. */
 .passkeys { --passkeyInk: var(--cms-main, var(--cmsMainColor)); --passkeyTone: color-mix(in srgb, var(--passkeyInk) 34%, var(--cmsCanvas)); }
+html[data-mode="dark"] .passkeys {
+	--passkeyInk: var(--cmsBrandInk);
+	--passkeyTone: color-mix(in srgb, var(--cmsBrandInk) 42%, var(--cmsCanvas));
+}
 .passkeys .passkeyCount { color: var(--cmsMuted); font-size: .75rem; }
 .passkeys div.cms.passkeyStatus { margin: .75rem 0 0; overflow-wrap: anywhere; }
 .passkeys .passkeyStatus:empty { display: none; }

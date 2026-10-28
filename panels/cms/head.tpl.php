@@ -30,8 +30,40 @@
 	// behind the address bar, set on html/body, not on this tag.
 	$themeColor = $brandColor;
 	$canvasColor = '#' . \Systopic\System\Sys\Theme::color('cmsBgColor');
+	$appearance = 'light';
+	if (!$onAuth) {
+		$choice = (string) (\Systopic\System\Auth\Session::current()->user?->appearance ?? '');
+		if (in_array($choice, ['dark', 'system'], true)) {
+			$appearance = $choice;
+		}
+	}
+	$darkGround = '#' . \Systopic\System\Sys\Theme::color('cmsTextColor');
 	?>
-	<style id="systemInitialCanvas">html{background-color:<?= $onAuth ? $brandColor : $canvasColor ?>}html:has(>body.cms.system),body.cms.system{background-color:<?= $canvasColor ?>}</style>
+	<?php if (!$onAuth) { ?>
+	<script>
+	(function () {
+		var root = document.documentElement;
+		var choice = <?= json_encode($appearance) ?>;
+		var darkGround = <?= json_encode($darkGround) ?>;
+		var lightGround = <?= json_encode($canvasColor) ?>;
+		var mq = matchMedia('(prefers-color-scheme: dark)');
+		function apply() {
+			var mode = root.getAttribute('data-appearance') || choice;
+			var dark = mode === 'dark' || (mode === 'system' && mq.matches);
+			if (dark) root.setAttribute('data-mode', 'dark');
+			else root.removeAttribute('data-mode');
+			root.style.backgroundColor = dark ? darkGround : lightGround;
+		}
+		root.setAttribute('data-appearance', choice);
+		apply();
+		mq.addEventListener('change', function () {
+			if ((root.getAttribute('data-appearance') || 'light') === 'system') apply();
+		});
+		new MutationObserver(apply).observe(root, { attributes: true, attributeFilter: ['data-appearance'] });
+	})();
+	</script>
+	<?php } ?>
+	<style id="systemInitialCanvas">html{background-color:<?= $onAuth ? $brandColor : ($appearance === 'dark' ? $darkGround : $canvasColor) ?>}html:has(>body.cms.system),body.cms.system{background-color:var(--cmsBgColor)}</style>
 	<?php
 	$overrideRoot = \fs::toNative(rtrim((string) \fs::$siteRoot, '/\\') . '/overrides/');
 	$iconSvg = \Systopic\System\Sys\Packages::panelAsset('img/icon.svg');
@@ -68,7 +100,7 @@
 	<?php if (!$onAuth) { ?>
 	<meta name="theme-color" content="<?= $themeColor ?>">
 	<?php } ?>
-	<meta name="color-scheme" content="<?= $onAuth ? 'dark' : 'light dark' ?>">
+	<meta name="color-scheme" content="<?= $onAuth ? 'dark' : ($appearance === 'dark' ? 'dark' : ($appearance === 'system' ? 'light dark' : 'light')) ?>">
 	<meta name="msapplication-TileColor" content="<?= $brandColor ?>">
 
     <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,interactive-widget=<?= $onAuth ? 'resizes-visual' : 'resizes-content' ?>">

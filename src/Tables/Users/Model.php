@@ -138,4 +138,15 @@ final class Model extends TableRow
         get => $this->__get__(__PROPERTY__);
         set => $this->__set__(__PROPERTY__, $value);
     }
+
+    /**
+     * How this account shows the CMS: light, dark, or system.
+     * Light until the account chooses otherwise. Null on a row from
+     * before the column existed: light.
+     */
+    #[Col(length: 10)]
+    public ?string $appearance = 'light' {
+        get => $this->__get__(__PROPERTY__);
+        set => $this->__set__(__PROPERTY__, $value);
+    }
 }

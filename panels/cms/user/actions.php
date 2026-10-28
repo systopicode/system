@@ -25,6 +25,16 @@ switch ($this->action) {
 		\http::refresh(\http::$root . 'cms/auth/logout', '', [], 0, 'native');
 		break;
 
+	case 'updateAppearance':
+		$value = (string) \http::dataset('value');
+		if ($this->me && in_array($value, ['light', 'dark', 'system'], true)) {
+			$this->me->appearance = $value;
+			$this->scope->save($this->me);
+			client::addCommand('setAttribute')->selector('html')->attr('data-appearance')->value($value);
+		}
+		$this->updateView('main');
+		break;
+
 	case 'changePassword':
 		$problems = UserOperator::passwordProblems((string) \http::posted('password'), (string) \http::posted('password_repeat'), STAGE === 'LIVE');
 		if ($this->me && $problems === []) {

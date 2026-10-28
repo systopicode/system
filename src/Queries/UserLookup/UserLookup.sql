@@ -11,6 +11,9 @@ SELECT usm_users.*
 FROM usm_users
 WHERE user_id != 1
     AND (:id IS NOT NULL OR COALESCE(user_type, 'person') != 'screen')
+    -- Names user_appearance so a database from before the column fails
+    -- with 1054 and the provisioner adds it. The comparison is always true.
+    AND COALESCE(user_appearance, 'light') IS NOT NULL
     AND CASE
         WHEN :id IS NOT NULL THEN user_id = :id
         WHEN :key IS NOT NULL THEN user_activation_key = :key

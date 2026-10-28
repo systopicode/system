@@ -336,7 +336,7 @@ body.cms .cmslightbox .cmsBox > header{
 	padding: 0 0.35rem;
 	border-radius: 999px;
 	background: color-mix(in srgb, var(--cmsMainColor) 12%, var(--cmsCanvas));
-	color: var(--cmsMainColor);
+	color: var(--cmsBrandInk);
 	font-size: 0.75rem;
 	font-weight: 700;
 	vertical-align: 1px;

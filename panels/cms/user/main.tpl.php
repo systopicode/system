@@ -154,16 +154,6 @@ $preview = $this->fakeRoles;
 				</form>
 			</section>
 		<?php } ?>
-		<section class="widget">
-			<header><h2><i class="fa-regular fa-arrow-rotate-left"></i>Layout</h2></header>
-			<main>
-				<?= \message::flush('layout') ?>
-				<p class="tagsHint">Puts every module back to its defaults: open panes, folded trees, filters, sort orders.</p>
-			</main>
-			<footer>
-				<button type="button" class="button" data-on_click="userConfirm" data-action="resetState" data-confirm="Reset the layout of every module to its defaults?"><i class="fa-regular fa-arrow-rotate-left"></i>Reset layout</button>
-			</footer>
-		</section>
 		<?php if ($me) { echo \Systopic\System\Auth\Passkeys::render($me, 'widget'); } ?>
 		<section class="widget">
 			<header>
@@ -190,6 +180,29 @@ $preview = $this->fakeRoles;
 				</footer>
 			<?php } ?>
 		</section>
+		<?php if ($me) {
+			$appearance = (string) ($me->appearance ?? '');
+			if (!in_array($appearance, ['light', 'dark', 'system'], true)) {
+				$appearance = 'light';
+			}
+		?>
+		<section class="widget">
+			<header><h2><i class="fa-regular fa-sun"></i>Appearance</h2></header>
+			<main>
+				<p class="tagsHint">Light is used until Dark or System is chosen for this account.</p>
+				<div class="appearanceChoices" role="radiogroup" aria-label="Appearance">
+					<?php foreach (['light' => ['fa-regular fa-sun', 'Light', 'Light background.'], 'dark' => ['fa-regular fa-moon', 'Dark', 'Dark background.'], 'system' => ['fa-regular fa-circle-half-stroke', 'System', 'Matches this device.']] as $value => $choice) { ?>
+						<button type="button" role="radio" data-on_click="updateAppearance" data-value="<?= $value ?>" aria-checked="<?= $appearance === $value ? 'true' : 'false' ?>"><i class="<?= $choice[0] ?>"></i><span><?= $choice[1] ?></span><small><?= $choice[2] ?></small></button>
+					<?php } ?>
+				</div>
+			</main>
+			<footer>
+				<?= \message::flush('layout') ?>
+				<p class="tagsHint">Puts every module back to its defaults: open panes, folded trees, filters, sort orders.</p>
+				<button type="button" class="button" data-on_click="userConfirm" data-action="resetState" data-confirm="Reset the layout of every module to its defaults?"><i class="fa-regular fa-arrow-rotate-left"></i>Reset layout</button>
+			</footer>
+		</section>
+		<?php } ?>
 	</div>
 </section>
 <?php if ($codesOn && count($ownDevices) > 3) { ?>

@@ -14,7 +14,7 @@
 button.disabled {
 	color:gray;
 	border-color:gray;
-	background:white;
+	background: var(--cmsCanvas);
 }
 .nowrap {
 	white-space: nowrap;
