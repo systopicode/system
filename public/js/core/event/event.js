@@ -36,6 +36,10 @@ sys.processEvent = function (e) {
 			leaving.classList.add('loading');
 		}
 	}
+    if ((e.type === 'blur' || e.type === 'focusout') && eventTarget?.cmsEditCancelled) {
+        delete eventTarget.cmsEditCancelled;
+        return;
+    }
 	// An element taken out of the document loses its focus, and the browser
 	// fires blur for it - Chrome while the element is still in the document.
 	// That is not the user leaving the field: a form that saves on blur would

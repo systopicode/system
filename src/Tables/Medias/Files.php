@@ -17,14 +17,16 @@ final class Files
 {
     /** Mime types the CMS takes, with the extension it knows them by — the legacy `mediaInfo::$mimetypes`. */
     public const MIMETYPES = [
+        'text/plain' => 'txt', 'text/csv' => 'csv',
         'image/webp' => 'webp', 'image/jpeg' => 'jpg', 'image/png' => 'png', 'image/gif' => 'gif',
-        'image/tiff' => 'tif', 'image/svg+xml' => 'svg', 'application/pdf' => 'pdf',
+        'image/svg+xml' => 'svg', 'application/pdf' => 'pdf',
         'application/vnd.sketchup.skp' => 'skp', 'application/x-sketchup' => 'skp',
         'application/msword' => 'doc', 'application/vnd.ms-excel' => 'xls',
         'application/vnd.openxmlformats-officedocument.wordprocessingml.document' => 'docx',
         'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' => 'xlsx',
         'application/vnd.openxmlformats-officedocument.presentationml.presentation' => 'pptx',
         'application/x-zip-compressed' => 'zip', 'audio/mpeg' => 'mp3', 'video/mpeg' => 'mpg',
+        'audio/mp4' => 'm4a', 'audio/x-m4a' => 'm4a', 'application/zip' => 'zip',
         'video/mp4' => 'mp4', 'video/quicktime' => 'mov', 'text/vcard' => 'vcf', 'text/x-vcard' => 'vcf',
     ];
 
@@ -166,6 +168,11 @@ final class Files
         $mime = (string) (new \finfo(FILEINFO_MIME_TYPE))->file($path);
         $type = (string) preg_replace('~/.*$~', '', $mime);
         $ext = strtolower(pathinfo($path, PATHINFO_EXTENSION));
+        $supported = \Systopic\System\Media\GroupPolicy::TYPES[\Systopic\System\Media\GroupPolicy::extension($path)] ?? null;
+        if ($supported !== null && in_array($mime, $supported[2], true)) {
+            $mime = $supported[2][0];
+            $type = explode('/', $mime)[0];
+        }
         if ($ext === 'svg') {
             [$mime, $type] = ['image/svg+xml', 'image'];
         } elseif ($ext === 'skp') {

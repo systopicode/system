@@ -163,14 +163,14 @@ body.dragging:has(ul.tree .sort.insertInto.dropTarget) .draghelper{
     text-align: center;
 }
 
-.cms ul.tree span.label[contenteditable="plaintext-only"]{
+.cms ul.tree span.label:is([contenteditable="plaintext-only"], [data-edit-finishing]){
     display: block;
     flex: 1 1 auto;
     min-width: 4rem;
     margin: 0.2rem 0.35rem 0.2rem 0.15rem;
     padding: 0.1rem 0.45rem;
     border: 1px solid var(--cmsInteractive);
-    border-radius: var(--cmsRadius);
+    border-radius: 2px;
     background: var(--cmsCanvas);
     box-shadow: 0 0 0 3px color-mix(in srgb, var(--cmsInteractive) 18%, transparent);
     font-size: 0.875rem;

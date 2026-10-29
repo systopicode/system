@@ -367,3 +367,6 @@ a.redirect i,
         flex-basis: 2.5rem; width: 2.5rem; height: 2.5rem;
     }
 }
+
+/* Icon-only media menus size to the actions, with no empty text column. */
+.cms ul.contextmenu.mediaContextMenu { min-width: 0; width: max-content; max-width: calc(100vw - 16px); }

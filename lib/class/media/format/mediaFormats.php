@@ -54,6 +54,17 @@ class mediaFormats {
 		return rtrim(rtrim(number_format($ratio, 2, '.', ''), '0'), '.') . ':1';
 	}
 
+	/** Match the sizing precedence used by mediaImage::getCanvasSize(). */
+    static function sizeLabel(array $format): string {
+        if ((float) ($format['megapixels'] ?? 0) > 0) return $format['megapixels'] . ' MP';
+        $w = (int) ($format['width'] ?? 0);
+        $h = (int) ($format['height'] ?? 0);
+        if ($w > 0 && $h > 0) return "$w × $h px";
+        if ($w > 0) return "$w px wide · proportional height";
+        if ($h > 0) return "$h px high · proportional width";
+        return 'Original size';
+    }
+
 	/** The image formats an editor may pick, name => label; the system's own are left out. */
 	static function editorImages(): array {
 		$labels = [];
@@ -61,7 +72,7 @@ class mediaFormats {
 			if (($format['cms_display'] ?? '') === 'none') {
 				continue;
 			}
-			$size = isset($format['width'], $format['height']) ? $format['width'] . '×' . $format['height'] : (isset($format['megapixels']) ? $format['megapixels'] . ' MP' : '');
+			$size = self::sizeLabel($format);
 			$labels[$name] = $size === '' ? $name : "$name ($size)";
 		}
 		return $labels;

@@ -51,13 +51,7 @@
 						if (($image_format['cms_display'] ?? '') === 'none') {
 							continue;
 						}
-						if (isset($image_format['width'])) {
-							$format_info = $image_format['width'] . ' × ' . $image_format['height'] . ' px';
-						} elseif (isset($image_format['autocrop'])) {
-							$format_info = $image_format['autocrop'] . ', ' . mediaFormats::ratioLabel($image_format['autocrop_limit'] ?? 0);
-						} else {
-							$format_info = ($image_format['megapixels'] ?? '') . ' megapixels';
-						}
+						$format_info = mediaFormats::sizeLabel($image_format);
 						?>
 						<option value="<?= htmlspecialchars((string) $key) ?>"><?= htmlspecialchars((string) $key) ?> (<?= htmlspecialchars((string) $format_info) ?>)</option>
 					<?php } ?>

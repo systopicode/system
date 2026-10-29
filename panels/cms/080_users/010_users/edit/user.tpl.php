@@ -36,6 +36,7 @@ $mailNote = static function (string $kind) use ($accountLabel, $logged): string 
 	return $line . '.';
 };
 $tabs = ['general' => 'General', 'roles' => 'Roles', 'access' => 'Access', 'signins' => 'Sign-ins', 'maintenance' => 'Maintenance'];
+if ($viewer && !$isScreen) $tabs = array_slice($tabs, 0, 4, true) + ['email' => 'E-Mail Log'] + array_slice($tabs, 4, null, true);
 $tab = (string) ($this->state->userTab ?? 'general');
 if (!isset($tabs[$tab])) {
 	$tab = 'general';
@@ -74,7 +75,7 @@ if ($heading === '') {
 			<?= \message::flush('account') ?>
 			<div class="accountPhoto">
 				<form class="ajax portraitDrop" method="post" enctype="multipart/form-data" action="<?= $e($this->href . 'uploadPortrait?user_id=' . (int) $user->id) ?>" data-drop-files data-upload="onsubmit">
-					<span class="portraitFace"><img src="<?= $e(Portrait::src((int) $user->id, $user->email, $isScreen)) ?>" alt=""></span>
+					<span class="portraitFace"><img referrerpolicy="no-referrer" src="<?= $e(Portrait::src((int) $user->id, $user->email, $isScreen)) ?>" alt=""></span>
 					<span>Drop or click</span>
 					<input type="file" name="portrait" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" onchange="this.form.requestSubmit()">
 				</form>
@@ -143,7 +144,7 @@ if ($heading === '') {
 					<div class="cmsBoxTitles"><h2>Sign-ins</h2><p class="cmsBoxLead">Sign-ins, failed attempts and sign-outs. Newest first.</p></div>
 				</header>
 				<div class="cmsBoxBody">
-					<p class="cmsBoxLead">This log has no automatic time-based deletion. Keep entries only while needed for a documented security or legal purpose. Review retention regularly and use Clean User Log when these entries are no longer required; include retained copies and backups in that process.</p>
+					<p class="cmsBoxLead">Entries older than <?= (int) \Systopic\System\Maintenance\LogRetention::LOGIN_DAYS ?> days are eligible for automatic cleanup during site visits or scheduled runs. The retention period is a fixed system rule, not a project setting. Delete entries earlier when their security purpose ends. Review retention regularly and use Clean User Log when these entries are no longer required; include retained copies and backups in that process.</p>
 					<?php if ($signIns === []) { ?>
 						<p class="profileEmpty">No sign-ins logged yet.</p>
 					<?php } else { ?>
@@ -159,7 +160,7 @@ if ($heading === '') {
 					<?php } ?>
 					<?php
 					$moreSignIns = $signInTotal > 3;
-					$cleanLog = $viewer && $signInTotal > 0;
+					$cleanLog = \Systopic\System\Auth\Session::isSuperuser() && $signInTotal > 0;
 					if ($moreSignIns || $cleanLog) { ?>
 						<div class="signInTools">
 							<?php if ($moreSignIns) { ?>
@@ -173,6 +174,23 @@ if ($heading === '') {
 				</div>
 			</section>
 	</div>
+    <?php if ($viewer && !$isScreen && $tab === 'email') { ?>
+    <div class="userPane" data-user-pane="email">
+        <section class="cmsBox">
+            <header><div class="cmsBoxTitles"><h2>E-Mail Log</h2><p class="cmsBoxLead">Messages addressed to this account's current email address. Newest first. Technical log retention: 90 days. Code-message contents are omitted by the sender.</p></div></header>
+            <div class="cmsBoxBody">
+            <?php $emails = \Systopic\System\Maintenance\RetainedLogs::emailsFor((string) $user->email); ?>
+            <?php if ($emails === []) { ?><p class="profileEmpty">No messages logged for this email address.</p><?php } ?>
+            <?php foreach ($emails as $mail) { ?>
+                <details class="userMailEntry">
+                    <summary><i class="fa-regular fa-envelope"></i> <?= $e($mail['subject'] ?? '') ?> <small><?= $e($mail['timestamp'] ?? '') ?> · <?= $e($mail['status'] ?? '') ?></small></summary>
+                    <div class="userMailContent"><?= $e(trim((string) ($mail['textContent'] ?? '')) ?: strip_tags((string) ($mail['htmlContent'] ?? '')) ?: (string) ($mail['contentPreview'] ?? 'Message content not logged.')) ?></div>
+                </details>
+            <?php } ?>
+            </div>
+        </section>
+    </div>
+    <?php } ?>
 	<div class="userPane" data-user-pane="access"<?= $tab === 'access' ? '' : ' hidden' ?>>
 			<?php
 			$envFile = null;

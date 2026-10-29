@@ -32,7 +32,7 @@ $refreshSignet = function () use ($user): void {
 switch ($this->action) {
 	case 'userTab':
 		$tab = (string) \http::dataset('tab');
-		if (in_array($tab, ['general', 'roles', 'access', 'signins', 'maintenance'], true)) {
+		if (in_array($tab, ['general', 'roles', 'access', 'signins', 'maintenance', 'email'], true) && ($tab !== 'email' || \Systopic\System\Auth\Session::isSuperuser())) {
 			$this->state->userTab = $tab;
 		}
 		$this->updateView('user');

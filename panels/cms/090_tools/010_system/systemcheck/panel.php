@@ -8,6 +8,8 @@ use Systopic\System\Panels\PanelNode;
 
 class Panel extends PanelNode
 {
+    public array $binaryProbes = [];
+
 	public function onLoad(): void
 	{
 		if ($this->action !== 'download' || !$this->inPath()) {

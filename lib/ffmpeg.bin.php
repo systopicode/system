@@ -75,10 +75,15 @@ function cmsFindBinary(string $name, ?string $root = null): string {
 		return $cache[$key];
 	}
 
-	$candidates = [];
+    $candidates = [];
+    // Share the legacy/runtime resolver, retaining this API's host-format checks.
+    if ($root === cmsSiteRootForBinaries() && class_exists('shellBinary')) {
+        $shared = \shellBinary::find($name);
+        if ($shared !== null) $candidates[] = $shared;
+    }
 	$const = strtoupper($name) . '_BINARY';
 	if (defined($const) && (string) constant($const) !== '') {
-		$candidates[] = (string) constant($const);
+		array_unshift($candidates, (string) constant($const));
 	}
 	$env = getenv($const);
 	if (is_string($env) && $env !== '') {

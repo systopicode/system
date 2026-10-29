@@ -361,7 +361,7 @@ body.dragging .dashWidgets .dashWidget > div.sort.v{
 }
 
 .dashList .presence.is-stale{
-	background: var(--cmsWarning);
+	background: #ffc107;
 }
 
 @media (prefers-reduced-motion: reduce){
@@ -495,7 +495,7 @@ body.dragging .dashWidgets .dashWidget > div.sort.v{
 	gap: 0.75rem;
 	margin: 0;
 	padding: 0.45rem 0.75rem;
-	color: var(--cmsMainColor);
+	color: var(--cmsTextColor);
 	overflow-wrap: anywhere;
 	text-decoration: none;
 }
@@ -671,7 +671,7 @@ body.cms .dashboard .dashTabs button:hover{
 	align-items: center;
 	border-radius: 0.3rem;
 	background: var(--cmsCanvas);
-	color: var(--cmsMainColor);
+	color: var(--cmsBrandInk);
 	font-size: 0.85rem;
 	pointer-events: none;
 	box-shadow: 0 0 0 1px color-mix(in srgb, var(--cmsMainColor) 12%, transparent);
@@ -832,4 +832,24 @@ body.cms .dashboard .dashTabs button:hover{
         overflow-wrap: anywhere;
         text-overflow: clip;
     }
+}
+
+.cleanupCard > p { margin: 0 0 .5rem; }
+.cleanupCardLegal { border-top: 1px solid var(--cmsLine); margin-top: 1rem; padding-top: 1rem; }
+.cleanupCardLegal > p { margin: .5rem 0; font-size: .85rem; }
+.cleanupOperatorHint { display: flex; align-items: flex-start; gap: .5rem; color: var(--cmsSubText); }
+.cleanupOperatorHint > i { color: #ffc107; flex: 0 0 auto; margin-top: .2rem; }
+.cleanupLegalLinks { display: flex; flex-wrap: wrap; gap: .5rem 1.25rem; margin-top: .75rem; font-size: .85rem; }
+.cleanupLegalLinks a { display: inline-flex; align-items: center; gap: .4rem; color: var(--cmsTextColor); }
+
+/* These actionable notices cannot be hidden through widget customisation. */
+.dashNotices { display: grid; gap: .5rem; margin-bottom: 1.25rem; }
+.dashNotice { display: flex; align-items: center; gap: .75rem; padding: .65rem 1rem; border: 1px solid var(--cmsLine); border-radius: var(--cmsRadius); background: var(--cmsCanvas); }
+.dashNotice > i { flex: 0 0 auto; color: #ffc107; }
+.dashNotice > p { flex: 1 1 auto; min-width: 0; margin: 0; font-size: .85rem; color: var(--cmsTextColor); }
+.dashNotice > .button { flex: 0 0 auto; margin: 0; }
+@media (max-width: 600px) {
+    .dashNotice { flex-wrap: wrap; align-items: flex-start; }
+    .dashNotice > p { flex-basis: calc(100% - 2rem); }
+    .dashNotice > .button { margin-left: auto; }
 }

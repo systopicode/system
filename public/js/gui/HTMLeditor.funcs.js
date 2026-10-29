@@ -235,6 +235,7 @@ function createHTMLeditorLink(event) {
 	}
 	var imageRef = state.image && editorMediaRef(state.image);
 	var post = state.image ? {image_node_id: imageRef ? imageRef.node_id : state.image.dataset.node_id} : {text: state.text};
+    post.return_url = location.pathname + location.search;
 	var anchor = state.anchor;
 	if (anchor) {
 		post.href = anchor.getAttribute('data-ref-href') || anchor.getAttribute('href') || '';
@@ -244,6 +245,7 @@ function createHTMLeditorLink(event) {
 	}
 	sys.core.server.sendCall({
 		method: 'post',
+        history: false,
 		post: post
 	}, settings.siteRoot + 'cms/pages/editor/editLink/');
 }
@@ -257,9 +259,10 @@ function applyHTMLeditorLink(button) {
 	var close = function () {
 		box.querySelector('header a').click();
 	};
+    var href = linkHref(field('linkType').value, field('linkUrl').value);
 	var editor = wysiwyg.applyLink({
 		text: field('linkTitle') ? field('linkTitle').value.replace(/\s+/g, ' ').trim() : '',
-		href: linkHref(field('linkType').value, field('linkUrl').value),
+		href: href,
 		className: field('linkClass').value,
 		newTab: field('target').value === '_blank',
 		download: field('download').checked
@@ -297,18 +300,33 @@ function linkHref(type, address) {
 
 function linkTypeChanged(select) {
 	select.nextElementSibling.placeholder = select.selectedOptions[0].dataset.hint;
+	linkDefaults(select.closest('main'), 'address', false);
 	select.nextElementSibling.focus();
+}
+
+/** Defaults belong to a newly selected target; users can then override either control. */
+function linkDefaults(main, kind, inline) {
+    var target = main.querySelector('[name=target]');
+    var download = main.querySelector('[name=download]');
+    var nativeAddress = kind === 'address' && main.querySelector('[name=linkType]').value !== 'url';
+    if (main.closest('.cmslightbox').dataset.existingLink !== 'true' && target.dataset.userOverride !== 'true') target.value = (kind === 'address' && !nativeAddress) || (kind === 'file' && inline) ? '_blank' : '';
+    if (main.closest('.cmslightbox').dataset.existingLink !== 'true' && download.dataset.userOverride !== 'true') download.checked = kind === 'file' && !inline;
 }
 
 /** A tab of the link dialog: an address, a page or a file. */
 function linkTab(tab) {
 	var target = tab.closest('.linkTarget');
+    var changed = tab.getAttribute('aria-selected') !== 'true';
 	target.querySelectorAll('[role=tab]').forEach(function (other) {
 		other.setAttribute('aria-selected', other === tab ? 'true' : 'false');
 	});
 	target.querySelectorAll('.linkPane').forEach(function (pane) {
 		pane.hidden = pane.dataset.pane !== tab.dataset.tab;
 	});
+    if (changed) {
+        var selected = target.querySelector('.linkPane:not([hidden]) button.selected[data-file-inline]');
+        linkDefaults(tab.closest('main'), tab.dataset.tab, selected?.dataset.fileInline === '1');
+    }
 	var field = target.querySelector('.linkPane:not([hidden]) :is(textarea, input)');
 	field && field.focus();
 }
@@ -322,6 +340,7 @@ function linkPicked(button) {
 	button.classList.add('selected');
 	main.querySelector('[name=linkType]').value = 'url';
 	main.querySelector('[name=linkUrl]').value = button.dataset.href;
+    linkDefaults(main, /^page:/.test(button.dataset.href || '') ? 'page' : 'file', button.dataset.fileInline === '1');
 	var text = main.querySelector('[name=linkTitle]');
 	if (text && text.value.trim() === '') {
 		text.value = button.dataset.label;
@@ -332,15 +351,70 @@ function linkFormatChosen(select) {
 	var main = select.closest('main');
 	main.querySelector('[name=linkType]').value = 'url';
 	main.querySelector('[name=linkUrl]').value = select.value;
+    linkDefaults(main, select.value ? 'file' : 'address', true);
 }
 
 function removeAnchor(event) {
 	wysiwyg.unlink(event.data.target);
 }
 
+/** Follow references using their stored identity; never navigate to a media: scheme. */
 function openAnchor(event) {
-	var anchor = event.data.target.closest('a');
-	anchor && window.open(anchor.href, '_blank', 'noopener');
+    var node = event.data.target;
+    var anchor = (node.nodeType === 1 ? node : node.parentElement).closest('a');
+    if (!anchor) return;
+    var ref = (anchor.getAttribute('data-ref-href') || anchor.getAttribute('href') || '').trim().replace(/^(media|page)::(?=\d)/, '$1:');
+    if (!ref) return;
+    if (/^(mailto|tel|sms):/i.test(ref)) {
+        if (anchor.getAttribute('target') === '_blank') window.open(ref, '_blank', 'noopener');
+        else window.location.assign(ref);
+        return;
+    }
+    var pageRef = ref.match(/^page:(\d+)(?:\?([^#]*))?(?:#.*)?$/);
+    if (pageRef) {
+        var params = new URLSearchParams(pageRef[2] || '');
+        var url = settings.siteRoot + 'cms/pages/?id=' + pageRef[1];
+        if (params.get('lang')) url += '&lang=' + encodeURIComponent(params.get('lang'));
+        if (anchor.hasAttribute('download')) {
+            var pageDownload = document.createElement('a');
+            pageDownload.href = url;
+            pageDownload.download = '';
+            document.body.appendChild(pageDownload);
+            pageDownload.click();
+            pageDownload.remove();
+        } else if (anchor.getAttribute('target') === '_blank') window.open(url, '_blank', 'noopener');
+        else sys.core.server.sendGet(url);
+        return;
+    }
+    var follow = function (data, previewWindow) {
+        if (!data || data.error || !data.url) { if (previewWindow) previewWindow.close(); return; }
+        var download = anchor.hasAttribute('download') || (!anchor.hasAttribute('target') && data.inline === false);
+        if (download) {
+            if (previewWindow) previewWindow.close();
+            var link = document.createElement('a');
+            link.href = data.url;
+            link.download = data.filename || '';
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+        } else if (anchor.getAttribute('target') === '_self') {
+            window.location.assign(data.url);
+        } else if (previewWindow) {
+            previewWindow.location.href = data.url;
+        } else {
+            window.open(data.url, '_blank', 'noopener');
+        }
+    };
+    if (/^media:\d+(?:[?#]|$)/.test(ref)) {
+        var knownDownload = anchor.hasAttribute('download') || (!anchor.hasAttribute('target') && /^(application\/(?!pdf)|text\/)/.test(anchor.getAttribute('data-ref-mimetype') || ''));
+        var previewWindow = !knownDownload && anchor.getAttribute('target') !== '_self' ? window.open('about:blank', '_blank') : null;
+        if (previewWindow) previewWindow.opener = null;
+        var call = new sys.core.server.call({method: 'put', ref: ref});
+        call.send(settings.siteRoot + 'cms/pages/resolveEditorLink').done(data => follow(data, previewWindow)).fail(() => { if (previewWindow) previewWindow.close(); });
+        return;
+    }
+    if (!/^(?:https?:|mailto:|tel:|sms:|\/|#|\?|[^:]+$)/i.test(ref)) return;
+    follow({url: anchor.href, inline: !/\.(docx?|xlsx?|pptx?|zip|csv|txt|vcf|skp)(?:[?#]|$)/i.test(ref)});
 }
 
 function setAttribute(e) {

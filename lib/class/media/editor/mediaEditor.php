@@ -28,12 +28,8 @@ class mediaEditor {
 		$src_height = $src_image->getImageHeight();
 		$crop_width = $mediacrop->media_crop_width;
 		$crop_height = $mediacrop->media_crop_height;
-		if (isset($image_format['megapixels'])) {
-			$format_width = sqrt($mediacrop->media_width * $image_format['megapixels'] * 1000000 / $mediacrop->media_height);
-			$display_scale = $display_width / $format_width;
-		} else {
-			$display_scale = $display_width / $image_format['width'];
-		}
+		[$format_width] = mediaImage::getCanvasSize($src_width * $crop_width, $src_height * $crop_height, $format_name, 1);
+        $display_scale = $display_width / max(1, $format_width);
 
 		list($cnv_width, $cnv_height) = mediaImage::getCanvasSize($src_width * $mediacrop->media_crop_width, $src_height * $mediacrop->media_crop_height, $format_name, $display_scale);
 		$scale_axis = (($src_width * $mediacrop->media_livearea_width) / ($src_height * $mediacrop->media_livearea_height) > $cnv_width / $cnv_height) ? 'y' : 'x';

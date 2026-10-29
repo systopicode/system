@@ -571,27 +571,27 @@ body.cms > .cmsMobileHeader > .cmsMobileMenuClose, body.cms > .cmsMobileHeader >
 	body.cms > main > div.main .cmsStage { margin-left: 16px; }
 	body.cms.cmsMobile > main > div.main nav > ul li a span,
 	body.cms.cmsMobile > main > div.main .bottomMenu .cmsHelp span { width: auto; text-align: left; font-size: 15px; }
-	body.cms.cmsMobile > main > div.main .bottomMenu div.cmsAccount,
-	body.cms.cmsMobile > main:has(> div.content .dashboard) .cms div.bottomMenu div.cmsAccount {
+	body.cms.cmsMobile > main > div.main .bottomMenu a.cmsAccount,
+	body.cms.cmsMobile > main:has(> div.content .dashboard) .cms div.bottomMenu a.cmsAccount {
 		display: flex; flex-direction: row; align-items: center; justify-content: flex-start;
 		gap: 12px; width: 100%; margin: 0; padding: 2px 16px;
 	}
-	body.cms.cmsMobile > main > div.main .bottomMenu div.cmsAccount .signet,
+	body.cms.cmsMobile > main > div.main .bottomMenu a.cmsAccount .signet,
 	body.cms.cmsMobile > main:has(> div.content .dashboard) .bottomMenu .signet {
 		flex: 0 0 2.25rem; width: 2.25rem; height: 2.25rem; margin: 0;
 	}
-	body.cms.cmsMobile > main > div.main .bottomMenu a.cmsAccountName,
-	body.cms.cmsMobile > main:has(> div.content .dashboard) .bottomMenu a.cmsAccountName {
+	body.cms.cmsMobile > main > div.main .bottomMenu .cmsAccountName,
+	body.cms.cmsMobile > main:has(> div.content .dashboard) .bottomMenu .cmsAccountName {
 		display: flex; align-items: center; flex: 1 1 auto; min-width: 0;
 		height: 2.25rem; min-height: 0; margin: 0; padding: 0; line-height: 1.2; text-align: left;
 		background: none;
 	}
-	body.cms.cmsMobile .bottomMenu div.cmsAccount:is(:hover, :focus-within) {
+	body.cms.cmsMobile .bottomMenu a.cmsAccount:is(:hover, :focus-within) {
 		background: var(--cmsOnDark);
 		border-radius: var(--cmsRadius);
 	}
-	body.cms.cmsMobile .bottomMenu div.cmsAccount:is(:hover, :focus-within) .signet:after { content: none; }
-	body.cms.cmsMobile .bottomMenu div.cmsAccount a:is(:hover, :focus, :focus-visible) {
+	body.cms.cmsMobile .bottomMenu a.cmsAccount:is(:hover, :focus-within) .signet:after { content: none; }
+	body.cms.cmsMobile .bottomMenu a.cmsAccount a:is(:hover, :focus, :focus-visible) {
 		background: none;
 		outline: none;
 	}

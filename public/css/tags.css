@@ -271,16 +271,16 @@ body.tagDragging:has(.layout.tags .tag.dropTarget) .draghelper{
     min-width: 0;
 }
 
-.cms .layout.tags .widget > header h1[contenteditable="true"],
-.cmslightbox .tagEditTitle h1[contenteditable="true"]{
+.cms .layout.tags .widget > header h1:is([contenteditable="true"], [contenteditable="plaintext-only"]),
+.cmslightbox .tagEditTitle h1:is([contenteditable="true"], [contenteditable="plaintext-only"]){
     outline: 1px dashed var(--cmsTextColor);
     outline-offset: 3px;
     background: transparent;
     cursor: text;
 }
 
-.cms .layout.tags .widget > header h1[contenteditable="true"]::selection,
-.cmslightbox .tagEditTitle h1[contenteditable="true"]::selection{
+.cms .layout.tags .widget > header h1:is([contenteditable="true"], [contenteditable="plaintext-only"])::selection,
+.cmslightbox .tagEditTitle h1:is([contenteditable="true"], [contenteditable="plaintext-only"])::selection{
     background: color-mix(in srgb, var(--cmsTextColor) 16%, transparent);
     color: inherit;
 }

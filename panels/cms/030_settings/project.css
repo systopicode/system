@@ -625,3 +625,66 @@ body:has(> .projectTemplatesMenu.is-sheet)::after{
 
 .cms .projectFiles td.pageSettingDrag { padding: 0.25rem; width: 2rem; min-width: 2rem; max-width: 2rem; text-align: center; }
 .cms .projectFiles td.pageSettingDrag > i { display: inline-flex; justify-content: center; align-items: center; width: 1.5rem; height: 2rem; margin: 0; }
+
+
+.envOrigins { list-style: none; margin: .75rem 0; padding: 0; }
+.envOrigins li { display: flex; flex-wrap: wrap; gap: .4rem 1rem; padding: .4rem 0; }
+.envOrigins small { color: var(--cmsMuted); }
+
+.envHub .cmsBoxBody { display: flex; flex-direction: column; gap: 1rem; }
+.envHub .cmsBoxLead, .envHub .cmsBoxActions { margin: 0; }
+.envHubStatus { display: flex; flex-wrap: wrap; gap: 1rem 3rem; }
+.envHubStatus > div { display: flex; flex-direction: column; gap: .2rem; }
+.envHubStatus span { color: var(--cmsMuted); font-size: .85rem; }
+.envHubOrigins { border-top: 1px solid var(--cmsLine); padding-top: 1rem; }
+.envHubOrigins h3 { margin: 0 0 .5rem; }
+.envHub .envOrigins { margin: .6rem 0 1rem; }
+.envHub .envOrigins li { align-items: center; gap: .75rem; padding: .7rem 0; border-bottom: 1px solid var(--cmsLine); }
+.envOrigins li > div { flex: 1; min-width: 0; }
+.envOrigins code { overflow-wrap: anywhere; }
+.envOrigins li > div small { display: block; margin-top: .25rem; }
+.envOrigins .button { flex: 0 0 auto; margin: 0; }
+.envHubRestart { display: flex; align-items: start; gap: .5rem; }
+.envHubRestart > i { margin-top: .2rem; }
+
+.envHubRestart > i { flex: 0 0 1rem; text-align: center; line-height: 1.5; margin-top: 0; }
+.envHubAddressHeader { display: flex; align-items: center; flex-wrap: wrap; gap: .5rem; margin-bottom: .5rem; }
+.envHubAddressHeader h3 { flex: 1; margin: 0; }
+.envHubAddressHeader .button { margin: 0; }
+.envFile input[aria-invalid="true"] { border-color: #dc3545; box-shadow: 0 0 0 2px rgb(220 53 69 / 16%); }
+
+.envHubInvalid { color: #b4232e; font-size: .85rem; margin: .5rem 0; }
+
+.settingInfo { flex: 0 0 auto; color: var(--cmsMuted); font-size: .85rem; cursor: help; }
+.formatSizing { display: flex; flex-wrap: nowrap; align-items: start; gap: .5rem; }
+.projectFiles .formatSizing select { margin: 0; min-width: 10rem; flex: 1 1 10rem; }
+.projectFiles .formatSizing label { position: relative; display: block; flex: 1 1 5rem; min-width: 4rem; margin: 0; }
+.formatSizing label > span, .projectFiles .formatField > span { display: block; min-height: .8rem; margin: 0 0 .25rem; font-size: .65rem; line-height: .8rem; color: var(--cmsSubText); }
+.projectFiles .formatField { display: block; margin: 0; }
+.projectFiles .imageFormatRow > td { vertical-align: middle; }
+/* Balance the label space above controls with the same space below. */
+.cms .projectFiles .widget .tableScroll table .imageFormatRow > td { padding-bottom: calc(.7rem + 1.05rem); }
+.cms .projectFiles .widget .tableScroll table .imageFormatRow > td.pageSettingDrag, .cms .projectFiles .widget .tableScroll table .imageFormatRow > td.projectRemove { padding-top: .7rem; padding-bottom: .7rem; }
+.projectFiles .formatField .projectSwitch { min-height: 2.125rem; }
+.cmslightbox.mediaTypes > section { width: min(42rem, 100%); min-width: 0; max-width: 42rem; }
+.mediaTypes .mediaTypeChoices { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 1.5rem; margin-top: .75rem; }
+.cms.mediaTypes .mediaTypeChoice { position: relative; display: flex; align-items: center; gap: .65rem; min-height: 3.2rem; padding: .45rem 0; border-top: 1px solid var(--cmsLine); }
+.cms.mediaTypes .mediaChoiceText { flex: 1; display: block; margin: 0; min-width: 0; cursor: pointer; }
+.mediaTypeChoices small { display: block; color: var(--cmsSubText); font-size: .75rem; }
+.mediaTypes > section > header { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+.mediaTypes .barmenu { flex: 0 0 auto; }
+@media (max-width: 640px) { .mediaTypes .mediaTypeChoices { grid-template-columns: minmax(0, 1fr); } }
+
+.projectFiles .formatSizing input { margin: 0; }
+
+/* Separate rows above, so an odd final row never leaves a trailing rule. */
+.cms.mediaTypes .mediaTypeChoice:nth-child(-n+2) { border-top: 0; }
+@media (max-width: 640px) {
+    .cms.mediaTypes .mediaTypeChoice:nth-child(n) { border-top: 1px solid var(--cmsLine); }
+    .cms.mediaTypes .mediaTypeChoice:first-child { border-top: 0; }
+}
+
+/* Keep media-setting controls on the same horizontal axis. Labels remain in flow. */
+.projectFiles .projectRows :is(th, td) { vertical-align: middle; }
+.projectFiles .formatSizing { align-items: center; }
+.projectFiles .imageFormatRow .projectSwitch { display: flex; align-items: center; }

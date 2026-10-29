@@ -30,12 +30,15 @@ $entries = array_reverse($entries);
 ?>
 <h1>PHP log</h1>
 <p class="tagsHint">PHP errors of this project, in <code>var/log/PHP_errors.log</code>. Newest first.</p>
+<p class="tagsHint">PHP error entries older than 90 days are eligible for automatic cleanup. Undated legacy records require administrator review.</p>
 <section class="widget is-list logList">
 	<header>
 		<h2>Entries</h2>
 		<input class="listSearch" type="search" placeholder="Search" data-on_input="filterLog" autocomplete="off">
 		<a target="_self" href="<?= htmlspecialchars($this->getHref(\http::$root) . 'downloadLog') ?>" class="button"><i class="fa-regular fa-file-arrow-down"></i><span>Download</span></a>
+		<?php if (\Systopic\System\Auth\Session::isSuperuser()) { ?>
 		<a data-on_click="userConfirm" data-action="clearLog" data-confirm="Delete this log file?" class="button"><i class="fa-regular fa-broom"></i><span>Clear</span></a>
+		<?php } ?>
 	</header>
 	<?php if ($entries === []) { ?>
 		<main><p>The log is empty.</p></main>

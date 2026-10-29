@@ -37,7 +37,7 @@ final class ProjectForm
         $hasLanguages = false;
         $autoLanguage = null;
         foreach (ProjectFile::groups($path) as $group) {
-            if (in_array($group->id, ['define:CMS_IMPRINT_URL', 'define:CMS_PRIVACY_URL'], true)) {
+            if (in_array(substr($group->id, 7), LegalLinks::FIELDS, true) && str_starts_with($group->id, 'define:')) {
                 $legalSettings[] = $group;
                 continue;
             }
@@ -86,6 +86,10 @@ final class ProjectForm
             }
             echo '<section class="widget">';
             echo '<header><h2>' . $e($name) . '</h2>';
+            if ($which === 'media' && in_array($name, ['Image formats','Media groups'], true)) {
+                $help = $name === 'Media groups' ? 'Groups restrict uploads, replacements and moved files. File types are chosen in a dialog. This does not make files private.' : 'Choose either a megapixel budget or pixel dimensions. One pixel dimension may stay empty to keep the proportions. Show in editor controls the format selector, not public access.';
+                echo '<i class="fa-regular fa-circle-info settingInfo" tabindex="0" title="' . $e($help) . '" aria-label="' . $e($help) . '"></i>';
+            }
             if ($headerButton !== null) {
                 self::addButton($which, $headerButton);
             }
@@ -138,6 +142,8 @@ final class ProjectForm
             'renameItem' => ProjectFile::renameItem($path, $id, $key, $text),
             'addItem' => ProjectFile::addItem($path, $id),
             'removeItem' => ProjectFile::removeItem($path, $id, $key),
+            'setImageSizing' => ProjectJson::setImageSizing($path, $key, $text),
+            'setImageVisibility' => ProjectFile::setField($path, 'call:mediaFormats::add', $key, 'cms_display', in_array($text, ['1','true','on'], true) ? 'image' : 'none'),
             'setField' => ProjectFile::setField($path, $id, $key, (string) \http::dataset('field'), $text),
             'toggleTemplate' => self::toggleTemplate($path, $id, $key),
             'moveBefore' => self::relocate($path, false),
@@ -150,7 +156,7 @@ final class ProjectForm
         if ($result === false) {
             \message::error(match ($panel->action) {
                 'removeItem' => 'Leave at least one entry.',
-                'renameItem' => 'That name is already used.',
+                'renameItem' => 'Use a unique key with letters, digits, underscores or hyphens and no spaces.',
                 default => 'That change was not saved.',
             });
             return;
@@ -158,7 +164,7 @@ final class ProjectForm
         \message::confirm('Saved.');
         // Reordering moves the row in the browser. A redraw would drop the
         // scroll position and whatever had focus.
-        if (in_array($panel->action, ['renameItem', 'addItem', 'removeItem', 'setField'], true)) {
+        if (in_array($panel->action, ['renameItem', 'addItem', 'removeItem', 'setField', 'setImageSizing'], true)) {
             $panel->updateView();
         }
     }
@@ -233,11 +239,13 @@ final class ProjectForm
         $e = static fn($value): string => htmlspecialchars((string) $value, ENT_QUOTES);
         if ($frame) echo '<div class="tableScroll"><table class="scalars"><thead><tr><th>Setting</th><th>Value</th></tr></thead><tbody>';
         foreach ($scalars as $group) {
-            $legal = in_array($group->label, ['CMS_IMPRINT_URL', 'CMS_PRIVACY_URL'], true);
-            $label = $legal ? ($group->label === 'CMS_IMPRINT_URL' ? 'System imprint URL' : 'System privacy URL') : self::human($group->label);
+            $legal = in_array($group->label, LegalLinks::FIELDS, true);
+            $label = $legal ? match ($group->label) { 'CMS_IMPRINT_URL' => 'System imprint URL', 'CMS_PRIVACY_URL' => 'System privacy URL', 'CMS_OPERATOR_DETAILS' => 'Responsible operator', default => 'Data protection officer (if appointed)' } : self::human($group->label);
             echo '<tr><td><span>' . $e($label);
             if (!$legal) echo '<small>' . $e(ltrim($group->label, '$')) . '</small>';
-            if ($legal) echo '<small class="settingNote">Optional HTTP(S) URL or path starting with /. Leave empty to use the frontend ' . ($group->label === 'CMS_IMPRINT_URL' ? '/imprint/' : '/privacy/') . ' page.</small>';
+            if ($group->label === 'CMS_OPERATOR_DETAILS') echo '<small class="settingNote">Name or company, full postal address and contact email of the responsible operator. Shown publicly in System Privacy. These details may instead be supplied in the linked imprint and privacy policy.</small>';
+            elseif ($group->label === 'CMS_DPO_DETAILS') echo '<small class="settingNote">Contact details of the appointed data protection officer. Leave empty if none is appointed. Shown publicly in System Privacy; never enter passwords or SMTP credentials.</small>';
+            elseif ($legal) echo '<small class="settingNote">Optional HTTP(S) URL or path starting with /. Leave empty to use the frontend ' . ($group->label === 'CMS_IMPRINT_URL' ? '/imprint/' : '/privacy/') . ' page.</small>';
             echo '</span></td><td>';
             if ($group->id === 'define:DEFAULT_LANG' && $languages !== null) {
                 self::languageSelect($which, $group, $languages);
@@ -324,6 +332,10 @@ final class ProjectForm
     {
         $e = static fn($value): string => htmlspecialchars((string) $value, ENT_QUOTES);
         $columns = ProjectFile::columns($group);
+        $images = $group->id === 'call:mediaFormats::add';
+        $mediaGroups = $group->id === 'var:media_groups';
+        if ($images) $columns = ['size', ...array_diff($columns, ['width','height','megapixels','autocrop','autocrop_limit','cms_display']), 'show_in_editor'];
+        if ($mediaGroups) $columns = array_values(array_unique([...array_diff($columns,['public']), 'file_extension', 'templates']));
         $templateField = self::TEMPLATE_FIELDS[$group->id] ?? null;
         if ($templateField !== null) {
             $columns = [...array_diff($columns, [$templateField]), $templateField];
@@ -343,12 +355,40 @@ final class ProjectForm
         }
         foreach ($group->items as $item) {
             $data = self::data($which, $group->id, $item->key);
-            echo '<tr><td class="pageSettingDrag">';
+            echo '<tr' . ($images ? ' class="imageFormatRow"' : '') . '><td class="pageSettingDrag">';
             self::grip($data);
-            echo '</td><td><input data-on_blur="renameItem"' . $data . ' name="value" value="' . $e($item->key) . '" autocomplete="off"></td>';
+            echo '</td><td>';
+            if ($images) echo '<label class="formatField"><span aria-hidden="true">&nbsp;</span>';
+            echo '<input data-setting-key pattern="[A-Za-z0-9_][A-Za-z0-9_\\-]*" required title="Use letters, digits, underscores or hyphens; no spaces." data-on_blur="renameItem"' . $data . ' name="value" value="' . $e($item->key) . '" autocomplete="off">';
+            if ($images) echo '</label>';
+            echo '</td>';
             foreach ($columns as $column) {
                 $on = $languages && $column === 'activated';
                 echo '<td' . ($on ? ' class="langOn"' : '') . '>';
+                if ($images && $column === 'size') {
+                    self::imageSize($which, $group, $item, $data);
+                    echo '</td>'; continue;
+                }
+                if ($images && $column === 'show_in_editor') {
+                    $values = self::valuesOf($group,$item);
+                    echo '<div class="formatField"><span aria-hidden="true">&nbsp;</span><label class="projectSwitch"><input type="checkbox" class="switch" aria-label="Show in editor" data-on_change="setImageVisibility"' . $data . ' name="value"' . (($values['cms_display'] ?? '') === 'none' ? '' : ' checked') . '><div><div></div></div></label></div></td>';
+                    continue;
+                }
+                if ($mediaGroups && $column === 'file_extension') {
+                    $values = self::valuesOf($group,$item);
+                    $picked = \Systopic\System\Media\GroupPolicy::parse((string) ($values['file_extension'] ?? ''));
+                    $rawTypes = trim((string) ($values['file_extension'] ?? ''));
+                    $label = $rawTypes === '' || $rawTypes === '*' ? 'All supported types' : ($picked === [] ? 'No supported types' : count($picked) . (count($picked) === 1 ? ' file type' : ' file types'));
+                    echo '<a class="ajax button transparent" href="' . $e(rtrim((string) \http::$root, '/') . '/cms/settings/mediasettings/types/') . '?group=' . rawurlencode($item->key) . '">' . $e($label) . '<i class="fa-regular fa-pen"></i></a></td>';
+                    continue;
+                }
+                if ($mediaGroups && $column === $templateField) {
+                    $values = self::valuesOf($group, $item);
+                    $picked = array_filter(array_map('trim', explode(';', (string) ($values['templates'] ?? ''))));
+                    $label = $picked === [] ? 'All templates' : count($picked) . (count($picked) === 1 ? ' template' : ' templates');
+                    echo '<a class="ajax button transparent" href="' . $e(rtrim((string) \http::$root, '/') . '/cms/settings/mediasettings/types/') . '?kind=templates&amp;group=' . rawurlencode($item->key) . '">' . $e($label) . '<i class="fa-regular fa-pen"></i></a></td>';
+                    continue;
+                }
                 if ($column === $templateField) {
                     $picked = [];
                     foreach ($item->fields as $field) {
@@ -390,6 +430,25 @@ final class ProjectForm
         }
     }
 
+    private static function valuesOf(Group $group, Item $item): array
+    {
+        $values=[];
+        foreach ($item->fields as $leaf) $values[ProjectFile::fieldName($group,$item,$leaf)]=$leaf->text;
+        return $values;
+    }
+
+    private static function imageSize(string $which, Group $group, Item $item, string $data): void
+    {
+        $e=static fn($v)=>htmlspecialchars((string)$v,ENT_QUOTES);
+        $values=self::valuesOf($group,$item);
+        $mp=(float)($values['megapixels']??0)>0;
+        echo '<div class="formatSizing"><label><span aria-hidden="true">&nbsp;</span><select name="value" data-on_change="setImageSizing"' . $data . ' aria-label="Sizing mode"><option value="megapixels"' . ($mp?' selected':'') . '>Megapixels</option><option value="pixels"' . (!$mp?' selected':'') . '>Pixel dimensions</option></select></label>';
+        foreach ($mp ? ['megapixels'=>'MP'] : ['width'=>'Width','height'=>'Height'] as $field=>$label) {
+            echo '<label><span>' . $label . '</span><input type="number" min="' . ($mp?'0.01':'0') . '" step="' . ($mp?'any':'1') . '" name="value" data-on_blur="setField"' . $data . ' data-field="' . $field . '" value="' . $e($values[$field]??'') . '" aria-label="' . $label . '"></label>';
+        }
+        echo '</div>';
+    }
+
     private static function listTable(string $which, Group $group): void
     {
         $e = static fn($value): string => htmlspecialchars((string) $value, ENT_QUOTES);
@@ -412,6 +471,10 @@ final class ProjectForm
     {
         $e = static fn($value): string => htmlspecialchars((string) $value, ENT_QUOTES);
         $attrs = ' data-file="' . $e($which) . '" data-id="' . $e($leaf->id) . '" name="value" autocomplete="off"';
+        if (in_array(substr($leaf->id, 7), LegalLinks::DETAILS, true) && str_starts_with($leaf->id, 'define:')) {
+            echo '<textarea rows="3" maxlength="5000" data-on_blur="' . $e($action) . '"' . $attrs . '>' . $e($leaf->text) . '</textarea>';
+            return;
+        }
         if (in_array($leaf->id, ['define:CMS_IMPRINT_URL', 'define:CMS_PRIVACY_URL'], true)) {
             $pattern = 'https?://[^\\x2f\\s\\\\@?#]+([\\x2f?#][^\\s\\\\]*)?|/(?!/)[^\\s\\\\]*';
             echo '<input class="systemLegalUrl" type="text" inputmode="url" spellcheck="false" pattern="' . $e($pattern) . '" title="Use an HTTP(S) URL, a path starting with /, or leave empty." data-on_blur="' . $e($action) . '"' . $attrs . ' value="' . $e($leaf->text) . '">';

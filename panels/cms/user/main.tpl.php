@@ -95,7 +95,7 @@ $preview = $this->fakeRoles;
 					<div class="signet">
 						<span><?= $e($this->initials) ?></span>
 						<?php if ($portrait !== '') { ?>
-							<img src="<?= $e($portrait) ?>" alt="">
+							<img referrerpolicy="no-referrer" src="<?= $e($portrait) ?>" alt="">
 						<?php } ?>
 					</div>
 					<input type="file" name="portrait" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" onchange="this.form.requestSubmit()">

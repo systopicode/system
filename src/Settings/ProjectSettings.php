@@ -15,6 +15,8 @@ final class ProjectSettings
     private const SCALARS = [
         'CMS_IMPRINT_URL',
         'CMS_PRIVACY_URL',
+        'CMS_OPERATOR_DETAILS',
+        'CMS_DPO_DETAILS',
         'PUBLIC_PAGE_NAME',
         'PUBLIC_APP_NAME',
         'PUBLIC_PAGE_TITLE',

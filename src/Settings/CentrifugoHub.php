@@ -80,31 +80,61 @@ final class CentrifugoHub
         return $code === 0 && self::status()['installed'];
     }
 
-    /** Start the launchd agent when the hub is installed and stopped. */
-    public static function start(): bool
+    public static function originOwner(string $file): string
     {
-        if (self::running(self::readConfig())) {
-            return true;
-        }
-        if (PHP_OS_FAMILY !== 'Darwin' || !function_exists('posix_geteuid')) {
-            return false;
-        }
+        return hash('sha256', rtrim((string) \fs::$projectRoot, '/') . '|' . $file);
+    }
+
+    /** @return list<string> */
+    public static function ownedOrigins(string $file): array
+    {
         $home = self::home();
-        if ($home === null) {
-            return false;
-        }
-        $plist = $home . '/Library/LaunchAgents/net.systopic.centrifugo.plist';
-        if (!is_file($plist)) {
-            return false;
-        }
-        $domain = 'gui/' . posix_geteuid();
-        self::command(['launchctl', 'bootstrap', $domain, $plist]);
-        self::command(['launchctl', 'kickstart', $domain . '/net.systopic.centrifugo']);
-        for ($try = 0; $try < 8; $try++) {
-            if (self::running(self::readConfig())) {
-                return true;
+        $registry = $home ? CentrifugoOrigins::read($home . '/.centrifugo/project-origins.json') : null;
+        return $registry['owners'][self::originOwner($file)] ?? [];
+    }
+
+    /** Only the permission list changes; this never restarts the shared process. */
+    public static function changeOrigin(string $file, string $origin, bool $add): bool
+    {
+        $home = self::home();
+        return $home !== null && CentrifugoOrigins::change($home . '/.centrifugo/config.json', $home . '/.centrifugo/project-origins.json', self::originOwner($file), $origin, $add);
+    }
+
+    /** @return list<string>|null */
+    public static function allowedOrigins(): ?array
+    {
+        $config = self::readConfig();
+        if ($config === null) return null;
+        $allowed = $config['client']['allowed_origins'] ?? [];
+        return is_array($allowed) ? array_values(array_filter($allowed, 'is_string')) : null;
+    }
+
+    /** @param list<mixed> $rules @return list<string> */
+    public static function projectOrigins(array $rules, string $scheme): array
+    {
+        $origins = [];
+        foreach ($rules as $rule) {
+            if (!is_array($rule)) continue;
+            foreach (['serverName', 'serverIp'] as $key) {
+                $host = strtolower(trim((string) ($rule[$key] ?? '')));
+                if ($host === '' || str_contains($host, '*')) continue;
+                if (preg_match('/^[0-9.]+$/', $host) && !filter_var($host, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)) continue;
+                if (filter_var($host, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6)) $host = '[' . $host . ']';
+                $url = $scheme . '://' . $host;
+                $parts = parse_url($url);
+                if ($parts === false || !isset($parts['host']) || isset($parts['user']) || isset($parts['pass']) || isset($parts['path']) || isset($parts['query']) || isset($parts['fragment'])) continue;
+                if (!preg_match('/^(?:[a-z0-9.-]+|\[[a-f0-9:]+\])(?::[0-9]+)?$/', $host)) continue;
+                $origins[] = $url;
             }
-            usleep(200000);
+        }
+        return array_values(array_unique($origins));
+    }
+
+    /** @param list<string> $allowed */
+    public static function originAllowed(string $origin, array $allowed): bool
+    {
+        foreach ($allowed as $pattern) {
+            if (preg_match('~^' . str_replace('\*', '.*', preg_quote($pattern, '~')) . '$~iD', $origin)) return true;
         }
         return false;
     }

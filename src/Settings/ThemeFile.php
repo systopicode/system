@@ -39,6 +39,20 @@ final class ThemeFile
         foreach (self::FIELDS as $name => $label) {
             $values[$name] = $name === $key ? $hex : Theme::color($name);
         }
+        return self::writeColors($values);
+    }
+
+    public static function resetColors(): bool
+    {
+        $values = [];
+        foreach (self::FIELDS as $name => $label) {
+            $values[$name] = Theme::defaultColor($name);
+        }
+        return self::writeColors($values);
+    }
+
+    private static function writeColors(array $values): bool
+    {
         $css = "/* System theme, written from Settings → Theme. */\n:root {\n";
         foreach ($values as $name => $value) {
             $css .= "\t--$name: #$value;\n";
@@ -229,7 +243,7 @@ final class ThemeFile
         echo '<h1>Theme</h1>';
         echo '<p class="tagsHint">Main, highlight, background and text. Everything else follows. The stage marker keeps its own colours.</p>';
         echo \message::flush();
-        echo '<section class="widget"><header><h2>Colours</h2></header><main>';
+        echo '<section class="widget"><header><h2>Colours</h2><button type="button" class="button" data-on_click="resetColors"><i class="fa-regular fa-arrow-rotate-left"></i>Reset to default</button></header><main>';
         echo '<div class="themeSwatches">';
         foreach (self::FIELDS as $name => $label) {
             $hex = '#' . Theme::color($name);

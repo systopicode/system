@@ -13,7 +13,7 @@ class Panel extends SettingsPanel
 {
     public $icon = 'fa-regular fa-image';
 
-    public bool $buildChildPanels = false;
+    public bool $buildChildPanels = true;
 
     public function __construct($name, $parent = null)
     {

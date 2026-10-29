@@ -212,7 +212,7 @@ if ($behind !== '') {
 				});
 				document.querySelectorAll('ul.tree span.label[contenteditable="plaintext-only"]:not([data-ready])').forEach(function (label) {
 					label.setAttribute('data-ready', '');
-					label.focus();
+					label.focus({preventScroll: true});
 					var range = document.createRange();
 					range.selectNodeContents(label);
 					var selection = window.getSelection();
@@ -234,11 +234,29 @@ if ($behind !== '') {
 				try { localStorage.setItem('cmsSidebarClosed', JSON.stringify(closedSections)); } catch (e) {}
 			}, true);
 
-			document.addEventListener('keydown', function (event) {
-				if (event.key !== 'Enter' || event.shiftKey) return;
-				var field = event.target.closest('[contenteditable="plaintext-only"][data-on_blur="updateLabel"]');
+            // Keep the value before a short label edit. Rich text editors use their own undo.
+            var labelBeforeEdit = new WeakMap();
+            document.addEventListener('focusin', function (event) {
+                var field = event.target.closest && event.target.closest('[contenteditable="plaintext-only"][data-on_blur="updateLabel"]');
+                if (field) labelBeforeEdit.set(field, field.innerHTML);
+            }, true);
+            document.addEventListener('keydown', function (event) {
+                var field = event.target.closest && event.target.closest('[contenteditable="plaintext-only"][data-on_blur="updateLabel"]');
+                if (event.key === 'Escape' && field) {
+                    event.preventDefault();
+                    event.stopImmediatePropagation();
+                    if (labelBeforeEdit.has(field)) field.innerHTML = labelBeforeEdit.get(field);
+                    if (field.closest('ul.tree')) field.dataset.editFinishing = '';
+                    field.cmsEditCancelled = true;
+                    field.blur();
+                    field.setAttribute('contenteditable', 'false');
+                    if (field.closest('ul.tree')) sys.core.server.sendCall({}, 'cancelEditLabel');
+                    return;
+                }
+                if (event.key !== 'Enter' || event.shiftKey) return;
 				if (!field) return;
 				event.preventDefault();
+                if (field.closest('ul.tree')) field.dataset.editFinishing = '';
 				if (field.classList.contains('pageTitle')) field.setAttribute('contenteditable', 'false');
 				field.blur();
 			}, true);

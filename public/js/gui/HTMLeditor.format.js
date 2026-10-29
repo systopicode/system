@@ -12,7 +12,7 @@ var wysiwyg = (function () {
 	var BLOCKS = TEXT_BLOCKS + ',li,td,th,div';
 	var FORMATS = {STRONG: 'strong,b', EM: 'em,i', U: 'u', S: 's,strike,del'};
 	var INLINE_STYLES = 'strong,b,em,i,u,s,strike,sub,sup,mark,small,big,code,span,font';
-	var MEDIA = 'img,video,iframe';
+	var MEDIA = 'img,video,audio,iframe';
 	var PASTE = {
 		P: [], H1: [], H2: [], H3: [], H4: [], H5: [], H6: [], UL: [], OL: [], LI: [], BR: [],
 		STRONG: [], EM: [], U: [], S: [], A: ['href', 'target'],
@@ -761,7 +761,7 @@ var wysiwyg = (function () {
 	var linkTarget = function (state) {
 		var editor = state.editor;
 		if (!editor.isConnected) {
-			editor = document.querySelector('.editor[contenteditable=true][data-field="' + state.data.field + '"][data-node_id="' + state.data.node_id + '"][data-language_iso="' + state.data.language_iso + '"]');
+			editor = Array.from(document.querySelectorAll('.editor[contenteditable=true]')).find(el => ['field','node_id','language_iso'].every(key => (el.dataset[key] || '') === (state.data[key] || '')));
 		}
 		if (!editor) {
 			return null;
@@ -781,7 +781,7 @@ var wysiwyg = (function () {
 			return false;
 		}
 		begin(state.editor);
-		var href = values.href.trim();
+		var href = values.href.trim().replace(/^(media|page)::(?=\d)/, '$1:');
 		var a = state.anchor;
 		if (!href || href === 'https://') {
 			if (!a) {
@@ -815,8 +815,10 @@ var wysiwyg = (function () {
 		} else if (!state.image && text && text !== a.textContent.trim()) {
 			a.textContent = text;
 		}
+        a.removeAttribute('data-ref-href');
+        a.removeAttribute('data-ref-missing');
 		attr(a, 'href', href);
-		attr(a, 'target', values.newTab ? '_blank' : false);
+		attr(a, 'target', values.newTab ? '_blank' : '_self');
 		attr(a, 'rel', values.newTab ? 'noopener' : false);
 		attr(a, 'download', values.download ? '' : false);
 		attr(a, 'class', (values.className || '').trim());

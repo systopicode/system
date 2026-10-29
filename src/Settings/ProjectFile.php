@@ -689,7 +689,7 @@ final class ProjectFile
             return ProjectJson::renameItem($path, $id, $key, $text);
         }
         $text = trim($text);
-        if ($text === '' || str_contains($text, "\n") || str_contains($text, '/')) {
+        if (!preg_match('/^[A-Za-z0-9_][A-Za-z0-9_-]*$/D', $text)) {
             return false;
         }
         $parser = self::open($path);

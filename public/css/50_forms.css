@@ -910,3 +910,10 @@ body.cms ul.tree button.treeMenu:hover{
     background-color: color-mix(in srgb, var(--cmsError) 10%, var(--cmsCanvas)) !important;
     box-shadow: 0 0 0 3px color-mix(in srgb, var(--cmsError) 25%, transparent) !important;
 }
+
+/* Short pencil edits share the same soft corners, including tree and headings. */
+.cms [contenteditable="plaintext-only"],
+.cms .domEditable [contenteditable="true"],
+.cms form.visible {
+    border-radius: 2px;
+}

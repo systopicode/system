@@ -15,6 +15,10 @@ switch ($this->action) {
 		}
 		break;
 	case 'clearLog':
+        if (!\Systopic\System\Auth\Session::isSuperuser()) {
+            \message::error('Only a superuser can clear logs.');
+            return;
+        }
 		if ($path !== '' && fs::isFile($path)) {
 			fs::unlinkFile($path);
 		}

@@ -70,7 +70,7 @@ final class EnvironmentFile
         $local = $dir . '/config.local.json';
         if (is_file($local)) {
             $files[] = [
-                'name' => 'This machine',
+                'name' => 'Local overrides',
                 'file' => 'config.local.json',
                 'path' => $local,
                 'current' => true,
@@ -136,6 +136,7 @@ final class EnvironmentFile
         if (!in_array($field, self::MATCH, true)) {
             return false;
         }
+        if ($field === 'serverIp' && trim($raw) !== '' && !filter_var(trim($raw), FILTER_VALIDATE_IP)) return false;
         return self::update($file, static function (array $data) use ($index, $field, $raw): ?array {
             $rules = array_values(is_array($data['matches'] ?? null) ? $data['matches'] : []);
             if (!isset($rules[$index]) || !is_array($rules[$index])) {
@@ -173,6 +174,18 @@ final class EnvironmentFile
             $data['relay'] = $relay;
             return $data;
         }) ?? false;
+    }
+
+    /** Switch this environment only; the shared hub process is untouched. */
+    public static function enableRelay(string $file, bool $enabled): bool
+    {
+        return self::update($file, static function (array $data) use ($enabled): ?array {
+            if (!is_array($data['relay'] ?? null) || empty($data['relay']['api']) || empty($data['relay']['secret'])) {
+                return null;
+            }
+            $data['relay']['enabled'] = $enabled;
+            return $data;
+        });
     }
 
     /** Drop the sign-in key. Lifetimes stay. Existing codes stop verifying. */

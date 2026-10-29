@@ -276,9 +276,13 @@ sys.core.server = new function () {
         var selectorOf = el => {
             var parts = [];
             for (; el && el !== document.body; el = el.parentElement) {
-                parts.unshift(el.localName + [...el.classList].map(name => '.' + CSS.escape(name)).join(''));
+                if (el.id) { parts.unshift('#' + CSS.escape(el.id)); break; }
+                var part = el.localName + [...el.classList].map(name => '.' + CSS.escape(name)).join('');
+                var siblings = el.parentElement && Array.from(el.parentElement.children).filter(node => node.localName === el.localName);
+                if (siblings && siblings.length > 1) part += ':nth-of-type(' + (siblings.indexOf(el) + 1) + ')';
+                parts.unshift(part);
             }
-            return 'body > ' + parts.join(' > ');
+            return (parts[0]?.startsWith('#') ? '' : 'body > ') + parts.join(' > ');
         };
         var found = [...document.body.querySelectorAll('*')].filter(el => el.scrollTop > 0)
             .map(el => ({selector: selectorOf(el), top: el.scrollTop}));
@@ -291,6 +295,7 @@ sys.core.server = new function () {
                 });
             }
         });
+        found.inputVersion = server.scrollInputVersion;
         return found;
     };
     /**
@@ -301,6 +306,7 @@ sys.core.server = new function () {
      * The returned function puts the place back and drops the hold.
      */
     server.pinScroll = (el, top) => {
+        var inputVersion = server.scrollInputVersion;
         var prev = el.style.minHeight;
         var before = el.clientHeight;
         var held = false;
@@ -313,6 +319,7 @@ sys.core.server = new function () {
             }
         }
         return () => {
+            if (server.scrollInputVersion !== inputVersion) { el.style.minHeight = prev; return; }
             if (!el.isConnected) {
                 return;
             }
@@ -328,6 +335,15 @@ sys.core.server = new function () {
         };
     };
 
+    // A late render must never pull the viewport back after the user starts scrolling.
+    server.scrollInputVersion = 0;
+    var noteScrollInput = () => { server.scrollInputVersion++; };
+    document.addEventListener('wheel', noteScrollInput, {capture: true, passive: true});
+    document.addEventListener('touchmove', noteScrollInput, {capture: true, passive: true});
+    document.addEventListener('keydown', e => {
+        if (['PageDown', 'PageUp', 'Home', 'End', 'ArrowDown', 'ArrowUp', ' '].includes(e.key)) noteScrollInput();
+    }, true);
+
     // Explicit navigation owns its scroller; older delayed restores must yield.
     server.scrollRevealVersion = 0;
     server.scrollReveals = new WeakMap();
@@ -339,7 +355,9 @@ sys.core.server = new function () {
     /** A box built anew gets its place back, also once its images have their height. */
     server.restoreScroll = positions => {
         var revealVersion = server.scrollRevealVersion;
+        var inputVersion = positions?.inputVersion ?? server.scrollInputVersion;
         var apply = () => {
+            if (server.scrollInputVersion !== inputVersion) return;
             (positions || []).forEach(position => {
                 var el;
                 try {
@@ -519,6 +537,7 @@ sys.core.server.call = function (data) {
                             if (method === 'post' && call.responses.some(response => response.command === 'updateDocument')) {
                                 sys.http.markRendered(xhrRootHref);
                             }
+                            if (call.data.history !== false && call.data.dataset?.history !== 'false') {
                             // an action is a command, not an address - a reload would run it again
                             if (!call.fromHistory) {
                                 sys.http.historyPush(sys.http.url2string(Object.assign({}, call.url, {action: ''})));
@@ -545,6 +564,7 @@ sys.core.server.call = function (data) {
                                     sys.core.server.restoreScroll(call.scrolled);
                                 }
                             }
+                            } // transient dialogs keep the current address and history
                         }
                     }
                 } else if (xhr.status === 500 && method === 'get' && !call.retried) {

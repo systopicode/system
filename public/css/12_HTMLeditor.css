@@ -450,3 +450,7 @@ body.editorMediaDrop *{
 .editor table{
 	width:100%;
 }
+/* Field chips are hover hints; the active field keeps its typing area clear. */
+.editor[contenteditable="true"]:focus::after,
+.editor[contenteditable="true"]:focus-within::after,
+.plaintext:focus-within::after { opacity: 0 !important; }

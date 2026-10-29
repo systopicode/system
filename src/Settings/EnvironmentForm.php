@@ -35,7 +35,7 @@ final class EnvironmentForm
         }
         echo '<label class="field envPick"><span>Config</span><select data-on_change="showEnvironment" name="env">';
         foreach ($files as $info) {
-            $mark = $info['current'] ? ' (this server)' : '';
+            $mark = $info['file'] === 'config.local.json' ? ' (this machine)' : ($info['current'] ? ' (this server)' : '');
             $on = $info['file'] === $selected ? ' selected' : '';
             echo '<option value="' . $e($info['file']) . '"' . $on . '>' . $e($info['name'] . $mark) . '</option>';
         }
@@ -44,6 +44,9 @@ final class EnvironmentForm
             $data = EnvironmentFile::read($info['file']);
             $hidden = $info['file'] === $selected ? '' : ' hidden';
             echo '<div class="envFile"' . $hidden . ' data-env="' . $e($info['file']) . '">';
+            if ($info['file'] === 'config.local.json') {
+                echo '<p class="tagsHint">Machine-local overrides, merged over the matching environment config. This file is not a separate server and is not synced. Empty values here do not mean the environment’s values are empty.</p>';
+            }
             self::scalars($info['file'], 'Database', 'db', EnvironmentFile::GROUPS['db'], is_array($data['db'] ?? null) ? $data['db'] : []);
             self::scalars($info['file'], 'Debug', 'debug', EnvironmentFile::GROUPS['debug'], is_array($data['debug'] ?? null) ? $data['debug'] : []);
             self::scalars($info['file'], 'Mail', 'mail', EnvironmentFile::GROUPS['mail'], is_array($data['mail'] ?? null) ? $data['mail'] : []);
@@ -63,7 +66,7 @@ final class EnvironmentForm
             \message::error('That config file is not here.');
             return;
         }
-        if (in_array($panel->action, ['connectHub', 'startHub', 'installHub'], true)) {
+        if (in_array($panel->action, ['connectHub', 'startRelay', 'stopRelay', 'addHubOrigin', 'removeHubOrigin'], true)) {
             self::hubAction($panel, $file);
             return;
         }
@@ -99,7 +102,7 @@ final class EnvironmentForm
             'removeAuth' => 'Sign-in key deleted. Codes already sent stop working.',
             default => 'Saved.',
         });
-        if ($panel->action !== 'save' && $panel->action !== 'saveMatch') {
+        if ($panel->action !== 'save') {
             $panel->updateView();
         }
     }
@@ -120,17 +123,25 @@ final class EnvironmentForm
             \message::error('That file is not the one this server is using.');
             return;
         }
-        if ($panel->action === 'installHub') {
-            CentrifugoHub::install()
-                ? \message::confirm('Centrifugo is installed.')
-                : \message::error('Centrifugo was not installed.');
+        if (in_array($panel->action, ['addHubOrigin', 'removeHubOrigin'], true)) {
+            $origin = (string) \http::dataset('origin');
+            $add = $panel->action === 'addHubOrigin';
+            $data = EnvironmentFile::read($file);
+            $scheme = self::requestScheme();
+            $permitted = $add ? CentrifugoHub::projectOrigins($data['matches'] ?? [], $scheme) : CentrifugoHub::ownedOrigins($file);
+            if (!in_array($origin, $permitted, true) || !CentrifugoHub::changeOrigin($file, $origin, $add)) {
+                \message::error('The origin permission was not saved. Check the address and hub config permissions.');
+            } else {
+                \message::confirm('Hub config saved. A server administrator must restart the shared hub to apply origin changes. No server was restarted.');
+            }
             $panel->updateView();
             return;
         }
-        if ($panel->action === 'startHub') {
-            CentrifugoHub::start()
-                ? \message::confirm('The hub is running.')
-                : \message::error('The hub was not started.');
+        if (in_array($panel->action, ['startRelay', 'stopRelay'], true)) {
+            $enabled = $panel->action === 'startRelay';
+            EnvironmentFile::enableRelay($file, $enabled)
+                ? \message::confirm($enabled ? 'Live updates started for this environment. Other open windows follow on their next request.' : 'Live updates stopped for this environment. Other open windows follow on their next request.')
+                : \message::error('Live updates could not be changed.');
             $panel->updateView();
             return;
         }
@@ -150,49 +161,68 @@ final class EnvironmentForm
      */
     private static function hub(string $file, array $data, bool $here): void
     {
-        $e = static fn($value): string => htmlspecialchars((string) $value, ENT_QUOTES);
+        $e = static fn($v): string => htmlspecialchars((string) $v, ENT_QUOTES);
         $relay = is_array($data['relay'] ?? null) ? $data['relay'] : [];
         $ready = ($relay['api'] ?? '') !== '' && ($relay['apiKey'] ?? '') !== '' && strlen((string) ($relay['secret'] ?? '')) >= 16;
         $status = CentrifugoHub::status();
-        echo '<section class="cmsBox"><header><div class="cmsBoxTitles"><h2>Centrifugo</h2>';
-        echo '<p class="cmsBoxLead">Centrifugo is the hub on this machine. It shows who has a page open, and whether they are using it. One hub serves every project here. The key is not shown.</p></div></header>';
-        echo '<div class="cmsBoxBody">';
-        if (!class_exists(\Systopic\Relay\Relay::class)) {
-            echo '<p class="cmsBoxLead">This project does not include the relay, so its pages cannot use the hub.</p>';
+        $included = class_exists(\Systopic\Relay\Relay::class);
+        $enabled = $ready && ($relay['enabled'] ?? true) !== false;
+        echo '<section class="cmsBox envHub"><header><div class="cmsBoxTitles"><h2>Centrifugo</h2><p class="cmsBoxLead">Live updates and online status for this project.</p></div></header><div class="cmsBoxBody">';
+        echo '<div class="envHubStatus"><div><strong>Project connection</strong><span>' . (!$included ? 'Relay package missing' : (!$ready ? 'Not configured' : ($enabled ? 'Enabled' : 'Stopped'))) . '</span></div>';
+        if ($here) echo '<div><strong>Shared hub</strong><span>' . ($status['running'] ? 'Running' : 'Not reachable') . '</span></div>';
+        echo '</div>';
+        if ($here && Session::isSuperuser() && $included) {
+            echo '<div class="cmsBoxActions is-start">';
+            if ($ready) {
+                echo '<button type="button" class="button" data-on_click="' . ($enabled ? 'stopRelay' : 'startRelay') . '" data-file="' . $e($file) . '"><i class="fa-regular ' . ($enabled ? 'fa-stop' : 'fa-play') . '"></i>' . ($enabled ? 'Stop live updates' : 'Start live updates') . '</button>';
+            } elseif ($status['configured']) {
+                echo '<button type="button" class="button" data-on_click="userConfirm" data-action="connectHub" data-confirm="Copy the local hub key into this environment?" data-file="' . $e($file) . '"><i class="fa-regular fa-key-skeleton"></i>Connect project</button>';
+            }
+            echo '</div>';
         }
-        if (!$here) {
-            echo '<p class="cmsBoxLead">' . ($ready ? 'A hub key is set for this file.' : 'This file has no hub key.') . '</p>';
-            echo '</div></section>';
-            return;
-        }
-        if ($ready) {
-            echo '<p class="cmsBoxLead">A hub key is set.</p>';
-        }
-        if (!$status['installed']) {
-            echo '<p class="cmsBoxLead">' . (PHP_OS_FAMILY === 'Darwin'
-                ? 'Centrifugo is not installed on this machine.'
-                : 'Centrifugo is not installed on this server.') . '</p>';
-        } elseif (!$status['configured']) {
-            echo '<p class="cmsBoxLead">Centrifugo is installed, but this server cannot read its key.' . ($status['running'] ? ' The hub is running.' : '') . '</p>';
-        } elseif ($status['running']) {
-            echo '<p class="cmsBoxLead">The hub is running.</p>';
-        } else {
-            echo '<p class="cmsBoxLead">Centrifugo is installed and not running.</p>';
-        }
-        $buttons = '';
-        if (Session::isSuperuser() && CentrifugoHub::canInstall()) {
-            $buttons .= '<button type="button" class="button" data-on_click="userConfirm" data-action="installHub" data-confirm="Install Centrifugo on this Mac? It becomes the hub for every project on this machine." data-file="' . $e($file) . '"><i class="fa-regular fa-download"></i> Install hub</button>';
-        }
-        if (Session::isSuperuser() && $status['installed'] && !$status['running']) {
-            $buttons .= '<button type="button" class="button" data-on_click="startHub" data-file="' . $e($file) . '"><i class="fa-regular fa-play"></i> Start hub</button>';
-        }
-        if (Session::isSuperuser() && !$ready && $status['configured'] && class_exists(\Systopic\Relay\Relay::class)) {
-            $buttons .= '<button type="button" class="button" data-on_click="userConfirm" data-action="connectHub" data-confirm="Save the hub key into this environment? It is copied from the hub on this machine and is not shown." data-file="' . $e($file) . '"><i class="fa-regular fa-key-skeleton"></i> Create hub key</button>';
-        }
-        if ($buttons !== '') {
-            echo '<div class="cmsBoxActions is-start">' . $buttons . '</div>';
-        }
+        echo '<p class="cmsBoxLead">Start/Stop affects this project and environment from the next request. The shared server and other projects keep running. Keys stay hidden.</p>';
+        if ($here) self::hubOrigins($file, $data);
         echo '</div></section>';
+    }
+
+    private static function requestScheme(): string
+    {
+        return (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+    }
+
+    /** @param array<string, mixed> $data */
+    private static function hubOrigins(string $file, array $data): void
+    {
+        $e = static fn($v): string => htmlspecialchars((string) $v, ENT_QUOTES);
+        $required = CentrifugoHub::projectOrigins(is_array($data['matches'] ?? null) ? $data['matches'] : [], self::requestScheme());
+        $owned = CentrifugoHub::ownedOrigins($file);
+        $origins = array_values(array_unique([...$required, ...$owned]));
+        $allowed = CentrifugoHub::allowedOrigins();
+        $invalidIp = false;
+        foreach ($data['matches'] ?? [] as $rule) {
+            $ip = is_array($rule) ? trim((string) ($rule['serverIp'] ?? '')) : '';
+            if ($ip !== '' && !filter_var($ip, FILTER_VALIDATE_IP)) $invalidIp = true;
+        }
+        echo '<div class="envHubOrigins"><div class="envHubAddressHeader"><h3>Browser addresses</h3>';
+        if (Session::isSuperuser()) echo '<button type="button" class="button" data-on_click="addAddress" data-file="' . $e($file) . '"><i class="fa-regular fa-plus"></i>Add domain / IP</button>';
+        echo '</div><p class="cmsBoxLead">Add each domain or IP under “Where this config applies”. After saving, its address appears here. Use Add beside a missing permission to allow it in the hub. “Shared permission” means it was already in the hub config; newly added permissions belong to this project.</p>';
+        if ($invalidIp) echo '<p class="envHubInvalid">An IP address below is invalid. Correct the marked field before adding its hub permission.</p>';
+        echo '<ul class="envOrigins">';
+        foreach ($origins as $origin) {
+            $known = $allowed === null ? null : CentrifugoHub::originAllowed($origin, $allowed);
+            $canRemove = in_array($origin, $owned, true);
+            echo '<li><div><code>' . $e($origin) . '</code><small>' . ($known === null ? 'Hub config unavailable' : ($known ? ($canRemove ? 'Added for this project' : 'Shared permission') : 'Missing in saved hub config')) . '</small></div>';
+            if (Session::isSuperuser() && $allowed !== null) {
+                if (!$known && in_array($origin, $required, true)) {
+                    echo '<button type="button" class="button" data-on_click="userConfirm" data-action="addHubOrigin" data-file="' . $e($file) . '" data-origin="' . $e($origin) . '" data-confirm="Add this browser origin to the shared hub config? Applying it requires an administrator to restart the hub." title="Add permission"><i class="fa-regular fa-plus"></i>Add</button>';
+                } elseif ($canRemove) {
+                    echo '<button type="button" class="button transparent" data-on_click="userConfirm" data-action="removeHubOrigin" data-file="' . $e($file) . '" data-origin="' . $e($origin) . '" data-confirm="Remove this project’s origin permission? A permission still registered by another project is kept. Otherwise all uses of this managed origin end after the administrator restarts the hub." title="Remove project permission"><i class="fa-regular fa-link-slash"></i></button>';
+                }
+            }
+            echo '</li>';
+        }
+        if ($origins === []) echo '<li>No browser addresses configured yet.</li>';
+        echo '</ul><p class="cmsBoxLead envHubRestart"><i class="fa-regular fa-circle-info"></i>Permissions shown are the saved configuration. Origin changes need an administrator to restart the shared hub; these controls never restart it.</p></div>';
     }
 
     /** @param array<string, mixed> $data */
@@ -276,7 +306,9 @@ final class EnvironmentForm
             echo '<tr>';
             foreach (EnvironmentFile::MATCH as $field) {
                 $attrs = ' data-file="' . $e($file) . '" data-index="' . (int) $index . '" data-field="' . $e($field) . '"';
-                echo '<td><input data-on_blur="saveMatch"' . $attrs . ' name="value" value="' . $e((string) ($rule[$field] ?? '')) . '" autocomplete="off"></td>';
+                $validation = $field === 'serverIp' ? ' pattern="(?:(?:(?:25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])\.){3}(?:25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])|(?:[0-9a-fA-F]*:){2,}[0-9a-fA-F:.]*)" title="Enter a valid IPv4 or IPv6 address, or leave empty."' : '';
+                if ($field === 'serverIp' && trim((string) ($rule[$field] ?? '')) !== '' && !filter_var(trim((string) $rule[$field]), FILTER_VALIDATE_IP)) $validation .= ' aria-invalid="true"';
+                echo '<td><input data-on_blur="saveMatch"' . $attrs . $validation . ' name="value" value="' . $e((string) ($rule[$field] ?? '')) . '" autocomplete="off"></td>';
             }
             echo '<td class="projectRemove"><button type="button" class="button transparent" title="Remove" data-on_click="userConfirm" data-action="removeMatch" data-confirm="Remove this address?" data-file="' . $e($file) . '" data-index="' . (int) $index . '"><i class="fa-regular fa-trash"></i></button></td>';
             echo '</tr>';

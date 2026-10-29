@@ -96,8 +96,8 @@ try {
   assert.equal(await page.locator('.relationResults').innerText(),'');
   await page.evaluate(()=>updatePageRelationResults(10,'redirect','Sport','<li>Matching target</li>'));
   assert.equal(await page.locator('.relationResults').innerText(),'Matching target');
-  await page.addScriptTag({content:await read('public/js/core/server/server.js')});
   await page.setContent('<div id="restored" style="height:100px;overflow:auto"><div style="height:2000px"></div></div><div id="untouched" style="height:100px;overflow:auto"><div style="height:2000px"></div></div>');
+  await page.addScriptTag({content:await read('public/js/core/server/server.js')});
   await page.evaluate(()=>{
    sys.core.server.restoreScroll([{selector:'#restored',top:600},{selector:'#untouched',top:400}]);
    sys.core.server.revealScroll(document.querySelector('#restored'),120);
@@ -107,6 +107,23 @@ try {
   assert.equal(await page.locator('#untouched').evaluate(n=>n.scrollTop),400,'unrelated scroller keeps restoration');
   await page.evaluate(()=>sys.core.server.restoreScroll([{selector:'#restored',top:250}]));
   assert.equal(await page.locator('#restored').evaluate(n=>n.scrollTop),250,'next navigation can restore normally');
+  // A late answer and its image-settling timers must yield to user scrolling.
+  await page.evaluate(()=>{
+   const el=document.querySelector('#restored');
+   const positions=sys.core.server.scrollPositions();
+   document.dispatchEvent(new WheelEvent('wheel',{bubbles:true,deltaY:50}));
+   el.scrollTop=390;
+   sys.core.server.restoreScroll(positions);
+  });
+  await page.waitForTimeout(850);
+  assert.equal(await page.locator('#restored').evaluate(n=>n.scrollTop),390,'scrolling while a request is in flight wins');
+  await page.evaluate(()=>{
+   sys.core.server.restoreScroll([{selector:'#restored',top:250}]);
+   document.dispatchEvent(new WheelEvent('wheel',{bubbles:true,deltaY:50}));
+   document.querySelector('#restored').scrollTop=420;
+  });
+  await page.waitForTimeout(850);
+  assert.equal(await page.locator('#restored').evaluate(n=>n.scrollTop),420,'scrolling after an answer cancels delayed restores');
   // Reveal the selected label, not the full height of its nested children.
   await page.setContent('<body class="cms"><main><div class="content"><aside class="cms"><div class="scrollContainer" style="height:200px;overflow:auto"><div style="height:600px"></div><details data-section="relations" open><summary>Relations</summary><div data-relation-section="aliases" style="height:50px">Aliases</div><div style="height:500px"></div></details></div></aside></div></main><div class="tree" style="height:120px;overflow:auto"><div style="height:500px"></div><ul class="tree"><li class="active"><label style="display:block;height:30px">Selected</label><ul style="height:600px"></ul></li></ul></div>');
   await page.evaluate(()=>focusPageRelations('aliases'));
@@ -121,6 +138,12 @@ try {
   await page.locator('#remove-relation').hover();
   assert.equal(await page.locator('#remove-relation').evaluate(n=>getComputedStyle(n).borderLeftWidth),'0px');
   assert.equal(await page.locator('#remove-relation').evaluate(n=>getComputedStyle(n).borderRadius),radius);
+  await page.setContent(`<style>${css}</style><body class="cms"><ul class="contextmenu mediaContextMenu"><li class="iconsonly"><ul>${['crop-simple','eye','arrow-down-to-line','trash'].map(icon=>`<li class="iconOnly"><a><i class="fa-regular fa-${icon}"></i></a></li>`).join('')}</ul></li></ul></body>`);
+  assert.ok(await page.locator('.mediaContextMenu').evaluate(el=>el.getBoundingClientRect().width)<220,'media icon menu has no empty text-column width');
+  assert.ok(await page.locator('.mediaContextMenu').evaluate(el=>{const box=el.getBoundingClientRect(),actions=el.querySelectorAll('a'),first=actions[0].getBoundingClientRect(),last=actions[actions.length-1].getBoundingClientRect();return Math.abs((first.left-box.left)-(box.right-last.right))<1;}),'media menu has equal left and right padding');
+  const mediaCss=await read('../cms/panels/cms/010_pages/pages.mml.css');
+  await page.setContent(`<style>${css}\n${mediaCss}</style><body class="cms"><aside class="cms" style="width:280px"><div class="mediaDrop shareImage"></div></aside></body>`);
+  assert.ok(await page.locator('.mediaDrop.shareImage').evaluate(n=>n.getBoundingClientRect().height)>80,'empty share-image drop keeps its height');
   await page.close();
  }
  console.log('ok: fixed sidebar tabs, symmetric touch grips, native debounce, scroll cancellation, long press and shared row ordering on phone/tablet/desktop');

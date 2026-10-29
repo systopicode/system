@@ -119,12 +119,29 @@ final class ProjectJson
         return self::open($path)?->putField($id, $key, $field, $text);
     }
 
+    public static function setImageSizing(string $path, string $key, string $mode): bool
+    {
+        $doc = self::open($path);
+        if ($doc === null || !in_array($mode, ['megapixels', 'pixels'], true) || !isset($doc->data['formats'][$key])) return false;
+        $row = $doc->data['formats'][$key];
+        if ($mode === 'megapixels') {
+            $row['megapixels'] = (float) ($row['megapixels'] ?? 0) > 0 ? $row['megapixels'] : 3;
+            unset($row['width'], $row['height']);
+        } else {
+            unset($row['megapixels']);
+            if ((int) ($row['width'] ?? 0) <= 0 && (int) ($row['height'] ?? 0) <= 0) $row['width'] = 1600;
+        }
+        unset($row['autocrop'], $row['autocrop_limit']);
+        $doc->data['formats'][$key] = $row;
+        return $doc->save();
+    }
+
     /** @return list<Group> */
     private function build(): array
     {
         $layout = $this->which === 'page' ? self::pageLayout() : self::mediaLayout();
         if ($this->which === 'page') {
-            $this->data['legal'] = array_replace(['CMS_IMPRINT_URL' => '', 'CMS_PRIVACY_URL' => ''], is_array($this->data['legal'] ?? null) ? $this->data['legal'] : []);
+            $this->data['legal'] = array_replace(array_fill_keys(LegalLinks::FIELDS, ''), array_intersect_key(is_array($this->data['legal'] ?? null) ? $this->data['legal'] : [], array_fill_keys(LegalLinks::FIELDS, '')));
         }
         $groups = [];
         foreach ($layout as $section => $spec) {
@@ -188,9 +205,9 @@ final class ProjectJson
             return null;
         }
         $name = substr($id, strlen('define:'));
-        if (in_array($name, ['CMS_IMPRINT_URL', 'CMS_PRIVACY_URL'], true)) {
+        if (in_array($name, LegalLinks::FIELDS, true)) {
             $text = trim($text);
-            if (!LegalLinks::valid($text)) return null;
+            if (strlen($text) > 5000 || (in_array($name, LegalLinks::KEYS, true) && !LegalLinks::valid($text))) return null;
             if (!is_array($this->data['legal'] ?? null)) $this->data['legal'] = [];
             $this->data['legal'][$name] = $text;
             return $this->save() ? $text : null;
@@ -235,7 +252,7 @@ final class ProjectJson
     private function rename(string $id, string $key, string $text): ?bool
     {
         $text = trim($text);
-        if ($text === '' || str_contains($text, "\n") || str_contains($text, '/') || !isset(self::GROUP[$id]) || $id === 'define:EXTERNAL_MEDIAS') {
+        if (!preg_match('/^[A-Za-z0-9_][A-Za-z0-9_-]*$/D', $text) || !isset(self::GROUP[$id]) || $id === 'define:EXTERNAL_MEDIAS') {
             return false;
         }
         $rows = $this->recordRows($id);
@@ -286,6 +303,8 @@ final class ProjectJson
                 $row[(string) $name] = self::blank(self::kindOf($value));
             }
         }
+        if ($id === 'call:mediaFormats::add') $row = ['width' => 1600, 'cms_display' => 'image'];
+        if ($id === 'var:media_groups') $row = ['label' => 'New group', 'file_extension' => '', 'templates' => ''];
         $rows[$newKey] = $row;
         $this->putRecords($id, $rows);
         return $this->save() ? true : false;
@@ -367,6 +386,22 @@ final class ProjectJson
         $current = self::rowKey($rows, $key);
         if ($current === null || !is_array($rows[$current])) {
             return false;
+        }
+        if ($id === 'call:mediaFormats::add' && in_array($field, ['megapixels','width','height'], true)) {
+            $number = trim($text) === '' ? 0 : filter_var($text, FILTER_VALIDATE_FLOAT);
+            if ($number === false || !is_finite((float) $number) || $number < 0 || ($field === 'megapixels' && $number <= 0)
+                || ($field !== 'megapixels' && floor($number) !== (float) $number)) return false;
+            if ($field === 'megapixels') {
+                unset($rows[$current]['width'], $rows[$current]['height']);
+                $rows[$current][$field] = (float) $number;
+            } else {
+                unset($rows[$current]['megapixels']);
+                if ($number > 0) $rows[$current][$field] = (int) $number;
+                else unset($rows[$current][$field]);
+            }
+            unset($rows[$current]['autocrop'], $rows[$current]['autocrop_limit']);
+            $this->putRecords($id, $rows);
+            return $this->save();
         }
         $kind = 'string';
         foreach ($rows as $row) {

@@ -150,7 +150,8 @@ final class External
         foreach ($types as $value => $label) {
             $sel = $value === $current ? ' selected' : '';
             $ext = self::is($value) ? ' data-external="1"' : '';
-            $html .= '<option value="' . $e($value) . '"' . $sel . $ext . '>' . $e($label) . '</option>';
+            $disabled = \Systopic\System\Media\TypePolicy::mayChoose($value, $opts['superuser'] ?? \Systopic\System\Auth\Session::isSuperuser()) ? '' : ' disabled';
+            $html .= '<option value="' . $e($value) . '"' . $sel . $ext . $disabled . '>' . $e($label) . '</option>';
         }
         $html .= '</select><span class="bar"></span><label>File type</label></div>';
         $html .= '<div class="inputGroup mediaUrlField">';

@@ -133,3 +133,59 @@ $(document).keydown(function (event) {
 		}
 	}
 });
+// Informational sheets close through their regular, history-free navigation.
+document.addEventListener('keydown', function (event) {
+    if (event.key !== 'Escape' || event.defaultPrevented) return;
+    var boxes = Array.from(document.querySelectorAll('.cmslightbox[data-transient-info]')).filter(box => box.getClientRects().length);
+    var close = boxes.at(-1)?.querySelector('header a[data-history="false"]');
+    if (!close) return;
+    event.preventDefault();
+    close.click();
+});
+
+/** Rename administrative roles/groups using the same compact header as tags. */
+function renameUserAdminTitle(button) {
+    var heading = button.closest('header').querySelector('h1');
+    if (heading.isContentEditable) { heading.blur(); return; }
+    var previous = heading.textContent;
+    var cancelled = false;
+    heading.setAttribute('contenteditable', 'plaintext-only');
+    var finish = function () {
+        heading.removeEventListener('blur', finish);
+        heading.removeEventListener('keydown', keydown);
+        heading.removeAttribute('contenteditable');
+        var value = heading.textContent.replace(/\s+/g, ' ').trim();
+        if (cancelled || !value) { heading.textContent = previous; return; }
+        heading.textContent = value;
+        if (value !== previous) {
+            var values = {};
+            values[button.dataset.renameField || 'value'] = value;
+            sys.core.server.sendCall({values: values}, button.dataset.renameUrl);
+        }
+    };
+    var keydown = function (event) {
+        if (event.key !== 'Enter' && event.key !== 'Escape') return;
+        event.preventDefault();
+        event.stopPropagation();
+        cancelled = event.key === 'Escape';
+        heading.blur();
+    };
+    heading.addEventListener('blur', finish);
+    heading.addEventListener('keydown', keydown);
+    heading.focus();
+    selectElementContents(heading);
+}
+
+// Autosaved technical keys use native validity without sending invalid changes.
+['input', 'change', 'blur', 'focusout'].forEach(function (type) {
+    document.addEventListener(type, function (event) {
+        var input = event.target;
+        if (!input.matches || !input.matches('input[data-setting-key]')) return;
+        var valid = input.checkValidity();
+        input.setAttribute('aria-invalid', valid ? 'false' : 'true');
+        if (!valid) {
+            event.stopImmediatePropagation();
+            if (type !== 'input') input.reportValidity();
+        }
+    }, true);
+});

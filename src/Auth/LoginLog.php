@@ -30,10 +30,11 @@ final class LoginLog
     public const EXPIRED = 'access expired';
     public const REVOKED = 'device revoked';
     /**
-     * Session files that only name a timed-out session. The login log itself
-     * is not cut down: it stays as long as the file is on disk.
+     * Session files that only name a timed-out session. Login-log retention is handled separately by Maintenance\LogRetention.
      */
     public const KEEP_DAYS = 90;
+
+    public static function invalidateCache(): void { self::$lineCache = null; }
 
     public static function file(): string
     {

@@ -81,7 +81,7 @@ $line = static function (array $row) use ($e): string {
 						$screen = $step === 'screen';
 					?>
 						<form class="authPick" method="post" action="confirmIdentity">
-							<img src="<?= $e(Portrait::src($id, (string) ($row['user_email'] ?? ''), $screen)) ?>" alt="">
+							<img referrerpolicy="no-referrer" src="<?= $e(Portrait::src($id, (string) ($row['user_email'] ?? ''), $screen)) ?>" alt="">
 							<span>
 								<b><?= $e($name) ?></b>
 								<?php $extra = $line($row); if ($extra !== '') { ?><small><?= $extra ?></small><?php } ?>

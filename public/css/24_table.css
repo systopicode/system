@@ -147,7 +147,10 @@ body.dragging .cms .tableScroll.stacked > table > tbody > tr:hover > td{
     max-width: 100%;
     overflow-x: hidden;
     overflow-y: hidden;
-    overscroll-behavior: none;
+    /* Keep sideways gestures in the table; vertical wheel/trackpad input
+       must reach the page even when the pointer rests above a table. */
+    overscroll-behavior-x: contain;
+    overscroll-behavior-y: auto;
 }
 
 .tableScroll.canScrollX{
@@ -547,4 +550,16 @@ div.table .tc{
 /* Sorting grips are controls, not content: do not inherit the card gutter. */
 .cms table:not(.octalSelector, .editor table) tbody td.pageSettingDrag {
     padding-inline: .25rem; width: 2rem; min-width: 2rem; max-width: 2rem; text-align: center;
+}
+
+/* Row actions share one quiet appearance across settings and administration. */
+.cms table:not(.editor table) tbody .button:not(.submit, .confirm, .active, .selected) {
+    background: transparent;
+    color: var(--cmsBrandInk);
+}
+.cms table:not(.editor table) tbody .button:not(.submit, .confirm, .active, .selected):not([disabled], .disabled):is(:hover, :focus-visible) {
+    background: var(--cmsHover);
+}
+.cms table:not(.editor table) tbody .button:not(.submit, .confirm, .active, .selected):not([disabled], .disabled):active {
+    background: color-mix(in srgb, var(--cmsMainColor) 14%, transparent);
 }

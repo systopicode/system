@@ -470,3 +470,24 @@ body.tools > main > div.content > header{
     height: 0;
     overflow: hidden;
 }
+
+/* Desktop owns one bounded content scroller; phone sheets scroll their outer row. */
+@media (min-width: 1025px) {
+    body.cms.settings > main > .content { min-height: 0; }
+    body.cms.settings > main > .content > .flexRow > .flexColumn { min-height: 0; }
+    body.cms.settings > main > .content > .flexRow > .flexColumn > section.cms {
+        min-height: 0;
+        height: auto;
+        align-self: stretch;
+        overflow-y: auto;
+    }
+}
+@media (max-width: 1024px) {
+    body.cms.settings > main > .content > .flexRow > .flexColumn { min-height: 0; height: auto; }
+    body.cms.settings > main > .content > .flexRow > .flexColumn > section.cms {
+        flex: 0 0 auto;
+        height: auto;
+        min-height: 0;
+        overflow: visible;
+    }
+}

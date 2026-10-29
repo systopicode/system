@@ -7,6 +7,11 @@ namespace Systopic\System\Settings;
 /** Project-wide destinations for the CMS's supplementary legal information. */
 final class LegalLinks
 {
+    public const KEYS = ['imprint' => 'CMS_IMPRINT_URL', 'privacy' => 'CMS_PRIVACY_URL'];
+
+    public const DETAILS = ['operator' => 'CMS_OPERATOR_DETAILS', 'dpo' => 'CMS_DPO_DETAILS'];
+    public const FIELDS = [...self::KEYS, ...self::DETAILS];
+
     public static function valid(string $url): bool
     {
         if ($url === '') return true;
@@ -20,13 +25,22 @@ final class LegalLinks
 
     public static function url(string $kind): string
     {
-        $key = match ($kind) {
-            'imprint' => 'CMS_IMPRINT_URL',
-            'privacy' => 'CMS_PRIVACY_URL',
-            default => throw new \InvalidArgumentException('Unknown legal link'),
-        };
-        $value = defined($key) && is_string(constant($key)) ? trim(constant($key)) : '';
-        if ($value !== '' && self::valid($value)) return $value;
+        $value = self::configured($kind);
+        if ($value !== '') return $value;
         return rtrim((string) \http::$root, '/') . '/' . $kind . '/';
     }
+    /** Empty means no explicit destination; it does not verify page contents. */
+    public static function configured(string $kind): string
+    {
+        $key = self::KEYS[$kind] ?? throw new \InvalidArgumentException('Unknown legal link');
+        $value = defined($key) && is_string(constant($key)) ? trim(constant($key)) : '';
+        return $value !== '' && self::valid($value) ? $value : '';
+    }
+
+    public static function details(string $kind): string
+    {
+        $key = self::DETAILS[$kind] ?? throw new \InvalidArgumentException('Unknown legal detail');
+        return defined($key) && is_string(constant($key)) ? trim(constant($key)) : '';
+    }
+
 }

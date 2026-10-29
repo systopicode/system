@@ -39,3 +39,7 @@ require_once __DIR__ . '/lib/ffmpeg.bin.php';
 
 // Send account security notifications only after committed ORM changes.
 \Systopic\Db\Scope::addObserver(new \Systopic\System\Auth\SecurityNotice());
+
+// Shared-hosting housekeeping: existing expiry rules, bounded and project-local.
+\Systopic\System\Maintenance\Tasks::register();
+\Systopic\System\Sys\Hooks\Hooks::on('afterConnect', static fn() => \Systopic\System\Maintenance\Runner::boot(), 1000);

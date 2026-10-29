@@ -4,8 +4,10 @@
 
 switch ($this->action) {
 	case 'clear':
-		if (\Systopic\System\Auth\Session::hasRole('admin')) {
+		if (\Systopic\System\Auth\Session::isSuperuser()) {
 			fs::unlinkFile($this->parent->logfile->filepath);
 			http::redirect('./');
-		}
+		} else {
+            \message::error('Only a superuser can clear logs.');
+        }
 }

@@ -1032,3 +1032,18 @@ body .cmslightbox section > div.layout > aside:not(.cms) > div > div{
         backdrop-filter: none;
     }
 }
+
+/* Download-only files have an intentional file face instead of an empty canvas. */
+.cmslightbox:is(.upload, .fileEditor) .filePreviewFallback { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: .8rem; padding: 2rem; text-align: center; color: var(--cmsSubText); background: var(--cmsCanvas); }
+.cmslightbox:is(.upload, .fileEditor) .filePreviewFallback[hidden] { display: none; }
+.cmslightbox:is(.upload, .fileEditor) .filePreviewFallback > i { font-size: 3.5rem; color: var(--cmsInteractive); }
+.cmslightbox:is(.upload, .fileEditor) .filePreviewFallback strong { max-width: 100%; overflow-wrap: anywhere; color: var(--cmsTextColor); }
+.cmslightbox:is(.upload, .fileEditor) .filePreviewFallback p { max-width: 26rem; margin: 0; font-size: .875rem; }
+
+.cmslightbox.fileEditor .fileStage:has(> .filePreviewFallback) { position: relative; min-height: 16rem; }
+
+/* The same external-video overlay as public pages, using CMS theme controls. */
+.cmslightbox .embedFrame .extVideo { width: 100%; }
+.cmslightbox .embedFrame .extVideo__copy { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: .8rem; min-height: 16rem; padding: 2rem; text-align: center; }
+.cmslightbox .embedFrame .extVideo__hint { max-width: 30rem; margin: 0; color: var(--cmsSubText); }
+.cmslightbox .embedFrame .extVideo__btn { display: inline-flex; align-items: center; gap: .5rem; }

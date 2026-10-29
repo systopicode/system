@@ -476,19 +476,6 @@ div.cms.message pre{
     color: #fff;
 }
 
-.cms div.bottomMenu div.signet > a{
-    display: block;
-    width: 100%;
-    height: 100%;
-    min-height: 0;
-    padding: 0;
-    margin: 0;
-    border: 0;
-    border-radius: 50%;
-    position: absolute;
-    inset: 0;
-    z-index: 2;
-}
 
 .cms div.bottomMenu div.signet:hover:after{
     content: '\f013';
@@ -612,11 +599,14 @@ body > main:has(> div.content .dashboard) .cms div.bottomMenu a.cmsSearchLink kb
     font-size: 0.7rem;
 }
 
-.cms div.bottomMenu a.cmsAccountName{
+.cms div.bottomMenu a.cmsAccount { display: block; margin: 0; padding: 0; color: inherit; text-decoration: none; }
+.cms div.bottomMenu a.cmsAccount:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; }
+
+.cms div.bottomMenu .cmsAccountName{
     display: none;
 }
 
-body > main:has(> div.content .dashboard) .cms div.bottomMenu div.cmsAccount{
+body > main:has(> div.content .dashboard) .cms div.bottomMenu a.cmsAccount{
     display: flex;
     align-items: center;
     gap: 0.5rem;
@@ -624,27 +614,23 @@ body > main:has(> div.content .dashboard) .cms div.bottomMenu div.cmsAccount{
     border-radius: var(--cmsRadius);
 }
 
-body > main:has(> div.content .dashboard) .cms div.bottomMenu div.cmsAccount:hover,
-body > main:has(> div.content .dashboard) .cms div.bottomMenu div.cmsAccount:focus-within{
+body > main:has(> div.content .dashboard) .cms div.bottomMenu a.cmsAccount:hover,
+body > main:has(> div.content .dashboard) .cms div.bottomMenu a.cmsAccount:focus-within{
     background: var(--cmsOnDark);
 }
 
-body > main:has(> div.content .dashboard) .cms div.bottomMenu div.cmsAccount:hover div.signet:after,
-body > main:has(> div.content .dashboard) .cms div.bottomMenu div.cmsAccount:focus-within div.signet:after{
+body > main:has(> div.content .dashboard) .cms div.bottomMenu a.cmsAccount:hover div.signet:after,
+body > main:has(> div.content .dashboard) .cms div.bottomMenu a.cmsAccount:focus-within div.signet:after{
     content: none;
 }
 
-body > main:has(> div.content .dashboard) .cms div.bottomMenu div.cmsAccount a:is(:hover, :focus, :focus-visible){
-    background: none;
-    outline: none;
-}
 
 body > main:has(> div.content .dashboard) .cms div.bottomMenu .signet{
     flex: none;
     margin: 0.5rem 0 0.25rem;
 }
 
-body > main:has(> div.content .dashboard) .cms div.bottomMenu a.cmsAccountName{
+body > main:has(> div.content .dashboard) .cms div.bottomMenu .cmsAccountName{
     display: block;
     flex: 1 1 auto;
     min-width: 0;

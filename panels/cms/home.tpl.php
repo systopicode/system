@@ -40,6 +40,7 @@ $revision = \Systopic\System\Sys\Release::revision();
 			</div>
 		</nav>
 	</header>
+	<?php include __DIR__ . '/home.notices.tpl.php'; ?>
 	<?php if ($editing) {
 		$off = array_values(array_intersect($sorted, $hidden));
 		?>

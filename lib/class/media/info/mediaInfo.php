@@ -51,31 +51,8 @@ class mediaInfo implements clientData { // => move to fsFile
 		}
 	}
 
-	public static $mimetypes = [
-		'image/webp' => 'webp',
-		'image/jpeg' => 'jpg',
-		'image/png' => 'png',
-		'image/gif' => 'gif',
-		'image/tiff' => 'tif',
-		'image/svg+xml' => 'svg',
-		'application/pdf' => 'pdf',
-		'application/vnd.sketchup.skp' => 'skp',
-		'application/x-sketchup' => 'skp',
-		'application/msword' => 'doc',
-		'application/vnd.ms-excel' => 'xls',
-		'application/vnd.openxmlformats-officedocument.wordprocessingml.document' => 'docx',
-		'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' => 'xlsx',
-		'application/vnd.openxmlformats-officedocument.presentationml.presentation' => 'pptx',
-		'application/x-vcard|vcard' => 'vcf',
-		'application/application/zip' => 'zip',
-		'application/x-zip-compressed' => 'zip',
-		'audio/mpeg' => 'mp3',
-		'video/mpeg' => 'mpg',
-		'video/mp4' => 'mp4',
-		'video/quicktime' => 'mov',
-		'text/vcard' => 'vcf',
-		'text/x-vcard' => 'vcf',
-	];
+	public static $mimetypes = \Systopic\System\Tables\Medias\Files::MIMETYPES;
+
 	public static $extentions = [// prepare to store presets on media handling e.g browser support
 		'jpg' => [],
 		'tiff' => [],

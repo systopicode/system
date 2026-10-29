@@ -17,7 +17,11 @@ foreach (preg_split('/\R/', $text) ?: [] as $line) {
 		continue;
 	}
 	if (preg_match('/^(.*?)\s+-\s+([\d.]+)s\s+([\d.]+)MB$/', $line, $match) === 1) {
-		$rows[] = [trim($match[1]), $when($match[2]), $match[3] . ' MB'];
+		if (preg_match('/^\[([^\]]+)\] (.*)$/', $match[1], $dated)) {
+            $rows[] = [$dated[2], $dated[1], $match[3] . ' MB'];
+        } else {
+            $rows[] = [trim($match[1]), $when($match[2]), $match[3] . ' MB'];
+        }
 	} else {
 		$rows[] = [$line, '', ''];
 	}

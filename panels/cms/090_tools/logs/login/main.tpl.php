@@ -10,13 +10,16 @@ $query = trim((string) ($_GET['q'] ?? ''));
 $shown = static fn(array $parts): bool => $query === '' || mb_stripos(implode(' ', $parts) . ' ' . LoginLog::methodLabel($parts[4]), $query) !== false;
 ?>
 <h1>Login log</h1>
+<p class="tagsHint">Entries older than <?= (int) \Systopic\System\Maintenance\LogRetention::LOGIN_DAYS ?> days are eligible for automatic cleanup. Runs depend on site visits or a configured scheduler. This is a fixed system rule, not a project setting. Superusers can clear entries earlier when they are no longer needed.</p>
 <p class="tagsHint">Sign-ins, failed attempts and sign-outs. Newest first.</p>
 <section class="widget is-list logList">
 	<header>
 		<h2>Sign-ins</h2>
 		<input class="listSearch" type="search" placeholder="Search" data-on_input="filterLog" autocomplete="off" value="<?= $e($query) ?>">
 		<a target="_self" href="<?= htmlspecialchars($this->getHref(\http::$root) . 'downloadLog') ?>" class="button"><i class="fa-regular fa-file-arrow-down"></i><span>Download</span></a>
+		<?php if (\Systopic\System\Auth\Session::isSuperuser()) { ?>
 		<a data-on_click="userConfirm" data-action="clearLog" data-confirm="Delete this log file?" class="button"><i class="fa-regular fa-broom"></i><span>Clear</span></a>
+		<?php } ?>
 	</header>
 	<?php if ($lines === []) { ?>
 		<main><p>The log is empty.</p></main>

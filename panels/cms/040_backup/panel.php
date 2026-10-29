@@ -445,7 +445,7 @@ class Panel extends CmsPanel
 		[$usec, $sec] = explode(' ', microtime());
 		$time   = round(((float) $usec + (float) $sec) - $scripttimeStart, 3);
 		$memory = round(memory_get_usage() / 1024 / 1024, 2);
-		$this->logfile->append("$info - {$time}s {$memory}MB\n");
+		\fs::file_put_contents($this->logfile->filepath, "[" . date('c') . "] $info - {$time}s {$memory}MB\n", FILE_APPEND | LOCK_EX);
 	}
 
 	function getBackupfilestable(string $backupdirpath): array

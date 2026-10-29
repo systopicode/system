@@ -5,13 +5,12 @@ $id = (int) \Systopic\System\Auth\Session::id();
 $identity = \Systopic\System\Auth\Session::current();
 $name = trim((string) $identity->fullname) !== '' ? (string) $identity->fullname : (string) $identity->name;
 ?>
-<div class="cmsAccount">
+<a class="ajax cmsAccount" href="<?= htmlspecialchars($this->href, ENT_QUOTES) ?>" title="Account">
 	<div class="signet">
 		<span class="initials<?= strlen($this->initials) > 2 ? '' : ' small' ?>"><?= htmlspecialchars($this->initials) ?></span>
 		<?php if ($id > 0) { ?>
-			<img src="<?= htmlspecialchars(Portrait::src($id, $this->email, ($identity->user->type ?? '') === \Systopic\System\Tables\Users\Model::SCREEN), ENT_QUOTES) ?>" alt="">
+			<img referrerpolicy="no-referrer" src="<?= htmlspecialchars(Portrait::src($id, $this->email, ($identity->user->type ?? '') === \Systopic\System\Tables\Users\Model::SCREEN), ENT_QUOTES) ?>" alt="">
 		<?php } ?>
-		<a class="ajax" href="<?= htmlspecialchars($this->href, ENT_QUOTES) ?>" title="Account"></a>
 	</div>
-	<a class="ajax cmsAccountName" href="<?= htmlspecialchars($this->href, ENT_QUOTES) ?>"><?= htmlspecialchars($name, ENT_QUOTES) ?></a>
-</div>
+	<span class="cmsAccountName"><?= htmlspecialchars($name, ENT_QUOTES) ?></span>
+</a>

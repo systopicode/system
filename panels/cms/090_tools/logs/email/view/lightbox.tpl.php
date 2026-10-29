@@ -160,7 +160,11 @@ if (empty($output)) {
 			<p class="logError"><?= htmlspecialchars($error) ?></p>
 		    <?php } ?>
 		    <?php if ($htmlContent !== '') { ?>
-			<iframe class="mailPreview" title="Message" srcdoc="<?= htmlspecialchars($htmlContent, ENT_QUOTES) ?>"></iframe>
+			<?php
+                // Logged HTML is untrusted. Keep formatting, block scripts and remote resources.
+                $previewHtml = '<meta http-equiv="Content-Security-Policy" content="default-src \'none\'; img-src data:; style-src \'unsafe-inline\'; form-action \'none\'">' . $htmlContent;
+            ?>
+            <iframe class="mailPreview" title="Message" sandbox="" referrerpolicy="no-referrer" srcdoc="<?= htmlspecialchars($previewHtml, ENT_QUOTES) ?>"></iframe>
 		    <?php } elseif ($textContent !== '') { ?>
 			<pre class="mailPreview"><?= htmlspecialchars($textContent) ?></pre>
 		    <?php } else { ?>

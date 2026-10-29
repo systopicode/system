@@ -26,7 +26,7 @@
 }
 
 .userList .userStatus.is-stale{
-    background: var(--cmsWarning);
+    background: #ffc107;
 }
 
 @media (prefers-reduced-motion: reduce){

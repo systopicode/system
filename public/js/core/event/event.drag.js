@@ -70,10 +70,17 @@ sys.core.event.drag = function (event, hooks) { // 2. param raus
 		if (drag.status !== 'down') {
 			keysHoldable.forEach(key => drag.$helper[0].classList.remove(key));
 			drag.keysheld.forEach(key => drag.$helper[0].classList.add(key));
-			var nextDrop = nearestZone(e.target, e.target.closest('[data-drop_accept]'));
+            // WebKit can keep a touch event targeted at the held row even
+            // after implicit pointer capture is released. Hit-test the finger,
+            // rather than treating that old event target as the drop row.
+            var target = pointer && Number.isFinite(e.clientX) && Number.isFinite(e.clientY)
+                ? document.elementFromPoint(e.clientX, e.clientY) : e.target;
+            target = target || e.target;
+            markMediaPolicy(target);
+            var nextDrop = nearestZone(target, target.closest('[data-drop_accept]'));
 			// Resting on a row that can take the item switches from the sort
 			// line to that row. Until then the line stays.
-			nextDrop = holdForOnto(e.target, nextDrop);
+			nextDrop = holdForOnto(target, nextDrop);
 			// Pages change cue at the midpoint. Other lists keep a few pixels
 			// so the line does not flicker between two neighbours.
 			if (drag.type !== 'page' && isLine(drag.dropObj) && isLine(nextDrop) && drag.dropObj !== nextDrop && distance(nextDrop) + 10 > distance(drag.dropObj)) {
@@ -153,8 +160,11 @@ sys.core.event.drag = function (event, hooks) { // 2. param raus
 			$(document).unbind(upType, mouseup);
 			return;
 		}
-		drag.e = e;
-		clearDwell();
+        // The final touch position may arrive only with pointerup.
+        if (pointer && e.type !== 'pointercancel' && drag.status !== 'down'
+            && Number.isFinite(e.clientX) && Number.isFinite(e.clientY)) mousemove(e);
+        drag.e = e;
+        clearDwell();
 		cancelAnimationFrame(edgeFrame);
 		edgeFrame = 0;
 		// Always undo what mousemove set up: hooks may switch hasHelper off
@@ -167,6 +177,7 @@ sys.core.event.drag = function (event, hooks) { // 2. param raus
 			drag.dropObj.classList.remove('dropTarget');
 		}
 		setHover(null);
+        markMediaPolicy(null);
 		$('body').removeClass('dragging');
 		$('body').removeClass(drag.type + 'Dragging');
 		drag.dragObj.classList.remove('dragged');
@@ -198,7 +209,7 @@ sys.core.event.drag = function (event, hooks) { // 2. param raus
 		if (drag.status === 'accept') {
 			// A medium dropped into a text lands where the finger is, not at
 			// the end: the selection is what the insert uses.
-			if (drag.type === 'media' && drag.e) {
+			if ((drag.type === 'media' || drag.type === 'page') && drag.e) {
 				placeEditorCaret(drag.e.clientX, drag.e.clientY);
 			}
 			// A table row is moved here. The answer only stores the order,
@@ -599,10 +610,28 @@ sys.core.event.drag = function (event, hooks) { // 2. param raus
 		return box;
 	}
 
+    // Targets advertise the same extension list used by the server-side media policy.
+    var rejectedMediaZone = null;
+    function mediaPolicyRejected(zone) {
+        if (drag.type !== 'media' || !zone) return false;
+        var policy = zone.closest('[data-media-accept]');
+        if (!policy) return false;
+        var ext = drag.dragObj.getAttribute('data-media-extension') || '';
+        return (policy.getAttribute('data-media-accept') || '').split(',').indexOf('.' + ext) === -1;
+    }
+    function markMediaPolicy(target) {
+        var policy = target && target.closest && target.closest('[data-media-accept]');
+        var rejected = policy && mediaPolicyRejected(policy) ? policy : null;
+        if (rejectedMediaZone && rejectedMediaZone !== rejected) rejectedMediaZone.classList.remove('dropRejected');
+        if (rejected) rejected.classList.add('dropRejected');
+        rejectedMediaZone = rejected;
+    }
+
 	var isAcceptable = () => {
 		if (!drag.dropObj) {
 			return;
 		}
+        if (mediaPolicyRejected(drag.dropObj)) return false;
 		if (isSelf(drag.dropObj)) {
 			return false;
 		}

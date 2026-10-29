@@ -180,7 +180,7 @@ RewriteRule ^css/x_responsive.(css|php) css/x_responsive.php [L,QSA]
 RewriteRule ^var/backups/ - [F]
 
 # Nur definierte Dateitypen direkt aus /var/ erlauben, Rest verbieten
-RewriteCond %{REQUEST_URI} !^.*\.(ico|jpe?g|svg|png|gif|mp4|webm|pdf|doc|docx|vcf|tif|css|js|mjs|zip|log|ics|json|otf|woff|woff2|webp|xml|skp|mp3|m4a|wav|ogg|aac)$ [NC]
+RewriteCond %{REQUEST_URI} !^.*\.(ico|jpe?g|svg|png|gif|mp4|webm|pdf|doc|docx|xlsx|pptx|txt|csv|vcf|tif|css|js|mjs|zip|log|ics|json|otf|woff|woff2|webp|xml|skp|mp3|m4a|wav|ogg|aac)$ [NC]
 RewriteRule ^var/ - [F]
 
 # Existierende Medien direkt senden (wenn kein Rebuild)

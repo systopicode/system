@@ -291,6 +291,7 @@
 			var pins = [];
 			var seen = new Set();
 			var saved = (window.sys && sys.core && sys.core.server && sys.core.server.pendingScroll) || [];
+            if (saved.inputVersion !== undefined && saved.inputVersion !== sys.core.server.scrollInputVersion) saved = [];
 			layer.rootNodes.forEach(node => {
 				var el = node && node.parentElement;
 				while (el && el !== document.body && el !== document.documentElement) {

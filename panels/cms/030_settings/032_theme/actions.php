@@ -20,6 +20,14 @@ $back = static function () use ($panel): void {
     \http::redirect($panel->href);
 };
 
+if ($this->action === 'resetColors') {
+    ThemeFile::resetColors()
+        ? \message::confirm('Default colours restored.')
+        : \message::error('The colours could not be reset.');
+    $back();
+    return;
+}
+
 if ($this->action === 'upload') {
     $error = ThemeAssets::store($slot);
     $error === null ? \message::confirm('Saved.') : \message::error($error);

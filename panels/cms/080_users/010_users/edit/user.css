@@ -558,3 +558,10 @@ body.cms:has(.cmslightbox.userEdit) .userKeyWarn{
 /* Validation occupies a complete row before portrait and fields. */
 .cmslightbox .userEdit .userAccount > .cmsBoxBody > .message { grid-column: 1 / -1; min-width: 0; }
 .userEdit .cmsBoxBody > .cmsBoxMore { display: flex; width: 100%; margin-top: 0.7rem; padding-top: 0.7rem; border-top: 1px solid var(--cmsLine); border-radius: 0; }
+
+.cmslightbox .userMailEntry { padding: 0.8rem 0; border-bottom: 1px solid var(--cmsLineStrong); }
+.cmslightbox .userMailEntry:last-child { border-bottom: 0; }
+.cmslightbox .userMailEntry summary { cursor: pointer; overflow-wrap: anywhere; }
+.cmslightbox .userMailEntry summary > i { margin-right: 0.4rem; }
+.cmslightbox .userMailEntry small { display: block; color: var(--cmsMuted); margin-top: 0.25rem; }
+.cmslightbox .userMailContent { white-space: pre-wrap; overflow-wrap: anywhere; margin-top: 0.8rem; }
