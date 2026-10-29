@@ -47,6 +47,11 @@ daher ist eine im selben Request angelegte ACL sofort dabei.
 Setzen über `Nodes\Operator::withAcl($node, $acl)` (eigene ACL) und
 `inheritingAcl($node)` (wieder erben), dann speichern.
 
+In der Oberfläche: Seitenleiste von `cms/pages/` → Content → Permissions
+(`packages/cms/panels/cms/010_pages/sidebar/045_permissions.tpl.php`,
+`actions.permissions.php`). Wer nicht Superuser ist, schaltet nur Gruppen
+um, auf die er Schreibrecht hat.
+
 Das Weitergeben an die Nachkommen macht der Observer
 `Nodes\AclInheritance` (registriert in `autoload.php`), und zwar nach
 **jedem** Commit, in dem sich bei einem Node `parentNode`, `acl` oder
