@@ -87,14 +87,39 @@ if ($heading === '') {
 			<section class="cmsBox">
 				<header><div class="cmsBoxTitles"><h2>Roles</h2><p class="cmsBoxLead"><?= $user->isSuperuser ? 'A superuser has every role.' : 'Click a role to give it or take it away.' ?></p></div></header>
 				<div class="cmsBoxBody">
-					<div class="picks">
-						<?php foreach ($this->admin->assignableRoles() as $role) {
-							$on = $user->isSuperuser || $this->admin->assignment($user, $role) !== null;
-							$color = ($role->color !== null && $role->color !== '') ? $role->color : '#8a8f93';
-							$click = $user->isSuperuser ? '' : ' data-on_click="toggleUserRole" data-role_id="' . (int) $role->id . '"';
-							echo '<div class="tag' . ($on ? ' active' : '') . '"' . $click . ' style="--tag-color:' . $e($color) . ';--tag-bg:' . $e($color) . ';background:' . $e($color) . ';border-color:' . $e($color) . '">' . $e($role->name) . '</div>';
-						} ?>
+					<?php
+					// held above, the rest below: which one is on reads off its place, not its shade
+					$held = [];
+					$other = [];
+					foreach ($this->admin->assignableRoles() as $role) {
+						if ($user->isSuperuser || $this->admin->assignment($user, $role) !== null) {
+							$held[] = $role;
+						} else {
+							$other[] = $role;
+						}
+					}
+					$chip = static function ($role, bool $on) use ($e, $user): string {
+						$color = ($role->color !== null && $role->color !== '') ? $role->color : '#8a8f93';
+						$click = $user->isSuperuser ? '' : ' data-on_click="toggleUserRole" data-role_id="' . (int) $role->id . '"';
+						$title = $user->isSuperuser ? '' : ' title="' . ($on ? 'Take away' : 'Give') . '"';
+						$icon = $user->isSuperuser ? '' : '<i class="fa-regular fa-' . ($on ? 'xmark' : 'plus') . '"></i>';
+						return '<div class="tag' . ($on ? ' active' : '') . '"' . $click . $title . ' style="--tag-color:' . $e($color) . ';--tag-bg:' . $e($color) . ';border-color:' . $e($color) . '">' . $e($role->name) . $icon . '</div>';
+					};
+					?>
+					<h3 class="picksLabel"><?= $user->isSuperuser ? 'Every role' : 'Has' ?></h3>
+					<div class="picks rolesHeld">
+						<?= $held === [] ? '<p class="tagsHint">No role yet.</p>' : implode('', array_map(static fn($r) => $chip($r, true), $held)) ?>
 					</div>
+					<?php if ($other !== []) { ?>
+						<h3 class="picksLabel">Other roles</h3>
+						<?php if (count($other) > 8) { ?>
+							<input type="search" class="picksFilter" placeholder="Find a role" autocomplete="off"
+								   oninput="const q = this.value.trim().toLowerCase(); this.nextElementSibling.querySelectorAll('.tag').forEach(t => t.hidden = q !== '' && !t.textContent.toLowerCase().includes(q))">
+						<?php } ?>
+						<div class="picks rolesOther">
+							<?= implode('', array_map(static fn($r) => $chip($r, false), $other)) ?>
+						</div>
+					<?php } ?>
 					<?php if ($viewer) { ?>
 						<div class="userRow">
 							<p class="tagsHint"><?= $user->isSuperuser ? 'Superuser: manages every user.' : 'A normal user.' ?><?= $isMe ? ' Not to be changed on your own account.' : '' ?></p>
