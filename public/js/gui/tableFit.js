@@ -72,8 +72,8 @@ if (!sys.fitTables.media) {
 sys.fitTables.edge = function (box) {
 	if (!box) return;
 	var table = box.querySelector(':scope > table');
-	var extra = table ? table.offsetWidth - box.clientWidth : 0;
-	var can = !box.classList.contains('stacked') && extra > 12;
+	var extra = table ? Math.max(table.offsetWidth, table.scrollWidth) - box.clientWidth : 0;
+	var can = !box.classList.contains('stacked') && extra > 1;
 	if (box.classList.contains('canScrollX') !== can) {
 		box.classList.toggle('canScrollX', can);
 	}

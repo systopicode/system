@@ -104,3 +104,9 @@
     text-overflow: ellipsis;
     white-space: nowrap;
 }
+
+.cmsFindTouchHint { display: none; }
+@media (max-width: 1024px), (orientation: portrait) and (max-width: 1400px) {
+    .cmsFind .cmsKeys { display: none; }
+    .cmsFindTouchHint { display: inline; }
+}

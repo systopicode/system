@@ -313,7 +313,7 @@ sys.core.event.drag = function (event, hooks) { // 2. param raus
 	}
 
 	function acceptsType(zone) {
-		return !!(zone && zone.dataset && (zone.dataset.drop_accept || '').split(' ').indexOf(drag.type) !== -1 && zone.getClientRects().length);
+		return !!(zone && zone.dataset && !isSelf(zone) && (zone.dataset.drop_accept || '').split(' ').indexOf(drag.type) !== -1 && zone.getClientRects().length);
 	}
 
 	function isLine(zone) {
@@ -345,7 +345,7 @@ sys.core.event.drag = function (event, hooks) { // 2. param raus
 			return tag;
 		}
 		var title = target.closest('li.title');
-		if (title && acceptsType(title) && !target.closest('li.title li')) {
+		if (title && !isSelf(title) && acceptsType(title) && !target.closest('li.title li')) {
 			return title;
 		}
 		var widget = target.closest('.layout.tags .widget');
@@ -524,6 +524,7 @@ sys.core.event.drag = function (event, hooks) { // 2. param raus
 	// items, the zone's content box (its padding is only there to be hit),
 	// down to a line when that is thinner than a few pixels.
 	function getBoundingBox(obj) {
+        if (drag.type === 'setting' && obj === drag.dragObj && down.pointerType && down.pointerType !== 'mouse') obj = obj.closest('tr') || obj;
 		var zone = obj.classList.contains('sort');
 		if (zone && obj.classList.contains('insertInto') && obj.parentElement) {
 			obj = obj.parentElement;
@@ -545,11 +546,12 @@ sys.core.event.drag = function (event, hooks) { // 2. param raus
 				gap = Math.max(0, afterH ? other.left - pill.right : pill.left - other.right);
 			}
 			var mid = gap / 2;
+            var extension = down.pointerType && down.pointerType !== 'mouse' ? 26 : 0;
 			return {
 				left: (afterH ? pill.right + mid : pill.left - mid) - 1,
-				top: pill.top,
+				top: pill.top - extension,
 				width: 2,
-				height: pill.height,
+				height: pill.height + extension + (extension ? 10 : 0),
 				line: true,
 				borderRadius: 1
 			};
@@ -601,7 +603,7 @@ sys.core.event.drag = function (event, hooks) { // 2. param raus
 		if (!drag.dropObj) {
 			return;
 		}
-		if (drag.dragObj === drag.dropObj) {
+		if (isSelf(drag.dropObj)) {
 			return false;
 		}
 		// A medium dropped onto its own tile is the click that follows the

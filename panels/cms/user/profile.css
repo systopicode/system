@@ -372,17 +372,14 @@ header.cms .rightAlign form{
 }
 
 .remoteLogin .remoteAbort:not([hidden]){
-    display: flex;
-    flex-direction: column;
-    align-items: stretch;
-    gap: 0;
+    display: block;
     width: 100%;
     margin: 0.85rem 0 0;
 }
 
-.remoteLogin .remoteAbort [data-qr-dim-text]{
-    margin: 0.7rem 0;
-    text-align: center;
+.cms .remoteLogin .remoteAbort > .button{
+    width: 100%;
+    margin: 0;
 }
 
 .remoteLogin .remoteSwitch{

@@ -52,7 +52,7 @@ body.cms .cmslightbox .userTabs button:hover{
 
 .cmslightbox .userEdit .userAccount > .cmsBoxBody{
     display: grid;
-    grid-template-columns: 7.5rem 1fr;
+    grid-template-columns: 7.5rem minmax(0, 1fr);
     gap: 1.25rem 1.5rem;
     align-items: start;
 }
@@ -554,3 +554,7 @@ body.cms:has(.cmslightbox.userEdit) .userKeyWarn{
     }
 }
 
+
+/* Validation occupies a complete row before portrait and fields. */
+.cmslightbox .userEdit .userAccount > .cmsBoxBody > .message { grid-column: 1 / -1; min-width: 0; }
+.userEdit .cmsBoxBody > .cmsBoxMore { display: flex; width: 100%; margin-top: 0.7rem; padding-top: 0.7rem; border-top: 1px solid var(--cmsLine); border-radius: 0; }

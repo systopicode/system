@@ -285,7 +285,8 @@ section.cms:has(> .themeEditor){
     border: 1px solid var(--cmsLine);
     border-radius: var(--cmsRadiusLg);
     box-shadow: var(--cmsShadow);
-    overflow: hidden;
+    overflow-x: auto;
+    overflow-y: hidden;
 }
 .projectFiles > .widget > .tableScroll.stacked,
 .pageSettings.widget > .tableScroll.stacked{
@@ -380,8 +381,8 @@ body.settingDragging .projectFiles td label{
     width: 2.5rem;
     min-width: 2.5rem;
     max-width: 2.5rem;
-    padding-left: 0.55rem;
-    padding-right: 0.15rem;
+    padding-left: 0.25rem;
+    padding-right: 0.25rem;
     text-align: center;
     vertical-align: middle;
 }
@@ -611,3 +612,16 @@ body:has(> .projectTemplatesMenu.is-sheet)::after{
 .projectFiles table.languages td.langOn .projectSwitch{
     justify-content: center;
 }
+
+@media (pointer: coarse) {
+    .cms .projectFiles .widget .tableScroll table :is(th:first-child, td.pageSettingDrag),
+    .cms .pageSettings .tableScroll table :is(th:first-child, td.pageSettingDrag) {
+        padding-inline: 0.25rem; width: 2rem; min-width: 2rem; max-width: 2rem;
+    }
+    body.settingDragging .tableScroll tr:has(.dragged),
+    .tableScroll tr:has(> td > .pressing), .tableScroll tr:has(> td > .longPressed) { outline: none; }
+    body.settingDragging .tableScroll .dropTarget { outline: none; background: transparent; }
+}
+
+.cms .projectFiles td.pageSettingDrag { padding: 0.25rem; width: 2rem; min-width: 2rem; max-width: 2rem; text-align: center; }
+.cms .projectFiles td.pageSettingDrag > i { display: inline-flex; justify-content: center; align-items: center; width: 1.5rem; height: 2rem; margin: 0; }

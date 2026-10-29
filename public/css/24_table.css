@@ -543,3 +543,8 @@ div.table .tc{
     }
     .cms .tableFoldToggle[aria-expanded="true"] i { transform: rotate(180deg); }
 }
+
+/* Sorting grips are controls, not content: do not inherit the card gutter. */
+.cms table:not(.octalSelector, .editor table) tbody td.pageSettingDrag {
+    padding-inline: .25rem; width: 2rem; min-width: 2rem; max-width: 2rem; text-align: center;
+}

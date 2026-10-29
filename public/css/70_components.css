@@ -218,9 +218,9 @@ pre.backupLog{
 	margin: 0;
 }
 
-.cms .widget > header + .tableScroll > table :is(th, td):first-child,
-.cms .widget > .tagsHint + .tableScroll > table :is(th, td):first-child,
-section.cms > .tableScroll > table :is(th, td):first-child{
+.cms .widget > header + .tableScroll > table :is(th, td):first-child:not(.pageSettingDrag),
+.cms .widget > .tagsHint + .tableScroll > table :is(th, td):first-child:not(.pageSettingDrag),
+section.cms > .tableScroll > table :is(th, td):first-child:not(.pageSettingDrag){
 	padding-left: 1.25rem;
 }
 

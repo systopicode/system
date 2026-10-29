@@ -105,6 +105,7 @@ try {
  await page.setContent(markup(methods.password));
  await page.locator('body').evaluate(node=>node.innerHTML='<main>Dashboard</main>');
  assert.equal(await page.evaluate(()=>getComputedStyle(document.body,'::before').content),'none');
+ assert.equal(await page.evaluate(()=>getComputedStyle(document.body,'::after').content),'none');
  // During a hard reload the shell can paint before any content is parsed.
  await page.setContent(`<style>@layer cms {${base}\n${auth}}</style><body class="cms system"></body>`);
  assert.equal(await page.evaluate(()=>getComputedStyle(document.body).backgroundColor),'rgb(240, 243, 244)');

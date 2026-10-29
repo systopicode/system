@@ -599,7 +599,7 @@ body.tagDragging .cms .layout.tags .tag.dragged > .tagActions{
     display: flex;
     flex: 0 0 auto;
     align-items: center;
-    gap: 0;
+    gap: var(--cmsActionGap, 0.5rem);
     margin: 0;
 }
 
@@ -631,3 +631,26 @@ body.tagDragging .cms .layout.tags .tag.dragged > .tagActions{
     color: var(--cmsMuted);
 }
 
+
+@media (pointer: coarse) {
+    .cms .layout.tags .tag { min-height: 1.8rem; padding-inline: 0.7rem; margin: 2px 5px 3px 0; }
+    .cms .layout.tags .tag > .tagActions button { width: 1.15rem; height: 1.15rem; flex-basis: 1.15rem; }
+    .cms .layout.tags .tag > .tagActions button i { font-size: 0.7rem; }
+    .cms .layout.tags .tag > .tagActions .tagGrip { padding-inline: 0.35rem; }
+    .cmslightbox .tagAssignments :is(a, button) { width: 2.5rem; height: 2.5rem; }
+    /* One cue, drawn by the shared drag helper, centred on its gap line. */
+    body.tagDragging .layout.tags .tag:has(> .sort.dropTarget)::after { display: none; }
+}
+
+@media (pointer: coarse) {
+    body.tagDragging .draghelper.line::before {
+        content: ""; position: absolute; width: 0.5rem; height: 0.5rem;
+        left: 50%; top: 0; transform: translate(-50%, -50%);
+        border-radius: 50%; background: var(--cmsHighlightColor);
+    }
+}
+
+/* Tablet layouts keep groups in reading order in a single column. */
+@media (max-width: 1400px) {
+    .cms .layout.tags { grid-template-columns: minmax(0, 1fr); }
+}

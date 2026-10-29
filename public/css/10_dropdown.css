@@ -95,7 +95,7 @@
 }
 
 .cms ul.contextmenu li.iconsonly ul li a i{
-    font-size: 0.9rem;
+    font-size: 1rem;
     line-height: 1;
 }
 
@@ -340,4 +340,30 @@ a.redirect i,
     position: relative;
     display: inline-block;
     margin: 0 10px 7px 15px;
+}
+
+/* Shared menu material and item geometry for split buttons and tree actions. */
+.cms :is(ul.contextmenu, .splitApplyList) {
+    border: 1px solid var(--cmsLine);
+    border-radius: var(--cmsRadiusLg);
+    padding: 0.35rem;
+    background: var(--cmsCanvas);
+    box-shadow: var(--cmsShadowLg);
+    box-sizing: border-box;
+}
+.cms :is(ul.contextmenu > li:not(.iconsonly) > a, .splitApplyList > button, .splitApplyList > a) {
+    display: flex; align-items: center; gap: 0.6rem; min-height: 2.25rem;
+    width: 100%; max-width: 100%; box-sizing: border-box; margin: 0; padding: 0.45rem 0.65rem;
+    border-radius: var(--cmsRadius); font-size: 0.8125rem; font-weight: 500;
+    color: var(--cmsTextColor); text-align: left;
+}
+.cms :is(ul.contextmenu, .splitApplyList) :is(a, button):is(:hover, :focus-visible) { background: var(--cmsHover); }
+.cms :is(ul.contextmenu, .splitApplyList) :is(a, button) > i { font-size: 1rem; flex: 0 0 1.25rem; text-align: center; }
+.cms ul.contextmenu li.seperator { margin: 0.35rem 0; }
+.cms ul.contextmenu li.iconsonly ul { margin: 0; }
+
+@media (pointer: coarse) {
+    .cms ul.contextmenu ul li.iconOnly {
+        flex-basis: 2.5rem; width: 2.5rem; height: 2.5rem;
+    }
 }

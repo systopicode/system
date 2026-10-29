@@ -176,7 +176,7 @@ $preview = $this->fakeRoles;
 					<?php if (count($ownDevices) > count($devicesShown)) { ?>
 						<button type="button" class="cmsBoxMore" data-open-box=".deviceListBox">Show all devices (<?= count($ownDevices) ?>)</button>
 					<?php } ?>
-					<button type="button" class="button" data-open-box=".remoteLoginBox"><i class="fa-regular fa-laptop-mobile"></i> Add device</button>
+					<button type="button" class="button submit" data-open-box=".remoteLoginBox"><i class="fa-regular fa-laptop-mobile"></i> Add device</button>
 				</footer>
 			<?php } ?>
 		</section>
@@ -199,7 +199,7 @@ $preview = $this->fakeRoles;
 			<footer>
 				<?= \message::flush('layout') ?>
 				<p class="tagsHint">Puts every module back to its defaults: open panes, folded trees, filters, sort orders.</p>
-				<button type="button" class="button" data-on_click="userConfirm" data-action="resetState" data-confirm="Reset the layout of every module to its defaults?"><i class="fa-regular fa-arrow-rotate-left"></i>Reset layout</button>
+				<button type="button" class="button submit" data-on_click="userConfirm" data-action="resetState" data-confirm="Reset the layout of every module to its defaults?"><i class="fa-regular fa-arrow-rotate-left"></i>Reset layout</button>
 			</footer>
 		</section>
 		<?php } ?>
@@ -266,14 +266,7 @@ $preview = $this->fakeRoles;
 				</div>
 				<div class="cms message qrScanMsg" data-qr-msg hidden></div>
 				<div class="qrScanDim remoteAbort" data-qr-dim hidden>
-					<p data-qr-dim-text></p>
-					<div class="remoteSwitch">
-						<button type="button" class="button submit" data-qr-again><i class="fa-regular fa-rotate-right"></i> <span data-qr-label>Try again</span></button>
-						<?php if ($offerSvg !== '') { ?>
-							<button type="button" class="button" data-remote-offer><i class="fa-regular fa-qrcode"></i> Show QR</button>
-						<?php } ?>
-						<button type="button" class="button" data-remote-code><i class="fa-regular fa-input-numeric"></i> Use code</button>
-					</div>
+					<button type="button" class="button submit" data-qr-again><i class="fa-regular fa-rotate-right"></i> <span data-qr-label>Try again</span></button>
 				</div>
 			</div>
 			<form class="remoteCode" data-code-form method="get" action="<?= $e($this->href) ?>"<?= ($remoteOpen || $offerSvg === '') ? '' : ' hidden' ?>>

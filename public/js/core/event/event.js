@@ -17,6 +17,7 @@ onpopstate = (event) => {
 };
 
 sys.processEvent = function (e) {
+    if (e.type === 'mousedown' && e.currentTarget?.cmsTouchMouseUntil > Date.now()) return;
 	e.stopPropagation();
 	if (e.type === 'popstate') {
 		var event = new sys.core.event(e);
@@ -135,12 +136,13 @@ sys.processPointerDown = function (e) {
 	if (down.pointerType === 'mouse' || !element) {
 		return;
 	}
+    element.cmsTouchMouseUntil = Date.now() + 1000;
 	if (!element.dataset.drag_type || element.dataset.on_draginit) {
 		return sys.processEvent(e);
 	}
 	e.stopPropagation();
 	// no emulated mousedown afterwards - it would start a second, mouse drag
-	down.preventDefault();
+	if (!element.closest('tr')) down.preventDefault();
 	sys.longPress(down, element, function () {
 		sys.processEvent($.Event(down, {currentTarget: element}));
 	});
@@ -182,6 +184,7 @@ sys.longPress = function (down, element, start) {
 		}
 	};
 	var end = function () {
+        element.cmsTouchMouseUntil = Date.now() + 500;
 		clearTimeout(timer);
 		element.classList.remove('pressing', 'longPressed');
 		document.removeEventListener('pointermove', move, true);
@@ -203,13 +206,16 @@ sys.longPress = function (down, element, start) {
 };
 
 sys.processEventDelayed = function (e) {
+    // Native events lose currentTarget after dispatch; debounce keeps its field.
+    var delayedEvent = $.Event(e, {currentTarget: e.currentTarget, target: e.target});
 	var events = sys.core.event;
 	if (events.inputTimer) {
 		clearTimeout(events.inputTimer);
 	}
 	events.inputTimer = setTimeout(function () {
 		delete events.inputTimer;
-		var event = new sys.core.event(e);
+		if (!delayedEvent.currentTarget?.isConnected) return;
+		var event = new sys.core.event(delayedEvent);
 		event.collectElementData();
 		event.dispatch();
 	}, 333);
@@ -430,7 +436,10 @@ sys.core.event = function (e) {
 			if (target.__object) {
 				libnode = target;
 			} else {
-				if (target.__data.hasOwnJS) {// load js and create instance
+				if (target.__data.hasOwnJS) {// a partial response may arrive before its instance
+                    sys.panelTree.build(sys.panels);
+                    if (target.__object) libnode = target;
+                    else sys.core.server.sendEventCall(event);
 					l('js');
 
 				} else {// no js

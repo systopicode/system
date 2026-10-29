@@ -191,6 +191,20 @@
 		look();
 	}
 
+	function waiting(host, on) {
+		var stage = host.querySelector('.qrScanStage');
+		if (!stage) return;
+		var wait = stage.querySelector('[data-qr-wait]');
+		if (!wait) {
+			wait = document.createElement('div');
+			wait.className = 'qrScanWait';
+			wait.setAttribute('data-qr-wait', '');
+			wait.setAttribute('aria-hidden', 'true');
+			stage.appendChild(wait);
+		}
+		wait.hidden = !on;
+	}
+
 	function stop(host) {
 		var live = host._qr;
 		if (!live) return;
@@ -203,6 +217,7 @@
 		if (video) video.srcObject = null;
 		host._qr = null;
 		host.classList.remove('is-on');
+		waiting(host, false);
 	}
 
 	function accept(host, run) {
@@ -254,6 +269,7 @@
 		if (form) form.hidden = true;
 		clearFlash(host);
 		hint(host, steady(host));
+		waiting(host, true);
 		var live = { done: false, stream: null, timer: null, frame: null, mirror: true, darkAt: 0, bad: '' };
 		host._qr = live;
 		function onHide() {
@@ -282,6 +298,7 @@
 			if (video) video.srcObject = null;
 			if (host._qr === live) host._qr = null;
 			host.classList.remove('is-on');
+			waiting(host, false);
 		}
 
 		live.timer = setTimeout(function () {
@@ -302,6 +319,7 @@
 			}
 			live.frame = setTimeout(function () { tick(performance.now()); }, STEP);
 			if (!video || video.readyState < 2 || !video.videoWidth) return;
+			waiting(host, false);
 			var scale = Math.min(1, 640 / Math.max(video.videoWidth, video.videoHeight));
 			canvas.width = Math.round(video.videoWidth * scale);
 			canvas.height = Math.round(video.videoHeight * scale);

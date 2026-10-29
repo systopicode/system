@@ -18,7 +18,7 @@ $this->loadJS();
 				</button>
 				<ul class="barmenu">
 					<li>
-						<button type="button" data-on_click="userConfirm" data-action="removeTag" data-tag_id="<?= (int) $tag->id ?>" data-confirm="Remove this tag? Pages and files lose it." aria-label="Remove">
+						<button type="button" data-on_click="userConfirm" data-action="removeTag" data-tag_id="<?= (int) $tag->id ?>" class="button icononly" data-confirm="Remove this tag? Pages and files lose it." aria-label="Remove">
 							<i class="fa-regular fa-trash"></i>
 						</button>
 					</li>
@@ -35,14 +35,14 @@ $this->loadJS();
 								<li>
 									<span class="tagAssignmentLabel"><?= htmlspecialchars($page['label']) ?></span>
 									<span class="tagAssignmentActions">
-										<a class="ajax" href="<?= htmlspecialchars($page['href']) ?>" title="<?= !empty($page['media']) ? 'View' : 'Open' ?>">
+										<a class="ajax" href="<?= htmlspecialchars($page['href']) ?>" <?= empty($page['media']) ? 'target="_blank" rel="noopener"' : '' ?> title="<?= !empty($page['media']) ? 'View' : 'Open in new window' ?>" aria-label="<?= !empty($page['media']) ? 'View' : 'Open in new window' ?>">
 											<i class="fa-regular <?= !empty($page['media']) ? 'fa-eye' : 'fa-arrow-up-right-from-square' ?>"></i>
 										</a>
-										<button type="button" title="Remove from this page"
+										<button type="button" class="button icononly" title="Remove from this page" aria-label="Remove from this page"
 											data-on_click="detach"
 											data-node_id="<?= (int) $page['nodeId'] ?>"
 											data-tag_id="<?= (int) $tag->id ?>">
-											<i class="fa-regular fa-trash"></i>
+											<i class="fa-regular fa-link-slash"></i>
 										</button>
 									</span>
 								</li>

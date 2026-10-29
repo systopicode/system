@@ -61,7 +61,7 @@ if ($authMethod === 'device' && is_array($authPair) && $authPairUrl !== '' && cl
     $qr = \qr::svgMarkup(\qr::payload('url', ['url' => $authPairUrl]), 4, 'M', 'qr-code');
 }
 
-$switch = '<p class="authFoot"><a class="authSwitch ajax" href="?method=choose"><span>Use another method</span><i class="fa-regular fa-arrow-right"></i></a></p>';
+$switch = '<p class="authFoot"><a class="authSwitch ajax" href="?method=choose"><i class="fa-regular fa-arrow-left"></i><span>Use another method</span></a></p>';
 $showSwitch = ($authMethod === 'passkey' && $authPasskey)
     || (in_array($authMethod, ['device', 'code'], true) && $authCodes)
     || $authMethod === 'password';

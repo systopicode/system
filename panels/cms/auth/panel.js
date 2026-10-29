@@ -2,7 +2,71 @@
 (function () {
     const setup = {info: 'CMS authentication', route: 'panels.cms.auth', extends: 'classes.panelNode'};
     let screenPollTimer = null;
+    let authSlide = null;
+    const slideEase = 'transform 0.32s cubic-bezier(0.32, 0.72, 0, 1)';
+
+    const captureSlide = (event) => {
+        const link = event.target && event.target.closest && event.target.closest('.authCard a.ajax');
+        if (!link) return;
+        const dir = link.classList.contains('authMethod') ? 'forward'
+            : (link.classList.contains('authSwitch') || link.classList.contains('authBack') ? 'back' : null);
+        const main = dir && link.closest('.authCard')?.querySelector(':scope > main');
+        if (!main) return;
+        const ghost = main.cloneNode(true);
+        ghost.classList.add('authSlideGhost');
+        ghost.setAttribute('aria-hidden', 'true');
+        authSlide = {dir, ghost};
+    };
+
+    const runSlide = () => {
+        const pending = authSlide;
+        authSlide = null;
+        const card = document.querySelector('.authCard');
+        const main = card && card.querySelector(':scope > main');
+        if (!card || !main || !pending || (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches)) return;
+
+        // Gap = card padding, so the panes don’t stick (authFoot overhangs that far).
+        const forward = pending.dir === 'forward';
+        const from = forward ? 'calc(100% + var(--authPadX))' : 'calc(-100% - var(--authPadX))';
+        const out = forward ? 'calc(-100% - var(--authPadX))' : 'calc(100% + var(--authPadX))';
+        const ghost = pending.ghost;
+        const stage = document.createElement('div');
+        stage.className = 'authSlideStage';
+
+        ghost.style.transform = 'translateX(0)';
+        ghost.style.transition = 'none';
+        main.style.transform = 'translateX(' + from + ')';
+        main.style.transition = 'none';
+
+        card.insertBefore(stage, main);
+        stage.append(ghost, main);
+        void stage.offsetWidth;
+
+        let finished = false;
+        const done = () => {
+            if (finished) return;
+            finished = true;
+            main.style.transform = '';
+            main.style.transition = '';
+            if (stage.parentNode === card) {
+                card.insertBefore(main, stage);
+                stage.remove();
+            }
+        };
+
+        ghost.style.transition = slideEase;
+        main.style.transition = slideEase;
+        ghost.style.transform = 'translateX(' + out + ')';
+        main.style.transform = 'translateX(0)';
+
+        main.addEventListener('transitionend', (event) => {
+            if (event.target === main && event.propertyName === 'transform') done();
+        });
+        setTimeout(done, 450);
+    };
+
     const boot = () => {
+        runSlide();
         if (window.sys && sys.passkeys) {
             sys.passkeys.attachAutofill();
             sys.passkeys.startIfAuto();
@@ -31,6 +95,9 @@
                 .catch(() => {});
         }, 3000);
     };
+
+    document.addEventListener('click', captureSlide, true);
+
     sys.lib.add(setup, function () {
         sys.lib.applyParentConstructor(this, setup, []);
         this.onUpdateMain = boot;

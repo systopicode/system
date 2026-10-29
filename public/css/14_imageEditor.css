@@ -175,3 +175,6 @@ div.aspectRatioSelector a{
 	padding:0 6px;
 	cursor:pointer;
 }
+
+div.dragimage > div { cursor: nesw-resize; }
+div.dragimage > div:nth-child(3), div.dragimage > div:nth-child(5) { cursor: nwse-resize; }

@@ -43,9 +43,9 @@
     display: none;
     width: max-content;
     margin: 0;
-    padding: 0.3rem;
-    border: 1px solid var(--cmsLineStrong);
-    border-radius: var(--cmsRadius);
+    padding: 0.35rem;
+    border: 1px solid var(--cmsLine);
+    border-radius: var(--cmsRadiusLg);
     background: var(--cmsCanvas);
     box-shadow: var(--cmsShadowLg);
 }
@@ -58,21 +58,22 @@
     display: flex;
     align-items: center;
     justify-content: flex-start;
-    width: auto;
+    width: 100%;
     min-width: 100%;
     height: auto;
-    min-height: 2rem;
+    min-height: 2.25rem;
     margin: 0;
-    padding: 0.4rem 0.7rem;
+    padding: 0.45rem 0.65rem;
     border: 0;
-    border-radius: calc(var(--cmsRadius) - 2px);
+    border-radius: var(--cmsRadius);
     background: transparent;
     color: var(--cmsTextColor);
     font-size: 0.8125rem;
-    font-weight: 600;
+    font-weight: 500;
     text-align: left;
     white-space: nowrap;
-    overflow: visible;
+    box-sizing: border-box;
+    gap: 0.6rem;
     cursor: pointer;
 }
 

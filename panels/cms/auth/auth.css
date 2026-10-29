@@ -44,6 +44,7 @@ body.appBody:has(.authCard) {
 		mask-image: linear-gradient(transparent, #000 22%, #000 78%, transparent);
 	}
 
+
 	div.authCard {
 		--authPadX: 2rem;
 		--authPadB: 1.75rem;
@@ -736,10 +737,22 @@ body.appBody:has(.authCard) .authCard main > p.authFoot {
 	flex: 0 0 auto;
 	width: auto;
 	margin: 0 calc(var(--authPadX) * -1) calc(var(--authPadB) * -1);
-	padding: 0.85rem var(--authPadX) 0.85rem;
+	padding: 0.55rem var(--authPadX);
 	border-top: 1px solid var(--cmsLine);
 	background: var(--cmsCanvas);
 	text-align: center;
+}
+
+/* Back links sit on the left like a phone nav control. */
+body.cms:has(.authCard) .authCard :is(> p.authFoot, main > p.authFoot):has(:is(a.authBack, a.authSwitch)),
+body.appBody:has(.authCard) .authCard :is(> p.authFoot, main > p.authFoot):has(:is(a.authBack, a.authSwitch)) {
+	justify-content: flex-start;
+	text-align: left;
+}
+
+body.cms:has(.authCard) .authCard :is(> p.authFoot, main > p.authFoot):has(:is(a.authBack, a.authSwitch)) :is(a.authBack, a.authSwitch),
+body.appBody:has(.authCard) .authCard :is(> p.authFoot, main > p.authFoot):has(:is(a.authBack, a.authSwitch)) :is(a.authBack, a.authSwitch) {
+	margin-left: -0.95rem;
 }
 
 .cms .authCard .authFoot :is(a.authBack, a.authSkip, a.authSwitch, button.authSwitch),
@@ -772,6 +785,44 @@ body.appBody:has(.authCard) .authCard main > p.authFoot {
 
 .cms .authCard .authFoot :is(a.authBack, a.authSkip, a.authSwitch, button.authSwitch) i {
 	font-size: 0.7rem;
+}
+
+/* Method switches slide like a phone stack. Transforms are set inline so both panes move together. */
+/* Stage reaches into the card padding so authFoot’s negative margins aren’t clipped mid-slide. */
+.authCard > .authSlideStage {
+	position: relative;
+	display: flex;
+	flex-direction: column;
+	flex: 1 1 auto;
+	min-height: 0;
+	margin: 0 calc(var(--authPadX) * -1) calc(var(--authPadB) * -1);
+	overflow: hidden;
+}
+
+.authCard > .authSlideStage > main {
+	position: absolute;
+	top: 0;
+	right: var(--authPadX);
+	bottom: var(--authPadB);
+	left: var(--authPadX);
+	z-index: 1;
+	display: flex;
+	flex-direction: column;
+	width: auto;
+	min-height: 0;
+	margin: 0;
+	overflow: hidden;
+	background: var(--cmsCanvas);
+}
+
+/* Keep the full-bleed foot inside the pane while sliding, otherwise panes glue together. */
+.authCard > .authSlideStage > main > p.authFoot {
+	margin-left: 0;
+	margin-right: 0;
+}
+
+.authCard > .authSlideStage > main.authSlideGhost {
+	pointer-events: none;
 }
 
 .authCard .passkeys.passkeyLogin {

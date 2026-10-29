@@ -707,22 +707,22 @@ body.cms > .cmsMobileHeader > .cmsMobileMenuClose, body.cms > .cmsMobileHeader >
 	body.cms .cmslightbox.cmsFind > section > header > .cmsMobileGrip { height: 36px; }
 	body.cms .cmslightbox > section > .cmsMobileGrip { z-index: 6; touch-action: none; }
 	body.cms .cmslightbox > section:before { content: none; }
-	body.cms > ul.contextmenu:before {
+	body.cms > :is(ul.contextmenu, .splitApplyList):before {
 		content: ""; position: absolute; top: 6px; left: calc(50% - 18px);
 		width: 36px; height: 4px; border-radius: 4px; background: var(--cmsMuted);
 	}
 	body.cms .cmslightbox section > header :is(a, li):has([class*="xmark"]) { display: none; }
 	body.cms .cmslightbox section > header .barmenu:not(:has(li:not(:has([class*="xmark"])))) { display: none; }
 	/* Tree actions are an in-viewport sheet, never a popover off the right edge. */
-	body.cms > ul.contextmenu {
+	body.cms > :is(ul.contextmenu, .splitApplyList) {
 		position: fixed; z-index: 9000; left: var(--sheetSide) !important; right: var(--sheetSide);
-		top: auto !important; bottom: 0; width: auto; min-width: 0; max-width: none;
+		top: auto !important; bottom: 0; width: auto !important; min-width: 0; max-width: none;
 		max-height: 75dvh; overflow: auto; padding-top: 18px;
 		border-radius: 24px 24px 0 0;
 		box-shadow: 0 0 0 100vmax rgb(0 20 25 / 35%);
 	}
 	body.cms > ul.contextmenu ul { flex-wrap: wrap; }
-	body.cms > ul.contextmenu li a { min-height: 44px; white-space: normal; }
+	body.cms > ul.contextmenu li a, body.cms > .splitApplyList > :is(a, button) { min-height: 44px; white-space: normal; }
 
 	body.cms > main > div.content,
 	body.cms .cmslightbox > section { --cmsCardPadding: 1rem; }
@@ -848,3 +848,13 @@ body.cms > .cmsMobileHeader > .cmsMobileMenuClose, body.cms > .cmsMobileHeader >
 	body.cms .cmslightbox > section { transition: none; }
 }
 
+@media (max-width: 1024px), (orientation: portrait) and (max-width: 1400px) {
+    body.cms .cmslightbox, body.cms .cmslightbox.cmsFind {
+        background: var(--cmsGlassBackdrop);
+    }
+}
+@media (prefers-reduced-transparency: reduce) {
+    body.cms .cmslightbox, body.cms .cmslightbox.cmsFind {
+        background: color-mix(in srgb, var(--cmsMainColor) 65%, transparent);
+    }
+}

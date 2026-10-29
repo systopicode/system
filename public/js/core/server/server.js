@@ -328,8 +328,17 @@ sys.core.server = new function () {
         };
     };
 
+    // Explicit navigation owns its scroller; older delayed restores must yield.
+    server.scrollRevealVersion = 0;
+    server.scrollReveals = new WeakMap();
+    server.revealScroll = (el, top) => {
+        server.scrollReveals.set(el, ++server.scrollRevealVersion);
+        el.scrollTop = top;
+    };
+
     /** A box built anew gets its place back, also once its images have their height. */
     server.restoreScroll = positions => {
+        var revealVersion = server.scrollRevealVersion;
         var apply = () => {
             (positions || []).forEach(position => {
                 var el;
@@ -338,7 +347,7 @@ sys.core.server = new function () {
                 } catch (error) {
                     return;
                 }
-                if (!el || !position.top) {
+                if (!el || !position.top || (server.scrollReveals.get(el) || 0) > revealVersion) {
                     return;
                 }
                 sys.core.server.pinScroll(el, position.top)();

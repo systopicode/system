@@ -145,7 +145,15 @@ function runImageEditor(iParams) {
 				 });*/
 				w_e = (x < b) ? 'w' : ((x < (w - b)) ? '' : 'e');
 				n_s = (y < b) ? 'n' : ((y < (h - b)) ? '' : 's');
-				cursor = (n_s + w_e) ? n_s + w_e + '-resize' : 'move';
+				// Corner grips cover more than the narrow edge band. Their entire
+                // area must resize diagonally, including the inner part.
+                var corner = $(event.target).closest('div.dragimage > div');
+                if (corner.length) {
+                    var index = corner.index();
+                    n_s = index === 1 || index === 2 ? 'n' : 's';
+                    w_e = index === 1 || index === 4 ? 'e' : 'w';
+                }
+                cursor = (n_s + w_e) ? n_s + w_e + '-resize' : 'move';
 				drag_image.css({cursor: cursor});
 
 				//	c();

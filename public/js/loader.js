@@ -24,11 +24,12 @@ sys.core.loader.__class = function () { // class to control availability of scri
 	};
 
 	loader.onScriptsReady = (call) => {
+		if (loader.scriptsLoading.size > 0) return;
 		var documentReadyStateChange = () => {
 			document.removeEventListener('readystatechange', documentReadyStateChange);
 			loader.onScriptsReady(call);
 		};
-		if (document.readyState !== 'complete') {
+		if (document.readyState === 'loading') {
 			l('flush onJSReadyFuncs skipped >>> waiting for DOM ready >>> STATE::' + document.readyState);
 			document.addEventListener('readystatechange', documentReadyStateChange);
 			return;
