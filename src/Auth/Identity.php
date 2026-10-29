@@ -28,6 +28,9 @@ final class Identity
     /** @var array{read: list<int>, write: list<int>}|null */
     private ?array $rights = null;
 
+    /** @var list<int>|null */
+    private ?array $rightsRoleIds = null;
+
     /**
      * @param list<string> $recoveryRoles the roles of the recovery user
      */
@@ -105,11 +108,29 @@ final class Identity
 
     public array $writeGroupIds { get => $this->rights()['write']; }
 
+    /**
+     * The ACLs the user may read / write: those with a group of the above.
+     * Not kept here but asked each time — the scope caches the query and
+     * throws it away when a new ACL is written in this request.
+     *
+     * @var list<int>
+     */
+    public array $readAclIds { get => UserRights::acls($this->scope, $this->rightsRoleIds())['read']; }
+
+    /** @var list<int> */
+    public array $writeAclIds { get => UserRights::acls($this->scope, $this->rightsRoleIds())['write']; }
+
     /** @return array{read: list<int>, write: list<int>} */
     private function rights(): array
     {
-        if ($this->rights !== null) {
-            return $this->rights;
+        return $this->rights ??= UserRights::groups($this->scope, $this->rightsRoleIds());
+    }
+
+    /** @return list<int> the roles the rights come from — a superuser's all, or the faked ones */
+    private function rightsRoleIds(): array
+    {
+        if ($this->rightsRoleIds !== null) {
+            return $this->rightsRoleIds;
         }
         $roleIds = $this->roleIds;
         if ($this->isSuperuser) {
@@ -120,7 +141,7 @@ final class Identity
             }
             $roleIds = array_map(static fn(Role $r) => (int) $r->id, $all);
         }
-        return $this->rights = UserRights::groups($this->scope, $roleIds);
+        return $this->rightsRoleIds = $roleIds;
     }
 
     // --------------------------------------------------- legacy surface
@@ -153,6 +174,8 @@ final class Identity
             'role_colors' => array_map(static fn(Role $r) => (string) $r->color, $this->roles),
             'read_group_ids' => $this->readGroupIds,
             'write_group_ids' => $this->writeGroupIds,
+            'read_acl_ids' => $this->readAclIds,
+            'write_acl_ids' => $this->writeAclIds,
             'roles' => $this->roles,
             default => $this->column($name),
         };

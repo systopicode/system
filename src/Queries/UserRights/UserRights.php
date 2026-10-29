@@ -4,14 +4,17 @@ declare(strict_types=1);
 
 namespace Systopic\System\Queries\UserRights;
 
+use Systopic\Db\Schema\Provisioner;
 use Systopic\Db\Schema\Registry;
 use Systopic\Db\Scope;
+use Systopic\System\Tables\GroupsInAcls\Model as GroupInAcl;
 use Systopic\System\Tables\Roles\Model as Role;
 
 /**
- * Roles and group rights of the logged-in user — `UserRights.roles.sql`,
- * `UserRights.groups.sql`. One statement each, for the one user of the
- * request; the legacy service asked once per user of the installation.
+ * Roles, group and ACL rights of the logged-in user — `UserRights.roles.sql`,
+ * `UserRights.groups.sql`, `UserRights.acls.sql`. One statement each, for the
+ * one user of the request; the legacy service asked once per user of the
+ * installation.
  */
 final class UserRights
 {
@@ -41,6 +44,38 @@ final class UserRights
             }
             if ((int) $row['rights_write']) {
                 $out['write'][] = $group;
+            }
+        }
+        return $out;
+    }
+
+    /**
+     * The ACLs a set of roles may read and write: those with at least one
+     * group the roles may read (write).
+     *
+     * Not to be kept by the caller beyond the request's scope: a new ACL is
+     * written during a request, and the scope throws this result away when
+     * that happens — a copy would not know.
+     *
+     * @param list<int> $roleIds
+     * @return array{read: list<int>, write: list<int>}
+     */
+    public static function acls(Scope $scope, array $roleIds): array
+    {
+        $out = ['read' => [], 'write' => []];
+        if ($roleIds === []) {
+            return $out;
+        }
+        Registry::register(GroupInAcl::class);
+        $rows = $scope->rows(__DIR__ . '/UserRights.acls.sql', ['roleIds' => array_values($roleIds)],
+            provisioner: new Provisioner($scope->connection));
+        foreach ($rows->looseValues() as $row) {
+            $acl = (int) $row['rights_acl_id'];
+            if ((int) $row['rights_read']) {
+                $out['read'][] = $acl;
+            }
+            if ((int) $row['rights_write']) {
+                $out['write'][] = $acl;
             }
         }
         return $out;

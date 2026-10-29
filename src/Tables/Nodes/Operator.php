@@ -4,8 +4,11 @@ declare(strict_types=1);
 
 namespace Systopic\System\Tables\Nodes;
 
+use Systopic\Db\Schema\Schema;
 use Systopic\Db\Scope;
+use Systopic\System\Queries\NodeAcls\NodeAcls;
 use Systopic\System\Queries\NodeChildren\NodeChildren;
+use Systopic\System\Tables\Acls\Model as Acl;
 
 /**
  * What `cms_nodes` knows how to do, whichever query brought the rows.
@@ -222,6 +225,130 @@ final class Operator
     public static function siblings(Scope $scope, ?int $parentId, ?string $type): array
     {
         return NodeChildren::of($scope, $parentId, $type);
+    }
+
+    // ------------------------------------------------------------- ACLs
+    //
+    // Every node stores its effective ACL; `aclInherit` says whether it is
+    // the parent's. The two setters below change one node — what follows
+    // from it below is done by `AclInheritance` after the commit, for these
+    // and for every other way a node gets moved or changed.
+
+    /**
+     * Give a node an ACL of its own — NULL is no group. Inheritance stops here.
+     *
+     * @return list<Model> what to save
+     */
+    public static function withAcl(Model $node, ?Acl $acl): array
+    {
+        $node->acl = $acl;
+        $node->aclInherit = false;
+        return [$node];
+    }
+
+    /**
+     * Let a node take its parent's ACL again; a root inherits no group.
+     *
+     * @return list<Model> what to save
+     */
+    public static function inheritingAcl(Model $node): array
+    {
+        $parentAcl = self::aclIdOf(self::parentOf($node));
+        $node->aclInherit = true;
+        $node->acl = $parentAcl === null ? null : Acl::withId($parentAcl);
+        return [$node];
+    }
+
+    /**
+     * What has to follow after these nodes moved, or got another ACL or
+     * inherit flag — read from the database as committed.
+     *
+     * A node that inherits takes its parent's ACL; then every node below it
+     * that inherits takes the node's, down to the first one of each branch
+     * with an ACL of its own. The order of `$nodes` does not matter: a parent
+     * after its child overwrites what the child passed down, and a child
+     * after its parent reads the parent's new value from the plan.
+     *
+     * @param list<Model> $nodes
+     * @return array<int, array{0: Model, 1: ?int}> node id => the node and the
+     *         ACL id it must have; only nodes whose stored ACL differs
+     */
+    public static function aclInheritance(Scope $scope, array $nodes): array
+    {
+        $plan = [];
+        $stored = [];
+        $valueOf = static function (Model $node) use (&$plan, &$stored): ?int {
+            $stored[$node->id] ??= [$node, self::aclIdOf($node)];
+            return array_key_exists($node->id, $plan) ? $plan[$node->id][1] : $stored[$node->id][1];
+        };
+        foreach ($nodes as $node) {
+            if ($node->id === null) {
+                continue;
+            }
+            $value = $valueOf($node);
+            if ($node->aclInherit) {
+                $parent = self::parentOf($node);
+                $value = $parent === null ? null : $valueOf($parent);
+                $plan[$node->id] = [$node, $value];
+            }
+            foreach (NodeAcls::heirs($scope, (int) $node->id) as $heir) {
+                $valueOf($heir);
+                $plan[$heir->id] = [$heir, $value];
+            }
+        }
+        return array_filter($plan, static fn(array $entry, int $id): bool => $entry[1] !== $stored[$id][1], ARRAY_FILTER_USE_BOTH);
+    }
+
+    /**
+     * Every node set right, from the roots down — for data that was written
+     * past the ORM (an import, an SQL statement). A node whose parent does
+     * not exist counts as a root; nodes on a cycle are left alone.
+     *
+     * @return array<int, array{0: ?Model, 1: ?int}> as `aclInheritance()`; the
+     *         row only when the request holds it already
+     */
+    public static function aclRepaired(Scope $scope): array
+    {
+        $byId = [];
+        foreach (NodeAcls::all($scope) as $node) {
+            $byId[$node['id']] = $node;
+        }
+        $children = [];
+        $queue = [];
+        foreach ($byId as $node) {
+            if ($node['parent'] > 0 && isset($byId[$node['parent']])) {
+                $children[$node['parent']][] = $node;
+            } else {
+                $queue[] = [$node, null];
+            }
+        }
+        $table = Schema::tableNameOf(Model::class);
+        $plan = [];
+        while ($queue !== []) {
+            [$node, $inherited] = array_shift($queue);
+            $value = $node['inherit'] ? $inherited : $node['acl'];
+            if ($value !== $node['acl']) {
+                $row = $scope->identity->get($table, (string) $node['id']);
+                $plan[$node['id']] = [$row instanceof Model ? $row : null, $value];
+            }
+            foreach ($children[$node['id']] ?? [] as $child) {
+                $queue[] = [$child, $value];
+            }
+        }
+        return $plan;
+    }
+
+    /** The ACL id a node stores; NULL for none (0 in older rows included). */
+    public static function aclIdOf(?Model $node): ?int
+    {
+        $id = (int) $node?->relationId('acl');
+        return $id > 0 ? $id : null;
+    }
+
+    /** The parent, NULL for a root — 0 in older rows is a root as well. */
+    private static function parentOf(Model $node): ?Model
+    {
+        return (int) $node->relationId('parentNode') > 0 ? $node->parentNode : null;
     }
 
     /**

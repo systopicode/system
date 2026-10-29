@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Systopic\System\Auth;
 
 use Systopic\Db\Scope;
+use Systopic\Db\TableRow;
 use Systopic\System\Queries\UserLookup\UserLookup;
 use Systopic\System\Setup\Setup;
 use Systopic\System\Tables\Users\Model as User;
@@ -135,17 +136,19 @@ final class Session
     // ---------------------------------------------------------- rights
 
     /**
-     * May the user read / write a row with `user_id` and `group_id` (legacy
-     * records and ORM rows alike)? The owner always; no group: superusers.
+     * May the user read / write a row with an owner and an ACL or a group
+     * (legacy records and ORM rows alike)? The owner always; neither ACL nor
+     * group: superusers. A row with an ACL (`cms_nodes`) is judged by it, a
+     * row with one group (`pwk_patchworks` for now) by that.
      */
     public static function mayRead(object $item): bool
     {
-        return self::may($item, self::current()->readGroupIds);
+        return self::may($item, 'read');
     }
 
     public static function mayWrite(object $item): bool
     {
-        return self::may($item, self::current()->writeGroupIds);
+        return self::may($item, 'write');
     }
 
     // ----------------------------------------------------- in and out
@@ -400,17 +403,30 @@ final class Session
         return self::recoveryTrusted() ? Identity::recovery($scope, $roles) : Identity::anonymous($scope);
     }
 
-    /** @param list<int> $groupIds */
-    private static function may(object $item, array $groupIds): bool
+    /** @param 'read'|'write' $right */
+    private static function may(object $item, string $right): bool
     {
-        $owner = $item->user_id ?? (method_exists($item, 'relationId') ? $item->relationId('user') : null);
+        $row = $item instanceof TableRow ? $item : null;
+        $owner = $row !== null
+            ? (property_exists($row, 'user') ? $row->relationId('user') : null)
+            : ($item->user_id ?? null);
         if ($owner !== null && (int) $owner === self::id()) {
             return true;
         }
-        $group = $item->group_id ?? (method_exists($item, 'relationId') ? $item->relationId('group') : null);
-        if ($group === null || (int) $group === 0) {
+        $identity = self::current();
+        $hasAcl = $row !== null ? property_exists($row, 'acl') : isset($item->acl_id);
+        if ($hasAcl) {
+            $id = $row !== null ? $row->relationId('acl') : $item->acl_id;
+            $allowed = $right === 'read' ? $identity->readAclIds : $identity->writeAclIds;
+        } else {
+            $id = $row !== null
+                ? (property_exists($row, 'group') ? $row->relationId('group') : null)
+                : ($item->group_id ?? null);
+            $allowed = $right === 'read' ? $identity->readGroupIds : $identity->writeGroupIds;
+        }
+        if ($id === null || (int) $id === 0) {
             return self::isSuperuser();
         }
-        return in_array((int) $group, $groupIds, true);
+        return in_array((int) $id, $allowed, true);
     }
 }

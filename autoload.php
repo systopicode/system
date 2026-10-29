@@ -39,3 +39,6 @@ require_once __DIR__ . '/lib/ffmpeg.bin.php';
 
 // Send account security notifications only after committed ORM changes.
 \Systopic\Db\Scope::addObserver(new \Systopic\System\Auth\SecurityNotice());
+
+// Inherited ACLs of the nodes follow a move or an ACL change, after the commit.
+\Systopic\Db\Scope::addObserver(new \Systopic\System\Tables\Nodes\AclInheritance());
