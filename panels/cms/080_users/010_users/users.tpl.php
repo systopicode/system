@@ -56,6 +56,9 @@ $e = static fn($v): string => htmlspecialchars((string) $v, ENT_QUOTES);
 						</td>
 						<td class="icons">
 							<ul>
+								<?php if (\Systopic\System\Auth\Session::isSuperuser(true) && !$user->isSuperuser) { ?>
+									<li><a class="button icononly" title="Sign in as this user" data-on_click="../hijackUser"><i class="fa-regular fa-ghost"></i></a></li>
+								<?php } ?>
 								<li><a class="ajax button icononly" title="Edit" href="<?= $e($this->href . 'edit/?user_id=' . (int) $user->id) ?>"><i class="fa-regular fa-pen"></i></a></li>
 								<?php if ((int) $user->id !== (int) \Systopic\System\Auth\Session::id()) { ?>
 									<li><a class="button icononly" title="Delete" data-on_click="userConfirm" data-action="removeUser" data-confirm="Delete this user? This cannot be undone." data-user_id="<?= (int) $user->id ?>"><i class="fa-regular fa-trash"></i></a></li>

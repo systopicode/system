@@ -62,6 +62,13 @@ class Panel extends CmsPanel {
 		return TRUE;
 	}
 
+	function getDefaultState() {
+		$state = parent::getDefaultState();
+		$state->hijackerId = NULL;   // set by cms/users' hijackUser, for "Back to my account"
+		$state->hijackedId = NULL;
+		return $state;
+	}
+
 	function getNaviItem(): ?\htmlElement {
 		return null;
 	}
