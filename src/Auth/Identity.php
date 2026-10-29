@@ -93,16 +93,19 @@ final class Identity
         get => array_map(static fn(Role $r) => (int) $r->id, $this->roles);
     }
 
-    /** @return list<string> the roles a superuser may take on (every role) */
+    /** @return list<string> the roles a superuser may take on — every role but the built-in ones, held anyway */
     public array $allRoleNames {
-        get => array_map(static fn(Role $r) => (string) $r->name, UserRights::roles($this->scope, null, true));
+        get => array_values(array_map(static fn(Role $r) => (string) $r->name,
+            array_filter(UserRights::roles($this->scope, null, true), static fn(Role $r) => !$r->isBuiltin)));
     }
 
     // ------------------------------------------------------- rights
 
     /**
      * The groups the user may read / write. A superuser holds every role —
-     * or, with fake roles, only those; anybody else the assigned ones.
+     * or, with fake roles, only those; anybody else the assigned ones. On
+     * top, for everybody: the built-in role `everyone`, and `authenticated`
+     * for a signed-in user.
      */
     public array $readGroupIds { get => $this->rights()['read']; }
 
@@ -141,7 +144,15 @@ final class Identity
             }
             $roleIds = array_map(static fn(Role $r) => (int) $r->id, $all);
         }
-        return $this->rightsRoleIds = $roleIds;
+        // the built-in roles nobody assigns: everyone, and every signed-in user
+        // (not for the recovery user, who may have no database)
+        $builtin = $this->recovery ? [] : UserRights::builtinRoles($this->scope);
+        foreach (['everyone' => true, 'authenticated' => $this->user !== null] as $key => $holds) {
+            if ($holds && isset($builtin[$key])) {
+                $roleIds[] = (int) $builtin[$key]->id;
+            }
+        }
+        return $this->rightsRoleIds = array_values(array_unique($roleIds));
     }
 
     // --------------------------------------------------- legacy surface

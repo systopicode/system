@@ -33,9 +33,9 @@ class Panel extends CmsPanel {
 		get => UserOperator::sort(array_values($this->admin->users), (string) $this->state->sortBy, (bool) $this->state->sortDesc);
 	}
 
-	/** @var list<Role> */
+	/** @var list<Role> the roles a user can be given — not the built-in ones */
 	public array $roles {
-		get => array_values($this->admin->roles);
+		get => array_values($this->admin->assignableRoles());
 	}
 
 	/** The user of the row an action came from. */

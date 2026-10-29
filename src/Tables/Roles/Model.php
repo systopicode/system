@@ -46,4 +46,20 @@ final class Model extends TableRow
         get => $this->__get__(__PROPERTY__);
         set => $this->__set__(__PROPERTY__, $value);
     }
+
+    /**
+     * `everyone` or `authenticated` for the two roles the system gives on its
+     * own (`Operator::BUILTIN`); NULL for every role somebody made. The key
+     * says which role it is — the name is only its label and may change.
+     */
+    #[Col(length: 32, index: Index::Unique)]
+    public ?string $builtin = null {
+        get => $this->__get__(__PROPERTY__);
+        set => $this->__set__(__PROPERTY__, $value);
+    }
+
+    // ---- virtual: computed, not a column -----------------------------------
+
+    /** Given by the system, not assigned: not to a user, and not to be deleted. */
+    public bool $isBuiltin { get => $this->builtin !== null; }
 }

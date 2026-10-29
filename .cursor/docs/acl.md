@@ -17,6 +17,41 @@ usm_users ── usm_users_at_roles ── usm_roles ── usm_roles_on_groups 
   zu allen ihren Gruppen. Es gilt ODER: Wer eine der Gruppen lesen darf, darf
   das Element lesen. Für Schreiben gilt dasselbe.
 - **NULL** = keine Gruppe: nur der Besitzer (`*_user_id`) und Superuser.
+  Öffentlich ist eine Seite nie von allein, sondern über eine Gruppe (z. B.
+  „öffentlich“), die die eingebaute Rolle `everyone` lesen darf.
+
+## Eingebaute Rollen
+
+`usm_roles.role_builtin` (unique): `everyone` (jeder Aufruf, auch ohne
+Login) und `authenticated` (jeder Eingeloggte), definiert in
+`Roles\Operator::BUILTIN`. Erkannt werden sie nur am Schlüssel, der Name ist
+änderbar.
+
+- `UserRights::builtinRoles()` legt fehlende Zeilen beim ersten Gebrauch an,
+  einmal pro Installation.
+- `Identity::rightsRoleIds()` gibt jedem `everyone` dazu, Eingeloggten
+  zusätzlich `authenticated`.
+- In der Rechte-Matrix stehen sie wie andere Rollen. Einem User zuweisen,
+  löschen oder als Fake-Rolle wählen kann man sie nicht
+  (`UserAdmin::assignableRoles()`, `Identity::allRoleNames`).
+
+## Seiten: Website und CMS
+
+`Params::$readAcls` filtert `PageTree.sql`, `.nodes.sql`, `.ancestors.sql`
+und `PageDetail.sql`: `node_acl_id IN (:readAcls)` oder der Viewer besitzt
+den Node. Damit gilt es für Navigation, Route, Links, sitemap.xml, llms.txt
+und den Seitenbaum im CMS. Gesetzt wird es von `Route::viewerAcls()` (Website)
+und vom Seiten-Panel (CMS).
+
+- **NULL** heißt ungefiltert: Superuser (ohne Fake-Rollen), Recovery, und
+  jede interne Abfrage (`new Params(lang: '')` für Trash, Removal …).
+- **Projekt-Schalter `PAGE_ACL`** (global settings bzw. `settings.php`):
+  Ohne ihn ist der Filter aus. Jede Installation hat anfangs nur Nodes ohne
+  Gruppe, die Website wäre beim Einschalten leer.
+- **Einschalten:** erst eine Gruppe „öffentlich“ mit Leserecht für
+  `everyone` anlegen, sie allen Wurzelseiten und eigenen ACLs hinzufügen,
+  dann `PAGE_ACL` auf 1. So sieht jeder Besucher dasselbe wie vorher.
+- Eine nicht lesbare Seite antwortet wie eine nicht vorhandene URL.
 
 ## ACLs sind unveränderlich und dedupliziert
 

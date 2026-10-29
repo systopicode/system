@@ -11,6 +11,42 @@ use Systopic\Db\Type\Text;
  */
 final class Operator
 {
+    /**
+     * The roles every request holds without anybody assigning them — the
+     * well-known ones of Windows and Drupal. Key => the name they start with.
+     *
+     *   everyone       every request, signed in or not
+     *   authenticated  every signed-in user
+     *
+     * What they may do is set like for any role (`usm_roles_on_groups`):
+     * a group "public" that `everyone` may read is the public web site.
+     */
+    public const BUILTIN = [
+        'everyone'      => 'Everyone',
+        'authenticated' => 'Signed in',
+    ];
+
+    /**
+     * The built-in roles that are missing from `$existing`, to save.
+     *
+     * @param array<string, Model> $existing key => role
+     * @return list<Model>
+     */
+    public static function missingBuiltins(array $existing): array
+    {
+        $new = [];
+        foreach (self::BUILTIN as $key => $name) {
+            if (!isset($existing[$key])) {
+                $role = new Model();
+                $role->builtin = $key;
+                $role->name = $name;
+                $role->color = '#8a8f93';
+                $new[] = $role;
+            }
+        }
+        return $new;
+    }
+
     /** The fields the role editor writes. */
     public const EDITABLE = ['name', 'description', 'color'];
 

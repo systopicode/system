@@ -28,5 +28,9 @@ $field = static function (string $label, string $type, string $action, ?string $
 	</div>
 </main>
 <footer>
-	<button type="button" class="button" data-on_click="userConfirm" data-action="removeRole" data-confirm="Delete this role? This cannot be undone." data-role_id="<?= (int) $role->id ?>"><i class="fa-regular fa-trash"></i>Remove role</button>
+	<?php if ($role->isBuiltin) { ?>
+		<p class="hint"><?= $role->builtin === 'everyone' ? 'Every visitor holds this role, signed in or not.' : 'Every signed-in user holds this role.' ?> It is given by the system: not assigned to users, and not to be deleted.</p>
+	<?php } else { ?>
+		<button type="button" class="button" data-on_click="userConfirm" data-action="removeRole" data-confirm="Delete this role? This cannot be undone." data-role_id="<?= (int) $role->id ?>"><i class="fa-regular fa-trash"></i>Remove role</button>
+	<?php } ?>
 </footer>

@@ -76,7 +76,7 @@ switch ($this->action) {
 
 	case 'toggleUserRole':
 		$role = $this->admin->role((int) \http::dataset('role_id'));
-		if ($role !== null) {
+		if ($role !== null && !$role->isBuiltin) {
 			$link = $this->admin->assignment($user, $role);
 			if ($link !== null) {
 				$this->scope->remove($link);

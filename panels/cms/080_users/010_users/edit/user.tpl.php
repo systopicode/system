@@ -88,7 +88,7 @@ if ($heading === '') {
 				<header><div class="cmsBoxTitles"><h2>Roles</h2><p class="cmsBoxLead"><?= $user->isSuperuser ? 'A superuser has every role.' : 'Click a role to give it or take it away.' ?></p></div></header>
 				<div class="cmsBoxBody">
 					<div class="picks">
-						<?php foreach ($this->admin->roles as $role) {
+						<?php foreach ($this->admin->assignableRoles() as $role) {
 							$on = $user->isSuperuser || $this->admin->assignment($user, $role) !== null;
 							$color = ($role->color !== null && $role->color !== '') ? $role->color : '#8a8f93';
 							$click = $user->isSuperuser ? '' : ' data-on_click="toggleUserRole" data-role_id="' . (int) $role->id . '"';

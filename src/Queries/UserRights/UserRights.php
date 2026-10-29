@@ -9,6 +9,7 @@ use Systopic\Db\Schema\Registry;
 use Systopic\Db\Scope;
 use Systopic\System\Tables\GroupsInAcls\Model as GroupInAcl;
 use Systopic\System\Tables\Roles\Model as Role;
+use Systopic\System\Tables\Roles\Operator as RoleOperator;
 
 /**
  * Roles, group and ACL rights of the logged-in user — `UserRights.roles.sql`,
@@ -23,6 +24,43 @@ final class UserRights
     {
         Registry::register(Role::class);
         return $scope->rows(__DIR__ . '/UserRights.roles.sql', ['all' => $all ? 1 : 0, 'userId' => $userId ?? 0])->all(Role::class);
+    }
+
+    /**
+     * The built-in roles (`Roles\Operator::BUILTIN`), key => role.
+     *
+     * The one place that writes on a read: a role that is missing is made
+     * here, at its first use — the same as the provisioner makes a missing
+     * column. That happens once per installation; a second request racing
+     * the first hits the unique key and reads what the first one made.
+     *
+     * @return array<string, Role>
+     */
+    public static function builtinRoles(Scope $scope): array
+    {
+        Registry::register(Role::class);
+        $read = static function () use ($scope): array {
+            $out = [];
+            foreach ($scope->rows(__DIR__ . '/UserRights.builtin.sql', [],
+                provisioner: new Provisioner($scope->connection))->all(Role::class) as $role) {
+                $out[(string) $role->builtin] = $role;
+            }
+            return $out;
+        };
+        $roles = $read();
+        $missing = RoleOperator::missingBuiltins($roles);
+        if ($missing !== []) {
+            try {
+                $scope->save(...$missing);
+            } catch (\Throwable $e) {
+                // made by a request at the same moment — or a real error
+                if (RoleOperator::missingBuiltins($read()) !== []) {
+                    throw $e;
+                }
+            }
+            $roles = $read();
+        }
+        return $roles;
     }
 
     /**

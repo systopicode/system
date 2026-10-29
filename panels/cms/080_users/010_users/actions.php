@@ -21,7 +21,7 @@ switch ($this->action) {
 		break;
 
 	case 'addRoleToUser':
-		if ($this->user && $this->role && !$this->admin->assignment($this->user, $this->role)) {
+		if ($this->user && $this->role && !$this->role->isBuiltin && !$this->admin->assignment($this->user, $this->role)) {
 			$link = new UserAtRole();
 			[$link->user, $link->role] = [$this->user, $this->role];
 			$this->scope->save($link);

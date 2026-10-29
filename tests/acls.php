@@ -9,6 +9,7 @@ use Systopic\Db\Schema\Schema;
 use Systopic\Db\Scope;
 use Systopic\System\Auth\Identity;
 use Systopic\System\Auth\Session;
+use Systopic\System\Queries\UserRights\UserRights;
 use Systopic\System\Tables\Acls\Model as Acl;
 use Systopic\System\Tables\Acls\Operator as AclOperator;
 use Systopic\System\Tables\Groups\Model as Group;
@@ -161,5 +162,25 @@ check('session: no ACL is superusers only', !Session::mayRead($lone));
 $lone->user = $ben;
 $scope->save($lone);
 check('session: the owner always may', Session::mayWrite($lone));
+
+// ---- built-in roles ---------------------------------------------------------
+
+$builtin = UserRights::builtinRoles($scope);
+check('the built-in roles are made at their first use', isset($builtin['everyone'], $builtin['authenticated']) && $builtin['everyone']->isBuiltin);
+check('… once', count(UserRights::builtinRoles($scope)) === 2
+    && (int) $connection->value('SELECT COUNT(*) FROM usm_roles WHERE role_builtin IS NOT NULL') === 2);
+$public = new Group(); $public->name = 'public';
+$scope->save($public);
+$grant($builtin['everyone'], $public, true, false);
+$grant($builtin['authenticated'], $press, true, false);
+$publicAcl = $acl([$public]);
+$_SESSION = []; Session::reset();
+check('a visitor reads what everyone may read', in_array($publicAcl->id, Session::current()->readAclIds, true)
+    && !in_array($both->id, Session::current()->readAclIds, true) && !in_array($withAll->id, Session::current()->readAclIds, true));
+check('… and writes nothing', Session::current()->writeAclIds === []);
+$as($ben);
+check('a signed-in user reads what everyone and the signed-in may read, beside their own',
+    in_array($publicAcl->id, Session::current()->readAclIds, true) && in_array($withAll->id, Session::current()->readAclIds, true)
+    && in_array($both->id, Session::current()->readAclIds, true));
 
 echo "all ACL checks passed\n";

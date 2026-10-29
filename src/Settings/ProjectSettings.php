@@ -22,6 +22,7 @@ final class ProjectSettings
         'PUBLIC_PAGE_COPYRIGHT',
         'PAGE_TITLE_SEPERATOR',
         'PAGE_IS_PUBLIC',
+        'PAGE_ACL',
         'AUTO_LANGUAGE_DETECTION',
         'FRONTEND_EDIT_BAR',
         'META_AUTHOR',
