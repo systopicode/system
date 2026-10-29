@@ -40,8 +40,8 @@ Login) und `authenticated` (jeder Eingeloggte), definiert in
 `Params::$readAcls` filtert `PageTree.sql`, `.nodes.sql`, `.ancestors.sql`
 und `PageDetail.sql`: `node_acl_id IN (:readAcls)` oder der Viewer besitzt
 den Node. Damit gilt es für Navigation, Route, Links, sitemap.xml, llms.txt
-und den Seitenbaum im CMS. Gesetzt wird es von `Route::viewerAcls()` (Website)
-und vom Seiten-Panel (CMS).
+und den Seitenbaum im CMS. Gesetzt wird es von `PageAccess::readAcls()`
+(cms, `src/Pages/PageAccess.php`), für Website und Seiten-Panel.
 
 - **NULL** heißt ungefiltert: Superuser (ohne Fake-Rollen), Recovery, und
   jede interne Abfrage (`new Params(lang: '')` für Trash, Removal …).
@@ -52,6 +52,33 @@ und vom Seiten-Panel (CMS).
   `everyone` anlegen, sie allen Wurzelseiten und eigenen ACLs hinzufügen,
   dann `PAGE_ACL` auf 1. So sieht jeder Besucher dasselbe wie vorher.
 - Eine nicht lesbare Seite antwortet wie eine nicht vorhandene URL.
+
+### Schreiben im CMS
+
+`PageAccess::mayWrite($node)` / `mayEdit($page)` (Alias: auch das Original)
+gelten mit denselben Ausnahmen wie das Lesen (ohne `PAGE_ACL`, Superuser,
+Recovery: alles erlaubt). Geprüft wird in den Actions von `cms/pages`
+(`refuses()` / `refusesEdit()` geben die Meldung aus):
+
+| Was | braucht Schreibrecht auf |
+|---|---|
+| Inhalt, Label, Veröffentlichen, neue Sprache, Seitenleiste | die Seite (bei Alias auch das Original) |
+| Neue Unterseite, Alias als Kind, Ablegen *in* | die Seite |
+| Neu daneben, Duplizieren, Ablegen *vor/nach*, Alias danach | den Parent |
+| Verschieben | die Seite **und** den neuen Parent |
+| Löschen / Wiederherstellen | alle Nodes des Zweigs (sonst nichts) |
+| Alles veröffentlichen | je Seite, der Rest bleibt und wird gemeldet |
+| Medien (Bibliothek, Upload, Datei-Editor, Tags) | den Media-Node bzw. die Zielseite |
+
+Die oberste Ebene (kein Parent) hat keine Gruppen: dort legt nur der
+Superuser an. Der Baum zeigt nicht beschreibbare Seiten blass mit Schloss,
+ohne Griff und ohne Drop-Zonen; das Kontextmenü zeigt nur Erlaubtes, die
+Felder einer solchen Seite rendern wie auf der Website. Der Superuser sieht
+bei `PAGE_ACL` Marken: eigene Gruppen unterhalb der obersten Ebene
+(`fa-users`, Titel = Gruppen) und „keine Gruppe“ (`fa-user-lock`).
+
+`Session::mayWrite()` lässt einen Superuser (ohne Fake-Rollen) immer zu,
+auch bei einer Gruppe, die keine Rolle schreiben darf (z. B. „öffentlich“).
 
 ## ACLs sind unveränderlich und dedupliziert
 

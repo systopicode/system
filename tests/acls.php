@@ -183,4 +183,14 @@ check('a signed-in user reads what everyone and the signed-in may read, beside t
     in_array($publicAcl->id, Session::current()->readAclIds, true) && in_array($withAll->id, Session::current()->readAclIds, true)
     && in_array($both->id, Session::current()->readAclIds, true));
 
+$boss = $user('boss');
+$boss->isSuperuser = true;
+$scope->save($boss);
+$publicNode = new Node(); $publicNode->type = 'page';
+$scope->save(...NodeOperator::withAcl($publicNode, $publicAcl));
+$as($ben);
+check('a group nobody may write shuts out the others', !Session::mayWrite($publicNode));
+$as($boss);
+check('… but not a superuser', Session::mayWrite($publicNode));
+
 echo "all ACL checks passed\n";

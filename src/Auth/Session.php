@@ -137,9 +137,10 @@ final class Session
 
     /**
      * May the user read / write a row with an owner and an ACL or a group
-     * (legacy records and ORM rows alike)? The owner always; neither ACL nor
-     * group: superusers. A row with an ACL (`cms_nodes`) is judged by it, a
-     * row with one group (`pwk_patchworks` for now) by that.
+     * (legacy records and ORM rows alike)? The owner and a superuser (not
+     * viewing as a role) always; neither ACL nor group: nobody else. A row
+     * with an ACL (`cms_nodes`) is judged by it, a row with one group
+     * (`pwk_patchworks` for now) by that.
      */
     public static function mayRead(object $item): bool
     {
@@ -406,6 +407,11 @@ final class Session
     /** @param 'read'|'write' $right */
     private static function may(object $item, string $right): bool
     {
+        // a superuser holds every role, but a group no role may write would
+        // still shut them out — they may anyway (unless viewing as a role)
+        if (self::isSuperuser()) {
+            return true;
+        }
         $row = $item instanceof TableRow ? $item : null;
         $owner = $row !== null
             ? (property_exists($row, 'user') ? $row->relationId('user') : null)
