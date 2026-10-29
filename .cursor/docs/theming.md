@@ -92,7 +92,7 @@ cms/panels/cms/010_pages/       → /cms/pages/
 	dashboard.tpl.php            widget on the dashboard, key "pages"
 	dashboard.todo.tpl.php       a second widget, key "pages.todo"
 	panel.js                     client code of the panel
-	module.css, pages.tree.css   styles only this panel needs
+	panel.css, pages.tree.css    styles only this panel needs (every *.css of the folder loads)
 	sidebar/, editor/, …         child panels
 ```
 
