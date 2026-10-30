@@ -1,4 +1,5 @@
 # fluxo GUI — how to work on it
+Lead: Lars (sabietzki)
 
 This is the hand-over for anyone (human or AI) who continues the admin GUI
 ("fluxo cms") — the panels behind `https://<host>/cms/`. Read it once before

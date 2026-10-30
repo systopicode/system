@@ -39,8 +39,10 @@ passt nicht zusammen.
   Rücksprache“).
 - Am Ende immer eine Tabelle: Repo, Stand vorher, Stand nachher.
 
-`.cursor/docs/` liegt im Repo. Pläne, Regeln und Prüfskripte unter `.cursor/`
-bleiben lokal und wandern nur per Sync zwischen den Arbeitsplätzen.
+`.cursor/docs/` liegt im Repo, ebenso `.cursor/team/` (Vorschläge an den
+Lead eines anderen Bereichs, siehe [team/README.md](../team/README.md)).
+Pläne, Regeln und Prüfskripte unter `.cursor/` bleiben lokal und wandern nur
+per Sync zwischen den Arbeitsplätzen.
 
 ## Sync für Dateien, Git für die Geschichte
 
