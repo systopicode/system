@@ -55,7 +55,7 @@ sys.fitTables.fit = function (box) {
             toggle.dataset.tableFold = '';
             toggle.className = 'tableFoldToggle';
             toggle.setAttribute('aria-label', 'Details: ' + (heading.querySelector('span')?.firstChild?.textContent || heading.textContent).trim());
-            toggle.innerHTML = '<i class="fa-regular fa-chevron-down" aria-hidden="true"></i>';
+            toggle.innerHTML = '<i class="cmsIcon cmsIcon-chevron-down" aria-hidden="true"></i>';
             heading.append(toggle);
         }
         toggle.setAttribute('aria-expanded', String(row.classList.contains('is-open')));

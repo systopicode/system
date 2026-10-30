@@ -14,7 +14,7 @@ use Systopic\System\Tables\Users\Model as User;
 class Panel extends CmsPanel {
 
 	public $showSubnavi = FALSE;
-	public $icon = 'fa-duotone fa-regular fa-users';
+	public $icon = 'cmsIcon cmsIcon-duotone cmsIcon-users';
 	public ?int $naviOrder = 20;
 	public bool $buildChildPanels = true;
 
@@ -48,7 +48,7 @@ class Panel extends CmsPanel {
 		$e = static fn($v): string => htmlspecialchars((string) $v, ENT_QUOTES);
 		$color = ($role->color !== null && $role->color !== '') ? $role->color : '#8a8f93';
 		$style = " style='--tag-color:{$e($color)};--tag-bg:{$e($color)};background:{$e($color)};border-color:{$e($color)}'";
-		$minus = $action !== NULL ? "<i class='fa-regular fa-minus-circle' data-on_click='{$e($action)}'></i>" : '';
+		$minus = $action !== NULL ? "<i class='cmsIcon cmsIcon-minus-circle' data-on_click='{$e($action)}'></i>" : '';
 		return "<div class='tag active' data-role_id='{$role->id}'$style>{$e($role->name)}$minus</div>";
 	}
 

@@ -54,5 +54,5 @@ $hasEnvironment = $this->environmentArchiveMap() !== [];
 	</form>
 </main>
 <footer>
-	<button type="submit" name="action" value="createTaskList" form="backupCreateForm" class="button submit"><i class="fa-regular fa-box-archive"></i><span>Create backup</span></button>
+	<button type="submit" name="action" value="createTaskList" form="backupCreateForm" class="button submit"><i class="cmsIcon cmsIcon-box-archive"></i><span>Create backup</span></button>
 </footer>

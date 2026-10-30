@@ -11,10 +11,10 @@
 	<td class="icons">
 		<ul>
 			<?php if (\Systopic\System\Auth\Session::hasOneRole('admin', 'restore', 'recovery')) { ?>
-				<li><a href='restore/?name=<?= $backup['filenamebase'] ?>' class='button transparent ajax icononly' title='Restore'><i class="fa-regular fa-arrow-rotate-left"></i></a></li>
+				<li><a href='restore/?name=<?= $backup['filenamebase'] ?>' class='button transparent ajax icononly' title='Restore'><i class="cmsIcon cmsIcon-arrow-rotate-left"></i></a></li>
 			<?php } ?>
 			<?php if (\Systopic\System\Auth\Session::hasRole('admin')) { ?>
-				<li><a  data-on_click='userConfirm' data-action='remove?name=<?= basename($backup["download"][0]) ?>' class='button transparent ajax icononly' data-confirm='Delete this backup?' title='Delete'><i class="fa-regular fa-trash"></i></a></li>
+				<li><a  data-on_click='userConfirm' data-action='remove?name=<?= basename($backup["download"][0]) ?>' class='button transparent ajax icononly' data-confirm='Delete this backup?' title='Delete'><i class="cmsIcon cmsIcon-trash"></i></a></li>
 			<?php } ?>
 			<?php if (\Systopic\System\Auth\Session::hasRole('admin')) { ?>
 				<li class="seperator">
@@ -30,7 +30,7 @@
 							// through the panel (actions.php: download) - var/backups/ is not served
 							->href(http::$siteUrl . 'cms/backup/download?name=' . rawurlencode(basename($singlefile)))
 							->title('Download ' . basename($singlefile))
-							->append('i.fa-regular.fa-arrow-down-to-line');
+							->append('i.cmsIcon.cmsIcon-arrow-down-to-line');
 					}
 					?>
 				</li>

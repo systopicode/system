@@ -63,12 +63,12 @@ if ($behind !== '') {
 ?>
 <body class="<?= 'CMS_VERSIONDATE' ?> <?= implode(' ', $shellPath) ?> <?= 'system' ?>"<?= $sheet ? ' data-cms-window="edit"' : '' ?>>
 	<header class="cmsMobileHeader cms">
-		<button type="button" data-cms-window="menu" aria-label="Open navigation" aria-expanded="false"><i class="fa-regular fa-bars"></i></button>
+		<button type="button" data-cms-window="menu" aria-label="Open navigation" aria-expanded="false"><i class="cmsIcon cmsIcon-bars"></i></button>
 		<a class="cmsMobileDashboardBrand" href="<?= http::$root ?>cms/" aria-label="Dashboard"><img src="<?= htmlspecialchars(\Systopic\System\Settings\ThemeAssets::href('wordDark'), ENT_QUOTES) ?>" alt="fluxo"></a>
 		<strong data-cms-module><?= htmlspecialchars((string) ($module?->label ?? ''), ENT_QUOTES, 'UTF-8') ?></strong>
 		<?= \Systopic\System\Sys\WebApp::stageBadge() ?>
-		<a class="ajax cmsSearchLink" href="<?= http::$root ?>cms/search/" aria-label="Search"><i class="fa-regular fa-magnifying-glass"></i></a>
-		<button type="button" class="cmsMobileMenuClose" data-cms-window="menu" aria-label="Close navigation"><i class="fa-regular fa-xmark"></i></button>
+		<a class="ajax cmsSearchLink" href="<?= http::$root ?>cms/search/" aria-label="Search"><i class="cmsIcon cmsIcon-magnifying-glass"></i></a>
+		<button type="button" class="cmsMobileMenuClose" data-cms-window="menu" aria-label="Close navigation"><i class="cmsIcon cmsIcon-xmark"></i></button>
 	</header>
 	<main<?= DEBUG() ? ' data-debug' : '' ?>>
 		<div class="main cms">
@@ -102,10 +102,10 @@ if ($behind !== '') {
 					?>
 					<?php $hotkey = \Systopic\System\Sys\Search::hotkey(); ?>
 					<a class="cmsHelp cmsSearchLink ajax" href="<?= http::$root ?>cms/search/" title="Search (<?= $hotkey ?>)">
-						<i class="fa-duotone fa-regular fa-magnifying-glass"></i><span>Search</span><kbd class="cmsKeys"><?= $hotkey ?></kbd>
+						<i class="cmsIcon cmsIcon-duotone cmsIcon-magnifying-glass"></i><span>Search</span><kbd class="cmsKeys"><?= $hotkey ?></kbd>
 					</a>
 					<a class="cmsHelp" target="_blank" rel="noopener" href="https://fluxo-help.1f2c.de" title="Help">
-						<i class="fa-duotone fa-regular fa-circle-question"></i><span>Help</span>
+						<i class="cmsIcon cmsIcon-duotone cmsIcon-circle-question"></i><span>Help</span>
 					</a>
 					<?php $this->withChild('user', 'signetmenu'); ?>
 					<?= \Systopic\System\Sys\WebApp::stageBadge() ?>

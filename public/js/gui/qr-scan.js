@@ -159,7 +159,7 @@
 			if (label) label.textContent = words;
 			else again.textContent = words;
 			var mark = again.querySelector('i');
-			if (mark) mark.className = 'fa-regular ' + (denied ? 'fa-camera' : 'fa-rotate-right');
+			if (mark) mark.className = 'cmsIcon ' + (denied ? 'cmsIcon-camera' : 'cmsIcon-rotate-right');
 		}
 		// The account lightbox already offers "Or use code" and keeps the QR.
 		// Opening the form there hides that QR.

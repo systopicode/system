@@ -99,7 +99,7 @@ should show them.
 ```php
 <div class="cms cmslightbox" data-size="2">   <!-- 1, 2 or 3 -->
 	<section>
-		<header><h1>…</h1><ul class="barmenu"><li><a class="ajax" href="../" title="Close"><i class="fa-regular fa-xmark"></i></a></li></ul></header>
+		<header><h1>…</h1><ul class="barmenu"><li><a class="ajax" href="../" title="Close"><i class="cmsIcon cmsIcon-xmark"></i></a></li></ul></header>
 		<main>…</main>
 	</section>
 </div>
@@ -141,7 +141,7 @@ settings do it so):
 ```php
 public function searchHits(\Systopic\System\Sys\Search $search): void {
 	foreach (Contacts::matching($this->scope, $search->like()) as $c) {
-		$search->add('Contacts', 'fa-address-book', $c->name, $c->company, $this->getHref(\http::$root) . '?id=' . $c->id);
+		$search->add('Contacts', 'cmsIcon-address-book', $c->name, $c->company, $this->getHref(\http::$root) . '?id=' . $c->id);
 	}
 }
 ```
@@ -161,7 +161,7 @@ columns and one phone column (700px and below).
 origins, login/autofill, setup, rights, schema upgrades and security emails.
 Passkey messages use the regular server-rendered message container; global
 banner styling lives in `20_base.css`. The supplied fingerprint SVG is the
-explicit exception to Font Awesome.
+Tabler-based animated artwork.
 
 **Link check** (`Systopic\Cms\Queries\LinkCheck`): `broken()` lists links of
 live pages to pages, aliases or `var/` files that are gone (To do
@@ -311,12 +311,12 @@ Rules:
   `.is-wide`), `.widgets` (grid of widgets), `label.field > span + input`,
   `td.icons > ul > li > a.button.icononly`, `.barmenu`, `.cmslightbox[data-size]`,
   `.tree`, `.dropdown`/`.contextmenu`, chips/tags (`tags.css`).
-- Icons: Font Awesome 7 Pro (`fa-regular`, `fa-duotone fa-regular`).
+- Icons: local Tabler Outline (`cmsIcon`) and Solar Line Duotone (`cmsIcon cmsIcon-duotone`) in main navigation.
 - Flags: `<img src="https://flagcdn.com/{code}.svg">` (see
   `cms/panels/cms/010_pages/controls.tpl.php`).
 
 Fonts in use (`system/public/fonts/`): `InterVariable.woff2` (GUI),
-`fontawesome/fa-regular-400.woff2`, `fontawesome/fa-duotone-regular-400.woff2`.
+`public/icons/ (local SVG masks)`, `public/icons/ (local SVG masks)`.
 Nothing else — placeholder images drawn by `mediaImage.php` use the Imagick
 default font.
 
@@ -492,8 +492,8 @@ same package, under their original path, and are no longer loaded:
 - `system/_legacy/public/js/cms/`, `_legacy/lib/…`.
 
 Outdated assets are deleted, not kept: old fonts, old icon sets. Only
-`fa-regular` and `fa-duotone fa-regular` have a font — `fa-light`,
-`fa-solid` etc. fall back to the regular glyphs, so do not use them.
+`cmsIcon` and `cmsIcon cmsIcon-duotone` have a font — `cmsIcon-light`,
+`cmsIcon-solid` etc. fall back to the regular glyphs, so do not use them.
 
 Before you call a class dead, search **all** packages and projects
 (`system`, `cms`, `db`, `relay`, `pwk`, `spaceticker`, the project) and look
@@ -549,7 +549,7 @@ Known places where the core still knows the cms (fix step by step):
   comes from the `editBarMenu` action in `panels/cms/actions.php`; with debug
   on the reply goes through `sysdebug.trimXhrResponse`. Logout:
   `cms/logout?to=<path>`. Every link but logout opens in a new tab. Icons:
-  the panel's `$icon` without `fa-duotone`; the shadow root links
+  the panel's `$icon` without `cmsIcon-duotone`; the shadow root links
   `css/11_fontawesome.min.css`, the `@font-face` rules sit in the document
   (a shadow root ignores them).
 - Pages sidebar (`cms/panels/cms/010_pages/sidebar/`): section headers carry a

@@ -29,7 +29,7 @@ if ($issued !== null) {
 		<header>
 			<h1><?= $e($heading) ?></h1>
 			<ul class="barmenu">
-				<li><button type="button" data-lightbox-close aria-label="Close"><i class="fa-regular fa-xmark"></i></button></li>
+				<li><button type="button" data-lightbox-close aria-label="Close"><i class="cmsIcon cmsIcon-xmark"></i></button></li>
 			</ul>
 		</header>
 		<main>
@@ -38,7 +38,7 @@ if ($issued !== null) {
 				<p class="tagsHint">Anyone who can see this can sign in as this <?= $screenCode ? 'screen' : 'person' ?>. Close it when you are done.</p>
 				<div class="qrCodeBar">
 					<strong><?= $e($issued['code']) ?></strong>
-					<button type="button" class="button" data-copy="<?= $e($issued['code']) ?>"><i class="fa-regular fa-copy"></i> Copy code</button>
+					<button type="button" class="button" data-copy="<?= $e($issued['code']) ?>"><i class="cmsIcon cmsIcon-copy"></i> Copy code</button>
 				</div>
 				<?php if ($svg !== '') { ?>
 					<div class="qrZoomStage">

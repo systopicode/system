@@ -14,7 +14,7 @@ use Systopic\System\Tables\Users\Model as User;
  */
 class Panel extends UsersPanel
 {
-    public $icon = 'fa-regular fa-tv';
+    public $icon = 'cmsIcon cmsIcon-tv';
 
     public string $accountKind = User::SCREEN;
 
@@ -30,7 +30,7 @@ class Panel extends UsersPanel
         );
         foreach ($rows as $row) {
             $name = trim((string) $row['user_name']) !== '' ? (string) $row['user_name'] : (string) $row['user_fullname'];
-            $search->add('Screens', 'fa-tv', $name, (string) $row['user_fullname'], $this->getHref(\http::$root) . 'edit/?user_id=' . (int) $row['user_id']);
+            $search->add('Screens', 'cmsIcon-tv', $name, (string) $row['user_fullname'], $this->getHref(\http::$root) . 'edit/?user_id=' . (int) $row['user_id']);
         }
     }
 }

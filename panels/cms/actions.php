@@ -28,7 +28,7 @@ switch ($this->action) {
 				$items[] = [
 					'label' => (string) $child->label,
 					'href' => $child->getHref(\http::$root),
-					'icon' => trim(str_replace('fa-duotone', '', (string) $child->icon)),
+					'icon' => trim(str_replace('cmsIcon-duotone', '', (string) $child->icon)),
 				];
 			}
 		}

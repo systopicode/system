@@ -10,10 +10,10 @@ $color = ($group->color !== null && $group->color !== '') ? $group->color : '#8a
 ?>
 <header class="tagEditTitle">
 	<h1><?= $e($group->name ?: 'Group') ?></h1>
-	<button type="button" class="tagGroupRename" onclick="renameUserAdminTitle(this)" data-rename-url="<?= $e($this->href . 'updateGroupName?group_id=' . (int) $group->id) ?>" title="Rename" aria-label="Rename"><i class="fa-regular fa-pen"></i></button>
+	<button type="button" class="tagGroupRename" onclick="renameUserAdminTitle(this)" data-rename-url="<?= $e($this->href . 'updateGroupName?group_id=' . (int) $group->id) ?>" title="Rename" aria-label="Rename"><i class="cmsIcon cmsIcon-pen"></i></button>
 	<ul class="barmenu">
-		<?php if ((int) $group->id !== 1) { ?><li><button type="button" class="button icononly" aria-label="Remove" title="Remove" data-on_click="userConfirm" data-action="removeGroup" data-confirm="Delete this group? This cannot be undone." data-group_id="<?= (int) $group->id ?>"><i class="fa-regular fa-trash"></i></button></li><?php } ?>
-		<li><a class="ajax" href="../" aria-label="Close"><i class="fa-regular fa-xmark"></i></a></li>
+		<?php if ((int) $group->id !== 1) { ?><li><button type="button" class="button icononly" aria-label="Remove" title="Remove" data-on_click="userConfirm" data-action="removeGroup" data-confirm="Delete this group? This cannot be undone." data-group_id="<?= (int) $group->id ?>"><i class="cmsIcon cmsIcon-trash"></i></button></li><?php } ?>
+		<li><a class="ajax" href="../" aria-label="Close"><i class="cmsIcon cmsIcon-xmark"></i></a></li>
 	</ul>
 </header>
 <main class="groupEdit">

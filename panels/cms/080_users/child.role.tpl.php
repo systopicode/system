@@ -9,10 +9,10 @@ $field = static function (string $label, string $type, string $action, ?string $
 ?>
 <header class="tagEditTitle">
 	<h1><?= $e($role->name) ?></h1>
-	<button type="button" class="tagGroupRename" onclick="renameUserAdminTitle(this)" data-rename-url="<?= $e($this->href . 'updateRoleName?role_id=' . (int) $role->id) ?>" title="Rename" aria-label="Rename"><i class="fa-regular fa-pen"></i></button>
+	<button type="button" class="tagGroupRename" onclick="renameUserAdminTitle(this)" data-rename-url="<?= $e($this->href . 'updateRoleName?role_id=' . (int) $role->id) ?>" title="Rename" aria-label="Rename"><i class="cmsIcon cmsIcon-pen"></i></button>
 	<ul class="barmenu">
-		<?php if ((int) $role->id !== 1) { ?><li><button type="button" class="button icononly" aria-label="Remove" title="Remove" data-on_click="userConfirm" data-action="removeRole" data-confirm="Delete this role? This cannot be undone." data-role_id="<?= (int) $role->id ?>"><i class="fa-regular fa-trash"></i></button></li><?php } ?>
-		<li><a class="ajax" href="../" aria-label="Close"><i class="fa-regular fa-xmark"></i></a></li>
+		<?php if ((int) $role->id !== 1) { ?><li><button type="button" class="button icononly" aria-label="Remove" title="Remove" data-on_click="userConfirm" data-action="removeRole" data-confirm="Delete this role? This cannot be undone." data-role_id="<?= (int) $role->id ?>"><i class="cmsIcon cmsIcon-trash"></i></button></li><?php } ?>
+		<li><a class="ajax" href="../" aria-label="Close"><i class="cmsIcon cmsIcon-xmark"></i></a></li>
 	</ul>
 </header>
 <main class="roleEdit">

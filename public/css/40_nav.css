@@ -337,8 +337,8 @@ main > div.main nav > ul li.active > a:before{
     background: var(--cmsHighlightColor);
 }
 
-main > div.main nav i.fa-duotone{
-    --fa-secondary-opacity: .35;
+main > div.main nav i.cmsIcon-duotone{
+    --icon-secondary-opacity: .75;
 }
 
 main > div.main nav > ul li.active span{
@@ -347,15 +347,13 @@ main > div.main nav > ul li.active span{
 
 /* Duotone: Grundform hell, Akzentebene in Markengelb */
 main > div.main nav > ul li.active i{
-    --fa-primary-color: #fff;
-    --fa-secondary-color: var(--cmsHighlightColor);
-    --fa-secondary-opacity: 1;
+    --icon-primary: #fff;
+    --icon-secondary: var(--cmsHighlightColor);
+    --icon-secondary-opacity: 1;
     color: var(--cmsHighlightColor);
 }
 
-main > div.main nav > ul li.active i svg *{
-    fill: var(--cmsHighlightColor);
-}
+/* Solar layers inherit --icon-primary and --icon-secondary independently. */
 
 /****************************** UNTERES MENÜ ***************************/
 .cms div.bottomMenu{

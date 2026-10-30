@@ -9,7 +9,7 @@ $picked = $templates ? array_filter(array_map('trim', explode(';', (string) ($gr
 ?>
 <div class="cmslightbox cms mediaTypes" data-size="2">
 <section><header><h1><?= $templates ? 'Templates' : 'File types' ?> · <?= $e($group['label'] ?? $this->state->group) ?></h1>
-<ul class="barmenu"><li><a class="ajax" href="../" aria-label="Close"><i class="fa-regular fa-xmark"></i></a></li></ul></header>
+<ul class="barmenu"><li><a class="ajax" href="../" aria-label="Close"><i class="cmsIcon cmsIcon-xmark"></i></a></li></ul></header>
 <main><p class="tagsHint">Changes are saved immediately. <?= $templates ? 'No selection: all templates.' : 'No selection: all supported types.' ?></p>
 <div class="mediaTypeChoices">
 <?php foreach ($this->choices() as $key => [$label, $capability]) { $id = 'media-choice-' . md5((string) $key); ?>

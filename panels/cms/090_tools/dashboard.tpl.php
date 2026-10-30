@@ -17,7 +17,7 @@ $rows = [
 ];
 $used = $free !== false && $total ? 1 - $free / $total : null;
 ?>
-<header><h2><i class="fa-regular fa-server"></i>System</h2></header>
+<header><h2><i class="cmsIcon cmsIcon-cpu"></i>System</h2></header>
 <main>
 	<dl class="dashFacts">
 		<?php foreach ($rows as $label => $value) { ?>

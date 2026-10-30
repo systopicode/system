@@ -5,9 +5,9 @@
 	<header>
 		<h2>Messages</h2>
 		<input class="listSearch" type="search" placeholder="Search" data-on_input="filterLog" autocomplete="off">
-		<a target="_self" href="<?= htmlspecialchars($this->getHref(\http::$root) . 'downloadLog') ?>" class="button" title="Download"><i class="fa-regular fa-file-arrow-down"></i><span>Download</span></a>
+		<a target="_self" href="<?= htmlspecialchars($this->getHref(\http::$root) . 'downloadLog') ?>" class="button" title="Download"><i class="cmsIcon cmsIcon-file-arrow-down"></i><span>Download</span></a>
 		<?php if (\Systopic\System\Auth\Session::isSuperuser()) { ?>
-		<a data-on_click="userConfirm" data-action="clearLog" data-confirm="Delete this log file?" class="button" title="Clear"><i class="fa-regular fa-broom"></i><span>Clear</span></a>
+		<a data-on_click="userConfirm" data-action="clearLog" data-confirm="Delete this log file?" class="button" title="Clear"><i class="cmsIcon cmsIcon-broom"></i><span>Clear</span></a>
 		<?php } ?>
 	</header>
     <?php
@@ -122,7 +122,7 @@
 					    <a href="view/?entry_id=<?= $row['entryId'] ?>&index=<?= $row['index'] ?>"
 					       class="ajax button icononly"
 					       title="View">
-						<i class="fa-regular fa-eye"></i>
+						<i class="cmsIcon cmsIcon-eye"></i>
 					    </a>
 					</li>
 				    </ul>

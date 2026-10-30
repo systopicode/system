@@ -121,8 +121,8 @@ trait ConfirmsActions
 			. '<p>' . $esc($q->message) . '</p>' . $items
 			. '</div></div></main>'
 			. '<footer>'
-			. '<button data-on_click="' . self::CONFIRM_CANCEL_ACTION . '"><i class="fa-regular fa-xmark"></i>' . $esc($q->dismiss) . '</button>'
-			. '<button class="submit" data-on_click="' . $esc($q->href) . '"><i class="fa-regular fa-check"></i>' . $esc($q->label) . '</button>'
+			. '<button data-on_click="' . self::CONFIRM_CANCEL_ACTION . '"><i class="cmsIcon cmsIcon-xmark"></i>' . $esc($q->dismiss) . '</button>'
+			. '<button class="submit" data-on_click="' . $esc($q->href) . '"><i class="cmsIcon cmsIcon-check"></i>' . $esc($q->label) . '</button>'
 			. '</footer>'
 			. '</section></div>';
 	}

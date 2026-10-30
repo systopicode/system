@@ -1,0 +1,16 @@
+repository,path,line,reason
+system,tools/icon-cleanup.php,7,exact obsolete file paths for deployment cleanup (dry-run default)
+system,panels/cms/auth/privacy.tpl.php,57,truthful statement that icon display does not contact former/external providers
+system,public/js/gui/icons.js,9,bounded compatibility input / rejection fixtures; no provider assets
+system,public/js/gui/icons.js,31,bounded compatibility input / rejection fixtures; no provider assets
+system,_legacy/public/css/ui.onPageCMSControls.css,57,"archived legacy source, outside normal public asset roots"
+system,docs/legal-notices.md,98,historical documentation; current icon guidance updated separately
+system,docs/legal-notices.md,104,historical documentation; current icon guidance updated separately
+system,docs/admin-safety.md,55,historical documentation; current icon guidance updated separately
+system,tests/icons.php,8,bounded compatibility input / rejection fixtures; no provider assets
+system,tests/icons.php,14,bounded compatibility input / rejection fixtures; no provider assets
+system,tests/icons.php,16,bounded compatibility input / rejection fixtures; no provider assets
+system,tests/icons-ui.mjs,35,bounded compatibility input / rejection fixtures; no provider assets
+system,tests/icons-ui.mjs,38,bounded compatibility input / rejection fixtures; no provider assets
+system,src/Ui/Icons.php,19,bounded compatibility input / rejection fixtures; no provider assets
+system,src/Ui/Icons.php,20,bounded compatibility input / rejection fixtures; no provider assets

@@ -10,4 +10,5 @@ use Systopic\System\Panels\Root\Cms\Tools\MenuPanel;
 
 class Panel extends MenuPanel
 {
+    public $icon = 'cmsIcon cmsIcon-cpu';
 }

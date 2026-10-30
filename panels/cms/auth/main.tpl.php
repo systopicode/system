@@ -14,7 +14,7 @@ $logoSvg = $logoOwn && str_ends_with(strtolower($logoPath), '.svg') ? (string) f
 	<?php } ?>
 	<?php $this->withView($this->form ?: 'login'); ?>
 	<?php if (!in_array((string) ($this->form ?? 'login'), ['login', 'signedIn', 'passkeySetup', 'loggedOut', 'identify'], true)) { ?>
-		<p class="authFoot"><a class="authBack ajax" href="<?= htmlspecialchars((string) $this->href, ENT_QUOTES) ?>"><i class="fa-regular fa-arrow-left"></i> Back to sign in</a></p>
+		<p class="authFoot"><a class="authBack ajax" href="<?= htmlspecialchars((string) $this->href, ENT_QUOTES) ?>"><i class="cmsIcon cmsIcon-arrow-left"></i> Back to sign in</a></p>
 	<?php } ?>
 </div>
 <?php include('footer.tpl.php'); ?>

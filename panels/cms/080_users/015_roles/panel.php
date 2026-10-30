@@ -13,7 +13,7 @@ use Systopic\System\Tables\Roles\Model as Role;
  */
 class Panel extends CmsPanel
 {
-    public $icon = 'fa-regular fa-user-tag';
+    public $icon = 'cmsIcon cmsIcon-user-tag';
 
     public function __construct($name, $parent = null)
     {

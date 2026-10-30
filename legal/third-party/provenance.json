@@ -1,5 +1,5 @@
 {
-  "checked": "2026-10-29",
+  "checked": "2026-10-30",
   "files": {
     "jquery-MIT.txt": {
       "source": "https://raw.githubusercontent.com/jquery/jquery/3.7.1/LICENSE.txt",
@@ -40,6 +40,14 @@
     "systopic-relay-LICENSE.txt": {
       "source": "systopic/relay LICENSE",
       "sha256": "5da039c41c31d695e6bb0d8b3f3397b6ab2549c280ba849768be6ed5aaf92449"
+    },
+    "Tabler-MIT.txt": {
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz (package/LICENSE)",
+      "sha256": "b740a1d46122672da62833e97f7e7c8a13fa85cbc7445b584b297cc00dde93db"
+    },
+    "Solar-CC-BY-4.0.txt": {
+      "source": "https://registry.npmjs.org/@iconify-json/solar/-/solar-1.2.13.tgz (package/info.json); https://creativecommons.org/licenses/by/4.0/legalcode.txt; Fluxo modification notice",
+      "sha256": "216dfdfccf92667fe5bd8cc7ec1e694a0691258627f2486b6a55cadc6d12ac66"
     }
   }
 }

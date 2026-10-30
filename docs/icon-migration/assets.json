@@ -1,0 +1,1684 @@
+{
+  "packages": {
+    "tabler": {
+      "shasum": "fb2bdeec8896e173c34789902aeb51ffda139753",
+      "tarball": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "fileCount": 11484,
+      "integrity": "sha512-HflLxyrH1cqC7s7jzQGSjpsTAVIoaf7+/yHjbdM59rJQBMjliibp+LYhDPFxOMcwa1M8DNpOk6ENzQiWn9a1Dg==",
+      "signatures": [
+        {
+          "sig": "MEUCIQDyn4U+OC/XLJNSAoYAduQGepc54+yZNOF29qxe0N5BqQIgLjU49MHnKfinq6OxXMS50KGcilFBbvUsuR+BJck4f+8=",
+          "keyid": "SHA256:DhQ8wR5APBvFHLF/+Tc+AYvPOdTpcIDqOhxsBHRwC7U"
+        },
+        {
+          "sig": "MEUCIQDOvyPKWUERcLwv7kD5VUfILHN+BxjwNuBAD+Wg6uxe/QIgWg4EuIWdTpXpjy/hxPZRxA83zBjFYTwCQ5ILVN5fA64=",
+          "keyid": "SHA256:DhQ8wR5APBvFHLF/+Tc+AYvPOdTpcIDqOhxsBHRwC7U"
+        }
+      ],
+      "attestations": {
+        "url": "https://registry.npmjs.org/-/npm/v1/attestations/@tabler%2ficons@3.50.0",
+        "provenance": {
+          "predicateType": "https://slsa.dev/provenance/v1"
+        }
+      },
+      "unpackedSize": 11385129
+    },
+    "solar": {
+      "shasum": "18cf292cb82887ac01ba247bbe610079015679a2",
+      "tarball": "https://registry.npmjs.org/@iconify-json/solar/-/solar-1.2.13.tgz",
+      "fileCount": 9,
+      "integrity": "sha512-/ZWb6xRib6pzxD/qTkKWYhuzSU2yu0bY+EN0spgtz1NM3d5f4eYueQZpL3PfCdsg5uVfm4Ldtt3cAyQL+YI8/Q==",
+      "signatures": [
+        {
+          "sig": "MEUCIHwAcg9AwuDucM249TlUnpL1w72dTD1aKyfYrzVW+AEXAiEAw/nrk3rCvw84CROccLog3dGCW5NO+Nq8Uro4fy3dIAI=",
+          "keyid": "SHA256:DhQ8wR5APBvFHLF/+Tc+AYvPOdTpcIDqOhxsBHRwC7U"
+        },
+        {
+          "sig": "MEQCIDp0vK/JGljogWaoIlKgemnw0Zo2N3nMdSQGsCHY+DouAiAKS6uX6PKliJUJvMJu7+89XqukJeTMZyb2i+022amxsA==",
+          "keyid": "SHA256:DhQ8wR5APBvFHLF/+Tc+AYvPOdTpcIDqOhxsBHRwC7U"
+        }
+      ],
+      "unpackedSize": 11955043
+    }
+  },
+  "assets": [
+    {
+      "path": "public/icons/solar/archive-line-duotone-primary.svg",
+      "provider": "solar",
+      "version": "1.2.13",
+      "sha256": "dc9e64edd7dd41ddfdd9e62fc1ff708e72ceb9851c46c71ae22af742845b3a10",
+      "source": "https://registry.npmjs.org/@iconify-json/solar/-/solar-1.2.13.tgz",
+      "changes": "stroke 2; separated opaque primary/secondary masks; luminance-mask geometry flattened where present"
+    },
+    {
+      "path": "public/icons/solar/archive-line-duotone-secondary.svg",
+      "provider": "solar",
+      "version": "1.2.13",
+      "sha256": "4569dfed41c7dc636e54ab8f1069881da6494c5c52334dcf5999c2a939a93dda",
+      "source": "https://registry.npmjs.org/@iconify-json/solar/-/solar-1.2.13.tgz",
+      "changes": "stroke 2; separated opaque primary/secondary masks; luminance-mask geometry flattened where present"
+    },
+    {
+      "path": "public/icons/solar/broom-line-duotone.svg",
+      "provider": "solar",
+      "version": "1.2.13",
+      "sha256": "b72bbd2885b31d21f973a6a35de9cee8ff4e1ee62b0bb8f31621983e4163685e",
+      "source": "https://registry.npmjs.org/@iconify-json/solar/-/solar-1.2.13.tgz",
+      "changes": "stroke 2; original Solar broom geometry rendered monochrome"
+    },
+    {
+      "path": "public/icons/solar/calendar-date-line-duotone-primary.svg",
+      "provider": "solar",
+      "version": "1.2.13",
+      "sha256": "c74ba9194325fe82aa2b8f185f6f9534c208d721cc83a76b3bd59b6f5dd8aaf2",
+      "source": "https://registry.npmjs.org/@iconify-json/solar/-/solar-1.2.13.tgz",
+      "changes": "stroke 2; separated opaque primary/secondary masks; luminance-mask geometry flattened where present"
+    },
+    {
+      "path": "public/icons/solar/calendar-date-line-duotone-secondary.svg",
+      "provider": "solar",
+      "version": "1.2.13",
+      "sha256": "0a229c28a976a9776f6686a64667465c5e6d372f1974cb3fbce5fe6ef50b70b9",
+      "source": "https://registry.npmjs.org/@iconify-json/solar/-/solar-1.2.13.tgz",
+      "changes": "stroke 2; separated opaque primary/secondary masks; luminance-mask geometry flattened where present"
+    },
+    {
+      "path": "public/icons/solar/documents-line-duotone-primary.svg",
+      "provider": "solar",
+      "version": "1.2.13",
+      "sha256": "2495609b950b9048d09b1a952096c4e9e8b06d773fbe50fae9be9eef4a70081a",
+      "source": "https://registry.npmjs.org/@iconify-json/solar/-/solar-1.2.13.tgz",
+      "changes": "stroke 2; separated opaque primary/secondary masks; luminance-mask geometry flattened where present"
+    },
+    {
+      "path": "public/icons/solar/documents-line-duotone-secondary.svg",
+      "provider": "solar",
+      "version": "1.2.13",
+      "sha256": "c572e263c07f5890e1b95415802454c3fab1b2888e420eea1221f5f4b443eda4",
+      "source": "https://registry.npmjs.org/@iconify-json/solar/-/solar-1.2.13.tgz",
+      "changes": "stroke 2; separated opaque primary/secondary masks; luminance-mask geometry flattened where present"
+    },
+    {
+      "path": "public/icons/solar/magnifer-line-duotone-primary.svg",
+      "provider": "solar",
+      "version": "1.2.13",
+      "sha256": "bc6c4e2bcdcba53314285867ce2eac5e2518f5f31d4cd1e0a2bf5208bd185852",
+      "source": "https://registry.npmjs.org/@iconify-json/solar/-/solar-1.2.13.tgz",
+      "changes": "stroke 2; separated opaque primary/secondary masks; luminance-mask geometry flattened where present"
+    },
+    {
+      "path": "public/icons/solar/magnifer-line-duotone-secondary.svg",
+      "provider": "solar",
+      "version": "1.2.13",
+      "sha256": "41a283d8df7e2e460c5db596f781aac7dbd4d84c47b0e7d601658696275a4593",
+      "source": "https://registry.npmjs.org/@iconify-json/solar/-/solar-1.2.13.tgz",
+      "changes": "stroke 2; separated opaque primary/secondary masks; luminance-mask geometry flattened where present"
+    },
+    {
+      "path": "public/icons/solar/notebook-line-duotone-primary.svg",
+      "provider": "solar",
+      "version": "1.2.13",
+      "sha256": "8aeb9912f50ac799318d670ae4c183c5eb7a553730cce5217690bab99ee2c98e",
+      "source": "https://registry.npmjs.org/@iconify-json/solar/-/solar-1.2.13.tgz",
+      "changes": "stroke 2; separated opaque primary/secondary masks; luminance-mask geometry flattened where present"
+    },
+    {
+      "path": "public/icons/solar/notebook-line-duotone-secondary.svg",
+      "provider": "solar",
+      "version": "1.2.13",
+      "sha256": "54a8d7661a8758170f71cc80c41a8b1fe0f75703c5d0d08b340a8458db4e9a7f",
+      "source": "https://registry.npmjs.org/@iconify-json/solar/-/solar-1.2.13.tgz",
+      "changes": "stroke 2; separated opaque primary/secondary masks; luminance-mask geometry flattened where present"
+    },
+    {
+      "path": "public/icons/solar/question-circle-line-duotone-primary.svg",
+      "provider": "solar",
+      "version": "1.2.13",
+      "sha256": "7afbc62e813bdee404b04ec4954fb883f195ccbdad51a8fbc599904b0b893ec6",
+      "source": "https://registry.npmjs.org/@iconify-json/solar/-/solar-1.2.13.tgz",
+      "changes": "stroke 2; separated opaque primary/secondary masks; luminance-mask geometry flattened where present"
+    },
+    {
+      "path": "public/icons/solar/question-circle-line-duotone-secondary.svg",
+      "provider": "solar",
+      "version": "1.2.13",
+      "sha256": "de4fae9c576c307d8c1b0335cca2975e9e47a6f939d6bcb415848ece8a2384c0",
+      "source": "https://registry.npmjs.org/@iconify-json/solar/-/solar-1.2.13.tgz",
+      "changes": "stroke 2; separated opaque primary/secondary masks; luminance-mask geometry flattened where present"
+    },
+    {
+      "path": "public/icons/solar/settings-line-duotone-primary.svg",
+      "provider": "solar",
+      "version": "1.2.13",
+      "sha256": "e0622157d5f075abc57d169f7d46b382c58cb7a14cb45197e0c3fdf3e9b74bf5",
+      "source": "https://registry.npmjs.org/@iconify-json/solar/-/solar-1.2.13.tgz",
+      "changes": "stroke 2; separated opaque primary/secondary masks; luminance-mask geometry flattened where present"
+    },
+    {
+      "path": "public/icons/solar/settings-line-duotone-secondary.svg",
+      "provider": "solar",
+      "version": "1.2.13",
+      "sha256": "260791be2c65928352adc12628b8b4739ed9ee8842596eaa30a3b0c64c678164",
+      "source": "https://registry.npmjs.org/@iconify-json/solar/-/solar-1.2.13.tgz",
+      "changes": "stroke 2; separated opaque primary/secondary masks; luminance-mask geometry flattened where present"
+    },
+    {
+      "path": "public/icons/solar/structure-line-duotone-primary.svg",
+      "provider": "solar",
+      "version": "1.2.13",
+      "sha256": "46c4851483e772f3f760cf40bd14913a1ba701e0feb1be530a8a11e25c57cc7f",
+      "source": "https://registry.npmjs.org/@iconify-json/solar/-/solar-1.2.13.tgz",
+      "changes": "stroke 2; separated opaque primary/secondary masks; luminance-mask geometry flattened where present"
+    },
+    {
+      "path": "public/icons/solar/structure-line-duotone-secondary.svg",
+      "provider": "solar",
+      "version": "1.2.13",
+      "sha256": "4696bbfe877391c2e0539a4cd0d79fff27814f9aed18b34271cad500c7050630",
+      "source": "https://registry.npmjs.org/@iconify-json/solar/-/solar-1.2.13.tgz",
+      "changes": "stroke 2; separated opaque primary/secondary masks; luminance-mask geometry flattened where present"
+    },
+    {
+      "path": "public/icons/solar/tuning-2-line-duotone-primary.svg",
+      "provider": "solar",
+      "version": "1.2.13",
+      "sha256": "937ab4c83a9f250c628d9418d925ed0a75c39098f728fa1887872b376a27f898",
+      "source": "https://registry.npmjs.org/@iconify-json/solar/-/solar-1.2.13.tgz",
+      "changes": "stroke 2; separated opaque primary/secondary masks; luminance-mask geometry flattened where present"
+    },
+    {
+      "path": "public/icons/solar/tuning-2-line-duotone-secondary.svg",
+      "provider": "solar",
+      "version": "1.2.13",
+      "sha256": "97ea16a2735765fa22708f04efbbdc2c99673a51a22c45f791beeb2c8c872e85",
+      "source": "https://registry.npmjs.org/@iconify-json/solar/-/solar-1.2.13.tgz",
+      "changes": "stroke 2; separated opaque primary/secondary masks; luminance-mask geometry flattened where present"
+    },
+    {
+      "path": "public/icons/solar/users-group-rounded-line-duotone-primary.svg",
+      "provider": "solar",
+      "version": "1.2.13",
+      "sha256": "1dd07c5e9d8f4904a727062c49e4c69d53dc0109f1d09b9aa7c2429079c548b9",
+      "source": "https://registry.npmjs.org/@iconify-json/solar/-/solar-1.2.13.tgz",
+      "changes": "stroke 2; separated opaque primary/secondary masks; luminance-mask geometry flattened where present"
+    },
+    {
+      "path": "public/icons/solar/users-group-rounded-line-duotone-secondary.svg",
+      "provider": "solar",
+      "version": "1.2.13",
+      "sha256": "ab49e53a518ca64e87711c34b39f9269987ced6f1d3f1e9436ff6e8b47146103",
+      "source": "https://registry.npmjs.org/@iconify-json/solar/-/solar-1.2.13.tgz",
+      "changes": "stroke 2; separated opaque primary/secondary masks; luminance-mask geometry flattened where present"
+    },
+    {
+      "path": "public/icons/tabler/address-book.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "a836767377a1eeecf7e82ca67fc207d801f280e8185e77f19037d83710c6590e",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
+      "path": "public/icons/tabler/adjustments-horizontal.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "a901f2142c6ff82d76c9dece45746867e9ea4b3e9caf3892a5cf336b542f1932",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
+      "path": "public/icons/tabler/alert-triangle.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "76e8a60d4171e5974550db14a28baa26122628bb2e558d4daef2fa45987ba387",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
+      "path": "public/icons/tabler/archive.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "4deb48cfcd3a8fb9ea665c8524dcc5a85f9a194e1bb58800f91622ef9a8a1296",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
+      "path": "public/icons/tabler/arrow-back-up.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "9b18d78939aa4891c94957cc90acbb29cc5ddf81440698a6a60f832700cca06f",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
+      "path": "public/icons/tabler/arrow-forward-up.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "2eaa2e27c8502f860881d2f3a54fa3ffaa1b496795a1255eb563d308dcd4ec76",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
+      "path": "public/icons/tabler/arrow-left.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "474b6ff1da63f59fe17749db6fb22f1089f2d44c41f9e7820483e7656f0c02ee",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
+      "path": "public/icons/tabler/arrow-right.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "0405c36df592b1e808e597fdccb66c259672527afc07db28802688b02bee920c",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
+      "path": "public/icons/tabler/arrows-horizontal.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "eba8089e4b68b26e63b22ccd4d10e26e5bc29eee211547e6c4c5435b2f0ffbea",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
+      "path": "public/icons/tabler/arrows-move.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "bd6da1583d91481b4ec0e318ad0f3fc5a31c5eecff8ae1bbe156b6b59a0b6be0",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
+      "path": "public/icons/tabler/beach.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "f3d2981317bb184897590226f0bde9ab9b354ec17e9c4b0e59eaf65721f15648",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
+      "path": "public/icons/tabler/bold.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "71b2006e5b184d67c6c11b1b4a0c569c063381c8a8cf694627eac415bafa838a",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
+      "path": "public/icons/tabler/bolt.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "b6f250a1a07f00ea07c0cec07164aaacb59af673dfd308a8dcd51c255bcdcd86",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
+      "path": "public/icons/tabler/braces.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "f9c3c6805c95c23e8515e058636602b855321e22d538e99e335ab762364d63d2",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
+      "path": "public/icons/tabler/bug.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "e87a177c23b06420537931390b1abed038a6a7d13def4d6f577c0b51cd7bee1d",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
+      "path": "public/icons/tabler/building.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "b851684d90d65c83a93ed9a32d51cd79a84f36c3474fa235711a7a84ec7e389b",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
+      "path": "public/icons/tabler/buildings.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "2928dbc563864aa409469deb2f956eff7635baf640f3aa2aac7a82a977f831f0",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
+      "path": "public/icons/tabler/calendar-check.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "afc079aac8f0fd9490916cfc1d797f744f5bbd6558f83213971452a274e145a3",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
+      "path": "public/icons/tabler/calendar-down.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "d83222e8004c964cd385e4788aaa0b8374d7e434fc78a1cbff1be804d0afd059",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
+      "path": "public/icons/tabler/calendar-event.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "4b9f13283933dff389f92e5f5b0bba18dcd4880c1e396e15fb292dfd74573307",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
+      "path": "public/icons/tabler/calendar-plus.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "1bb493ae202219b7ebe66b2ee46cef85265fa853c5521f0e860a6d18f0bb58eb",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
+      "path": "public/icons/tabler/calendar-week.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "02778c93b9747ea4b1f90df2e1fab674f52374b28d6a8483f685a15a5d1059c5",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
+      "path": "public/icons/tabler/calendar-x.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "2ca59c11dfef3637a55a902f6ef9595255e8e72c9681acf4122ebd7518490257",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
+      "path": "public/icons/tabler/calendar.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "d302ec62c6342cf829534e547de5c5c1defcf5d7ef4c243519f7b9d3c2a24f4c",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
+      "path": "public/icons/tabler/camera.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "46198b8a96aad82ee7afde500a7a37a082719194b9da8640063987adcadf633e",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
+      "path": "public/icons/tabler/chart-bar.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "fd1005e3a145e4ce977b565c8a1708e2a63d438e7a70647efacae65c0ee3e356",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
+      "path": "public/icons/tabler/check.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "f68bb07ff5613df4dbc7b97718cf94e124632b3fdf3a0008170030d30ca00623",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
+      "path": "public/icons/tabler/chevron-down.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "fe3a56e5a0cca0b31d4793a443878107a145bd8c445852b7cad1f652c8e1a526",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
+      "path": "public/icons/tabler/chevron-left.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "a8756547bf32ba6d16066591f4a12c8c8a45809199340d5603c0eaf02533be28",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
+      "path": "public/icons/tabler/chevron-right.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "5196560664eff3f741443bbb4e016690798934d99a522ecbeb696838406df668",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
+      "path": "public/icons/tabler/chevron-up.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "9373634ec8041fd22fb612ca28783350ba01a8fc49657148af22696edc12010b",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
+      "path": "public/icons/tabler/circle-check.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "46b6d342694c380027645aacc81a395e87112f4de7d72b1acfe39472184589d5",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
+      "path": "public/icons/tabler/circle-half-2.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "8da316dec92674ab56aacc1d5ddb16ac21ba76d232240c0e91b22b8dc9b15761",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
+      "path": "public/icons/tabler/circle-minus.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "9a7d00ccab729e7e10d243ad08df8db63d23dc4f7cbd17b57e6a67b93ee53362",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
+      "path": "public/icons/tabler/circle-play.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "cbb595a2ea271a0b87c0288ae480efed7caedd1341388748f1603c5ee2deeb27",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
+      "path": "public/icons/tabler/circle-plus.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "cbb14521cd30086308a20187b68cf3bd1ba91ac9eeed6386632ab25bb5ee1549",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
+      "path": "public/icons/tabler/circle-x.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "4444b2d04e0606c793eaaa7d6262f4f7654f3fd22b87d4f5e2bdd604a0f5eb03",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
+      "path": "public/icons/tabler/clock.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "b23eed51ccfe8da2ad752bdc73115d07ac04f732b38b994880ee9048e8b75d2e",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
+      "path": "public/icons/tabler/cloud-upload.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "ca552f647c2b12fa538673904f76bd0ec135a88cb43551c3d056ab038e9bdfc2",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
+      "path": "public/icons/tabler/color-swatch.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "0e16e93f5954de60a5338694497398f615c94e371e79e99ace81a989b70dbfff",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
+      "path": "public/icons/tabler/compass.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "c47d0b051b02ef07d4d21805e420751466d0175ab6e45daf603d419102c97e5d",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
+      "path": "public/icons/tabler/copy.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "ddb36122b28962e7d8b1633eaec67783cb1ddc6db73023dd1e08c54f03b64e1e",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
+      "path": "public/icons/tabler/corner-down-right.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "d3ef458788bc89af75cdec9e4cc25374ea8a375126b09fa977c348b3c4827d12",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
+      "path": "public/icons/tabler/cpu.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "94d8130b6d52f43a35ae9f8a0d82ac5fdd6dc9910c9bcabec3f2186353283691",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
+      "path": "public/icons/tabler/crop.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "c43da8ede53acd41427a174071d1957282f5b3472b5175985a075444d88879e1",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
+      "path": "public/icons/tabler/cube.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "e24fc0f0f58bc2d028593e3fa56917923937832d9affa45970cd3ceed0d16e5f",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
+      "path": "public/icons/tabler/database.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "c976c36b1f73f24c13fc83c1d23deb07231d156c65a3933fa032ad1c9804b636",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
+      "path": "public/icons/tabler/device-desktop-off.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "8a7abfaeb01c74cbf31c7f1c387bfdf27c2748bf0132d84a5e875b825f1a59ea",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
+      "path": "public/icons/tabler/device-desktop.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "14a3a45d16af204b1f6c0b64c381129f8815fb4285fc04165de952f67e9a7071",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
+      "path": "public/icons/tabler/device-laptop-off.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "3333a6ee24cdc6bb1f4bacc48c8aba6f95ec6e1db1875a591c9a7747b2332c01",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
+      "path": "public/icons/tabler/device-laptop.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "93ec2c025308b103d38eafe8913669781f30510981429f9194ab126684f584b1",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
+      "path": "public/icons/tabler/device-mobile-off.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "07884cd85efff79f09db05c792bd63b310cd3d2bda8976775f2abfd733715eaa",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
+      "path": "public/icons/tabler/device-mobile.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "31ad968dde05c6e9a31b43dbd72828be37a101752e95b7cfb058fae88f13425a",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
+      "path": "public/icons/tabler/device-tablet.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "3dc02ebc08b0b7923cfb04e63a07dbd13b5c4cb819ab0e3ebbca4554ce82282f",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
+      "path": "public/icons/tabler/device-tv.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "b2e0e84c2d07704e003107c26189ce5f7ebae9854b4975d7bcaa4852c4c5e237",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
+      "path": "public/icons/tabler/devices.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "03b0d38e83003edd9d5e877b855092a6e150a154bf3ab8561960359212c08c05",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
+      "path": "public/icons/tabler/direction-sign.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "ee2b2447e6d3c3303af933685d0bf96b261e5981061724f85935938c1809bf01",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
+      "path": "public/icons/tabler/dots-vertical.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "d99364e5f1ae16ab07c2ab66cdb1aefabdcad783dbd1de1079620c07a6763e36",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
+      "path": "public/icons/tabler/dots.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "9c4225aca4d91e76f864261ca3e011977c63015dffb75a9b6269bcd7dcc04028",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
+      "path": "public/icons/tabler/download.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "f4d0e8f474b3f6355e553f626a1c9f6bac7681c402880c1a2494238241eae03c",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
+      "path": "public/icons/tabler/edit.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "26dd3de5642d3eab38c949c8961e6e57bbcc793961e92b8b5ef128dd63a9ffbb",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
+      "path": "public/icons/tabler/eraser.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "bfc99a362a6efa8bd243a560e2f496a15ea5fcf02f8611d986527ae72d97d256",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
+      "path": "public/icons/tabler/exclamation-circle.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "bdfda5f3e9c05cbac8c3753b08126a0a375f2886a1056e91c6432c61e34ace46",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
+      "path": "public/icons/tabler/external-link.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "9ab132640b95c65dc55940fde468d08593bfb7fb7c1f289be4775e2f796c1be9",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
+      "path": "public/icons/tabler/eye-off.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "15f62dfb5a7915617722d96d34bb6af5624fd26a030ffa75024fbeef490fefba",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
+      "path": "public/icons/tabler/eye.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "aa681ca2a81fa7458468b587614b83af29bf96696f4095786b055bd23f43f23a",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
+      "path": "public/icons/tabler/file-description.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "c22900a481198809b02dc35c99bde33cd6630c13280863cd78d98028bf645486",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
+      "path": "public/icons/tabler/file-download.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "43b305c3fbb534f8e7591970ca6c409b879626c2bda222c32c462277fc51f89c",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
+      "path": "public/icons/tabler/file-import.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "26b01ab93d324e3234e7676cc1665069b9bbce8ebe15eee052efc8f39427cc2d",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
+      "path": "public/icons/tabler/file-off.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "8f4cc60dc055a44c1f702e7ca1b48a8b62d20f5fec35c207931b15992c51d4eb",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
+      "path": "public/icons/tabler/file-plus.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "73f60ba9e3c8ce7d0ce8b4e956f7b622dd860a7ee70b3364a59ea014b16b2028",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
+      "path": "public/icons/tabler/file-text.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "67f9a051d681213b1b9db6b8719666effb5c8e86f544d9413dbfb57bc94a6e4d",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
+      "path": "public/icons/tabler/file-type-csv.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "01894467a953f9b1f8832dafcef2bf7939633b4b6f6ba3194d55e0a9842f6190",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
+      "path": "public/icons/tabler/file-type-doc.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "618d9f9cf1dc7ee58b3bbc1e7ad288c0d34f814183f00f615d1adc8452182c68",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
+      "path": "public/icons/tabler/file-type-pdf.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "672497c42b81685282ac575dce881b53bb305b130b70433b3ebc60d455131c4a",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
+      "path": "public/icons/tabler/file-type-ppt.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "afffceb64948ce04ca18629283870959b8bc6311b98c6d93bd4b1328338fcfdc",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
+      "path": "public/icons/tabler/file-type-xls.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "317268c392ce02afbb15082899fee0afaa995a7be54b997ec505471eb9ef9a78",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
+      "path": "public/icons/tabler/file-zip.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "5d8db26ec326ac8cc0774937735a7aadb4508c59b2b5af2f10a8200431d6eec3",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
+      "path": "public/icons/tabler/file.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "27699b76a9b84637fdbed833654397a362d51e83642b98f6dcd6a427d42db31e",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
+      "path": "public/icons/tabler/files.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "37f7efc112d946759c37a7c57200278d07d3610a062a2891a4c8780431cf3eee",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
+      "path": "public/icons/tabler/filter-off.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "1e62feccf664ee0c8048d2b46b3494007f1554c64dfec11466c393c80baff3b3",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
+      "path": "public/icons/tabler/fingerprint.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "24576f6d9fd23c17c867d30f14d180c94591530ea207b409a9da0cbc83e2135d",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
+      "path": "public/icons/tabler/first-aid-kit.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "46dc8b5aba9c8fae273c606570dc53777d457a362ba84bfab03f1cce6e6cf453",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
+      "path": "public/icons/tabler/flask.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "145567ecc6bfb6d6bf3d4d2b53064d63d65193d92cc81acbbac930c8529aea8a",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
+      "path": "public/icons/tabler/flip-horizontal.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "7d7969fc6d7729afb686141837d6fc8ff6701a25755d5e518d39d2ee31876ddd",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
+      "path": "public/icons/tabler/focus-2.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "faec114a690aa6f61de52f1d420c4f114825aff918027dcbd13014fc31beaab7",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
+      "path": "public/icons/tabler/folder-minus.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "172a3bc668cd6c6533c006def7614d4cee749397ffbdaf669b267879253eeb98",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
+      "path": "public/icons/tabler/folder-open.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "c33494a8adebae98f80eaaa2c73e2d8b081245155a93ac920b9780bb77749ace",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
+      "path": "public/icons/tabler/folder-plus.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "ebd03e32fe55cdad68ec96c2703e9fa95faef25be84a811e9ea8dd3a05b1f322",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
+      "path": "public/icons/tabler/folder.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "b546c74de76decd8e0f3d13180d940c87778319d0c6aeaa075844b8d009729c3",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
+      "path": "public/icons/tabler/gif.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "a2ed0e870b30a0ac2650db6df90986dd2c8a20402303ead13aae653234baac09",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
+      "path": "public/icons/tabler/git-merge.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "21835952c2070e5b9517a1a1b5f377e6e3a287221bd213b1f11babb1b13dec4b",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
+      "path": "public/icons/tabler/globe.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "e5e0be5e2540a06a052dc367acf5539bc19805be228f9641f062c482d0a619ff",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
+      "path": "public/icons/tabler/grip-horizontal.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "c090c65fe273ef3189b32161aa9bb002c11f2a6ab5cc6716fd6f3cfcaaf7fda5",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
+      "path": "public/icons/tabler/grip-vertical.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "51ffa55c32c6a0989bb7d52ca9e7c621286e043b6ad220358fcdc00c6d65bb43",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
+      "path": "public/icons/tabler/hammer.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "d213966fb6934d04ca044ca046d3df45eed25d320493559098ffb06abc366103",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
+      "path": "public/icons/tabler/hash.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "b3d3d901297715eaff8abb6f0f3f8150989215f4abea5c1b084bd2be49d04c82",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
+      "path": "public/icons/tabler/heading.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "647f00a907cfe529b4379e129b8c036945bd3c53777e427217388e78a33cc91e",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
+      "path": "public/icons/tabler/help-circle.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "8e7ca1bfd21918b2abeb94cad3cf513360acd2c68899373fd18e0aeb4647fead",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
+      "path": "public/icons/tabler/history.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "49a15e3898974d0484f7a831da734b42e86736f0189636b777ae2a3a6613946b",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
+      "path": "public/icons/tabler/id.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "d7e6f480af8ded6fc8d441b1087b2443c0556d69215a44158a4fa09193b759ed",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
+      "path": "public/icons/tabler/info-circle.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "cbd71800b8d37a06fcc29987525d31ff078468a877c058d1954185c90b2c1f3a",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
+      "path": "public/icons/tabler/italic.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "7a41e37aac24037b0bd880c61dca2843ce1b507a61d775370e2f6275bb6347c2",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
+      "path": "public/icons/tabler/key.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "04f6102743ff549e761b9d8b5f4d85b8059d136315094e31d1d8fe34902cb650",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
+      "path": "public/icons/tabler/keyboard.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "a5f3acd9e8eece230f21a7138426b845029f36c5025d4d5666bab3d6c2d87e1d",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
+      "path": "public/icons/tabler/layout-grid.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "728f07cc76a0972b9ed5059915c2f262f15a649a393f91673c70146a9bb1a284",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
+      "path": "public/icons/tabler/library-photo.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "bcf968b7788abcf2a9fcc2803ae18843d5123546a196a2db475f1b507a25a1b4",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
+      "path": "public/icons/tabler/link-off.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "13a71817b852b3854d960ff4728862af1915fd2cf0bb565e27bcbe61382be226",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
+      "path": "public/icons/tabler/link.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "5ae972ede199d618ea15a6c0da96b7b82c8d67c7a0fe11ce7e678171213b1a94",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
+      "path": "public/icons/tabler/list-check.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "b248867340a1a7d6dc006a19aa9a8947b32d587d520b431f2c17e7aeb68cfe88",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
+      "path": "public/icons/tabler/list.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "560650ef629d9968aecedc9aaa84b74fa3b738201f016c143cd1150f929b2b5d",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
+      "path": "public/icons/tabler/loader-2.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "a16c1ef681ab929fba6ace51d3b924dc7e67c8f00efd1b02e91af49770434939",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
+      "path": "public/icons/tabler/lock-open.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "7209b47fe53e2eb94a5d9fd22d5db4ae6291b3645858a72a2ac3612e1f6f5fef",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
+      "path": "public/icons/tabler/lock.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "77fa65fdaa7b28bc758c8f6e8026777fe42287f65f03c9e4c04b518d7ae9f621",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
+      "path": "public/icons/tabler/login-2.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "d569441d568740485f654c071468635174eea90873772551a24f48a7fa31efea",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
+      "path": "public/icons/tabler/logout.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "87ef541a30795c22057bf3359d3b22af446dc0a4a750ce02f0e0ba25550bb8e6",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
+      "path": "public/icons/tabler/mail.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "1363991e695adac81e2bd23deca41b91922b3877b35642c44ee7490179a6e1f3",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
+      "path": "public/icons/tabler/map-2.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "4d31344c0f6217e76fdb0cec0bdfe52610d71ece364c44769a8b1ab08a727705",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
+      "path": "public/icons/tabler/map-pin.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "99ada0a990f5196ff1edee5c7c861c0edc0a6134b368469cd2b220d94026253b",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
+      "path": "public/icons/tabler/maximize.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "58d8cea7557cc5edf03de60e2d80bf955048542590aa22bc6be6db3bb95ed051",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
+      "path": "public/icons/tabler/menu-2.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "98f4fed9b34787ca2bb1e149d7cd39b2deb279fc9c66dbd8ac9679cccaa0f961",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
+      "path": "public/icons/tabler/message.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "18bc1d20670d2dd9a1d2a1d9cce67c08e94ab689d207c921e2c271d8c76d3795",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
+      "path": "public/icons/tabler/minus.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "462f645ba93f76373e34933b1e8298fe2da1180a905cf58f3b4488a18b32ce31",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
+      "path": "public/icons/tabler/moon.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "1fff3f7fabc4090fa26085222472fe1c43875c1f823afe7aef3671f12c668dea",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
+      "path": "public/icons/tabler/movie-off.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "1de305fc5f66fe4d5c8256b594f25e6d7efd076ab0ea9a115b7f1f664e1dcb2a",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
+      "path": "public/icons/tabler/movie.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "f822d867a116d5d9742d18937051eb531a79ea2aaa62847bf40e6a4f694644a9",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
+      "path": "public/icons/tabler/music.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "501785ec9537f4245671c9ffb75de774f2fc782b7b61ed11efba12bca39d179a",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
+      "path": "public/icons/tabler/number-123.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "53913eb2f402c499a4981d5d64cc109b2829c102cba394631613fb73107c5fe0",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
+      "path": "public/icons/tabler/password.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "0ad0f377565b3d5a75278bee995ce48cbe3c553445f552f6bf34fdf36dabce10",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
+      "path": "public/icons/tabler/pencil.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "e498bdbaf7429409f48ad21314d6227727276184eb7da8bf0953a4f78df085f7",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
+      "path": "public/icons/tabler/phone.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "a9d3f4f462d3718043c9b46adf96ea69ec3ca11df356fdeb9b4522ed7046da8d",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
+      "path": "public/icons/tabler/photo-off.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "6bbc6bed9a474c509c048b815cb2e4df11c0c35064f48b186f616c7c94fe9055",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
+      "path": "public/icons/tabler/photo-video.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "0f33c4eb72fe7da46b6fd3d350d4c50a9e07857eb6181671b6cac615de42ba43",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
+      "path": "public/icons/tabler/photo.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "8809f0dee5e291cbc8e3139202767642c241af4a53c3fd623498802acb6614a4",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
+      "path": "public/icons/tabler/pilcrow.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "585cd199d6f66ae07076c6d7ea8f759d509ebf65e1217c34c2be03873fff06f2",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
+      "path": "public/icons/tabler/player-play.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "f070bdc9659fd3ac3d34dec0bf9163a4ed7f8b31f831c564da79a97b8f0c9234",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
+      "path": "public/icons/tabler/player-stop.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "1c7ea33463282dce877315979691beea73b10ce60bbfd9f70839825ce828cee8",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
+      "path": "public/icons/tabler/player-track-next.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "3600a7b772092f16281901db93d6e9b09c9d62665ebeb1fd774d0f80899a9cf9",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
+      "path": "public/icons/tabler/plus.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "a29a658999bc66ce54ce2039c65b4ed07a1a25cc713dcd7463e82bc2990ce796",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
+      "path": "public/icons/tabler/qrcode.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "e0dd115897922c7170a9fe475c20e2c2e33f39b5e6701da54b0fec98292c2833",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
+      "path": "public/icons/tabler/refresh.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "4941e2ff11eed25ea1ef7b146ace3f3a70dd2794269e8bfa7bf91ba2396da482",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
+      "path": "public/icons/tabler/repeat.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "5a187715189b76b29bbb451ba2755e56595211a1233dcc88ecc949ce12af4de0",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
+      "path": "public/icons/tabler/rotate-2.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "83d5521d7b3759bc052fc28a1b9a9068214854d71463068be36e886eb505ffc9",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
+      "path": "public/icons/tabler/rotate-clockwise-2.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "8b4c45a8f363f4ba7f558555346c76b789da76e64b9a7b2cc9a406733c9d5026",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
+      "path": "public/icons/tabler/rotate.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "a1fbfa61ca3b63821112bf3a6d99b1156050e791e51610475269651e8d21f5a3",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
+      "path": "public/icons/tabler/route.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "cb486f4f86f640ee1b0abfbef53a997524663efa946109ee4ea34778f2816b19",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
+      "path": "public/icons/tabler/search.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "fc8a5d5ee781055b033ec3fb9db1dc717994f9ec4617df6015e39235436b248e",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
+      "path": "public/icons/tabler/send.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "da5323d283ea2f961ee94bd61ad43b2f58ed4eac3f3b52d4e9c6445a7ed5745f",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
+      "path": "public/icons/tabler/server.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "fb759485c14bfdf9eee461fcc9573676b4e15a55142bae727c44cf92a6ddc06c",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
+      "path": "public/icons/tabler/settings.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "75c03c8a335ed0a72ebfdcf664117686c7fc5778f2cc7e1e52c409476abb0d79",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
+      "path": "public/icons/tabler/shield-check.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "e00ed9d261e13259bfbd1bfa2fb6507eb68252ef803c0e318e5eb08c0d87e90d",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
+      "path": "public/icons/tabler/shield-half.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "88032bea741afd30d0e0c133add851e035bdc46acba18a29b2f93c8acee8ffc2",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
+      "path": "public/icons/tabler/sitemap.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "08dae7574538a128c7c0620cb69ac62774ecebbd6fee4af3a826b975bc5ded59",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
+      "path": "public/icons/tabler/spy.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "3a0d1d3094dc38653b049f66ccd4be19387a821f62fe500ececc7342dc166969",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
+      "path": "public/icons/tabler/square.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "ff2d4544086487652732a5a6b863a0b2731000ca4e23ddcee31203d559d4601d",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
+      "path": "public/icons/tabler/stack-2.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "8ba9634a8871c2c0def6d81910131c50449f6df9c205e079468344322926c9cc",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
+      "path": "public/icons/tabler/stack-plus.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "0585e44793005208f61eef0526ef75108584860e1de4543f2734f51debb5dcd8",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
+      "path": "public/icons/tabler/strikethrough.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "977a62f29c8bd9b68130b588fd21be21642fb7d90384142a92f315d7cfa99e4f",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
+      "path": "public/icons/tabler/sun.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "6a67d70bc54265f929b573754841365c5cc95f93403cc3fc0b55169d220dbd3f",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
+      "path": "public/icons/tabler/table-column.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "8561f6059a83c6cc959f2d21072862eeb88688afbbe44e0fefaa19ecf057c8ab",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
+      "path": "public/icons/tabler/table-row.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "b77cfa239b3dea315676c6034d25964a36b8f6f42638184910d3067b751b0a54",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
+      "path": "public/icons/tabler/table.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "5fb31c88384c953e5d2ac457497f741f67a0233264941b30a7a5f260912559d2",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
+      "path": "public/icons/tabler/tag.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "2453cef9b77c4b66393651844ea07a49d544014a8ca0810ad375c63b4359ec60",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
+      "path": "public/icons/tabler/tags.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "d824f83ba5a463d64c67d53c0759b34b421864ce4962642d54a106ee3d4e1afe",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
+      "path": "public/icons/tabler/tool.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "0421123471fee94b9b1d3c73d584eca36fab2927536dbbe03edcf87d829b732d",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
+      "path": "public/icons/tabler/trash-off.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "288875b620978aa062007e269d8134dc49912916f6af378c49c5670fb2f488bb",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
+      "path": "public/icons/tabler/trash-x.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "24d2a308366a96efe1c3c1cc047d80501e4213e9018671bc10a8b534a4fa2e8e",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
+      "path": "public/icons/tabler/trash.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "3921299a09171b3f0346287c00638edff9fc30178c806e4a5337497ce1cf8148",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
+      "path": "public/icons/tabler/typography-off.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "73dc78947dd960f085c7d22bf05cdcfae7c3ed0380ecd5fa276eff3fc3c3eb68",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
+      "path": "public/icons/tabler/underline.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "30f80445cf5bcdd529fd3acc10e4d930ce209c9dd7273140e1857ccd1d1d3277",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
+      "path": "public/icons/tabler/upload.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "17b81a0160a8ded94df0e26a7954de25db22d6b8c3e628329125de66458c5886",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
+      "path": "public/icons/tabler/user-cancel.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "485aca520c824dfa43d110c26bd6bb366aa102bec4a7c0f05451eb38480bde09",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
+      "path": "public/icons/tabler/user-cog.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "61990937132a583aca537f6ba3015077ac059ac81ecc5b485ebc4f4229fe1326",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
+      "path": "public/icons/tabler/user-key.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "006b11be0aa7c52a5a30acd2cc3e53739cd5b04b4512ae1a7f90a28a9914435b",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
+      "path": "public/icons/tabler/user-plus.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "5109b99462b199d76adb2c2beb8de56c397bf5aa2061497c696cfd3910aff19a",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
+      "path": "public/icons/tabler/user-scan.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "5afdedb8ed1ecd3a820038ae6597b5c34f2cdd63b3f2f92fa70c9d84b4c18128",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
+      "path": "public/icons/tabler/user-shield.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "61566c3b7742a6e68129b4e2417abf3a40f9b13ba93cacd677fa5f9ad0f138e5",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
+      "path": "public/icons/tabler/user.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "26091deea1b667ffedb6606ab41921d36bff54e572d1c6dea93d15b9cadc494f",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
+      "path": "public/icons/tabler/users.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "fb53640e7cff16720021310d6e3d42a441adb6a8221d87c13b84cfb43983bd39",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
+      "path": "public/icons/tabler/vector.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "04c9eeb664e76844fb0d2cf3d47e3d90c6adf59467bd66dc7395f14fd2cf9917",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
+      "path": "public/icons/tabler/volume-off.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "77de1c99c9a500eb9ceca09148e7a491d86bf5f085bbded2022d38ca65a81357",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
+      "path": "public/icons/tabler/x.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "dbda6c4a743b719a45ef8a4a8b3f7fbcb68dcce7018481a557547e1550584b79",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    }
+  ],
+  "artwork": [
+    {
+      "path": "src/Auth/passkey-icons.tpl.php",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sourceAssets": [
+        "fingerprint",
+        "user-scan",
+        "lock-open"
+      ],
+      "sha256": "d53a55ed5e523701df238ecd0dcd5f671f021c1a51601e810d04404f84c8097c",
+      "changes": "stroke 0.9, explicit ink roles, tone fills; existing animation timings preserved"
+    }
+  ]
+}

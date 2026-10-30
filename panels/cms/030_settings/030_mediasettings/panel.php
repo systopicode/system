@@ -11,7 +11,7 @@ use Systopic\System\Panels\Root\Cms\Settings\Panel as SettingsPanel;
  */
 class Panel extends SettingsPanel
 {
-    public $icon = 'fa-regular fa-image';
+    public $icon = 'cmsIcon cmsIcon-image';
 
     public bool $buildChildPanels = true;
 

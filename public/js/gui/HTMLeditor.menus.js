@@ -13,10 +13,10 @@ function HTMLeditorRightClick(clicktype, event, elements) {
 	var listTag = (at.closest('ul,ol') || {}).nodeName;
 	var param = {target: target};
 	var cmd = function (title, icon, func, extra) {
-		return Object.assign({title: title, className: 'fa-regular fa-' + icon, func: func, param: param}, extra);
+		return Object.assign({title: title, className: 'cmsIcon cmsIcon-' + icon, func: func, param: param}, extra);
 	};
 	var format = function (title, icon, data, extra) {
-		return Object.assign({title: title, className: 'fa-regular fa-' + icon, func: 'formatHTMLeditor', param: data, reopen: true}, extra);
+		return Object.assign({title: title, className: 'cmsIcon cmsIcon-' + icon, func: 'formatHTMLeditor', param: data, reopen: true}, extra);
 	};
 	var sub = function (title, func, data, selected) {
 		return {title: title, func: func, param: data, selected: selected, reopen: func !== 'createHTMLeditorLink'};
@@ -37,9 +37,9 @@ function HTMLeditorRightClick(clicktype, event, elements) {
 		headings['h' + n] = sub('Headline ' + n, 'formatHTMLeditor', {element: 'formatBlock', tag: 'h' + n}, blockTag === 'H' + n);
 	});
 	var blocks = {
-		headlines: {title: 'Headline', className: 'fa-regular fa-heading', selected: /^H\d$/.test(blockTag), subs: headings, sep: true},
+		headlines: {title: 'Headline', className: 'cmsIcon cmsIcon-heading', selected: /^H\d$/.test(blockTag), subs: headings, sep: true},
 		paragraph: format('Paragraph', 'paragraph', {element: 'formatBlock', tag: 'p'}, {selected: blockTag === 'P'}),
-		list: {title: 'List', className: 'fa-regular fa-list-ul', selected: !!listTag, subs: {
+		list: {title: 'List', className: 'cmsIcon cmsIcon-list-ul', selected: !!listTag, subs: {
 			ul: sub('Bullet points', 'formatHTMLeditor', {element: 'insertUnorderedList'}, listTag === 'UL'),
 			ol: sub('Numbered', 'formatHTMLeditor', {element: 'insertorderedlist'}, listTag === 'OL')
 		}}
@@ -62,7 +62,7 @@ function HTMLeditorRightClick(clicktype, event, elements) {
 		$.each(editorFormats[kind], function (name, label) {
 			subs[name] = sub(label, 'changeMediaFormat', {target: target, format: name}, current === name);
 		});
-		return {title: 'Format', className: 'fa-regular fa-' + (kind === 'video' ? 'film' : 'image'), active: usable && Object.keys(subs).length > 1, subs: subs};
+		return {title: 'Format', className: 'cmsIcon cmsIcon-' + (kind === 'video' ? 'film' : 'image'), active: usable && Object.keys(subs).length > 1, subs: subs};
 	};
 	var toggleAttr = function (attr, title, icon) {
 		var on = target.hasAttribute(attr);
@@ -94,12 +94,12 @@ function HTMLeditorRightClick(clicktype, event, elements) {
 				return sub(title, 'tableHTMLeditor', {action: action, cell: cell});
 			};
 			items = Object.assign({}, history, {
-				row: {title: 'Row', className: 'fa-regular fa-table-rows', sep: true, subs: {
+				row: {title: 'Row', className: 'cmsIcon cmsIcon-table-rows', sep: true, subs: {
 					before: tableCmd('Insert row above', 'rowBefore'),
 					after: tableCmd('Insert row below', 'rowAfter'),
 					remove: tableCmd('Delete row', 'rowRemove')
 				}},
-				column: {title: 'Column', className: 'fa-regular fa-table-columns', subs: {
+				column: {title: 'Column', className: 'cmsIcon cmsIcon-table-columns', subs: {
 					before: tableCmd('Insert column left', 'colBefore'),
 					after: tableCmd('Insert column right', 'colAfter'),
 					remove: tableCmd('Delete column', 'colRemove')

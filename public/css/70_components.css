@@ -296,10 +296,9 @@ body.cms .cmslightbox .cmsBox > header{
 }
 
 .cmsBox > summary::after{
-	content: "\f078";
+	content: ""; width: 1em; height: 1em; background-color: currentColor; -webkit-mask: var(--icon-chevron-down) center / contain no-repeat; mask: var(--icon-chevron-down) center / contain no-repeat;
 	flex: 0 0 auto;
 	margin-left: auto;
-	font-family: "CMS Font Awesome 7 Pro";
 	font-size: 0.8rem;
 	font-weight: 400;
 	line-height: 1.4;
@@ -475,7 +474,7 @@ body.cms .cmslightbox .cmsBox > header{
 	margin-left: 2px;
 }
 
-.domEditable.int i.fa-minus-circle {
+.domEditable.int i.cmsIcon-minus-circle {
 	left: 0;
 	right: auto;
 }
@@ -498,14 +497,14 @@ body.cms .cmslightbox .cmsBox > header{
 	right: 0;
 }
 
-.input i.editable.fa-pen,
-.input i.editable.fa-edit {
+.input i.editable.cmsIcon-pen,
+.input i.editable.cmsIcon-edit {
 	display: none;
 }
 
 
-.domEditable:not(.inline) .fa-pen.editable,
-.domEditable:not(.inline) .fa-edit.editable {
+.domEditable:not(.inline) .cmsIcon-pen.editable,
+.domEditable:not(.inline) .cmsIcon-edit.editable {
 	margin-right: 0;
 	margin-left: 5px;
 	position: static;
@@ -520,8 +519,8 @@ body.cms .cmslightbox .cmsBox > header{
 	min-height: 35px;
 }
 
-.domEditable .fa-pen.editable,
-.domEditable .fa-edit.editable {
+.domEditable .cmsIcon-pen.editable,
+.domEditable .cmsIcon-edit.editable {
 	right: 0px;
 }
 
@@ -537,24 +536,24 @@ body.cms .cmslightbox .cmsBox > header{
 	padding-right: 40px;
 }
 
-.domEditable.confirmcontrols .fa-pen,
-.domEditable.confirmcontrols .fa-edit {
+.domEditable.confirmcontrols .cmsIcon-pen,
+.domEditable.confirmcontrols .cmsIcon-edit {
 	right: 18px;
 }
 
 
-.domEditable.confirmcontrols.block i.fa-check-circle,
-.domEditable.confirmcontrols.block i.fa-times-circle {
+.domEditable.confirmcontrols.block i.cmsIcon-check-circle,
+.domEditable.confirmcontrols.block i.cmsIcon-times-circle {
 	margin-right: 0;
 }
 
-.domEditable.confirmcontrols.block i.fa-check-circle {
+.domEditable.confirmcontrols.block i.cmsIcon-check-circle {
 	margin-right: 18px;
 	z-index: 1;
 
 }
 
-.domEditable.confirmcontrols.inline i.fa-check-circle {
+.domEditable.confirmcontrols.inline i.cmsIcon-check-circle {
 	right: 18px;
 	margin-right: 0;
 }
@@ -644,3 +643,5 @@ body.cms .cmslightbox .cmsBox > header{
 @media (prefers-reduced-motion: reduce){
 	.userDevice > .presence.is-on{ animation: none; }
 }
+/* Icon catalogue links reuse standard CMS buttons and the wrapping action row. */
+.cms .themeIcons .cmsBoxActions { justify-content: flex-start; }

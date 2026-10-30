@@ -78,7 +78,7 @@ function editBlockClass(event) {
 	var kind = {P: 'paragraph', UL: 'list', OL: 'list', TABLE: 'table', IMG: 'image', VIDEO: 'video', IFRAME: 'embed'}[block.nodeName] || 'headline';
 	form.innerHTML = '<input name="className" list="HTMLeditorClasses" placeholder="CSS classes of this ' + kind + '" autocapitalize="off" autocomplete="off" spellcheck="false">'
 		+ '<datalist id="HTMLeditorClasses"></datalist>'
-		+ '<button type="submit" title="Apply"><i class="fa-regular fa-check"></i></button>';
+		+ '<button type="submit" title="Apply"><i class="cmsIcon cmsIcon-check"></i></button>';
 	used.sort().forEach(function (name) {
 		form.querySelector('datalist').appendChild(new Option(name));
 	});

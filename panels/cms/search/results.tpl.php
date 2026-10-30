@@ -17,7 +17,7 @@ $search = $this->results;
 					?>
 					<li>
 						<a class="ajax" href="<?= $e($hit['href']) ?>">
-							<i class="fa-regular <?= $e($hitIcon) ?>"></i>
+							<i class="cmsIcon <?= $e($hitIcon) ?>"></i>
 							<span><b><?= $e($hit['title']) ?></b><?php if ($hit['context'] !== '') { ?><small><?= $e($hit['context']) ?></small><?php } ?></span>
 						</a>
 					</li>

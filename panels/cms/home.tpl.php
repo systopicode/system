@@ -33,10 +33,10 @@ $revision = \Systopic\System\Sys\Release::revision();
 			<p><?= $e($now->format('l, j F Y')) ?></p>
 		</div>
 		<nav>
-			<button type="button" class="button dashHeadMore" data-cms-more aria-label="More" aria-expanded="false"><i class="fa-regular fa-ellipsis"></i></button>
+			<button type="button" class="button dashHeadMore" data-cms-more aria-label="More" aria-expanded="false"><i class="cmsIcon cmsIcon-ellipsis"></i></button>
 			<div class="cmsPageToolsMenu dashHeadMenu">
-				<button type="button" class="button" data-on_click="dashEdit"><i class="fa-regular <?= $editing ? 'fa-check' : 'fa-grid-2' ?>"></i><span><?= $editing ? 'Done' : 'Customize' ?></span></button>
-				<a class="button" href="<?= $e($site) ?>" target="_blank" rel="noopener"><i class="fa-regular fa-up-right-from-square"></i><span>View website</span></a>
+				<button type="button" class="button" data-on_click="dashEdit"><i class="cmsIcon <?= $editing ? 'cmsIcon-check' : 'cmsIcon-grid-2' ?>"></i><span><?= $editing ? 'Done' : 'Customize' ?></span></button>
+				<a class="button" href="<?= $e($site) ?>" target="_blank" rel="noopener"><i class="cmsIcon cmsIcon-up-right-from-square"></i><span>View website</span></a>
 			</div>
 		</nav>
 	</header>
@@ -50,7 +50,7 @@ $revision = \Systopic\System\Sys\Release::revision();
 				<p class="dashHidden">
 					<span>Add:</span>
 					<?php foreach ($off as $key) { ?>
-						<button type="button" class="button" data-on_click="showWidget" data-widget="<?= $e($key) ?>"><i class="fa-regular fa-plus"></i><?= $title($widgets[$key]['file']) ?></button>
+						<button type="button" class="button" data-on_click="showWidget" data-widget="<?= $e($key) ?>"><i class="cmsIcon cmsIcon-plus"></i><?= $title($widgets[$key]['file']) ?></button>
 					<?php } ?>
 				</p>
 			<?php } ?>
@@ -69,7 +69,7 @@ $revision = \Systopic\System\Sys\Release::revision();
 						<?php if ($editing) { ?>
 							<div class="sort v insertBefore" data-drop_accept="widget" data-on_drop="insertWidgetBefore"></div>
 							<div class="sort v insertAfter" data-drop_accept="widget" data-on_drop="insertWidgetAfter"></div>
-							<button type="button" class="dashHide" data-on_click="hideWidget" title="Hide"><i class="fa-regular fa-xmark"></i></button>
+							<button type="button" class="dashHide" data-on_click="hideWidget" title="Hide"><i class="cmsIcon cmsIcon-xmark"></i></button>
 						<?php } ?>
 						<?php $panel->render($file); ?>
 					</section>
@@ -83,10 +83,10 @@ $revision = \Systopic\System\Sys\Release::revision();
 	<footer class="authFooter dashFooter">
 		<span>© <?= date('Y') ?> systopic GmbH · <a class="ajax" href="legal/?page=releases" title="Release notes">GUI <?= $e($gui) ?><?= $revision !== '' ? ' · ' . $e($revision) : '' ?></a></span>
 		<nav>
-			<a class="ajax" href="legal/?page=license"><i class="fa-regular fa-file-contract"></i> License</a>
-			<a class="ajax" href="legal/?page=imprint"><i class="fa-regular fa-building"></i> Imprint</a>
-			<a class="ajax" href="legal/?page=privacy"><i class="fa-regular fa-shield-halved"></i> Privacy</a>
-			<a href="https://fluxo-help.1f2c.de" target="_blank" rel="noopener"><i class="fa-regular fa-question-circle"></i> Help</a>
+			<a class="ajax" href="legal/?page=license"><i class="cmsIcon cmsIcon-file-contract"></i> License</a>
+			<a class="ajax" href="legal/?page=imprint"><i class="cmsIcon cmsIcon-building"></i> Imprint</a>
+			<a class="ajax" href="legal/?page=privacy"><i class="cmsIcon cmsIcon-shield-halved"></i> Privacy</a>
+			<a href="https://fluxo-help.1f2c.de" target="_blank" rel="noopener"><i class="cmsIcon cmsIcon-question-circle"></i> Help</a>
 		</nav>
 	</footer>
 </div>

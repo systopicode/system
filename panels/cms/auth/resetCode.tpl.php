@@ -7,14 +7,14 @@
 	<div class="row">
 		<form method=get action=reset  onsubmit='this.classList.add("loading")'>
 			<div class="row">
-				<div class='inputGroup'><i class="fa-regular fa-hashtag"></i>
+				<div class='inputGroup'><i class="cmsIcon cmsIcon-hashtag"></i>
 					<input type=text name="key" placeholder="Reset Code" required autocapitalize="off"/>
 					<span class='bar'></span>
 				</div>
 			</div>
 			<div class="row">
 				<br>
-				<button class='submit'><i class="fa-regular fa-arrow-right"></i> Continue</button>
+				<button class='submit'><i class="cmsIcon cmsIcon-arrow-right"></i> Continue</button>
 			</div>
 		</form>
 	</div>

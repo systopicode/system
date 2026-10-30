@@ -17,9 +17,9 @@ $escape = static fn($v) => htmlspecialchars((string) $v, ENT_QUOTES);
 <aside class="dashNotices" aria-label="Needs attention">
 <?php foreach ($notices as [$text, $label, $icon, $path]) { ?>
     <div class="dashNotice">
-        <i class="fa-regular fa-triangle-exclamation" aria-hidden="true"></i>
+        <i class="cmsIcon cmsIcon-triangle-exclamation" aria-hidden="true"></i>
         <p><?= $escape($text) ?></p>
-        <a class="button transparent ajax" href="<?= $escape(rtrim((string) \http::$root, '/') . $path) ?>"><i class="fa-regular fa-<?= $escape($icon) ?>"></i><?= $escape($label) ?></a>
+        <a class="button transparent ajax" href="<?= $escape(rtrim((string) \http::$root, '/') . $path) ?>"><i class="cmsIcon cmsIcon-<?= $escape($icon) ?>"></i><?= $escape($label) ?></a>
     </div>
 <?php } ?>
 </aside>

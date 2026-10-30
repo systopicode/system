@@ -21,7 +21,7 @@ $php = [
 ?>
 <h1>System check</h1>
 <p class="tagsHint">What this server is running, and what the CMS still needs. The download is one PHP file: open it on a server before the CMS is installed, then delete it.</p>
-<p><a class="button submit" target="_self" href="<?= htmlspecialchars($this->getHref(\http::$root) . 'download') ?>"><i class="fa-regular fa-file-arrow-down"></i><span>Download</span></a></p>
+<p><a class="button submit" target="_self" href="<?= htmlspecialchars($this->getHref(\http::$root) . 'download') ?>"><i class="cmsIcon cmsIcon-file-arrow-down"></i><span>Download</span></a></p>
 <div class="widgets">
 	<?php
 	$card('PHP', $php);
@@ -45,11 +45,11 @@ $php = [
 	$card('Functions', array_values($var_functions));
     $card('Optional media tools', array_values($var_binaries));
     ?>
-    <section class="widget"><header><h2>Media support</h2><button type="button" class="button" data-on_click="probeMediaTools"><i class="fa-regular fa-flask"></i>Test media tools</button></header><main>
+    <section class="widget"><header><h2>Media support</h2><button type="button" class="button" data-on_click="probeMediaTools"><i class="cmsIcon cmsIcon-flask"></i>Test media tools</button></header><main>
     <p>Check whether this host can start the optional video and image tools. No media files are changed.</p>
     <dl class="cleanupActivity"><dt>Image editing</dt><dd><?= class_exists('Imagick') ? 'Imagick is installed' : 'Requires the Imagick PHP extension' ?></dd><dt>Backup archives</dt><dd><?= class_exists('ZipArchive') ? 'ZipArchive is installed' : 'Requires the ZipArchive PHP extension' ?></dd></dl>
     <p class="tagsHint">The test checks startup only. Supported formats, PDF permissions and large conversions still depend on the host.</p>
-    <details class="cleanupDetails"><summary><i class="fa-regular fa-circle-info"></i>About this check<i class="fa-regular fa-chevron-down cleanupChevron"></i></summary><main><p>Project-local tools in <code>var/bin/</code>, <code>bin/</code> and platform subfolders are supported. The version test has a short timeout and never downloads tools or changes permissions.</p><p>Missing optional tools limit the related media feature. Cron and Centrifugo are not required for ordinary editing. Backups also need sufficient disk space and runtime.</p></main></details>
+    <details class="cleanupDetails"><summary><i class="cmsIcon cmsIcon-circle-info"></i>About this check<i class="cmsIcon cmsIcon-chevron-down cleanupChevron"></i></summary><main><p>Project-local tools in <code>var/bin/</code>, <code>bin/</code> and platform subfolders are supported. The version test has a short timeout and never downloads tools or changes permissions.</p><p>Missing optional tools limit the related media feature. Cron and Centrifugo are not required for ordinary editing. Backups also need sufficient disk space and runtime.</p></main></details>
     </main></section>
     <?php
 	$card('Server', array_values($var_server));

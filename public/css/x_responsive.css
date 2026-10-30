@@ -170,7 +170,7 @@ body.cms > .cmsMobileHeader > .cmsMobileMenuClose, body.cms > .cmsMobileHeader >
 		pointer-events: none;
 	}
 	body.cms[data-cms-window="menu"] > .cmsMobileHeader { color: #fff; }
-	body.cms i[class*="fa-"] {
+	body.cms i[class*="cmsIcon-"] {
 		-webkit-user-drag: none;
 		user-select: none;
 	}

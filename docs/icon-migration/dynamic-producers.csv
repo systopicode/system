@@ -1,0 +1,19 @@
+producer,finite_domain_or_input,verification
+system/panels/cms/090_tools/040_cleanup/040_automatic/main.tpl.php,"clock, triangle-exclamation, circle-check",waiting/error/more-work/success ternary outcomes
+system/public/js/gui/ui.js,"circle-check,circle-xmark,circle-exclamation,spinner,circle-info,arrows-rotate; data-broken keys",autosave/failed/retry/loading and thumbnail recovery
+system/public/js/gui/HTMLeditor.menus.js,"undo/redo,bold,italic,underline,strikethrough,paragraph,tag,brackets-curly,text-slash,table,table-layout,pen,link,link-slash,film,image,up-down-left-right,sliders,play,volume-slash,arrows-repeat,mobile",finite formatting/menu/toggle branches inspected
+system/src/Media/Presentation.php,all Presentation::ICONS values plus file fallback,real PHP producer exercised for every registered extension
+cms/panels/cms/010_pages/panel.php,"tileFace,brokenIcon,searchHits",MIME/type/extension/external-video/default branches inspected; actual brokenIcon producer exercised
+cms/panels/cms/010_pages/dashboard.media.tpl.php,"file-pdf,gif,circle-play,vector-polygon,type,file",dashboard badge closure traced to tileFace/provider types
+cms/panels/cms/010_pages/editor/editLink/lightbox.tpl.php,faces[i].icon,traced to pages tileFace; no independent icon mapping
+cms/panels/cms/010_pages/upload/panel.js,server-supplied Presentation::ICONS; file,server JSON to JS replacement preview traced
+system/src/Auth/DeviceName.php,"tablet-screen,mobile-screen,laptop,display-slash,mobile-slash,laptop-slash",real PHP device icon and revocation producers exercised
+system/src/Panels/PanelNode.php; system/panels/cms/090_tools/pylon.tpl.php,panel icon metadata; Tools group server/search/broom/file-lines/database/bug/photo-film/repeat,"root/child/extension navigation, permission and active-context routes retained"
+system/src/Sys/Search.php; system/panels/cms/actions.php,registered panel/group/hit keys,search output and website edit-bar response normalized centrally
+cms/public/site/editBar.js,"pen,chevron-left,grid-2,arrow-right-from-bracket,item.icon,square",all fixed keys and server producer traced
+system/src/Sys/WebApp.php,"hammer,flask,globe",DEV/STAGING/LIVE environment marker; not Tools symbol
+system/public/js/loader.js; public/js/gui/qr-scan.js; panels/cms/030_settings/032_theme/panel.js,spinner/circle-exclamation; camera/rotate-right; circle-check/triangle-exclamation,"finite loader, camera retry, contrast state branches"
+cms/src/Queries/PageTree/PageTree.php; cms/panels/cms/010_pages/sidebar/main.tpl.php,chevron-down/right and chevron-left/right; folder/file/import/route,"open/closed/leaf, alias/redirect and property-sidebar states"
+system/src/Auth/login.card.tpl.php,eye / eye-slash,password-visible state; not disabled login
+system/panels/cms/home.tpl.php,grid-2 / check,customize/done state
+cms/public/modules/skp-viewer.js,"minus,expand,plus",only owned zoom toolbar; dependency bundle left intact

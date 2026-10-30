@@ -82,7 +82,7 @@ final class ThemeAssets
             echo '</label></form></main>';
             echo '<footer><span class="left">' . $e($note) . '</span>';
             if ($own) {
-                echo '<button type="button" class="button" data-on_click="clear" data-slot="' . $e($slot) . '"><i class="fa-regular fa-image"></i>Use the system image</button>';
+                echo '<button type="button" class="button" data-on_click="clear" data-slot="' . $e($slot) . '"><i class="cmsIcon cmsIcon-image"></i>Use the system image</button>';
             }
             echo '</footer></article>';
         }

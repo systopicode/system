@@ -85,13 +85,13 @@ final class WebApp
     {
         $stage = defined('STAGE') ? (string) STAGE : '';
         $icon = match ($stage) {
-            'DEV' => 'fa-hammer',
-            'STAGING' => 'fa-flask',
-            'LIVE' => 'fa-globe',
+            'DEV' => 'cmsIcon-hammer',
+            'STAGING' => 'cmsIcon-flask',
+            'LIVE' => 'cmsIcon-globe',
             default => '',
         };
         $safe = htmlspecialchars($stage, ENT_QUOTES, 'UTF-8');
-        $mark = $icon === '' ? '' : '<i class="fa-regular ' . $icon . '" aria-hidden="true"></i>';
+        $mark = $icon === '' ? '' : '<i class="cmsIcon ' . $icon . '" aria-hidden="true"></i>';
         return '<span class="cmsStage ' . $safe . '" title="' . $safe . '">' . $mark . '<span>' . $safe . '</span></span>';
     }
 

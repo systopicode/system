@@ -58,7 +58,7 @@ if ($heading === '') {
 <header>
 	<h1><?= $e($heading) ?></h1>
 	<ul class="barmenu">
-		<li><a class="ajax" href="../" aria-label="Close"><i class="fa-regular fa-xmark"></i></a></li>
+		<li><a class="ajax" href="../" aria-label="Close"><i class="cmsIcon cmsIcon-xmark"></i></a></li>
 	</ul>
 </header>
 <nav class="dashTabs userTabs" role="tablist">
@@ -80,7 +80,7 @@ if ($heading === '') {
 					<input type="file" name="portrait" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" onchange="this.form.requestSubmit()">
 				</form>
 				<?php if (Portrait::hasFile((int) $user->id)) { ?>
-					<button type="button" class="button" data-on_click="removePortrait" data-user_id="<?= (int) $user->id ?>"><i class="fa-regular fa-trash"></i>Remove</button>
+					<button type="button" class="button" data-on_click="removePortrait" data-user_id="<?= (int) $user->id ?>"><i class="cmsIcon cmsIcon-trash"></i>Remove</button>
 				<?php } ?>
 			</div>
 			<div class="accountFields">
@@ -122,16 +122,16 @@ if ($heading === '') {
 						<div class="userRow">
 							<p class="tagsHint">A screen cannot be a superuser.</p>
 							<?php if ($user->isSuperuser) { ?>
-								<button type="button" class="button" data-on_click="revokeSuperuser" data-user_id="<?= (int) $user->id ?>"><i class="fa-regular fa-user-shield"></i>Revoke superuser</button>
+								<button type="button" class="button" data-on_click="revokeSuperuser" data-user_id="<?= (int) $user->id ?>"><i class="cmsIcon cmsIcon-user-shield"></i>Revoke superuser</button>
 							<?php } ?>
 						</div>
 					<?php } elseif ($viewer) { ?>
 						<div class="userRow">
 							<p class="tagsHint"><?= $user->isSuperuser ? 'Superuser: manages every user.' : 'A normal user.' ?><?= $isMe ? ' Not to be changed on your own account.' : '' ?></p>
 							<?php if (!$isMe && $user->isSuperuser) { ?>
-								<button type="button" class="button" data-on_click="revokeSuperuser" data-user_id="<?= (int) $user->id ?>"><i class="fa-regular fa-user-shield"></i>Revoke superuser</button>
+								<button type="button" class="button" data-on_click="revokeSuperuser" data-user_id="<?= (int) $user->id ?>"><i class="cmsIcon cmsIcon-user-shield"></i>Revoke superuser</button>
 							<?php } elseif (!$isMe) { ?>
-								<button type="button" class="button" data-on_click="makeSuperuser" data-user_id="<?= (int) $user->id ?>"><i class="fa-regular fa-user-shield"></i>Make superuser</button>
+								<button type="button" class="button" data-on_click="makeSuperuser" data-user_id="<?= (int) $user->id ?>"><i class="cmsIcon cmsIcon-user-shield"></i>Make superuser</button>
 							<?php } ?>
 						</div>
 					<?php } ?>
@@ -164,10 +164,10 @@ if ($heading === '') {
 					if ($moreSignIns || $cleanLog) { ?>
 						<div class="signInTools">
 							<?php if ($moreSignIns) { ?>
-								<button type="button" class="cmsBoxMore" data-on_click="moreSignIns"><?= $signInsAll ? 'Show less' : 'Show all sign-ins (' . (int) $signInTotal . ')' ?> <i class="fa-regular fa-chevron-<?= $signInsAll ? 'up' : 'down' ?>"></i></button>
+								<button type="button" class="cmsBoxMore" data-on_click="moreSignIns"><?= $signInsAll ? 'Show less' : 'Show all sign-ins (' . (int) $signInTotal . ')' ?> <i class="cmsIcon cmsIcon-chevron-<?= $signInsAll ? 'up' : 'down' ?>"></i></button>
 							<?php } ?>
 							<?php if ($cleanLog) { ?>
-								<button type="button" class="button" data-on_click="userConfirm" data-action="clearSignIns" data-confirm="Clean this user's sign-in log? Only this user's lines are removed." data-user_id="<?= (int) $user->id ?>"><i class="fa-regular fa-broom"></i> Clean User Log</button>
+								<button type="button" class="button" data-on_click="userConfirm" data-action="clearSignIns" data-confirm="Clean this user's sign-in log? Only this user's lines are removed." data-user_id="<?= (int) $user->id ?>"><i class="cmsIcon cmsIcon-broom"></i> Clean User Log</button>
 							<?php } ?>
 						</div>
 					<?php } ?>
@@ -183,7 +183,7 @@ if ($heading === '') {
             <?php if ($emails === []) { ?><p class="profileEmpty">No messages logged for this email address.</p><?php } ?>
             <?php foreach ($emails as $mail) { ?>
                 <details class="userMailEntry">
-                    <summary><i class="fa-regular fa-envelope"></i> <?= $e($mail['subject'] ?? '') ?> <small><?= $e($mail['timestamp'] ?? '') ?> · <?= $e($mail['status'] ?? '') ?></small></summary>
+                    <summary><i class="cmsIcon cmsIcon-envelope"></i> <?= $e($mail['subject'] ?? '') ?> <small><?= $e($mail['timestamp'] ?? '') ?> · <?= $e($mail['status'] ?? '') ?></small></summary>
                     <div class="userMailContent"><?= $e(trim((string) ($mail['textContent'] ?? '')) ?: strip_tags((string) ($mail['htmlContent'] ?? '')) ?: (string) ($mail['contentPreview'] ?? 'Message content not logged.')) ?></div>
                 </details>
             <?php } ?>
@@ -213,7 +213,7 @@ if ($heading === '') {
 					</div>
 					<?php if ($canAuth && $envFile !== null) { ?>
 						<div class="cmsBoxActions">
-							<button type="button" class="button" data-on_click="createAuth" data-file="<?= $e($envFile) ?>"><i class="fa-regular fa-key-skeleton"></i> Create sign-in key</button>
+							<button type="button" class="button" data-on_click="createAuth" data-file="<?= $e($envFile) ?>"><i class="cmsIcon cmsIcon-key-skeleton"></i> Create sign-in key</button>
 						</div>
 					<?php } ?>
 				</section>
@@ -223,7 +223,7 @@ if ($heading === '') {
 					<header><div class="cmsBoxTitles"><h2>Pairing</h2><p class="cmsBoxLead">A code signs a device in as this screen. It is shown here and is not sent by email.</p></div></header>
 					<div class="accessRow">
 						<div>
-							<button type="button" class="button submit" data-on_click="inviteCode"><i class="fa-regular fa-qrcode"></i> Create code</button>
+							<button type="button" class="button submit" data-on_click="inviteCode"><i class="cmsIcon cmsIcon-qrcode"></i> Create code</button>
 							<p class="cmsBoxLead">Valid for 10 minutes. Shown here.</p>
 						</div>
 					</div>
@@ -237,16 +237,16 @@ if ($heading === '') {
 					<header><div class="cmsBoxTitles"><h2>Sign-in code</h2><p class="cmsBoxLead"><?php if (!$user->firstLogin) { ?>This person has not signed in yet. A code is the first way in and makes the account active.<?php } else { ?>A code signs this person in on another device. A signed-in account can confirm that device instead.<?php } ?></p></div></header>
 					<div class="accessRow">
 						<div>
-							<button type="button" class="button submit" data-on_click="inviteCode"><i class="fa-regular fa-qrcode"></i> Create code</button>
+							<button type="button" class="button submit" data-on_click="inviteCode"><i class="cmsIcon cmsIcon-qrcode"></i> Create code</button>
 							<p class="cmsBoxLead">Valid for 10 minutes. Shown here.</p>
 						</div>
 						<div>
-							<button type="button" class="button" data-on_click="inviteMail"><i class="fa-regular fa-paper-plane"></i> Send invitation code</button>
+							<button type="button" class="button" data-on_click="inviteMail"><i class="cmsIcon cmsIcon-paper-plane"></i> Send invitation code</button>
 							<p class="cmsBoxLead">Valid for 24 hours.<?= ($note = $mailNote(LoginLog::MAILED_INVITATION)) !== '' ? ' ' . $e($note) : '' ?></p>
 						</div>
 						<?php if (!$user->firstLogin) { ?>
 							<div>
-								<button type="button" class="button" data-on_click="resendActivationEmail"><i class="fa-regular fa-paper-plane"></i> Email a password link</button>
+								<button type="button" class="button" data-on_click="resendActivationEmail"><i class="cmsIcon cmsIcon-paper-plane"></i> Email a password link</button>
 								<p class="cmsBoxLead">Valid for <?= (int) $activationHours ?> hours.<?= ($note = $mailNote(LoginLog::MAILED_PASSWORD)) !== '' ? ' ' . $e($note) : '' ?></p>
 							</div>
 						<?php } ?>
@@ -259,9 +259,9 @@ if ($heading === '') {
 						<?php if ((string) $user->activationKey !== '') {
 							$activationLink = \http::$siteUrl . 'cms/auth/reset?key=' . rawurlencode((string) $user->activationKey);
 						?>
-							<button type="button" class="button" data-copy="<?= $e($activationLink) ?>"><i class="fa-regular fa-copy"></i> Copy activation link</button>
+							<button type="button" class="button" data-copy="<?= $e($activationLink) ?>"><i class="cmsIcon cmsIcon-copy"></i> Copy activation link</button>
 						<?php } ?>
-						<button type="button" class="button" data-on_click="resendActivationEmail" data-user_id="<?= (int) $user->id ?>" <?= (string) $user->email === '' ? 'disabled' : '' ?>><i class="fa-regular fa-paper-plane"></i> <?= $user->firstLogin ? 'Email a new password link' : 'Email a password link' ?></button>
+						<button type="button" class="button" data-on_click="resendActivationEmail" data-user_id="<?= (int) $user->id ?>" <?= (string) $user->email === '' ? 'disabled' : '' ?>><i class="cmsIcon cmsIcon-paper-plane"></i> <?= $user->firstLogin ? 'Email a new password link' : 'Email a password link' ?></button>
 						<p class="cmsBoxLead">Valid for <?= (int) $activationHours ?> hours.<?= ($note = $mailNote(LoginLog::MAILED_PASSWORD)) !== '' ? ' ' . $e($note) : '' ?></p>
 					</div>
 				</section>
@@ -295,7 +295,7 @@ if ($heading === '') {
 						</div>
 					<?php } ?>
 					<?php if (count($devices) > 3) { ?>
-						<button type="button" class="cmsBoxMore" data-on_click="showAllDevices"><?= $devicesAll ? 'Show less' : 'Show all devices (' . count($devices) . ')' ?> <i class="fa-regular fa-chevron-<?= $devicesAll ? 'up' : 'down' ?>"></i></button>
+						<button type="button" class="cmsBoxMore" data-on_click="showAllDevices"><?= $devicesAll ? 'Show less' : 'Show all devices (' . count($devices) . ')' ?> <i class="cmsIcon cmsIcon-chevron-<?= $devicesAll ? 'up' : 'down' ?>"></i></button>
 					<?php } ?>
 				</div>
 			</section>
@@ -311,7 +311,7 @@ if ($heading === '') {
 				</div>
 			</header>
 			<div class="cmsBoxActions">
-				<button type="button" class="button" data-on_click="userConfirm" data-action="resetState" data-confirm="Reset the layout of every module to its defaults?" data-user_id="<?= (int) $user->id ?>"><i class="fa-regular fa-arrow-rotate-left"></i> Reset layout</button>
+				<button type="button" class="button" data-on_click="userConfirm" data-action="resetState" data-confirm="Reset the layout of every module to its defaults?" data-user_id="<?= (int) $user->id ?>"><i class="cmsIcon cmsIcon-arrow-rotate-left"></i> Reset layout</button>
 			</div>
 		</section>
 		<?php if (!$isMe) { ?>
@@ -323,7 +323,7 @@ if ($heading === '') {
 					</div>
 				</header>
 				<div class="cmsBoxActions">
-					<button type="button" class="button" data-on_click="userConfirm" data-action="removeUser" data-confirm="<?= $isScreen ? 'Delete this screen? This cannot be undone.' : 'Delete this user? This cannot be undone.' ?>" data-user_id="<?= (int) $user->id ?>"><i class="fa-regular fa-trash"></i> <?= $isScreen ? 'Delete screen' : 'Delete user' ?></button>
+					<button type="button" class="button" data-on_click="userConfirm" data-action="removeUser" data-confirm="<?= $isScreen ? 'Delete this screen? This cannot be undone.' : 'Delete this user? This cannot be undone.' ?>" data-user_id="<?= (int) $user->id ?>"><i class="cmsIcon cmsIcon-trash"></i> <?= $isScreen ? 'Delete screen' : 'Delete user' ?></button>
 				</div>
 			</section>
 		<?php } ?>

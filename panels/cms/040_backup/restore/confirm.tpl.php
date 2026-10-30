@@ -78,6 +78,6 @@ if (is_array($contents)) {
 </main>
 <?php if ($contents !== null) { ?>
 <footer>
-	<button type="submit" name="action" value="createTaskList?name=<?= urlencode($name) ?>" form="backupRestoreForm" class="button submit"><i class="fa-regular fa-arrow-rotate-left"></i><span>Restore</span></button>
+	<button type="submit" name="action" value="createTaskList?name=<?= urlencode($name) ?>" form="backupRestoreForm" class="button submit"><i class="cmsIcon cmsIcon-arrow-rotate-left"></i><span>Restore</span></button>
 </footer>
 <?php } ?>

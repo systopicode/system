@@ -53,23 +53,23 @@ $line = static function (array $row) use ($e): string {
 				<div class="authMethods">
 					<form method="post" action="confirmIdentity">
 						<button class="authMethod" type="submit">
-							<i class="fa-regular fa-user"></i>
+							<i class="cmsIcon cmsIcon-user"></i>
 							<span><b>Sign in as yourself</b><small>This device becomes <?= $e($meLabel) ?>.</small></span>
-							<i class="fa-regular fa-chevron-right"></i>
+							<i class="cmsIcon cmsIcon-chevron-right"></i>
 						</button>
 					</form>
 					<?php if ($screenRows !== []) { ?>
 						<a class="authMethod ajax" href="?as=screen">
-							<i class="fa-regular fa-tv"></i>
+							<i class="cmsIcon cmsIcon-tv"></i>
 							<span><b>Pair a screen</b><small>This device becomes that screen.</small></span>
-							<i class="fa-regular fa-chevron-right"></i>
+							<i class="cmsIcon cmsIcon-chevron-right"></i>
 						</a>
 					<?php } ?>
 					<?php if ($mayPersons) { ?>
 						<a class="authMethod ajax" href="?as=person">
-							<i class="fa-regular fa-users"></i>
+							<i class="cmsIcon cmsIcon-users"></i>
 							<span><b>Sign in as another person</b><small>This device becomes that person.</small></span>
-							<i class="fa-regular fa-chevron-right"></i>
+							<i class="cmsIcon cmsIcon-chevron-right"></i>
 						</a>
 					<?php } ?>
 				</div>
@@ -87,7 +87,7 @@ $line = static function (array $row) use ($e): string {
 								<?php $extra = $line($row); if ($extra !== '') { ?><small><?= $extra ?></small><?php } ?>
 							</span>
 							<input type="hidden" name="<?= $screen ? 'screen' : 'person' ?>" value="<?= $id ?>">
-							<button class="button submit icononly" type="submit" aria-label="Sign in"><i class="fa-regular fa-right-to-bracket"></i></button>
+							<button class="button submit icononly" type="submit" aria-label="Sign in"><i class="cmsIcon cmsIcon-right-to-bracket"></i></button>
 						</form>
 					<?php } ?>
 				</div>
@@ -95,8 +95,8 @@ $line = static function (array $row) use ($e): string {
 		</div>
 	</div>
 	<?php if ($step !== '') { ?>
-		<p class="authFoot"><a class="authSwitch ajax" href="<?= $e($this->href) ?>"><i class="fa-regular fa-arrow-left"></i><span>Back</span></a></p>
+		<p class="authFoot"><a class="authSwitch ajax" href="<?= $e($this->href) ?>"><i class="cmsIcon cmsIcon-arrow-left"></i><span>Back</span></a></p>
 	<?php } else { ?>
-		<p class="authFoot"><a class="authSwitch ajax" href="?method=code"><i class="fa-regular fa-arrow-left"></i><span>Scan another code</span></a></p>
+		<p class="authFoot"><a class="authSwitch ajax" href="?method=code"><i class="cmsIcon cmsIcon-arrow-left"></i><span>Scan another code</span></a></p>
 	<?php } ?>
 </main>

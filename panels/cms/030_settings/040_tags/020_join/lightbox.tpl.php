@@ -17,7 +17,7 @@ $swatch = static function ($tag) use ($e): string {
 		<header>
 			<h1>Join tags</h1>
 			<ul class="barmenu">
-				<li><a class="ajax" href="../" aria-label="Close"><i class="fa-regular fa-xmark"></i></a></li>
+				<li><a class="ajax" href="../" aria-label="Close"><i class="cmsIcon cmsIcon-xmark"></i></a></li>
 			</ul>
 		</header>
 		<main>
@@ -26,7 +26,7 @@ $swatch = static function ($tag) use ($e): string {
 					<div class="tag" style="<?= $swatch($source) ?>"><?= $e($source->name) ?></div>
 					<p><?= $pages($this->sourcePages) ?></p>
 				</div>
-				<i class="fa-regular fa-arrow-right"></i>
+				<i class="cmsIcon cmsIcon-arrow-right"></i>
 				<div>
 					<div class="tag" style="<?= $swatch($target) ?>"><?= $e($target->name) ?></div>
 					<p><?= $pages($this->targetPages) ?></p>
@@ -35,7 +35,7 @@ $swatch = static function ($tag) use ($e): string {
 			<p class="tagsHint"><?= $e($source->name) ?> is removed. Its pages and files keep <?= $e($target->name) ?>.</p>
 		</main>
 		<footer>
-			<button type="button" class="button submit" data-on_click="join" data-id="<?= (int) $source->id ?>" data-into="<?= (int) $target->id ?>"><i class="fa-regular fa-code-merge"></i>Join</button>
+			<button type="button" class="button submit" data-on_click="join" data-id="<?= (int) $source->id ?>" data-into="<?= (int) $target->id ?>"><i class="cmsIcon cmsIcon-code-merge"></i>Join</button>
 		</footer>
 	</section>
 </div>

@@ -6,7 +6,7 @@
 		<header>
 			<input type="search" name="query" data-on_input="<?= htmlspecialchars(\http::$root . 'cms/search/search', ENT_QUOTES) ?>" value="<?= htmlspecialchars((string) $this->state->query, ENT_QUOTES) ?>" placeholder="Search everything" aria-label="Search" autocomplete="off" autofocus>
 			<ul class="barmenu">
-				<li><button type="button" data-close-find aria-label="Close"><i class="fa-regular fa-xmark"></i></button></li>
+				<li><button type="button" data-close-find aria-label="Close"><i class="cmsIcon cmsIcon-xmark"></i></button></li>
 			</ul>
 		</header>
 		<main>

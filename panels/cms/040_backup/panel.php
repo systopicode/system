@@ -16,7 +16,7 @@ use Systopic\System\Settings\ProjectFile;
 class Panel extends CmsPanel
 {
 	public bool $bequests = true;
-	public $icon = 'fa-duotone fa-regular fa-box-archive';
+	public $icon = 'cmsIcon cmsIcon-duotone cmsIcon-box-archive';
 	public ?int $naviOrder = 30;
 	public $infoFilename = 'info.txt';
 	public $dumpFilename = 'mysqldump_all.sql';

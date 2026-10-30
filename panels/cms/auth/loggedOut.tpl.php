@@ -4,7 +4,7 @@ $again = \http::$root . 'cms/auth/?choose=1';
 <h1>Signed out</h1>
 <p class="authLead">See you later.</p>
 <main>
-	<a class="button submit" href="<?= htmlspecialchars($again, ENT_QUOTES) ?>"><i class="fa-regular fa-right-to-bracket" aria-hidden="true"></i>Sign in again</a>
+	<a class="button submit" href="<?= htmlspecialchars($again, ENT_QUOTES) ?>"><i class="cmsIcon cmsIcon-right-to-bracket" aria-hidden="true"></i>Sign in again</a>
 	<div class="authProgress is-slow" aria-hidden="true"><span></span></div>
 	<p class="authWait">Opens in 30 seconds.</p>
 </main>

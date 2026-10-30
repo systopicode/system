@@ -24,7 +24,7 @@ if ($onlineIds !== null) {
 }
 $tab = Cms::widgetTab($this, 'users', $tabs);
 ?>
-<header><h2><i class="fa-regular fa-right-to-bracket"></i>Sign-ins</h2></header>
+<header><h2><i class="cmsIcon cmsIcon-right-to-bracket"></i>Sign-ins</h2></header>
 <?php if (count($tabs) > 1) { ?>
 <nav class="dashTabs" role="tablist">
 	<?php foreach ($tabs as $key => $label) { ?>
@@ -99,4 +99,4 @@ $signIns = array_slice(array_values(array_filter(LoginLog::entries(), static fn(
 		<?php } ?>
 	</ul>
 <?php } ?>
-<footer><a class="ajax button" href="<?= $e(\http::$root . 'cms/tools/logs/login/') ?>"><i class="fa-regular fa-list"></i><span>Login log</span></a></footer>
+<footer><a class="ajax button" href="<?= $e(\http::$root . 'cms/tools/logs/login/') ?>"><i class="cmsIcon cmsIcon-list"></i><span>Login log</span></a></footer>

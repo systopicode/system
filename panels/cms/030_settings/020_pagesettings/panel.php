@@ -11,7 +11,7 @@ use Systopic\System\Panels\Root\Cms\Settings\Panel as SettingsPanel;
  */
 class Panel extends SettingsPanel
 {
-    public $icon = 'fa-regular fa-globe';
+    public $icon = 'cmsIcon cmsIcon-globe';
 
     public bool $buildChildPanels = false;
 

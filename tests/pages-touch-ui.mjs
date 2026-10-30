@@ -138,7 +138,7 @@ try {
   await page.locator('#remove-relation').hover();
   assert.equal(await page.locator('#remove-relation').evaluate(n=>getComputedStyle(n).borderLeftWidth),'0px');
   assert.equal(await page.locator('#remove-relation').evaluate(n=>getComputedStyle(n).borderRadius),radius);
-  await page.setContent(`<style>${css}</style><body class="cms"><ul class="contextmenu mediaContextMenu"><li class="iconsonly"><ul>${['crop-simple','eye','arrow-down-to-line','trash'].map(icon=>`<li class="iconOnly"><a><i class="fa-regular fa-${icon}"></i></a></li>`).join('')}</ul></li></ul></body>`);
+  await page.setContent(`<style>${css}</style><body class="cms"><ul class="contextmenu mediaContextMenu"><li class="iconsonly"><ul>${['crop-simple','eye','arrow-down-to-line','trash'].map(icon=>`<li class="iconOnly"><a><i class="cmsIcon cmsIcon-${icon}"></i></a></li>`).join('')}</ul></li></ul></body>`);
   assert.ok(await page.locator('.mediaContextMenu').evaluate(el=>el.getBoundingClientRect().width)<220,'media icon menu has no empty text-column width');
   assert.ok(await page.locator('.mediaContextMenu').evaluate(el=>{const box=el.getBoundingClientRect(),actions=el.querySelectorAll('a'),first=actions[0].getBoundingClientRect(),last=actions[actions.length-1].getBoundingClientRect();return Math.abs((first.left-box.left)-(box.right-last.right))<1;}),'media menu has equal left and right padding');
   const mediaCss=await read('../cms/panels/cms/010_pages/pages.mml.css');

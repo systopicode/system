@@ -101,7 +101,7 @@ $preview = $this->fakeRoles;
 					<input type="file" name="portrait" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" onchange="this.form.requestSubmit()">
 				</form>
 				<?php if ($me && Portrait::hasFile((int) $me->id)) { ?>
-					<button type="button" class="portraitRemove" data-on_click="removePortrait" title="Remove photo"><i class="fa-regular fa-trash"></i></button>
+					<button type="button" class="portraitRemove" data-on_click="removePortrait" title="Remove photo"><i class="cmsIcon cmsIcon-trash"></i></button>
 				<?php } ?>
 			</div>
 			<span>Drop or click to replace</span>
@@ -113,11 +113,11 @@ $preview = $this->fakeRoles;
 				<p><?= $e($me->email) ?></p>
 			<?php } ?>
 			<?php if ($me?->lastLogin) { ?>
-				<p><i class="fa-regular fa-user-clock"></i>Signed in <?= $e(\Systopic\System\Sys\LocalTime::format($me->lastLogin, 'j M Y, H:i')) ?></p>
+				<p><i class="cmsIcon cmsIcon-user-clock"></i>Signed in <?= $e(\Systopic\System\Sys\LocalTime::format($me->lastLogin, 'j M Y, H:i')) ?></p>
 			<?php } ?>
 			<ul class="profileRoles">
 				<?php if (\Systopic\System\Auth\Session::isSuperuser(true)) { ?>
-					<li class="is-super"><i class="fa-regular fa-user-shield"></i>Superuser</li>
+					<li class="is-super"><i class="cmsIcon cmsIcon-user-shield"></i>Superuser</li>
 				<?php } ?>
 				<?php foreach (\Systopic\System\Auth\Session::current()->roles as $role) { ?>
 					<li><?= $e($role->name) ?></li>
@@ -129,12 +129,12 @@ $preview = $this->fakeRoles;
 		</div>
 	</div>
 	<?php if ($preview !== []) { ?>
-		<p class="profilePreview"><i class="fa-regular fa-eye"></i>Viewing the CMS as <?= $e(implode(', ', $preview)) ?>. <a data-on_click="unsetFakeRoles">Stop</a></p>
+		<p class="profilePreview"><i class="cmsIcon cmsIcon-eye"></i>Viewing the CMS as <?= $e(implode(', ', $preview)) ?>. <a data-on_click="unsetFakeRoles">Stop</a></p>
 	<?php } ?>
 	<div class="profileGrid">
 		<?php if ($me) { ?>
 			<section class="widget">
-				<header><h2><i class="fa-regular fa-id-card"></i>Account</h2></header>
+				<header><h2><i class="cmsIcon cmsIcon-id-card"></i>Account</h2></header>
 				<main class="fieldGrid">
 					<?= \message::flush('account') ?>
 					<?= $field('Username', 'text', 'updateUserName', $me->name, 'off') ?>
@@ -143,21 +143,21 @@ $preview = $this->fakeRoles;
 				</main>
 			</section>
 			<section class="widget">
-				<header><h2><i class="fa-regular fa-lock"></i>Password</h2></header>
+				<header><h2><i class="cmsIcon cmsIcon-lock"></i>Password</h2></header>
 				<form method="post" action="changePassword">
 					<main class="fieldGrid">
 						<?= \message::flush('password') ?>
 						<label class="field"><span>New password</span><input type="password" name="password" autocomplete="new-password" required></label>
 						<label class="field"><span>Repeat new password</span><input type="password" name="password_repeat" autocomplete="new-password" required></label>
 					</main>
-					<footer><button class="button submit" type="submit"><i class="fa-regular fa-check"></i>Save password</button></footer>
+					<footer><button class="button submit" type="submit"><i class="cmsIcon cmsIcon-check"></i>Save password</button></footer>
 				</form>
 			</section>
 		<?php } ?>
 		<?php if ($me) { echo \Systopic\System\Auth\Passkeys::render($me, 'widget'); } ?>
 		<section class="widget">
 			<header>
-				<h2><i class="fa-regular fa-phone-laptop"></i>Trusted devices</h2>
+				<h2><i class="cmsIcon cmsIcon-phone-laptop"></i>Trusted devices</h2>
 			</header>
 			<main>
 				<?= \message::flush('devices') ?>
@@ -176,7 +176,7 @@ $preview = $this->fakeRoles;
 					<?php if (count($ownDevices) > count($devicesShown)) { ?>
 						<button type="button" class="cmsBoxMore" data-open-box=".deviceListBox">Show all devices (<?= count($ownDevices) ?>)</button>
 					<?php } ?>
-					<button type="button" class="button submit" data-open-box=".remoteLoginBox"><i class="fa-regular fa-laptop-mobile"></i> Add device</button>
+					<button type="button" class="button submit" data-open-box=".remoteLoginBox"><i class="cmsIcon cmsIcon-laptop-mobile"></i> Add device</button>
 				</footer>
 			<?php } ?>
 		</section>
@@ -187,11 +187,11 @@ $preview = $this->fakeRoles;
 			}
 		?>
 		<section class="widget">
-			<header><h2><i class="fa-regular fa-sun"></i>Appearance</h2></header>
+			<header><h2><i class="cmsIcon cmsIcon-sun"></i>Appearance</h2></header>
 			<main>
 				<p class="tagsHint">Light is used until Dark or System is chosen for this account.</p>
 				<div class="appearanceChoices" role="radiogroup" aria-label="Appearance">
-					<?php foreach (['light' => ['fa-regular fa-sun', 'Light', 'Light background.'], 'dark' => ['fa-regular fa-moon', 'Dark', 'Dark background.'], 'system' => ['fa-regular fa-circle-half-stroke', 'System', 'Matches this device.']] as $value => $choice) { ?>
+					<?php foreach (['light' => ['cmsIcon cmsIcon-sun', 'Light', 'Light background.'], 'dark' => ['cmsIcon cmsIcon-moon', 'Dark', 'Dark background.'], 'system' => ['cmsIcon cmsIcon-circle-half-stroke', 'System', 'Matches this device.']] as $value => $choice) { ?>
 						<button type="button" role="radio" data-on_click="updateAppearance" data-value="<?= $value ?>" aria-checked="<?= $appearance === $value ? 'true' : 'false' ?>"><i class="<?= $choice[0] ?>"></i><span><?= $choice[1] ?></span><small><?= $choice[2] ?></small></button>
 					<?php } ?>
 				</div>
@@ -199,7 +199,7 @@ $preview = $this->fakeRoles;
 			<footer>
 				<?= \message::flush('layout') ?>
 				<p class="tagsHint">Puts every module back to its defaults: open panes, folded trees, filters, sort orders.</p>
-				<button type="button" class="button submit" data-on_click="userConfirm" data-action="resetState" data-confirm="Reset the layout of every module to its defaults?"><i class="fa-regular fa-arrow-rotate-left"></i>Reset layout</button>
+				<button type="button" class="button submit" data-on_click="userConfirm" data-action="resetState" data-confirm="Reset the layout of every module to its defaults?"><i class="cmsIcon cmsIcon-arrow-rotate-left"></i>Reset layout</button>
 			</footer>
 		</section>
 		<?php } ?>
@@ -211,7 +211,7 @@ $preview = $this->fakeRoles;
 		<header>
 			<h1>Trusted devices</h1>
 			<ul class="barmenu">
-				<li><button type="button" data-box-close aria-label="Close"><i class="fa-regular fa-xmark"></i></button></li>
+				<li><button type="button" data-box-close aria-label="Close"><i class="cmsIcon cmsIcon-xmark"></i></button></li>
 			</ul>
 		</header>
 		<main>
@@ -231,7 +231,7 @@ $preview = $this->fakeRoles;
 		<header>
 			<h1>Remote login</h1>
 			<ul class="barmenu">
-				<li><button type="button" data-box-close data-qr-close aria-label="Close"><i class="fa-regular fa-xmark"></i></button></li>
+				<li><button type="button" data-box-close data-qr-close aria-label="Close"><i class="cmsIcon cmsIcon-xmark"></i></button></li>
 			</ul>
 		</header>
 		<main class="remoteLogin">
@@ -246,8 +246,8 @@ $preview = $this->fakeRoles;
 					<div class="remoteOfferCopy">
 						<p class="cmsBoxLead">Scan this on the new device.</p>
 						<p class="remoteExpiry">Valid for 10 minutes.</p>
-						<button type="button" class="button" data-qr-start><i class="fa-regular fa-camera"></i> Scan QR code</button>
-						<button type="button" class="button" data-remote-code><i class="fa-regular fa-input-numeric"></i> Use code</button>
+						<button type="button" class="button" data-qr-start><i class="cmsIcon cmsIcon-camera"></i> Scan QR code</button>
+						<button type="button" class="button" data-remote-code><i class="cmsIcon cmsIcon-input-numeric"></i> Use code</button>
 					</div>
 				</div>
 			<?php } ?>
@@ -255,18 +255,18 @@ $preview = $this->fakeRoles;
 				<div class="qrScanStage">
 					<video playsinline muted autoplay disablepictureinpicture disableremoteplayback></video>
 					<div class="qrScanFrame" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
-					<button type="button" class="qrScanTorch" data-qr-torch hidden aria-label="Light"><i class="fa-regular fa-bolt"></i></button>
+					<button type="button" class="qrScanTorch" data-qr-torch hidden aria-label="Light"><i class="cmsIcon cmsIcon-bolt"></i></button>
 				</div>
 				<p class="qrScanHint" data-qr-hint>Hold the QR code steady and well lit in the frame.</p>
 				<div class="remoteMethods">
 					<?php if ($offerSvg !== '') { ?>
-						<button type="button" class="button" data-remote-offer><i class="fa-regular fa-qrcode"></i> Show QR</button>
+						<button type="button" class="button" data-remote-offer><i class="cmsIcon cmsIcon-qrcode"></i> Show QR</button>
 					<?php } ?>
-					<button type="button" class="button" data-remote-code><i class="fa-regular fa-input-numeric"></i> Use code</button>
+					<button type="button" class="button" data-remote-code><i class="cmsIcon cmsIcon-input-numeric"></i> Use code</button>
 				</div>
 				<div class="cms message qrScanMsg" data-qr-msg hidden></div>
 				<div class="qrScanDim remoteAbort" data-qr-dim hidden>
-					<button type="button" class="button submit" data-qr-again><i class="fa-regular fa-rotate-right"></i> <span data-qr-label>Try again</span></button>
+					<button type="button" class="button submit" data-qr-again><i class="cmsIcon cmsIcon-rotate-right"></i> <span data-qr-label>Try again</span></button>
 				</div>
 			</div>
 			<form class="remoteCode" data-code-form method="get" action="<?= $e($this->href) ?>"<?= ($remoteOpen || $offerSvg === '') ? '' : ' hidden' ?>>
@@ -281,13 +281,13 @@ $preview = $this->fakeRoles;
 						<?php } ?>
 						<input type="hidden" name="screen" value="">
 					</div>
-					<button class="button submit" type="submit" aria-label="Continue" title="Continue"><i class="fa-regular fa-check"></i></button>
+					<button class="button submit" type="submit" aria-label="Continue" title="Continue"><i class="cmsIcon cmsIcon-check"></i></button>
 				</div>
 				<div class="remoteSwitch">
 					<?php if ($offerSvg !== '') { ?>
-						<button type="button" class="button" data-remote-offer><i class="fa-regular fa-qrcode"></i> Show QR</button>
+						<button type="button" class="button" data-remote-offer><i class="cmsIcon cmsIcon-qrcode"></i> Show QR</button>
 					<?php } ?>
-					<button type="button" class="button" data-qr-start><i class="fa-regular fa-camera"></i> Scan QR code</button>
+					<button type="button" class="button" data-qr-start><i class="cmsIcon cmsIcon-camera"></i> Scan QR code</button>
 				</div>
 			</form>
 		</main>
@@ -311,7 +311,7 @@ $preview = $this->fakeRoles;
 		<header>
 			<h1><?= $asScreen ? 'Screen' : 'Remote login' ?></h1>
 			<ul class="barmenu">
-				<li><a class="ajax" href="<?= $e($this->href) ?>" aria-label="Close"><i class="fa-regular fa-xmark"></i></a></li>
+				<li><a class="ajax" href="<?= $e($this->href) ?>" aria-label="Close"><i class="cmsIcon cmsIcon-xmark"></i></a></li>
 			</ul>
 		</header>
 		<main>
@@ -338,7 +338,7 @@ $preview = $this->fakeRoles;
 						<p class="cmsBoxLead">Allow this device to sign in as you?</p>
 					<?php } ?>
 					<div class="cmsBoxActions">
-						<button class="button submit" type="submit"><i class="fa-regular fa-check"></i>Allow</button>
+						<button class="button submit" type="submit"><i class="cmsIcon cmsIcon-check"></i>Allow</button>
 					</div>
 				</form>
 			<?php } elseif (!$mayScreens) { ?>
@@ -360,7 +360,7 @@ $preview = $this->fakeRoles;
 						</select>
 					</label>
 					<div class="cmsBoxActions">
-						<button class="button submit" type="submit"><i class="fa-regular fa-check"></i>Allow</button>
+						<button class="button submit" type="submit"><i class="cmsIcon cmsIcon-check"></i>Allow</button>
 					</div>
 				</form>
 			<?php } ?>

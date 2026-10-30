@@ -9,7 +9,7 @@ function markBrokenThumb(img) {
 		return;
 	}
 	var icon = document.createElement('i');
-	icon.className = 'fa-regular fa-' + img.dataset.broken + ' thumbBroken';
+	icon.className = 'cmsIcon cmsIcon-' + img.dataset.broken + ' thumbBroken';
 	icon.title = 'The picture cannot be shown';
 	tile.classList.add('thumbMissing');
 	img.after(icon);

@@ -364,7 +364,7 @@ var contextMenuWW = function (params, event) {
 	var ul = $('<ul></ul>');
 	var mediaBar = target && target.closest && target.closest('img, video, iframe');
 	if (editorPointer === 'touch' && wysiwygOf(target) && !mediaBar) {
-		$('<li><a href="javascript:void(0)" title="Type"><i class="fa-regular fa-keyboard"></i></a></li>')
+		$('<li><a href="javascript:void(0)" title="Type"><i class="cmsIcon cmsIcon-keyboard"></i></a></li>')
 			.appendTo(ul).children('a').on('click', startTyping);
 	}
 	$.each(params, function (key, item) {

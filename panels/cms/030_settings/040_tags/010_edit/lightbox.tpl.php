@@ -14,15 +14,15 @@ $this->loadJS();
 			<header class="tagEditTitle">
 				<h1 data-doc=tagname><?= htmlspecialchars((string) $tag->name) ?></h1>
 				<button type="button" class="tagGroupRename" data-on_click="rename" title="Rename">
-					<i class="fa-regular fa-pen"></i>
+					<i class="cmsIcon cmsIcon-pen"></i>
 				</button>
 				<ul class="barmenu">
 					<li>
 						<button type="button" data-on_click="userConfirm" data-action="removeTag" data-tag_id="<?= (int) $tag->id ?>" class="button icononly" data-confirm="Remove this tag? Pages and files lose it." aria-label="Remove">
-							<i class="fa-regular fa-trash"></i>
+							<i class="cmsIcon cmsIcon-trash"></i>
 						</button>
 					</li>
-					<li><a class="ajax" href="../" aria-label="Close"><i class="fa-regular fa-xmark"></i></a></li>
+					<li><a class="ajax" href="../" aria-label="Close"><i class="cmsIcon cmsIcon-xmark"></i></a></li>
 				</ul>
 			</header>
 			<main>
@@ -36,13 +36,13 @@ $this->loadJS();
 									<span class="tagAssignmentLabel"><?= htmlspecialchars($page['label']) ?></span>
 									<span class="tagAssignmentActions">
 										<a class="ajax" href="<?= htmlspecialchars($page['href']) ?>" <?= empty($page['media']) ? 'target="_blank" rel="noopener"' : '' ?> title="<?= !empty($page['media']) ? 'View' : 'Open in new window' ?>" aria-label="<?= !empty($page['media']) ? 'View' : 'Open in new window' ?>">
-											<i class="fa-regular <?= !empty($page['media']) ? 'fa-eye' : 'fa-arrow-up-right-from-square' ?>"></i>
+											<i class="cmsIcon <?= !empty($page['media']) ? 'cmsIcon-eye' : 'cmsIcon-arrow-up-right-from-square' ?>"></i>
 										</a>
 										<button type="button" class="button icononly" title="Remove from this page" aria-label="Remove from this page"
 											data-on_click="detach"
 											data-node_id="<?= (int) $page['nodeId'] ?>"
 											data-tag_id="<?= (int) $tag->id ?>">
-											<i class="fa-regular fa-link-slash"></i>
+											<i class="cmsIcon cmsIcon-link-slash"></i>
 										</button>
 									</span>
 								</li>

@@ -174,9 +174,9 @@ final class EnvironmentForm
         if ($here && Session::isSuperuser() && $included) {
             echo '<div class="cmsBoxActions is-start">';
             if ($ready) {
-                echo '<button type="button" class="button" data-on_click="' . ($enabled ? 'stopRelay' : 'startRelay') . '" data-file="' . $e($file) . '"><i class="fa-regular ' . ($enabled ? 'fa-stop' : 'fa-play') . '"></i>' . ($enabled ? 'Stop live updates' : 'Start live updates') . '</button>';
+                echo '<button type="button" class="button" data-on_click="' . ($enabled ? 'stopRelay' : 'startRelay') . '" data-file="' . $e($file) . '"><i class="cmsIcon ' . ($enabled ? 'cmsIcon-stop' : 'cmsIcon-play') . '"></i>' . ($enabled ? 'Stop live updates' : 'Start live updates') . '</button>';
             } elseif ($status['configured']) {
-                echo '<button type="button" class="button" data-on_click="userConfirm" data-action="connectHub" data-confirm="Copy the local hub key into this environment?" data-file="' . $e($file) . '"><i class="fa-regular fa-key-skeleton"></i>Connect project</button>';
+                echo '<button type="button" class="button" data-on_click="userConfirm" data-action="connectHub" data-confirm="Copy the local hub key into this environment?" data-file="' . $e($file) . '"><i class="cmsIcon cmsIcon-key-skeleton"></i>Connect project</button>';
             }
             echo '</div>';
         }
@@ -204,7 +204,7 @@ final class EnvironmentForm
             if ($ip !== '' && !filter_var($ip, FILTER_VALIDATE_IP)) $invalidIp = true;
         }
         echo '<div class="envHubOrigins"><div class="envHubAddressHeader"><h3>Browser addresses</h3>';
-        if (Session::isSuperuser()) echo '<button type="button" class="button" data-on_click="addAddress" data-file="' . $e($file) . '"><i class="fa-regular fa-plus"></i>Add domain / IP</button>';
+        if (Session::isSuperuser()) echo '<button type="button" class="button" data-on_click="addAddress" data-file="' . $e($file) . '"><i class="cmsIcon cmsIcon-plus"></i>Add domain / IP</button>';
         echo '</div><p class="cmsBoxLead">Add each domain or IP under “Where this config applies”. After saving, its address appears here. Use Add beside a missing permission to allow it in the hub. “Shared permission” means it was already in the hub config; newly added permissions belong to this project.</p>';
         if ($invalidIp) echo '<p class="envHubInvalid">An IP address below is invalid. Correct the marked field before adding its hub permission.</p>';
         echo '<ul class="envOrigins">';
@@ -214,15 +214,15 @@ final class EnvironmentForm
             echo '<li><div><code>' . $e($origin) . '</code><small>' . ($known === null ? 'Hub config unavailable' : ($known ? ($canRemove ? 'Added for this project' : 'Shared permission') : 'Missing in saved hub config')) . '</small></div>';
             if (Session::isSuperuser() && $allowed !== null) {
                 if (!$known && in_array($origin, $required, true)) {
-                    echo '<button type="button" class="button" data-on_click="userConfirm" data-action="addHubOrigin" data-file="' . $e($file) . '" data-origin="' . $e($origin) . '" data-confirm="Add this browser origin to the shared hub config? Applying it requires an administrator to restart the hub." title="Add permission"><i class="fa-regular fa-plus"></i>Add</button>';
+                    echo '<button type="button" class="button" data-on_click="userConfirm" data-action="addHubOrigin" data-file="' . $e($file) . '" data-origin="' . $e($origin) . '" data-confirm="Add this browser origin to the shared hub config? Applying it requires an administrator to restart the hub." title="Add permission"><i class="cmsIcon cmsIcon-plus"></i>Add</button>';
                 } elseif ($canRemove) {
-                    echo '<button type="button" class="button transparent" data-on_click="userConfirm" data-action="removeHubOrigin" data-file="' . $e($file) . '" data-origin="' . $e($origin) . '" data-confirm="Remove this project’s origin permission? A permission still registered by another project is kept. Otherwise all uses of this managed origin end after the administrator restarts the hub." title="Remove project permission"><i class="fa-regular fa-link-slash"></i></button>';
+                    echo '<button type="button" class="button transparent" data-on_click="userConfirm" data-action="removeHubOrigin" data-file="' . $e($file) . '" data-origin="' . $e($origin) . '" data-confirm="Remove this project’s origin permission? A permission still registered by another project is kept. Otherwise all uses of this managed origin end after the administrator restarts the hub." title="Remove project permission"><i class="cmsIcon cmsIcon-link-slash"></i></button>';
                 }
             }
             echo '</li>';
         }
         if ($origins === []) echo '<li>No browser addresses configured yet.</li>';
-        echo '</ul><p class="cmsBoxLead envHubRestart"><i class="fa-regular fa-circle-info"></i>Permissions shown are the saved configuration. Origin changes need an administrator to restart the shared hub; these controls never restart it.</p></div>';
+        echo '</ul><p class="cmsBoxLead envHubRestart"><i class="cmsIcon cmsIcon-circle-info"></i>Permissions shown are the saved configuration. Origin changes need an administrator to restart the shared hub; these controls never restart it.</p></div>';
     }
 
     /** @param array<string, mixed> $data */
@@ -235,7 +235,7 @@ final class EnvironmentForm
         if (!$ready) {
             echo '<p class="cmsBoxLead">One-time codes need a sign-in key. Creating it writes the key, how long a device stays, and how long a screen stays.</p></div></header>';
             echo '<div class="cmsBoxActions is-start">';
-            echo '<button type="button" class="button" data-on_click="createAuth" data-file="' . $e($file) . '"><i class="fa-regular fa-key-skeleton"></i> Create sign-in key</button>';
+            echo '<button type="button" class="button" data-on_click="createAuth" data-file="' . $e($file) . '"><i class="cmsIcon cmsIcon-key-skeleton"></i> Create sign-in key</button>';
             echo '</div></section>';
             return;
         }
@@ -249,9 +249,9 @@ final class EnvironmentForm
         echo '</td></tr>';
         echo '</tbody></table></div>';
         echo '<p class="cmsBoxLead">Replacing the key makes codes already sent stop working.</p>';
-        echo '<button type="button" class="button" data-on_click="userConfirm" data-action="replaceAuth" data-confirm="Replace the sign-in key? Codes already sent stop working." data-file="' . $e($file) . '"><i class="fa-regular fa-rotate-right"></i> Replace sign-in key</button>';
+        echo '<button type="button" class="button" data-on_click="userConfirm" data-action="replaceAuth" data-confirm="Replace the sign-in key? Codes already sent stop working." data-file="' . $e($file) . '"><i class="cmsIcon cmsIcon-rotate-right"></i> Replace sign-in key</button>';
         if (Session::isSuperuser()) {
-            echo '<button type="button" class="button" data-on_click="userConfirm" data-action="removeAuth" data-confirm="Delete the sign-in key? Codes already sent stop working." data-file="' . $e($file) . '"><i class="fa-regular fa-trash"></i> Delete sign-in key</button>';
+            echo '<button type="button" class="button" data-on_click="userConfirm" data-action="removeAuth" data-confirm="Delete the sign-in key? Codes already sent stop working." data-file="' . $e($file) . '"><i class="cmsIcon cmsIcon-trash"></i> Delete sign-in key</button>';
         }
         echo '</div></section>';
     }
@@ -290,7 +290,7 @@ final class EnvironmentForm
     {
         $e = static fn($value): string => htmlspecialchars((string) $value, ENT_QUOTES);
         echo '<section class="widget"><header><h2>Where this config applies</h2>';
-        echo '<button type="button" class="button" data-on_click="addMatch" data-file="' . $e($file) . '"><i class="fa-regular fa-plus"></i>Add</button></header>';
+        echo '<button type="button" class="button" data-on_click="addMatch" data-file="' . $e($file) . '"><i class="cmsIcon cmsIcon-plus"></i>Add</button></header>';
         echo '<div class="tableScroll"><table class="projectRows"><thead><tr>';
         foreach (EnvironmentFile::MATCH as $field) {
             echo '<th>' . $e(self::label($field)) . '</th>';
@@ -310,7 +310,7 @@ final class EnvironmentForm
                 if ($field === 'serverIp' && trim((string) ($rule[$field] ?? '')) !== '' && !filter_var(trim((string) $rule[$field]), FILTER_VALIDATE_IP)) $validation .= ' aria-invalid="true"';
                 echo '<td><input data-on_blur="saveMatch"' . $attrs . $validation . ' name="value" value="' . $e((string) ($rule[$field] ?? '')) . '" autocomplete="off"></td>';
             }
-            echo '<td class="projectRemove"><button type="button" class="button transparent" title="Remove" data-on_click="userConfirm" data-action="removeMatch" data-confirm="Remove this address?" data-file="' . $e($file) . '" data-index="' . (int) $index . '"><i class="fa-regular fa-trash"></i></button></td>';
+            echo '<td class="projectRemove"><button type="button" class="button transparent" title="Remove" data-on_click="userConfirm" data-action="removeMatch" data-confirm="Remove this address?" data-file="' . $e($file) . '" data-index="' . (int) $index . '"><i class="cmsIcon cmsIcon-trash"></i></button></td>';
             echo '</tr>';
         }
         echo '</tbody></table></div></section>';

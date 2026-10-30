@@ -14,7 +14,7 @@ use Systopic\System\Panels\PanelNode;
  * - a panel is found by its menu name and by the fixed texts of its views
  *   (headings, field labels, legends);
  * - a panel with `public function searchHits(Search $search): void` adds its
- *   own records: `$search->add('Contacts', 'fa-user', $name, $company, $href)`.
+ *   own records: `$search->add('Contacts', 'cmsIcon-user', $name, $company, $href)`.
  */
 final class Search
 {
@@ -87,11 +87,11 @@ final class Search
             $href = $child->getHref(\http::$root);
             $where = implode(' › ', $trail);
             if ($this->matches($label)) {
-                $this->add('Sections', 'fa-compass', $label, $where, $href);
+                $this->add('Sections', 'cmsIcon-compass', $label, $where, $href);
             }
             foreach (self::texts($child->absPath) as $text) {
                 if ($this->matches($text)) {
-                    $this->add('Sections', 'fa-compass', $text, implode(' › ', [...$trail, $label]), $href);
+                    $this->add('Sections', 'cmsIcon-compass', $text, implode(' › ', [...$trail, $label]), $href);
                 }
             }
             if (method_exists($child, 'searchHits')) {

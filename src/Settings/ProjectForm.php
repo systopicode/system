@@ -88,7 +88,7 @@ final class ProjectForm
             echo '<header><h2>' . $e($name) . '</h2>';
             if ($which === 'media' && in_array($name, ['Image formats','Media groups'], true)) {
                 $help = $name === 'Media groups' ? 'Groups restrict uploads, replacements and moved files. File types are chosen in a dialog. This does not make files private.' : 'Choose either a megapixel budget or pixel dimensions. One pixel dimension may stay empty to keep the proportions. Show in editor controls the format selector, not public access.';
-                echo '<i class="fa-regular fa-circle-info settingInfo" tabindex="0" title="' . $e($help) . '" aria-label="' . $e($help) . '"></i>';
+                echo '<i class="cmsIcon cmsIcon-circle-info settingInfo" tabindex="0" title="' . $e($help) . '" aria-label="' . $e($help) . '"></i>';
             }
             if ($headerButton !== null) {
                 self::addButton($which, $headerButton);
@@ -206,7 +206,7 @@ final class ProjectForm
         $templates = class_exists('template') ? (array) \template::getAll() : [];
         uksort($templates, 'strnatcmp');
         $some = $picked !== [] ? ' data-some' : '';
-        echo '<details class="projectTemplates"' . $some . '><summary title="Choose templates"><span class="all">All templates</span><span class="some">Only the ticked</span><i class="fa-regular fa-pen"></i></summary><div class="projectTemplatesMenu">';
+        echo '<details class="projectTemplates"' . $some . '><summary title="Choose templates"><span class="all">All templates</span><span class="some">Only the ticked</span><i class="cmsIcon cmsIcon-pen"></i></summary><div class="projectTemplatesMenu">';
         foreach ($templates as $name => $template) {
             $checked = in_array((string) $name, $picked, true) ? ' checked' : '';
             $shown = trim(str_replace(['_', '-'], ' ', (string) ($template->name ?? $name)));
@@ -379,14 +379,14 @@ final class ProjectForm
                     $picked = \Systopic\System\Media\GroupPolicy::parse((string) ($values['file_extension'] ?? ''));
                     $rawTypes = trim((string) ($values['file_extension'] ?? ''));
                     $label = $rawTypes === '' || $rawTypes === '*' ? 'All supported types' : ($picked === [] ? 'No supported types' : count($picked) . (count($picked) === 1 ? ' file type' : ' file types'));
-                    echo '<a class="ajax button transparent" href="' . $e(rtrim((string) \http::$root, '/') . '/cms/settings/mediasettings/types/') . '?group=' . rawurlencode($item->key) . '">' . $e($label) . '<i class="fa-regular fa-pen"></i></a></td>';
+                    echo '<a class="ajax button transparent" href="' . $e(rtrim((string) \http::$root, '/') . '/cms/settings/mediasettings/types/') . '?group=' . rawurlencode($item->key) . '">' . $e($label) . '<i class="cmsIcon cmsIcon-pen"></i></a></td>';
                     continue;
                 }
                 if ($mediaGroups && $column === $templateField) {
                     $values = self::valuesOf($group, $item);
                     $picked = array_filter(array_map('trim', explode(';', (string) ($values['templates'] ?? ''))));
                     $label = $picked === [] ? 'All templates' : count($picked) . (count($picked) === 1 ? ' template' : ' templates');
-                    echo '<a class="ajax button transparent" href="' . $e(rtrim((string) \http::$root, '/') . '/cms/settings/mediasettings/types/') . '?kind=templates&amp;group=' . rawurlencode($item->key) . '">' . $e($label) . '<i class="fa-regular fa-pen"></i></a></td>';
+                    echo '<a class="ajax button transparent" href="' . $e(rtrim((string) \http::$root, '/') . '/cms/settings/mediasettings/types/') . '?kind=templates&amp;group=' . rawurlencode($item->key) . '">' . $e($label) . '<i class="cmsIcon cmsIcon-pen"></i></a></td>';
                     continue;
                 }
                 if ($column === $templateField) {
@@ -495,17 +495,17 @@ final class ProjectForm
     private static function addButton(string $which, Group $group): void
     {
         $e = static fn($value): string => htmlspecialchars((string) $value, ENT_QUOTES);
-        echo '<button type="button" class="button" data-on_click="addItem" data-file="' . $e($which) . '" data-id="' . $e($group->id) . '"><i class="fa-regular fa-plus"></i>Add</button>';
+        echo '<button type="button" class="button" data-on_click="addItem" data-file="' . $e($which) . '" data-id="' . $e($group->id) . '"><i class="cmsIcon cmsIcon-plus"></i>Add</button>';
     }
 
     private static function removeButton(string $data): void
     {
-        echo '<button type="button" class="button transparent" title="Remove" data-on_click="userConfirm" data-action="removeItem" data-confirm="Remove this entry?"' . $data . '><i class="fa-regular fa-trash"></i></button>';
+        echo '<button type="button" class="button transparent" title="Remove" data-on_click="userConfirm" data-action="removeItem" data-confirm="Remove this entry?"' . $data . '><i class="cmsIcon cmsIcon-trash"></i></button>';
     }
 
     private static function grip(string $data): void
     {
-        echo '<i class="fa-regular fa-grip-dots-vertical" aria-label="Drag to reorder" data-drag_type="setting"' . $data . '></i>';
+        echo '<i class="cmsIcon cmsIcon-grip-dots-vertical" aria-label="Drag to reorder" data-drag_type="setting"' . $data . '></i>';
         echo '<div class="sort v insertBefore" data-drop_accept="setting" data-on_drop="moveBefore"' . $data . '></div>';
         echo '<div class="sort v insertAfter" data-drop_accept="setting" data-on_drop="moveAfter"' . $data . '></div>';
     }
@@ -557,7 +557,7 @@ final class ProjectForm
         foreach ($path === null ? [] : ProjectFile::groups($path) as $group) {
             $label = self::human($group->label);
             if ($search->matches($label) || $search->matches(ltrim($group->label, '$')) || $search->matches($group->category)) {
-                $search->add('Settings', 'fa-gear', $label, $group->category !== '' ? $title . ' › ' . $group->category : $title, $href);
+                $search->add('Settings', 'cmsIcon-gear', $label, $group->category !== '' ? $title . ' › ' . $group->category : $title, $href);
             }
         }
     }

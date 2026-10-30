@@ -7,7 +7,7 @@
 	<div class="row">
 		<form method=get action=activate  onsubmit='this.classList.add("loading")'>
 			<div class="row">
-				<div class='inputGroup'><i class="fa-regular fa-hashtag"></i>
+				<div class='inputGroup'><i class="cmsIcon cmsIcon-hashtag"></i>
 					<input type=text name=key placeholder="Activation code" required spellcheck="false" autocapitalize="off"
 						   autocomplete="off"/>
 					<span class='bar'></span>
@@ -16,7 +16,7 @@
 			<div class="row">
 				<div>
 					<br>
-					<button class='submit'><i class="fa-regular fa-check"></i> Activate</button>
+					<button class='submit'><i class="cmsIcon cmsIcon-check"></i> Activate</button>
 				</div>
 			</div>
 		</form>

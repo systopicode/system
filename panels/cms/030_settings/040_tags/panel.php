@@ -18,7 +18,7 @@ use Systopic\System\Panels\PanelNode;
  */
 class Panel extends PanelNode {
 
-	public $icon = 'fa-regular fa-tags';
+	public $icon = 'cmsIcon cmsIcon-tags';
 
 	public function __construct($name, $parent) {
 		parent::__construct($name, $parent);
@@ -68,7 +68,7 @@ class Panel extends PanelNode {
 			[$search->like()],
 		);
 		foreach ($rows as $row) {
-			$search->add('Tags', 'fa-tag', (string) $row['tag_name'], (string) $row['taggroup_name'], $this->getHref(\http::$root) . 'edit/?id=' . (int) $row['tag_id']);
+			$search->add('Tags', 'cmsIcon-tag', (string) $row['tag_name'], (string) $row['taggroup_name'], $this->getHref(\http::$root) . 'edit/?id=' . (int) $row['tag_id']);
 		}
 	}
 }

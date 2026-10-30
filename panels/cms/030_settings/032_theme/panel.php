@@ -12,7 +12,7 @@ use Systopic\System\Panels\Root\Cms\Settings\Panel as SettingsPanel;
  */
 class Panel extends SettingsPanel
 {
-    public $icon = 'fa-regular fa-swatchbook';
+    public $icon = 'cmsIcon cmsIcon-swatchbook';
 
     public bool $buildChildPanels = false;
 

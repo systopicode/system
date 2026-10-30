@@ -7,7 +7,7 @@ $e = static fn($v): string => htmlspecialchars((string) $v, ENT_QUOTES);
 	<header>
 		<h2>List of roles</h2>
 		<input class="listSearch" type="search" placeholder="Search" data-on_input="filterRoles" autocomplete="off">
-		<a class="button submit" data-on_click="addRole"><i class="fa-regular fa-plus"></i><span>Add role</span></a>
+		<a class="button submit" data-on_click="addRole"><i class="cmsIcon cmsIcon-plus"></i><span>Add role</span></a>
 	</header>
 	<div class="tableScroll">
 		<table>
@@ -31,7 +31,7 @@ $e = static fn($v): string => htmlspecialchars((string) $v, ENT_QUOTES);
 						<td><?= $e($role->description) ?></td>
 						<td class="icons">
 							<ul>
-								<li><a class="ajax button icononly" title="Edit" href="edit/?role_id=<?= (int) $role->id ?>"><i class="fa-regular fa-pen"></i></a></li>
+								<li><a class="ajax button icononly" title="Edit" href="edit/?role_id=<?= (int) $role->id ?>"><i class="cmsIcon cmsIcon-pen"></i></a></li>
 							</ul>
 						</td>
 					</tr>

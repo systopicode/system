@@ -243,7 +243,7 @@ final class ThemeFile
         echo '<h1>Theme</h1>';
         echo '<p class="tagsHint">Main, highlight, background and text. Everything else follows. The stage marker keeps its own colours.</p>';
         echo \message::flush();
-        echo '<section class="widget"><header><h2>Colours</h2><button type="button" class="button" data-on_click="resetColors"><i class="fa-regular fa-arrow-rotate-left"></i>Reset to default</button></header><main>';
+        echo '<section class="widget"><header><h2>Colours</h2><button type="button" class="button" data-on_click="resetColors"><i class="cmsIcon cmsIcon-arrow-rotate-left"></i>Reset to default</button></header><main>';
         echo '<div class="themeSwatches">';
         foreach (self::FIELDS as $name => $label) {
             $hex = '#' . Theme::color($name);
@@ -252,20 +252,29 @@ final class ThemeFile
         }
         echo '</div></main></section>';
         ThemeAssets::render($panel);
+        echo '<section class="widget themeIcons"><header><h2>Icon sets</h2></header><main>';
+        echo '<p>Tabler Outline is used for controls and content. Solar Line Duotone is used for the main-navigation icons, including the Tools sliders, and custom main-navigation panels. The cleanup broom uses the existing Solar geometry in one colour. All icons are served locally.</p>';
+        echo '<nav class="cmsBoxActions" aria-label="Icon set search">';
+        echo '<a class="button" href="https://tabler.io/icons?style=outline" target="_blank" rel="noopener noreferrer"><i class="cmsIcon cmsIcon-arrow-up-right-from-square" aria-hidden="true"></i>Tabler Outline</a>';
+        echo '<a class="button" href="https://icon-sets.iconify.design/solar/?suffixes=Line+Duotone" target="_blank" rel="noopener noreferrer"><i class="cmsIcon cmsIcon-arrow-up-right-from-square" aria-hidden="true"></i>Solar Line Duotone</a>';
+        echo '</nav>';
+        echo '</main></section>';
+
+
         $pagesHere = self::pagesPanelPresent();
         if ($pagesHere) {
             echo '<section class="widget"><header><h2>Page overrides</h2></header>';
             echo '<form method="post" action="saveCss">';
             echo '<main><p class="tagsHint">pages_overrides.css. Only the page preview, and only while the pages panel is installed. Selectors are parsed into the page.</p>';
             echo '<textarea class="themeCss" name="css" spellcheck="false" autocomplete="off" autocapitalize="off">' . $e(self::readCss()) . '</textarea></main>';
-            echo '<footer><button type="submit" class="button submit"><i class="fa-regular fa-check"></i>Save CSS</button></footer>';
+            echo '<footer><button type="submit" class="button submit"><i class="cmsIcon cmsIcon-check"></i>Save CSS</button></footer>';
             echo '</form></section>';
         }
         echo '<section class="widget"><header><h2>System overrides</h2></header>';
         echo '<form method="post" action="saveSystemCss">';
         echo '<main><p class="tagsHint">system_overrides.css. Loaded in the CMS only, not on the public site, and not parsed into the page preview.</p>';
         echo '<textarea class="themeCss" name="css" spellcheck="false" autocomplete="off" autocapitalize="off">' . $e(self::readSystemCss()) . '</textarea></main>';
-        echo '<footer><button type="submit" class="button submit"><i class="fa-regular fa-check"></i>Save CSS</button></footer>';
+        echo '<footer><button type="submit" class="button submit"><i class="cmsIcon cmsIcon-check"></i>Save CSS</button></footer>';
         echo '</form></section></div>';
     }
 }

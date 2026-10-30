@@ -97,7 +97,7 @@ final class TagGroupsPanel
             ->attr('onmousedown', 'event.stopPropagation()')
             ->attr('onpointerdown', 'event.stopPropagation()')
             ->click('edit')
-            ->append('i.fa-regular.fa-pen');
+            ->append('i.cmsIcon.cmsIcon-pen');
         return $el;
     }
 
@@ -152,7 +152,7 @@ final class TagGroupsPanel
         if ($relatedNodeId !== null) {
             $el->append('a.ajax')->href($pageBase . $relatedNodeId)
                 ->style('color', $tag->colorStyle)
-                ->append('i.fa-regular.fa-arrow-turn-down-right');
+                ->append('i.cmsIcon.cmsIcon-arrow-turn-down-right');
         }
         return $el;
     }
@@ -164,7 +164,7 @@ final class TagGroupsPanel
         $header->append('h1')->doc('groupName')->text($group->name);
         $header->append('button.tagGroupRename')->attr('type', 'button')->title('Rename')
             ->data(['on_click' => 'rename'])
-            ->append('i.fa-regular.fa-pen');
+            ->append('i.cmsIcon.cmsIcon-pen');
         $header->append('input.tagGroupColor[type=color][name=color]')
             ->value($group->colorStyle !== '' ? $group->colorStyle : '#888888')
             ->title('Colour')
@@ -172,7 +172,7 @@ final class TagGroupsPanel
         if ($group->tags === []) {
             $header->append('button.tagGroupDelete')->attr('type', 'button')->title('Delete group')
                 ->data(['on_click' => 'deleteGroup'])
-                ->append('i.fa-regular.fa-trash');
+                ->append('i.cmsIcon.cmsIcon-trash');
         }
         return $header;
     }

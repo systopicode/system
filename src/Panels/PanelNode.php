@@ -140,7 +140,7 @@ class PanelNode implements ClientExportable, RenderNode
     public ?string $jsClass = null;
 
     /**
-     * Optional icon class (e.g. Font-Awesome) used by getNaviItem().
+     * Optional icon class (e.g. cmsIcon cmsIcon-file) used by getNaviItem().
      * Untyped to stay compatible with legacy subclasses that declare
      * `public $icon = '...'` without a type.
      */
@@ -817,12 +817,12 @@ class PanelNode implements ClientExportable, RenderNode
                 return null;
             }
             return match ($this->name) {
-                'system' => 'fa-regular fa-server',
-                'database' => 'fa-regular fa-database',
-                'maintenance' => 'fa-regular fa-wrench',
-                'debug' => 'fa-regular fa-bug',
-                'migration' => 'fa-regular fa-repeat',
-                'logs' => 'fa-regular fa-file-text',
+                'system' => 'cmsIcon cmsIcon-server',
+                'database' => 'cmsIcon cmsIcon-database',
+                'maintenance' => 'cmsIcon cmsIcon-wrench',
+                'debug' => 'cmsIcon cmsIcon-bug',
+                'migration' => 'cmsIcon cmsIcon-repeat',
+                'logs' => 'cmsIcon cmsIcon-file-text',
                 default => null,
             };
         }

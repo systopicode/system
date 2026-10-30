@@ -16,7 +16,7 @@ if (empty($output)) {
 		<h1>Email Log Entry</h1>
 		<ul class="barmenu">
 		    <li>
-			<a class="ajax" href="<?= htmlspecialchars($this->parent->getHref(\http::$root)) ?>"><i class="fa-regular fa-xmark"></i></a>
+			<a class="ajax" href="<?= htmlspecialchars($this->parent->getHref(\http::$root)) ?>"><i class="cmsIcon cmsIcon-xmark"></i></a>
 		    </li>
 		</ul>
 	    </header>
@@ -42,7 +42,7 @@ if (empty($output)) {
 		    <h1>Email Log Entry</h1>
 		    <ul class="barmenu">
 			<li>
-			    <a class="ajax" href="<?= htmlspecialchars($this->parent->getHref(\http::$root)) ?>"><i class="fa-regular fa-xmark"></i></a>
+			    <a class="ajax" href="<?= htmlspecialchars($this->parent->getHref(\http::$root)) ?>"><i class="cmsIcon cmsIcon-xmark"></i></a>
 			</li>
 		    </ul>
 		</header>
@@ -136,7 +136,7 @@ if (empty($output)) {
 		    <h1><?= htmlspecialchars($subject !== '' ? $subject : 'Email') ?></h1>
 		    <ul class="barmenu">
 			<li>
-			    <a class="ajax" href="<?= htmlspecialchars($this->parent->getHref(\http::$root)) ?>"><i class="fa-regular fa-xmark"></i></a>
+			    <a class="ajax" href="<?= htmlspecialchars($this->parent->getHref(\http::$root)) ?>"><i class="cmsIcon cmsIcon-xmark"></i></a>
 			</li>
 		    </ul>
 		</header>

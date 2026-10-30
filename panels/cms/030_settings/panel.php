@@ -13,7 +13,7 @@ class Panel extends PanelNode {
 		$this->label = 'Settings';
 	}
 
-	public $icon = 'fa-duotone fa-regular fa-gear';
+	public $icon = 'cmsIcon cmsIcon-duotone cmsIcon-gear';
 	public ?int $naviOrder = 40;
 
 	/** Global Settings and Tags exist before onLoad, so the menu can open one. */

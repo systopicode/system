@@ -160,7 +160,7 @@ class Panel extends PanelNode {
 	function toNavi() {
 		if (!\Systopic\System\Auth\Session::known()) {
 			return \html::create('li.menu_item')->doc('menu_item')
-							->append('a.ajax')->href($this->href)->append('i.far.fa-user')->end()
+							->append('a.ajax')->href($this->href)->append('i.far.cmsIcon-user')->end()
 			;
 		}
 	}

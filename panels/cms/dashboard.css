@@ -687,7 +687,7 @@ body.cms .dashboard .dashTabs button:hover{
 }
 .dashThumbs i.thumbBroken{
 	inset: 0;
-	width: 100%;   /* Font Awesome gives icons a fixed width */
+	width: 100%;   /* Keep thumbnail fallback icons centred in their existing slot */
 	height: 100%;
 	display: flex;
 	justify-content: center;

@@ -7,7 +7,7 @@
 	<div class="row">
 		<form method=post action=sendResetCode  onsubmit='this.classList.add("loading")'>
 			<div class="row">
-				<div class='inputGroup'><i class="fa-regular fa-envelope"></i>
+				<div class='inputGroup'><i class="cmsIcon cmsIcon-envelope"></i>
 					<input required spellcheck=false autocapitalize=off placeholder="Email" type=email name=email_reset autocomplete="username"
 						   value="<?= http::post('email_reset') ?>"/>
 					<span class='bar'></span>
@@ -16,7 +16,7 @@
 			<div class="row">
 				<div>
 					<br>
-					<button class="submit"><i class="fa-regular fa-paper-plane"></i> Send code</button>
+					<button class="submit"><i class="cmsIcon cmsIcon-paper-plane"></i> Send code</button>
 				</div>
 			</div>
 		</form>

@@ -45,24 +45,24 @@ final class DeviceName
     public static function icon(string $userAgent): string
     {
         if (preg_match('~iPad|Tablet|Android(?!.*Mobile)~', $userAgent)) {
-            return 'fa-regular fa-tablet-screen';
+            return 'cmsIcon cmsIcon-tablet-screen';
         }
         if (preg_match('~iPhone|iPod|Android.*Mobile|Mobile~', $userAgent)) {
-            return 'fa-regular fa-mobile-screen';
+            return 'cmsIcon cmsIcon-mobile-screen';
         }
-        return 'fa-regular fa-laptop';
+        return 'cmsIcon cmsIcon-laptop';
     }
 
     /** The same device, crossed out: the control that signs it out. */
     public static function slash(string $userAgent): string
     {
         if (preg_match('~iPad|Tablet|Android(?!.*Mobile)~', $userAgent)) {
-            return 'fa-regular fa-display-slash';
+            return 'cmsIcon cmsIcon-display-slash';
         }
         if (preg_match('~iPhone|iPod|Android.*Mobile|Mobile~', $userAgent)) {
-            return 'fa-regular fa-mobile-slash';
+            return 'cmsIcon cmsIcon-mobile-slash';
         }
-        return 'fa-regular fa-laptop-slash';
+        return 'cmsIcon cmsIcon-laptop-slash';
     }
 
     /** @param array<string, string> $patterns */

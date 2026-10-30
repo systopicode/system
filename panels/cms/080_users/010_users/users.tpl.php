@@ -17,7 +17,7 @@ $screens = ($this->accountKind ?? '') === \Systopic\System\Tables\Users\Model::S
 	<header>
 		<h2><?= $screens ? 'List of screens' : 'List of persons' ?></h2>
 		<input class="listSearch" type="search" placeholder="Search" data-on_input="filterUsers" autocomplete="off">
-		<a class="button submit" data-on_click="addUser"><i class="fa-regular fa-plus"></i><span><?= $screens ? 'Add screen' : 'Add person' ?></span></a>
+		<a class="button submit" data-on_click="addUser"><i class="cmsIcon cmsIcon-plus"></i><span><?= $screens ? 'Add screen' : 'Add person' ?></span></a>
 	</header>
 	<div class="tableScroll">
 		<table>
@@ -40,7 +40,7 @@ $screens = ($this->accountKind ?? '') === \Systopic\System\Tables\Users\Model::S
 						<td>
 							<?= $e($user->name) ?>
 							<?php if ($user->isSuperuser) { ?>
-								<i class="fa-regular fa-user-shield userSuper" title="Superuser"></i>
+								<i class="cmsIcon cmsIcon-user-shield userSuper" title="Superuser"></i>
 							<?php } ?>
 						</td>
 						<td><?= $e($user->fullname) ?></td>
@@ -57,9 +57,9 @@ $screens = ($this->accountKind ?? '') === \Systopic\System\Tables\Users\Model::S
 						</td>
 						<td class="icons">
 							<ul>
-								<li><a class="ajax button icononly" title="Edit" href="<?= $e($this->href . 'edit/?user_id=' . (int) $user->id) ?>"><i class="fa-regular fa-pen"></i></a></li>
+								<li><a class="ajax button icononly" title="Edit" href="<?= $e($this->href . 'edit/?user_id=' . (int) $user->id) ?>"><i class="cmsIcon cmsIcon-pen"></i></a></li>
 								<?php if ((int) $user->id !== (int) \Systopic\System\Auth\Session::id()) { ?>
-									<li><a class="button icononly" title="Delete" data-on_click="userConfirm" data-action="removeUser" data-confirm="<?= $screens ? 'Delete this screen? This cannot be undone.' : 'Delete this user? This cannot be undone.' ?>" data-user_id="<?= (int) $user->id ?>"><i class="fa-regular fa-trash"></i></a></li>
+									<li><a class="button icononly" title="Delete" data-on_click="userConfirm" data-action="removeUser" data-confirm="<?= $screens ? 'Delete this screen? This cannot be undone.' : 'Delete this user? This cannot be undone.' ?>" data-user_id="<?= (int) $user->id ?>"><i class="cmsIcon cmsIcon-trash"></i></a></li>
 								<?php } ?>
 							</ul>
 						</td>

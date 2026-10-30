@@ -17,5 +17,5 @@ if ($previewUrl === '') {
 ?>
 <a class="button cmsPreviewBtn" target="_blank" rel="noopener noreferrer"
 	href="<?= htmlspecialchars($previewUrl) ?>" title="Vorschau in der App">
-	<i class="fa-regular fa-eye"></i><span>Vorschau</span>
+	<i class="cmsIcon cmsIcon-eye"></i><span>Vorschau</span>
 </a>

@@ -18,7 +18,7 @@ use Systopic\System\Tables\Users\Operator as UserOperator;
  */
 class Panel extends CmsPanel {
 
-	public $icon = 'fa-regular fa-users';
+	public $icon = 'cmsIcon cmsIcon-users';
 
 	public function __construct($name, $parent = null) {
 		parent::__construct($name, $parent);
@@ -89,7 +89,7 @@ class Panel extends CmsPanel {
 		);
 		foreach ($rows as $row) {
 			$name = trim((string) $row['user_fullname']) !== '' ? (string) $row['user_fullname'] : (string) $row['user_name'];
-			$search->add('Persons', 'fa-user', $name, (string) $row['user_email'], $this->getHref(\http::$root) . 'edit/?user_id=' . (int) $row['user_id']);
+			$search->add('Persons', 'cmsIcon-user', $name, (string) $row['user_email'], $this->getHref(\http::$root) . 'edit/?user_id=' . (int) $row['user_id']);
 		}
 	}
 }

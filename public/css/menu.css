@@ -101,7 +101,7 @@ ul.barmenu li i{
     line-height: 1;
 }
 
-ul.barmenu > li > a > i.fa-ellipsis-v{
+ul.barmenu > li > a > i.cmsIcon-ellipsis-v{
     width: 2rem;
 }
 
@@ -120,7 +120,7 @@ ul.barmenu li ul{
 }
 
 ul.barmenu li ul.left,
-ul.barmenu li i.fa-ellipsis-v.left + ul{
+ul.barmenu li i.cmsIcon-ellipsis-v.left + ul{
     right: auto;
     left: 0;
 }
@@ -157,14 +157,14 @@ ul.barmenu li ul li i + span{
     padding-left: 0.6rem;
 }
 
-ul.barmenu li i.fa-ellipsis-v.left + ul li ul{
+ul.barmenu li i.cmsIcon-ellipsis-v.left + ul li ul{
     left: calc(100% - 6px);
     top: initial;
     right: auto;
     margin-top: -32px;
 }
 
-ul.barmenu li i.fa-ellipsis-v.left + ul li:hover ul{
+ul.barmenu li i.cmsIcon-ellipsis-v.left + ul li:hover ul{
     display: block;
     opacity: 1;
     visibility: visible;

@@ -14,7 +14,7 @@ $names = function ($group, string $right) use ($e): string {
 	<header>
 		<h2>Content groups</h2>
 		<input class="listSearch" type="search" placeholder="Search" data-on_input="filterGroups" autocomplete="off">
-		<a class="button submit" data-on_click="addGroup"><i class="fa-regular fa-plus"></i><span>Add group</span></a>
+		<a class="button submit" data-on_click="addGroup"><i class="cmsIcon cmsIcon-plus"></i><span>Add group</span></a>
 	</header>
 	<div class="tableScroll">
 		<table>
@@ -40,7 +40,7 @@ $names = function ($group, string $right) use ($e): string {
 						<td><?= $names($group, 'write') ?></td>
 						<td class="icons">
 							<ul>
-								<li><a class="ajax button icononly" title="Edit" href="edit/?group_id=<?= (int) $group->id ?>"><i class="fa-regular fa-pen"></i></a></li>
+								<li><a class="ajax button icononly" title="Edit" href="edit/?group_id=<?= (int) $group->id ?>"><i class="cmsIcon cmsIcon-pen"></i></a></li>
 							</ul>
 						</td>
 					</tr>

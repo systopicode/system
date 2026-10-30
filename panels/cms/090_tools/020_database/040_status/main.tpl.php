@@ -37,7 +37,7 @@ $remove = static function (string $subject, string $label) use ($orphans, $e): s
 	}
 	$ask = $label . ' ' . $subject . '? ' . $action->describe . ($action->destructive ? '. This discards data.' : '.');
 	return '<a class="button" data-on_click="userConfirm" data-action="removeOrphan" data-key="' . $e($action->key())
-		. '" data-confirm="' . $e($ask) . '"><i class="fa-regular fa-trash"></i> ' . $e($label) . '</a>';
+		. '" data-confirm="' . $e($ask) . '"><i class="cmsIcon cmsIcon-trash"></i> ' . $e($label) . '</a>';
 };
 ?>
 <h1>Database status</h1>
@@ -60,7 +60,7 @@ $remove = static function (string $subject, string $label) use ($orphans, $e): s
 			<div><div></div></div>
 		</label>
 	</form>
-	<a class="button" data-on_click="refreshStatus"><i class="fa-regular fa-arrows-rotate"></i><span>Refresh</span></a>
+	<a class="button" data-on_click="refreshStatus"><i class="cmsIcon cmsIcon-arrows-rotate"></i><span>Refresh</span></a>
 </div>
 <?php if ($state['shown'] === []): ?>
 	<p class="tagsHint">No table matches the selection.</p>

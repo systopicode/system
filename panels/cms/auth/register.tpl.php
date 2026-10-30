@@ -7,7 +7,7 @@
 	<div class="row">
 		<form method=post action=createAccount  onsubmit='this.classList.add("loading")'>
 			<div class="row">
-				<div class='inputGroup'><i class="fa-regular fa-envelope"></i>
+				<div class='inputGroup'><i class="cmsIcon cmsIcon-envelope"></i>
 					<input required spellcheck="false" autocapitalize="off" placeholder="Email" type=email autocomplete="username"
 						   name=email_create
 						   value="<?= http::post('email_create') ?>"/>
@@ -17,7 +17,7 @@
 			<div class="row">
 				<div>
 					 <br>
-					<button class='submit'><i class="fa-regular fa-user-plus"></i> Create account</button>
+					<button class='submit'><i class="cmsIcon cmsIcon-user-plus"></i> Create account</button>
 				</div>
 			</div>
 		</form>

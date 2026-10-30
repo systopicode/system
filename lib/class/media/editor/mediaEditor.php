@@ -74,7 +74,7 @@ class mediaEditor {
 			<div class='cropBar' style='width:{$cnv_width}px;'>
 				<span>$hint</span>
 				<button type='button' class='button' data-crop_cancel>Cancel</button>
-				<button type='button' class='button submit'><i class='fa-regular fa-check'></i>Apply</button>
+				<button type='button' class='button submit'><i class='cmsIcon cmsIcon-check'></i>Apply</button>
 			</div>
 		</div>
 	";

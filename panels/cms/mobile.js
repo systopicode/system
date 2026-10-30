@@ -519,7 +519,7 @@ function fitHeader(head) {
 	more.setAttribute('data-cms-more', '');
 	more.setAttribute('aria-label', 'More');
 	more.setAttribute('aria-expanded', 'false');
-	more.innerHTML = '<i class="fa-regular fa-ellipsis"></i>';
+	more.innerHTML = '<i class="cmsIcon cmsIcon-ellipsis"></i>';
 	row.append(more, menu);
 }
 // Use capture so existing AJAX handlers still receive actual links and actions.

@@ -15,7 +15,7 @@ use Systopic\System\Tables\Roles\Model as Role;
  */
 class Panel extends CmsPanel {
 
-	public $icon = 'fa-regular fa-shield-halved';
+	public $icon = 'cmsIcon cmsIcon-shield-halved';
 
 	public bool $bequests = true;
 
