@@ -16,6 +16,7 @@ namespace Systopic\System\Controlmap;
 final class DiscoveredPanel
 {
     /**
+     * @param string                          $dir     the winning folder: class file and actions.php are read from here
      * @param list<string>                    $origins every package (or 'project') that has the folder, in registration order
      * @param array{build?: list<string>, action?: list<string>} $grants what the class's own buildGranted() / actionGranted() ask for
      * @param array<string, DiscoveredAction> $actions
@@ -26,6 +27,7 @@ final class DiscoveredPanel
         public readonly string $name,
         public readonly string $folder,
         public readonly string $origin,
+        public readonly string $dir,
         public readonly array $origins,
         public readonly ?string $classFile,
         public readonly ?string $className,

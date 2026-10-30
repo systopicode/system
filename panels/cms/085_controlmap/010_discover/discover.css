@@ -31,7 +31,7 @@
 	opacity: 0.5;
 }
 
-.cms table.discoverList :is(span.origin, span.term, span.action){
+.cms table.discoverList :is(span.origin, span.term, .action){
 	display: inline-block;
 	margin: 0 0.25rem 0.25rem 0;
 	padding: 0 0.4rem;
@@ -59,11 +59,23 @@
 	color: var(--cmsMuted);
 	font-size: 0.75rem;
 }
-.cms table.discoverList span.action.is-entry{
+.cms table.discoverList .action.is-entry{
 	background: none;
 	outline: 1px dashed var(--cmsRedirect);
 	color: var(--cmsRedirect);
 }
-.cms table.discoverList span.action.is-entry i{
+.cms table.discoverList .action.is-entry i{
 	margin-right: 0.25rem;
+}
+.cms table.discoverList a.action{
+	color: inherit;
+	text-decoration: none;
+}
+.cms table.discoverList a.action:hover{
+	outline: 1px solid var(--cmsTextColor);
+}
+.cms table.discoverList td.panel a.code{
+	margin-left: 0.35rem;
+	font-size: 0.75rem;
+	color: var(--cmsMuted);
 }

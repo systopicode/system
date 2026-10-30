@@ -1,0 +1,22 @@
+/* cms/controlmap — the panel tree in the pylon */
+
+.cms .controlmapTree ul.tree li.plain > label{
+	opacity: 0.5;
+}
+.cms .controlmapTree ul.tree a.label .count{
+	margin-left: auto;
+	font-size: 0.75rem;
+	color: var(--cmsMuted);
+}
+
+/* As wide as the tree, up to most of the screen; pulled, the pulled width
+   (GUI proposal for every pylon: .cursor/team/2026-10-30-pylon-breite.md) */
+body > main > div.pylon.controlmapTree{
+	flex: 0 0 auto;
+	width: auto;
+	max-width: 60vw;
+}
+body > main > div.pylon.controlmapTree[style*="--pylonWidth"]{
+	width: var(--pylonWidth);
+	max-width: min(var(--pylonWidth), 80vw);
+}

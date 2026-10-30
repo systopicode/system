@@ -77,6 +77,7 @@ final class Discover
                 name: $hit->name,
                 folder: $hit->folder,
                 origin: self::origin($hit->absPath),
+                dir: $dir,
                 origins: array_values(array_unique(array_map(self::origin(...), $hit->altPaths))),
                 classFile: $classFile,
                 className: $class['class'] ?? null,
