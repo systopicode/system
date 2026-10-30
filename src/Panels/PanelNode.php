@@ -155,6 +155,18 @@ class PanelNode implements ClientExportable, RenderNode
      */
     public ?int $naviOrder = null;
 
+    /**
+     * Actions that may be opened from outside — the link of a mail, a
+     * bookmark, another site: by GET only, from any origin. Every other
+     * action runs only when the request comes from this site's own pages
+     * (`ActionGuard`). An entry action must not change anything on the
+     * strength of the session alone: what it does, the link itself has to
+     * authorise (a reset key), or it only shows something.
+     *
+     * @var list<string>
+     */
+    public array $entryActions = [];
+
     // -------------------------------------------------------------------------
     // View / render state
     // -------------------------------------------------------------------------
