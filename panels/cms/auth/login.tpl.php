@@ -22,7 +22,9 @@ $authPair = $authMethod === 'device' ? \Systopic\System\Auth\ScreenPair::current
 $authPairUrl = is_array($authPair) ? \Systopic\System\Auth\ScreenPair::url((string) $authPair['code']) : '';
 $code = preg_replace('~[^0-9A-Za-z\-]~', '', (string) \http::get('code', ''));
 $pending = $code !== '' ? \Systopic\System\Auth\LoginCodes::peek($code, ['invite', 'recover', 'pair']) : null;
-$authCode = $code;
+// A failed submission must retain the manual input, including on touch devices.
+$authCode = (string) (\http::posted('code') ?: $code);
+$authCodeAttempted = $this->action === 'redeemCode';
 $authAuto = false;
 $authUsername = (string) \http::posted('username', '');
 $authPassword = (string) \http::posted('password', '');

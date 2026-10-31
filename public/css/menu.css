@@ -55,7 +55,7 @@ section.widget header > ul > li.spacer{
     cursor: default;
 }
 
-ul.barmenu a{
+ul.barmenu :is(a, button:where([data-cms-action])){
     display: flex;
     align-items: center;
     align-self: center;
@@ -66,18 +66,18 @@ ul.barmenu a{
     justify-content: center;
 }
 
-ul.barmenu a,
-ul.barmenu a i{
+ul.barmenu :is(a, button:where([data-cms-action])),
+ul.barmenu :is(a, button:where([data-cms-action])) i{
     font-size: 1.15rem;
     color: var(--cmsBrandInk);
 }
 
 /* A button in the bar is the same hit target as a link. Its own fill would
    sit on top of the item hover and read as a second highlight. */
-.cms ul.barmenu > li > button,
-.cms ul.barmenu > li > button:enabled:not(.disabled):hover,
-.cms ul.barmenu > li > button:enabled:not(.disabled):active,
-.cms ul.barmenu > li > button:focus-visible{
+.cms ul.barmenu > li > button:where(:not([data-cms-action])),
+.cms ul.barmenu > li > button:where(:not([data-cms-action])):enabled:not(.disabled):hover,
+.cms ul.barmenu > li > button:where(:not([data-cms-action])):enabled:not(.disabled):active,
+.cms ul.barmenu > li > button:where(:not([data-cms-action])):focus-visible{
     display: flex;
     align-items: center;
     justify-content: center;
@@ -101,7 +101,7 @@ ul.barmenu li i{
     line-height: 1;
 }
 
-ul.barmenu > li > a > i.cmsIcon-ellipsis-v{
+ul.barmenu > li > :is(a, button:where([data-cms-action])) > i.cmsIcon-ellipsis-v{
     width: 2rem;
 }
 
@@ -135,8 +135,8 @@ ul.barmenu li ul li{
     border-radius: var(--cmsRadius);
 }
 
-ul.barmenu li ul li a,
-ul.barmenu li ul li a i{
+ul.barmenu li ul li :is(a, button:where([data-cms-action])),
+ul.barmenu li ul li :is(a, button:where([data-cms-action])) i{
     height: auto;
     justify-content: flex-start;
     font-size: 0.9375rem;

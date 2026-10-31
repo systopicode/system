@@ -10,6 +10,8 @@
 SELECT usm_users.*
 FROM usm_users
 WHERE user_id != 1
+    AND COALESCE(user_is_blocked, 0) IN (0, 1)
+    AND (:id IS NOT NULL OR COALESCE(user_is_blocked, 0) = 0)
     AND (:id IS NOT NULL OR COALESCE(user_type, 'person') != 'screen')
     -- Names user_appearance so a database from before the column fails
     -- with 1054 and the provisioner adds it. The comparison is always true.

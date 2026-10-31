@@ -198,7 +198,7 @@ $var_extensions = array();
 foreach ($needed_extensions as $needed_ext) {
     $var_extensions[$needed_ext] = array(
         'label' => "<b>$needed_ext</b> is not loaded",
-        'status' => 'error'
+        'status' => in_array($needed_ext, ['mysqlnd','mysqli','pgsql','imagick','zip','xsl','xmlreader','xmlwriter'], true) ? 'warning' : 'error'
     );
 }
 

@@ -26,7 +26,7 @@
 }
 
 .userList .userStatus.is-stale{
-    background: #ffc107;
+    background: var(--cmsWarning);
 }
 
 @media (prefers-reduced-motion: reduce){
@@ -51,3 +51,5 @@
     color: var(--cmsHighlightColor);
     font-size: 0.85rem;
 }
+
+.userList .userSuper.userBlocked { color:var(--cmsError); }

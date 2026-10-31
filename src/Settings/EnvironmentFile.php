@@ -18,6 +18,7 @@ final class EnvironmentFile
         'mail' => [
             'host' => 'string', 'port' => 'int', 'secure' => 'string',
             'user' => 'string', 'password' => 'string', 'from' => 'string', 'fromName' => 'string',
+            'testMode' => 'bool', 'testRecipient' => 'string',
         ],
         'auth' => [
             'deviceDays' => 'int',
@@ -123,6 +124,10 @@ final class EnvironmentFile
             $kind = self::GROUPS[$group][$key] ?? null;
             if ($kind === null) {
                 return null;
+            }
+            if ($group === 'mail' && $key === 'testRecipient') {
+                $raw = trim($raw);
+                if ($raw !== '' && !filter_var($raw, FILTER_VALIDATE_EMAIL)) return null;
             }
             $bag = is_array($data[$group] ?? null) ? $data[$group] : [];
             $bag[$key] = self::cast($raw, $kind);

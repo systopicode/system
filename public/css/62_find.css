@@ -62,7 +62,7 @@
     list-style: none;
 }
 
-.cmsFindResults ul li a{
+.cmsFindResults ul li :is(a, button:where([data-cms-action])){
     display: flex;
     align-items: center;
     gap: 0.75rem;
@@ -72,33 +72,33 @@
     text-decoration: none;
 }
 
-.cmsFindResults ul li a:hover{
+.cmsFindResults ul li :is(a, button:where([data-cms-action])):hover{
     background: var(--cmsHover);
 }
 
-.cmsFindResults ul li a.is-selected{
+.cmsFindResults ul li :is(a, button:where([data-cms-action])).is-selected{
     background: var(--cmsSelected);
     box-shadow: inset 3px 0 0 var(--cmsInteractive);
 }
 
-.cmsFindResults ul li a i{
+.cmsFindResults ul li :is(a, button:where([data-cms-action])) i{
     width: 1.25rem;
     text-align: center;
     color: var(--cmsMuted);
 }
 
-.cmsFindResults ul li a span{
+.cmsFindResults ul li :is(a, button:where([data-cms-action])) span{
     display: flex;
     flex-direction: column;
     min-width: 0;
 }
 
-.cmsFindResults ul li a b{
+.cmsFindResults ul li :is(a, button:where([data-cms-action])) b{
     font-weight: 500;
     overflow-wrap: anywhere;
 }
 
-.cmsFindResults ul li a small{
+.cmsFindResults ul li :is(a, button:where([data-cms-action])) small{
     overflow: hidden;
     color: var(--cmsMuted);
     text-overflow: ellipsis;

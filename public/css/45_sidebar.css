@@ -44,7 +44,7 @@ aside.cms nav.sidebarTabs ul::-webkit-scrollbar{
     display: none;
 }
 
-aside.cms nav.sidebarTabs button.tabScroll{
+aside.cms nav.sidebarTabs button:where(:not([data-cms-action])).tabScroll{
     position: absolute;
     top: 0.35rem;
     bottom: 1px;
@@ -64,20 +64,20 @@ aside.cms nav.sidebarTabs button.tabScroll{
     cursor: pointer;
 }
 
-aside.cms nav.sidebarTabs button.tabScroll[hidden]{
+aside.cms nav.sidebarTabs button:where(:not([data-cms-action])).tabScroll[hidden]{
     display: none;
 }
 
-aside.cms nav.sidebarTabs button.tabScroll:hover{
+aside.cms nav.sidebarTabs button:where(:not([data-cms-action])).tabScroll:hover{
     color: var(--cmsTextColor);
 }
 
-aside.cms nav.sidebarTabs button.prev{
+aside.cms nav.sidebarTabs button:where(:not([data-cms-action])).prev{
     left: 0;
     box-shadow: 8px 0 8px -4px var(--cmsCanvas);
 }
 
-aside.cms nav.sidebarTabs button.next{
+aside.cms nav.sidebarTabs button:where(:not([data-cms-action])).next{
     right: 0;
     box-shadow: -8px 0 8px -4px var(--cmsCanvas);
 }
@@ -86,7 +86,7 @@ aside.cms nav.sidebarTabs li{
     margin: 0;
 }
 
-aside.cms nav.sidebarTabs ul li a{
+aside.cms nav.sidebarTabs ul li :is(a, button:where([data-cms-action])){
     display: flex;
     align-items: center;
     height: 2.5rem;
@@ -102,12 +102,12 @@ aside.cms nav.sidebarTabs ul li a{
     cursor: pointer;
 }
 
-aside.cms nav.sidebarTabs ul li a:hover{
+aside.cms nav.sidebarTabs ul li :is(a, button:where([data-cms-action])):hover{
     background: none;
     color: var(--cmsTextColor);
 }
 
-aside.cms nav.sidebarTabs ul li a.selected{
+aside.cms nav.sidebarTabs ul li :is(a, button:where([data-cms-action])).selected{
     background: none;
     border-bottom-color: var(--cmsHighlightColor);
     box-shadow: none;
@@ -116,7 +116,7 @@ aside.cms nav.sidebarTabs ul li a.selected{
 }
 
 /****************************** EIN- UND AUSFAHREN ***************************/
-aside.cms a.sidebarFlag{
+aside.cms :is(a, button:where([data-cms-action])).sidebarFlag{
     position: absolute;
     top: 0.75rem;
     left: calc(-1.25rem - 1px);
@@ -132,7 +132,7 @@ aside.cms a.sidebarFlag{
     border-radius: var(--cmsRadius) 0 0 var(--cmsRadius);
     box-shadow: -2px 2px 6px rgba(0,0,0,.18);
     color: var(--cmsMuted);
-    font-size: 0.6875rem;
+    font-size: 0.875rem;
     cursor: pointer;
     touch-action: none;
     -webkit-user-drag: none;   /* a link: the browser would lift it as a drag ghost */
@@ -142,19 +142,20 @@ aside.cms a.sidebarFlag{
 
 /* a finger swipes the flag (pages panel.js): wide enough to catch */
 @media (any-pointer: coarse){
-    aside.cms a.sidebarFlag{
+    aside.cms :is(a, button:where([data-cms-action])).sidebarFlag{
         left: calc(-1.4rem - 1px);
         width: 1.4rem;
         height: 2.75rem;
     }
 }
 
-aside.cms a.sidebarFlag:hover{
+aside.cms :is(a, button:where([data-cms-action])).sidebarFlag:hover{
     color: var(--cmsTextColor);
 }
 
 aside.cms.collapsed{
     min-width: 0;
+    border-left: 0;
     overflow: visible;
 }
 
@@ -401,7 +402,7 @@ aside.cms .settingGroup div[data-on_input] > label:first-child{
     margin-top: 0.55rem;
 }
 
-aside.cms div.sidebarItem a{
+aside.cms div.sidebarItem :is(a, button:where([data-cms-action])){
     color: var(--cmsTextColor);
 }
 
@@ -421,22 +422,22 @@ aside.cms ul li > p{
     display: block;
 }
 
-aside.cms ul li a{
+aside.cms ul li :is(a, button:where([data-cms-action])){
     cursor: pointer;
 }
 
-aside.cms ul li a:not([role="tab"]):not(.icon):not(.sideAction):not(.cmsTextLink){
+aside.cms ul li :is(a, button:where([data-cms-action])):not([role="tab"]):not(.icon):not(.sideAction):not(.cmsTextLink){
     margin-left: -0.5rem;
     padding: 0.3rem 0.5rem;
     border-radius: var(--cmsRadius);
     transition: background-color .15s;
 }
 
-aside.cms ul li a:not([role="tab"]):not(.icon):not(.sideAction):not(.cmsTextLink):hover{
+aside.cms ul li :is(a, button:where([data-cms-action])):not([role="tab"]):not(.icon):not(.sideAction):not(.cmsTextLink):hover{
     background: var(--cmsHover);
 }
 
-aside.cms ul li a.cmsTextLink{
+aside.cms ul li :is(a, button:where([data-cms-action])).cmsTextLink{
     display: inline;
     margin: 0;
     padding: 0;
@@ -448,12 +449,12 @@ aside.cms ul li a.cmsTextLink{
     text-underline-offset: 0.15em;
 }
 
-aside.cms ul li a.cmsTextLink:hover{
+aside.cms ul li :is(a, button:where([data-cms-action])).cmsTextLink:hover{
     background: none;
     color: var(--cmsTextColor);
 }
 
-aside.cms ul li a.selected:not([role="tab"]){
+aside.cms ul li :is(a, button:where([data-cms-action])).selected:not([role="tab"]){
     background: var(--cmsSelected);
     color: var(--cmsHighlightText);
     font-weight: 600;
@@ -467,7 +468,7 @@ aside.cms ul.templates li.seperator:empty{
     border-bottom: 1px solid var(--cmsLineStrong);
 }
 
-aside.cms ul li a.icon{
+aside.cms ul li :is(a, button:where([data-cms-action])).icon{
     margin-left: 0.5rem;
     padding: 0;
 }
@@ -482,7 +483,7 @@ aside.cms ul li i:first-child{
     padding: 0;
 }
 
-aside.cms ul li input + a.icon{
+aside.cms ul li input + :is(a, button:where([data-cms-action])).icon{
     float: none;
 }
 
@@ -536,7 +537,7 @@ aside.cms .sideActions{
     margin-top: 0.35rem;
 }
 
-aside.cms a.sideAction{
+aside.cms :is(a, button:where([data-cms-action])).sideAction{
     display: flex;
     align-items: center;
     justify-content: flex-start;
@@ -557,13 +558,13 @@ aside.cms a.sideAction{
     transition: background-color .15s, color .15s;
 }
 
-aside.cms a.sideAction:hover,
-aside.cms a.sideAction:focus-visible{
+aside.cms :is(a, button:where([data-cms-action])).sideAction:hover,
+aside.cms :is(a, button:where([data-cms-action])).sideAction:focus-visible{
     background: var(--cmsHover);
     outline: none;
 }
 
-aside.cms a.sideAction i{
+aside.cms :is(a, button:where([data-cms-action])).sideAction i{
     width: 1rem;
     margin: 0;
     font-size: 0.85rem;
@@ -571,11 +572,11 @@ aside.cms a.sideAction i{
     text-align: center;
 }
 
-aside.cms a.sideAction:hover i{
+aside.cms :is(a, button:where([data-cms-action])).sideAction:hover i{
     color: inherit;
 }
 
-aside.cms a.sideAction.danger{
+aside.cms :is(a, button:where([data-cms-action])).sideAction.danger{
     margin-top: 1rem;
     color: var(--cmsError);
 }
@@ -707,7 +708,7 @@ aside.cms ul.templates li > *{
     padding: 0;
 }
 
-aside.cms ul.templates a{
+aside.cms ul.templates :is(a, button:where([data-cms-action])){
     display: block;
     margin: 0;
     padding: 0.32rem 0.5rem;
@@ -742,3 +743,10 @@ aside.cms { min-height: 0; overflow: visible; }
 aside.cms > nav.sidebarTabs { flex-shrink: 0; z-index: 2; background: var(--cmsCanvas); touch-action: pan-x; }
 aside.cms > .flexContainer { display: flex; flex-direction: column; height: auto; overflow: hidden; }
 aside.cms > .flexContainer > .scrollContainer { flex: 1 1 0; min-height: 0; height: auto; overscroll-behavior-y: contain; touch-action: pan-y; }
+
+aside.cms .mediaUsage .relationLink > i { margin-top:.15rem; flex-shrink:0; }
+aside.cms .mediaUsage .relationLink small { display:block; color:var(--cmsMuted); font-size:.75rem; font-weight:normal; }
+
+aside.cms .mediaUsage .relationIncoming .relationLink { justify-content:flex-start; align-items:center; text-align:left; width:100%; }
+
+aside.cms .mediaUsage .relationLink:is(:hover,:focus-visible) { border-color:transparent; box-shadow:none; text-decoration:none; }

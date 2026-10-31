@@ -9,8 +9,9 @@
 		<h2>Entries</h2>
 		<a target="_self" href="<?= htmlspecialchars($this->getHref(\http::$root) . 'downloadLog') ?>" class="button"><i class="cmsIcon cmsIcon-file-arrow-down"></i><span>Download</span></a>
 		<?php if (\Systopic\System\Auth\Session::isSuperuser()) { ?>
-		<a data-on_click="userConfirm" data-action="clearLog" data-confirm="Clear this log?" class="button"><i class="cmsIcon cmsIcon-broom"></i><span>Clear</span></a>
+		<button type="button" data-cms-action aria-label="Clear backup log" data-on_click="userConfirm" data-action="clearLog" data-confirm="Clear this log?" class="button"><i class="cmsIcon cmsIcon-broom"></i><span>Clear</span></button>
 		<?php } ?>
 	</header>
+    <?= \Systopic\System\Logs\Filters::controls() ?>
 	<?php include dirname(__DIR__, 3) . '/040_backup/log/text.inc.php'; ?>
 </section>

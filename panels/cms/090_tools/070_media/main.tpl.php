@@ -1,4 +1,4 @@
-<h1>Media</h1>
+<h1>Media repair</h1>
 <p class="tagsHint">Files and the sizes made from them.</p>
 <?= \message::flush() ?>
 <div class="widgets">
@@ -10,7 +10,7 @@
 		</main>
 		<footer>
 			<a class="button put" href="showMediaWithInsufficientPermissions"><i class="cmsIcon cmsIcon-eye"></i><span>Show</span></a>
-			<a class="button submit" data-on_click="userConfirm" data-action="fixMediaPermissions" data-confirm="Make these files readable?"><i class="cmsIcon cmsIcon-wrench"></i><span>Fix</span></a>
+			<button type="button" data-cms-action class="button submit" data-on_click="userConfirm" data-action="fixMediaPermissions" data-confirm="Make these files readable?"><i class="cmsIcon cmsIcon-wrench"></i><span>Fix</span></button>
 		</footer>
 	</section>
 
@@ -22,7 +22,7 @@
 		</main>
 		<footer>
 			<a class="button put" href="showMediaWithoutMimetype"><i class="cmsIcon cmsIcon-eye"></i><span>Show</span></a>
-			<a class="button submit" data-on_click="userConfirm" data-action="updateMediaMimetype" data-confirm="Write the type for up to 2000 files?"><i class="cmsIcon cmsIcon-arrows-rotate"></i><span>Update</span></a>
+			<button type="button" data-cms-action class="button submit" data-on_click="userConfirm" data-action="updateMediaMimetype" data-confirm="Write the type for up to 2000 files?"><i class="cmsIcon cmsIcon-arrows-rotate"></i><span>Update</span></button>
 		</footer>
 	</section>
 
@@ -34,11 +34,11 @@
 		</main>
 		<footer>
 			<a class="button put" href="showMediaWithoutSize"><i class="cmsIcon cmsIcon-eye"></i><span>Show</span></a>
-			<a class="button submit" data-on_click="userConfirm" data-action="updateMediaSize" data-confirm="Write the size for up to 2000 images?"><i class="cmsIcon cmsIcon-arrows-rotate"></i><span>Update</span></a>
+			<button type="button" data-cms-action class="button submit" data-on_click="userConfirm" data-action="updateMediaSize" data-confirm="Write the size for up to 2000 images?"><i class="cmsIcon cmsIcon-arrows-rotate"></i><span>Update</span></button>
 		</footer>
 	</section>
 
-	<section class="widget is-wide">
+	<section class="widget">
 		<header><h2>Crops</h2></header>
 		<main>
 			<p class="tagsHint">A generated size of an image or a video. Clear cache deletes those files; they are rebuilt when a page needs them. Remove frames deletes the saved crop of an image, so it uses the automatic frame again.</p>
@@ -53,7 +53,7 @@
 						}
 						$format_info = mediaFormats::sizeLabel($image_format);
 						?>
-						<option value="<?= htmlspecialchars((string) $key) ?>"><?= htmlspecialchars((string) $key) ?> (<?= htmlspecialchars((string) $format_info) ?>)</option>
+						<option value="<?= htmlspecialchars((string) $key) ?>"><?= htmlspecialchars(mediaFormats::label((string) $key, $image_format)) ?> (<?= htmlspecialchars((string) $format_info) ?>)</option>
 					<?php } ?>
 				</optgroup>
 				<?php if (defined('VIDEO_FORMATS') && is_array(VIDEO_FORMATS) && VIDEO_FORMATS !== []) { ?>
@@ -62,7 +62,7 @@
 							$width = (int) ($video_format['max_width'] ?? 0);
 							$format_info = $width > 0 ? 'max ' . $width . ' px' : '';
 							?>
-							<option value="<?= htmlspecialchars((string) $key) ?>"><?= htmlspecialchars((string) $key) ?><?= $format_info !== '' ? ' (' . htmlspecialchars($format_info) . ')' : '' ?></option>
+							<option value="<?= htmlspecialchars((string) $key) ?>"><?= htmlspecialchars(mediaFormats::label((string) $key, $video_format)) ?><?= $format_info !== '' ? ' (' . htmlspecialchars($format_info) . ')' : '' ?></option>
 						<?php } ?>
 					</optgroup>
 				<?php } ?>
@@ -70,8 +70,8 @@
 			</label>
 		</main>
 		<footer>
-			<a class="button" data-on_click="cropAction" data-action="removeCropCache" data-confirm="Clear the generated files for this format?"><i class="cmsIcon cmsIcon-broom"></i><span>Clear cache</span></a>
-			<a class="button submit" data-on_click="cropAction" data-action="removeCropParams" data-confirm="Remove the saved crop frames for this format?"><i class="cmsIcon cmsIcon-frame"></i><span>Remove frames</span></a>
+			<button type="button" data-cms-action class="button" data-on_click="cropAction" data-action="removeCropCache" data-confirm="Clear the generated files for this format?"><i class="cmsIcon cmsIcon-broom"></i><span>Clear cache</span></button>
+			<button type="button" data-cms-action class="button submit" data-on_click="cropAction" data-action="removeCropParams" data-confirm="Remove the saved crop frames for this format?"><i class="cmsIcon cmsIcon-frame"></i><span>Remove frames</span></button>
 		</footer>
 	</section>
 </div>

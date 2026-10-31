@@ -18,7 +18,7 @@
 /* The sign-in screen keeps its own petrol scene. It does not follow the account. */
 html[data-mode="dark"]:not(:has(.authCard)) {
 	color-scheme: dark;
-	background-color: var(--cmsTextHold);
+	background-color: var(--cmsMainColor);
 }
 
 html[data-mode="dark"] body.cms:not(:has(.authCard)),
@@ -77,26 +77,28 @@ html[data-mode="dark"] body.cms:not(:has(.authCard)) div.signet span {
 }
 
 /* The open tree row stays the light brand chip, so its type stays dark. */
-html[data-mode="dark"] body.cms:not(:has(.authCard)) ul.tree li.active > label a.label {
+html[data-mode="dark"] body.cms:not(:has(.authCard)) ul.tree li.active > label :is(:is(a, button:where([data-cms-action])),button:where(:not([data-cms-action]))).label,
+html[data-mode="dark"] body.cms:not(:has(.authCard)) ul.tree li.active > label :is(a, button:where([data-cms-action])).fold,
+html[data-mode="dark"] body.cms:not(:has(.authCard)) ul.tree li.active > label .label i.type {
 	color: var(--cmsMainColor);
 }
 
 /* Status marks on a dark row need more ink. On the light open row they flip back. */
-html[data-mode="dark"] body.cms:not(:has(.authCard)) ul.tree label > a:not(.label):not(.fold):not(.alias):not(.redirect),
+html[data-mode="dark"] body.cms:not(:has(.authCard)) ul.tree label > :is(a, button:where([data-cms-action])):not(.label):not(.fold):not(.alias):not(.redirect),
 html[data-mode="dark"] body.cms:not(:has(.authCard)) ul.tree label > i:not(.treeGrip),
 html[data-mode="dark"] body.cms:not(:has(.authCard)) ul.tree i.treeGrip,
-html[data-mode="dark"] body.cms:not(:has(.authCard)) ul.tree button.treeMenu {
+html[data-mode="dark"] body.cms:not(:has(.authCard)) ul.tree button:where(:not([data-cms-action])).treeMenu {
 	color: color-mix(in srgb, var(--cmsTextColor) 82%, transparent);
 }
 
-html[data-mode="dark"] body.cms:not(:has(.authCard)) ul.tree li.active > label > a:not(.label):not(.fold):not(.alias):not(.redirect),
+html[data-mode="dark"] body.cms:not(:has(.authCard)) ul.tree li.active > label > :is(a, button:where([data-cms-action])):not(.label):not(.fold):not(.alias):not(.redirect),
 html[data-mode="dark"] body.cms:not(:has(.authCard)) ul.tree li.active > label > i:not(.treeGrip),
 html[data-mode="dark"] body.cms:not(:has(.authCard)) ul.tree li.active > label i.treeGrip,
-html[data-mode="dark"] body.cms:not(:has(.authCard)) ul.tree li.active > label button.treeMenu {
+html[data-mode="dark"] body.cms:not(:has(.authCard)) ul.tree li.active > label button:where(:not([data-cms-action])).treeMenu {
 	color: var(--cmsMainColor);
 }
 
-html[data-mode="dark"] body.cms:not(:has(.authCard)) aside.cms a.sideAction i {
+html[data-mode="dark"] body.cms:not(:has(.authCard)) aside.cms :is(a, button:where([data-cms-action])).sideAction i {
 	color: var(--cmsTextColor);
 }
 
@@ -127,8 +129,8 @@ html[data-mode="dark"] body.cms .fileFrame svg.qr-code {
 	border-radius: var(--cmsRadius);
 }
 
-html[data-mode="dark"] body.cms:not(:has(.authCard)) .cmslightbox :is(a, button):has([class*="xmark"]),
-html[data-mode="dark"] body.cms:not(:has(.authCard)) .cmslightbox :is(a, button):has([class*="xmark"]) i,
+html[data-mode="dark"] body.cms:not(:has(.authCard)) .cmslightbox :is(:is(a, button:where([data-cms-action])), button:where(:not([data-cms-action]))):has([class*="xmark"]),
+html[data-mode="dark"] body.cms:not(:has(.authCard)) .cmslightbox :is(:is(a, button:where([data-cms-action])), button:where(:not([data-cms-action]))):has([class*="xmark"]) i,
 html[data-mode="dark"] body.cms:not(:has(.authCard)) [data-box-close],
 html[data-mode="dark"] body.cms:not(:has(.authCard)) [data-box-close] i {
 	color: var(--cmsBrandInk);
@@ -140,7 +142,7 @@ body.cms .appearanceChoices {
 	gap: 0.75rem;
 }
 
-body.cms .appearanceChoices button {
+body.cms .appearanceChoices button:where(:not([data-cms-action])) {
 	display: flex;
 	flex-direction: column;
 	align-items: flex-start;
@@ -156,27 +158,27 @@ body.cms .appearanceChoices button {
 	white-space: normal;
 }
 
-body.cms .appearanceChoices button i {
+body.cms .appearanceChoices button:where(:not([data-cms-action])) i {
 	font-size: 1rem;
 	color: var(--cmsBrandInk);
 }
 
-body.cms .appearanceChoices button span {
+body.cms .appearanceChoices button:where(:not([data-cms-action])) span {
 	font-weight: 600;
 }
 
-body.cms .appearanceChoices button small {
+body.cms .appearanceChoices button:where(:not([data-cms-action])) small {
 	color: var(--cmsMuted);
 	font-size: 0.75rem;
 	line-height: 1.3;
 }
 
-body.cms .appearanceChoices button:hover {
+body.cms .appearanceChoices button:where(:not([data-cms-action])):hover {
 	background: var(--cmsHover);
 	color: var(--cmsTextColor);
 }
 
-body.cms .appearanceChoices button[aria-checked="true"] {
+body.cms .appearanceChoices button:where(:not([data-cms-action]))[aria-checked="true"] {
 	border-color: var(--cmsHighlightColor);
 	outline: 1px solid var(--cmsHighlightColor);
 	outline-offset: -2px;

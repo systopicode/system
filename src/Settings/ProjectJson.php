@@ -128,7 +128,7 @@ final class ProjectJson
             $row['megapixels'] = (float) ($row['megapixels'] ?? 0) > 0 ? $row['megapixels'] : 3;
             unset($row['width'], $row['height']);
         } else {
-            unset($row['megapixels']);
+            unset($row['megapixels'], $row['aspect_ratio']);
             if ((int) ($row['width'] ?? 0) <= 0 && (int) ($row['height'] ?? 0) <= 0) $row['width'] = 1600;
         }
         unset($row['autocrop'], $row['autocrop_limit']);
@@ -387,6 +387,14 @@ final class ProjectJson
         if ($current === null || !is_array($rows[$current])) {
             return false;
         }
+        if ($id === 'call:mediaFormats::add' && $field === 'aspect_ratio') {
+            $value = trim($text);
+            if ((float) ($rows[$current]['megapixels'] ?? 0) <= 0 || ($value !== '' && \mediaFormats::aspectRatio($value) === null)) return false;
+            if ($value === '') unset($rows[$current]['aspect_ratio']);
+            else $rows[$current]['aspect_ratio'] = str_replace('/', ':', $value);
+            $this->putRecords($id, $rows);
+            return $this->save();
+        }
         if ($id === 'call:mediaFormats::add' && in_array($field, ['megapixels','width','height'], true)) {
             $number = trim($text) === '' ? 0 : filter_var($text, FILTER_VALIDATE_FLOAT);
             if ($number === false || !is_finite((float) $number) || $number < 0 || ($field === 'megapixels' && $number <= 0)
@@ -395,7 +403,7 @@ final class ProjectJson
                 unset($rows[$current]['width'], $rows[$current]['height']);
                 $rows[$current][$field] = (float) $number;
             } else {
-                unset($rows[$current]['megapixels']);
+                unset($rows[$current]['megapixels'], $rows[$current]['aspect_ratio']);
                 if ($number > 0) $rows[$current][$field] = (int) $number;
                 else unset($rows[$current][$field]);
             }

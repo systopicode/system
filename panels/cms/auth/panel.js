@@ -3,11 +3,16 @@
     const setup = {info: 'CMS authentication', route: 'panels.cms.auth', extends: 'classes.panelNode'};
     let screenPollTimer = null;
     let authSlide = null;
+    let resetEmail = '';
     const slideEase = 'transform 0.32s cubic-bezier(0.32, 0.72, 0, 1)';
 
     const captureSlide = (event) => {
         const link = event.target && event.target.closest && event.target.closest('.authCard a.ajax');
         if (!link) return;
+        if (link.matches('.authLinks a[href*="resetPassword"]')) {
+            const username = link.closest('.authCard').querySelector('input[name="username"]')?.value.trim() || '';
+            resetEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(username) ? username : '';
+        }
         const dir = link.classList.contains('authMethod') ? 'forward'
             : (link.classList.contains('authSwitch') || link.classList.contains('authBack') ? 'back' : null);
         const main = dir && link.closest('.authCard')?.querySelector(':scope > main');
@@ -66,8 +71,11 @@
     };
 
     const boot = () => {
+        const email = document.querySelector('.authCard input[name="email_reset"]');
+        if (email && resetEmail) { if (!email.value) email.value = resetEmail; resetEmail = ''; }
         runSlide();
         if (window.sys && sys.passkeys) {
+            sys.passkeys.checkSupport();
             sys.passkeys.attachAutofill();
             sys.passkeys.startIfAuto();
         }
@@ -86,7 +94,8 @@
                 .then(answer => {
                     if (answer.paired) {
                         clearInterval(screenPollTimer);
-                        location.href = answer.redirect;
+                        sys.passkeys.showSignedIn(block, answer.profile, answer.redirect);
+                        setTimeout(() => { location.href = answer.redirect; }, 2000);
                     } else if (answer.expired) {
                         clearInterval(screenPollTimer);
                         location.reload();

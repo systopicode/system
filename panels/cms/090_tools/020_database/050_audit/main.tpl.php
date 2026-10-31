@@ -52,7 +52,7 @@ foreach ($actions as $action) {
 	Every action that would make the database match the model: tables, columns, indexes, foreign keys, orphaned rows and migrations.
 </p>
 <div class="schemaBar">
-	<a class="button" data-on_click="runAudit" title="Run the audit again"><i class="cmsIcon cmsIcon-arrows-rotate"></i><span>Refresh</span></a>
+	<button type="button" data-cms-action class="button" data-on_click="runAudit" title="Run the audit again"><i class="cmsIcon cmsIcon-arrows-rotate"></i><span>Refresh</span></button>
 </div>
 
 <?php if ($actions === []): ?>
@@ -61,7 +61,7 @@ foreach ($actions as $action) {
 <?php endif; ?>
 
 <?php // no method= - the client reads that as PUT and puts the fields into put->form ?>
-<form action="applyAudit" class="auditForm">
+<form action="applyAudit" class="auditForm" data-feedback="parameters">
 	<?php foreach ($groups as $kind => $group):
 		$discard = count(array_filter($group, static fn($a) => $a->destructive));
 		$fail = count(array_filter($group, static fn($a) => $a->blocked));
@@ -84,7 +84,7 @@ foreach ($actions as $action) {
 							?>
 							<tr class="<?= $row ?>">
 								<td class="auditCheck">
-									<input type="checkbox" name="run:<?= $e($action->key()) ?>" value="1"<?= $action->destructive || $action->blocked ? '' : ' checked' ?>>
+									<input class="custom" id="audit-<?= $e($action->key()) ?>" type="checkbox" name="run:<?= $e($action->key()) ?>" value="1"<?= $action->destructive || $action->blocked ? '' : ' checked' ?>><label for="audit-<?= $e($action->key()) ?>" aria-label="Select <?= $e($action->subject) ?>"></label>
 								</td>
 								<td><span class="auditSubject"><?= $e($action->subject) ?></span></td>
 								<td>
@@ -101,10 +101,10 @@ foreach ($actions as $action) {
 										// An <a>, not a <button>: every submit button in the form would
 										// send its value and the last would win. Only what discards data asks.
 										if ($action->destructive): ?>
-											<a class="button submit" data-on_click="userConfirm" data-action="applyAudit" data-key="<?= $e($action->key()) ?>"
-											   data-confirm="<?= $e('Run ' . $action->kind->value . ' on ' . $action->subject . '? ' . $action->describe . '. This discards data.') ?>"><i class="cmsIcon cmsIcon-play"></i><span>Run</span></a>
+											<button type="button" data-cms-action class="button submit" data-on_click="userConfirm" data-action="applyAudit" data-key="<?= $e($action->key()) ?>"
+											   data-confirm="<?= $e('Run ' . $action->kind->value . ' on ' . $action->subject . '? ' . $action->describe . '. This discards data.') ?>"><i class="cmsIcon cmsIcon-play"></i><span>Run</span></button>
 										<?php else: ?>
-											<a class="button submit" data-on_click="applyAudit" data-key="<?= $e($action->key()) ?>"><i class="cmsIcon cmsIcon-play"></i><span>Run</span></a>
+											<button type="button" data-cms-action class="button submit" data-on_click="applyAudit" data-key="<?= $e($action->key()) ?>"><i class="cmsIcon cmsIcon-play"></i><span>Run</span></button>
 										<?php endif;
 									endif; ?>
 								</td>
@@ -121,11 +121,11 @@ foreach ($actions as $action) {
 		<div class="auditButtons">
 			<button type="submit" class="button submit"><i class="cmsIcon cmsIcon-play"></i><span>Run checked</span></button>
 			<?php // the same body as "Run checked", with FOREIGN_KEY_CHECKS = 0 for the run ?>
-			<a class="button" data-on_click="applyAudit" data-nofk="1"
-			   title="Runs the checked actions with FOREIGN_KEY_CHECKS = 0, switched back on afterwards."><i class="cmsIcon cmsIcon-link-slash"></i><span>Run checked without FK checks</span></a>
-			<a class="button" data-on_click="applyLossless"><i class="cmsIcon cmsIcon-shield-check"></i><span>Run lossless only (<?= $lossless ?>)</span></a>
-			<a class="button" data-on_click="userConfirm" data-action="applyAll"
-			   data-confirm="<?= $e('Run all ' . count($actions) . ' actions, including ' . $destructive . ' that discard data?') ?>"><i class="cmsIcon cmsIcon-forward"></i><span>Run all (<?= count($actions) ?>)</span></a>
+			<button type="button" data-cms-action class="button" data-on_click="applyAudit" data-nofk="1"
+			   title="Runs the checked actions with FOREIGN_KEY_CHECKS = 0, switched back on afterwards."><i class="cmsIcon cmsIcon-link-slash"></i><span>Run checked without FK checks</span></button>
+			<button type="button" data-cms-action class="button" data-on_click="applyLossless"><i class="cmsIcon cmsIcon-shield-check"></i><span>Run lossless only (<?= $lossless ?>)</span></button>
+			<button type="button" data-cms-action class="button" data-on_click="userConfirm" data-action="applyAll"
+			   data-confirm="<?= $e('Run all ' . count($actions) . ' actions, including ' . $destructive . ' that discard data?') ?>"><i class="cmsIcon cmsIcon-forward"></i><span>Run all (<?= count($actions) ?>)</span></button>
 		</div>
 		<p class="tagsHint">
 			Red rows discard data, amber ones would fail on the data as it stands - the finding says how many rows

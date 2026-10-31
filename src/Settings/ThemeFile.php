@@ -250,7 +250,9 @@ final class ThemeFile
             echo '<label><input type="color" data-on_change="save" data-key="' . $e($name) . '" name="value" value="' . $e($hex) . '" aria-label="' . $e($label) . '">';
             echo '<i style="background-color:' . $e($hex) . '"></i><span>' . $e($label) . '<small>' . $e($hex) . '</small></span></label>';
         }
-        echo '</div></main></section>';
+        echo '</div>';
+        Contrast::render();
+        echo '</main></section>';
         ThemeAssets::render($panel);
         echo '<section class="widget themeIcons"><header><h2>Icon sets</h2></header><main>';
         echo '<p>Tabler Outline is used for controls and content. Small information hints use the original Solar info-circle motif in one colour. Phosphor Duotone is used for main navigation, including Tools (Wrench), custom main-navigation panels and the passkey animation. Cleanup and log clearing use the Tabler eraser. All icons are served locally.</p>';
@@ -260,20 +262,19 @@ final class ThemeFile
         echo '</nav>';
         echo '</main></section>';
 
-
         $pagesHere = self::pagesPanelPresent();
         if ($pagesHere) {
             echo '<section class="widget"><header><h2>Page overrides</h2></header>';
             echo '<form method="post" action="saveCss">';
             echo '<main><p class="tagsHint">pages_overrides.css. Only the page preview, and only while the pages panel is installed. Selectors are parsed into the page.</p>';
-            echo '<textarea class="themeCss" name="css" spellcheck="false" autocomplete="off" autocapitalize="off">' . $e(self::readCss()) . '</textarea></main>';
+            echo '<textarea class="themeCss" name="css" aria-label="Public website CSS" spellcheck="false" autocomplete="off" autocapitalize="off">' . $e(self::readCss()) . '</textarea></main>';
             echo '<footer><button type="submit" class="button submit"><i class="cmsIcon cmsIcon-check"></i>Save CSS</button></footer>';
             echo '</form></section>';
         }
         echo '<section class="widget"><header><h2>System overrides</h2></header>';
         echo '<form method="post" action="saveSystemCss">';
         echo '<main><p class="tagsHint">system_overrides.css. Loaded in the CMS only, not on the public site, and not parsed into the page preview.</p>';
-        echo '<textarea class="themeCss" name="css" spellcheck="false" autocomplete="off" autocapitalize="off">' . $e(self::readSystemCss()) . '</textarea></main>';
+        echo '<textarea class="themeCss" name="css" aria-label="CMS system overrides CSS" spellcheck="false" autocomplete="off" autocapitalize="off">' . $e(self::readSystemCss()) . '</textarea></main>';
         echo '<footer><button type="submit" class="button submit"><i class="cmsIcon cmsIcon-check"></i>Save CSS</button></footer>';
         echo '</form></section></div>';
     }

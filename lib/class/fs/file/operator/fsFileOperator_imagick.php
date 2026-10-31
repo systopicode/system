@@ -57,6 +57,13 @@ class fsFileOperator_imagick extends fsFileOperator {
 			} else {
 				$this->imagick->readImageBlob($this->file->contents);
 			}
+			// Device cameras often store rotation/mirroring in EXIF instead of pixels.
+			// Normalize before measuring/resampling or converting to PNG. Keep originals intact.
+			if (in_array($this->imagick->getImageOrientation(), range(2, 8), true)) {
+				$this->imagick->autoOrient();
+				$this->imagick->setImageOrientation(Imagick::ORIENTATION_TOPLEFT);
+				$this->imagick->setImagePage(0, 0, 0, 0);
+			}
 			$this->read = TRUE;
 		} catch (Exception $exception) {
 			p('imagick error readImageBlob - contensize:' . strlen($this->file->contents));

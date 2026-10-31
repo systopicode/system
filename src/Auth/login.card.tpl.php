@@ -68,17 +68,11 @@ $showSwitch = ($authMethod === 'passkey' && $authPasskey)
 $codeChars = str_split(substr(strtoupper((string) preg_replace('/[^0-9A-Z]/', '', $authCode)), 0, 8));
 ?>
 <main class="authSignin">
-    <div class="authPane">
     <?php if ($authMethod === 'signedIn') { ?>
-        <div class="authSuccess">
-            <span class="authTick" aria-hidden="true"><i class="cmsIcon cmsIcon-check"></i></span>
-            <h1>Successfully signed in</h1>
-            <p class="authLead">Welcome back!</p>
-            <?= $authMessages ?>
-            <div class="authProgress" aria-hidden="true"><span></span></div>
-            <p class="authWait">Redirecting in 2 seconds …</p>
-        </div>
-    <?php } elseif ($authMethod === 'passkey' && $authPasskey) { ?>
+        <?php $authSuccessHidden = false; include __DIR__ . '/signed-in.tpl.php'; ?>
+    <?php } else { ?>
+    <div class="authPane">
+    <?php if ($authMethod === 'passkey' && $authPasskey) { ?>
         <div class="passkeys passkeyLogin" data-passkey-endpoint="<?= $e($authEndpoint) ?>" data-passkey-origin="<?= $e($origin ?? '') ?>" data-passkey-token="<?= $e(\Systopic\System\Auth\PasskeyChallenge::token()) ?>" data-passkey-auto="1">
             <div class="passkeyAuthFeedback"><div class="passkeyArtwork"><?php include __DIR__ . '/passkey-icons.tpl.php'; ?></div></div>
             <h1>Use your passkey</h1>
@@ -89,7 +83,6 @@ $codeChars = str_split(substr(strtoupper((string) preg_replace('/[^0-9A-Z]/', ''
     <?php } elseif ($authMethod === 'device' && $authCodes) { ?>
         <div class="authBody">
             <h1><?= $e($authPairTitle ?? 'Remote login') ?></h1>
-            <p class="authLead">&nbsp;</p>
             <?= $authMessages ?>
             <?php if ($qr !== '') { ?>
                 <div class="authQrWrap" data-screen-pairing data-code-until="<?= (int) ($authPair['expires'] ?? 0) ?>">
@@ -107,7 +100,6 @@ $codeChars = str_split(substr(strtoupper((string) preg_replace('/[^0-9A-Z]/', ''
     <?php } elseif ($authMethod === 'code' && $authCodes) { ?>
         <div class="authBody">
             <h1>Sign-in code</h1>
-            <p class="authLead">&nbsp;</p>
             <?= $authMessages ?>
             <div class="qrScan" data-qr-host="login" data-profile="<?= $e($authProfile) ?>" hidden>
                 <div class="qrScanStage">
@@ -121,7 +113,7 @@ $codeChars = str_split(substr(strtoupper((string) preg_replace('/[^0-9A-Z]/', ''
                 <div class="qrScanDim" data-qr-dim hidden>
                     <strong data-qr-dim-title>Scanning timed out</strong>
                     <p data-qr-dim-text></p>
-                    <button type="button" class="button submit" data-qr-again><i class="cmsIcon cmsIcon-rotate-right"></i> <span data-qr-label>Try again</span></button>
+                    <button type="button" class="button submit" data-qr-again><i class="cmsIcon cmsIcon-arrows-rotate"></i> <span data-qr-label>Try again</span></button>
                 </div>
             </div>
             <form class="authCodeForm appLoginForm" data-code-form method="post" action="redeemCode" <?= $authAuto ? 'data-auto-submit' : '' ?> onsubmit='this.classList.add("loading")'>
@@ -142,6 +134,8 @@ $codeChars = str_split(substr(strtoupper((string) preg_replace('/[^0-9A-Z]/', ''
             </form>
             <script>
                 (function () {
+                    // A failed attempt stays in the manual form, even if incomplete or empty.
+                    if (<?= !empty($authCodeAttempted) ? 'true' : 'false' ?>) return;
                     var desktop = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
                     if (desktop) return;
                     var filled = document.querySelector('[data-code-form] input[name="code"]');
@@ -160,6 +154,7 @@ $codeChars = str_split(substr(strtoupper((string) preg_replace('/[^0-9A-Z]/', ''
         <?= $authMessages ?>
         <?= $passkeyBox ?>
         <form class="appLoginForm" method="post" action="doLogin" onsubmit='this.classList.add("loading")'>
+            <input type="hidden" name="passkey_supported" value="0">
             <?php if ($authNext !== '') { ?>
                 <input type="hidden" name="next" value="<?= $e($authNext) ?>">
             <?php } ?>
@@ -174,12 +169,12 @@ $codeChars = str_split(substr(strtoupper((string) preg_replace('/[^0-9A-Z]/', ''
             </div>
             <p class="authError" id="appLoginError" hidden></p>
             <button class="button submit authPasswordButton" type="submit"><i class="cmsIcon cmsIcon-right-to-bracket"></i> Sign in</button>
-        </form>
         <?php if ($authForgot !== null || $authRegister !== null) { ?>
             <p class="authLinks">
                 <?php if ($authForgot !== null) { ?><a href="<?= $e($authForgot) ?>" class="<?= $e($authForgotClass) ?>">Forgot your password?</a><?php } ?>
             </p>
         <?php } ?>
+        </form>
     <?php } else { ?>
         <h1>Sign in</h1>
         <p class="authLead">&nbsp;</p>
@@ -205,21 +200,16 @@ $codeChars = str_split(substr(strtoupper((string) preg_replace('/[^0-9A-Z]/', ''
                 </a>
             <?php } ?>
             <a class="authMethod ajax" href="?method=password">
-                <i class="cmsIcon cmsIcon-user"></i>
+                <i class="cmsIcon cmsIcon-input-password"></i>
                 <span><b>Username &amp; password</b><small>Username and password.</small></span>
                 <i class="cmsIcon cmsIcon-chevron-right"></i>
             </a>
         </div>
     <?php } ?>
     </div>
+    <?php } ?>
     <?php if ($showSwitch) { echo $switch; } ?>
     <?php if ($authMethod !== 'signedIn') { ?>
-    <div class="authSuccess" data-auth-success hidden>
-        <span class="authTick" aria-hidden="true"><i class="cmsIcon cmsIcon-check"></i></span>
-        <h1>Successfully signed in</h1>
-        <p class="authLead">Welcome back!</p>
-        <div class="authProgress" aria-hidden="true"><span></span></div>
-        <p class="authWait">Redirecting in 2 seconds …</p>
-    </div>
+    <?php $authSuccessHidden = true; include __DIR__ . '/signed-in.tpl.php'; ?>
     <?php } ?>
 </main>

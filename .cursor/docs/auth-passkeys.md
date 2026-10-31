@@ -96,9 +96,7 @@ Meldungen stehen im regulären oberen `message::flush([], true)`-Container.
 Fehler/Abbruch stellt die Loginoptionen wieder her. Das Profil verwendet den
 vorhandenen globalen Message-Container, der Setup-Dialog seinen lokalen.
 
-`fingerprint.tpl.php` ist die bewusste Ausnahme zu Font Awesome: das gelieferte
-Regular-SVG. Dieselbe Geometrie in `passkey-icons.tpl.php` ist in helle und dunkle
-Liniengruppen aufgeteilt. Fingerprint, Face und Schloss wechseln während der
+Die drei Motive in `passkey-icons.tpl.php` verwenden Tabler Outline 3.50.0 (MIT), mit angepasster Strichstärke, expliziten Primär-/Sekundärrollen und Tonflächen. Die Originalquellen und Änderungen sind im Icon-Lizenzinventar dokumentiert. Fingerprint, Face und Schloss wechseln während der
 Einrichtung; erst nach Serverbestätigung bleibt das Schloss stehen. Farben
 folgen `cmsMainColor`/`cms-main`, reduzierte Bewegung wird berücksichtigt.
 

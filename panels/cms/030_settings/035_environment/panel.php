@@ -11,7 +11,7 @@ use Systopic\System\Panels\Root\Cms\Settings\Panel as SettingsPanel;
  */
 class Panel extends SettingsPanel
 {
-    public $icon = 'cmsIcon cmsIcon-sliders';
+    public $icon = 'cmsIcon cmsIcon-server';
 
     public bool $buildChildPanels = false;
 

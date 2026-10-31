@@ -203,12 +203,18 @@ var focusPath = (function () {
 
 	/** old takes the attributes of neu. */
 	function attributes(old, neu) {
+        // Kept editor content must keep the version it was based on too.
+        // A live render may carry a newer version belonging to somebody else.
+        var fieldVersion = old.getAttribute('data-field_version');
+        var keepVersion = fieldVersion !== null && (old === document.activeElement || old.contains(document.activeElement));
 		Array.from(old.attributes).forEach(attribute => {
+			if (keepVersion && attribute.name === 'data-field_version') return;
 			if (!neu.hasAttribute(attribute.name)) {
 				old.removeAttribute(attribute.name);
 			}
 		});
 		Array.from(neu.attributes).forEach(attribute => {
+            if (keepVersion && attribute.name === 'data-field_version') return;
 			if (old.getAttribute(attribute.name) !== attribute.value) {
 				old.setAttribute(attribute.name, attribute.value);
 			}

@@ -66,6 +66,26 @@ final class EnvironmentForm
             \message::error('That config file is not here.');
             return;
         }
+        if ($panel->action === 'testMail') {
+            $current = false;
+            foreach (EnvironmentFile::files() as $info) if ($info['file'] === $file && $info['current'] && $file !== 'config.local.json') $current = true;
+            if (!Session::isSuperuser() || !$current) {
+                \message::error('Only a superuser can test mail for the active environment.');
+                return;
+            }
+            try {
+                $result = \Systopic\System\Mail\TestDelivery::send();
+                $text = ($result['ok'] ? 'SMTP accepted the test message' : 'SMTP did not accept the test message') . ' for ' . $result['recipient'] . '. Test routing: ' . ($result['testMode'] ? 'on' : 'off') . '. SMTP acceptance does not confirm inbox delivery.';
+                $result['ok'] ? \message::confirm($text) : \message::error($text . ' Check the email log and mail settings.');
+            } catch (\Throwable $error) {
+                $settings = \Systopic\System\Mail\Delivery::settings();
+                $detail = \Systopic\System\Mail\Failure::detail($error->getMessage(), $settings);
+                $hint = \Systopic\System\Mail\Failure::hint($detail);
+                \message::error('Test mail failed. ' . $hint . ' Server response: ' . htmlspecialchars($detail, ENT_QUOTES));
+            }
+            $panel->updateView();
+            return;
+        }
         if (in_array($panel->action, ['connectHub', 'startRelay', 'stopRelay', 'addHubOrigin', 'removeHubOrigin'], true)) {
             self::hubAction($panel, $file);
             return;
@@ -249,7 +269,7 @@ final class EnvironmentForm
         echo '</td></tr>';
         echo '</tbody></table></div>';
         echo '<p class="cmsBoxLead">Replacing the key makes codes already sent stop working.</p>';
-        echo '<button type="button" class="button" data-on_click="userConfirm" data-action="replaceAuth" data-confirm="Replace the sign-in key? Codes already sent stop working." data-file="' . $e($file) . '"><i class="cmsIcon cmsIcon-rotate-right"></i> Replace sign-in key</button>';
+        echo '<button type="button" class="button" data-on_click="userConfirm" data-action="replaceAuth" data-confirm="Replace the sign-in key? Codes already sent stop working." data-file="' . $e($file) . '"><i class="cmsIcon cmsIcon-arrows-rotate"></i> Replace sign-in key</button>';
         if (Session::isSuperuser()) {
             echo '<button type="button" class="button" data-on_click="userConfirm" data-action="removeAuth" data-confirm="Delete the sign-in key? Codes already sent stop working." data-file="' . $e($file) . '"><i class="cmsIcon cmsIcon-trash"></i> Delete sign-in key</button>';
         }
@@ -261,6 +281,9 @@ final class EnvironmentForm
     {
         $e = static fn($value): string => htmlspecialchars((string) $value, ENT_QUOTES);
         echo '<section class="widget"><header><h2>' . $e($title) . '</h2></header>';
+        if ($group === 'mail') {
+            echo '<main><p class="tagsHint">Test mode redirects all To, CC and BCC recipients to the test recipient. DEV always uses test routing, even when this switch is off. Enable the switch to use test routing in LIVE or STAGING. Leave the recipient empty to use testmail@systopic.media. Invalid test recipients block delivery.</p></main>';
+        }
         echo '<div class="tableScroll"><table class="scalars"><tbody>';
         foreach ($schema as $key => $kind) {
             $value = $values[$key] ?? ($kind === 'bool' ? false : '');
@@ -268,7 +291,18 @@ final class EnvironmentForm
             self::control($file, $group, $key, $kind, $value);
             echo '</td></tr>';
         }
-        echo '</tbody></table></div></section>';
+        echo '</tbody></table></div>';
+        if ($group === 'mail' && Session::isSuperuser()) {
+            foreach (EnvironmentFile::files() as $info) if ($info['file'] === $file && $info['current'] && $file !== 'config.local.json') {
+                $effective = \Systopic\System\Mail\Delivery::settings();
+                $transport = trim((string) ($effective['host'] ?? '')) ?: 'Local mail catcher (127.0.0.1:1025)';
+                try { $recipient = \Systopic\System\Mail\Delivery::testRecipient(); }
+                catch (\RuntimeException) { $recipient = 'Invalid recipient — delivery blocked'; }
+                echo '<main><p class="tagsHint">Effective delivery: <strong>' . $e($transport) . '</strong> → <strong>' . $e($recipient) . '</strong>. Local overrides apply. SMTP acceptance confirms handover to this server, not delivery to the inbox.</p></main>';
+                echo '<footer><button type="button" class="button" data-action-feedback data-on_click="testMail" data-file="' . $e($file) . '"><i class="cmsIcon cmsIcon-paper-plane"></i>Send test email</button><a class="button transparent" href="' . $e(\http::$root . 'cms/tools/logs/email/') . '"><i class="cmsIcon cmsIcon-envelope"></i>Email log</a></footer>';
+            }
+        }
+        echo '</section>';
     }
 
     /** @param array<string, mixed> $data */
@@ -305,7 +339,7 @@ final class EnvironmentForm
             }
             echo '<tr>';
             foreach (EnvironmentFile::MATCH as $field) {
-                $attrs = ' data-file="' . $e($file) . '" data-index="' . (int) $index . '" data-field="' . $e($field) . '"';
+                $attrs = ' aria-label="' . $e(self::label($field) . ': rule ' . ($index + 1)) . '" data-file="' . $e($file) . '" data-index="' . (int) $index . '" data-field="' . $e($field) . '"';
                 $validation = $field === 'serverIp' ? ' pattern="(?:(?:(?:25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])\.){3}(?:25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])|(?:[0-9a-fA-F]*:){2,}[0-9a-fA-F:.]*)" title="Enter a valid IPv4 or IPv6 address, or leave empty."' : '';
                 if ($field === 'serverIp' && trim((string) ($rule[$field] ?? '')) !== '' && !filter_var(trim((string) $rule[$field]), FILTER_VALIDATE_IP)) $validation .= ' aria-invalid="true"';
                 echo '<td><input data-on_blur="saveMatch"' . $attrs . $validation . ' name="value" value="' . $e((string) ($rule[$field] ?? '')) . '" autocomplete="off"></td>';
@@ -319,7 +353,7 @@ final class EnvironmentForm
     private static function control(string $file, string $group, string $key, string $kind, mixed $value): void
     {
         $e = static fn($v): string => htmlspecialchars((string) $v, ENT_QUOTES);
-        $attrs = ' data-file="' . $e($file) . '" data-group="' . $e($group) . '" data-key="' . $e($key) . '" name="value" autocomplete="off"';
+        $attrs = ' aria-label="' . $e(self::label($key)) . '" data-file="' . $e($file) . '" data-group="' . $e($group) . '" data-key="' . $e($key) . '" name="value" autocomplete="off"';
         if ($kind === 'bool') {
             $checked = $value === true || $value === 1 || $value === '1' ? ' checked' : '';
             echo '<label class="projectSwitch"><input type="checkbox" class="switch" data-on_change="save"' . $attrs . $checked . '><div><div></div></div></label>';
@@ -334,6 +368,7 @@ final class EnvironmentForm
             echo '</select>';
             return;
         }
+        if ($group === 'mail' && $key === 'testRecipient') $attrs .= ' type="email" placeholder="testmail@systopic.media"';
         echo '<input data-on_blur="save"' . $attrs . ' value="' . $e(is_scalar($value) ? (string) $value : '') . '">';
     }
 
@@ -357,6 +392,8 @@ final class EnvironmentForm
             'versionAppendix' => 'Version appendix',
             'versionDate' => 'Version date',
             'fromName' => 'From name',
+            'testMode' => 'Test mode',
+            'testRecipient' => 'Test recipient',
             'serverName' => 'Server name',
             'serverIp' => 'Server IP',
             default => ucfirst($key),

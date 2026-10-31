@@ -12,4 +12,7 @@ message::confirm('Saved.');message::warning('Check this.');
 $html=message::flush([],true);
 check('server messages use one shared container',substr_count($html,'data-system-messages')===1&&str_contains($html,"class='confirm'")&&str_contains($html,"class='warning'"));
 check('messages are consumed once',message::flush()==='');
+check('non-error messages do not mark a request failed',!message::requestFailed());
+message::error('Rejected');message::flush();
+check('failure is retained even after its message has been rendered',message::requestFailed());
 echo "All shared message checks passed.\n";

@@ -69,6 +69,7 @@ final class SignInRights
     /** Read or write on the permission, or being a superuser. */
     public static function allows(Scope $scope, User $user, string $name): bool
     {
+        if ($user->isBlocked) return false;
         if (!isset(self::TEXT[$name])) {
             return false;
         }
@@ -98,7 +99,7 @@ final class SignInRights
         }
         $table = Schema::tableNameOf(User::class);
         $sql = "SELECT user_id, user_name, user_fullname, user_email FROM $table
-            WHERE user_id > 1 AND user_id <> ? AND user_is_active = 1
+            WHERE user_id > 1 AND user_id <> ? AND user_is_active = 1 AND COALESCE(user_is_blocked, 0) = 0
             AND (user_type = ? OR user_type IS NULL OR user_type = '')";
         $args = [(int) $actor->id, User::PERSON];
         if (!$actor->isSuperuser) {
@@ -126,7 +127,7 @@ final class SignInRights
         try {
             return $scope->connection->all(
                 "SELECT user_id, user_name, user_fullname, user_email FROM $table
-                WHERE user_type = ? AND user_id > 1 AND user_is_active = 1 ORDER BY user_name",
+                WHERE user_type = ? AND user_id > 1 AND user_is_active = 1 AND COALESCE(user_is_blocked, 0) = 0 ORDER BY user_name",
                 [User::SCREEN],
             );
         } catch (\Throwable) {

@@ -1,3 +1,9 @@
+/* Native action buttons retain the former inline-link defaults; component classes supply the look. */
+:where(button[data-cms-action]) {
+    appearance:none;display:inline;font:inherit;color:inherit;text-align:inherit;
+    background:none;border:0;padding:0;margin:0;line-height:inherit;
+    white-space:inherit;vertical-align:baseline;overflow:visible;cursor:pointer;
+}
 /****************************** FIELDS ***************************/
 .cms form.visible{
     outline: 1px dashed var(--cmsLine);
@@ -54,7 +60,7 @@
     display: block;
 }
 
-.cms .splitApplyList button{
+.cms .splitApplyList button:where(:not([data-cms-action])){
     display: flex;
     align-items: center;
     justify-content: flex-start;
@@ -77,7 +83,7 @@
     cursor: pointer;
 }
 
-.cms .splitApplyList button:hover{
+.cms .splitApplyList button:where(:not([data-cms-action])):hover{
     background: var(--cmsHover);
 }
 
@@ -96,6 +102,33 @@
     margin-bottom: 0.75rem;
     resize: none;
     transition: border-color .15s, box-shadow .15s;
+}
+
+/* Keep native pickers, but give their browser-specific controls the same
+   outer dimensions and typography as the other system fields. */
+.cms input:is([type="date"],[type="time"],[type="datetime-local"]){
+    display: block;
+    appearance: none;
+    -webkit-appearance: none;
+    min-width: 0;
+    max-width: 100%;
+    min-inline-size: 0;
+    max-inline-size: 100%;
+    height: var(--cmsControl);
+    box-sizing: border-box;
+    line-height: normal;
+    text-align: left;
+}
+
+.cms input:is([type="date"],[type="time"],[type="datetime-local"])::-webkit-date-and-time-value{
+    min-width: 0;
+    min-height: 1em;
+    text-align: left;
+}
+
+.cms input:is([type="date"],[type="time"],[type="datetime-local"])::-webkit-datetime-edit{
+    padding: 0;
+    font: inherit;
 }
 
 .cms .portraitDrop.dragover .signet,
@@ -317,7 +350,7 @@ div.main select{
 }
 
 /****************************** BUTTONS ***************************/
-.cms button,
+.cms button:where(:not([data-cms-action])),
 .cms .button,
 .cms .submit{
     display: inline-flex;
@@ -343,23 +376,23 @@ div.main select{
     transition: background-color .15s, border-color .15s, color .15s;
 }
 
-.cms button{
+.cms button:where(:not([data-cms-action])){
     font-family: var(--cmsFont);
 }
 
-.cms button[hidden],
+.cms button:where(:not([data-cms-action]))[hidden],
 .cms .button[hidden]{
     display: none !important;
 }
 
-.cms button:enabled:not(.disabled):hover,
+.cms button:where(:not([data-cms-action])):enabled:not(.disabled):hover,
 .cms .button:not([disabled]):not(.disabled):hover{
     background: color-mix(in srgb, var(--cmsButtonBg) 88%, var(--cmsMainColor));
 }
 
 /* Every tab list. A tab is a button or a link in the markup, and the
    button rules above would otherwise paint it as one. */
-body.cms :is(button, a)[role="tab"]{
+body.cms :is(button:where(:not([data-cms-action])), :is(a, button:where([data-cms-action])))[role="tab"]{
     margin: 0 0 -1px;
     padding: 0.5rem 0;
     border: 0;
@@ -373,13 +406,13 @@ body.cms :is(button, a)[role="tab"]{
     overflow: visible;
 }
 
-body.cms button[role="tab"]:enabled:not(.disabled):is(:hover, :focus-visible),
-body.cms a[role="tab"]:is(:hover, :focus-visible){
+body.cms button:where(:not([data-cms-action]))[role="tab"]:enabled:not(.disabled):is(:hover, :focus-visible),
+body.cms :is(a, button:where([data-cms-action]))[role="tab"]:is(:hover, :focus-visible){
     background: none;
     color: var(--cmsTextColor);
 }
 
-body.cms :is(button, a)[role="tab"]:is(.selected, [aria-selected="true"]){
+body.cms :is(button:where(:not([data-cms-action])), :is(a, button:where([data-cms-action])))[role="tab"]:is(.selected, [aria-selected="true"]){
     background: none;
     border-bottom-color: var(--cmsHighlightColor);
     color: var(--cmsTextColor);
@@ -387,20 +420,20 @@ body.cms :is(button, a)[role="tab"]:is(.selected, [aria-selected="true"]){
 }
 
 /* Keyboard focus uses the same cue for primary and secondary actions. */
-.cms button:focus-visible,
+.cms button:where(:not([data-cms-action])):focus-visible,
 .cms .button:focus-visible {
     outline: 2px solid var(--cmsInteractive);
     outline-offset: 2px;
 }
 
-.cms button span,
+.cms button:where(:not([data-cms-action])) span,
 .cms .button span,
-.cms button i,
+.cms button:where(:not([data-cms-action])) i,
 .cms .button i{
     color: inherit;
 }
 
-.cms button i,
+.cms button:where(:not([data-cms-action])) i,
 .cms .button i{
     font-size: 1.1rem;
     line-height: 1;
@@ -408,7 +441,7 @@ body.cms :is(button, a)[role="tab"]:is(.selected, [aria-selected="true"]){
     padding: 0;
 }
 
-.cms button.submit,
+.cms button:where(:not([data-cms-action])).submit,
 .cms .button.submit,
 .cms .submit{
     background: var(--cmsHighlightColor);
@@ -416,33 +449,34 @@ body.cms :is(button, a)[role="tab"]:is(.selected, [aria-selected="true"]){
     font-weight: 600;
 }
 
-.cms button.submit:enabled:not(.disabled):hover,
+.cms button:where(:not([data-cms-action])).submit:enabled:not(.disabled):hover,
 .cms .button.submit:not([disabled]):not(.disabled):hover,
 .cms .submit:not([disabled]):not(.disabled):hover{
     background: color-mix(in srgb, var(--cmsHighlightColor) 88%, #000);
 }
 
 .cms .button.transparent,
-.cms button.transparent{
+.cms button:where(:not([data-cms-action])).transparent{
     background: transparent;
     color: var(--cmsBrandInk);
     font-size: 0.875rem;
 }
 
 .cms .button.transparent i,
-.cms button.transparent i{
-    color: var(--cmsBrandInk);
+.cms button:where(:not([data-cms-action])).transparent i{
+    color: inherit;
 }
 
+
 .cms .button.transparent:not([disabled]):not(.disabled):hover,
-.cms button.transparent:enabled:not(.disabled):hover,
+.cms button:where(:not([data-cms-action])).transparent:enabled:not(.disabled):hover,
 .cms .button.transparent:focus-visible,
-.cms button.transparent:focus-visible{
+.cms button:where(:not([data-cms-action])).transparent:focus-visible{
     background: var(--cmsHover);
 }
 
 .cms .button.transparent:not([disabled]):not(.disabled):active,
-.cms button.transparent:enabled:not(.disabled):active{
+.cms button:where(:not([data-cms-action])).transparent:enabled:not(.disabled):active{
     background: color-mix(in srgb, var(--cmsMainColor) 14%, transparent);
 }
 
@@ -451,13 +485,13 @@ body.cms :is(button, a)[role="tab"]:is(.selected, [aria-selected="true"]){
     color: var(--cmsSuccess);
 }
 
-.cms button.icononly,
+.cms button:where(:not([data-cms-action])).icononly,
 .cms .button.icononly{
     padding: 0;
     width: var(--cmsControl);
 }
 
-.cms button.icononly.small,
+.cms button:where(:not([data-cms-action])).icononly.small,
 .cms .button.icononly.small{
     width: 1.5rem;
     height: 1.5rem;
@@ -465,12 +499,12 @@ body.cms :is(button, a)[role="tab"]:is(.selected, [aria-selected="true"]){
     margin: 0;
 }
 
-.cms button.icononly.small i,
+.cms button:where(:not([data-cms-action])).icononly.small i,
 .cms .button.icononly.small i{
     font-size: 0.75rem;
 }
 
-.cms button[disabled],
+.cms button:where(:not([data-cms-action]))[disabled],
 .cms .button[disabled],
 .cms .button.disabled,
 .cms input[disabled]{
@@ -478,7 +512,7 @@ body.cms :is(button, a)[role="tab"]:is(.selected, [aria-selected="true"]){
     opacity: .6;
 }
 
-.cms .rightAlign button,
+.cms .rightAlign button:where(:not([data-cms-action])),
 .cms .rightAlign .button{
     margin-right: 0;
     margin-left: 0.4rem;
@@ -593,7 +627,7 @@ body.cms :is(button, a)[role="tab"]:is(.selected, [aria-selected="true"]){
     height: 20px;
     margin-left: auto;
     border-radius: 10px;
-    background: color-mix(in srgb, var(--cmsMainColor) 22%, var(--cmsLine));
+    background: var(--cmsMuted);
     transition: background-color .2s;
     cursor: pointer;
     touch-action: pan-y;   /* a sideways swipe toggles it (cms panel.js), not the page */
@@ -872,7 +906,7 @@ body.firefox .cms select:-moz-focusring{
    The fill appears on the button itself, or while its menu is open.
    appearance kills the browser's own button face, which stayed visible
    after the background was cleared. */
-body.cms ul.tree button.treeMenu{
+body.cms ul.tree button:where(:not([data-cms-action])).treeMenu{
     appearance: none;
     min-height: 0;
     margin: 0;
@@ -884,21 +918,21 @@ body.cms ul.tree button.treeMenu{
     color: var(--cmsMuted);
 }
 
-body.cms ul.tree button.treeMenu i{
+body.cms ul.tree button:where(:not([data-cms-action])).treeMenu i{
     color: inherit;
     font-size: 0.8rem;
 }
 
-body.cms ul.tree li:not(.menuTarget) > label button.treeMenu:not(:hover),
-body.cms ul.tree li:not(.menuTarget) > label button.treeMenu:not(:hover) i{
+body.cms ul.tree li:not(.menuTarget) > label button:where(:not([data-cms-action])).treeMenu:not(:hover),
+body.cms ul.tree li:not(.menuTarget) > label button:where(:not([data-cms-action])).treeMenu:not(:hover) i{
     background: none !important;
     background-color: transparent !important;
     background-image: none !important;
     box-shadow: none !important;
 }
 
-body.cms ul.tree li.menuTarget > label button.treeMenu,
-body.cms ul.tree button.treeMenu:hover{
+body.cms ul.tree li.menuTarget > label button:where(:not([data-cms-action])).treeMenu,
+body.cms ul.tree button:where(:not([data-cms-action])).treeMenu:hover{
     background: var(--cmsHover) !important;
     background-color: var(--cmsHover) !important;
     color: var(--cmsTextColor);
@@ -917,3 +951,42 @@ body.cms ul.tree button.treeMenu:hover{
 .cms form.visible {
     border-radius: 2px;
 }
+
+/* Native autofill keeps the system palette rather than browser fill colours. */
+.cms input:is(:autofill, :-webkit-autofill),
+.appBody .authCard input:is(:autofill, :-webkit-autofill) {
+    box-shadow: inset 0 0 0 1000px var(--cmsCanvas) !important;
+    -webkit-text-fill-color: var(--cmsTextColor) !important;
+    color: var(--cmsTextColor) !important;
+    caret-color: var(--cmsTextColor);
+    transition: border-color .15s;
+    background-color: var(--cmsCanvas) !important;
+}
+
+/* Safari's native credentials badge is separate from extension overlays. */
+.cms input::-webkit-credentials-auto-fill-button,
+.appBody .authCard input::-webkit-credentials-auto-fill-button {
+    visibility: hidden;
+    pointer-events: none;
+}
+
+/* Shared semantic button colours retain the normal hover/focus/disabled behavior. */
+.cms .button.alias { color:var(--cmsAlias); }
+.cms .button.redirect { color:var(--cmsRedirect); }
+.cms :is(button:where(:not([data-cms-action])),:is(a, button:where([data-cms-action])).button)[role="tab"]:focus-visible { border-radius:var(--cmsRadius); outline-offset:-2px; }
+
+
+.cms .button.selected:not([disabled]):not(.disabled),
+.cms button:where(:not([data-cms-action])).selected:enabled:not(.disabled),
+.cms .button.selected:not([disabled]):not(.disabled):is(:hover, :focus-visible, :active){
+    background: var(--cmsHighlightColor);
+    color: var(--cmsOnHighlight);
+}
+
+/* A shared range control: identical track/thumb geometry in WebKit and Gecko. */
+.cms input[type="range"]{appearance:none;-webkit-appearance:none;min-height:1.5rem;height:1.5rem;padding:0;border:0;background:transparent;cursor:pointer;}
+.cms input[type="range"]::-webkit-slider-runnable-track{height:3px;border-radius:2px;background:var(--cmsLineStrong);}
+.cms input[type="range"]::-moz-range-track{height:3px;border:0;border-radius:2px;background:var(--cmsLineStrong);}
+.cms input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:1rem;height:1rem;margin-top:calc((3px - 1rem)/2);border:0;border-radius:50%;background:var(--cmsHighlightColor);box-shadow:0 1px 2px #0004;}
+.cms input[type="range"]::-moz-range-thumb{width:1rem;height:1rem;border:0;border-radius:50%;background:var(--cmsHighlightColor);box-shadow:0 1px 2px #0004;}
+.cms input[type="range"]:focus-visible{outline:2px solid var(--cmsInteractive);outline-offset:3px;border-radius:var(--cmsRadius);}

@@ -6,7 +6,7 @@ switch ($this->action) {
 		$close = TRUE;
 		break;
 	case 'createTaskList':
-		if (($this->parent->state->restoreNotice ?? '') === 'nothing') {
+		if (($this->parent->state->restoreNotice ?? '') !== '') {
 			$this->parent->state->restoreNotice = '';
 			$include = 'confirm.tpl.php';
 			$title = 'Restore backup';
@@ -34,7 +34,7 @@ switch ($this->action) {
 	
 }
 ?>
-<div class="cms cmslightbox" data-size="1">
+<div class="cms cmslightbox" data-size="2">
     <section>
 		<header>
 			<h1><?= $title ?></h1>

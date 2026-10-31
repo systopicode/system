@@ -22,6 +22,7 @@ class Panel extends PanelNode {
 	 * resetCode, activationCode, setPassword. Actions set it.
 	 */
 	public string $form = 'login';
+    public ?string $successTarget = null;
 
 	/** '' follows the config. choose is the method list. */
 	public function getDefaultState() {
@@ -70,7 +71,7 @@ class Panel extends PanelNode {
 			$this->state->pendingUntil = 0;
 			$this->state->pendingMethod = '';
 		}
-		if ($get && in_array($view, ['login', 'resetPassword', 'license', 'imprint', 'privacy', 'releases'], true)) {
+		if ($get && in_array($view, ['login', 'resetPassword', 'resetCode', 'activationCode', 'setPassword', 'license', 'imprint', 'privacy', 'releases'], true)) {
 			$this->form = $view;
 		} elseif ($get && $view === '' && (string) \http::get('method', '') === '' && $this->pendingAccount() !== null && !\Systopic\System\Auth\Session::active()) {
 			$this->form = 'identify';
@@ -132,6 +133,8 @@ class Panel extends PanelNode {
 	}
 
 	function buildGranted() {
+        // QR validity is checked before either anonymous sign-in or an authenticated pairing.
+        if ((string) \app::request()->action === 'validateQr' && \http::$method === 'PUT') return TRUE;
         if ((string) \app::request()->action === 'continueWithoutPasskey') return TRUE;
 		if (\Systopic\System\Auth\Passkeys::setupPending()) {
 			$this->form = 'passkeySetup';
@@ -160,7 +163,7 @@ class Panel extends PanelNode {
 	function toNavi() {
 		if (!\Systopic\System\Auth\Session::known()) {
 			return \html::create('li.menu_item')->doc('menu_item')
-							->append('a.ajax')->href($this->href)->append('i.far.cmsIcon-user')->end()
+							->append('a.ajax')->href($this->href)->append('i.cmsIcon.cmsIcon-user')->end()
 			;
 		}
 	}
@@ -181,9 +184,10 @@ class Panel extends PanelNode {
 	 * Into the CMS with a full load: the login's own css would stay in the
 	 * document. Back to the page that sent here, if one did.
 	 */
-	function enterCms(int $delay = 0): void {
+	function enterCms(float $delay = 0, ?string $target = null): void {
+        $this->successTarget = $target ?? \Systopic\System\Auth\Session::takeReturn() ?? \http::$root . 'cms/';
 		\client::addCommand('redirect')
-			->data(['path' => \Systopic\System\Auth\Session::takeReturn() ?? \http::$root . 'cms/', 'action' => '', 'get' => [], 'method' => 'load'])
+			->data(['path' => $this->successTarget, 'action' => '', 'get' => [], 'method' => 'load'])
 			->delay($delay);
 	}
 

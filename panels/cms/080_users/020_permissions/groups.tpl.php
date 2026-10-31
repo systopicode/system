@@ -13,8 +13,8 @@ $names = function ($group, string $right) use ($e): string {
 <section class="widget is-list groupList">
 	<header>
 		<h2>Content groups</h2>
-		<input class="listSearch" type="search" placeholder="Search" data-on_input="filterGroups" autocomplete="off">
-		<a class="button submit" data-on_click="addGroup"><i class="cmsIcon cmsIcon-plus"></i><span>Add group</span></a>
+		<input class="listSearch" type="search" aria-label="Search permission groups" placeholder="Search" data-on_input="filterGroups" autocomplete="off">
+		<button type="button" data-cms-action class="button submit" data-on_click="addGroup"><i class="cmsIcon cmsIcon-plus"></i><span>Add group</span></button>
 	</header>
 	<div class="tableScroll">
 		<table>

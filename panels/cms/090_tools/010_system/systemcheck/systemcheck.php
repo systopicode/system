@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Can this server run fluxo cms? One file, no install.
+ * Can this server run fluxo? One file, no install.
  * Upload it, open it in the browser, then delete it.
  */
 
@@ -58,7 +58,7 @@ $cards['PHP'][] = $row(ini_get('log_errors') ? 'ok' : 'warn', ini_get('log_error
 
 $extensions = ['mysqlnd', 'xml', 'curl', 'dom', 'imagick', 'json', 'mbstring', 'mysqli', 'pdo_mysql', 'pgsql', 'simplexml', 'xmlreader', 'xmlwriter', 'xsl', 'zip', 'openssl', 'fileinfo', 'session', 'iconv', 'ctype', 'tokenizer'];
 foreach ($extensions as $extension) {
-	$cards['Extensions'][] = $row(extension_loaded($extension) ? 'ok' : 'bad', $extension . (extension_loaded($extension) ? ' is loaded' : ' is not loaded'));
+	$cards['Extensions'][] = $row(extension_loaded($extension) ? 'ok' : (in_array($extension, ['mysqlnd','mysqli','pgsql','imagick','zip','xsl','xmlreader','xmlwriter'], true) ? 'warn' : 'bad'), $extension . (extension_loaded($extension) ? ' is loaded' : ' is not loaded'));
 }
 if (class_exists('Imagick', false)) {
 	$version = Imagick::getVersion();
@@ -72,16 +72,20 @@ if (class_exists('Imagick', false)) {
 $disabled = array_values(array_filter(array_map('trim', explode(',', (string) ini_get('disable_functions')))));
 foreach (['exec' => 'video frames', 'shell_exec' => 'finding programs', 'proc_open' => 'piped video'] as $function => $why) {
 	$on = function_exists($function) && !in_array($function, $disabled, true);
-	$cards['Functions'][] = $row($on ? 'ok' : 'bad', "$function() " . ($on ? 'is available' : 'is disabled') . " ($why)");
+	$cards['Functions'][] = $row($on ? 'ok' : 'warn', "$function() " . ($on ? 'is available' : 'is disabled') . " ($why)");
 }
 $cards['Functions'][] = $row($disabled === [] ? 'ok' : 'warn', $disabled === [] ? 'disable_functions is empty.' : 'disable_functions: ' . implode(', ', $disabled));
 
 $which = static function (string $name) use ($disabled): ?string {
-	foreach ([dirname(__DIR__) . '/var/bin', getcwd() . '/var/bin', dirname(getcwd()) . '/var/bin'] as $dir) {
-		$path = $dir . '/' . $name;
+	foreach (array_unique([__DIR__, dirname(__DIR__), getcwd(), dirname(getcwd())]) as $root) {
+        foreach (['var/bin','bin'] as $folder) {
+        $dir = $root . '/' . $folder;
+        foreach (array_merge([$dir . '/' . $name], glob($dir . '/*/' . $name) ?: []) as $path) {
 		if (@is_file($path) && @is_executable($path)) {
 			return $path;
 		}
+        }
+        }
 	}
 	if (!function_exists('shell_exec') || in_array('shell_exec', $disabled, true)) {
 		return null;
@@ -89,17 +93,17 @@ $which = static function (string $name) use ($disabled): ?string {
 	$found = trim((string) shell_exec('command -v ' . escapeshellarg($name) . ' 2>/dev/null'));
 	return $found !== '' ? $found : null;
 };
-foreach (['ffmpeg' => 'video frames', 'ffprobe' => 'video info', 'identify' => 'PDF info'] as $binary => $why) {
+foreach (['ffmpeg' => 'video frames', 'ffprobe' => 'video info', 'identify' => 'optional image metadata', 'magick' => 'optional ImageMagick command'] as $binary => $why) {
 	$found = $which($binary);
 	if ($found === null && (!function_exists('shell_exec') || in_array('shell_exec', $disabled, true))) {
 		$cards['Programs'][] = $row('warn', "$binary could not be looked up ($why). shell_exec is disabled.");
 		continue;
 	}
-	$cards['Programs'][] = $row($found !== null ? 'ok' : ($binary === 'identify' ? 'warn' : 'bad'), $found !== null ? "$binary ($why): $found" : "$binary was not found ($why).");
+	$cards['Programs'][] = $row($found !== null ? 'ok' : 'warn', $found !== null ? "$binary ($why): $found" : "$binary was not found ($why).");
 }
 
 $e = static fn(string $value): string => htmlspecialchars($value, ENT_QUOTES);
-echo '<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>fluxo cms server check</title>';
+echo '<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>fluxo server check</title>';
 echo '<style>
 html{font-size:17.5px}
 body{margin:0;background:#f0f3f4;color:#161c1f;font:1rem/1.45 system-ui,sans-serif}
@@ -115,7 +119,7 @@ li.ok{background:color-mix(in srgb,#7cb249 18%,#fff)}
 li.warn{background:color-mix(in srgb,#fcb60c 32%,#fff)}
 li.bad{background:color-mix(in srgb,#c44536 14%,#fff)}
 </style></head><body>';
-echo '<main><h1>Server check</h1><p class="lead">Nothing was installed. This only asks whether fluxo cms can run here. Database, mail and folders are checked after the project is in place. Delete this file when you are done.</p><div class="grid">';
+echo '<main><h1>Server check</h1><p class="lead">Nothing was installed. This only asks whether fluxo can run here. Database, mail and folders are checked after the project is in place. Delete this file when you are done.</p><div class="grid">';
 foreach ($cards as $title => $rows) {
 	echo '<section><h2>' . $e($title) . '</h2><ul>';
 	foreach ($rows as $item) {

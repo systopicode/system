@@ -11,7 +11,7 @@
 .disabled{
 	color:lightgray;
 }
-button.disabled {
+button:where(:not([data-cms-action])).disabled {
 	color:gray;
 	border-color:gray;
 	background: var(--cmsCanvas);

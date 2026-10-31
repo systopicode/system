@@ -36,7 +36,9 @@ sys.processEvent = function (e) {
 			leaving.classList.add('loading');
 		}
 	}
+    if ((e.type === 'blur' || e.type === 'focusout') && eventTarget?.cmsPencilCommitting && !e.pencilCommit) return;
     if ((e.type === 'blur' || e.type === 'focusout') && eventTarget?.cmsEditCancelled) {
+        window.cmsFeedback?.cancel(eventTarget);
         delete eventTarget.cmsEditCancelled;
         return;
     }
@@ -56,6 +58,9 @@ sys.processEvent = function (e) {
 		}
 		var currentTarget = e.currentTarget;
 		queueMicrotask(() => {
+			// A class-name field belongs to the same editing interaction. Its
+            // keyboard must not be destroyed by the editor's blur response.
+            if (eventTarget.matches?.('.editor[contenteditable="true"]') && document.activeElement?.closest('.HTMLeditorClass')) return;
 			if (!eventTarget.isConnected) {
 				f('||| ' + e.type + ' of a focused element something removed from the document - skipped', eventTarget);
 				return;
@@ -72,6 +77,13 @@ sys.processEvent = function (e) {
 		});
 		return;
 	}
+    // Editing a link opens the existing WYSIWYG bar, never panel navigation.
+    if (e.type === 'click' && eventTarget?.closest?.('.editor[contenteditable="true"] a')) {
+        e.preventDefault();
+        var editorLink = eventTarget.closest('.editor[contenteditable="true"] a');
+        $(editorLink).trigger($.Event('contextmenu', {target: editorLink, pointed: true, clientX: e.clientX, clientY: e.clientY}));
+        return;
+    }
 	var defaultAnchor = (eventTarget && eventTarget.closest) ? (eventTarget.closest('a') || eventTarget) : null;
 	if (defaultAnchor && defaultAnchor.hasAttribute && defaultAnchor.hasAttribute('target')) {
 		l('||| ' + e.type + ' found default Anchor - skip and return to default');
@@ -166,10 +178,22 @@ document.addEventListener('pointerdown', function (down) {
 	sys.processPointerDown({originalEvent: down, currentTarget: grip, stopPropagation: function () {}});
 });
 
+// Explicit long-press actions share the same recogniser on mouse, pen and touch.
+// Delegation also covers headers inserted by AJAX without a second binding pass.
+document.addEventListener('pointerdown', function (down) {
+    if (down.button !== 0 || !down.target.closest) return;
+    var element = down.target.closest('[data-on_longpress]');
+    if (!element || down.target.closest('a, button, input, select, textarea, label, [contenteditable]')) return;
+    sys.longPress(down, element, function () {
+        if (element.isConnected) sys.processEvent($.Event('longpress', {currentTarget: element, target: element}));
+    });
+});
+
 sys.longPress = function (down, element, start) {
 	var held = false;
 	element.classList.add('pressing');
 	var timer = setTimeout(function () {
+		if (!element.isConnected) { end(); return; }
 		held = true;
 		element.classList.remove('pressing');
 		element.classList.add('longPressed');
@@ -190,6 +214,7 @@ sys.longPress = function (down, element, start) {
 	var end = function () {
         element.cmsTouchMouseUntil = Date.now() + 500;
 		clearTimeout(timer);
+		window.removeEventListener('blur', end);
 		element.classList.remove('pressing', 'longPressed');
 		document.removeEventListener('pointermove', move, true);
 		document.removeEventListener('pointerup', end, true);
@@ -201,6 +226,7 @@ sys.longPress = function (down, element, start) {
 			document.removeEventListener('click', block, true);
 		}, 0);
 	};
+	window.addEventListener('blur', end);
 	document.addEventListener('pointermove', move, true);
 	document.addEventListener('pointerup', end, true);
 	document.addEventListener('pointercancel', end, true);
@@ -570,3 +596,7 @@ sys.core.event = function (e) {
 	/* ****************** REMOVE ******************* */
 
 };
+// Safari Force Click must not turn a tree hold into a link preview/Look Up.
+document.addEventListener('webkitmouseforcewillbegin', function (event) {
+    if (event.target.closest?.('ul.tree label[data-drag_type="page"]')) event.preventDefault();
+}, {capture: true, passive: false});

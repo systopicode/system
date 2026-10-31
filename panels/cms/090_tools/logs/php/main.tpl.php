@@ -34,12 +34,13 @@ $entries = array_reverse($entries);
 <section class="widget is-list logList">
 	<header>
 		<h2>Entries</h2>
-		<input class="listSearch" type="search" placeholder="Search" data-on_input="filterLog" autocomplete="off">
+		<input class="listSearch" type="search" aria-label="Search PHP log" placeholder="Search"  autocomplete="off">
 		<a target="_self" href="<?= htmlspecialchars($this->getHref(\http::$root) . 'downloadLog') ?>" class="button"><i class="cmsIcon cmsIcon-file-arrow-down"></i><span>Download</span></a>
 		<?php if (\Systopic\System\Auth\Session::isSuperuser()) { ?>
-		<a data-on_click="userConfirm" data-action="clearLog" data-confirm="Delete this log file?" class="button"><i class="cmsIcon cmsIcon-broom"></i><span>Clear</span></a>
+		<button type="button" data-cms-action aria-label="Clear PHP log" data-on_click="userConfirm" data-action="clearLog" data-confirm="Delete this log file?" class="button"><i class="cmsIcon cmsIcon-broom"></i><span>Clear</span></button>
 		<?php } ?>
 	</header>
+    <?= \Systopic\System\Logs\Filters::controls() ?>
 	<?php if ($entries === []) { ?>
 		<main><p>The log is empty.</p></main>
 	<?php } else { ?>
@@ -64,7 +65,7 @@ $entries = array_reverse($entries);
 							$pill = ' is-quiet';
 						}
 						?>
-						<tr>
+						<tr<?= \Systopic\System\Logs\Filters::attributes($entry['time'], '', $entry['level']) ?>>
 							<td><?= $e($entry['time']) ?></td>
 							<td><span class="logPill<?= $pill ?>"><?= $e($entry['level']) ?></span></td>
 							<td>

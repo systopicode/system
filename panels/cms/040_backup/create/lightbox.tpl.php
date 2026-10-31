@@ -21,7 +21,7 @@ switch ($this->action) {
 		break;
 }
 ?>
-<div class="cms cmslightbox" data-size="1">
+<div class="cms cmslightbox" data-size="2">
     <section>
 		<header>
 			<h1><?= $title ?></h1>

@@ -7,6 +7,9 @@
   License    : MIT License  https://opensource.org/licenses/MIT
  * *********************************************************** */
 
+if (!class_exists(\Systopic\System\Mail\Failure::class)) require_once __DIR__ . '/Mail/Failure.php';
+if (!class_exists(\Systopic\System\Mail\Delivery::class)) require_once __DIR__ . '/Mail/Delivery.php';
+
 Class SMTPMailer {
 
 	private $server = 'smtp.gmail.com';
@@ -149,6 +152,7 @@ Class SMTPMailer {
 
 	// Send the SMTP Mail
 	public function Send() {
+        \Systopic\System\Mail\Delivery::prepare($this);
 		// Prepare data for sending
 		$this->headers = $this->doHeaders();
 		$user64 = base64_encode($this->username);
@@ -167,8 +171,10 @@ Class SMTPMailer {
 
 		if ($this->secure == 'tls') {
 			$this->logreq('STARTTLS', '220');
-			stream_socket_enable_crypto($this->sock, true,
-					STREAM_CRYPTO_METHOD_TLS_CLIENT);
+            if (@stream_socket_enable_crypto($this->sock, true, STREAM_CRYPTO_METHOD_TLS_CLIENT) !== true) {
+                fclose($this->sock);
+                throw new \RuntimeException('SMTP: TLS handshake failed; check encryption, port and certificate');
+            }
 			$this->logreq('EHLO ' . $this->local, '250');
 		}
 
@@ -221,7 +227,7 @@ Class SMTPMailer {
 		if (substr($result, 0, 3) == $code)
 			return;
 		fclose($this->sock);
-		throw new \RuntimeException("SMTP: expected $code from $this->hostname, got: " . trim((string) $result));
+		throw new \RuntimeException("SMTP: expected $code from $this->hostname, got: " . \Systopic\System\Mail\Failure::detail(trim((string) $result), ['user'=>$this->username,'password'=>$this->password]));
 	}
 
 	// Do create headers after precheck

@@ -40,32 +40,40 @@ sys.core.event.drag = function (event, hooks) { // 2. param raus
 	var noNativeDrag = ev => ev.preventDefault();
 	document.addEventListener('dragstart', noNativeDrag, true);
 
+	// Holding is an alternative to moving the mouse, never a prerequisite.
+	var holdTimer, mouseHeld = false;
+	function beginDrag() {
+		clearTimeout(holdTimer);
+		if (drag.status !== 'down' || !drag.dragObj.isConnected) return;
+		drag.hooks.start();
+		drag.status = 'dragging';
+		var before = drag.dragObj.getBoundingClientRect();
+		drag.$helper = $('<div class="draghelper"></div>');
+		drag.$helper.append(drag.$keyheldIcon);
+		$('body').append(drag.$helper);
+		$('body').addClass('dragging');
+		$('body').addClass(drag.type + 'Dragging');
+		drag.dragObj.classList.add('dragged');
+		drag.dragObj.previousElementSibling && drag.dragObj.previousElementSibling.classList.add('beforeDragged');
+		drag.dragObj.nextElementSibling && drag.dragObj.nextElementSibling.classList.add('afterDragged');
+		keepUnderPointer(before);
+		// ?don't extend helper to parent objects
+		// drag.dragObj.parents('[data-drop_accept="' + drag.type + '"]').attr('data-drop_accept', drag.type + '_parent');
+		if (!drag.hasHelper) {
+			drag.$helper.hide();
+		}
+	}
 	var lineKey = '';
 	function mousemove(e) {
 		drag.e = e;
 
 		drag.moveX = e.clientX - drag.downX;
 		drag.moveY = e.clientY - drag.downY;
+		if (drag.moveX * drag.moveX + drag.moveY * drag.moveY > 25) mouseHeld = false;
 		drag.hooks.move();
 		drag.keysheld = keysHoldable.filter(key => e[key + 'Key']);
 		if (drag.moveX * drag.moveX + drag.moveY * drag.moveY > 25 && drag.status === 'down') { // drag threshold 5px
-			drag.hooks.start();
-			drag.status = 'dragging';
-			var before = drag.dragObj.getBoundingClientRect();
-			drag.$helper = $('<div class="draghelper"></div>');
-			drag.$helper.append(drag.$keyheldIcon);
-			$('body').append(drag.$helper);
-			$('body').addClass('dragging');
-			$('body').addClass(drag.type + 'Dragging');
-			drag.dragObj.classList.add('dragged');
-			drag.dragObj.previousElementSibling && drag.dragObj.previousElementSibling.classList.add('beforeDragged');
-			drag.dragObj.nextElementSibling && drag.dragObj.nextElementSibling.classList.add('afterDragged');
-			keepUnderPointer(before);
-			// ?don't extend helper to parent objects
-			// drag.dragObj.parents('[data-drop_accept="' + drag.type + '"]').attr('data-drop_accept', drag.type + '_parent');
-			if (!drag.hasHelper) {
-				drag.$helper.hide();
-			}
+			beginDrag();
 		}
 		if (drag.status !== 'down') {
 			keysHoldable.forEach(key => drag.$helper[0].classList.remove(key));
@@ -113,21 +121,6 @@ sys.core.event.drag = function (event, hooks) { // 2. param raus
 				}
 			}
 			if (drag.hasHelper) {
-				var ghost = drag.type === 'tag' && !css.line;
-				drag.$helper[0].classList.toggle('tagGhost', ghost);
-				if (ghost) {
-					var held = drag.dragObj.getBoundingClientRect();
-					drag.$helper[0].textContent = (drag.dragObj.dataset.label || '').trim();
-					css.line = false;
-					css.left = Math.round(e.clientX - held.width / 2);
-					css.top = Math.max(8, Math.round(e.clientY - held.height - 36));
-					css.width = Math.round(held.width);
-					css.height = Math.round(held.height);
-					css.borderRadius = 999;
-					css.padding = 0;
-				} else if (drag.$helper[0].textContent) {
-					drag.$helper[0].textContent = '';
-				}
 				drag.$helper.toggleClass('line', !!css.line);
 				var showLine = !!css.line;
 				delete css.line;
@@ -155,6 +148,8 @@ sys.core.event.drag = function (event, hooks) { // 2. param raus
 	}
 
 	function mouseup(e) {
+		clearTimeout(holdTimer);
+		window.removeEventListener('blur', cancelHold);
 		if (e.shiftKey && e.ctrlKey) { // debug: freeze dragmode
 			$(document).unbind(moveType, mousemove);
 			$(document).unbind(upType, mouseup);
@@ -206,7 +201,7 @@ sys.core.event.drag = function (event, hooks) { // 2. param raus
 				document.removeEventListener('click', swallowClick, true);
 			}, 400);
 		}
-		if (drag.status === 'accept') {
+		if (drag.status === 'accept' && !mouseHeld) {
 			// A medium dropped into a text lands where the finger is, not at
 			// the end: the selection is what the insert uses.
 			if ((drag.type === 'media' || drag.type === 'page') && drag.e) {
@@ -536,6 +531,10 @@ sys.core.event.drag = function (event, hooks) { // 2. param raus
 	// down to a line when that is thinner than a few pixels.
 	function getBoundingBox(obj) {
         if (drag.type === 'setting' && obj === drag.dragObj && down.pointerType && down.pointerType !== 'mouse') obj = obj.closest('tr') || obj;
+        if (drag.type === 'tag' && !obj.classList.contains('sort')) {
+            var tagRect = obj.getBoundingClientRect();
+            return {left: tagRect.left, top: tagRect.bottom, width: tagRect.width, height: 2, line: true};
+        }
 		var zone = obj.classList.contains('sort');
 		if (zone && obj.classList.contains('insertInto') && obj.parentElement) {
 			obj = obj.parentElement;
@@ -669,6 +668,19 @@ sys.core.event.drag = function (event, hooks) { // 2. param raus
 		}
 		return true;
 	};
+	function cancelHold() { mouseup($.Event('pointercancel')); }
+	if (!pointer && drag.type && !drag.dragObj.dataset.on_draginit
+        && (!e.target.closest('a, button, input, select, textarea, label, [contenteditable]')
+            || (drag.type === 'page' && e.target.closest('a.label, button.label')?.parentElement === drag.dragObj)
+            || (drag.dragObj.matches('button[data-drag_type], label[data-drag_type]') && e.target.closest('a, button, input, select, textarea, label, [contenteditable]') === drag.dragObj))
+        && (e.button === undefined || e.button === 0)) {
+		holdTimer = setTimeout(function () {
+			mouseHeld = true;
+			beginDrag();
+			if (drag.status !== 'down') mousemove(drag.e);
+		}, 400);
+		window.addEventListener('blur', cancelHold);
+	}
 	$(document).bind(moveType, mousemove);
 	$(document).bind(upType, mouseup);
 	e.preventDefault();

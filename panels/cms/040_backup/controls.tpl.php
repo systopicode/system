@@ -4,11 +4,11 @@ if ($this->withChildSelected('controls')) return;
 <div class="rightAlign">
 	<?php
 	if (\Systopic\System\Auth\Session::hasRole('recovery') && \Systopic\System\Auth\Session::isRecovery()) {
-		echo '<a data-on_click="createDatabase" class="button"><span>Create Database "' . DB_NAME . '"</span></a>';
+		echo '<button type="button" data-cms-action data-on_click="createDatabase" class="button"><span>Create Database "' . DB_NAME . '"</span></button>';
 	}
 	if (\Systopic\System\Auth\Session::hasRole('admin')) {
 		echo '<a href="log/" class="ajax button"><i class="cmsIcon cmsIcon-file-lines"></i><span>Log</span></a>';
-		echo '<a data-on_click="clearTempdirs" class="button"><i class="cmsIcon cmsIcon-broom"></i><span>Clear temporary files</span></a>';
+		echo '<button type="button" data-cms-action data-on_click="clearTempdirs" class="button"><i class="cmsIcon cmsIcon-broom"></i><span>Clear temporary files</span></button>';
 		echo '<label class="button backupUpload"><i class="cmsIcon cmsIcon-arrow-up-from-bracket"></i><span>Upload backup</span>';
 		echo '<input type="file" accept=".zip,application/zip" multiple data-on_change="upload">';
 		echo '</label>';

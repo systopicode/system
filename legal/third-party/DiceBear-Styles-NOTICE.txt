@@ -1,0 +1,25 @@
+DiceBear local avatar styles — pinned subset 10.6.0
+
+Only the original Notionists and Bottts style definitions are included. They are compacted as JSON and stored as gzip data. Artwork and attribution metadata are retained. Generated SVGs also retain the upstream embedded attribution metadata. No public DiceBear API is used.
+
+Source package: dicebear/styles v10.6.0
+Repository: https://github.com/dicebear/styles
+Pinned revision: 22a9abebc54ed68275da811573204ad83db646b8
+Original licence overview: https://github.com/dicebear/styles/blob/22a9abebc54ed68275da811573204ad83db646b8/LICENSE.md
+
+Notionists
+Creator: Zoish (https://bio.link/heyzoish)
+Original: https://heyzoish.gumroad.com/l/notionists
+Licence: CC0 1.0 Universal
+Legal text: https://creativecommons.org/publicdomain/zero/1.0/
+The complete CC0 text is supplied in CC0-1.0.txt.
+Upstream attribution: Remix of Notionists by Zoish, licensed under CC0 1.0.
+
+Bottts
+Creator: Pablo Stanley (https://twitter.com/pablostanley)
+Original and licence: https://bottts.com/
+Permission stated by the pinned upstream definition and licence overview: Free for personal and commercial use.
+Upstream attribution: Remix of Bottts by Pablo Stanley, licensed under Free for personal and commercial use.
+This notice records those artist-specific terms; it does not relabel Bottts as MIT or CC0.
+
+The adapted PHP renderer is separately MIT-licensed. Its complete licence and copyright notice are supplied in DiceBear-MIT.txt. The system's proprietary licence does not restrict the rights granted by these third-party terms.

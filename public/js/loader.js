@@ -5,6 +5,21 @@ sys.core.loader.__class = function () { // class to control availability of scri
 	loader.scripts = new Map(); // all scripts (loading and loaded) by id including prefix cms:class/module/module.js
 	loader.scriptsLoading = new Map();
 	loader.scriptsLoaded = new Map();
+    loader.scriptsFailed = new Map();
+    let loadingDeadline;
+    loader.status = (state) => {
+        clearTimeout(loadingDeadline);
+        if (state === 'loading') loadingDeadline = setTimeout(() => loader.status('error'), 30000);
+        const line = document.querySelector('.cmsLoadState');
+        if (line) {
+            line.hidden = state === 'ready';
+            line.classList.toggle('is-error', state === 'error');
+            line.querySelector('i').className = state === 'error' ? 'cmsIcon cmsIcon-circle-exclamation' : 'cmsIcon cmsIcon-spinner cmsIcon-spin';
+            line.querySelector('span').textContent = state === 'error' ? 'Some tools could not load. Reload to try again.' : 'Loading tools…';
+            line.querySelector('button').hidden = state !== 'error';
+        }
+        document.dispatchEvent(new CustomEvent('cms:loading', {detail: state}));
+    };
 
 	loader.addScripts = (scripts, call) => { // given info from server, create and append dom element
 		scripts.forEach(info => {
@@ -12,6 +27,7 @@ sys.core.loader.__class = function () { // class to control availability of scri
 				lx('skipped: ', info.id);
 				return;
 			}
+            loader.status('loading');
 			info.domObj = document.createElement('script');
 			new sys.script(loader, info, call);
 			document.head.append(info.domObj);
@@ -24,7 +40,8 @@ sys.core.loader.__class = function () { // class to control availability of scri
 	};
 
 	loader.onScriptsReady = (call) => {
-		if (loader.scriptsLoading.size > 0) return;
+        if (loader.scriptsLoading.size > 0) return;
+        if (loader.scriptsFailed.size > 0) { loader.status('error'); return; }
 		var documentReadyStateChange = () => {
 			document.removeEventListener('readystatechange', documentReadyStateChange);
 			loader.onScriptsReady(call);
@@ -35,6 +52,7 @@ sys.core.loader.__class = function () { // class to control availability of scri
 			return;
 		}
 		l('flush onJSReadyFuncs:' + sys.onJSReadyFuncs.length + '(' + loader.scripts.size + ' sripts loaded) >>>>>>>> run build');
+        try {
 		sys.flushOnJSReady();
 		sys.buildSingletons(sys.singletons);
 		sys.buildObjects(sys.classes);
@@ -46,6 +64,9 @@ sys.core.loader.__class = function () { // class to control availability of scri
 		// update routeRendererData
 		// l('flush onLibReady');
 		sys.flushOnLibReady();
+        } catch (error) { loader.status('error'); throw error; }
+        loader.status('ready');
+        document.dispatchEvent(new CustomEvent('cms:rendered'));
 		// sys.flushOnDocumentReady(); // removed 2026-01 calld from routRenderer after update Document
 	};
 
@@ -63,7 +84,13 @@ sys.core.script.__class = function (loader, info, call) {
 	var script = this; // save instance;
 	loader.scripts.set(info.id, script);
 	loader.scriptsLoading.set(info.id, script);
+    info.domObj.addEventListener('error', () => {
+        loader.scriptsLoading.delete(info.id);
+        loader.scriptsFailed.set(info.id, script);
+        loader.status('error');
+    });
 	info.domObj.addEventListener('load', e => {
+        loader.scriptsFailed.delete(info.id);
 		// l(e.target.src);
 		lx('loading complete:', info.id);
 		loader.scriptsLoaded.set(info.id, script);

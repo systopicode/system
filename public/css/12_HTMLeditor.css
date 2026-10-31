@@ -1,5 +1,12 @@
 /****************************** WYSIWYG BAR ***************************/
+/* Retain native selection handles, suppress the WebKit callout where supported. */
+article.cmsContent .editor[contenteditable="true"],
+article.cmsContent .editor[contenteditable="true"] *{
+    -webkit-touch-callout: none;
+}
 div.HTMLeditorMenu{
+    box-sizing: border-box;
+    max-width: calc(100vw - 16px);
     --size: 2.25rem;
     position: fixed;
     z-index: 99999;
@@ -14,7 +21,8 @@ div.HTMLeditorMenu{
 }
 
 div.HTMLeditorMenu.is-touch{
-    --size: 2.75rem;
+    --size: 2.5rem;
+    padding: 0.2rem;
 }
 
 div.HTMLeditorMenu:before{
@@ -48,6 +56,8 @@ div.HTMLeditorMenu ul{
     list-style: none;
 }
 
+div.HTMLeditorMenu > ul { flex-wrap: wrap; }
+
 div.HTMLeditorMenu li{
     position: relative;
     margin: 0;
@@ -61,20 +71,20 @@ div.HTMLeditorMenu > ul > li.sep{
     border-left: 1px solid rgb(255 255 255 / 18%);
 }
 
-div.HTMLeditorMenu li.is-drag a{
+div.HTMLeditorMenu li.is-drag :is(a, button:where([data-cms-action])){
     cursor: grab;
     touch-action: none;
 }
 
-div.cms div.HTMLeditorMenu a{
+div.cms div.HTMLeditorMenu :is(a, button:where([data-cms-action])){
     color: #fff;
 }
 
-div.cms div.HTMLeditorMenu li.selected > a{
+div.cms div.HTMLeditorMenu li.selected > :is(a, button:where([data-cms-action])){
     color: var(--cmsOnHighlight);
 }
 
-div.HTMLeditorMenu a{
+div.HTMLeditorMenu :is(a, button:where([data-cms-action])){
     display: flex;
     align-items: center;
     justify-content: center;
@@ -87,12 +97,12 @@ div.HTMLeditorMenu a{
     transition: background-color .12s;
 }
 
-div.HTMLeditorMenu li.hasChildren > a{
+div.HTMLeditorMenu li.hasChildren > :is(a, button:where([data-cms-action])){
     gap: 0.3rem;
     padding: 0 0.5rem;
 }
 
-div.HTMLeditorMenu li.hasChildren > a:after{
+div.HTMLeditorMenu li.hasChildren > :is(a, button:where([data-cms-action])):after{
     content: '';
     border: 4px solid transparent;
     border-top-color: currentColor;
@@ -100,17 +110,17 @@ div.HTMLeditorMenu li.hasChildren > a:after{
     opacity: .7;
 }
 
-div.HTMLeditorMenu a:hover,
-div.HTMLeditorMenu li.open > a{
+div.HTMLeditorMenu :is(a, button:where([data-cms-action])):hover,
+div.HTMLeditorMenu li.open > :is(a, button:where([data-cms-action])){
     background: rgb(255 255 255 / 14%);
 }
 
-div.HTMLeditorMenu li.selected > a{
+div.HTMLeditorMenu li.selected > :is(a, button:where([data-cms-action])){
     background: var(--cmsHighlightColor);
     color: var(--cmsOnHighlight);
 }
 
-div.HTMLeditorMenu li.disabled > a{
+div.HTMLeditorMenu li.disabled > :is(a, button:where([data-cms-action])){
     opacity: .35;
     pointer-events: none;
 }
@@ -130,6 +140,8 @@ div.HTMLeditorMenu li > ul{
     visibility: hidden;
     transition: opacity .15s, visibility .15s;
 }
+
+div.HTMLeditorMenu li > ul > li > :is(a, button){width:100%;box-sizing:border-box;justify-content:flex-start;}
 
 /* bridges the gap to the sub menu for the pointer */
 div.HTMLeditorMenu li.hasChildren:after{
@@ -157,14 +169,14 @@ div.HTMLeditorMenu li.hasChildren.open > ul{
     visibility: visible;
 }
 
-div.HTMLeditorMenu li > ul a{
+div.HTMLeditorMenu li > ul :is(a, button:where([data-cms-action])){
     justify-content: flex-start;
     height: auto;
     padding: 0.45rem 0.75rem;
     font-size: 0.875rem;
 }
 
-div.HTMLeditorMenu.is-touch li > ul a{
+div.HTMLeditorMenu.is-touch li > ul :is(a, button:where([data-cms-action])){
     padding: 0.75rem 1rem;
     font-size: 1rem;
 }
@@ -195,7 +207,7 @@ div.HTMLeditorMenu form.HTMLeditorClass input::placeholder{
     color: rgb(255 255 255 / 60%);
 }
 
-div.HTMLeditorMenu form.HTMLeditorClass button{
+div.HTMLeditorMenu form.HTMLeditorClass button:where(:not([data-cms-action])){
     width: var(--size);
     height: var(--size);
     margin: 0;
@@ -360,7 +372,7 @@ p.editor:after{
 /* Marks a link in CMS text outside the page preview. Inside the preview
    the site decides the underline. :not() stops at the article, so this
    does not raise the colour of the floating bar. */
-[contenteditable="true"]:not(article.cmsContent *) a{
+[contenteditable="true"]:not(article.cmsContent *) :is(a, button:where([data-cms-action])){
     text-decoration: underline !important;
 }
 
@@ -454,3 +466,6 @@ body.editorMediaDrop *{
 .editor[contenteditable="true"]:focus::after,
 .editor[contenteditable="true"]:focus-within::after,
 .plaintext:focus-within::after { opacity: 0 !important; }
+
+/* Keyboard focus must enter a submenu immediately, without waiting for visibility animation. */
+div.HTMLeditorMenu[data-keyboard="true"] li > ul { transition:none; }

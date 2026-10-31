@@ -139,7 +139,7 @@ Projekte ohne `templates/pages/` laufen mit der alten Struktur (`pages/`).
 { "path": "/projects/beautiful-technology.de/public/", "output": "json",
   "server": { "SCRIPT_NAME": "/projects/beautiful-technology.de/public/index.php", "HTTP_HOST": "192.168.22.50", "SERVER_NAME": "192.168.22.50" } }
 // Wartungs-Button
-{ "path": "/projects/systopic.net/public/cms/tools/maintenance/rewrite/", "output": "json", "user": 2, "put": { "action": "assignSites" } }
+{ "path": "/projects/systopic.net/public/cms/tools/website/paths/", "output": "json", "user": 2, "put": { "action": "assignSites" } }
 ```
 
 Erwartung auf DEV: Route `root > site=747 > id=741`, `bodyClasses` mit

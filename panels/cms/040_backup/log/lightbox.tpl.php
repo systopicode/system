@@ -8,7 +8,7 @@
 				</li>
 				<?php if (\Systopic\System\Auth\Session::isSuperuser()) { ?>
 				<li>
-					<a data-on_click="userConfirm" data-action="clear" data-confirm="Clear this log?" title="Clear log"><i class="cmsIcon cmsIcon-trash"></i></a>
+					<button type="button" data-cms-action data-on_click="userConfirm" data-action="clear" data-confirm="Clear this log?" title="Clear log"><i class="cmsIcon cmsIcon-broom"></i></button>
 				</li>
 				<?php } ?>
 				<li>
@@ -17,7 +17,7 @@
 			</ul>
 		</header>
 		<main>
-			<?php include __DIR__ . '/text.inc.php'; ?>
+			<section class="widget is-list"><?php include __DIR__ . '/text.inc.php'; ?></section>
 		</main>
     </section>
 </div>

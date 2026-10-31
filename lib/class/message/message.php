@@ -4,6 +4,8 @@
 class message {
 
 	public static $length = 0;
+    private static bool $requestFailed = false;
+    public static function requestFailed(): bool { return self::$requestFailed; }
 
 	public static function noop() {
 		return TRUE;
@@ -90,6 +92,7 @@ class message {
 	}
 
 	public function __construct($message = '', $type = 'notice') {
+        if ($type === 'error') self::$requestFailed = true;
 		self::$length++;
 		$this->type = $type;
 		$this->message = $message;

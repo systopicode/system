@@ -218,7 +218,9 @@
     "contrast": "contrast",
     "droplet-half-2": "droplet-half-2",
     "text-select": "cursor-text",
-    "editor-undo": "arrow-back-up"
+    "editor-undo": "arrow-back-up",
+    "aspect-ratio": "aspect-ratio",
+    "lock-open": "lock-open"
   },
   "duotone": {
     "gear": "gear-six",

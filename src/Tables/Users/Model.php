@@ -123,6 +123,12 @@ final class Model extends TableRow
         set => $this->__set__(__PROPERTY__, $value);
     }
 
+    /** Administrative suspension; activation and password recovery never clear it. */
+    public ?bool $isBlocked = false {
+        get => $this->__get__(__PROPERTY__);
+        set => $this->__set__(__PROPERTY__, $value);
+    }
+
     public const PERSON = 'person';
     public const SCREEN = 'screen';
 

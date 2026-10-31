@@ -1,334 +1,385 @@
-repository,path,scope
-system,.cursor/docs/gui.md,icon migration
-system,_legacy/public/css/dead-rules.css,icon migration
-system,_legacy/public/css/ui.onPageCMSControls.css,icon migration
-system,docs/icon-migration/README.md,icon migration
-system,docs/icon-migration/asset-license-inventory.csv,icon migration
-system,docs/icon-migration/assets.json,icon migration
-system,docs/icon-migration/dynamic-producers.csv,icon migration
-system,docs/icon-migration/icon-map.csv,icon migration
-system,docs/icon-migration/residuals.csv,icon migration
-system,docs/icon-migration/semantic-audit.csv,icon migration
-system,docs/icon-migration/usage-inventory.csv,icon migration
-system,docs/icon-migration/validation.md,icon migration
-system,legal/third-party/Solar-CC-BY-4.0.txt,icon migration
-system,legal/third-party/Tabler-MIT.txt,icon migration
-system,legal/third-party/provenance.json,icon migration
-system,lib/class/dom/editable/domEditable.js,icon migration
-system,lib/class/html/element/htmlElements.php,icon migration
-system,lib/class/media/editor/mediaEditor.php,icon migration
-system,panels/cms/030_settings/020_pagesettings/panel.php,icon migration
-system,panels/cms/030_settings/030_mediasettings/010_types/lightbox.tpl.php,icon migration
-system,panels/cms/030_settings/030_mediasettings/panel.php,icon migration
-system,panels/cms/030_settings/032_theme/panel.php,icon migration
-system,panels/cms/030_settings/035_environment/panel.php,icon migration
-system,panels/cms/030_settings/040_tags/010_edit/lightbox.tpl.php,icon migration
-system,panels/cms/030_settings/040_tags/020_join/lightbox.tpl.php,icon migration
-system,panels/cms/030_settings/040_tags/controls.tpl.php,icon migration
-system,panels/cms/030_settings/040_tags/panel.php,icon migration
-system,panels/cms/030_settings/panel.php,icon migration
-system,panels/cms/040_backup/backup.tpl.php,icon migration
-system,panels/cms/040_backup/controls.tpl.php,icon migration
-system,panels/cms/040_backup/create/lightbox.tpl.php,icon migration
-system,panels/cms/040_backup/create/settings.tpl.php,icon migration
-system,panels/cms/040_backup/dashboard.tpl.php,icon migration
-system,panels/cms/040_backup/log/lightbox.tpl.php,icon migration
-system,panels/cms/040_backup/panel.php,icon migration
-system,panels/cms/040_backup/restore/confirm.tpl.php,icon migration
-system,panels/cms/040_backup/restore/lightbox.tpl.php,icon migration
-system,panels/cms/080_users/010_users/edit/lightbox.tpl.php,icon migration
-system,panels/cms/080_users/010_users/edit/user.tpl.php,icon migration
-system,panels/cms/080_users/010_users/panel.php,icon migration
-system,panels/cms/080_users/010_users/users.tpl.php,icon migration
-system,panels/cms/080_users/012_screens/panel.php,icon migration
-system,panels/cms/080_users/015_roles/panel.php,icon migration
-system,panels/cms/080_users/020_permissions/edit/group.tpl.php,icon migration
-system,panels/cms/080_users/020_permissions/groups.tpl.php,icon migration
-system,panels/cms/080_users/020_permissions/panel.php,icon migration
-system,panels/cms/080_users/child.role.tpl.php,icon migration
-system,panels/cms/080_users/child.roles.tpl.php,icon migration
-system,panels/cms/080_users/dashboard.tpl.php,icon migration
-system,panels/cms/080_users/panel.php,icon migration
-system,panels/cms/090_tools/010_system/assets/main.tpl.php,icon migration
-system,panels/cms/090_tools/010_system/panel.php,icon migration
-system,panels/cms/090_tools/010_system/systemcheck/main.tpl.php,icon migration
-system,panels/cms/090_tools/020_database/040_status/main.tpl.php,icon migration
-system,panels/cms/090_tools/020_database/050_audit/main.tpl.php,icon migration
-system,panels/cms/090_tools/030_maintenance/010_cleanup/main.tpl.php,icon migration
-system,panels/cms/090_tools/030_maintenance/media/main.tpl.php,icon migration
-system,panels/cms/090_tools/dashboard.cleanup.tpl.php,icon migration
-system,panels/cms/090_tools/dashboard.tpl.php,icon migration
-system,panels/cms/090_tools/logs/backup_log/main.tpl.php,icon migration
-system,panels/cms/090_tools/logs/email/main.tpl.php,icon migration
-system,panels/cms/090_tools/logs/email/view/lightbox.tpl.php,icon migration
-system,panels/cms/090_tools/logs/login/main.tpl.php,icon migration
-system,panels/cms/090_tools/logs/php/main.tpl.php,icon migration
-system,panels/cms/090_tools/panel.php,icon migration
-system,panels/cms/actions.php,icon migration
-system,panels/cms/auth/activationCode.tpl.php,icon migration
-system,panels/cms/auth/footer.tpl.php,icon migration
-system,panels/cms/auth/identify.tpl.php,icon migration
-system,panels/cms/auth/license.tpl.php,icon migration
-system,panels/cms/auth/loggedOut.tpl.php,icon migration
-system,panels/cms/auth/main.tpl.php,icon migration
-system,panels/cms/auth/panel.php,icon migration
-system,panels/cms/auth/passkeySetup.tpl.php,icon migration
-system,panels/cms/auth/privacy.tpl.php,icon migration
-system,panels/cms/auth/register.tpl.php,icon migration
-system,panels/cms/auth/resetCode.tpl.php,icon migration
-system,panels/cms/auth/resetPassword.tpl.php,icon migration
-system,panels/cms/auth/setPassword.tpl.php,icon migration
-system,panels/cms/body.tpl.php,icon migration
-system,panels/cms/dashboard.css,icon migration
-system,panels/cms/home.notices.tpl.php,icon migration
-system,panels/cms/home.tpl.php,icon migration
-system,panels/cms/legal/lightbox.tpl.php,icon migration
-system,panels/cms/mobile.js,icon migration
-system,panels/cms/preview.tpl.php,icon migration
-system,panels/cms/search/lightbox.tpl.php,icon migration
-system,panels/cms/search/results.tpl.php,icon migration
-system,panels/cms/user/controls.tpl.php,icon migration
-system,panels/cms/user/main.tpl.php,icon migration
-system,panels/cms/user/panel.php,icon migration
-system,public/css/11_fontawesome.min.css,icon migration
-system,public/css/11_icons.css,icon migration
-system,public/css/20_base.css,icon migration
-system,public/css/40_nav.css,icon migration
-system,public/css/70_components.css,icon migration
-system,public/css/75_passkeys.css,icon migration
-system,public/css/menu.css,icon migration
-system,public/css/x_responsive.css,icon migration
-system,public/fonts/fontawesome/fa-duotone-regular-400.woff2,icon migration
-system,public/fonts/fontawesome/fa-regular-400.woff2,icon migration
-system,public/icons/solar/archive-line-duotone-primary.svg,icon migration
-system,public/icons/solar/archive-line-duotone-secondary.svg,icon migration
-system,public/icons/solar/broom-line-duotone.svg,icon migration
-system,public/icons/solar/calendar-date-line-duotone-primary.svg,icon migration
-system,public/icons/solar/calendar-date-line-duotone-secondary.svg,icon migration
-system,public/icons/solar/documents-line-duotone-primary.svg,icon migration
-system,public/icons/solar/documents-line-duotone-secondary.svg,icon migration
-system,public/icons/solar/magnifer-line-duotone-primary.svg,icon migration
-system,public/icons/solar/magnifer-line-duotone-secondary.svg,icon migration
-system,public/icons/solar/notebook-line-duotone-primary.svg,icon migration
-system,public/icons/solar/notebook-line-duotone-secondary.svg,icon migration
-system,public/icons/solar/question-circle-line-duotone-primary.svg,icon migration
-system,public/icons/solar/question-circle-line-duotone-secondary.svg,icon migration
-system,public/icons/solar/settings-line-duotone-primary.svg,icon migration
-system,public/icons/solar/settings-line-duotone-secondary.svg,icon migration
-system,public/icons/solar/structure-line-duotone-primary.svg,icon migration
-system,public/icons/solar/structure-line-duotone-secondary.svg,icon migration
-system,public/icons/solar/tuning-2-line-duotone-primary.svg,icon migration
-system,public/icons/solar/tuning-2-line-duotone-secondary.svg,icon migration
-system,public/icons/solar/users-group-rounded-line-duotone-primary.svg,icon migration
-system,public/icons/solar/users-group-rounded-line-duotone-secondary.svg,icon migration
-system,public/icons/tabler/address-book.svg,icon migration
-system,public/icons/tabler/adjustments-horizontal.svg,icon migration
-system,public/icons/tabler/alert-triangle.svg,icon migration
-system,public/icons/tabler/archive.svg,icon migration
-system,public/icons/tabler/arrow-back-up.svg,icon migration
-system,public/icons/tabler/arrow-forward-up.svg,icon migration
-system,public/icons/tabler/arrow-left.svg,icon migration
-system,public/icons/tabler/arrow-right.svg,icon migration
-system,public/icons/tabler/arrows-horizontal.svg,icon migration
-system,public/icons/tabler/arrows-move.svg,icon migration
-system,public/icons/tabler/beach.svg,icon migration
-system,public/icons/tabler/bold.svg,icon migration
-system,public/icons/tabler/bolt.svg,icon migration
-system,public/icons/tabler/braces.svg,icon migration
-system,public/icons/tabler/bug.svg,icon migration
-system,public/icons/tabler/building.svg,icon migration
-system,public/icons/tabler/buildings.svg,icon migration
-system,public/icons/tabler/calendar-check.svg,icon migration
-system,public/icons/tabler/calendar-down.svg,icon migration
-system,public/icons/tabler/calendar-event.svg,icon migration
-system,public/icons/tabler/calendar-plus.svg,icon migration
-system,public/icons/tabler/calendar-week.svg,icon migration
-system,public/icons/tabler/calendar-x.svg,icon migration
-system,public/icons/tabler/calendar.svg,icon migration
-system,public/icons/tabler/camera.svg,icon migration
-system,public/icons/tabler/chart-bar.svg,icon migration
-system,public/icons/tabler/check.svg,icon migration
-system,public/icons/tabler/chevron-down.svg,icon migration
-system,public/icons/tabler/chevron-left.svg,icon migration
-system,public/icons/tabler/chevron-right.svg,icon migration
-system,public/icons/tabler/chevron-up.svg,icon migration
-system,public/icons/tabler/circle-check.svg,icon migration
-system,public/icons/tabler/circle-half-2.svg,icon migration
-system,public/icons/tabler/circle-minus.svg,icon migration
-system,public/icons/tabler/circle-play.svg,icon migration
-system,public/icons/tabler/circle-plus.svg,icon migration
-system,public/icons/tabler/circle-x.svg,icon migration
-system,public/icons/tabler/clock.svg,icon migration
-system,public/icons/tabler/cloud-upload.svg,icon migration
-system,public/icons/tabler/color-swatch.svg,icon migration
-system,public/icons/tabler/compass.svg,icon migration
-system,public/icons/tabler/copy.svg,icon migration
-system,public/icons/tabler/corner-down-right.svg,icon migration
-system,public/icons/tabler/cpu.svg,icon migration
-system,public/icons/tabler/crop.svg,icon migration
-system,public/icons/tabler/cube.svg,icon migration
-system,public/icons/tabler/database.svg,icon migration
-system,public/icons/tabler/device-desktop-off.svg,icon migration
-system,public/icons/tabler/device-desktop.svg,icon migration
-system,public/icons/tabler/device-laptop-off.svg,icon migration
-system,public/icons/tabler/device-laptop.svg,icon migration
-system,public/icons/tabler/device-mobile-off.svg,icon migration
-system,public/icons/tabler/device-mobile.svg,icon migration
-system,public/icons/tabler/device-tablet.svg,icon migration
-system,public/icons/tabler/device-tv.svg,icon migration
-system,public/icons/tabler/devices.svg,icon migration
-system,public/icons/tabler/direction-sign.svg,icon migration
-system,public/icons/tabler/dots-vertical.svg,icon migration
-system,public/icons/tabler/dots.svg,icon migration
-system,public/icons/tabler/download.svg,icon migration
-system,public/icons/tabler/edit.svg,icon migration
-system,public/icons/tabler/eraser.svg,icon migration
-system,public/icons/tabler/exclamation-circle.svg,icon migration
-system,public/icons/tabler/external-link.svg,icon migration
-system,public/icons/tabler/eye-off.svg,icon migration
-system,public/icons/tabler/eye.svg,icon migration
-system,public/icons/tabler/file-description.svg,icon migration
-system,public/icons/tabler/file-download.svg,icon migration
-system,public/icons/tabler/file-import.svg,icon migration
-system,public/icons/tabler/file-off.svg,icon migration
-system,public/icons/tabler/file-plus.svg,icon migration
-system,public/icons/tabler/file-text.svg,icon migration
-system,public/icons/tabler/file-type-csv.svg,icon migration
-system,public/icons/tabler/file-type-doc.svg,icon migration
-system,public/icons/tabler/file-type-pdf.svg,icon migration
-system,public/icons/tabler/file-type-ppt.svg,icon migration
-system,public/icons/tabler/file-type-xls.svg,icon migration
-system,public/icons/tabler/file-zip.svg,icon migration
-system,public/icons/tabler/file.svg,icon migration
-system,public/icons/tabler/files.svg,icon migration
-system,public/icons/tabler/filter-off.svg,icon migration
-system,public/icons/tabler/fingerprint.svg,icon migration
-system,public/icons/tabler/first-aid-kit.svg,icon migration
-system,public/icons/tabler/flask.svg,icon migration
-system,public/icons/tabler/flip-horizontal.svg,icon migration
-system,public/icons/tabler/focus-2.svg,icon migration
-system,public/icons/tabler/folder-minus.svg,icon migration
-system,public/icons/tabler/folder-open.svg,icon migration
-system,public/icons/tabler/folder-plus.svg,icon migration
-system,public/icons/tabler/folder.svg,icon migration
-system,public/icons/tabler/gif.svg,icon migration
-system,public/icons/tabler/git-merge.svg,icon migration
-system,public/icons/tabler/globe.svg,icon migration
-system,public/icons/tabler/grip-horizontal.svg,icon migration
-system,public/icons/tabler/grip-vertical.svg,icon migration
-system,public/icons/tabler/hammer.svg,icon migration
-system,public/icons/tabler/hash.svg,icon migration
-system,public/icons/tabler/heading.svg,icon migration
-system,public/icons/tabler/help-circle.svg,icon migration
-system,public/icons/tabler/history.svg,icon migration
-system,public/icons/tabler/id.svg,icon migration
-system,public/icons/tabler/info-circle.svg,icon migration
-system,public/icons/tabler/italic.svg,icon migration
-system,public/icons/tabler/key.svg,icon migration
-system,public/icons/tabler/keyboard.svg,icon migration
-system,public/icons/tabler/layout-grid.svg,icon migration
-system,public/icons/tabler/library-photo.svg,icon migration
-system,public/icons/tabler/link-off.svg,icon migration
-system,public/icons/tabler/link.svg,icon migration
-system,public/icons/tabler/list-check.svg,icon migration
-system,public/icons/tabler/list.svg,icon migration
-system,public/icons/tabler/loader-2.svg,icon migration
-system,public/icons/tabler/lock-open.svg,icon migration
-system,public/icons/tabler/lock.svg,icon migration
-system,public/icons/tabler/login-2.svg,icon migration
-system,public/icons/tabler/logout.svg,icon migration
-system,public/icons/tabler/mail.svg,icon migration
-system,public/icons/tabler/map-2.svg,icon migration
-system,public/icons/tabler/map-pin.svg,icon migration
-system,public/icons/tabler/maximize.svg,icon migration
-system,public/icons/tabler/menu-2.svg,icon migration
-system,public/icons/tabler/message.svg,icon migration
-system,public/icons/tabler/minus.svg,icon migration
-system,public/icons/tabler/moon.svg,icon migration
-system,public/icons/tabler/movie-off.svg,icon migration
-system,public/icons/tabler/movie.svg,icon migration
-system,public/icons/tabler/music.svg,icon migration
-system,public/icons/tabler/number-123.svg,icon migration
-system,public/icons/tabler/password.svg,icon migration
-system,public/icons/tabler/pencil.svg,icon migration
-system,public/icons/tabler/phone.svg,icon migration
-system,public/icons/tabler/photo-off.svg,icon migration
-system,public/icons/tabler/photo-video.svg,icon migration
-system,public/icons/tabler/photo.svg,icon migration
-system,public/icons/tabler/pilcrow.svg,icon migration
-system,public/icons/tabler/player-play.svg,icon migration
-system,public/icons/tabler/player-stop.svg,icon migration
-system,public/icons/tabler/player-track-next.svg,icon migration
-system,public/icons/tabler/plus.svg,icon migration
-system,public/icons/tabler/qrcode.svg,icon migration
-system,public/icons/tabler/refresh.svg,icon migration
-system,public/icons/tabler/repeat.svg,icon migration
-system,public/icons/tabler/rotate-2.svg,icon migration
-system,public/icons/tabler/rotate-clockwise-2.svg,icon migration
-system,public/icons/tabler/rotate.svg,icon migration
-system,public/icons/tabler/route.svg,icon migration
-system,public/icons/tabler/search.svg,icon migration
-system,public/icons/tabler/send.svg,icon migration
-system,public/icons/tabler/server.svg,icon migration
-system,public/icons/tabler/settings.svg,icon migration
-system,public/icons/tabler/shield-check.svg,icon migration
-system,public/icons/tabler/shield-half.svg,icon migration
-system,public/icons/tabler/sitemap.svg,icon migration
-system,public/icons/tabler/spy.svg,icon migration
-system,public/icons/tabler/square.svg,icon migration
-system,public/icons/tabler/stack-2.svg,icon migration
-system,public/icons/tabler/stack-plus.svg,icon migration
-system,public/icons/tabler/strikethrough.svg,icon migration
-system,public/icons/tabler/sun.svg,icon migration
-system,public/icons/tabler/table-column.svg,icon migration
-system,public/icons/tabler/table-row.svg,icon migration
-system,public/icons/tabler/table.svg,icon migration
-system,public/icons/tabler/tag.svg,icon migration
-system,public/icons/tabler/tags.svg,icon migration
-system,public/icons/tabler/tool.svg,icon migration
-system,public/icons/tabler/trash-off.svg,icon migration
-system,public/icons/tabler/trash-x.svg,icon migration
-system,public/icons/tabler/trash.svg,icon migration
-system,public/icons/tabler/typography-off.svg,icon migration
-system,public/icons/tabler/underline.svg,icon migration
-system,public/icons/tabler/upload.svg,icon migration
-system,public/icons/tabler/user-cancel.svg,icon migration
-system,public/icons/tabler/user-cog.svg,icon migration
-system,public/icons/tabler/user-key.svg,icon migration
-system,public/icons/tabler/user-plus.svg,icon migration
-system,public/icons/tabler/user-scan.svg,icon migration
-system,public/icons/tabler/user-shield.svg,icon migration
-system,public/icons/tabler/user.svg,icon migration
-system,public/icons/tabler/users.svg,icon migration
-system,public/icons/tabler/vector.svg,icon migration
-system,public/icons/tabler/volume-off.svg,icon migration
-system,public/icons/tabler/x.svg,icon migration
-system,public/js/gui/HTMLeditor.contextmenu.js,icon migration
-system,public/js/gui/HTMLeditor.funcs.js,icon migration
-system,public/js/gui/HTMLeditor.menus.js,icon migration
-system,public/js/gui/icons.js,icon migration
-system,public/js/gui/qr-scan.js,icon migration
-system,public/js/gui/tableFit.js,icon migration
-system,public/js/gui/ui.js,icon migration
-system,src/Auth/DeviceName.php,icon migration
-system,src/Auth/login.card.tpl.php,icon migration
-system,src/Auth/passkey-icons.tpl.php,icon migration
-system,src/Auth/passkeys.tpl.php,icon migration
-system,src/Panels/ConfirmsActions.php,icon migration
-system,src/Panels/PanelNode.php,icon migration
-system,src/Queries/TagGroups/TagGroupsPanel.php,icon migration
-system,src/Settings/EnvironmentForm.php,icon migration
-system,src/Settings/ProjectForm.php,icon migration
-system,src/Settings/ThemeAssets.php,icon migration
-system,src/Settings/ThemeFile.php,icon migration
-system,src/Sys/Search.php,icon migration
-system,src/Sys/ThirdParty.php,icon migration
-system,src/Sys/WebApp.php,icon migration
-system,src/Ui/Icons.php,icon migration
-system,src/Ui/icon-map.json,icon migration
-system,tests/icons-ui.mjs,icon migration
-system,tests/icons.php,icon migration
-system,tests/inline-edit-ui.mjs,icon migration
-system,tests/pages-touch-ui.mjs,icon migration
-system,tools/build-icons.py,icon migration
-system,tools/icon-cleanup.php,icon migration
+repository,path,change,initial_sha256,current_sha256
+cms,_legacy/panels/cms/010_pages/editor/insertLink/lightbox.tpl.php,modified,1c5dfe51a097c0f84cd7edbad656caf4edf7df5de2ad53f0cd2a716c15e8ccfa,01597a4ad460aab3b9490e0b4d9cafa98f6d44a1ce57be28a38fbe592827c94b
+cms,composer.json,modified,91986b1608e21fcc7c8cdb017853edb7b8336c0b55484d81e78047aec5c0d188,c46117ebe3ce3ca7c7215ab5bdc58d1d489928bc8bfe1bbe8ac918d109f15272
+cms,docs/icon-migration/README.md,added,,d7e36ad1a9df087cd13854085060a307413bf752685e2c4d185b6a66c66486d6
+cms,docs/qa-block-1-followup.md,added,,1fd1dc4c4ada816c8e04766ca9c11d8e74d158e53494161d66b78d9a44494fea
+cms,docs/qa-block-1-tools-logs-mail.md,modified,508448c4ce263b8c97c71cf9e7ec83ba32fd0675c4fb7a42aa4b72055d3db759,b41a04eeae2f28e30b588b077a8b49d36b37a93e5e063e2665c38d45cecc07d4
+cms,panels/cms/010_pages/actions.php,modified,f827af631bfe042dc14e8a987cef75442d011d9e01a868ff10cabb916988c65f,f40c0d9d6b16770266375ed4a398514ccd6fe7ce2297cb43da3fbf4890417a4e
+cms,panels/cms/010_pages/contextmenu.tpl.php,modified,ab4796e31a05e4699b4c5760c353638e94f6282937936587b692d9e15c32be5b,74e365668d9a9b3826e8c82c8fa8cbba8d230a6f55e6a936ada751a46754643a
+cms,panels/cms/010_pages/controls.tpl.php,modified,7350464eda8d8915d356769daf962ab52dbf89389598a7ed199a001d3f20dfe4,c4f24f203b610290ce6ce00b3b3637b582b65e9a991e97bcf012b4e510c543fc
+cms,panels/cms/010_pages/dashboard.figures.tpl.php,modified,11addbe2cff1c659b6febcd430d935ffd5f382486469e05e6d51173446ee4b22,ed7521a7b109c54fb871a45de618650af964416aa38e4ab4e27b336bab767051
+cms,panels/cms/010_pages/dashboard.media.tpl.php,modified,ec31fac33a72641e7df8350bd84efb1d3e50e01d973f790a75ff932f67f2b908,943b17910f3a2fda51c98e14535535cd1ebe6d5ccfccbd6e510aa96ca202afeb
+cms,panels/cms/010_pages/dashboard.todo.tpl.php,modified,4b1e24670a128b978e0690ef76d4db387bc9c21580b6393ce043623b3ae2fa83,a4a76f39153dc2f5a196885d5ccd65c8caadb8df134b1147db53eda1678531b6
+cms,panels/cms/010_pages/dashboard.tpl.php,modified,5869682d3ca606957b4a21eabc29ee06473838dadced82d98667fb6b90fde09c,844984bcd8e5da78fd6f19574d0a164b868d519fcbe6dc82cd1e2732e9104452
+cms,panels/cms/010_pages/editor/editLink/lightbox.tpl.php,modified,4f7635686a07a6fd29bf08037acdab846913a3788d5ffaaf1ea6edac71b594f1,5a1de48502db6f17cab946890a7e344fc9211b9408ca5f14638b02932b549034
+cms,panels/cms/010_pages/editor/file/image.tpl.php,modified,d3f822721b70a10f58f62685ce01b9472ee2ee4b208a932b4fad82945b5d97e2,eb3a638a7c29bdd3d42d33afab7036aafa7e1207f9daebb702518a37836b10a6
+cms,panels/cms/010_pages/editor/file/lightbox.tpl.php,modified,bb37ca44aa8bea9e25f138299f94ef2f3551cecd1e635df74d024ea289d21e33,7da115bd40da625cba6c668bf8a9023af25b276a0765e956d46a861d1d5e5f75
+cms,panels/cms/010_pages/editor/file/meta.tpl.php,modified,c0cae8f84a49035bc46431d35ed34ff0ca6d913389b917f510ec663798bae295,c59e5ba68d8e1c241e666fa4b36722ee0a699b707fbe275a386712d5583b6072
+cms,panels/cms/010_pages/editor/file/video.tpl.php,modified,e2e115f7c5249d5de4505b96ce7c4a71b45d2de310d421f371c3a8e5fadbf641,a89f4ce2e392cde18c0afc8e9f14d9a35b12ff294ce54a0dfb092df62d0a9d35
+cms,panels/cms/010_pages/editor/htmlmode/lightbox.tpl.php,modified,8f8d8fc2e0e3d4489e65d680b916cfe1e5bc799e502b423cc05e5322352eb5ef,f6b8eef05ee8748e60a052c21d3541229b6ed8f488a086e5f92484c4b79e0691
+cms,panels/cms/010_pages/media-usage.tpl.php,modified,3837feef0f12b862fde4077738256d0c9263e6f71084562e82b6868e2117ab3f,3f0fa39a5935334a8fa60fa73772aa7cb946532fb541f91d04325b8f1399f5b9
+cms,panels/cms/010_pages/mml.tpl.php,modified,43411f3be43d84ce1dc620a7e91f66d2d868237bbbc7ccbd156481c74de743bb,441b028c9754ac054aa47d6394caefe9070875aef4632fa6217c43a0824738c5
+cms,panels/cms/010_pages/mml/contextmenu.tpl.php,modified,dc56984da24516f45d74a927928a4c95b1fb4474af3f55c30fabbca167696b45,26ebd365bb0d874ccdbeec5b939b73206b197c868bb37fcb2e1c17db9a8c973b
+cms,panels/cms/010_pages/mml/groupInfo/lightbox.tpl.php,modified,ddeefb56dcf4d1d2ce2a3fec4c69fa997db636d9d73277c3ad16c1d1d87c420e,deed41ec98d51f38c5e1e3781980457d3e1ba0854ebf8676d5fd2d62fb7545b5
+cms,panels/cms/010_pages/module.css,modified,fd373765da400f2d8f0718fa361df209525b28e3b181c1ba162d6a5a003c7fe1,69263df3f36b8c3153b2266f60114e230c51ddf3a5af4fb290c52186e9487009
+cms,panels/cms/010_pages/pages.js,modified,2b5272fd808bc3d4235e27a1ecdb090f7580f2717ef88e38a6be3ca44a88a74a,bd48c5b1d74a1b98e5fbbf3be179421e48694b12eb8fa87eab263e303e957828
+cms,panels/cms/010_pages/pages.mml.css,modified,2fb45ec7073593ac50cb5736b890d45c00134afbe5121bc2cb04cd43e2d83f7f,9666193504d9b06d1ca73eb167d6cec92dec596ba14160dbafae07150d4c5b2c
+cms,panels/cms/010_pages/panel.php,modified,0f066a09e484e73426d819cb016bc370bdd2ba53636096c8f0858b3a7a1cc09b,43aed40c0c5656b68c23dac4998277e211bddd6cfa3a590de12084fcbdf5c277
+cms,panels/cms/010_pages/pylon.tpl.php,modified,db1c00dc272e59a1522a6bf93ca0a6d74542b4657807fe511a08f08981e694e9,5ebd7004d6d4283bc8686ac8da936cfe6daf7ce0a368bde614c1d1334201e468
+cms,panels/cms/010_pages/sidebar/010_urls.tpl.php,modified,d7287144b5922683076df51af6795666a2904a462af27fd24f9852d7a32c7740,17f5aefef28bf443b62631801ee6c559642feb9aed30d368649c8d247ac358b4
+cms,panels/cms/010_pages/sidebar/060_publishing.tpl.php,modified,d1f70e0d6fa3e8cc042db1710b2e097785ea3f812faf971e9ac51cd9f94735c7,d2acfa712625f659089170e510be0a890d65b55b84624b25c8c2b541789f7b89
+cms,panels/cms/010_pages/sidebar/065_relations.tpl.php,modified,c72def6b868aa9c46b0133f52511d0514e48e58eaa060ad2027a67f547968d64,b00647e8bd9efc518746ebcba18d17d98c11a28b267119459152ecf1a6e00f56
+cms,panels/cms/010_pages/sidebar/actions.relations.php,modified,fa6fea97ea528324e8b9d021439b81f79943762a5c37b7ef2eb5e586ad771999,e952f5672c5c52fd7cd0650e85a003a77ec210888532c40a482f32786080bc3f
+cms,panels/cms/010_pages/sidebar/defaultMeta/lightbox.tpl.php,modified,588a6c94c10969f77b37403e6ef7ca7ab1318876c6a60148b6b009fe5e9ea535,bdb54363cb1ae40a74a26653e5e28cc652e0f6b68cb14550b15eb820bf2772f1
+cms,panels/cms/010_pages/sidebar/main.tpl.php,modified,f45191c77d4cfc62e02a02eae850c6af5c6dc22bc5e8991dbe3351c492175f21,38e86144013ef313138de5879c291c70ea9496b15c08bacb3a64f3c18fc41d68
+cms,panels/cms/010_pages/sidebar/panel.php,modified,e4e80847bf537d1126efdc23cadab3b92e1db2c709d4437826edbb9bd2dd1791,ef99a7abc1e38f64d12a2fc659ed4e4d3be689ebe1bd0669c7461d6b9a803b63
+cms,panels/cms/010_pages/sidebar/relationsHelp/lightbox.tpl.php,modified,adf6e9544816ddb515b6271c12a1e8e4f9d9619c59905e7448163f7bc0577acc,1922d14a47ecb27c00ff1cdaa8bdde1eda19865ddb0afd8435fda8af1f87988b
+cms,panels/cms/010_pages/site.tpl.php,modified,293b6a2c72946f66f05d847762e3ae1cc6fe344b1e7c1c376d63168dfcab75c8,54ff7e5413f63b3b94de21bbfa575664c81dcdef1a08be23e7e2f8c10e7a7465
+cms,panels/cms/010_pages/upload/lightbox.tpl.php,modified,e48031109950a3b9e1f6197df5b926e7de7bb1259a4f80451cb01721dd10e55f,8df1c3cc8f83cc9be393676e9f1900a141b2cfa70bbf1766d47017c40101c3a7
+cms,panels/cms/010_pages/upload/panel.js,modified,ebe145b02ce4c2f620b83d2122539133c884bf7adad5e6776a448ca87fad2aab,76d24294c0458b980552d566281f46caac4c087cb24af90a54be6bf047bdcfa1
+cms,panels/cms/030_settings/010_page/delete/lightbox.tpl.php,modified,e14abf3381dc91f9143d0fc993c17a640541cc165dfb4f36cf68b5c43b4040d7,534be809814a432c7027df5ec000f9df54d70fca47dc08132155620042defcab
+cms,panels/cms/030_settings/010_page/edit/lightbox.tpl.php,modified,58b6be83ee9d8763fa6538be560cbd4531021957373d44a4b63d2a6deea8d214,1ddad1d5381540f0cf07ce58c0b667bbb8f284048ad57d7bb753e6aa32525a30
+cms,panels/cms/030_settings/010_page/main.tpl.php,modified,290db45b3063205d48b1309e9bbd4e750efa8c84fc2f2e445627c755f58a52fd,59db159eb2ffddbe82f9ddef353ce1735a4cbef979bd5560d29dab35cdce23c9
+cms,panels/cms/030_settings/010_page/panel.php,modified,432b8e1e8b4d8c95660a65c3a44afaec9f397f4ae4459be42fa77e41863639f3,0817be54ec8eaf1a4e02351e3253e78b54167b6056bd23e9497ed5e74fe0495e
+cms,panels/cms/090_tools/035_website/010_links/main.tpl.php,modified,9869d54123782c5e680d6735df6faa5ab10dcf193278f1454668b1a44536d2fa,9c269888585355cfd1079a540f7742ba8b1504eeef4fb6984fc30db7ca9e01df
+cms,panels/cms/090_tools/035_website/020_misses/main.tpl.php,modified,16b7d80fe9ea3bc837f18b3e41aa33ce9256394087ca77e67446a98c6cc7794e,e84c516ac8ee814ea58436582d4931529078efa105ef53874cb8e0f91d770660
+cms,panels/cms/090_tools/035_website/030_paths/main.tpl.php,modified,33e15ba39f66bf95552686cabd5e05fbf4d4cd6941fddf1cce973795362f54a0,ea102d3ee207f2f4b4dabb85363458adeb102fa3aa2fed6387f6361ad72938ba
+cms,panels/cms/090_tools/040_cleanup/010_trash/main.tpl.php,modified,71f3932728d1d82d520d88a22a85bb40c10d0aa4d6f224d509f5d8b69d1b449b,9898e9fa0f2928eecd2103800139cceab5051e28fcca320ed42a36deb3261dbe
+cms,panels/cms/090_tools/040_cleanup/020_unused/main.tpl.php,modified,efe794315d14c6d81eca586f6c531ff5a685496f389cbbd89122b58065da41ae,c1f4296c8a43444bdcae4f06320a50f2fe511e9a3c60812d61c35a6ce639364e
+cms,panels/cms/090_tools/040_cleanup/030_duplicates/main.tpl.php,modified,90d2e69147e8b8e6eb8dede924179e7ac5b895eb2ff26a469e94a9da4d347317,37080da27156c40b354889cde2ec1bda5e54cb2242c90cd7bb6671cbc7cb98de
+cms,panels/cms/090_tools/040_migration/main.tpl.php,modified,e2ca2a3dde1a9f4b7d1fadb510ee7c2c6c177bfac097d9239e9e976c8b522363,20555986aedf8efe0174dfbd9600fc15ed346272c57d4eef1ae655733c3af387
+cms,public/modules/skp-viewer.js,modified,3d89126c2e7b115a374da829f98b7dfde89bb58e3c548c543655d1512dd0742c,fe91bdafd7649cea834de963ee6d3ec67e4cbabbeb493de00ae0f7e17c9b1690
+cms,public/site/editBar.js,modified,3ba0d63d35861986dbc79416cc448b1f1f02c8d958c55f228b3cf72332e81894,9cc3ecb9996e2520e0f314bb7630eff915d0496c653a3dcb61ac8f0e1edf4cb5
+cms,src/Media/EmbedConsent.php,modified,ae3869b2391a880b100b3dde1975f2138c331c983cb1e9012ee21568d9800d2f,1c522f80ed680202bdff46ebe9677b558afb2708c67a4c7a58272a69012f9df6
+cms,src/Pages/EditBar.php,modified,b0b94f10d6793d3f57e1c509b7ccaef57d7b75748f5112d6a5f440c143e70ac0,864dcaf4bc1c4c9c68fa1c462af80b1ba96060452e92ed4e516ef37f5aa23a0e
+cms,src/Queries/PageTree/PageTree.php,modified,2be38847fb7bbcfa510faf1386508918dc8a0fead010bf7a2173fbe0e30c4b41,536ac2d8b40c1d9a57c5d26e5e47b9d3645c0277bf71d5dbf2aba50604b5141c
+system,.cursor/docs/auth-passkeys.md,modified,42520626b8b638a03ed60f14eeeae34dbe24439db77c09af727c2b90ab4d0c80,77e2400b07a17c7627bcbb7230f5a3211d944e05f9d784588bf2b6b9bc996f07
+system,.cursor/docs/gui.md,modified,a8fd45ed4182ac022e82d06064197015bc511381d165107dd0a9a0652516cd9e,379e201fb50b9c58d59e725321dcd1c997d55e1f767fb2696c8c52518fd262e3
+system,_legacy/public/css/dead-rules.css,modified,43050577d699434b064506fd0f3e4d555d2f2653d586041918e1fb003aa99d5f,80978f829417b041c75f47bcd875709d96d58f0627caccd88a41ca23721c53c1
+system,docs/icon-migration/README.md,added,,b2665e07d40c58b3874d0bed879ac179944d6f05dc0db0b33dfa4406fa8a42a6
+system,docs/icon-migration/assets.json,added,,fd4d19f80fc77bd61bfaf7387c70e7451992dddc3b38dfc4e3033222c89ff068
+system,docs/icon-migration/icon-map.csv,added,,aaf3326990cfecb5884237582377bbed7ada54d88e3a2dc9ba2f50b37d0fd339
+system,docs/icon-migration/usage-inventory.csv,added,,c886ca0a0c283f5d2d07afe02a5e0b84fb405becf015da1c5c1c5361c18d320c
+system,legal/third-party/Solar-CC-BY-4.0.txt,added,,d432b4675182e9cc3ce2e044fd282700a72f0f270b080a3a3da398f6c3a1bc70
+system,legal/third-party/Tabler-MIT.txt,added,,b740a1d46122672da62833e97f7e7c8a13fa85cbc7445b584b297cc00dde93db
+system,legal/third-party/provenance.json,modified,0342a033fb79c233cc4c82a853518bb0ad1b4e0d41b1d5f38607a5e8665b13c7,dda96b6b5f90d6e5199547b5cb2852d636ae4725e98f4c0a91844e92f30754e1
+system,lib/class/dom/editable/domEditable.js,modified,638a0f1d37722e29cd9ef075c416ac483177a645097ec6de63d5204ff2b3cb5c,c5601a115ef2d652d55f7c166d001b655eb724d13539984de49368bda0a893de
+system,lib/class/html/element/htmlElements.php,modified,1f22abf6c7d72a8ca41167ca091f93fd3d85f52b42ac62ebba626111ce97ed47,8c843e0fc0c312747deb1069d79b577b95ba0d9d0ca5bff2652fd2041da1958e
+system,lib/class/media/editor/mediaEditor.php,modified,3c39dd364f5a0aefda7e76f01af9b8e827b669184ce701500089b016531b62fb,68ac1fcb9d0440ecab5fce7ce486ef4224228eb3169dbff3558ded6da45d6117
+system,panels/cms/030_settings/020_pagesettings/panel.php,modified,9639764af33177574345c99620ce119d6116eeed5b38f6552d67d62a77e9c687,11f551831320e05d1a425d2d47631db89fab25e0d447f69a850b35ce05a4559e
+system,panels/cms/030_settings/030_mediasettings/010_types/lightbox.tpl.php,modified,73bcc63bc7e26df1d2f42d65f440d52d446bdceb666bff5bb5b09001363b7270,d502cec66afeec6a58a19ec417de8d61835a73a618d27f27e680ed3d65f96e96
+system,panels/cms/030_settings/030_mediasettings/panel.php,modified,8907062997a5437804b50d6eaf5f5e3220153d9c41b59c8deb1bbd3e8906f5b0,a2b21512f6775f26cbd9eaf7422d4d698bd6869a0251dd62d46c94b287ff5b6b
+system,panels/cms/030_settings/032_theme/panel.js,modified,02c6b5ed34c095fe378735e41ffc150b3e92618012690f8252baf77f762702d8,bfac510125f0d7e89115a61a01b3bc636a3ebfae36e12a104518e77d124c7406
+system,panels/cms/030_settings/032_theme/panel.php,modified,fdc8231eaaf002fe5497082c84f5a13c2721d2658a429acf695988533738ff48,f1dd6122bc6ce6215de9a0ed8ba381bea03f8316160dab1592481ec8def6e5ea
+system,panels/cms/030_settings/035_environment/panel.php,modified,af448251af07d2af62c3c4a2904d48bd5cf861cf71f0d30f245577d3d8e18b97,b2c0d43fc72c4c03660d4dee8261fbadc992b48bf2db133a7db56cb1c1e22529
+system,panels/cms/030_settings/040_tags/010_edit/lightbox.tpl.php,modified,3a4d87bd233314b3b019e59ec8e350bd6144092ce65ee11b53faf95ddc8debe3,66c3493a273bc88800780cc683e6fdcfc6898d8d51973d3452008e17dff05f07
+system,panels/cms/030_settings/040_tags/020_join/lightbox.tpl.php,modified,5a542652f03dd74c8aa795e2e49956e5f9c50ace00b29f4644acbb0ade1b5575,9dc0a40d3b950fcaec3764f9a9ea5d1cddfc48085d83345702bec10d07fb893f
+system,panels/cms/030_settings/040_tags/controls.tpl.php,modified,5755583d74f33297188228ade4c3f8ec2b7f3405effc119ddfaeec1e423aa1c0,20ce4fe82fba7494e81368c1678d378041a8389fced03c65713383d4536cc5ed
+system,panels/cms/030_settings/040_tags/panel.php,modified,43045c72af788800fdf001414c421f14e93a705b056580fb891f54342e0d2cc5,30d522888964c73f843deb961434daac94b8aa44b5b3f217aa830d3687663401
+system,panels/cms/030_settings/panel.php,modified,e02656ca3abbfdd448925c3ed6fd744c25fa89f3a429a2f13faa414ac3ee46e4,8ad8f2b4c8c7e0115d85c18e6c24c8d420ada0f079e9300c242e192cc476606e
+system,panels/cms/030_settings/pylon.tpl.php,modified,449a7313c6c619000f18de32b3da81d712b16a099ec38e7286585e450f701a1d,473b95cd9ed87dd02fd9739cc27615fe4400eaca7864279fefd353f37f8a64be
+system,panels/cms/040_backup/backup.tpl.php,modified,44e94cb83e2b0aadf59d03085e32616a3bad4d86ecd3046f8ddbd25b356183e3,e25aa762cf085c55b005c710a3c6c8b1fc3a415f9415775ad66e4e0f5bbbc159
+system,panels/cms/040_backup/controls.tpl.php,modified,5ce315ac539cb315a76ec46b17069d089c318dde60cf49d4bd27bc7031e85d99,0f7cb3b349059352846c7981adfba5f57a7485dec2040710cb5586b06f78adbc
+system,panels/cms/040_backup/create/lightbox.tpl.php,modified,6ce02e3b1e4e30bbecb4a8f4f43f80f3e295ea326e853badb4347b03a4acc33d,1aa9a6dc964392a7b05790a22c35d10b1b5dff0ca9732c9a3cf8157101176f76
+system,panels/cms/040_backup/create/settings.tpl.php,modified,f062f2a8eaed9935bd0289ab26dc1ae32e6718b2e4865550f35c6663c74511c1,003ac51d1cf0bd870e0c332ae4fa80a9e9fd7d8b11d7f73d49207dba83ccb443
+system,panels/cms/040_backup/dashboard.tpl.php,modified,2c617763d5327feabfb881eef56b33fc19cc0d18c921404b1957368e47d292ee,2cfd6075c583a7e7b67e3d1c949af33e00414fc3e48ccc058738710eecbc0547
+system,panels/cms/040_backup/log/lightbox.tpl.php,modified,d148c9d39aa124851bc988f3229df9e5615fb8245dca5185d27b59e3bfd54d5c,4b79a9b93d56b4852fb736bb35316b40b6f9e214d2e9b45f1813052814075cf1
+system,panels/cms/040_backup/panel.php,modified,f8ac7f986674e3fb33cd2d777724de44d7d692157e5680b901afc1f6d12812d0,10a1042b02ab73aa42ab9033a1cf264d890b7578214f1b015d1715229ee7dc5a
+system,panels/cms/040_backup/restore/confirm.tpl.php,modified,0044efb380ea40e348a0a0dba37876167d6e913d04c2a49308e6763121eb4490,a9d45329a26b7cbc66a22fedb57b22be7505860aaf77e1f2dddd7f7efd7f2758
+system,panels/cms/040_backup/restore/lightbox.tpl.php,modified,1950356abf29bba59b6b11558c07453e19d645a2835758b0d9a6782b83e4ffd4,534c9af799028814a3530d367e9b08ebe85b3c5f39022ab39abaa80cad6f1202
+system,panels/cms/080_users/010_users/edit/lightbox.tpl.php,modified,bd22f2658c1314a8d3dc5b2204a6b80cc3761f2aadcc8aeb317fdf3738418541,e375d3773a4b29ae379682437aa18373a05a8d342776f35e888a1a751911fc57
+system,panels/cms/080_users/010_users/edit/user.tpl.php,modified,5619f3739109ff52b797201d9186f9f83d2d8ee8c7a3989d657706ab7250ecbc,6c5a5d95ec921fba2eefb97515f4fbd17622802a60f787ea1c3e2dec547fdee9
+system,panels/cms/080_users/010_users/panel.php,modified,a0c22f06b199ae4428e50b28d4a6c7a707bd8d6b814fe5200d99a860f13570a6,3481c60ccaa70527a40fc1466a2366f0c50bbd0f2f58ceb2a25d1d4a03464365
+system,panels/cms/080_users/010_users/users.tpl.php,modified,64caa0d18b5075101f7364dfe1ee329a1874758ef3c677b20361bf242f6ee2ba,8c54bd5e978aecf18c36d5beee0591238608d8c2b259db256051e690411ae811
+system,panels/cms/080_users/012_screens/panel.php,modified,1f523dc6f4a75bddcc32a4ddcb9dbfc794b5d251f61a3b82c128dd28a50de32b,22f4ca4bf16c972cc1660e4ab5b65a7ee4f58c1d8c6b816fc9410b0b285f708b
+system,panels/cms/080_users/015_roles/panel.php,modified,64acae1f27cd8205ad732de5a3f7a09118200d5ced49b2544e3065d7d9a9bf1d,3005e216b0c8f20b0238c136a1cd904a5974018fc6a2529b9d9e72d0f985c5a5
+system,panels/cms/080_users/020_permissions/edit/group.tpl.php,modified,86e159c2b29408c75571a8dd49a7fde12aee7ff4262abe568d9b4aab50c26301,8fe08a077bd8d2f1e6ab09f657c10b62f26b3a60fc5d5788a3c564cb0b8c2973
+system,panels/cms/080_users/020_permissions/groups.tpl.php,modified,fe1ee1c64b82915a2899bba9e828f7983fb8d9f6b8bf18463ad7674d4184ec8c,f27dc9eebd0485a3903dd7ec660aebc0b4af0f50ee6fccbfa670699388c20dae
+system,panels/cms/080_users/020_permissions/panel.php,modified,6a391ea0ac16b11e4f36c77c64bcf28667041489d4eddb05b275551ac741f66f,fb4ac57677f116ab270c1dd0ac9865af6afc041cc9c9240bd749bfb9a166fcf6
+system,panels/cms/080_users/child.role.tpl.php,modified,a1536c2ac57eaabc202bf3ca8e1af637048ead2523f53d4cc39f6561a95fadd0,3ba2ebcfdec7e37ebabb9d18ae059d9243cf2afc7a8b344cbd48950d0f5583d9
+system,panels/cms/080_users/child.roles.tpl.php,modified,a6b62f16b8e5884a16e0029aed16223d26e103eaaadb04115b280b3b85c3fb4f,cbe195bb43760152f182b01e58ac696ea5b10cd69e3d5d838fa3341c96978403
+system,panels/cms/080_users/dashboard.tpl.php,modified,8278d5ca651d3f1df5421b5f1233fe1cc93e983c694ea213be88e778f9d15713,8ed3936475d2c97d352bfe0072388039700e81b95a29d110dfedef77de997a26
+system,panels/cms/080_users/panel.php,modified,1341f3c2f2a1e11cf1eccafd58e8f3c9cdce5d7512671f0ff446138dc631f1ca,2a3cbcd6ac632c745e07f24d54f28fda7d2c28eb63f78aaec87e4bd58ef31fbf
+system,panels/cms/090_tools/010_system/assets/main.tpl.php,modified,b20af882380950443159e8fe6e9e6cc4496b634e3779ef506e5a1a8346d88670,e9dd10a1f452308608af0a0931cd8cc419ae2fb7bb32d54890730393da9c4c1c
+system,panels/cms/090_tools/010_system/systemcheck/main.tpl.php,modified,65d9076a95934ece41d633a75670cd090bda526a380dc67a90fffd91ecde0dc7,ac6678d865bfac2ef7ce7a88c86a8a63e14114c587fc2946af43db1cf0b82ba1
+system,panels/cms/090_tools/010_system/systemcheck/media.tpl.php,modified,680ed6dcf5db3a997f2f7e14110508044d1bbe7b6e2c384fde72b98e93e9fae3,ce0a6136b21dca4ba53004593efbb0f7467e132f90d346717ee83b5127f62c52
+system,panels/cms/090_tools/020_database/040_status/main.tpl.php,modified,e4ceafb26dc1d5afe695a9bbb779c9f7c133d7b963f2dc517fd2fa76bdc093d2,a248543df84ead37161f82c75575e35d9e009bf68cda925d3d15b72c40acec71
+system,panels/cms/090_tools/020_database/050_audit/main.tpl.php,modified,0a92f237f6f5af335ea704383c83406ccbf26eddbe6682a9080266bc6392737f,f358f50f28db494979cc066d48405ea4ffc6752bbdd6c4ae71769cd22b066524
+system,panels/cms/090_tools/040_cleanup/040_automatic/main.tpl.php,modified,7cfee0dda5ad0c20c688580493920561f8110669a344a332ba408298cae39c69,3c781e81aa18f715036725e319d9f35ac2c5ef571bd4dbbda866514c90c06194
+system,panels/cms/090_tools/040_cleanup/040_automatic/preview.tpl.php,modified,943ab61c554c6eef1eb3e19bb12989840e707faf6c9fc21fe79a37f7a6df291a,b1214323fe67637897232304272e5d6ee54ee29c3ea1a9ce138f1271817ddbfe
+system,panels/cms/090_tools/070_media/main.tpl.php,modified,4e91d017e75cef54891227e7ded5a46d46524559bf1e53b4854340a433658068,e768b2f9cd34d2a5641b4496b0a6e1a084755da734d8458b4be50d35fdb740c6
+system,panels/cms/090_tools/dashboard.cleanup.tpl.php,modified,0c3cb640f50153093af00f57bc88b5aa1a224b39fceffbf03202fb8e38cec75c,8d4c09b365474705a68ec54e0ffce87004410f2c317c409151e1ffd82a800b27
+system,panels/cms/090_tools/dashboard.tpl.php,modified,728160bda4474ef54c228aab9fc9cccb257389c0ec6303842ae7ece092cf3285,9a110eafd821da623901dd278f141c2bde9115c9e4ca84e339d085ddf95353af
+system,panels/cms/090_tools/logs/backup_log/main.tpl.php,modified,990ecfea1a1580478c6e9b3fab93a7bde672be3bc64ea62c6ba029903321a8ab,2601d58cbb146e3c7dcaa2bff098cc5db02bcd40646f0cc6cca2b3fc837bf0c9
+system,panels/cms/090_tools/logs/email/main.tpl.php,modified,8d3e6765191ab37e4ac42f131575dc39f54a72de2d73ceaacaef8c9e89eedd5c,91f9ce078ecd6624ce0f61b71375bf175fc5597b9921ab30c804a11724a8927f
+system,panels/cms/090_tools/logs/email/view/lightbox.tpl.php,modified,3cd81568ff94c6bb0f2697fb24636371f4e4d5cadefacb31ac53bfd71f2bba3d,2db35e43f836099a77f60165dc007e6ca977ca914f9740f72d695436fa27d513
+system,panels/cms/090_tools/logs/failed/panel.js,modified,44e8aa85fa39e4146bee9c8476de738ea4a9ba813fa263c23bb3a4387ad4fd35,be5910d5194761ab6159811cbc7df67f01153e1ffb30b0fc9d5d15b8001dda13
+system,panels/cms/090_tools/logs/login/main.tpl.php,modified,2409264d135fc08326f30d4df8bb337b865f4530fc683ed0a22e3bad85ef9b0a,2fe9faca465d2264508c3df4ca1e6005236cc983bd05c958c62a2bb9c6ae301a
+system,panels/cms/090_tools/logs/php/main.tpl.php,modified,adbc2231ba8c7897de3e990bbb7757e7bcc2026c9e0634b34de37d3704eedddc,5ca3633572f2d6bf82d8a9b5f9ad03d73ae4fced703f79d5796ebfa8bd2a782e
+system,panels/cms/090_tools/panel.php,modified,b16976902b4257868b2fc78246f90f45f2d771d2aa02c7ab157acb50b2029c75,febd8e23e9fee93ccd6c18faddc97f0d0caa62b7493c8ca0ff8274031acb9db5
+system,panels/cms/090_tools/pylon.tpl.php,modified,9d61b57ad3d3ea802699738ff36f4fceb31264d6936a0b893b5a7c119178c84d,81a2679a78645983e5b2c2354ba543537e984e6474217ef9b5b6536fb44d595f
+system,panels/cms/090_tools/tools.css,modified,4992fc61ed835d11b7bd35c101a2e82f1b2d14d4d46e1a5a39c08eebb9473b47,6f602c75a6ea127237c070b14d4e10d43f9272e1755d2631da1b8e2a8488f0dd
+system,panels/cms/actions.php,modified,830ded084caf2ab7277450d80f3762e537e8371d3a4b19eb8c081cd37ed35d35,c7483485e4b4e715869a774df624f7464f36137352d9cedc68c7119977c4d03e
+system,panels/cms/auth/activationCode.tpl.php,modified,d997dda7537787caca35dbfb944ce83cb9e12c97c0df085a00147166e5563a70,21d5b3a10e2a190365cb5fdd692b692adfed436b03b8ffd4fd97dea224858767
+system,panels/cms/auth/footer.tpl.php,modified,7bf9f6a680f0aad1763d73dc9466bf230ef5ceeae18cf4b66879ef2e61881359,7d37e634f62ffe5616cc7bda01315935736583dc87ecf7a51798f7cf7657b0cc
+system,panels/cms/auth/identify.tpl.php,modified,d26b24cb93f2f8dd084317f97b4b8ca6db37a39d61dfe57f7531b5796347ec4b,dde6235610c4c413696355284ab2b896fd80a1097266861daa3ccbe043c552a5
+system,panels/cms/auth/license.tpl.php,modified,282eb82c0071c568cf720e80cc685ca133a5ff8db0ded09b5a4535c83dd23504,de8b7c30d0143fbed091a92061974f4d89f9a973595a8b09c1e2e97d76c749ef
+system,panels/cms/auth/loggedOut.tpl.php,modified,93f8ce92fa028df3798196adf52174315ea82a09f8c10d08ee99083acd06287e,e76de73830a649612575121694bbc33d3cc54121eb6006d54632a388cfa88934
+system,panels/cms/auth/main.tpl.php,modified,94736df3178459c1fc69f67c1f425c414ddfa7707fbbc80e691cbef560bf1f49,36f347539b183c027d9a5dc5038b50ad6ad090ff60a5c7dcfb8a277a86ef1518
+system,panels/cms/auth/panel.php,modified,2459fb9f2150620659c94675c2709bad7d576dcc747a17ec14c07c145428c8fd,c17b382c081fb6bd43dd3ca1a5c83cef5bfd6e78588574da75d8b4e17248f197
+system,panels/cms/auth/passkeySetup.tpl.php,modified,370c1bab04497e23c6f91e3b95eafe9ceef63015c419fb0ebec5c4d3cc227b80,2498ff7d535ce39b2879f0d39eea8678ce3728424319e0acbb4dabe0a892971c
+system,panels/cms/auth/privacy.tpl.php,modified,113125997c3d315c8f23497222fafae7b221a503afbd27588b25218e1d903e4c,382d960968260ea14d89ff391658165d7c543dab49a633749f803352ff714a5a
+system,panels/cms/auth/register.tpl.php,modified,e492fdc11094601f0be4f3420b5b55aadb53cb2e1d5b5e0b83e417db6cc15642,81021523d1a96ed9764edd44afb5b25cd142dde160de57f4f69e5354d036890c
+system,panels/cms/auth/resetCode.tpl.php,modified,27d2e6be60a9e4ab05db47580b21dc0680bc430c44120a39688b495b98e96713,a33f976090cd5b1f382489c507fbe71933eaa3cef83b9cb65ba236575d615bd1
+system,panels/cms/auth/resetPassword.tpl.php,modified,038917eb550c514481cb3581c3baf5d6ce9a02627d562e23f2e0e175740e632e,94e9087cc2022df03b7b80a57760dad608179b711f11cb95c883da013e42bac1
+system,panels/cms/auth/setPassword.tpl.php,modified,c7a80a3e3211399fb01037690361520bb8a9b81e1c841b064618a584e4834cd9,449253fd698ab3ee52051d9ee78bc14ce41c8a9a7f419bf675308bea7355bd47
+system,panels/cms/body.tpl.php,modified,8c8766f279103cec6a5fb50ef1d4ed3a2d545aeb28731f312fdd04cf9c05156b,780ae978de811443b02b2869eebd8f4da2985d047e2fee25e4d36cf0f56b6384
+system,panels/cms/child.pylon.tpl.php,modified,1f88bdfa6bd8e39a0a2789a88010fd1eb98ec74129ea202ff8543afc0046056b,0be1c62d475c9af2259fca51ce1c8ee2bfff63f98d5ee1d6dbe8333b2c163942
+system,panels/cms/dashboard.css,modified,0cae17830b49f7f779bef26c92f266a06ab1dcf23b71b15c15cc6a588b4dc9ba,97122e331cca0999ac8eaf73879575c9facaabfbb62771304b4a9efa648f0501
+system,panels/cms/head.tpl.php,modified,207e3340fe9777697be1dca155a10a4ac8eb0af3778c24fed877b047281a605e,b9c780e2f7bae8a60a7c709d0d24f4e4a462f27dba7af9ddd1a23df97dd7ac51
+system,panels/cms/home.notices.tpl.php,modified,7b2c552303210d8176fbfc7b02ed1a6913b9f474203cafa8ba478fa0072aae45,2931981506f9d4ae0a36633d11af9a33c430339c2f8d545b6ee1c251626f4614
+system,panels/cms/home.tpl.php,modified,e2f729db0befe13e6b4f35e17e7691bb9b0673e4761ad2f991fc14db71001c67,35e17e92f0a8cb85df815e66fd6a71e44e641cb56773873befad7f11f8865242
+system,panels/cms/legal/lightbox.tpl.php,modified,8cacd77b376d41aef12eb2ba84980d11389be3516f3a4cf3d56e42a15d09b322,502c411d6b83b8b6c0eedf1b42aacf62f4ae8b8656a61c5d3be8ad04b54543da
+system,panels/cms/mobile.js,modified,946f4c9df6dc80cddc6ae32b7ecfc63024e96b4c88c175cae7363925259fa411,7bcf9d36f8cc58555e5387109cca7e8d0b6a15563d2ea4ea41a3246a110e1a0f
+system,panels/cms/preview.tpl.php,modified,f48ecdef7bec7ad4e3d2169aab348102fa4e77295564af349e00692b993f147e,5a84006446244846d87bdebd39990c89c8b2b01e1f41b51bb358790f036ffa63
+system,panels/cms/search/lightbox.tpl.php,modified,7fbe86f95b1b41ca6207817031f71f791aadba5578a407f62d64436811ca60fc,86870f43888fcbac7ea623fc347fe45bc5d1951552e71f2fef00982ea7e0556d
+system,panels/cms/search/results.tpl.php,modified,e24adca4f38230936b0f426890175a09bd2f0c77f1c4d3772d3133622cf6d7b3,f0a3716c85c3863c65a622c65b847735a25c81f9fa847d95e4cde961c6f5153e
+system,panels/cms/user/controls.tpl.php,modified,3512f772da615bdb8776b80ea29355eef8d9a7dc3bbd0dd2e606449545114420,c74b59e3e3f40a90f8ce19896b14bc173282019401400fdf36d6770831e1d030
+system,panels/cms/user/main.tpl.php,modified,22eabeab04ff7875f8694ac2600212334edcf8c4ee2e39363c0e3334dfe17158,12f78850e3671ed07fd7f4db435a8f7f7dc46c841b1f5af3eba888b9d11d58de
+system,panels/cms/user/panel.php,modified,352cb7a5c213689ae2e983b4179075c3379853415b5814969fed73ca1f5453bb,25b5b9aab07357109c5594ef766f590521862fbb5f1844a501e1425c6ebaf735
+system,public/css/11_fontawesome.min.css,removed,d5eefd6dbfdb3ef77a80ba2c15b50efb9b24febd070caac22889b5112f22b206,
+system,public/css/11_icons.css,added,,428506abf90ae59ba7b62f3eb616829bb34994db60e799d34cfa4748034f8492
+system,public/css/20_base.css,modified,42070d7b71551298134b309f615c22fec6c325f65b7e674b3577ebc5d85ec53d,7cc9d877f00ca194daaa340c0ced32aaf56a32189ad42d87e84c8c69968d51c8
+system,public/css/23_pylon.css,modified,72a9ac9f32548a6b2aa99794e5d63b368b23a3ad85f852c45808a20547cece65,fbe0ca1a3d5c019047d3616d494a682f08defbdc2ad4630e52a1b76f49718b22
+system,public/css/24_table.css,modified,2bdb6844cb1535404972b0a5fb6a3ebf182f1c7e8c196671aa96f2647b0d54ce,5b9cc4b473c4024763eed5549eec7ffe6ecbab7fab35cc536de3714e3186ad30
+system,public/css/40_nav.css,modified,d2860badf38aa54890a2332ec68b84d1dac110b7638cf86280a44371cc78e296,ae1a67c73087cbaf0bd937fcfa05743af715d54c4ec0b521137a2967d267011f
+system,public/css/50_forms.css,modified,6fd5e3f4d2c1dc6fbe10c1fce06d7aa9c3b4a98c527f43bb63cfcb14721f1ed9,3aa16feb97fa784fa3f865af60986bba41790e1649590729d0105a852f438864
+system,public/css/70_components.css,modified,19ee3daba2a118e62b57f7997fc07b31825c266e72b770a83cca1866d46ed2a8,08ab1c152deb52e7447225683274315651fbbe1b8b4065f2c1ef9cd42cf0e117
+system,public/css/75_passkeys.css,modified,8511cf0a69697cf944c6d674878476a015597837d147e2116b8fe775afcbb3a4,360ffdc5b1487bf092ae419d7eff7c99d193a07dd0867f72d87747195178c636
+system,public/css/menu.css,modified,45133af736688fa02fcc3e05389951b5d4840b6976b4fccbef9ccdc32412411a,22e4f5e6889d10d6e6361af21ac92d04768bf56e1a72daa21440992dfe69c120
+system,public/css/x_responsive.css,modified,5bd2eebbd113e5f9732f5dd1ee3f6e4a8e50e5dfd3fa021e65849a368e7b2971,58ecf30533bb5e6e9b0d0b3dc95554d5eaf9fae6bc1f9360b92bd39c40c15ead
+system,public/fonts/fontawesome/fa-duotone-regular-400.woff2,removed,2b41641ca6903f3a1b1b56834e385d9233b34082e8d35a24e1eb5a2151c0d00a,
+system,public/fonts/fontawesome/fa-regular-400.woff2,removed,74f9b47004f302d62d54a87fa2a7144327890d9c81ed3d058304f5419e0c4c6f,
+system,public/icons/solar/archive-line-duotone-primary.svg,added,,dc9e64edd7dd41ddfdd9e62fc1ff708e72ceb9851c46c71ae22af742845b3a10
+system,public/icons/solar/archive-line-duotone-secondary.svg,added,,4569dfed41c7dc636e54ab8f1069881da6494c5c52334dcf5999c2a939a93dda
+system,public/icons/solar/documents-line-duotone-primary.svg,added,,2495609b950b9048d09b1a952096c4e9e8b06d773fbe50fae9be9eef4a70081a
+system,public/icons/solar/documents-line-duotone-secondary.svg,added,,c572e263c07f5890e1b95415802454c3fab1b2888e420eea1221f5f4b443eda4
+system,public/icons/solar/magnifer-line-duotone-primary.svg,added,,bc6c4e2bcdcba53314285867ce2eac5e2518f5f31d4cd1e0a2bf5208bd185852
+system,public/icons/solar/magnifer-line-duotone-secondary.svg,added,,41a283d8df7e2e460c5db596f781aac7dbd4d84c47b0e7d601658696275a4593
+system,public/icons/solar/question-circle-line-duotone-primary.svg,added,,7afbc62e813bdee404b04ec4954fb883f195ccbdad51a8fbc599904b0b893ec6
+system,public/icons/solar/question-circle-line-duotone-secondary.svg,added,,de4fae9c576c307d8c1b0335cca2975e9e47a6f939d6bcb415848ece8a2384c0
+system,public/icons/solar/settings-line-duotone-primary.svg,added,,e0622157d5f075abc57d169f7d46b382c58cb7a14cb45197e0c3fdf3e9b74bf5
+system,public/icons/solar/settings-line-duotone-secondary.svg,added,,260791be2c65928352adc12628b8b4739ed9ee8842596eaa30a3b0c64c678164
+system,public/icons/solar/structure-line-duotone-primary.svg,added,,46c4851483e772f3f760cf40bd14913a1ba701e0feb1be530a8a11e25c57cc7f
+system,public/icons/solar/structure-line-duotone-secondary.svg,added,,4696bbfe877391c2e0539a4cd0d79fff27814f9aed18b34271cad500c7050630
+system,public/icons/solar/toolbox-line-duotone-primary.svg,added,,6513d64c67434c0f87dc72579251aba40d53478366d9c936e33db375eb357fe3
+system,public/icons/solar/toolbox-line-duotone-secondary.svg,added,,58caa268cd3246596a0b2ff34825d95ab06109f555a00df8273500c684c8ba33
+system,public/icons/solar/users-group-rounded-line-duotone-primary.svg,added,,1dd07c5e9d8f4904a727062c49e4c69d53dc0109f1d09b9aa7c2429079c548b9
+system,public/icons/solar/users-group-rounded-line-duotone-secondary.svg,added,,ab49e53a518ca64e87711c34b39f9269987ced6f1d3f1e9436ff6e8b47146103
+system,public/icons/tabler/address-book.svg,added,,80b9c2bc02f2caa1bfeee1afa41e3aa0221c540489b6c0a1567e7d70bb80d48d
+system,public/icons/tabler/adjustments-horizontal.svg,added,,21806b0fbe380d63108c10937c91d8b59c00d58778f1d4e048fe4ee8a07fcc36
+system,public/icons/tabler/alert-triangle.svg,added,,9bc8cfa57885fcf404baf7a3005cd7b8f9ca7c57b6ecdd51abcf333a4165a5ee
+system,public/icons/tabler/archive.svg,added,,f31a16d8e0b65f4c3e519a19f5488b84dd9f5e84bfb74edc675a929e184ea8a4
+system,public/icons/tabler/arrow-back-up.svg,added,,9490a123ec6d2c27313f700aca5bc4e45fa8a5976735dc563f589a5ee5ad6c98
+system,public/icons/tabler/arrow-forward-up.svg,added,,3087a8b148acec8607de7896c666d1cd845ed16b358987b6dea19f92094b3c88
+system,public/icons/tabler/arrow-guide.svg,added,,c1d16610fd77e92f76f1ea36f0d7684601d655a2e0634c769428111dc8c2e816
+system,public/icons/tabler/arrow-left.svg,added,,48fb9321f9ec681b57dc692c4036664e3a6f1e5bcc25fde5be8227a784935ec6
+system,public/icons/tabler/arrow-right.svg,added,,7483ed0ffac21c8b41e55c7cade5c7aff48c65c8e9f9c4e54ec566f986346304
+system,public/icons/tabler/arrows-horizontal.svg,added,,3ab160e3a5434689295551f687dcf90840ce67e28fea96f688ebea3b326955b4
+system,public/icons/tabler/arrows-move.svg,added,,0133f7be3d5b31d33996d79e5e8388e52adb07db0b79c0e3a215ad930f588ad2
+system,public/icons/tabler/bold.svg,added,,f8f12579b84ccad5a09b3a127adb5956b5fe406f10b4f3be8dc2aaf0fe21236b
+system,public/icons/tabler/bolt.svg,added,,dc90dc0afb9e0951c6498d6ef9ce7abef5c610dae2c762d2c575762bff902338
+system,public/icons/tabler/braces.svg,added,,daf2c467cbc8f59ee345cb1905511ead65fd92fee388fe0e90d5cc808b51bf19
+system,public/icons/tabler/bug.svg,added,,9743978919a0acb1faba7a2033bcefddf4f061ecd5ca05f184a83c245a3e74f6
+system,public/icons/tabler/building.svg,added,,d5bb7beac7d90414d76ac766c4f673eba694f5c384b589861b722b8253e26171
+system,public/icons/tabler/calendar.svg,added,,74e95a7e7011a04e7ecbb2c6bcd0d130e9c9ea530f192f96dd307e3ec4a2c247
+system,public/icons/tabler/camera.svg,added,,000461faa52248a6aca278158dab8380d14156a7456fec4a654d015ea2200386
+system,public/icons/tabler/chart-bar.svg,added,,0001940074fca9ba052305d6519971e5b22f14f059881a3c41ad719217f8190f
+system,public/icons/tabler/check.svg,added,,1d88113d14d51b9b25e2844654900cf919e7b83bb75aa586c6bc9c258929f802
+system,public/icons/tabler/chevron-down.svg,added,,e75ca98f71fce5404425891a39df65f13d4b7e2dd82fcc8417b54da0a5f88b99
+system,public/icons/tabler/chevron-left.svg,added,,72788eb0a43bf9f964b0b195431cb2bbec5672834d23483675e16a58a7a497fd
+system,public/icons/tabler/chevron-right.svg,added,,089a9fa9ccd11c267becf74a81685529508e811a47d357e3f8b6ab1af69c17a3
+system,public/icons/tabler/chevron-up.svg,added,,d9700e5c48ddf88c820bc4300cda1cca6dede83dc8b9cc4e29cedc826e18ff55
+system,public/icons/tabler/circle-check.svg,added,,89a56c842a659b0cbdf5f727bc57bee1932fcc03c9d450c44a701591564b5039
+system,public/icons/tabler/circle-half-2.svg,added,,13bdf1791a2a63fbeb890f43b4717456390d9e424cae64d4dc5ffabd1ee5f297
+system,public/icons/tabler/circle-minus.svg,added,,1ca29af6b5024cd6302796fb39869760082e8eaf29ff22e4d97d67c683910def
+system,public/icons/tabler/circle-plus.svg,added,,b125179184ff1e7662f4f9b6307d94f446afdd483ce239f192873667125cb17e
+system,public/icons/tabler/circle-x.svg,added,,6bb3a7df3b7d775d958a83a52aa32acac54867bf227725c16539ff540dd128b3
+system,public/icons/tabler/clear-all.svg,added,,4937ef4cc9e1f8316166c0f389b043a840c8141749547f74dcd7461a37fee0f7
+system,public/icons/tabler/cloud-upload.svg,added,,7c70a4484ee589668b1f5ca9c45739776e838565177d3cde67cd1dbea47e4e78
+system,public/icons/tabler/columns-3.svg,added,,0371c1f36c53a485de65b34f09965f97c5ddd455e6341ccd848ee05789a77b68
+system,public/icons/tabler/compass.svg,added,,46f0fb2342b4ffdf0109bfdeb18fc9f13d6f84ea0778b70c4d25ad8112002998
+system,public/icons/tabler/copy.svg,added,,865f995aaf1cfb93066500a2c1b90e91a66fe3f2de788c908c39485a01bb24de
+system,public/icons/tabler/corner-down-right.svg,added,,3cec82debc68a2813d503715b461c044a578582def17c56f9655d68c0b1f900f
+system,public/icons/tabler/crop-1-1.svg,added,,610a19c1a50862bbd8a7de8f36a391e8030084878086c0f7a1ad51193e6fcaa0
+system,public/icons/tabler/crop.svg,added,,fb6c847cdb1871bbdda05e7b93917279b13551dfe24045bb56cfa083fbe8b0b4
+system,public/icons/tabler/cube.svg,added,,fb1fa3a703e2024a8e121f3b7941e8f877ecc427277815e3344163ee797ff607
+system,public/icons/tabler/database.svg,added,,ce6ecb288532f26ef7edbd07dee8b9db448b0a426e32c936fc96ed775f1847a7
+system,public/icons/tabler/device-desktop-off.svg,added,,4d08aebce6e9bc5f4b406f42ce349ed09664cfe7656c527a31820a7131bc4b65
+system,public/icons/tabler/device-desktop.svg,added,,bc0eb517ad476680d13dae797bec1007a60b5545487b7ee6d5862a36e28e75a7
+system,public/icons/tabler/device-laptop-off.svg,added,,7da9f2f6ce713436d207d1e70ea15e4e023c0928bc32f2884d96bda975a68483
+system,public/icons/tabler/device-laptop.svg,added,,abe8a6f1d2d06429d90d601d4efdd71d02d44b3b9ea42c012153130ffade1a9c
+system,public/icons/tabler/device-mobile-off.svg,added,,b689dd4a49fa482e5318bef381079a305d7ed35e0c847bafdf96feb26551aa84
+system,public/icons/tabler/device-mobile.svg,added,,4b641b88ad328af45100b3182c1dc9e7b906ec42b08d79f9d5e79217a9b45b37
+system,public/icons/tabler/device-tablet.svg,added,,050ac76b4a1bbe14befb0c84c8abfb44bc604dc161d86e996385b7be7f9128f0
+system,public/icons/tabler/device-tv.svg,added,,67310202da4591628442581e4e7f5426332732f8d6e05b128532d5636befcd3e
+system,public/icons/tabler/devices.svg,added,,cafc1605172fc0036ff06d8b9acfb6f928e286636020b4d08ea338f28fd89ee0
+system,public/icons/tabler/dots-vertical.svg,added,,849526dd29e0ccea343b69756712d1ee4bf5ed120029b79a7dae4c063b251d2c
+system,public/icons/tabler/dots.svg,added,,f4ca3c7ed309472336d55e951bc56ba33b6cbbd7aaa4a80a7f6df2827ebace53
+system,public/icons/tabler/download.svg,added,,40be689823b4ad01fa4fe0889b337ef94602aa9413c3ad82dea461ffdd212467
+system,public/icons/tabler/edit.svg,added,,fef535c6ece61e9253a0824b3c515b29252b6b845ff3b750c4cc689c0970b4df
+system,public/icons/tabler/eraser.svg,added,,9b4151a02701d71529cf92030297f1b0463d069f3b3cc0514ac5524fb7630aaf
+system,public/icons/tabler/exclamation-circle.svg,added,,ecab1bd34f390820c093d5f86644ff18ec302eebfc5b74d3dd4e6dc43ce63b3e
+system,public/icons/tabler/external-link.svg,added,,5081706f959b119ac4fb1a8bc28797a09779907062426a715e9541d03647c570
+system,public/icons/tabler/eye-off.svg,added,,118284f7e4496847304815f759adfbed9454c0c75739a85358cf2834071d65ca
+system,public/icons/tabler/eye.svg,added,,977634baeba356f83ae6e0d005b980ab84dbe7afa61dc9cb1cb3e1e9cab9f51d
+system,public/icons/tabler/file-certificate.svg,added,,c434ff5e3a1012ff15b8dd5575661f869c0b04f64421ec1666d001aeb82b5d99
+system,public/icons/tabler/file-download.svg,added,,e6d271345a3688b06ffabfe439c93da26614e1865e3f53fcf841e5979dd173b1
+system,public/icons/tabler/file-import.svg,added,,6b5533e65c0c86243e8cc9c12862e917eedf37c8e93cee1d9461f30cc1e2dd83
+system,public/icons/tabler/file-off.svg,added,,cc9316aa5cdbe8d87deabf160bebeda1c867edfaa0db0196abf602913fecb9fb
+system,public/icons/tabler/file-text.svg,added,,8ca19497dac705d8ba75de4514613fe024c5d56c8819bdef102879119cfa56fd
+system,public/icons/tabler/file-type-csv.svg,added,,f8ead5a918f74f65f24102adb4c43d501a75c8e8c9505b1fa6304ba38c8c59a6
+system,public/icons/tabler/file-type-doc.svg,added,,29f4a1e62887a3e3128da6f6322f3ae883b8098abd33ee3186f5f6d9dc15e325
+system,public/icons/tabler/file-type-jpg.svg,added,,70d57c01c360f7d7c6c0c74593b0dc340c8768208c4d11551a73ebb2655a5769
+system,public/icons/tabler/file-type-pdf.svg,added,,43e79335304df06141e30df0b6963d0f96a571ecf6bb688cbb81683c8926a7e0
+system,public/icons/tabler/file-type-ppt.svg,added,,bff58cdc7649565e6871feeb474ebb042ed3c0f31bebc59b5341e356dbf20e1d
+system,public/icons/tabler/file-type-xls.svg,added,,08843b385660c412dc39b580a947f249fb75b851b829b00c71ae215830a72cfd
+system,public/icons/tabler/file-zip.svg,added,,c25c15475cc82e38ea765ce8e737f795df9dd6b725b0341d7f218e3a41ff8491
+system,public/icons/tabler/file.svg,added,,fb2f1a1ccf8e1fd07c6e1ef7c4af35b63c3132f513709239af46010db0fb6a29
+system,public/icons/tabler/files.svg,added,,584e78fe0c91b20ca5bfdac4016d3138afc8707d5bd65df72840f003a28c06ef
+system,public/icons/tabler/filter-off.svg,added,,4a5c8d3a290d322d9523868843b7bcfa0c7430a97ea6f86e676a8353054a0260
+system,public/icons/tabler/fingerprint.svg,added,,c793d8e54e07da0eae33d729f898a9b30a1a504bc644f9f2eea845b34b3d6e26
+system,public/icons/tabler/flask.svg,added,,97eadedc8731476954c22b486a4208b17424c5b5ca345935d1c55ccfa3d79283
+system,public/icons/tabler/flip-horizontal.svg,added,,639fffa287b3e8b44e6defad377a68893bd738c22bc6c4c7992ce0ece625c76c
+system,public/icons/tabler/focus-2.svg,added,,d27a4f08b98b85b1dcc3e3a7f18a560a92ece556e66a7fabfc8d6e160ace3044
+system,public/icons/tabler/folder-minus.svg,added,,1712409e9823cf195d5ddb53f4f8849eb304d95f1848ba610e316d270dc7e87c
+system,public/icons/tabler/folder-open.svg,added,,8d52e68413c09ebb8c8d92b6cccc2710a44181715370287801f440c5017a96f7
+system,public/icons/tabler/folder-plus.svg,added,,2e71c46ef86972466844a5985b2968903e81d19c3265fd473ca789b47311d5ec
+system,public/icons/tabler/folder.svg,added,,71cba90640cd464ba72782eb416dc18806d947dfef8f7ec092297efc69f7aa17
+system,public/icons/tabler/gif.svg,added,,48dc97d8627f45fe963c8b57edab515c48dcb2ee8e3ebcd1ef1a42ab80bcff9b
+system,public/icons/tabler/git-merge.svg,added,,c6aa3be5debb3678a032cd23e7b1e6fb70c36d6df101d3a8191f84c1c04320e7
+system,public/icons/tabler/globe.svg,added,,6d54c21464390cd3f516ec1c83954652d95fae3946e97d1340d467bf9f28366c
+system,public/icons/tabler/grip-horizontal.svg,added,,c38fe19d74d1f6a9255455ca0d2a3ad4f7a47ab502bbaaff49c0377908ee7d41
+system,public/icons/tabler/grip-vertical.svg,added,,e537ce586fb317ff04c71f01eacbcb5f5f156930e901bfd00fee33241caf61c3
+system,public/icons/tabler/hammer.svg,added,,57ebb5632d4166679ce37a5333e816cbe3f42ee32e3ab5e99e39923c1c567523
+system,public/icons/tabler/hash.svg,added,,a013f2b370641d80b73723c2be5e96d3d375582fb05901d29d63e5982844a186
+system,public/icons/tabler/heading.svg,added,,44717cd1e4351318fdc928574d8cf14963f005028b47ff2678eaea060c18ecd6
+system,public/icons/tabler/help-circle.svg,added,,5aba583b3f28cdacb64e8ebf2493cd593bf20309deacd75e4da33a91ce2a5c22
+system,public/icons/tabler/history.svg,added,,e8567867d870fb6b8fe4455cfb33bf6446664fd30142d2a8eb72d10eb2fc5c52
+system,public/icons/tabler/id.svg,added,,a6bbef3636fa87241be195978c0296e8cd208c2b06278e482c140bd115d999f6
+system,public/icons/tabler/info-circle.svg,added,,63596f293bce22fdd678fd8dd9d8ea9b4499e4ff35345a938b2f4694406d1be6
+system,public/icons/tabler/italic.svg,added,,dd59e9453dd33c7d173b1fa31ecc8ae9f95359b1270cac207f5d8bfdc8d39dd4
+system,public/icons/tabler/key.svg,added,,fdf3df27fd0364917408f7ff7ffe858289dbe8bd60dd910307932ec380c39a19
+system,public/icons/tabler/keyboard.svg,added,,c246efeec6bfa438f8c6246a2b2f7426b5b7a51dcecc3390680efd0b6b9b2e4d
+system,public/icons/tabler/layers-intersect.svg,added,,c92b503b1d431b4823ebb584efd53bd96fe8f002e758d335215a8f0b2e8d676e
+system,public/icons/tabler/layout-grid.svg,added,,5abf6a308e2d7f73808e8b041c3d5b5f775ee48493f7b2184e15844740825e8b
+system,public/icons/tabler/library-photo.svg,added,,994a86de974111ab1cb9667bc0ba8b71c21c64320e9f0a83c7fbffce9ae8b9d5
+system,public/icons/tabler/link-off.svg,added,,bd5114e17cdd35d17fa5ce79bf429fe0421816ae5a7ec1b19cb56389b858f26e
+system,public/icons/tabler/link.svg,added,,e8412902aeeb6d8a6141a4c68b838ce868e3324ee370271c8f18dbfbd2f13386
+system,public/icons/tabler/list-check.svg,added,,3b3b8e7f7872711f2296ffd70a7637ada30cca6c7605ec0415d70e5d2526f252
+system,public/icons/tabler/list.svg,added,,e36f93615166a1575ca186390d1702d72325791d4814a2c1acd5354b7f21dca6
+system,public/icons/tabler/loader-2.svg,added,,7128372cb891425bc1b8d57c8d22c0bc0423c43b67a12196d366e2aedbda1721
+system,public/icons/tabler/lock-open.svg,added,,b221ee71ecbf18b1c04889d6b52d3d086346082cbb4d6283030af2508d1cd1f8
+system,public/icons/tabler/lock.svg,added,,dc42c3c355e66d3b823b09f0267a4cfe09e8dc1863f27789ff347344f46e5655
+system,public/icons/tabler/login.svg,added,,7af8676ac474b5a767f8e702a96398b29219fd59cf9e16e9c15bff763c916217
+system,public/icons/tabler/logout.svg,added,,8b1f468c4d031d936e4965cc1726e941e02107c6aea88c604baebb3bc15c8bce
+system,public/icons/tabler/mail.svg,added,,b91628cb37ec74e5d3617550132c96f71af46c669a9d2a3c3e5ca18923070aec
+system,public/icons/tabler/maximize.svg,added,,8d5f150ed39aeec7c260c45765c9c863355732c7eeff37127d0624a7594b3eb5
+system,public/icons/tabler/menu-2.svg,added,,bd52659f3f6a0d8edc21d91c7b84507bbe0029dddc3df2fdb1b426ed01f4fed6
+system,public/icons/tabler/minus.svg,added,,8c137c21c5f2ec614bfeb48b7fd7868b82d5338d5f8418785cfe9db5d4aaa58a
+system,public/icons/tabler/moon.svg,added,,8679ed5b806fae1a13f7248da899af58b1e2454f02e0bc56ecc58fd85731ab38
+system,public/icons/tabler/movie-off.svg,added,,c3449bead834cee1786440a394dcbf8761992fcdf26ed09f85c466437985398a
+system,public/icons/tabler/movie.svg,added,,3fa387eae80e290c699ada77758b703e8d1ab93cf1d4490002029e654fb15786
+system,public/icons/tabler/music.svg,added,,065874831925d1322248a07ed7857c32d33596c6caf654899472e5815b66536f
+system,public/icons/tabler/number-123.svg,added,,d273aead21707c6166ff48522fe6006ae005ca8f6b42b2a7999718dd9656523e
+system,public/icons/tabler/palette.svg,added,,1107c6633f874af33d7c6ac70ad626cb2986092d23a7310b8f36bb6bd40b5362
+system,public/icons/tabler/password.svg,added,,1ca25e87a344dab56b1448a5a0dd1f88dcc565e0b590e634cfc95e5d89c00b78
+system,public/icons/tabler/pencil.svg,added,,e2a9b5988ec94c11df9e687769c67a2bdb6cfa9de1e1fbad828600f77419df42
+system,public/icons/tabler/photo-off.svg,added,,77a303827603b487fe8cf4bacd64a9f4e77710ecc3835910b609e499cff3441f
+system,public/icons/tabler/photo-video.svg,added,,c0febb9cc632d7c82d9c5c99517fca059848e3ad07f6ca2dadfdae9c2a1e534c
+system,public/icons/tabler/photo.svg,added,,ce8f690f39451f50f635e58aa69f8c31c34c75f47f9d5394de035937bca08490
+system,public/icons/tabler/pilcrow.svg,added,,c32a413e5bd102dcbf58662c70eba2a518a4c508936ba9af2396be0a8bdf0381
+system,public/icons/tabler/player-play.svg,added,,c4f5db9fddd136d7639d2392db0fc55c505d35c06a2baa24f2c6d5ffaef43b7d
+system,public/icons/tabler/player-stop.svg,added,,07c4e50f9e4c8c5c692c456d1915fad1ec969dabd7df916cca0a1be0d39d0558
+system,public/icons/tabler/player-track-next.svg,added,,ef49e58df972122340222212fdd94f3e3ab2841c6217cc5be7f4d50197a3dd40
+system,public/icons/tabler/plus.svg,added,,3c0caa944b89101ecc2d07dcbd03e0253dc0b1a4c2bfe927deba6156cc62ddf6
+system,public/icons/tabler/qrcode.svg,added,,57beb23700fd12e65440ff70257d8bef7aa3754782f5f4b8724f7dc609966f34
+system,public/icons/tabler/refresh.svg,added,,4cd3f51ae3b0944539d54c9e90a1433af21e6e13f2816031056c1b7ab362cbfd
+system,public/icons/tabler/repeat.svg,added,,919a52707ccc8cf01f5654e67a848d858fb3b6a598b53d52105b0c3a1054a859
+system,public/icons/tabler/rotate-2.svg,added,,0c62afa3941bcadd017fb7d710b7a148fbc9d0cce9d50f524c7d775f2b77caad
+system,public/icons/tabler/rotate-clockwise-2.svg,added,,c86463d4dd53f840c569099aa34458d10a657a40b32c3191e1cd6c9b855d5aa3
+system,public/icons/tabler/rotate.svg,added,,0dffe78d408c04c4fd17bb4867b55d3a3ee7cbb4b2e838e08b280887efda44ee
+system,public/icons/tabler/route.svg,added,,d3d0ab402c2c963716a61cb64ec00e07a1d7f2299ea102ab7154f4eae47abba0
+system,public/icons/tabler/search.svg,added,,d37dce50783cf21c1311790e7238b5f6cc2dad847e20a8030185aac20e034785
+system,public/icons/tabler/send.svg,added,,7554c23c64e60d3327ef644e9c025195ef307b3e29e82f830643fd5fa3b57a34
+system,public/icons/tabler/server.svg,added,,1785a803fd174372ccf8504ebbc24d42c0513163fdd5cb63e83bd82da7e0f7c0
+system,public/icons/tabler/settings.svg,added,,5d8dbfd5dd362c1932424fb7df20bb7fe4eb720c449684399ad615a39ea125e9
+system,public/icons/tabler/shield-check.svg,added,,0bbf9f201d32aa00d6b31de3e75116eecc669eab1007cac6b809ec25eab75240
+system,public/icons/tabler/shield-half.svg,added,,43ccf3991b6c1a06e02a4b52d4007c5182a54b80024bbf9def4461ac92542c87
+system,public/icons/tabler/sitemap.svg,added,,88d175d1bb197fc3239f67ff56a4ba85b63bdecf1936987c9355f77c53409db3
+system,public/icons/tabler/square.svg,added,,dc8a419dd4096cf56254cc2f805db0041b0bb041cedfe7f715c74e42b92c5817
+system,public/icons/tabler/stack-plus.svg,added,,d530a77d397839a4f7c0bfe2b9877f6021f75d97dfa5eb7beddbc3065314c987
+system,public/icons/tabler/strikethrough.svg,added,,5241d073900dd04fe34ea76ebccd481352a2967a8f7232985c81242001bec2f9
+system,public/icons/tabler/sun.svg,added,,f9a557118d4533d5bfedc42f0f67fcc11f560a6dbcd0f213a6f56fa47dd44303
+system,public/icons/tabler/table-row.svg,added,,b3d6acfda2ac8b67343b251da4fb3c2d1ada91f1c65cc8b107874aab61bfc881
+system,public/icons/tabler/table.svg,added,,c75f9008110e646594580ca4f70be036cab0296a7962ca4e398e2f7f3c35ebf9
+system,public/icons/tabler/tag.svg,added,,b71dcd079398415ad0c71e16a522b2db5f3ee024273826a997824628aed0bc41
+system,public/icons/tabler/tags.svg,added,,b158a3a67a232a7ef89062be373c98bafde51e405b5c47cec790d756f47b24c8
+system,public/icons/tabler/tool.svg,added,,98904d08539e9285d81809a6949429ad11bdd9d355f326dbeda51f54da969fa8
+system,public/icons/tabler/trash-off.svg,added,,5b3ad1a1aa9e61567cf1d7b5cf4a58789ec48085cbad0192e29fed1285db418f
+system,public/icons/tabler/trash-x.svg,added,,40b2dd47eb21f35d7081a915aacf9c32222b7b5b44c2f20c65c79d3bff79fabd
+system,public/icons/tabler/trash.svg,added,,f5c3932959b0930bae4a90831f763b8a25d950bd01c5b8366d05ed8110c998cd
+system,public/icons/tabler/typography-off.svg,added,,60fea9fe992c2fdab649e73e25685526e2788695f5258809e9fc6896b65fc1d2
+system,public/icons/tabler/underline.svg,added,,4b7fba0e3eaf8a44c660c6106e0a033eee461286954d03d65ee617826be8bd33
+system,public/icons/tabler/upload.svg,added,,7b908661f7bc5713444cd371cf5b9e91a98c50d48c26995fd4728304336b00e2
+system,public/icons/tabler/user-edit.svg,added,,0ab02e3d374b67d866a73f73dca06e485b1a7ebcb780a1f6eff10c28abff4dd8
+system,public/icons/tabler/user-key.svg,added,,cbfc48e59d019b16b42e94f43fecda1e5e465587397706576ecdc193036863f0
+system,public/icons/tabler/user-plus.svg,added,,6980eec1d43fcc1d45461fe4c914cc7b3ce9d734197e2fcc4d39857c7c3f9043
+system,public/icons/tabler/user-scan.svg,added,,98bfb8ca4de3fdea22674c0e7b533814a1bdecb2eba702f5bb338fff8e163ab1
+system,public/icons/tabler/user-search.svg,added,,e9874989c13b49300ea8ee2a989d64c72e333be21e16cea25979b1f2e9b58d31
+system,public/icons/tabler/user-shield.svg,added,,6e5424c91480c898fd923c0523015e5e6c95f22742ed405e13fd63880b08ba2c
+system,public/icons/tabler/user.svg,added,,b66f9f127085a107d8e35b9df4f64b31217820305788db040a523da201ce5538
+system,public/icons/tabler/users.svg,added,,f336342b85f622755070116e190935656e33831bd189f2172c574cf0a0da7799
+system,public/icons/tabler/vector.svg,added,,bdb90bafa8a27a191321c8b11b4d1026439d453dd2f3b66bd7a0cfd3e43e5d6c
+system,public/icons/tabler/volume-off.svg,added,,29a3f56f7629df90b5161070c112c9820e3c5bc74a36da4c6e1c84629a849510
+system,public/icons/tabler/x.svg,added,,aefa0a56452468e05b9f7de6fc251eca97617518457d6cce0a837fc9cb70cedb
+system,public/js/gui/HTMLeditor.contextmenu.js,modified,4bb23a0e610205fbe566f8d513c93e734562f1933f25c0a1974a654d6a8d680e,d2c08b8822f5b57a031854e43c049a82df1a705da689228489be20c0f825ad7b
+system,public/js/gui/HTMLeditor.funcs.js,modified,d07a686d981e1e54c327756e7c967215f842ca8ce3ecab6e98c6c0bda8894098,e48858fc78cb29468b469ae9b08ee4de3e92029fb8cfa6b259d11c88003573f3
+system,public/js/gui/HTMLeditor.menus.js,modified,6d6a190cff38568fb73df73ee471783e6301c25b7706a0ed9406e214661aa5ab,9efee4e63695ad721a1b13d6ccf624483db65dd0f23410de4b1a9408e3e10924
+system,public/js/gui/icons.js,added,,1ad9e252817da6c0bbcfc5ea6810f0295cc7598e426cc311db4f8b6b74b8ec47
+system,public/js/gui/qr-scan.js,modified,6186f2081529f4d76b80792b116948063313a66a17ee811b7c106ea2cf510fe3,11615a6faba216947b83db9416f030cb677a22cf6a04f7a1e4d4a16f3ade4b43
+system,public/js/gui/tableFit.js,modified,9512bdbe8a2c792b1e8a10080968cc74ca42b673b728a43f4a774c5f5eb8d11a,aa18d4ed925f69c47c39163a54cc2373a3746073908893cda3a9902d15b207bb
+system,public/js/gui/ui.js,modified,f1dbcbaa32fe96cef15d1ed8d877c0902bf4d00db9407dc17b74f979b25c62dd,670d0811586bff2d21a96511c1f75fd14cadbe98335dd758bed2e01a33a878d4
+system,public/js/loader.js,modified,ee243d20fc7c8111e795a8610696f436dbd8a2142e19b501192ec933847735bd,7e7cf23673b8fef512c7faebb807d4ea1d41fcc0b79c4354f4ffbe16f1f7ee1e
+system,src/Auth/Branding.php,added,,d41c256bf319711393f79424805854f9d7edd7a1b0ca2365ce460a5a4459f5b6
+system,src/Auth/DeviceName.php,modified,9f03ed703587ce465cafcbbec083c2615a03746ff229829ac14d8d87323dc728,1848fc402b6bc93931d23b6454b110ba401583ee5be6911817f16ccc377a4458
+system,src/Auth/form.card.tpl.php,modified,a1ccb6841ff4c7d82eb494e9a812ae82c244703911d313e63850679676eaf7c9,aea18872cbcccc980fe574cf8a99acb38cb91d212aa235dc5ac9bb84938d06d9
+system,src/Auth/login.card.tpl.php,modified,1697a98ddbf65c58edfa466b988c0bab5f0380f1cae5576118ea661458a5fd1b,abf3d6e4ea7aeb2ff25a468b18a42c36faeabb4e79450c5f665e5647c5097529
+system,src/Auth/passkey-icons.tpl.php,modified,e76fc196ad137bb1d5bb0c80adc235b57760d55fc00c6e8f46f81bc62665ecfb,d53a55ed5e523701df238ecd0dcd5f671f021c1a51601e810d04404f84c8097c
+system,src/Auth/passkeys.js,modified,8afcb936e78d86120cb6529c9aa6b049210dd0672172add695cb0400fc9fde41,514baf2862f30bf6a2e513a7301ed6fc6a930aebfb0f039d8287bb266910f245
+system,src/Auth/passkeys.tpl.php,modified,a41b1f1d54d79361f678577c4b41e5f0d3a5009854836fa242d6bdca2a543f3a,73ef7c0e499ab11542a39e6488770ad4f13ef7e580a3331b6e0db581539da029
+system,src/Auth/signed-in.tpl.php,modified,ac9297a5d2ad0b9462ff38d587248d0017475d1c25318e46cfd1d17297017a72,3a8a152f645cffd5b8c086dd1c6b1fa7fa410795ef015ec54b1752d3f94be6c4
+system,src/Logs/Filters.php,modified,58d1aaed3408da5a1c81ebfa0aeac7da9883445e42f5d17c326f56358deb1042,32109042e5883e27307dafcf4ff7e93b2e4f91bad79926fddb53b407bd093d2f
+system,src/Panels/ConfirmsActions.php,modified,bcadb62e5fb222c8c989656d43de1e8d8eac0009bcc55b5bdc3640fd4a1981a7,0b0e9a05810a9a021ffebcca762491a66be068442ea6122039182d27e1d7e463
+system,src/Panels/PanelNode.php,modified,d24df3a93cebe405d207533af7a281d3356c63eb0da8276351fe925c6231406e,0af5eb602990d364494d5b2689b8d19c7323477a0289e80c9aa4925cebad67df
+system,src/Queries/TagGroups/TagGroupsPanel.php,modified,6e4b1493be75571058a857d24eb55a6c7fb5a14393d6642d40b462c9ace22957,dcea00edbdcb7a88343223334bd0eb87cc61caa370c1ec8480c7e62464ef4f1c
+system,src/Settings/Contrast.php,modified,dc760605f70bc0209e7f3f3de439d24817d99778e2b7f0078090c5620feae138,5d221fb189bc382936984d8f4a7797d7b4582cbfe2de2b76c428bf7bbb0aa344
+system,src/Settings/EnvironmentForm.php,modified,ce75c5cbeff339bb5444017fae83f9eedf2bad39367f3d2a26ed0d676a18d177,6452cee2d2ec11cb1c0f108b16a8132fd6c178e2907e896ab53c79203f215108
+system,src/Settings/ProjectForm.php,modified,6a4645274f3a3e36fa5fc811f9fe197c48d7e4947d7302fd3714b9ec09d522d3,8dbc37e670c179e4f81118381a1729f2b650bab06986cfcf17a05956d72e2235
+system,src/Settings/ThemeAssets.php,modified,d444a52b4f47238e3f3b031d5612e5e216b25ac3c864a9c991bba51f1b19ea34,04c42d35cec6077a85ea929fb9ef4c4baa9a69f06916d3093e30b8e09b90d2c3
+system,src/Settings/ThemeFile.php,modified,66b97b50381662962ba45bd28d1193921538301fa1274d20e18752c0de627cd1,e48fb870a10a2e606dd0566b2a9e55a784a02cb56e9a98b30eba551fb793f43a
+system,src/Sys/Search.php,modified,9fe548dd07c517ec0c81e321f3c8186f553b24be0d1a4fb886651b68530563df,57597dfbbad170f760c5d0158e56b8d5c19911b5bdff8c7a5c733520c8fc70a5
+system,src/Sys/ThirdParty.php,modified,dc3314a32bf0e000931064c6b9067708904a4b77f67168b265282826bb0ff7a3,9bf7f5185b17a6e49126926a256fb7a4ce1b62a83515ca48c9a12f10bee312c7
+system,src/Sys/WebApp.php,modified,5b2cfaf27d09285ad78bdc390a415a275356fba56f7dc55c7d6e2abbcb4a37ac,10e72f736cd903cfa488478f71d934706912b7f3885619adb9f54dc5c404f5ab
+system,src/Ui/Icons.php,added,,2a3f4dc796db65074580e8dfeed1e1829a41a201ab360c0170c56ab1092a27c3
+system,src/Ui/icon-map.json,added,,208a7e3fc33d5f0bb52d88e12cb787481146a09cb5d533d038daec9f22105025
+system,tests/auth-branding.php,added,,19f58c98a2c1c9a860f086db11647b2125298806342aa0dd204438bc1691f1f7
+system,tests/block1-followup-ui.mjs,added,,26987ff865309db6427ae64c351e7b17e654eb5e47d1b7aca2fb60d89ed0a0bf
+system,tests/gui-feedback-ui.mjs,modified,cc22ecadf0c52f8db46a63b4406b0c1723e1e678600c9af89a166fecb73d1c8e,33c8d484fcef831b6e079c774b8d4bc43b4b4b56be1ebe14cb6e4edd6e421ef5
+system,tests/icons-ui.mjs,added,,2627ec6af001eacc4ae8fd92f5b5d270118f1c4c32f801459409edfc15ef17ee
+system,tests/icons.php,added,,33970696f6182267c5a405d00b573e01dcb9c5a48d9aec7b3215f92d7413e7f9
+system,tests/inline-edit-ui.mjs,modified,0436102599525397111b199cb5f03bb064d416d4816c36c9aaa792078c21ea5d,cea37ca0fc85f7de90b7b0ccc9cdbd8a53eddb00e979a08e1d8a4acc90153dec
+system,tests/pages-touch-ui.mjs,modified,828038a95766d88bae252f168ccb9eafc6817e029bb2f3480559e90a8c0b694e,57d1e8f4c4cecdc6c4116cf1fd97218cf916b6027604dcb5e952d52aab6ebadf
+system,tests/tools-block1-ui.mjs,modified,696d1fbbcce051350b21d42ac771b0bf382f6949b88d2dd867009febcc272618,5ab27e253b1e10187405c44ff2ce9fd13e3b991d67a7d7a539cb8ce3e06ad49b
+system,tools/build-icons.py,added,,09d5d1c3076d290335359cdda6aee0b43baf0305156912d33e8cdc8e6341defc
+system,tools/icon-cleanup.php,added,,f65e13e0fbd775abdb74b9f3c29f4b0da9dc5aff99b3c91b1eb25f29e5bd11bc

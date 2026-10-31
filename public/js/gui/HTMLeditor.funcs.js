@@ -90,8 +90,13 @@ function editBlockClass(event) {
 		closeAllMenus();
 	});
 	input.addEventListener('keydown', function (e) {
-		e.key === 'Escape' && closeAllMenus();
+		if (e.key === 'Escape') closeAllMenus();
 	});
+    // Flush the deferred field blur only when its class tools really close.
+    var menuState = contextMenus.find(item => item.domObj?.[0] === menu);
+    if (menuState) menuState.onClose = function () {
+        block.closest('.editor')?.dispatchEvent(new FocusEvent('blur'));
+    };
 	menu.querySelector('ul').replaceWith(form);
 	placeEditorMenu(menu);
 	input.focus();
@@ -243,11 +248,16 @@ function createHTMLeditorLink(event) {
 		post.download = anchor.hasAttribute('download') ? 1 : '';
 		post.target = anchor.getAttribute('target') || '';
 	}
-	sys.core.server.sendCall({
+	// Leaving the field may have started its blur-save. Its response must
+    // finish before the ephemeral dialog opens, or it replaces the dialog.
+    document.activeElement?.closest('.editor[contenteditable="true"]')?.blur();
+    // Blur handlers settle in a microtask to distinguish real blur from a
+    // removed DOM node. Wait for that handler to enqueue its save as well.
+    queueMicrotask(() => sys.core.server.onIdle(() => sys.core.server.sendCall({
 		method: 'post',
         history: false,
 		post: post
-	}, settings.siteRoot + 'cms/pages/editor/editLink/');
+	}, settings.siteRoot + 'cms/pages/editor/editLink/')));
 }
 
 /** "Save" in the link dialog: closing renders the page anew, so the field is saved first. */
@@ -276,9 +286,12 @@ function applyHTMLeditorLink(button) {
 		editor.blur();
 	}
 	button.classList.add('loading');
-	var save = new sys.core.event({type: 'input', target: editor, currentTarget: editor});
+	var save = new sys.core.event({type: editor.hasAttribute('data-on_blur') ? 'blur' : 'input', target: editor, currentTarget: editor});
 	save.collectElementData();
-	save.dispatch().done(close);
+	save.dispatch().done(() => {
+        button.classList.remove('loading');
+        if (!save.requestFailed && !document.getElementById('pageEditConflict')) close();
+    });
 }
 
 function linkHref(type, address) {

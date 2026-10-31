@@ -7,7 +7,7 @@ $search = $this->results;
 	<?php if (mb_strlen($search->query) < 2) { ?>
 		<p class="hint">Type at least two letters.<span class="cmsFindTouchHint"> Tap a result to open it.</span><span class="cmsKeys"> <kbd>↑</kbd> <kbd>↓</kbd> choose, <kbd>Enter</kbd> opens, <kbd>Esc</kbd> closes.</span></p>
 	<?php } elseif ($search->groups === []) { ?>
-		<p class="hint">Nothing found for “<?= $e($search->query) ?>”.</p>
+		<p class="hint">No matches for “<?= $e($search->query) ?>”. Try a shorter title or another search term.</p>
 	<?php } else {
 		foreach ($search->groups as $group => ['icon' => $icon, 'hits' => $hits]) { ?>
 			<h3><?= $e($group) ?></h3>

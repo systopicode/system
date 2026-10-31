@@ -33,7 +33,7 @@ main > div.content > header{
 }
 
 /* Kein Button, keine Krümel, kein Feld: die Leiste fällt weg. */
-main > div.content > header.cms:not(:has(a, button, .button, input, select, textarea, nav, ul, form, label)){
+main > div.content > header.cms:not(:has(:is(a, button:where([data-cms-action])), button:where(:not([data-cms-action])), .button, input, select, textarea, nav, ul, form, label)){
     display: none;
 }
 
@@ -104,7 +104,7 @@ footer.cmsStatusbar .cmsStage > i{
     display: flex;
 }
 
-.content header.cms ul li a{
+.content header.cms ul li :is(a, button:where([data-cms-action])){
     display: inline-flex;
     align-items: center;
     gap: 0.4rem;
@@ -118,15 +118,15 @@ footer.cmsStatusbar .cmsStage > i{
     transition: background-color .15s, color .15s;
 }
 
-.content header.cms ul li a{
+.content header.cms ul li :is(a, button:where([data-cms-action])){
     color: var(--cmsTextColor);
 }
 
-.content header.cms ul li a:hover{
+.content header.cms ul li :is(a, button:where([data-cms-action])):hover{
     background: var(--cmsHover);
 }
 
-.content header.cms ul li a.selected{
+.content header.cms ul li :is(a, button:where([data-cms-action])).selected{
     background: var(--cmsSelected);
     color: var(--cmsHighlightText);
 }
@@ -137,7 +137,7 @@ footer.cmsStatusbar .cmsStage > i{
 }
 
 /* Buttons im hellen Kopf */
-main > div.content > header button,
+main > div.content > header button:where(:not([data-cms-action])),
 main > div.content > header .button,
 main > div.content > header .submit{
     margin: 0 0 0 0.4rem;
@@ -194,7 +194,7 @@ main > div.content > header .submit{
     display: block;
 }
 
-.cms div.cmsSearchResults ul li a{
+.cms div.cmsSearchResults ul li :is(a, button:where([data-cms-action])){
     display: block;
     overflow: hidden;
     padding: 0.4rem 0.6rem;
@@ -207,7 +207,7 @@ main > div.content > header .submit{
     white-space: nowrap;
 }
 
-.cms div.cmsSearchResults ul li a:hover{
+.cms div.cmsSearchResults ul li :is(a, button:where([data-cms-action])):hover{
     background: var(--cmsHover);
 }
 
@@ -278,7 +278,7 @@ main > div.main nav > ul li{
     text-align: center;
 }
 
-main > div.main nav ul li a{
+main > div.main nav ul li :is(a, button:where([data-cms-action])){
     position: relative;
     display: flex;
     flex-direction: column;
@@ -293,12 +293,12 @@ main > div.main nav ul li a{
 }
 
 @media (hover: hover) and (pointer: fine) {
-    main > div.main nav ul li a:hover{
+    main > div.main nav ul li :is(a, button:where([data-cms-action])):hover{
         background: var(--cmsOnDark);
     }
 }
 
-main > div.main nav ul li a span{
+main > div.main nav ul li :is(a, button:where([data-cms-action])) span{
     width: 100%;
     font-size: 0.75rem;
     font-weight: 500;
@@ -307,7 +307,7 @@ main > div.main nav ul li a span{
     overflow-wrap: anywhere;
 }
 
-main > div.main nav ul li a i{
+main > div.main nav ul li :is(a, button:where([data-cms-action])) i{
     order: -1;
     font-size: 1.45rem;
     line-height: 1;
@@ -322,11 +322,11 @@ main > div.main nav > ul li i svg *{
     fill: var(--cmsFrameText);
 }
 
-main > div.main nav > ul li.active > a{
+main > div.main nav > ul li.active > :is(a, button:where([data-cms-action])){
     background: transparent;
 }
 
-main > div.main nav > ul li.active > a:before{
+main > div.main nav > ul li.active > :is(a, button:where([data-cms-action])):before{
     content: "";
     position: absolute;
     left: -0.15rem;
@@ -345,12 +345,10 @@ main > div.main nav > ul li.active span{
     color: var(--cmsHighlightColor);
 }
 
-/* Duotone: Grundform hell, Akzentebene in Markengelb */
-main > div.main nav > ul li.active i{
-    --icon-primary: #fff;
-    --icon-secondary: var(--cmsHighlightColor);
-    --icon-secondary-opacity: .5;
-    color: var(--cmsHighlightColor);
+/* Duotone: Konturen bleiben gleich; nur die aktive Innenfläche wird gelb. */
+main > div.main nav > ul li.active i.cmsIcon-duotone{
+    --icon-secondary: color-mix(in srgb, var(--cmsHighlightColor) 60%, white);
+    --icon-secondary-opacity: 1;
 }
 
 /* Duotone layers inherit --icon-primary and --icon-secondary independently. */
@@ -370,7 +368,7 @@ main > div.main nav > ul li.active i{
     position: relative;
 }
 
-.cms div.bottomMenu > div > a{
+.cms div.bottomMenu > div > :is(a, button:where([data-cms-action])){
     display: block;
     padding: 0.5rem;
     border-radius: var(--cmsRadius);
@@ -379,21 +377,21 @@ main > div.main nav > ul li.active i{
     text-align: center;
 }
 
-.cms div.bottomMenu > div > a > img{
+.cms div.bottomMenu > div > :is(a, button:where([data-cms-action])) > img{
     height: 24px;
 }
 
-.cms div.bottomMenu > div > a > i{
+.cms div.bottomMenu > div > :is(a, button:where([data-cms-action])) > i{
     font-size: 1.35rem;
     line-height: 1;
     color: rgba(255,255,255,.82);
 }
 
-.cms div.bottomMenu > div > a:hover{
+.cms div.bottomMenu > div > :is(a, button:where([data-cms-action])):hover{
     background: var(--cmsOnDark);
 }
 
-.cms div.bottomMenu a.cmsHelp{
+.cms div.bottomMenu :is(a, button:where([data-cms-action])).cmsHelp{
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -405,12 +403,12 @@ main > div.main nav > ul li.active i{
     line-height: 1.15;
 }
 
-.cms div.bottomMenu a.cmsHelp i{
+.cms div.bottomMenu :is(a, button:where([data-cms-action])).cmsHelp i{
     font-size: 1.45rem;
     line-height: 1;
 }
 
-.cms div.bottomMenu a.cmsHelp:hover{
+.cms div.bottomMenu :is(a, button:where([data-cms-action])).cmsHelp:hover{
     background: var(--cmsOnDark);
 }
 

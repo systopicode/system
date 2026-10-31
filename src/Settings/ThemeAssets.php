@@ -78,7 +78,7 @@ final class ThemeAssets
             echo '<main><form method="post" enctype="multipart/form-data" action="' . $e($href . 'upload?slot=' . $slot) . '">';
             echo '<label class="themePreview" data-drop-files>';
             echo self::preview($slot, $path);
-            echo '<input type="file" name="file" accept="' . $e($spec['accept']) . '" hidden onchange="this.form.requestSubmit()">';
+            echo '<input type="file" name="file" accept="' . $e($spec['accept']) . '" aria-label="Upload ' . $e($spec['label']) . '" onchange="this.form.requestSubmit()">';
             echo '</label></form></main>';
             echo '<footer><span class="left">' . $e($note) . '</span>';
             if ($own) {

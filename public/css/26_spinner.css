@@ -1,6 +1,6 @@
 /****************************** LOADING SPINNER ***************************/
 
-.cms button.loading:before,
+.cms button:where(:not([data-cms-action])).loading:before,
 .cms .button.loading:before{
     right:10px;
     left:auto;
@@ -12,9 +12,9 @@
     min-height: 24px;
 }
 
-.cms button.loading:before,
+.cms button:where(:not([data-cms-action])).loading:before,
 .cms .button.loading:before,
-form.loading button:not(.authReveal):before,
+form.loading button:where(:not([data-cms-action])):not(.authReveal):before,
 .spinner:before {
     content: 'Loading';
     position: absolute;
@@ -26,9 +26,9 @@ form.loading button:not(.authReveal):before,
     margin-left: -10px;
 }
 
-form.loading button:not(.authReveal):before,
+form.loading button:where(:not([data-cms-action])):not(.authReveal):before,
 .spinner:not(:required):before,
-.cms button.loading:before,
+.cms button:where(:not([data-cms-action])).loading:before,
 .cms .button.loading:before{
     content: '';
     border-radius: 50%;
@@ -37,17 +37,17 @@ form.loading button:not(.authReveal):before,
     animation: spinner .6s linear infinite;
 }
 
-.cms form.loading button.submit:before,
+.cms form.loading button:where(:not([data-cms-action])).submit:before,
 .cms form.loading .button.submit:before,
-.cms button.submit.loading:before,
+.cms button:where(:not([data-cms-action])).submit.loading:before,
 .cms .button.submit.loading:before{
     border-color: var(--cmsOnHighlight);
     border-top-color: transparent;
 }
 
-.cms form.loading button.submit,
+.cms form.loading button:where(:not([data-cms-action])).submit,
 .cms form.loading .button.submit,
-.cms button.submit.loading,
+.cms button:where(:not([data-cms-action])).submit.loading,
 .cms .button.submit.loading,
 .cms .submit.loading{
 	background: var(--cmsHighlightColor);
@@ -55,22 +55,22 @@ form.loading button:not(.authReveal):before,
 	pointer-events: none;
 }
 
-.cms form.loading button:not(.authReveal),
+.cms form.loading button:where(:not([data-cms-action])):not(.authReveal),
 .cms form.loading .button:not(.authReveal),
-.cms button.loading,
+.cms button:where(:not([data-cms-action])).loading,
 .cms .button.loading,
-.cms form.loading button:not(.authReveal) i,
-.cms button.loading i,
+.cms form.loading button:where(:not([data-cms-action])):not(.authReveal) i,
+.cms button:where(:not([data-cms-action])).loading i,
 .cms .button.loading i{
 	color: transparent;
 	pointer-events: none;
 }
 
-form.loading button.authReveal{
+form.loading button:where(:not([data-cms-action])).authReveal{
 	pointer-events: none;
 }
 
-form.loading button.authReveal:before{
+form.loading button:where(:not([data-cms-action])).authReveal:before{
 	content: none;
 	animation: none;
 }
@@ -80,17 +80,17 @@ form.loading button.authReveal:before{
 }
 
 /* Icon links, such as Log out in the menu, get the same spinner as a button. */
-a.ajax.loading{
+:is(a, button:where([data-cms-action])).ajax.loading{
     position: relative;
     pointer-events: none;
     cursor: wait;
 }
 
-a.ajax.loading > i{
+:is(a, button:where([data-cms-action])).ajax.loading > i{
     visibility: hidden;
 }
 
-a.ajax.loading:before{
+:is(a, button:where([data-cms-action])).ajax.loading:before{
     content: '';
     position: absolute;
     top: 50%;

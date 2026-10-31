@@ -14,9 +14,16 @@ if (str_starts_with((string) $this->action, 'passkey')) {
 }
 
 switch ($this->action) {
+    case 'validateQr':
+        $renderStyle = 'none';
+        \client::done(['valid' => LoginCodes::peek((string) \http::put('code', ''), [Codes::PAIR_SCREEN, Codes::PAIR_USER, Codes::INVITE, Codes::RECOVER, Codes::PAIR]) !== null]);
+        break;
     case 'continueWithoutPasskey':
         if (\Systopic\System\Auth\Session::active()) {
-            \http::redirect(\Systopic\System\Auth\Passkeys::completeSetup());
+            $target = \Systopic\System\Auth\Passkeys::completeSetup();
+            $this->form = 'signedIn';
+            $this->updateView('main');
+            $this->enterCms(2, $target);
             break;
         }
         $this->form = 'login';
@@ -72,20 +79,17 @@ switch ($this->action) {
 	case 'activate':
 	case 'reset':
 		// The link of an activation or reset mail (GET, the page renders after).
-		if ($this->keyUser === NULL) {
-			$this->refuse('Activation key not found');
-		} elseif (!UserOperator::keyValid($this->keyUser)) {
-			$this->refuse('Activation key expired. Go and get a new one.');
-		} else {
-			\message::confirm($this->keyUser->firstLogin === NULL ? 'Your Activation key is valid.' : 'Your reset key is valid.');
-			$this->form = 'setPassword';
-		}
+        // Rendering checks the key before exposing password fields, including
+        // expired, missing and already consumed links.
+        $this->form = 'setPassword';
+        $this->updateView('main');
 		break;
 
 	case 'setPassword':
 		$user = $this->keyUser;
 		if ($user === NULL || !UserOperator::keyValid($user)) {
-			$this->refuse('Your activation key was not found or is expired, please get a new one');
+			$this->form = 'setPassword';
+            $this->updateView('main');
 			break;
 		}
 		$this->form = 'setPassword';
@@ -97,7 +101,8 @@ switch ($this->action) {
 		$this->scope->save(UserOperator::activate($user, (string) \http::posted('password')));
 		$this->signIn($user, \Systopic\System\Auth\LoginLog::EMAIL_LINK);
 		\message::confirm('Your new password has been set');
-		$this->enterCms(5);
+		$this->form = 'signedIn';
+		$this->enterCms(2);
 		$this->updateView('main');
 		break;
 
@@ -116,6 +121,7 @@ switch ($this->action) {
 		break;
 
 	case 'redeemCode':
+        $this->state->loginMethod = 'code';
 		$code = LoginCodes::redeem((string) (\http::posted('code') ?: \http::post('code', '')), [Codes::INVITE, Codes::RECOVER, Codes::PAIR]);
 		$user = $code !== null ? UserLookup::byId($this->scope, (int) $code->relationId('user')) : null;
 		if ($user === null) {
@@ -228,7 +234,7 @@ switch ($this->action) {
 			break;
 		}
 		$this->signIn($user, \Systopic\System\Auth\LoginLog::PASSWORD);
-		if (\Systopic\System\Auth\Passkeys::offerSetup($user)) {
+		if ((string) \http::posted('passkey_supported', '') === '1' && \Systopic\System\Auth\Passkeys::offerSetup($user)) {
 			$this->form = 'passkeySetup';
 			$this->updateView('main');
 		} else {

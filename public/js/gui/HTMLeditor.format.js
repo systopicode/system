@@ -520,6 +520,9 @@ var wysiwyg = (function () {
 		var input = new Event('input', {bubbles: true});
 		input.wysiwyg = true;
 		editor.dispatchEvent(input);
+        if (editor.hasAttribute('data-on_blur') && document.activeElement !== editor && !editor.contains(document.activeElement) && !document.activeElement?.closest('.cmslightbox')) {
+            editor.dispatchEvent(new FocusEvent('blur', {relatedTarget: document.activeElement}));
+        }
 	};
 	var step = function (editor, by) {
 		begin(editor);
@@ -534,6 +537,9 @@ var wysiwyg = (function () {
 		var input = new Event('input', {bubbles: true});
 		input.wysiwyg = true;
 		editor.dispatchEvent(input);
+        if (editor.hasAttribute('data-on_blur') && document.activeElement !== editor && !editor.contains(document.activeElement) && !document.activeElement?.closest('.cmslightbox')) {
+            editor.dispatchEvent(new FocusEvent('blur', {relatedTarget: document.activeElement}));
+        }
 	};
 
 	/* ---------------------------------------------------------------- commands */

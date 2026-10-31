@@ -29,7 +29,32 @@ $refreshSignet = function () use ($user): void {
 		$node = $node->parent;
 	}
 };
+if ($user->isBlocked && in_array($this->action, ['makeSuperuser', 'inviteCode', 'inviteMail', 'resendActivationEmail'], true)) {
+    \message::error('Unblock this account before granting access or sending an invitation.');
+    return;
+}
 switch ($this->action) {
+    case 'blockUser':
+    case 'unblockUser':
+        if (!\Systopic\System\Auth\Session::isSuperuser() || (int) $user->id <= 1 || (int) $user->id === (int) \Systopic\System\Auth\Session::id()) {
+            \message::error('Only a superuser can block another account. You cannot block yourself.');
+            break;
+        }
+        $user->isBlocked = $this->action === 'blockUser';
+        if ($user->isBlocked) {
+            \Systopic\System\Auth\AccountAccess::suspend($user);
+        }
+        $this->scope->save($user);
+        if ($user->isBlocked) {
+            Devices::revokeAllOf((int) $user->id, null, 'blocked');
+            \Systopic\System\Queries\LoginCodes\LoginCodes::byHash($this->scope, str_repeat('0', 64));
+            $this->scope->connection->run('UPDATE usm_logincodes SET logincode_used_at = CURRENT_TIMESTAMP WHERE logincode_user_id = ? AND logincode_used_at IS NULL', [(int) $user->id]);
+        }
+        \message::confirm($user->isBlocked ? 'Account blocked. Existing sessions and devices can no longer sign in.' : 'Account unblocked. Sign in again to reconnect devices.');
+        $this->updateView('user');
+        $this->parent->updateView('main');
+        break;
+
 	case 'userTab':
 		$tab = (string) \http::dataset('tab');
 		if (in_array($tab, ['general', 'roles', 'access', 'signins', 'maintenance', 'email'], true) && ($tab !== 'email' || \Systopic\System\Auth\Session::isSuperuser())) {
@@ -141,7 +166,9 @@ switch ($this->action) {
 			$gone[] = $passkey;
 		}
 		$gone[] = $user;
-		$this->scope->remove(...$gone);
+		$removedUserId = (int) $user->id;
+        $this->scope->remove(...$gone);
+        Portrait::remove($removedUserId);
 		$this->parent->updateView('main');
 		\http::redirect('../');
 		break;

@@ -123,11 +123,21 @@ body.dragging:has(ul.tree .sort.insertInto.dropTarget) .draghelper{
     background: var(--cmsActive);
 }
 
-.cms ul.tree a{
+.cms ul.tree :is(a, button:where([data-cms-action])){
     color: var(--cmsSubText);
 }
 
-.cms ul.tree a.label{
+.cms ul.tree :is(:is(a, button:where([data-cms-action])), button:where(:not([data-cms-action]))).label{
+    min-height: 0;
+    margin: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    color: var(--cmsSubText);
+    justify-content: flex-start;
+    font-weight: 400;
+    text-align: left;
+
     display: flex;
     align-items: center;
     gap: 0.5rem;
@@ -139,34 +149,38 @@ body.dragging:has(ul.tree .sort.insertInto.dropTarget) .draghelper{
     text-overflow: ellipsis;
 }
 
-.cms ul.tree li.active > label a.label{
+.cms ul.tree li.active > label :is(:is(a, button:where([data-cms-action])), button:where(:not([data-cms-action]))).label{
     font-weight: 500;
     color: var(--cmsTextColor);
 }
 
-.cms ul.tree a.label i.type{
+.cms ul.tree :is(:is(a, button:where([data-cms-action])), button:where(:not([data-cms-action]))).label i.type{
     flex: 0 0 1rem;
     font-size: 0.875rem;
     color: var(--cmsMuted);
     text-align: center;
 }
 
-.cms ul.tree li.active > label a.label i.type{
-    color: var(--cmsMainColor);
+.cms ul.tree li.active > label :is(:is(a, button:where([data-cms-action])), button:where(:not([data-cms-action]))).label i.type{
+    color: var(--cmsTextColor);
 }
+
+.cms ul.tree li.active > label :is(a, button:where([data-cms-action])).fold { color:var(--cmsTextColor); }
 
 .cms ul.tree label > i.type{
     flex: 0 0 1rem;
     margin-left: 0.25rem;
     font-size: 0.875rem;
-    color: var(--cmsBrandInk);
+    color: var(--cmsSubText);
     text-align: center;
 }
 
 .cms ul.tree span.label:is([contenteditable="plaintext-only"], [data-edit-finishing]){
     display: block;
     flex: 1 1 auto;
-    min-width: 4rem;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: clip;
     margin: 0.2rem 0.35rem 0.2rem 0.15rem;
     padding: 0.1rem 0.45rem;
     border: 1px solid var(--cmsInteractive);
@@ -183,7 +197,7 @@ body.dragging:has(ul.tree .sort.insertInto.dropTarget) .draghelper{
 }
 
 /* Auf-/Zuklappen; Blätter halten nur den Platz */
-.cms ul.tree a.fold{
+.cms ul.tree :is(a, button:where([data-cms-action])).fold{
     display: flex;
     align-items: center;
     justify-content: center;
@@ -194,22 +208,22 @@ body.dragging:has(ul.tree .sort.insertInto.dropTarget) .draghelper{
     cursor: pointer;
 }
 
-.cms ul.tree a.fold i{
+.cms ul.tree :is(a, button:where([data-cms-action])).fold i{
     font-size: 0.6875rem;
 }
 
-.cms ul.tree a.fold:hover{
+.cms ul.tree :is(a, button:where([data-cms-action])).fold:hover{
     color: var(--cmsTextColor);
     background: var(--cmsHover);
 }
 
-.cms ul.tree a.fold.leaf{
+.cms ul.tree :is(a, button:where([data-cms-action])).fold.leaf{
     cursor: default;
     background: none;
 }
 
 /* Status-Icons hinter dem Label (Alias, unveröffentlicht, Papierkorb) */
-.cms ul.tree label > a:not(.label):not(.fold),
+.cms ul.tree label > :is(a, button:where([data-cms-action])):not(.label):not(.fold),
 .cms ul.tree label > i:not(.treeGrip){
     flex: 0 0 auto;
     padding: 0 0.3rem;
@@ -217,24 +231,24 @@ body.dragging:has(ul.tree .sort.insertInto.dropTarget) .draghelper{
     color: var(--cmsMuted);
 }
 
-.cms ul.tree label > a.alias{ color: var(--cmsAlias); }
-.cms ul.tree label > a.redirect{ color: var(--cmsRedirect); }
+.cms ul.tree label > :is(a, button:where([data-cms-action])).alias{ color: var(--cmsAlias); }
+.cms ul.tree label > :is(a, button:where([data-cms-action])).redirect{ color: var(--cmsRedirect); }
 
-.cms ul.tree label > a.unpublished{ cursor: pointer; }
-.cms ul.tree label > a.unpublished:hover{ color: var(--cmsTextColor); }
+.cms ul.tree label > :is(a, button:where([data-cms-action])).unpublished{ cursor: pointer; }
+.cms ul.tree label > :is(a, button:where([data-cms-action])).unpublished:hover{ color: var(--cmsTextColor); }
 
 /* Status icons sit at the right. Grip and menu take no space until the
    row is hovered, then they grow and the icons ease left. */
-.cms ul.tree label > a.alias,
-.cms ul.tree label > a.redirect,
-.cms ul.tree label > a.unpublished,
-.cms ul.tree label > a:not(.label):not(.fold){
+.cms ul.tree label > :is(a, button:where([data-cms-action])).alias,
+.cms ul.tree label > :is(a, button:where([data-cms-action])).redirect,
+.cms ul.tree label > :is(a, button:where([data-cms-action])).unpublished,
+.cms ul.tree label > :is(a, button:where([data-cms-action])):not(.label):not(.fold){
     order: 2;
     margin-left: 0;
 }
 
 .cms ul.tree i.treeGrip,
-.cms ul.tree button.treeMenu{
+.cms ul.tree button:where(:not([data-cms-action])).treeMenu{
     display: flex;
     align-items: center;
     justify-content: center;
@@ -264,15 +278,16 @@ body.dragging:has(ul.tree .sort.insertInto.dropTarget) .draghelper{
     cursor: grabbing;
 }
 
-.cms ul.tree button.treeMenu{
+.cms ul.tree button:where(:not([data-cms-action])).treeMenu{
     order: 4;
     cursor: pointer;
 }
 
 .cms ul.tree li > label:hover i.treeGrip,
-.cms ul.tree li > label:hover button.treeMenu,
+.cms ul.tree li > label:hover button:where(:not([data-cms-action])).treeMenu,
+.cms ul.tree li > label:focus-within button:where(:not([data-cms-action])).treeMenu,
 .cms ul.tree li.menuTarget > label i.treeGrip,
-.cms ul.tree li.menuTarget > label button.treeMenu{
+.cms ul.tree li.menuTarget > label button:where(:not([data-cms-action])).treeMenu{
     flex-basis: 1.25rem;
     width: 1.25rem;
     margin-left: 0.15rem;
@@ -291,22 +306,22 @@ body.dragging:has(ul.tree .sort.insertInto.dropTarget) .draghelper{
     opacity: 0.7;
 }
 
-:root[data-pointer="touch"] .cms ul.tree button.treeMenu{
+:root[data-pointer="touch"] .cms ul.tree button:where(:not([data-cms-action])).treeMenu{
     flex-basis: 1.25rem;
     width: 1.25rem;
     margin-left: 0.15rem;
     opacity: 1;
 }
 
-body.cms ul.tree button.treeMenu,
-body.cms ul.tree button.treeMenu:enabled,
-body.cms ul.tree button.treeMenu:enabled:not(.disabled):active{
+body.cms ul.tree button:where(:not([data-cms-action])).treeMenu,
+body.cms ul.tree button:where(:not([data-cms-action])).treeMenu:enabled,
+body.cms ul.tree button:where(:not([data-cms-action])).treeMenu:enabled:not(.disabled):active{
     background: transparent;
     box-shadow: none;
 }
 
-body.cms ul.tree button.treeMenu:hover,
-body.cms ul.tree li.menuTarget > label button.treeMenu{
+body.cms ul.tree button:where(:not([data-cms-action])).treeMenu:hover,
+body.cms ul.tree li.menuTarget > label button:where(:not([data-cms-action])).treeMenu{
     background: var(--cmsHover);
     color: var(--cmsTextColor);
 }
@@ -316,7 +331,7 @@ body.cms ul.tree li.menuTarget > label button.treeMenu{
     color: var(--cmsTextColor);
 }
 
-.cms ul.tree button.treeMenu i{
+.cms ul.tree button:where(:not([data-cms-action])).treeMenu i{
     font-size: inherit;
     line-height: 1;
 }
@@ -338,7 +353,7 @@ body.cms ul.tree li.menuTarget > label button.treeMenu{
     list-style-type: none;
 }
 
-.cms .treeNavi a{
+.cms .treeNavi :is(a, button:where([data-cms-action])){
     display: flex;
     align-items: center;
     justify-content: center;
@@ -350,7 +365,19 @@ body.cms ul.tree li.menuTarget > label button.treeMenu{
     cursor: pointer;
 }
 
-.cms .treeNavi a:hover{
+.cms .treeNavi :is(a, button:where([data-cms-action])):hover{
     background: var(--cmsHover);
     color: var(--cmsTextColor);
+}
+
+.cms ul.tree button:where(:not([data-cms-action])).label:hover { background: transparent; }
+
+.cms ul.tree .treeLabelEdit {
+    display: flex; align-items: center; gap: .5rem; flex: 1 1 auto; min-width: 0;
+    padding: .3rem .25rem; font-size: .875rem;
+}
+.cms ul.tree .treeLabelEdit > i.type { flex: 0 0 1rem; font-size: .875rem; text-align: center; color: var(--cmsMuted); }
+.cms ul.tree .treeLabelEdit > .label { flex: 1 1 auto; min-width: 0; padding: 0; }
+.cms ul.tree .treeLabelEdit > span.label:is([contenteditable], [data-edit-finishing]) {
+    margin: 0; padding: 0 .25rem; min-width: 0; line-height: 1.2;
 }

@@ -6,7 +6,7 @@ $hasEnvironment = $this->environmentArchiveMap() !== [];
 ?>
 <main class="backupCreate">
 	<?= message::flush(); ?>
-	<form id="backupCreateForm" method="put" action="createTaskList">
+	<form id="backupCreateForm" data-feedback="parameters" method="put" action="createTaskList">
 	<ul class="checkBoxList">
 		<li>
 			<label class="checkbox">
@@ -47,7 +47,7 @@ $hasEnvironment = $this->environmentArchiveMap() !== [];
 		<?php } ?>
 	</ul>
 	<div class="inputGroup">
-		<input type="text" data-on_input="updateBackupSettings" name="backupNotes" value="<?= htmlspecialchars((string) $state->backupNotes, ENT_QUOTES, 'UTF-8') ?>">
+		<input type="text" aria-label="Notes" data-on_input="updateBackupSettings" name="backupNotes" value="<?= htmlspecialchars((string) $state->backupNotes, ENT_QUOTES, 'UTF-8') ?>">
 		<span class="bar"></span>
 		<label>Notes</label>
 	</div>

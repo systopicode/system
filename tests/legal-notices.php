@@ -23,7 +23,7 @@ check('privacy matches purpose-based log retention and actual cookie lifetime', 
 check('retention criteria and installation duties are explicit', str_contains($privacy, 'detection and investigation window') && str_contains($privacy, 'define and document review intervals') && str_contains($privacy, 'not a scheduled daily deletion'));
 check('consent and rights are not replaced by a notice', str_contains($privacy, 'requests must be prevented until it has been given') && str_contains($privacy, 'Signing in does not waive') && str_contains($privacy, 'particular situation'));
 check('browser storage is covered', str_contains($privacy,'cmsDeviceMobile') && str_contains($privacy,'cmsTimezone') && str_contains($privacy,'cmsOpenSheet'));
-check('external requests and hash limits are disclosed', str_contains($privacy,'exposes your IP address') && str_contains($privacy,'not an authentication secret or a guarantee of anonymity'));
+check('external requests and hash limits are disclosed', str_contains($privacy,'IP address') && str_contains($privacy,'digest is pseudonymous, not anonymous') && str_contains($privacy,'No email address, seed or image request is sent to DiceBear'));
 check('CMS video processing has its own scope', str_contains($privacy,'only after you click its Load player button') && str_contains($privacy,"not the public website's player or consent settings"));
 check('installation links respect the root', str_contains($privacy,'/example/privacy/') && str_contains($privacy,'/example/imprint/'));
 if (($argv[1] ?? '') === '--render-privacy') file_put_contents(sys_get_temp_dir() . '/fluxo-privacy-review.html', $privacy);

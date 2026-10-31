@@ -417,7 +417,7 @@ function syncMobile() {
 			node.setAttribute('aria-modal', String(activeWindow === name));
 			node.setAttribute('aria-label', {menu: 'Navigation', edit: 'Edit', media: 'Media Library'}[name]);
 		} else {
-			node.removeAttribute('role'); node.removeAttribute('aria-modal'); node.removeAttribute('aria-label');
+			if (name === 'edit') node.setAttribute('role','main'); else node.removeAttribute('role'); node.removeAttribute('aria-modal'); node.removeAttribute('aria-label');
 		}
 	});
 	// Do not make the pylon inert: it contains the media window. Isolate its base instead.

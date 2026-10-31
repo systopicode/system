@@ -38,7 +38,7 @@ class Panel extends CmsPanel {
 
 	/** @return list<\Systopic\System\Tables\Devices\Model> the user's devices, not revoked */
 	public array $devices {
-		get => $this->user !== NULL ? \Systopic\System\Queries\Devices\Devices::ofUser($this->scope, (int) $this->user->id) : [];
+		get => $this->user !== NULL ? \Systopic\System\Queries\Devices\Devices::ofUser($this->scope, (int) $this->user->id, (bool) $this->user->isBlocked) : [];
 	}
 
 	/**

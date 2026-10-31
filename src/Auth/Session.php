@@ -159,7 +159,7 @@ final class Session
         $id = is_int($user) ? $user : (int) ($user->id ?? 0);
         $scope = Scope::default();
         $row = $user instanceof User ? $user : UserLookup::byId($scope, $id);
-        if ($row === null) {
+        if ($row === null || $row->isBlocked) {
             return;
         }
         \http::sessionStartOnce();
@@ -172,6 +172,7 @@ final class Session
             LoginLog::sessionOpened(session_id(), (string) $row->name);
         }
         $_SESSION[self::USER_KEY] = (int) $row->id;
+        $_SESSION['systopic_access_key'] = (string) $row->sessionKey;
         $_SESSION[self::PASSKEY_GRANT] = ['user' => (int) $row->id, 'expires' => time() + 600];
         $now = new \DateTimeImmutable();
         $row->firstLogin ??= $now;
@@ -188,7 +189,7 @@ final class Session
     {
         $scope = Scope::default();
         $user = UserLookup::byName($scope, $name);
-        if ($user === null || !Password::verify($user->passwordHash, $password)) {
+        if ($user === null || $user->isBlocked || !Password::verify($user->passwordHash, $password)) {
             return null;
         }
         if (Password::needsRehash($user->passwordHash)) {
@@ -387,6 +388,11 @@ final class Session
         }
         try {
             if ($id > 0 && ($user = UserLookup::byId($scope, $id)) !== null) {
+                if (!AccountAccess::sessionValid($user, (string) ($_SESSION['systopic_access_key'] ?? ''))) {
+                    unset($_SESSION[self::USER_KEY], $_SESSION[self::STATE_KEY], $_SESSION[self::PASSKEY_GRANT], $_SESSION['systopic_access_key']);
+                    self::$state = null;
+                    return Identity::anonymous($scope);
+                }
                 return new Identity($scope, $user);
             }
             self::noteLapsed();

@@ -45,7 +45,7 @@ final class WebApp
     public static function name(): string
     {
         $name = defined('CMS_PAGE_TITLE_OVERRIDE') ? trim(strip_tags((string) CMS_PAGE_TITLE_OVERRIDE)) : '';
-        return $name !== '' ? $name : 'fluxo cms';
+        return $name !== '' ? $name : 'fluxo';
     }
 
     /** The public site's name, so several CMS tabs can be told apart. */
@@ -120,7 +120,7 @@ final class WebApp
             'id' => $start,
             'name' => self::name(),
             'short_name' => self::shortName(),
-            'description' => 'fluxo cms',
+            'description' => 'fluxo',
             'start_url' => $start,
             'scope' => $start,
             'display' => 'standalone',

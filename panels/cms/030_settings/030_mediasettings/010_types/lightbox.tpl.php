@@ -11,6 +11,8 @@ $picked = $templates ? array_filter(array_map('trim', explode(';', (string) ($gr
 <section><header><h1><?= $templates ? 'Templates' : 'File types' ?> · <?= $e($group['label'] ?? $this->state->group) ?></h1>
 <ul class="barmenu"><li><a class="ajax" href="../" aria-label="Close"><i class="cmsIcon cmsIcon-xmark"></i></a></li></ul></header>
 <main><p class="tagsHint">Changes are saved immediately. <?= $templates ? 'No selection: all templates.' : 'No selection: all supported types.' ?></p>
+<?php $impact = \Systopic\System\Settings\Impact::group((string) $this->state->group, $templates ? [] : $picked); ?>
+<p class="tagsHint"><?= $impact['files'] === null ? 'Usage could not be counted.' : (int) $impact['files'] . ' existing files use this group.' ?> <?= $templates ? 'Template selection changes where the group is offered.' : ($impact['outside'] === null ? '' : (int) $impact['outside'] . ' existing files fall outside the selected types.') ?> Existing files are kept; restrictions apply to future uploads, replacements and moves.</p>
 <div class="mediaTypeChoices">
 <?php foreach ($this->choices() as $key => [$label, $capability]) { $id = 'media-choice-' . md5((string) $key); ?>
 <div class="mediaTypeChoice"><input class="custom" id="<?= $id ?>" type="checkbox" aria-label="<?= $e($label) ?>" name="value" data-choice="<?= $e($key) ?>" data-on_change="toggle"<?= in_array($key, $picked, true) ? ' checked' : '' ?>><label for="<?= $id ?>" aria-hidden="true"></label><label class="mediaChoiceText" for="<?= $id ?>"><?= $e($label) ?><?php if (!$templates || $capability !== $label) { ?><small><?= $e($capability) ?></small><?php } ?></label></div>

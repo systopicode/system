@@ -1,10 +1,12 @@
 <?php
 if (empty($this->backupfilestable)) {
 	echo html::section()->class('cms')->h1('No backups yet.');
+    echo '<p class="tagsHint">Use “New backup” to save a snapshot of this installation.</p>';
 	return;
 }
 ?>
 <section class="cms">
+    <h1>Backup</h1>
 	<div class="tableScroll">
 		<table class="hover">
 			<thead>

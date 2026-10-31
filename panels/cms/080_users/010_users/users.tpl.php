@@ -16,8 +16,8 @@ $screens = ($this->accountKind ?? '') === \Systopic\System\Tables\Users\Model::S
 <section class="widget is-list userList">
 	<header>
 		<h2><?= $screens ? 'List of screens' : 'List of persons' ?></h2>
-		<input class="listSearch" type="search" placeholder="Search" data-on_input="filterUsers" autocomplete="off">
-		<a class="button submit" data-on_click="addUser"><i class="cmsIcon cmsIcon-plus"></i><span><?= $screens ? 'Add screen' : 'Add person' ?></span></a>
+		<input class="listSearch" type="search" aria-label="<?= $screens ? 'Search screens' : 'Search persons' ?>" placeholder="Search" data-on_input="filterUsers" autocomplete="off">
+		<button type="button" data-cms-action class="button submit" data-on_click="addUser"><i class="cmsIcon cmsIcon-plus"></i><span><?= $screens ? 'Add screen' : 'Add person' ?></span></button>
 	</header>
 	<div class="tableScroll">
 		<table>
@@ -36,11 +36,12 @@ $screens = ($this->accountKind ?? '') === \Systopic\System\Tables\Users\Model::S
 				<?php foreach ($this->users as $user) { ?>
 					<tr data-user_id="<?= $user->id ?>">
 						<?php [$status, $statusTitle] = Presence::userMark((int) $user->id); ?>
-						<td class="userStatusCell"><span class="userStatus <?= $status ?>" title="<?= $statusTitle ?>"></span></td>
+						<td class="userStatusCell"><span class="userStatus <?= $status ?>" title="<?= $e($statusTitle) ?>" role="img" aria-label="<?= $e($statusTitle) ?>"></span></td>
 						<td>
 							<?= $e($user->name) ?>
+                            <?php if ($user->isBlocked): ?><i class="cmsIcon cmsIcon-user-lock userSuper userBlocked" title="Blocked" aria-label="Blocked"></i><?php endif; ?>
 							<?php if ($user->isSuperuser) { ?>
-								<i class="cmsIcon cmsIcon-user-shield userSuper" title="Superuser"></i>
+								<i class="cmsIcon cmsIcon-user-shield userSuper" title="Superuser" role="img" aria-label="Superuser"></i>
 							<?php } ?>
 						</td>
 						<td><?= $e($user->fullname) ?></td>
@@ -57,9 +58,9 @@ $screens = ($this->accountKind ?? '') === \Systopic\System\Tables\Users\Model::S
 						</td>
 						<td class="icons">
 							<ul>
-								<li><a class="ajax button icononly" title="Edit" href="<?= $e($this->href . 'edit/?user_id=' . (int) $user->id) ?>"><i class="cmsIcon cmsIcon-pen"></i></a></li>
+								<li><a class="ajax button icononly" title="Edit <?= $screens ? 'screen' : 'person' ?>: <?= $e($user->name) ?>" aria-label="Edit <?= $screens ? 'screen' : 'person' ?>: <?= $e($user->name) ?>" href="<?= $e($this->href . 'edit/?user_id=' . (int) $user->id) ?>"><i class="cmsIcon cmsIcon-pen"></i></a></li>
 								<?php if ((int) $user->id !== (int) \Systopic\System\Auth\Session::id()) { ?>
-									<li><a class="button icononly" title="Delete" data-on_click="userConfirm" data-action="removeUser" data-confirm="<?= $screens ? 'Delete this screen? This cannot be undone.' : 'Delete this user? This cannot be undone.' ?>" data-user_id="<?= (int) $user->id ?>"><i class="cmsIcon cmsIcon-trash"></i></a></li>
+									<li><button type="button" data-cms-action class="button icononly" title="Delete <?= $screens ? 'screen' : 'person' ?>: <?= $e($user->name) ?>" aria-label="Delete <?= $screens ? 'screen' : 'person' ?>: <?= $e($user->name) ?>" data-on_click="userConfirm" data-action="removeUser" data-confirm="<?= $screens ? 'Delete this screen? This cannot be undone.' : 'Delete this user? This cannot be undone.' ?>" data-user_id="<?= (int) $user->id ?>"><i class="cmsIcon cmsIcon-trash"></i></button></li>
 								<?php } ?>
 							</ul>
 						</td>

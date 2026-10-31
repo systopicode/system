@@ -37,7 +37,7 @@ namespace {
     mkdir(fs::$siteRoot . 'overrides/img/favicons', 0777, true);
     try {
         define('PUBLIC_APP_NAME', 'SP'); // Public website branding must not name the CMS install.
-        expect(WebApp::name() === 'fluxo cms', 'CMS install defaults to fluxo, independent of the public website');
+        expect(WebApp::name() === 'fluxo', 'CMS install defaults to fluxo, independent of the public website');
         define('CMS_PAGE_TITLE_OVERRIDE', 'Studio CMS');
         expect(WebApp::name() === 'Studio CMS' && WebApp::shortName() === 'Studio CMS', 'configured CMS name is used by both install labels');
         file_put_contents(fs::$siteRoot . 'overrides/css/theme.css', ':root { --cmsMainColor: #123456; }');

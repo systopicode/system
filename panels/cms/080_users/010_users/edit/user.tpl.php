@@ -77,7 +77,7 @@ if ($heading === '') {
 				<form class="ajax portraitDrop" method="post" enctype="multipart/form-data" action="<?= $e($this->href . 'uploadPortrait?user_id=' . (int) $user->id) ?>" data-drop-files data-upload="onsubmit">
 					<span class="portraitFace"><img referrerpolicy="no-referrer" src="<?= $e(Portrait::src((int) $user->id, $user->email, $isScreen)) ?>" alt=""></span>
 					<span>Drop or click</span>
-					<input type="file" name="portrait" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" onchange="this.form.requestSubmit()">
+					<input type="file" aria-label="Upload profile picture" title="Upload profile picture" name="portrait" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" onchange="this.form.requestSubmit()">
 				</form>
 				<?php if (Portrait::hasFile((int) $user->id)) { ?>
 					<button type="button" class="button" data-on_click="removePortrait" data-user_id="<?= (int) $user->id ?>"><i class="cmsIcon cmsIcon-trash"></i>Remove</button>
@@ -125,7 +125,7 @@ if ($heading === '') {
 								<button type="button" class="button" data-on_click="revokeSuperuser" data-user_id="<?= (int) $user->id ?>"><i class="cmsIcon cmsIcon-user-shield"></i>Revoke superuser</button>
 							<?php } ?>
 						</div>
-					<?php } elseif ($viewer) { ?>
+					<?php } elseif ($viewer && !$user->isBlocked) { ?>
 						<div class="userRow">
 							<p class="tagsHint"><?= $user->isSuperuser ? 'Superuser: manages every user.' : 'A normal user.' ?><?= $isMe ? ' Not to be changed on your own account.' : '' ?></p>
 							<?php if (!$isMe && $user->isSuperuser) { ?>
@@ -192,6 +192,8 @@ if ($heading === '') {
     </div>
     <?php } ?>
 	<div class="userPane" data-user-pane="access"<?= $tab === 'access' ? '' : ' hidden' ?>>
+
+<?php if (!$user->isBlocked): ?>
 			<?php
 			$envFile = null;
 			foreach (\Systopic\System\Settings\EnvironmentFile::files() as $info) {
@@ -241,12 +243,12 @@ if ($heading === '') {
 							<p class="cmsBoxLead">Valid for 10 minutes. Shown here.</p>
 						</div>
 						<div>
-							<button type="button" class="button" data-on_click="inviteMail"><i class="cmsIcon cmsIcon-paper-plane"></i> Send invitation code</button>
+							<button type="button" class="button" data-on_click="userConfirm" data-action="inviteMail" data-confirm="Send an invitation code to this user?"><i class="cmsIcon cmsIcon-paper-plane"></i> Send invitation code</button>
 							<p class="cmsBoxLead">Valid for 24 hours.<?= ($note = $mailNote(LoginLog::MAILED_INVITATION)) !== '' ? ' ' . $e($note) : '' ?></p>
 						</div>
 						<?php if (!$user->firstLogin) { ?>
 							<div>
-								<button type="button" class="button" data-on_click="resendActivationEmail"><i class="cmsIcon cmsIcon-paper-plane"></i> Email a password link</button>
+								<button type="button" class="button" data-on_click="userConfirm" data-action="resendActivationEmail" data-confirm="Send a password link to this user?"><i class="cmsIcon cmsIcon-paper-plane"></i> Email a password link</button>
 								<p class="cmsBoxLead">Valid for <?= (int) $activationHours ?> hours.<?= ($note = $mailNote(LoginLog::MAILED_PASSWORD)) !== '' ? ' ' . $e($note) : '' ?></p>
 							</div>
 						<?php } ?>
@@ -261,11 +263,12 @@ if ($heading === '') {
 						?>
 							<button type="button" class="button" data-copy="<?= $e($activationLink) ?>"><i class="cmsIcon cmsIcon-copy"></i> Copy activation link</button>
 						<?php } ?>
-						<button type="button" class="button" data-on_click="resendActivationEmail" data-user_id="<?= (int) $user->id ?>" <?= (string) $user->email === '' ? 'disabled' : '' ?>><i class="cmsIcon cmsIcon-paper-plane"></i> <?= $user->firstLogin ? 'Email a new password link' : 'Email a password link' ?></button>
+						<button type="button" class="button" data-on_click="userConfirm" data-action="resendActivationEmail" data-confirm="Send a password link to this user?" data-user_id="<?= (int) $user->id ?>" <?= (string) $user->email === '' ? 'disabled' : '' ?>><i class="cmsIcon cmsIcon-paper-plane"></i> <?= $user->firstLogin ? 'Email a new password link' : 'Email a password link' ?></button>
 						<p class="cmsBoxLead">Valid for <?= (int) $activationHours ?> hours.<?= ($note = $mailNote(LoginLog::MAILED_PASSWORD)) !== '' ? ' ' . $e($note) : '' ?></p>
 					</div>
 				</section>
 			<?php } ?>
+<?php endif; ?>
 			<?php if ($codes) { ?>
 			<section class="cmsBox">
 				<header>
@@ -279,18 +282,18 @@ if ($heading === '') {
 						<div class="userDevice">
 							<i class="<?= $e(DeviceName::icon((string) $device->userAgent)) ?>" aria-hidden="true"></i>
 							<?php [$presence, $presenceTitle] = Presence::deviceMark((int) $device->id); ?>
-							<span class="presence<?= $presence !== '' ? ' ' . $presence : '' ?>" title="<?= $e($presenceTitle) ?>"></span>
+							<span class="presence<?= $presence !== '' ? ' ' . $presence : '' ?>" title="<?= $e($presenceTitle) ?>" role="img" aria-label="<?= $e($presenceTitle) ?>"></span>
 							<span>
 								<b><?= $e($device->name) ?></b>
 								<?= $device->client === 'app' ? 'App' : 'Browser' ?>
 								<?php $mine = \Systopic\System\Auth\Devices::current();
 							$isMine = $mine && (int) $mine->id === (int) $device->id; ?>
-							<small><?php if ($isMine) { ?>This device · <?php } ?>Last seen <?= $e($when($device->lastSeen)) ?><?php
+							<small><?php if ($device->revokedAt) { ?>Access revoked · <?php } ?><?php if ($isMine) { ?>This device · <?php } ?>Last seen <?= $e($when($device->lastSeen)) ?><?php
 								$paired = LoginLog::paired(trim((string) ($user->name ?: $user->email)), $device->createdAt);
 								if ($paired !== '') { ?><br><?= $e($paired) ?><?php } ?></small>
 							</span>
-							<?php if (!$isMine) { ?>
-								<button type="button" class="button transparent icononly" data-on_click="userConfirm" data-action="revokeDevice" data-device_id="<?= (int) $device->id ?>" data-confirm="Sign this device out?" aria-label="Revoke" title="Sign out"><i class="<?= $e(DeviceName::slash((string) $device->userAgent)) ?>" aria-hidden="true"></i></button>
+							<?php if (!$isMine && !$user->isBlocked) { ?>
+								<button type="button" class="button transparent icononly" data-on_click="userConfirm" data-action="revokeDevice" data-device_id="<?= (int) $device->id ?>" data-confirm="Sign this device out?" aria-label="Sign out device: <?= $e((string) $device->name) ?>; last seen <?= $e($when($device->lastSeen)) ?>" title="Sign out device"><i class="<?= $e(DeviceName::slash((string) $device->userAgent)) ?>" aria-hidden="true"></i></button>
 							<?php } ?>
 						</div>
 					<?php } ?>
@@ -301,8 +304,12 @@ if ($heading === '') {
 			</section>
 			<?php } ?>
 			<?php if (!$isScreen) { echo \Systopic\System\Auth\Passkeys::render($user); } ?>
+        <?php if ($viewer && !$isMe && (int) $user->id > 1): ?>
+        <section class="cmsBox"><header><div class="cmsBoxTitles"><h2><?= $user->isBlocked ? 'Account blocked' : 'Block account' ?></h2><p class="cmsBoxLead">Prevents sign-in and revokes existing sessions and device access. Content, roles and account details are kept. Unblocking requires a fresh sign-in.</p></div></header><div class="cmsBoxActions"><button type="button" class="button" data-on_click="userConfirm" data-action="<?= $user->isBlocked ? 'unblockUser' : 'blockUser' ?>" data-confirm="<?= $user->isBlocked ? 'Allow this account to sign in again?' : 'Block this account and revoke all access?' ?>" data-user_id="<?= (int) $user->id ?>"><i class="cmsIcon cmsIcon-<?= $user->isBlocked ? 'user-unlock' : 'user-lock' ?>"></i><?= $user->isBlocked ? 'Unblock account' : 'Block account' ?></button></div></section>
+        <?php endif; ?>
 	</div>
 	<div class="userPane" data-user-pane="maintenance"<?= $tab === 'maintenance' ? '' : ' hidden' ?>>
+
 		<section class="cmsBox">
 			<header>
 				<div class="cmsBoxTitles">

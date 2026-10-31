@@ -1,11 +1,9 @@
-<h1>Enter the code</h1>
-<p class="authLead">Check your inbox, and the spam folder.</p>
-<main>
-	<div class="row">
-		<?= message::flush() ?>
-	</div>
-	<div class="row">
-		<form method=get action=reset  onsubmit='this.classList.add("loading")'>
+<?php
+$authTitle = 'Enter the code';
+$authLead = 'Check your inbox, and the spam folder.';
+ob_start();
+?>
+<form class="appLoginForm" method=get action=reset  onsubmit='this.classList.add("loading")'>
 			<div class="row">
 				<div class='inputGroup'><i class="cmsIcon cmsIcon-hashtag"></i>
 					<input type=text name="key" placeholder="Reset Code" required autocapitalize="off"/>
@@ -14,8 +12,9 @@
 			</div>
 			<div class="row">
 				<br>
-				<button class='submit'><i class="cmsIcon cmsIcon-arrow-right"></i> Continue</button>
+				<button class='submit'><i class="cmsIcon cmsIcon-check"></i> Verify code</button>
 			</div>
 		</form>
-	</div>
-</main>
+<?php
+$authForm = ob_get_clean();
+include dirname(__DIR__, 3) . '/src/Auth/form.card.tpl.php';

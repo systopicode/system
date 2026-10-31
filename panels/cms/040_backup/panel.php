@@ -470,7 +470,7 @@ class Panel extends CmsPanel
 					}
 					if (str_ends_with(\fs::toInternal($span), '-0.zip')) {
 						$raw = $zip->getFromName($this->infoFilename);
-						$info_txt = is_string($raw) ? @unserialize($raw) : false;
+						$info_txt = is_string($raw) ? @unserialize($raw, ['allowed_classes'=>['stdClass']]) : false;
 					}
 					for ($i = 0; $i < $zip->numFiles; $i++) {
 						$name = $zip->getNameIndex($i);

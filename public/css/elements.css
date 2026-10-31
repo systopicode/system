@@ -1,5 +1,5 @@
 /**************************TYPO***********************/
-.cms a{
+.cms :is(a, button:where([data-cms-action])){
     color: var(--cmsSecondaryColor);
     text-decoration: none;
 }
@@ -19,7 +19,7 @@
 }
 
 .cms h2,
-.cms h2 a{
+.cms h2 :is(a, button:where([data-cms-action])){
     margin-bottom: 1rem;
     font-size: 1.125rem;
     font-weight: 600;
@@ -28,7 +28,7 @@
 }
 
 .cms h3,
-.cms h3 a{
+.cms h3 :is(a, button:where([data-cms-action])){
     font-size: 1rem;
     font-weight: 600;
     color: var(--cmsTextColor);

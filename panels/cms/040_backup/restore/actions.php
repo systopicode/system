@@ -34,6 +34,13 @@ switch ($this->action) {
 			message::error('This backup was not found.');
 			break;
 		}
+        $preflight = \Systopic\System\Backup\Preflight::inspect($backupdirpathNative, (string) http::get('name'), $tmpdirpathNative);
+        if ($preflight['errors']) {
+            foreach ($preflight['errors'] as $error) message::error($error);
+            $this->parent->state->restoreNotice = 'invalid';
+            $this->updateView('lightbox');
+            break;
+        }
 		$this->parent->takePostedSelection();
 		clearstatcache();
 		fsDir::get($tmpdirpath)->unlink(TRUE);
@@ -49,7 +56,7 @@ switch ($this->action) {
 		$zip = new ZipArchive();
 		$backupfile = $backupdirpathNative . http::get('name') . '-0.zip';
 		$zip->open($backupfile);
-		$info_txt = unserialize($zip->getFromName('info.txt'));
+		$info_txt = unserialize($zip->getFromName('info.txt'), ['allowed_classes'=>['stdClass']]);
 		$zip->close();
 		$this->parent->state->taskList = $info_txt['taskList'];
 		foreach ($this->parent->state->taskList as &$taskListItem) {

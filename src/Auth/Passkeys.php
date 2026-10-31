@@ -63,7 +63,7 @@ final class Passkeys
         $name = trim((string) ($settings['name'] ?? end($parts)));
         $host = (string) parse_url(self::config()['origin'], PHP_URL_HOST);
         $stage = \Systopic\System\Config\Config::current()?->instance->stage ?? '';
-        return implode(' · ', array_filter([$name ?: 'Fluxo CMS', $stage, $host]));
+        return implode(' · ', array_filter([$name ?: 'fluxo', $stage, $host]));
     }
 
     public static function suggestedName(): string
@@ -106,7 +106,7 @@ final class Passkeys
 
     public static function needsSetup(User $user): bool
     {
-        return self::available() && (bool) $user->isActive && $user->type !== User::SCREEN
+        return self::available() && (bool) $user->isActive && !$user->isBlocked && $user->type !== User::SCREEN
             && Keys::ofUser(Scope::default(), (int) $user->id, self::project()) === [];
     }
 
@@ -174,13 +174,16 @@ final class Passkeys
             $scope = Scope::default();
             $ip = (string) ($_SERVER['REMOTE_ADDR'] ?? '');
             $failures = AuthFailures::of($scope, $ip);
-            if (Failures::blocked($failures, new DateTimeImmutable())) {
-                throw new DomainException('Too many attempts. Please try again later.');
+            if ($action !== 'passkeyCancel' && Failures::blocked($failures, new DateTimeImmutable())) {
+                $minutes = max(1, (int) ceil(($failures->blockedUntil->getTimestamp() - time()) / 60));
+                throw new DomainException('Too many attempts. Please try again in ' . $minutes . ' minutes.');
             }
             try {
                 $result = self::execute($action, $data, $login, $afterLogin);
             } catch (\Throwable $e) {
-                $scope->save(Failures::failed($failures, $ip, new DateTimeImmutable()));
+                if (in_array($action, ['passkeyFinishLogin','passkeyFinishCreate','passkeyBeginCreate','passkeyRemove'], true) && ($action !== 'passkeyBeginCreate' || !empty($data['confirm']))) {
+                    $scope->save(Failures::failed($failures, $ip, new DateTimeImmutable()));
+                }
                 throw $e;
             }
             echo json_encode($result, JSON_THROW_ON_ERROR | JSON_HEX_TAG);
@@ -206,7 +209,7 @@ final class Passkeys
             }
         } elseif (!in_array($action, ['passkeyBeginCreate', 'passkeyFinishCreate', 'passkeyBeginConfirm', 'passkeyRename', 'passkeyRemove', 'passkeyCancel'], true)) {
             throw new DomainException('Invalid passkey action.');
-        } elseif ($user === null || !$user->isActive || $user->type === User::SCREEN) {
+        } elseif ($user === null || (!$user->isActive || $user->isBlocked) || $user->type === User::SCREEN) {
             throw new DomainException('Sign in to your own account first.');
         }
         if ($action === 'passkeyCancel') {
@@ -214,7 +217,7 @@ final class Passkeys
             return ['ok' => true];
         }
         $config = self::config();
-        $web = new WebAuthn('Fluxo CMS', $config['rpId'], ['none'], true);
+        $web = new WebAuthn('fluxo', $config['rpId'], ['none'], true);
         if ($action === 'passkeyBeginLogin') {
             $name = trim((string) ($data['username'] ?? ''));
             $discovery = $name === '';
@@ -222,7 +225,7 @@ final class Passkeys
                 throw new DomainException('Enter your email first.');
             }
             $account = $name === '' ? null : \Systopic\System\Queries\UserLookup\UserLookup::byName($scope, $name);
-            $keys = $account?->isActive && $account->type !== User::SCREEN
+            $keys = $account?->isActive && !$account->isBlocked && $account->type !== User::SCREEN
                 ? Keys::ofUser($scope, (int) $account->id, self::project()) : [];
             // An unknown account gets an indistinguishable random allow-list entry.
             $ids = array_map(static fn(Key $key): string => self::decode($key->credentialId->value), $keys);
@@ -244,7 +247,7 @@ final class Passkeys
                 if ($key === null || $key->rpId !== $config['rpId'] || $key->project !== self::project()
                     || $challenge['data']['project'] !== self::project()
                     || (!($challenge['data']['discovery'] ?? false) && $key->relationId('user') !== $challenge['data']['user'])
-                    || (($challenge['data']['discovery'] ?? false) && empty($data['userHandle'])) || !$key->user?->isActive
+                    || (($challenge['data']['discovery'] ?? false) && empty($data['userHandle'])) || (!$key->user?->isActive || $key->user?->isBlocked)
                     || $key->user->type === User::SCREEN
                     || !hash_equals($key->credentialId->value, self::encode($id))
                     || (!empty($data['userHandle']) && !hash_equals(hex2bin($key->userHandle), self::decode((string) $data['userHandle'])))) {
@@ -261,7 +264,7 @@ final class Passkeys
             // with a device, like every other login: otherwise no list shows it and no revocation reaches it
             Devices::issue($key->user);
             LoginLog::write((string) $key->user->name, 'logged in', LoginLog::PASSKEY);
-            return ['redirect' => Session::takeReturn() ?? $afterLogin ?? \http::$root . 'cms/'];
+            return ['profile' => SignInFeedback::profile(), 'redirect' => Session::takeReturn() ?? $afterLogin ?? \http::$root . 'cms/'];
         }
         if ($user === null || $login) {
             throw new DomainException('Invalid passkey request.');
@@ -297,8 +300,7 @@ final class Passkeys
             }
             if ($keys !== []) {
                 self::assertOwnKey($web, $scope, $user, $data);
-            } elseif (!$onboarding && !Session::passkeyGrant()) {
-                throw new DomainException('Sign in again before adding a passkey.');
+
             } elseif (!self::onOwnDevice($user)) {
                 throw new DomainException('Add the passkey from the browser you are signed in on.');
             }
@@ -334,7 +336,7 @@ final class Passkeys
             $key->signCount = $verified->signatureCounter ?? 0;
             $key->createdAt = new DateTimeImmutable();
             PasskeyUpgrade::save($scope, $key);
-            if ($challenge['data']['onboarding'] ?? false) return ['redirect' => self::completeSetup()];
+            if ($challenge['data']['onboarding'] ?? false) return ['profile' => SignInFeedback::profile(), 'redirect' => self::completeSetup()];
             return ['html' => self::render($user)];
         }
         if (in_array($action, ['passkeyRename', 'passkeyRemove'], true)) {

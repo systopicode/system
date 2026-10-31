@@ -87,8 +87,8 @@ final class ProjectForm
             echo '<section class="widget">';
             echo '<header><h2>' . $e($name) . '</h2>';
             if ($which === 'media' && in_array($name, ['Image formats','Media groups'], true)) {
-                $help = $name === 'Media groups' ? 'Groups restrict uploads, replacements and moved files. File types are chosen in a dialog. This does not make files private.' : 'Choose either a megapixel budget or pixel dimensions. One pixel dimension may stay empty to keep the proportions. Show in editor controls the format selector, not public access.';
-                echo '<i class="cmsIcon cmsIcon-circle-info settingInfo" tabindex="0" title="' . $e($help) . '" aria-label="' . $e($help) . '"></i>';
+                $help = $name === 'Media groups' ? 'Groups restrict uploads, replacements and moved files. File types are chosen in a dialog. This does not make files private.' : 'Choose either a megapixel budget or pixel dimensions. Megapixels may have a fixed aspect ratio (e.g. 16:9); leave it empty to crop freely. One pixel dimension may stay empty to keep the proportions. Show in editor controls the format selector, not public access.';
+                echo '<button type="button" class="button transparent icononly settingInfo" data-setting-help="' . $e($help) . '" title="' . $e($help) . '" aria-label="About ' . $e($name) . '"><i class="cmsIcon cmsIcon-circle-info"></i></button>';
             }
             if ($headerButton !== null) {
                 self::addButton($which, $headerButton);
@@ -160,6 +160,10 @@ final class ProjectForm
                 default => 'That change was not saved.',
             });
             return;
+        }
+        // Generated files only; retain original files, saved crops and adjustments.
+        if ($which === 'media' && ($panel->action === 'setImageSizing' || ($panel->action === 'setField' && $id === 'call:mediaFormats::add' && in_array((string) \http::dataset('field'), ['aspect_ratio','megapixels','width','height'], true)))) {
+            \Systopic\System\Tables\Medias\Files::clearFormat($key);
         }
         \message::confirm('Saved.');
         // Reordering moves the row in the browser. A redraw would drop the
@@ -251,7 +255,7 @@ final class ProjectForm
                 self::languageSelect($which, $group, $languages);
             } else {
                 $leaf = new Leaf($group->id, $group->category, $group->label, $group->kind, $group->text, $group->start, $group->end);
-                self::control($which, $leaf, 'save');
+                self::control($which, $leaf, 'save', $label);
             }
             echo '</td></tr>';
         }
@@ -274,7 +278,7 @@ final class ProjectForm
         if ($setting->text !== '' && !isset($choices[$setting->text])) {
             $choices = [$setting->text => $setting->text] + $choices;
         }
-        echo '<select data-on_change="save" data-file="' . $e($which) . '" data-id="' . $e($setting->id) . '" name="value">';
+        echo '<select data-on_change="save" data-file="' . $e($which) . '" data-id="' . $e($setting->id) . '" name="value" aria-label="Default language">';
         foreach ($choices as $key => $label) {
             $selected = (string) $key === $setting->text ? ' selected' : '';
             echo '<option value="' . $e($key) . '"' . $selected . '>' . $e($label) . '</option>';
@@ -297,6 +301,7 @@ final class ProjectForm
             self::control($which, $leaf, 'save');
             echo '</div>';
         }
+        echo '<div class="languageFlagHelp"><p class="tagsHint">Flags are served locally. Upload an SVG to choose a different flag for this project (maximum 128 KB).</p><a class="button cmsExternalLink" href="' . $e(LanguageFlags::SOURCE) . '" target="_blank" rel="noopener noreferrer">Download SVG flags<i class="cmsIcon cmsIcon-arrow-up-right-from-square" aria-hidden="true"></i></a></div>';
         self::recordTable($which, $group, false);
         echo '</div>';
     }
@@ -318,7 +323,7 @@ final class ProjectForm
         echo '<table class="scalars"><thead><tr><th>Setting</th><th>Value</th></tr></thead><tbody>';
         if ($file !== null) {
             echo '<tr class="securityRow"><td><span>Default sign-in<small>default_login_method</small><small class="settingNote">Which sign-in opens first. Ask each time shows the method list.</small></span></td><td>';
-            echo '<select data-on_change="saveAuthMethod" data-file="' . $e($file) . '" data-group="auth" data-key="default_login_method" name="value">';
+            echo '<select data-on_change="saveAuthMethod" data-file="' . $e($file) . '" data-group="auth" data-key="default_login_method" name="value" aria-label="Default sign-in">';
             foreach (['' => 'Ask each time', 'code' => 'Sign-in code', 'device' => 'Remote login', 'passkey' => 'Passkey', 'password' => 'Username & password'] as $option => $label) {
                 echo '<option value="' . $e($option) . '"' . ($method === $option ? ' selected' : '') . '>' . $e($label) . '</option>';
             }
@@ -334,32 +339,43 @@ final class ProjectForm
         $columns = ProjectFile::columns($group);
         $images = $group->id === 'call:mediaFormats::add';
         $mediaGroups = $group->id === 'var:media_groups';
-        if ($images) $columns = ['size', ...array_diff($columns, ['width','height','megapixels','autocrop','autocrop_limit','cms_display']), 'show_in_editor'];
+        if ($group->id === 'define:VIDEO_FORMATS') $columns = ['label', ...array_diff($columns, ['label'])];
+        if ($images) $columns = ['label', 'size', ...array_diff($columns, ['label','width','height','megapixels','aspect_ratio','autocrop','autocrop_limit','cms_display']), 'show_in_editor'];
         if ($mediaGroups) $columns = array_values(array_unique([...array_diff($columns,['public']), 'file_extension', 'templates']));
         $templateField = self::TEMPLATE_FIELDS[$group->id] ?? null;
         if ($templateField !== null) {
             $columns = [...array_diff($columns, [$templateField]), $templateField];
         }
         $languages = $group->id === 'define:LANGUAGES';
+        if ($languages) $columns = array_values(array_diff($columns, ['code']));
         if ($frame) {
             echo '<div class="tableScroll">';
         }
-        echo '<table class="projectRows' . ($languages ? ' languages' : '') . '"><thead><tr><th></th><th>Key</th>';
+        echo '<table class="projectRows' . ($languages ? ' languages' : '') . '"><thead><tr><th></th>';
+        if ($languages) echo '<th>Flag</th>';
+        echo '<th>' . ($languages ? 'Language' : 'Key') . '</th>';
         foreach ($columns as $column) {
-            $heading = $languages && $column === 'activated' ? 'On' : self::human($column);
+            $heading = $languages ? match ($column) { 'activated' => 'On', 'label' => 'Name', default => self::human($column) } : self::human($column);
             echo '<th' . ($languages && $column === 'activated' ? ' class="langOn"' : '') . '>' . $e($heading) . '</th>';
         }
         echo '<th></th></tr></thead><tbody>';
         if ($group->items === []) {
-            echo '<tr><td colspan="' . (count($columns) + 3) . '">Nothing here yet.</td></tr>';
+            echo '<tr><td colspan="' . (count($columns) + ($languages ? 4 : 3)) . '">Nothing here yet.</td></tr>';
         }
         foreach ($group->items as $item) {
             $data = self::data($which, $group->id, $item->key);
             echo '<tr' . ($images ? ' class="imageFormatRow"' : '') . '><td class="pageSettingDrag">';
             self::grip($data);
-            echo '</td><td>';
+            echo '</td>';
+            if ($languages) {
+                $values = self::valuesOf($group, $item);
+                echo '<td class="languageFlagCell">';
+                LanguageFlags::preview(trim((string) ($values['code'] ?? '')) ?: (string) $item->key, (string) ($values['label'] ?? $item->key), (string) $item->key);
+                echo '</td>';
+            }
+            echo '<td>';
             if ($images) echo '<label class="formatField"><span aria-hidden="true">&nbsp;</span>';
-            echo '<input data-setting-key pattern="[A-Za-z0-9_][A-Za-z0-9_\\-]*" required title="Use letters, digits, underscores or hyphens; no spaces." data-on_blur="renameItem"' . $data . ' name="value" value="' . $e($item->key) . '" autocomplete="off">';
+            echo '<input aria-label="' . $e(($languages ? 'Language' : 'Key') . ': ' . $item->key) . '" data-key-impact="Renaming a technical key can break template code, stored references and integrations. References are not updated automatically. Rename this key?" data-setting-key pattern="[A-Za-z0-9_][A-Za-z0-9_\\-]*" required title="Use letters, digits, underscores or hyphens; no spaces." data-on_blur="renameItem"' . $data . ' name="value" value="' . $e($item->key) . '" autocomplete="off">';
             if ($images) echo '</label>';
             echo '</td>';
             foreach ($columns as $column) {
@@ -407,21 +423,30 @@ final class ProjectForm
                         break;
                     }
                 }
+                if ($images && $column === 'label') echo '<label class="formatField"><span aria-hidden="true">&nbsp;</span>';
                 if ($leaf !== null) {
-                    self::control($which, $leaf, 'save');
+                    self::control($which, $leaf, 'save', ($languages && $column === 'label' ? 'Name' : ($on ? 'On' : self::human($column))) . ': ' . $item->key);
                 } else {
                     $kind = self::columnKind($group, $column);
                     $blank = new Leaf($group->id, '', $column, $kind, '', 0, 0);
+                    $fieldData = $data . ' aria-label="' . $e(self::human($column) . ': ' . $item->key) . '"';
                     if (self::isFlag($blank)) {
-                        echo '<label class="projectSwitch"><input type="checkbox" class="switch" data-on_change="setField"' . $data . ' data-field="' . $e($column) . '" name="value"><div><div></div></div></label>';
+                        echo '<label class="projectSwitch"><input type="checkbox" class="switch" data-on_change="setField"' . $fieldData . ' data-field="' . $e($column) . '" name="value"><div><div></div></div></label>';
                     } else {
-                        echo '<input data-on_blur="setField"' . $data . ' data-field="' . $e($column) . '" name="value" value="" autocomplete="off">';
+                        echo '<input data-on_blur="setField"' . $fieldData . ' data-field="' . $e($column) . '" name="value" value="" autocomplete="off">';
                     }
                 }
+                if ($images && $column === 'label') echo '</label>';
                 echo '</td>';
             }
-            echo '<td class="projectRemove">';
-            self::removeButton($data);
+            echo '<td class="projectRemove' . ($languages ? ' languageActions' : '') . '">';
+            if ($languages) {
+                echo '<div class="languageRowActions">';
+                $values = self::valuesOf($group, $item);
+                LanguageFlags::control(trim((string) ($values['code'] ?? '')) ?: (string) $item->key, (string) ($values['label'] ?? $item->key), (string) $item->key);
+            }
+            self::removeButton($data, (string) $item->key);
+            if ($languages) echo '</div>';
             echo '</td></tr>';
         }
         echo '</tbody></table>';
@@ -446,6 +471,7 @@ final class ProjectForm
         foreach ($mp ? ['megapixels'=>'MP'] : ['width'=>'Width','height'=>'Height'] as $field=>$label) {
             echo '<label><span>' . $label . '</span><input type="number" min="' . ($mp?'0.01':'0') . '" step="' . ($mp?'any':'1') . '" name="value" data-on_blur="setField"' . $data . ' data-field="' . $field . '" value="' . $e($values[$field]??'') . '" aria-label="' . $label . '"></label>';
         }
+        if ($mp) echo '<label><span>Aspect ratio</span><input type="text" name="value" data-on_blur="setField"' . $data . ' data-field="aspect_ratio" value="' . $e($values['aspect_ratio']??'') . '" placeholder="Free · e.g. 16:9" pattern="[0-9]+([.][0-9]+)?((:|/)[0-9]+([.][0-9]+)?)?" title="Positive width:height, e.g. 16:9. Leave empty for a free crop." aria-label="Aspect ratio"></label>';
         echo '</div>';
     }
 
@@ -460,17 +486,17 @@ final class ProjectForm
             $data = self::data($which, $group->id, $item->key);
             echo '<tr><td class="pageSettingDrag">';
             self::grip($data);
-            echo '</td><td><input data-on_blur="saveItem"' . $data . ' name="value" value="' . $e($item->text) . '" autocomplete="off"></td><td class="projectRemove">';
-            self::removeButton($data);
+            echo '</td><td><input aria-label="' . $e(self::human($group->label) . ': ' . $item->key) . '" data-on_blur="saveItem"' . $data . ' name="value" value="' . $e($item->text) . '" autocomplete="off"></td><td class="projectRemove">';
+            self::removeButton($data, (string) $item->key);
             echo '</td></tr>';
         }
         echo '</tbody></table></div>';
     }
 
-    private static function control(string $which, Leaf $leaf, string $action): void
+    private static function control(string $which, Leaf $leaf, string $action, ?string $label = null): void
     {
         $e = static fn($value): string => htmlspecialchars((string) $value, ENT_QUOTES);
-        $attrs = ' data-file="' . $e($which) . '" data-id="' . $e($leaf->id) . '" name="value" autocomplete="off"';
+        $attrs = ' aria-label="' . $e($label ?? self::human($leaf->label)) . '" data-file="' . $e($which) . '" data-id="' . $e($leaf->id) . '" name="value" autocomplete="off"';
         if (in_array(substr($leaf->id, 7), LegalLinks::DETAILS, true) && str_starts_with($leaf->id, 'define:')) {
             echo '<textarea rows="3" maxlength="5000" data-on_blur="' . $e($action) . '"' . $attrs . '>' . $e($leaf->text) . '</textarea>';
             return;
@@ -498,9 +524,9 @@ final class ProjectForm
         echo '<button type="button" class="button" data-on_click="addItem" data-file="' . $e($which) . '" data-id="' . $e($group->id) . '"><i class="cmsIcon cmsIcon-plus"></i>Add</button>';
     }
 
-    private static function removeButton(string $data): void
+    private static function removeButton(string $data, string $context): void
     {
-        echo '<button type="button" class="button transparent" title="Remove" data-on_click="userConfirm" data-action="removeItem" data-confirm="Remove this entry?"' . $data . '><i class="cmsIcon cmsIcon-trash"></i></button>';
+        echo '<button type="button" class="button transparent" title="Remove" aria-label="Remove: ' . htmlspecialchars($context, ENT_QUOTES, 'UTF-8') . '" data-on_click="userConfirm" data-action="removeItem" data-confirm="Remove this entry?"' . $data . '><i class="cmsIcon cmsIcon-trash"></i></button>';
     }
 
     private static function grip(string $data): void

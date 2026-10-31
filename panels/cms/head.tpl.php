@@ -12,6 +12,9 @@
 	$asset = static fn(string $file): string => htmlspecialchars(\Systopic\System\Sys\Packages::panelAssetHref($file), ENT_QUOTES);
 	$brandColor = '#' . \Systopic\System\Sys\Theme::color('cmsMainColor');
 	$onAuth = isset($headHost) && $headHost->name === 'auth';
+    if ($onAuth && \Systopic\System\Auth\Branding::frontend()) {
+        $asset = static fn(string $file): string => htmlspecialchars(\Systopic\System\Auth\Branding::href($file) ?? \Systopic\System\Sys\Packages::panelAssetHref($file), ENT_QUOTES);
+    }
 	// A QR sign-in sets this for one landing. The page does not offer to
 	// install the CMS; the cookie is then gone, so a later visit still can.
 	$freshSignIn = (($_COOKIE['sys_plain'] ?? '') === '1');
@@ -27,7 +30,7 @@
 		]);
 	}
 	// The status bar sits on the petrol header. The page grey is the background
-	// behind the address bar, set on html/body, not on this tag.
+	// behind the content remains separate from the root/browser chrome tint.
 	$themeColor = $brandColor;
 	$canvasColor = '#' . \Systopic\System\Sys\Theme::color('cmsBgColor');
 	$appearance = 'light';
@@ -63,17 +66,19 @@
 	})();
 	</script>
 	<?php } ?>
-	<style id="systemInitialCanvas">html{background-color:<?= $onAuth ? $brandColor : ($appearance === 'dark' ? $darkGround : $canvasColor) ?>}html:has(>body.cms.system),body.cms.system{background-color:var(--cmsBgColor)}</style>
+	<style id="systemInitialCanvas">html{background-color:<?= $brandColor ?>}html:has(>body.cms.system),body.cms.system{background-color:var(--cmsMainColor)}</style>
 	<?php
 	$overrideRoot = \fs::toNative(rtrim((string) \fs::$siteRoot, '/\\') . '/overrides/');
 	$iconSvg = \Systopic\System\Sys\Packages::panelAsset('img/icon.svg');
 	$iconPng = \Systopic\System\Sys\Packages::panelAsset('img/favicons/favicon-32x32.png');
 	$svgOwn = $iconSvg !== null && str_starts_with(\fs::toNative($iconSvg), $overrideRoot);
 	$pngOwn = $iconPng !== null && str_starts_with(\fs::toNative($iconPng), $overrideRoot);
-	if ($svgOwn || !$pngOwn) { ?>
+    $frontendSvg = $onAuth ? \Systopic\System\Auth\Branding::href('img/icon.svg') : null;
+    $frontendPng = $onAuth ? \Systopic\System\Auth\Branding::href('img/favicons/favicon-32x32.png') : null;
+	if ($frontendSvg !== null || ($frontendPng === null && ($svgOwn || !$pngOwn))) { ?>
 	<link rel="icon" type="image/svg+xml" href="<?= $asset('img/icon.svg') ?>">
 	<?php } ?>
-	<link rel="apple-touch-icon" sizes="180x180" href="<?= htmlspecialchars(\http::$root . 'cms/icon-180.png', ENT_QUOTES) ?>">
+	<link rel="apple-touch-icon" sizes="180x180" href="<?= $onAuth && \Systopic\System\Auth\Branding::frontend() ? $asset('img/favicons/apple-touch-icon.png') : htmlspecialchars(\http::$root . 'cms/icon-180.png', ENT_QUOTES) ?>">
     <link rel="icon" type="image/png" sizes="32x32" href="<?= $asset('img/favicons/favicon-32x32.png') ?>">
     <link rel="icon" type="image/png" sizes="16x16" href="<?= $asset('img/favicons/favicon-16x16.png') ?>">
     <?php if (!$skipApp) { ?>
@@ -87,13 +92,13 @@
     <meta name="mobile-web-app-capable" content="yes">
     <?php } ?>
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="application-name" content="fluxo cms">
-    <meta name="description" content="fluxo cms">
+    <meta name="application-name" content="fluxo">
+    <meta name="description" content="fluxo">
     <meta name="author" content="systopic GmbH"/>
     <meta name="copyright" content="systopic GmbH"/>
-    <meta name="abstract" content="fluxo cms"/>
+    <meta name="abstract" content="fluxo"/>
     <meta name="msapplication-config" content="<?= $asset('img/favicons/browserconfig.xml') ?>">
-	<?php $shareImage = http::$hostUrl . htmlspecialchars(\Systopic\System\Settings\ThemeAssets::href('share'), ENT_QUOTES); ?>
+	<?php $shareImage = http::$hostUrl . htmlspecialchars(($onAuth ? \Systopic\System\Auth\Branding::href('img/share_default.jpg') : null) ?? \Systopic\System\Settings\ThemeAssets::href('share'), ENT_QUOTES); ?>
 	<meta property='og:image' content='<?= $shareImage ?>' />
 	<meta itemprop='image' content='<?= $shareImage ?>' />
 
@@ -404,7 +409,7 @@
 	// from the root. A variable here is resolved; a missing color falls back to white.
 	?>
 	<?php if (!$onAuth) { ?>
-	<style id="cmsSafariChrome">html{background-color:<?= $canvasColor ?>}body.cms>.cmsMobileHeader{background-color:<?= $themeColor ?>}</style>
+	<style id="cmsSafariChrome">html,html:has(>body.cms.system),body.cms.system{background-color:<?= $themeColor ?>}body.cms>.cmsMobileHeader{background-color:<?= $themeColor ?>}</style>
 	<?php } ?>
 	<!-- +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-->
 </head>

@@ -1,6 +1,6 @@
 <?php
 $items = [];
-$this->eachChild(function ($child) use (&$items) {
+$collect = function ($child) use (&$items) {
 	$item = $child->getNaviItem();
 	if ($item === null) {
 		return;
@@ -10,7 +10,8 @@ $this->eachChild(function ($child) use (&$items) {
 		'folder' => (string) $child->folder,
 		'item' => $item,
 	];
-});
+};
+for ($child = $this->firstChild; $child !== null; $child = $child->next) $collect($child);
 usort($items, static function (array $a, array $b): int {
 	return $a['order'] <=> $b['order'] ?: strnatcasecmp($a['folder'], $b['folder']);
 });

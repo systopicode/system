@@ -6,7 +6,7 @@ use Systopic\System\Settings\LegalLinks;
 if (!Session::isSuperuser()) return;
 $notices = [];
 if (Overview::needsAttention()) {
-    $notices[] = [Overview::summary(), 'Review cleanup', 'broom', '/cms/tools/maintenance/cleanup/'];
+    $notices[] = [Overview::summary(), 'Review cleanup', 'broom', '/cms/tools/cleanup/automatic/'];
 }
 if (LegalLinks::details('operator') === '') {
     $notices[] = ['Please check: operator details are not entered in System Privacy. Add them or verify that your linked imprint and privacy policy cover them.', 'Privacy settings', 'gear', '/cms/settings/pagesettings/'];

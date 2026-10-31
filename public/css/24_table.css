@@ -91,14 +91,14 @@ body.dragging .cms .tableScroll.stacked > table > tbody > tr:hover > td{
 }
 
 .cms table .button,
-.cms table button{
+.cms table button:where(:not([data-cms-action])){
     min-height: 1.875rem;
     margin-bottom: 0;
     padding: 0 0.6rem;
 }
 
 .cms table .button i,
-.cms table button i{
+.cms table button:where(:not([data-cms-action])) i{
     font-size: 1rem;
 }
 
@@ -129,12 +129,12 @@ body.dragging .cms .tableScroll.stacked > table > tbody > tr:hover > td{
     border-top: 1px solid var(--cmsLine);
 }
 
-.cms table tfoot td .pagination a{
+.cms table tfoot td .pagination :is(a, button:where([data-cms-action])){
     padding: 0.15rem 0.35rem;
     border-radius: 4px;
 }
 
-.cms table tfoot td .pagination a.selected{
+.cms table tfoot td .pagination :is(a, button:where([data-cms-action])).selected{
     font-weight: 600;
     background: var(--cmsSelected);
     cursor: pointer;
@@ -149,7 +149,7 @@ body.dragging .cms .tableScroll.stacked > table > tbody > tr:hover > td{
     overflow-y: hidden;
     /* Keep sideways gestures in the table; vertical wheel/trackpad input
        must reach the page even when the pointer rests above a table. */
-    overscroll-behavior-x: contain;
+    overscroll-behavior-x: none;
     overscroll-behavior-y: auto;
 }
 
@@ -173,7 +173,7 @@ body.dragging section.cms{
     overflow-x: hidden;
 }
 
-.tableScroll.canScrollX > table td.icons,
+.tableScroll.canScrollX > table :is(td.icons,td.schemaApply,td.projectRemove),
 .tableScroll.canScrollX > table tr > th:last-child:empty{
     position: sticky;
     right: 0;
@@ -183,7 +183,7 @@ body.dragging section.cms{
 
 /* The fade is painted from inside the cell, so it cannot make the table
    a pixel wider. It only runs once the table actually scrolls. */
-.tableScroll.canScrollX > table td.icons::before{
+.tableScroll.canScrollX > table :is(td.icons,td.schemaApply,td.projectRemove)::before{
     content: "";
     position: absolute;
     top: 0;
@@ -193,14 +193,7 @@ body.dragging section.cms{
     transform: translateX(-100%);
     background: linear-gradient(to left, color-mix(in srgb, var(--cmsTextColor) 22%, transparent), transparent);
     pointer-events: none;
-    opacity: 0;
-    animation: cmsScrollEdge linear both;
-    animation-timeline: scroll(x nearest);
-}
-
-@keyframes cmsScrollEdge{
-    from{ opacity: 1; }
-    to{ opacity: 0; }
+    opacity: 1;
 }
 
 .cms .tableScroll > table tbody tr:hover td.icons,
@@ -367,7 +360,6 @@ body.dragging section.cms{
 }
 
 /* A drag-sorted table on a phone starts as that one line. Tap the row to open it. */
-@media (max-width: 1024px), (orientation: portrait) and (max-width: 1400px) {
     .cms .tableScroll.stacked.is-foldable > table > tbody > tr:not(.is-open) > td:not(:first-child, :has(> .userStatus, > i[data-drag_type]), :has(> .userStatus, > i[data-drag_type]) + td, .icons, .projectRemove, .schemaApply){
         display: none;
     }
@@ -379,6 +371,7 @@ body.dragging section.cms{
         padding-top: 0.45rem;
         padding-bottom: 0.45rem;
     }
+
     body.cms > main > div.content .flexColumn:has(.tableScroll.stacked),
     section.cms:has(> .tableScroll.stacked.is-foldable),
     .cms .tableScroll.stacked.is-foldable,
@@ -504,7 +497,7 @@ body.dragging section.cms{
         margin: 0;
         flex: 0 0 auto;
     }
-}
+
 
 .tableScroll.stacked :is(input:not([type="checkbox"], [type="radio"]), select, textarea){
     width: 100%;
@@ -526,12 +519,12 @@ div.table .tc{
 }
 
 .tableFoldToggle { display: none; }
-@media (max-width: 1024px), (orientation: portrait) and (max-width: 1400px) {
+
     .cms .tableScroll.stacked.is-foldable td:has(> .tableFoldToggle) {
         position: relative;
         padding-right: 2.75rem;
     }
-    .cms .tableFoldToggle {
+    .cms .tableScroll.stacked.is-foldable .tableFoldToggle {
         display: inline-flex;
         position: absolute;
         right: 0;
@@ -545,7 +538,7 @@ div.table .tc{
         color: var(--cmsMuted);
     }
     .cms .tableFoldToggle[aria-expanded="true"] i { transform: rotate(180deg); }
-}
+
 
 /* Sorting grips are controls, not content: do not inherit the card gutter. */
 .cms table:not(.octalSelector, .editor table) tbody td.pageSettingDrag {
@@ -563,3 +556,14 @@ div.table .tc{
 .cms table:not(.editor table) tbody .button:not(.submit, .confirm, .active, .selected):not([disabled], .disabled):active {
     background: color-mix(in srgb, var(--cmsMainColor) 14%, transparent);
 }
+
+/* Labelled row actions remain one compact column when space is limited. */
+@media (max-width:1280px) {
+ .cms .tableScroll td.icons ul:has(.button:not(.icononly)) { flex-direction:column; align-items:stretch; }
+ .cms .tableScroll td.icons ul:has(.button:not(.icononly)) .button { width:100%; justify-content:flex-start; }
+}
+@media (pointer:coarse) {
+ .cms table .button, .cms table button:where(:not([data-cms-action])) { min-height:2.5rem; min-width:2.5rem; }
+}
+
+.cms .tableScroll[data-table-scroll] > table { min-width:42rem; }

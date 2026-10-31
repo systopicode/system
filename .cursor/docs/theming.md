@@ -1,6 +1,6 @@
 # fluxo — a project's own look, and how a panel is built
 
-For people and agents. This is about fluxo cms (the GUI under `/cms/`, the
+For people and agents. This is about fluxo (the GUI under `/cms/`, the
 login, the system mails, the edit bar on the website), not the website's
 own frontend.
 
@@ -17,7 +17,7 @@ Everything lives in the project, never in the packages:
 | `overrides/img/logo.svg` or `logo.png` | Logo on the login card and at the top of every system mail. SVG is inlined, PNG is an image. |
 | `overrides/img/<name>` | Replaces the system image of the same name, see the table below. |
 | `overrides/js/*.js` | Extra GUI scripts, loaded last. |
-| `PUBLIC_PAGE_NAME` (config) | Site name in the window title and the installed web app ("Site // fluxo cms"). |
+| `PUBLIC_PAGE_NAME` (config) | Site name in the window title and the installed web app ("Site // fluxo"). |
 
 Images a project may replace by name (`Packages::panelAsset()` looks in
 `overrides/` first for `img/…`):

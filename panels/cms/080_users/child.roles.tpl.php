@@ -6,8 +6,8 @@ $e = static fn($v): string => htmlspecialchars((string) $v, ENT_QUOTES);
 <section class="widget is-list roleList">
 	<header>
 		<h2>List of roles</h2>
-		<input class="listSearch" type="search" placeholder="Search" data-on_input="filterRoles" autocomplete="off">
-		<a class="button submit" data-on_click="addRole"><i class="cmsIcon cmsIcon-plus"></i><span>Add role</span></a>
+		<input class="listSearch" type="search" aria-label="Search roles" placeholder="Search" data-on_input="filterRoles" autocomplete="off">
+		<button type="button" data-cms-action class="button submit" data-on_click="addRole"><i class="cmsIcon cmsIcon-plus"></i><span>Add role</span></button>
 	</header>
 	<div class="tableScroll">
 		<table>
@@ -20,7 +20,7 @@ $e = static fn($v): string => htmlspecialchars((string) $v, ENT_QUOTES);
 				</tr>
 			</thead>
 			<tbody>
-				<?php foreach ($this->roles as $role) {
+				<?php $hasRoles = false; foreach ($this->roles as $role) { $hasRoles = true;
 					$color = ($role->color !== null && $role->color !== '') ? $role->color : '#8a8f93';
 				?>
 					<tr data-role_id="<?= (int) $role->id ?>">
@@ -36,6 +36,7 @@ $e = static fn($v): string => htmlspecialchars((string) $v, ENT_QUOTES);
 						</td>
 					</tr>
 				<?php } ?>
+                <?php if (!$hasRoles) { ?><tr><td colspan="4"><p class="tagsHint">No roles yet. Use “Add role” to create the first one.</p></td></tr><?php } ?>
 			</tbody>
 		</table>
 	</div>

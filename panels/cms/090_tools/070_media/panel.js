@@ -2,7 +2,7 @@
 (function () {
 	var setup = {
 		info: 'Media',
-		route: 'panels.cms.tools.maintenance.media',
+		route: 'panels.cms.tools.media',
 		extends: 'panels.cms',
 	};
 	sys.lib.add(setup, function () {

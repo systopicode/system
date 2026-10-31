@@ -70,7 +70,7 @@ body.appBody:has(.authCard) {
 			background: var(--cmsHighlightColor);
 		}
 
-		a.logo {
+		:is(a, button:where([data-cms-action])).logo {
 			display: block;
 			flex: 0 0 auto;
 			margin-bottom: 1.75rem;
@@ -201,10 +201,10 @@ body.appBody:has(.authCard) {
 			border: 1px solid var(--cmsLine);
 		}
 
-		button.submit,
-		a.button.submit,
-		button.passkeyLoginButton,
-		button.authPasswordButton {
+		button:where(:not([data-cms-action])).submit,
+		:is(a, button:where([data-cms-action])).button.submit,
+		button:where(:not([data-cms-action])).passkeyLoginButton,
+		button:where(:not([data-cms-action])).authPasswordButton {
 			display: inline-flex;
 			align-items: center;
 			justify-content: center;
@@ -212,22 +212,22 @@ body.appBody:has(.authCard) {
 			width: 100%;
 			min-height: 2.75rem;
 			margin: 0.75rem 0 0;
-			font-size: 0.9375rem;
 			border-radius: var(--cmsRadius);
 		}
 
-		main.is-passkey-signing-in button.passkeyLoginButton {
+		main.is-passkey-signing-in button:where(:not([data-cms-action])).passkeyLoginButton {
 			display: none;
 		}
 
 		.authLinks {
+			margin: 1rem 0 0;
 			display: flex;
 			flex-direction: column;
 			align-items: center;
 			gap: 0.55rem;
 			text-align: center;
 
-			a {
+			:is(a, button:where([data-cms-action])) {
 				display: inline-flex;
 				align-items: center;
 				gap: 0.45rem;
@@ -248,7 +248,7 @@ body.appBody:has(.authCard) {
 				display: none;
 			}
 
-			a {
+			:is(a, button:where([data-cms-action])) {
 				color: var(--cmsSubText);
 			}
 		}
@@ -271,14 +271,14 @@ body.appBody:has(.authCard) {
 			justify-content: center;
 			gap: 0.35rem 0.9rem;
 
-			a {
+			:is(a, button:where([data-cms-action])) {
 				display: inline-flex;
 				align-items: center;
 				gap: 0.35rem;
 			}
 		}
 
-		a {
+		:is(a, button:where([data-cms-action])) {
 			color: inherit;
 			text-decoration: none;
 
@@ -557,11 +557,11 @@ main.is-passkey-signing-in .passkeyLogin--quiet {
 
 .authCard .authBody > .qrScan,
 .authCard .authBody > .authCodeForm {
-	margin-top: 1.75rem;
+	margin-top: .5rem;
 }
 
-.cms .authCard button.authScan,
-.cms .authCard button.authScan:enabled:hover {
+.cms .authCard button:where(:not([data-cms-action])).authScan,
+.cms .authCard button:where(:not([data-cms-action])).authScan:enabled:hover {
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
@@ -577,8 +577,8 @@ main.is-passkey-signing-in .passkeyLogin--quiet {
 	padding-right: 2.35rem;
 }
 
-.cms .authCard button.authReveal,
-.cms .authCard button.authReveal:enabled:hover {
+.cms .authCard button:where(:not([data-cms-action])).authReveal,
+.cms .authCard button:where(:not([data-cms-action])).authReveal:enabled:hover {
 	position: absolute;
 	top: 50%;
 	right: 0.2rem;
@@ -599,7 +599,7 @@ main.is-passkey-signing-in .passkeyLogin--quiet {
 	box-shadow: none;
 }
 
-.cms .authCard button.authReveal:enabled:hover {
+.cms .authCard button:where(:not([data-cms-action])).authReveal:enabled:hover {
 	color: var(--cmsTextColor);
 }
 
@@ -660,8 +660,8 @@ main.is-passkey-signing-in .passkeyLogin--quiet {
 	font-size: 0.8125rem;
 }
 
-body.cms:has(.authCard) div.authCard .authPick button.submit,
-body.appBody:has(.authCard) div.authCard .authPick button.submit {
+body.cms:has(.authCard) div.authCard .authPick button:where(:not([data-cms-action])).submit,
+body.appBody:has(.authCard) div.authCard .authPick button:where(:not([data-cms-action])).submit {
 	flex: 0 0 2.75rem;
 	width: 2.75rem;
 	min-width: 2.75rem;
@@ -670,8 +670,8 @@ body.appBody:has(.authCard) div.authCard .authPick button.submit {
 	padding: 0;
 }
 
-.cms .authCard :is(a.authMethod, button.authMethod),
-.cms .authCard :is(a.authMethod, button.authMethod):hover {
+.cms .authCard :is(:is(a, button:where([data-cms-action])).authMethod, button:where(:not([data-cms-action])).authMethod),
+.cms .authCard :is(:is(a, button:where([data-cms-action])).authMethod, button:where(:not([data-cms-action])).authMethod):hover {
 	display: flex;
 	align-items: center;
 	gap: 0.75rem;
@@ -692,12 +692,12 @@ body.appBody:has(.authCard) div.authCard .authPick button.submit {
 	cursor: pointer;
 }
 
-.cms .authCard :is(a.authMethod, button.authMethod):hover {
+.cms .authCard :is(:is(a, button:where([data-cms-action])).authMethod, button:where(:not([data-cms-action])).authMethod):hover {
 	background: var(--cmsHover);
 	border-color: color-mix(in srgb, var(--cmsMainColor) 35%, var(--cmsLine));
 }
 
-.cms .authCard :is(a.authMethod, button.authMethod) > i:first-child {
+.cms .authCard :is(:is(a, button:where([data-cms-action])).authMethod, button:where(:not([data-cms-action])).authMethod) > i:first-child {
 	flex: 0 0 1.25rem;
 	width: 1.25rem;
 	font-size: 0.95rem;
@@ -743,21 +743,28 @@ body.appBody:has(.authCard) .authCard main > p.authFoot {
 	text-align: center;
 }
 
+/* Forward actions sit opposite Back; do not change the footer's legal links. */
+body.cms:has(.authCard) .authCard p.authFoot:has(:is(a, button:where([data-cms-action])).authSkip),
+body.appBody:has(.authCard) .authCard p.authFoot:has(:is(a, button:where([data-cms-action])).authSkip) {
+    justify-content: flex-end;
+    text-align: right;
+}
+
 /* Back links sit on the left like a phone nav control. */
-body.cms:has(.authCard) .authCard :is(> p.authFoot, main > p.authFoot):has(:is(a.authBack, a.authSwitch)),
-body.appBody:has(.authCard) .authCard :is(> p.authFoot, main > p.authFoot):has(:is(a.authBack, a.authSwitch)) {
+body.cms:has(.authCard) .authCard p.authFoot:has(:is(:is(a, button:where([data-cms-action])).authBack, :is(a, button:where([data-cms-action])).authSwitch)),
+body.appBody:has(.authCard) .authCard p.authFoot:has(:is(:is(a, button:where([data-cms-action])).authBack, :is(a, button:where([data-cms-action])).authSwitch)) {
 	justify-content: flex-start;
 	text-align: left;
 }
 
-body.cms:has(.authCard) .authCard :is(> p.authFoot, main > p.authFoot):has(:is(a.authBack, a.authSwitch)) :is(a.authBack, a.authSwitch),
-body.appBody:has(.authCard) .authCard :is(> p.authFoot, main > p.authFoot):has(:is(a.authBack, a.authSwitch)) :is(a.authBack, a.authSwitch) {
+body.cms:has(.authCard) .authCard p.authFoot:has(:is(:is(a, button:where([data-cms-action])).authBack, :is(a, button:where([data-cms-action])).authSwitch)) :is(:is(a, button:where([data-cms-action])).authBack, :is(a, button:where([data-cms-action])).authSwitch),
+body.appBody:has(.authCard) .authCard p.authFoot:has(:is(:is(a, button:where([data-cms-action])).authBack, :is(a, button:where([data-cms-action])).authSwitch)) :is(:is(a, button:where([data-cms-action])).authBack, :is(a, button:where([data-cms-action])).authSwitch) {
 	margin-left: -0.95rem;
 }
 
-.cms .authCard .authFoot :is(a.authBack, a.authSkip, a.authSwitch, button.authSwitch),
-.cms .authCard .authFoot :is(a.authSwitch, button.authSwitch):hover,
-.cms .authCard .authFoot :is(a.authBack, a.authSkip):hover {
+.cms .authCard .authFoot :is(:is(a, button:where([data-cms-action])).authBack, :is(a, button:where([data-cms-action])).authSkip, :is(a, button:where([data-cms-action])).authSwitch, button:where(:not([data-cms-action])).authSwitch),
+.cms .authCard .authFoot :is(:is(a, button:where([data-cms-action])).authSwitch, button:where(:not([data-cms-action])).authSwitch):hover,
+.cms .authCard .authFoot :is(:is(a, button:where([data-cms-action])).authBack, :is(a, button:where([data-cms-action])).authSkip):hover {
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
@@ -777,13 +784,13 @@ body.appBody:has(.authCard) .authCard :is(> p.authFoot, main > p.authFoot):has(:
 	box-shadow: none;
 }
 
-.cms .authCard .authFoot :is(a.authSwitch, button.authSwitch):hover,
-.cms .authCard .authFoot :is(a.authBack, a.authSkip):hover {
+.cms .authCard .authFoot :is(:is(a, button:where([data-cms-action])).authSwitch, button:where(:not([data-cms-action])).authSwitch):hover,
+.cms .authCard .authFoot :is(:is(a, button:where([data-cms-action])).authBack, :is(a, button:where([data-cms-action])).authSkip):hover {
 	background: var(--cmsHover);
 	color: var(--cmsTextColor);
 }
 
-.cms .authCard .authFoot :is(a.authBack, a.authSkip, a.authSwitch, button.authSwitch) i {
+.cms .authCard .authFoot :is(:is(a, button:where([data-cms-action])).authBack, :is(a, button:where([data-cms-action])).authSkip, :is(a, button:where([data-cms-action])).authSwitch, button:where(:not([data-cms-action])).authSwitch) i {
 	font-size: 0.7rem;
 }
 
@@ -887,6 +894,8 @@ body.appBody:has(.authCard) .authCard :is(> p.authFoot, main > p.authFoot):has(:
 	color: var(--cmsDanger, #9b2c2c);
 }
 
+.authCard [hidden] { display:none !important; }
+
 .authCard .authSuccess {
 	text-align: center;
 }
@@ -970,3 +979,43 @@ body.appBody:has(.passkeyOnboarding) div.authCard main > .passkeyOnboarding::-we
 	width: 0;
 	height: 0;
 }
+
+
+/* Auth outcomes use one alignment, including the lead and queued messages. */
+body:is(.cms, .appBody):has(.authCard) .authCard .authSuccess :is(h1, p, .authLead, .authMessages) {
+    text-align: center;
+}
+
+/* Both inline-return links measure from the button, without a form margin. */
+body:is(.cms,.appBody):has(.authCard) .authCard form.appLoginForm { margin-bottom: 0; }
+body:is(.cms,.appBody):has(.authCard) .authCard .authLinks { margin-top: 1rem; }
+body:is(.cms,.appBody):has(.authCard) .authCard :is(button:where(:not([data-cms-action])).submit,.button.submit) { margin-bottom: 0; }
+
+.authCard .authMethod[hidden] { display: none !important; }
+
+/* Illustrated outcomes and passkey sign-in center their heading and copy. */
+body:is(.cms,.appBody):has(.authCard) .authCard .authHero :is(h1,p,.authLead) { text-align: center; }
+
+/* Wrapped code/remote/identity panes share the normal sign-in rhythm. */
+.authCard .authPane > .authBody {
+    display: flex; flex-direction: column; gap: .85rem; min-height: 0;
+}
+.authCard .passkeys.passkeyLogin:not(.passkeyLogin--quiet) { gap: .85rem; }
+
+.authCard .authSuccessPortrait {
+    width: 5rem;
+    height: 5rem;
+    object-fit: cover;
+    border-radius: 50%;
+    margin: 1.5rem auto 0.75rem;
+}
+
+.authCard [data-success-footer][hidden] { display: none !important; }
+
+/* The success content fills the same pane as forms, leaving the footer at the card edge. */
+.authCard main.authSignin > .authSuccess:not([hidden]) { flex: 1 1 auto; min-height: 0; }
+.authCard main > [data-success-footer] { margin-top: auto; }
+
+body:is(.cms,.appBody):has(.authCard) .authCard .authHero.authSignedOut > :is(h1,.authLead) { text-align:left; }
+
+body:is(.cms,.appBody):has(.authCard) .authCard .authSuccess p[data-success-name] { color:var(--cmsTextColor); }

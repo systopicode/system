@@ -151,6 +151,8 @@ switch ($this->action) {
 			break;
 		}
 		$info_txt = serialize(array(
+            'format' => 1,
+            'php' => PHP_VERSION,
 			'user' => \Systopic\System\Auth\Session::current()->name,
 			'created' => date("Y-m-d H:i:s"),
 			'stage' => STAGE,

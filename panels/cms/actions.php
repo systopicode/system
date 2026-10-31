@@ -28,7 +28,7 @@ switch ($this->action) {
 				$items[] = [
 					'label' => (string) $child->label,
 					'href' => $child->getHref(\http::$root),
-					'icon' => trim(str_replace('cmsIcon-duotone', '', (string) $child->icon)),
+					'icon' => str_replace(' cmsIcon-duotone', '', \Systopic\System\Ui\Icons::classes((string) $child->icon)),
 				];
 			}
 		}
@@ -45,30 +45,40 @@ switch ($this->action) {
 	case 'insertWidgetAfter':
 	case 'insertWidgetEnd':
 	case 'hideWidget':
+	case 'hideDroppedWidget':
 	case 'showWidget':
-		// the order as the dashboard showed it last ('|' between the columns), so a widget new since then keeps its place
-		['hidden' => $hidden] = $this->dashboardLayout();
-		$order = array_values(array_filter((array) ($this->state->dashboard ?? []), 'is_string'));
-		if (str_starts_with($this->action, 'insertWidget')) {
-			$moved = (string) \http::dragdata('widget', '');
-			$from = array_search($moved, $order, true);
-			if ($from !== false) {
-				array_splice($order, $from, 1);
-				if ($this->action === 'insertWidgetEnd') {
-					$ends = array_keys($order, '|', true);
-					$to = $ends[(int) \http::dataset('column')] ?? count($order);
-				} else {
-					$to = array_search((string) \http::dataset('widget'), $order, true);
-					$to = $to === false ? $from : $to + ($this->action === 'insertWidgetAfter' ? 1 : 0);
-				}
-				array_splice($order, $to, 0, [$moved]);
-			}
-		} elseif ($this->action === 'hideWidget') {
-			$hidden[] = (string) \http::dataset('widget');
-		} else {
-			$hidden = array_diff($hidden, [(string) \http::dataset('widget')]);
-		}
-		$this->saveDashboardLayout($order, $hidden);
+        $layout = $this->dashboardLayout();
+        $hidden = $layout['hidden'];
+        $count = max(1, min(3, (int) \http::dataset('columns', 3)));
+        $keys = array_keys($this->dashboardWidgets());
+        $posted = \http::dataset('order', []);
+        if (is_string($posted)) $posted = json_decode($posted, true);
+        $order = \Systopic\System\Dashboard\Layout::order(\Systopic\System\Dashboard\Layout::columns($keys, is_array($posted) ? $posted : ($layout['layouts'][$count] ?? $layout['order']), $count));
+        $reordered = str_starts_with($this->action, 'insertWidget');
+        if ($reordered) {
+            $moved = (string) \http::dragdata('widget', '');
+            $target = (string) \http::dataset('widget', '');
+            $from = array_search($moved, $order, true);
+            if ($from === false || $moved === $target) break;
+            array_splice($order, $from, 1);
+            if ($this->action === 'insertWidgetEnd') {
+                $column = max(0, min($count - 1, (int) \http::dataset('column', 0)));
+                $ends = array_keys($order, '|', true);
+                $to = $ends[$column] ?? count($order);
+            } else {
+                $to = array_search($target, $order, true);
+                if ($to === false) break;
+                $to += $this->action === 'insertWidgetAfter' ? 1 : 0;
+            }
+            array_splice($order, $to, 0, [$moved]);
+            $hidden = array_diff($hidden, [$moved]);
+        } elseif (in_array($this->action, ['hideWidget', 'hideDroppedWidget'], true)) {
+            $key = $this->action === 'hideDroppedWidget' ? (string) \http::dragdata('widget', '') : (string) \http::dataset('widget');
+            if (in_array($key, $keys, true)) $hidden[] = $key;
+        } else {
+            $hidden = array_diff($hidden, [(string) \http::dataset('widget')]);
+        }
+        $this->saveDashboardLayout($order, $hidden, $count, $reordered);
 		$this->updateView('home');
 		break;
 

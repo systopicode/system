@@ -15,9 +15,9 @@ $root = rtrim((string) \http::$root, '/');
         <?php } else { ?><p class="tagsHint">Operator details are included in System Privacy.</p><?php } ?>
         <div class="cleanupLegalLinks">
         <?php foreach (['imprint' => 'Imprint', 'privacy' => 'Privacy policy'] as $kind => $label) { ?>
-        <a class="button transparent" href="<?= $e(LegalLinks::url($kind)) ?>" target="_blank" rel="noopener noreferrer"><i class="cmsIcon cmsIcon-arrow-up-right-from-square"></i><?= $e($label) ?></a>
+        <a class="button transparent cmsExternalLink" href="<?= $e(LegalLinks::url($kind)) ?>" target="_blank" rel="noopener noreferrer"><?= $e($label) ?><i class="cmsIcon cmsIcon-arrow-up-right-from-square" aria-hidden="true"></i></a>
         <?php } ?>
         </div>
     </div>
 </main>
-<footer><a class="button ajax" href="<?= $e($root . '/cms/settings/pagesettings/') ?>"><i class="cmsIcon cmsIcon-gear"></i>Privacy settings</a><a class="button ajax" href="<?= $e($root . '/cms/tools/maintenance/cleanup/') ?>"><i class="cmsIcon cmsIcon-broom"></i>Open cleanup</a></footer>
+<footer><a class="button ajax" href="<?= $e($root . '/cms/settings/pagesettings/') ?>"><i class="cmsIcon cmsIcon-gear"></i>Privacy settings</a><a class="button ajax" href="<?= $e($root . '/cms/tools/cleanup/automatic/') ?>"><i class="cmsIcon cmsIcon-broom"></i>Open cleanup</a></footer>

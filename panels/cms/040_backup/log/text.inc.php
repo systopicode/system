@@ -44,7 +44,7 @@ if ($rows === []) {
 		</thead>
 		<tbody>
 			<?php foreach ($rows as $row) { ?>
-				<tr>
+				<tr<?= \Systopic\System\Logs\Filters::attributes($row[1], '', $row[0]) ?>>
 					<td><?= $e($row[0]) ?></td>
 					<td><?= $e($row[1]) ?></td>
 					<td><?= $e($row[2]) ?></td>

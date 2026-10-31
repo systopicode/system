@@ -18,6 +18,11 @@ try {
     $data = EnvironmentFile::read('DEV.test.config.json');
     check('secrets and unrelated settings survive stop', $data['relay']['secret']==='test-secret' && $data['relay']['apiKey']==='test-key' && $data['untouched']===42 && $data['relay']['enabled']===false);
     check('start restores this environment', EnvironmentFile::enableRelay('DEV.test.config.json',true) && EnvironmentFile::read('DEV.test.config.json')['relay']['enabled']===true);
+    check('mail test mode saves', EnvironmentFile::set('DEV.test.config.json','mail','testMode','1') && EnvironmentFile::read('DEV.test.config.json')['mail']['testMode'] === true);
+    check('test recipient trims and saves', EnvironmentFile::set('DEV.test.config.json','mail','testRecipient',' sink@example.test ') && EnvironmentFile::read('DEV.test.config.json')['mail']['testRecipient'] === 'sink@example.test');
+    check('invalid recipient rejected without changing saved value', !EnvironmentFile::set('DEV.test.config.json','mail','testRecipient','invalid') && EnvironmentFile::read('DEV.test.config.json')['mail']['testRecipient'] === 'sink@example.test');
+    check('empty recipient permits system fallback', EnvironmentFile::set('DEV.test.config.json','mail','testRecipient',''));
+    check('test switch can be disabled without touching other settings', EnvironmentFile::set('DEV.test.config.json','mail','testMode','0') && EnvironmentFile::read('DEV.test.config.json')['mail']['testMode'] === false && EnvironmentFile::read('DEV.test.config.json')['untouched'] === 42);
     $origins = CentrifugoHub::projectOrigins([['serverName'=>'dev.local','serverIp'=>'192.168.10.66','path'=>'/project/'],['serverName'=>'dev.local'],['serverName'=>'evil.test/path'],['serverName'=>'*.test'],['serverIp'=>'::1']], 'https');
     check('addresses deduplicate, include IP and exclude paths and wildcards', $origins===['https://dev.local','https://192.168.10.66','https://[::1]']);
     check('exact and configured wildcard origins match', CentrifugoHub::originAllowed('https://dev.local',['https://dev.local']) && CentrifugoHub::originAllowed('https://a.example.test',['https://*.example.test']));

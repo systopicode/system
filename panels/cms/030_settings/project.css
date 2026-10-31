@@ -393,8 +393,8 @@ body.settingDragging .projectFiles td label{
     vertical-align: middle;
 }
 
-.cms .projectFiles td.projectRemove button.transparent,
-.cms .projectFiles td.projectRemove button.transparent:enabled:hover{
+.cms .projectFiles td.projectRemove button:where(:not([data-cms-action])).transparent,
+.cms .projectFiles td.projectRemove button:where(:not([data-cms-action])).transparent:enabled:hover{
     width: 2rem;
     min-width: 2rem;
     height: 2rem;
@@ -562,6 +562,7 @@ body:has(> .projectTemplatesMenu.is-sheet)::after{
 .cms .projectFiles .widget .tableScroll:not(.stacked) table.languages{
     table-layout: fixed;
     width: 100%;
+    min-width: 36rem;
 }
 
 .cms .projectFiles .widget .tableScroll table.languages :is(th, td):nth-child(1){
@@ -569,11 +570,15 @@ body:has(> .projectTemplatesMenu.is-sheet)::after{
 }
 
 .cms .projectFiles .widget .tableScroll table.languages :is(th, td):nth-child(2){
+    width: 4.5rem;
+}
+
+.cms .projectFiles .widget .tableScroll table.languages :is(th, td):nth-child(3){
     width: 5.5rem;
 }
 
 .cms .projectFiles .widget .tableScroll table.languages :is(th, td):nth-child(4){
-    width: 5.5rem;
+    width: auto;
 }
 
 .cms .projectFiles .widget .tableScroll table.languages :is(th.langOn, td.langOn){
@@ -582,8 +587,8 @@ body:has(> .projectTemplatesMenu.is-sheet)::after{
 }
 
 .cms .projectFiles .widget .tableScroll table.languages :is(th:last-child, td.projectRemove){
-    width: 2.75rem;
-    max-width: 2.75rem;
+    width: 8.5rem;
+    max-width: 8.5rem;
     padding-left: 0;
     padding-right: 0.45rem;
     text-align: center;
@@ -663,8 +668,8 @@ body:has(> .projectTemplatesMenu.is-sheet)::after{
 .projectFiles .formatField { display: block; margin: 0; }
 .projectFiles .imageFormatRow > td { vertical-align: middle; }
 /* Balance the label space above controls with the same space below. */
-.cms .projectFiles .widget .tableScroll table .imageFormatRow > td { padding-bottom: calc(.7rem + 1.05rem); }
-.cms .projectFiles .widget .tableScroll table .imageFormatRow > td.pageSettingDrag, .cms .projectFiles .widget .tableScroll table .imageFormatRow > td.projectRemove { padding-top: .7rem; padding-bottom: .7rem; }
+.cms .projectFiles .widget .tableScroll:not(.stacked) table .imageFormatRow > td { padding-bottom: calc(.7rem + 1.05rem); }
+.cms .projectFiles .widget .tableScroll:not(.stacked) table .imageFormatRow > td.pageSettingDrag, .cms .projectFiles .widget .tableScroll:not(.stacked) table .imageFormatRow > td.projectRemove { padding-top: .7rem; padding-bottom: .7rem; }
 .projectFiles .formatField .projectSwitch { min-height: 2.125rem; }
 .cmslightbox.mediaTypes > section { width: min(42rem, 100%); min-width: 0; max-width: 42rem; }
 .mediaTypes .mediaTypeChoices { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 1.5rem; margin-top: .75rem; }
@@ -688,3 +693,26 @@ body:has(> .projectTemplatesMenu.is-sheet)::after{
 .projectFiles .projectRows :is(th, td) { vertical-align: middle; }
 .projectFiles .formatSizing { align-items: center; }
 .projectFiles .imageFormatRow .projectSwitch { display: flex; align-items: center; }
+
+@media (pointer: coarse) {
+    .cms .projectFiles .widget .tableScroll table.languages .languageRowActions :is(.button, .languageFlagChoose) {
+        width:44px; min-width:44px; height:44px; min-height:44px; padding:0; margin:0;
+    }
+}
+
+.cms .projectFiles .widget .tableScroll table.languages .languageFlagPreview {
+    display:inline-flex; align-items:center; justify-content:flex-start; width:2rem; min-width:2rem;
+    height:2rem; min-height:2rem; margin:0; padding:0; line-height:1;
+}
+.cms .languageFlagPreview > .languageFlag { width:2rem; height:1.5rem; object-fit:contain; border-radius:2px; box-shadow:0 0 0 1px var(--cmsLine); }
+@media (pointer:coarse) {
+    .cms .projectFiles .widget .tableScroll table.languages .languageFlagPreview { width:44px; min-width:44px; height:44px; min-height:44px; }
+}
+
+/* Format controls keep usable widths when their containing panel stacks. */
+.projectFiles .tableScroll.stacked .formatSizing{flex-wrap:wrap;}
+.projectFiles .tableScroll.stacked .formatSizing > label:first-child{flex:1 0 100%;}
+.projectFiles .tableScroll.stacked .formatSizing select{min-width:0;width:100%;}
+
+/* Tablet uses the regular scrollable table; keep format controls readable. */
+.projectFiles .tableScroll:not(.stacked) > table:has(.imageFormatRow){min-width:64rem;}

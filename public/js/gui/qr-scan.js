@@ -113,8 +113,8 @@
 	}
 
 	function go(base, code) {
-		var join = base.indexOf('?') === -1 ? '?' : '&';
-		location.href = base + join + 'screen=' + encodeURIComponent(code);
+		var form=document.createElement('form');form.method='post';form.action=base;
+        var input=document.createElement('input');input.type='hidden';input.name='screen';input.value=code;form.append(input);document.body.append(form);form.submit();
 	}
 
 	function fill(form, code) {
@@ -132,6 +132,12 @@
 		if (!keep) host.hidden = true;
 		var form = formOf(host);
 		if (form) form.hidden = false;
+        if (host.dataset.qrHost === 'login') {
+            var manual = host.querySelector('[data-qr-fields]');
+            var scan = form && form.querySelector('[data-qr-start]');
+            if (manual) manual.hidden = !!keep;
+            if (scan) scan.hidden = !!keep;
+        }
 	}
 
 	function showDim(host, mode) {
@@ -155,11 +161,12 @@
 			var words = denied
 				? (host.getAttribute('data-allow') || 'Allow access')
 				: (host.getAttribute('data-again') || 'Try again');
+            if (host.dataset.qrHost === 'login') again.classList.toggle('submit', !denied);
 			var label = again.querySelector('[data-qr-label]');
 			if (label) label.textContent = words;
 			else again.textContent = words;
 			var mark = again.querySelector('i');
-			if (mark) mark.className = 'cmsIcon ' + (denied ? 'cmsIcon-camera' : 'cmsIcon-rotate-right');
+			if (mark) mark.className = 'cmsIcon ' + (denied ? 'cmsIcon-camera' : 'cmsIcon-arrows-rotate');
 		}
 		// The account lightbox already offers "Or use code" and keeps the QR.
 		// Opening the form there hides that QR.
@@ -220,10 +227,16 @@
 		waiting(host, false);
 	}
 
-	function accept(host, run) {
+	function accept(host, token, run) {
 		stop(host);
-		flash(host, 'confirm', 'Code recognised.');
-		setTimeout(run, 700);
+		// Reading a QR is not authentication. Only the server can validate its key.
+		flash(host, 'info', 'Checking code…');
+		var call = new sys.core.server.call({method: 'put', code: token});
+        call.background = true;
+        var invalid = function () { flash(host, 'error', host.getAttribute('data-invalid') || 'That code is wrong or has expired.'); showFields(host, true); };
+        call.send(settings.siteRoot + 'cms/auth/validateQr').done(function (data) {
+            if (data && data.valid) run(); else invalid();
+        }).fail(invalid);
 		return true;
 	}
 
@@ -232,15 +245,15 @@
 		if (host.getAttribute('data-qr-host') === 'profile') {
 			var token = found.screen || found.bare;
 			if (!token) return false;
-			return accept(host, function () { go(host.getAttribute('data-base') || '', token); });
+			return accept(host, token, function () { go(host.getAttribute('data-base') || '', token); });
 		}
 		if (found.screen) {
-			return accept(host, function () { go(host.getAttribute('data-profile') || '', found.screen); });
+			return accept(host, found.screen, function () { go(host.getAttribute('data-profile') || '', found.screen); });
 		}
 		var typed = found.code || found.bare;
 		var form = formOf(host);
 		if (!typed || !form) return false;
-		return accept(host, function () {
+		return accept(host, typed, function () {
 			fill(form, typed);
 			var button = form.querySelector('button[type="submit"]');
 			if (button) button.click();
@@ -263,6 +276,12 @@
 		stop(host);
 		host.hidden = false;
 		host.classList.remove('is-dim');
+        if (host.dataset.qrHost === 'login') {
+            var manual = host.querySelector('[data-qr-fields]');
+            var scan = formOf(host)?.querySelector('[data-qr-start]');
+            if (manual) manual.hidden = false;
+            if (scan) scan.hidden = false;
+        }
 		var dim = host.querySelector('[data-qr-dim]');
 		if (dim) dim.hidden = true;
 		var form = formOf(host);
@@ -495,6 +514,8 @@
 			}
 		}
 		scanBox.hidden = true;
+        const cleanUrl=new URL(location.href);
+        if(cleanUrl.searchParams.has('screen')) { cleanUrl.searchParams.delete('screen');history.replaceState(history.state,'',cleanUrl); }
 	}, true);
 
 	document.addEventListener('change', function (event) {

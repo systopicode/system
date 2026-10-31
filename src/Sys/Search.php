@@ -58,6 +58,7 @@ final class Search
             return;
         }
         $this->seen[$key] = true;
+        $icon = \Systopic\System\Ui\Icons::classes($icon);
         $this->groups[$group] ??= ['icon' => $icon, 'hits' => []];
         if (count($this->groups[$group]['hits']) < self::PER_GROUP) {
             $this->groups[$group]['hits'][] = ['title' => $title, 'context' => $context, 'href' => $href, 'icon' => $icon];

@@ -61,7 +61,9 @@ if ($behind !== '') {
 	}
 }
 ?>
-<body class="<?= 'CMS_VERSIONDATE' ?> <?= implode(' ', $shellPath) ?> <?= 'system' ?>"<?= $sheet ? ' data-cms-window="edit"' : '' ?>>
+<body data-1p-ignore data-bwignore="true" class="<?= 'CMS_VERSIONDATE' ?> <?= implode(' ', $shellPath) ?> <?= 'system' ?>"<?= $sheet ? ' data-cms-window="edit"' : '' ?>>
+    <a class="cmsSkipLink" href="#cms-main">Skip to content</a>
+    <div class="cmsLoadState cms" role="status" aria-live="polite"><i class="cmsIcon cmsIcon-spinner cmsIcon-spin" aria-hidden="true"></i><span>Preparing your workspace…</span><button type="button" class="button transparent" onclick="location.reload()" hidden><i class="cmsIcon cmsIcon-arrows-rotate"></i>Reload</button></div>
 	<header class="cmsMobileHeader cms">
 		<button type="button" data-cms-window="menu" aria-label="Open navigation" aria-expanded="false"><i class="cmsIcon cmsIcon-bars"></i></button>
 		<a class="cmsMobileDashboardBrand" href="<?= http::$root ?>cms/" aria-label="Dashboard"><img src="<?= htmlspecialchars(\Systopic\System\Settings\ThemeAssets::href('wordDark'), ENT_QUOTES) ?>" alt="fluxo"></a>
@@ -70,15 +72,15 @@ if ($behind !== '') {
 		<a class="ajax cmsSearchLink" href="<?= http::$root ?>cms/search/" aria-label="Search"><i class="cmsIcon cmsIcon-magnifying-glass"></i></a>
 		<button type="button" class="cmsMobileMenuClose" data-cms-window="menu" aria-label="Close navigation"><i class="cmsIcon cmsIcon-xmark"></i></button>
 	</header>
-	<main<?= DEBUG() ? ' data-debug' : '' ?>>
+	<main role="presentation"<?= DEBUG() ? ' data-debug' : '' ?>>
 		<div class="main cms">
 			<header>
-				<a class="cmsBrand" href="<?= http::$root ?>cms/" title="fluxo cms">
+				<a class="cmsBrand" href="<?= http::$root ?>cms/" title="fluxo">
 					<img class="brandMark" src="<?= htmlspecialchars(\Systopic\System\Settings\ThemeAssets::href('signet'), ENT_QUOTES) ?>" alt="fluxo">
 					<img class="brandFull" src="<?= htmlspecialchars(\Systopic\System\Settings\ThemeAssets::href('wordDark'), ENT_QUOTES) ?>" alt="fluxo">
 				</a>
 			</header>
-			<nav>
+			<nav aria-label="Main navigation">
 				<ul>
 					<?php $this->withView('menu'); ?>
 				</ul>
@@ -113,7 +115,7 @@ if ($behind !== '') {
 			</nav>
 		</div>
 		<?php $surface('pylon'); ?>
-		<div class="content"<?= $sheet ? ' data-cms-sheet="1"' : '' ?>>
+		<div class="content" id="cms-main" role="main" tabindex="-1"<?= $sheet ? ' data-cms-sheet="1"' : '' ?>>
 			<header class="cms">
 				<?php $surface('controls'); ?>
 				<?php $this->withView('preview'); ?>
@@ -143,12 +145,13 @@ if ($behind !== '') {
 	</main>
 	<footer class="cmsStatusbar cms">
 		<span class="cmsJobs" hidden></span>
+        <span class="cmsSaveState" role="status" aria-live="polite" hidden></span>
 		<?php if ($behind === '') { $surface('status'); } ?>
 		<?= \Systopic\System\Sys\WebApp::stageBadge() ?>
 	</footer>
 	<?php
 	$this->withSelected('lightbox');
-	echo message::flush();
+	echo str_replace("class='cms message'", "class='cms message cmsActionMessages'", message::flush());
 	?>
 	<button type="button" class="cmsMobileBackdrop" data-cms-close aria-label="Close window" tabindex="-1"></button>
 	<script>
@@ -253,12 +256,21 @@ if ($behind !== '') {
                     if (field.closest('ul.tree')) sys.core.server.sendCall({}, 'cancelEditLabel');
                     return;
                 }
-                if (event.key !== 'Enter' || event.shiftKey) return;
+                if (event.key !== 'Enter' || event.shiftKey || event.isComposing || event.keyCode === 229) return;
 				if (!field) return;
 				event.preventDefault();
                 if (field.closest('ul.tree')) field.dataset.editFinishing = '';
-				if (field.classList.contains('pageTitle')) field.setAttribute('contenteditable', 'false');
-				field.blur();
+                // Snapshot and dispatch the value before ending edit mode. A native
+                // blur caused by ending it is suppressed, so Enter saves exactly once.
+                field.cmsPencilCommitting = true;
+                sys.processEvent({
+                    type: 'blur', target: field, currentTarget: field,
+                    settled: true, pencilCommit: true,
+                    preventDefault() {}, stopPropagation() {}
+                });
+                field.blur();
+                if (field.classList.contains('pageTitle')) field.setAttribute('contenteditable', 'false');
+                queueMicrotask(() => { delete field.cmsPencilCommitting; });
 			}, true);
 
 			document.addEventListener('focusout', function (event) {

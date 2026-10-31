@@ -51,6 +51,7 @@ class Panel extends PanelNode {
 		\fs::load('fsUploader');
 		if ($this->path === ['cms']) { // update navi if change
 			$selected = $this->childSelected;
+            if ($selected !== null) $this->state->dashEdit = false;
 			$deep = $selected;
 			while ($deep !== null && $deep->childSelected !== null && $deep->childSelected->inNavi) {
 				$deep = $deep->childSelected;
@@ -155,22 +156,18 @@ class Panel extends PanelNode {
 		return (string) array_key_first($tabs);
 	}
 
-	/** @return array{order: list<string>, hidden: list<string>} how this user arranged the dashboard */
+	/** Stored user layout: legacy desktop order, per-column-count orders, shared hidden widgets. */
 	public function dashboardLayout(): array {
 		$user = \Systopic\System\Auth\Session::current()->user;
 		$data = $user === null ? null : json_decode((string) $user->sessiondata?->value, true);
-		$keys = static fn($list): array => array_values(array_filter((array) $list, 'is_string'));
-		return [
-			'order' => $keys($data['dashboard']['order'] ?? []),
-			'hidden' => $keys($data['dashboard']['hidden'] ?? []),
-		];
+		return \Systopic\System\Dashboard\Layout::read($data['dashboard'] ?? []);
 	}
 
 	/** Columns of the dashboard; in the stored order a '|' closes one. */
 	public const DASH_COLUMNS = 3;
 
 	/**
-	 * The widgets column by column. An order from before the columns is dealt
+	 * The legacy desktop widgets column by column. An order from before the columns is dealt
 	 * out evenly, a widget new since the last save joins the shortest column.
 	 *
 	 * @param list<string> $keys
@@ -178,40 +175,21 @@ class Panel extends PanelNode {
 	 * @return list<list<string>>
 	 */
 	public function dashboardColumns(array $keys, array $order): array {
-		$columns = [[]];
-		foreach ($order as $entry) {
-			if ($entry === '|') {
-				count($columns) < self::DASH_COLUMNS && $columns[] = [];
-			} elseif (in_array($entry, $keys, true)) {
-				$columns[array_key_last($columns)][] = $entry;
-			}
-		}
-		$columns = array_pad($columns, self::DASH_COLUMNS, []);
-		$new = array_values(array_diff($keys, array_merge(...$columns)));
-		if (!in_array('|', $order, true)) {
-			$all = [...array_merge(...$columns), ...$new];
-			return array_pad(array_chunk($all, max(1, (int) ceil(count($all) / self::DASH_COLUMNS))), self::DASH_COLUMNS, []);
-		}
-		foreach ($new as $key) {
-			$sizes = array_map('count', $columns);
-			$columns[array_search(min($sizes), $sizes, true)][] = $key;
-		}
-		return $columns;
+		return \Systopic\System\Dashboard\Layout::columns($keys, $order, self::DASH_COLUMNS);
 	}
 
 	/** Kept with the account, so the arrangement follows the user to every device. */
-	public function saveDashboardLayout(array $order, array $hidden): void {
+	public function saveDashboardLayout(array $order, array $hidden, int $columns = 3, bool $reordered = true): void {
 		$user = UserAdmin::of($this->scope)->user((int) \Systopic\System\Auth\Session::id());
 		if ($user === null) {
 			return;
 		}
 		$data = json_decode((string) $user->sessiondata?->value, true);
 		$data = is_array($data) ? $data : [];
-		$seen = [];
-		$order = array_values(array_filter($order, static function (string $entry) use (&$seen): bool {
-			return $entry === '|' || !isset($seen[$entry]) && $seen[$entry] = true;
-		}));
-		$data['dashboard'] = ['order' => $order, 'hidden' => array_values(array_unique($hidden))];
+        $layout = \Systopic\System\Dashboard\Layout::read($data['dashboard'] ?? []);
+        $data['dashboard'] = $reordered
+            ? \Systopic\System\Dashboard\Layout::save($layout, $order, $hidden, $columns)
+            : array_replace($layout, ['hidden' => array_values(array_unique($hidden))]);
 		$user->sessiondata = new \Systopic\Db\Type\Text((string) json_encode($data));
 		$this->scope->save($user);
 	}
@@ -227,7 +205,6 @@ class Panel extends PanelNode {
 						'pylonWidth' => 180,
 						'submoduleName' => FALSE,
 						'submodulePath' => [],
-						'dashboard' => [],
 						'dashTabs' => [],
 						'dashEdit' => false,
 			];

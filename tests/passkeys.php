@@ -15,9 +15,12 @@ use Systopic\Db\Connection;
 use Systopic\Db\Scope;
 
 // Minimal web boundary for standalone service tests, no project bootstrap.
-class http { public static string $root = '/'; public static string $hostUrl = 'https://cms.example.test'; public static function redirect(string $target): never { throw new TestRedirect($target); } public static function sessionStartOnce(): void {} public static function put($key, $default = '') { return $default; } }
+class http { public static string $root = '/'; public static string $hostUrl = 'https://cms.example.test'; public static function redirect(string $target): never { throw new TestRedirect($target); } public static function projectCookieKey(): ?string { return null; } public static function sessionStartOnce(): void {} public static function put($key, $default = '') { return $default; } }
 class TestRedirect extends RuntimeException {}
 class fs { public static string $root; }
+// Presentation is covered separately; this fixture exercises cryptographic account boundaries.
+class PasskeyPortraitFixture { public static function src(int $id, ?string $email, bool $screen): string { return '/fixture-portrait.svg'; } }
+class_alias(PasskeyPortraitFixture::class, \Systopic\System\Auth\Portrait::class);
 class message { public static function flush($targets = [], bool $keepEmpty = false): string { return $keepEmpty ? '<div class="cms message" data-system-messages role="status" aria-live="polite"></div>' : ''; } }
 $_SESSION = [];
 
@@ -74,7 +77,7 @@ check('alternate domain and plain HTTP cannot offer setup', !Passkeys::onConfigu
 $private = openssl_pkey_new(['private_key_type' => OPENSSL_KEYTYPE_EC, 'curve_name' => 'prime256v1']);
 $details = openssl_pkey_get_details($private);
 $id = random_bytes(32);
-$cose = hex2bin('a5010203262001215820') . $details['ec']['x'] . hex2bin('225820') . $details['ec']['y'];
+$cose = hex2bin('a5010203262001215820') . str_pad($details['ec']['x'], 32, "\0", STR_PAD_LEFT) . hex2bin('225820') . str_pad($details['ec']['y'], 32, "\0", STR_PAD_LEFT);
 $bytes = static fn(string $s): string => (strlen($s) < 24 ? chr(0x40 + strlen($s)) : (strlen($s) <= 255 ? "\x58" . chr(strlen($s)) : "\x59" . pack('n', strlen($s)))) . $s;
 $client = static fn(string $challenge, string $type, string $origin = 'https://cms.example.test', bool $crossOrigin = false): string => Passkeys::encode(json_encode(['type' => $type, 'origin' => $origin, 'challenge' => $challenge, 'crossOrigin' => $crossOrigin]));
 $createResponse = static function (array $options, int $flags = 0x45, string $rp = 'cms.example.test') use ($id, $cose, $bytes, $client): array {
@@ -106,7 +109,11 @@ if ((int) $user->id === 1) {
 $other = new User(); $other->name = 'passkey-other'; $other->isActive = true; $other->passwordHash = Password::hash('Other!234'); $scope->save($other);
 $as = static function (?User $row): void { if ($row) $_SESSION['systopic_user_id'] = (int) $row->id; else unset($_SESSION['systopic_user_id']); Session::reset(); };
 $as($user);
-rejects('a signed-in session cannot add the first passkey', fn() => Passkeys::execute('passkeyBeginCreate', ['name' => 'My laptop'], false));
+$storedPassword = $user->passwordHash;
+$user->passwordHash = null; $scope->save($user);
+$firstKey = Passkeys::execute('passkeyBeginCreate', ['name' => 'My laptop'], false);
+check('first passkey works for an active QR-only account without a password', isset($firstKey['options'], $firstKey['ceremony']));
+$user->passwordHash = $storedPassword; $scope->save($user);
 $_SESSION[Session::PASSKEY_GRANT] = ['user' => (int) $user->id, 'expires' => time() + 600];
 $beginCreate = static fn(): array => $optionsArray(Passkeys::execute('passkeyBeginCreate', ['name' => 'My laptop'], false));
 $options = $beginCreate();
@@ -200,6 +207,7 @@ $options = $beginLogin();
 $user->isActive = false; $scope->save($user);
 rejects('inactive user cannot log in', fn() => Passkeys::execute('passkeyFinishLogin', $assertResponse($options, $key->userHandle, 2), true));
 $user->isActive = true; $scope->save($user); $as($user);
+Session::clearPasskeyGrant();
 rejects('removal asks for a passkey once the sign-in is no longer fresh', fn() => Passkeys::execute('passkeyRemove', ['keyId' => $key->id], false));
 $_SESSION[Session::PASSKEY_GRANT] = ['user' => (int) $user->id, 'expires' => time() + 600];
 Passkeys::execute('passkeyRemove', ['keyId' => $key->id], false);
@@ -212,7 +220,8 @@ http::$root = '/';
 $_SESSION['systopic_passkey_offer']['expires'] = time() - 1;
 check('login proof expires', !Passkeys::setupPending());
 Session::clearPasskeyGrant();
-rejects('expired sign-in cannot add a passkey', fn() => Passkeys::execute('passkeyBeginCreate', ['name'=>'Expired'], false));
+$afterGrant = Passkeys::execute('passkeyBeginCreate', ['name'=>'No password grant needed'], false);
+check('active owner may add first passkey after grant expiry', isset($afterGrant['options']));
 Passkeys::offerSetup($user);
 // Ordinary continuation is safe even after proof expiry, from an IP, and without WebAuthn headers.
 Passkeys::offerSetup($user);
@@ -221,7 +230,7 @@ http::$hostUrl = 'https://192.168.1.2';
 $_SERVER['HTTP_ORIGIN'] = http::$hostUrl;
 $_SERVER['REQUEST_METHOD'] = 'GET';
 Session::rememberReturn('/cms/pages/?id=43');
-$continuation = new class { public string $action='continueWithoutPasskey'; public string $form=''; public function updateView($view): void {} };
+$continuation = new class { public string $action='continueWithoutPasskey'; public string $form=''; public function updateView($view): void {} public function enterCms(float $delay=0, ?string $target=null): void { if ($delay !== 2.0) throw new RuntimeException('Expected two-second success state'); throw new TestRedirect($target ?? '/cms/'); } };
 $continue = function (): void { include dirname(__DIR__).'/panels/cms/auth/actions.php'; };
 try { $continue->call($continuation); check('continuation redirects', false); }
 catch (TestRedirect $redirect) { check('IP access with expired setup proof can continue through ordinary navigation', $redirect->getMessage()==='/cms/pages/?id=43' && !Passkeys::setupPending()); }

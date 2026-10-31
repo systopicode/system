@@ -22,7 +22,7 @@ $hint = match ($mode) {
 		</main>
 		<footer>
 			<a class="button submit put" href="publishAll"><i class="cmsIcon cmsIcon-cloud-arrow-up"></i><span>Publish all</span></a>
-			<a class="button" data-on_click="userConfirm" data-action="clearAll" data-confirm="Remove all published copies? They are made again on first use."><i class="cmsIcon cmsIcon-broom"></i><span>Clear all</span></a>
+			<button type="button" data-cms-action class="button" data-on_click="userConfirm" data-action="clearAll" data-confirm="Remove all published copies? They are made again on first use."><i class="cmsIcon cmsIcon-broom"></i><span>Clear all</span></button>
 		</footer>
 	</section>
 	<section class="widget">

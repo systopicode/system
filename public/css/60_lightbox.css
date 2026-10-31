@@ -1,5 +1,6 @@
 /****************************** LIGHTBOX ***************************/
 .cmslightbox[hidden],
+dialog.cmslightbox:not([open]),
 body.cms .cmslightbox[hidden]{
     display: none;
 }
@@ -18,6 +19,11 @@ body.cms .cmslightbox[hidden]{
     transition: top 0.32s ease, height 0.32s ease;
 }
 
+dialog.cmslightbox {
+    width:100%; height:100%; max-width:none; max-height:none;
+    margin:0; border:0; box-sizing:border-box;
+}
+
 @media (prefers-reduced-motion: reduce){
     .cmslightbox{
         transition: none;
@@ -26,7 +32,7 @@ body.cms .cmslightbox[hidden]{
 
 /* Touch: while the on-screen keyboard is open, center in the space it leaves.
    A dialog taller than that space sits at the top of it. */
-html.cms-keyboard .cmslightbox{
+html.cms-keyboard .cmslightbox:not(.fileEditor){
     top: var(--cmsVvTop, 0px);
     bottom: auto;
     height: var(--cmsVvHeight, 100%);
@@ -35,7 +41,7 @@ html.cms-keyboard .cmslightbox{
     overflow-y: auto;
 }
 
-html.cms-keyboard .cmslightbox > section{
+html.cms-keyboard .cmslightbox:not(.fileEditor) > section{
     max-height: none;
     flex: 0 0 auto;
 }
@@ -58,7 +64,7 @@ html.cms-keyboard .cmslightbox > section{
         padding-right: calc(var(--cmsCardPadding) / 2);
     }
     body.cms .cmslightbox section > header li:has([class*="xmark"]),
-    body.cms .cmslightbox section > header > a:has([class*="xmark"]){
+    body.cms .cmslightbox section > header > :is(a, button:where([data-cms-action])):has([class*="xmark"]){
         display: inline-flex;
         align-items: center;
         justify-content: center;
@@ -69,7 +75,7 @@ html.cms-keyboard .cmslightbox > section{
         margin: 0;
         padding: 0;
     }
-    body.cms .cmslightbox section > header :is(a, button):has([class*="xmark"]){
+    body.cms .cmslightbox section > header :is(:is(a, button:where([data-cms-action])), button:where(:not([data-cms-action]))):has([class*="xmark"]){
         display: inline-flex;
         align-items: center;
         justify-content: center;
@@ -82,7 +88,7 @@ html.cms-keyboard .cmslightbox > section{
         background: transparent;
         font-size: 1.25rem;
     }
-    body.cms .cmslightbox section > header :is(a, button):has([class*="xmark"]) i{
+    body.cms .cmslightbox section > header :is(:is(a, button:where([data-cms-action])), button:where(:not([data-cms-action]))):has([class*="xmark"]) i{
         width: 1.25em;
         font-size: 1.25rem;
         text-align: center;
@@ -115,7 +121,7 @@ body.cms .cmslightbox > section > header h1{
     line-height: 1.3;
 }
 
-.cmslightbox section > header > a,
+.cmslightbox section > header > :is(a, button:where([data-cms-action])),
 .cmslightbox section > header > ul{
     margin-left: auto;
 }
@@ -178,9 +184,9 @@ body.cms .cmslightbox > section > header h1{
     background: var(--cmsBgColor);
 }
 
-.cmslightbox.cms > section > footer button,
+.cmslightbox.cms > section > footer button:where(:not([data-cms-action])),
 .cmslightbox.cms > section > footer .button,
-.cmslightbox.cms > section > footer button:last-child,
+.cmslightbox.cms > section > footer button:where(:not([data-cms-action])):last-child,
 .cmslightbox.cms > section > footer .button:last-child{
     margin: 0;
 }
@@ -224,7 +230,7 @@ body .cmslightbox section > div.layout > aside:not(.cms) h3{
     border-bottom: 1px solid var(--cmsLineStrong);
 }
 
-.cmslightbox section > main .widget{
+.cmslightbox section > main .widget:not(.is-list){
     margin-bottom: 1.75rem;
     background: none;
     border: 0;
@@ -573,13 +579,10 @@ body .cmslightbox section > div.layout > aside:not(.cms) > div > div{
 }
 
 .cmslightbox .fileAdjust .cropButton{
-    width: auto;
-    height: 2rem;
-    padding: 0 0.7rem;
-    gap: 0.35rem;
+    padding: 0;
 }
 
-.cmslightbox .fileAdjust input[type="range"]{
+:is(.cmslightbox .fileAdjust, body.cms > .unifiedAdjustSlider) input[type="range"]{
     width: 6.5rem;
     height: 1.1rem;
     min-height: 0;
@@ -592,44 +595,11 @@ body .cmslightbox section > div.layout > aside:not(.cms) > div > div{
     cursor: pointer;
 }
 
-.cmslightbox .fileAdjust input[type="range"]:focus{
-    outline: none;
-    box-shadow: none;
-}
 
-.cmslightbox .fileAdjust input[type="range"]::-webkit-slider-runnable-track{
-    height: 3px;
-    border-radius: 2px;
-    background: color-mix(in srgb, var(--cmsMainColor) 28%, var(--cmsLine));
-}
-
-.cmslightbox .fileAdjust input[type="range"]::-webkit-slider-thumb{
-    appearance: none;
-    width: 0.85rem;
-    height: 0.85rem;
-    margin-top: -0.32rem;
-    border: 0;
-    border-radius: 50%;
-    background: var(--cmsHighlightColor);
-    box-shadow: 0 0 0 1px color-mix(in srgb, var(--cmsMainColor) 40%, transparent);
-}
-
-.cmslightbox .fileAdjust input[type="range"]::-moz-range-track{
-    height: 3px;
-    border: 0;
-    border-radius: 2px;
-    background: color-mix(in srgb, var(--cmsMainColor) 28%, var(--cmsLine));
-}
-
-.cmslightbox .fileAdjust input[type="range"]::-moz-range-thumb{
-    width: 0.85rem;
-    height: 0.85rem;
-    border: 0;
-    border-radius: 50%;
-    background: var(--cmsHighlightColor);
-}
-
-.cmslightbox .fileAdjust button:not(.submit){
+.cmslightbox .fileAdjust button:where(:not([data-cms-action])):not(.submit),
+div.imageEditor .cropBar > button:not(.submit),
+div.imageEditor .editorAdjustment > button:not(.selected),
+div.imageEditor .editorAspect > button{
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -649,16 +619,10 @@ body .cmslightbox section > div.layout > aside:not(.cms) > div > div{
     align-items: center;
     justify-content: center;
     gap: 0.35rem;
-    height: 2rem;
+    height: var(--cmsControl);
+    box-sizing: border-box;
     margin: 0;
     white-space: nowrap;
-}
-
-.cmslightbox .fileAdjust button.cropButton{
-    width: 2rem;
-    padding: 0;
-    background: var(--cmsHighlightColor);
-    color: var(--cmsOnHighlight);
 }
 
 .cmslightbox .fileFrame.imageCropAlignContainer > div,
@@ -684,7 +648,7 @@ body .cmslightbox section > div.layout > aside:not(.cms) > div > div{
     gap: 0.35rem;
 }
 
-.cmslightbox .frameZoom button{
+.cmslightbox .frameZoom button:where(:not([data-cms-action])){
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -795,7 +759,7 @@ body .cmslightbox section > div.layout > aside:not(.cms) > div > div{
     gap: 0.35rem;
 }
 
-.cmslightbox .cmsSkpStage .appSkpTools button{
+.cmslightbox .cmsSkpStage .appSkpTools button:where(:not([data-cms-action])){
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -811,7 +775,7 @@ body .cmslightbox section > div.layout > aside:not(.cms) > div > div{
     cursor: pointer;
 }
 
-.cmslightbox .cmsSkpStage .appSkpTools button i{
+.cmslightbox .cmsSkpStage .appSkpTools button:where(:not([data-cms-action])) i{
     font-size: 0.85rem;
     line-height: 1;
 }
@@ -831,11 +795,11 @@ body .cmslightbox section > div.layout > aside:not(.cms) > div > div{
     background: #000;
 }
 
-.cmslightbox button.posterButton{
+.cmslightbox button:where(:not([data-cms-action])).posterButton{
     align-self: center;
 }
 
-.cmslightbox button.posterButton i{
+.cmslightbox button:where(:not([data-cms-action])).posterButton i{
     margin-right: 0.4rem;
 }
 
@@ -1047,3 +1011,82 @@ body .cmslightbox section > div.layout > aside:not(.cms) > div > div{
 .cmslightbox .embedFrame .extVideo__copy { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: .8rem; min-height: 16rem; padding: 2rem; text-align: center; }
 .cmslightbox .embedFrame .extVideo__hint { max-width: 30rem; margin: 0; color: var(--cmsSubText); }
 .cmslightbox .embedFrame .extVideo__btn { display: inline-flex; align-items: center; gap: .5rem; }
+
+/* Fullscreen editors leave the persistent desktop statusbar its own space. */
+@media (min-width: 1025px) and (orientation: landscape), (min-width: 1401px) {
+    body:has(> footer.cmsStatusbar) .cmslightbox[data-size="3"] {
+        bottom: var(--cmsStatusBar);
+    }
+}
+
+.cmslightbox.fileEditor .fileFrame.imageCropAlignContainer { border:1px dashed color-mix(in srgb, var(--cmsMainColor) 34%, var(--cmsLine)); border-radius:var(--cmsRadius); }
+
+.cmslightbox [data-preview-loading] { position:absolute; top:calc(50% - 1.25rem);left:calc(50% - 1.25rem);font-size:2.5rem;pointer-events:none;color:var(--cmsHighlightColor); }
+.cmslightbox [data-preview-loading][hidden] { display:none !important; }
+
+/* Focus follows the existing close control instead of an offset square. */
+.cmslightbox header :is(:is(a, button:where([data-cms-action])),button:where(:not([data-cms-action]))) { border-radius:var(--cmsRadius); }
+.cmslightbox header :is(:is(a, button:where([data-cms-action])),button:where(:not([data-cms-action]))):focus-visible { outline:2px solid var(--cmsInteractive); outline-offset:0; }
+/* A single adjustment slider is bound to the selected colour action. */
+.cmslightbox .fileAdjust { gap:.35rem; }
+.cmslightbox .fileAdjust .adjustToggle { display:inline-flex; }
+.cmslightbox .fileAdjust .adjustSlider { flex:1 1 13rem; }
+.cmslightbox .fileAdjust .adjustSlider[hidden] { display:none; }
+.cmslightbox .fileAdjust .adjustSlider input[type="range"] { flex:1 1 0; min-width:4rem; width:100%; }
+.cmslightbox .fileAdjustActions { margin-left:auto; flex-wrap:wrap; gap:.25rem; }
+
+.cmslightbox.fileEditor .fileFrame { padding:12px; box-sizing:border-box; }
+.cmslightbox .frameView[hidden] { display:none; }
+
+/* Native modal dialogs live above the document stacking contexts. */
+.cmslightbox > footer.cmsStatusbar { position:fixed; inset:auto 0 0; margin:0; width:100%; }
+
+body.cms-dialog-open:has(.cmsPreview) footer.cmsStatusbar .cmsStatusInfo { visibility:hidden; }
+
+
+/* Reserve the shared footer in the dialog's own available height, including native dialogs. */
+@media (min-width:1025px) and (orientation:landscape), (min-width:1401px) {
+    body.cms-dialog-open .cmslightbox:has(> footer.cmsStatusbar) {
+        padding-bottom: calc(var(--cmsStatusBar) + .75rem);
+    }
+}
+body.cms-dialog-open footer.cmsStatusbar {
+    background: color-mix(in srgb, var(--cmsFrame) 86%, transparent);
+}
+
+/* Format and existing tools share one row; the active slider overlays the preview. */
+.cmslightbox .fileImageTools{display:grid;grid-template-columns:minmax(5rem,1fr) auto;align-items:center;gap:.4rem;position:relative;}
+.cmslightbox .fileImageTools > select{width:100%;min-width:0;height:var(--cmsControl);}
+.cmslightbox .fileImageTools .fileAdjust{display:contents;}
+.cmslightbox .fileImageTools .adjustSlider{position:absolute;top:calc(100% + 1.4rem);left:.75rem;right:.75rem;width:auto;padding:.65rem .8rem;border:1px solid var(--cmsLine);border-radius:var(--cmsRadius);background:color-mix(in srgb,var(--cmsCanvas) 92%,transparent);box-shadow:0 3px 12px rgb(0 0 0 / .18);backdrop-filter:blur(8px);z-index:4;}
+.cmslightbox .fileImageTools .fileAdjustActions{grid-column:2;grid-row:1;margin-left:0;flex-wrap:nowrap;}
+body .cmslightbox.fileEditor section > .layout > aside.cms{position:relative;overflow:visible;}
+@media(max-width:600px){
+ .cmslightbox .fileImageTools{grid-template-columns:minmax(0,1fr);}
+ .cmslightbox .fileImageTools .fileAdjustActions{grid-column:1/-1;grid-row:2;justify-content:flex-end;flex-wrap:wrap;}
+
+ body .cmslightbox.fileEditor:has(.fileImageTools) section > .layout{display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(20rem,1fr) 8rem;}
+ body .cmslightbox.fileEditor:has(.fileImageTools) section > .layout > main{min-height:0;}
+ body .cmslightbox.fileEditor:has(.fileImageTools) section > .layout > aside.cms{width:100%;min-width:0;max-width:none;height:100%;min-height:0;border-left:0;border-top:1px solid var(--cmsLine);}
+ body .cmslightbox.fileEditor:has(.fileImageTools) .fileFrame{min-height:5rem;}
+}
+
+.cmslightbox .fileImageTools .fileAdjustActions > button{width:var(--cmsControl);height:var(--cmsControl);box-sizing:border-box;}
+.cmslightbox .fileImageTools .fileAdjustActions > .cropButton:not(:focus-visible){box-shadow:none;}
+
+/* Unified editor: image tools, utility actions, primary Apply. */
+div.unifiedImageEditor .cropBar :is(button[data-editor-utility],button[data-crop-reset],button[data-crop-grid],button[data-crop_cancel],.editorAspect > button):not(.selected){
+ background:var(--cmsButtonBg);border-color:transparent;
+}
+div.unifiedImageEditor .splitApply > .submit:not(.splitApplyMenu){width:auto;min-width:0;padding:0 .75rem;gap:.4rem;}
+div.unifiedImageEditor .cropBar :is(button[data-editor-utility],button[data-crop-reset],button[data-crop-grid],button[data-crop_cancel],.editorAspect > button):not(.selected):is(:hover,:focus-visible,:active){background:color-mix(in srgb,var(--cmsButtonBg) 85%,var(--cmsTextColor));}
+
+/* Preview geometry must win over the legacy page-media sizing rules. */
+.cmslightbox.fileEditor .fileFrame.imageCropAlignContainer > .frameView{max-width:none;max-height:none;line-height:0;transform-origin:center;touch-action:none;}
+.cmslightbox.fileEditor .fileFrame.imageCropAlignContainer > .frameView img.srcToChange{width:100%;height:100%;max-width:none;max-height:none;margin:0;object-fit:fill;outline:0;}
+.cmslightbox.fileEditor .fileFrame.imageCropAlignContainer{position:relative;overflow:hidden;touch-action:none;}
+.cmslightbox.fileEditor .fileFrame.imageCropAlignContainer > .frameZoom{width:auto;height:auto;max-height:none;}
+
+div.imageEditor.unifiedImageEditor:not(.is-cropping) :is([data-crop-original],[data-crop-grid]){display:none;}
+
+div.imageEditor.unifiedImageEditor .cropBar [hidden]{display:none !important;}

@@ -336,6 +336,14 @@
       "changes": "regular stroke 2 retained, removed provider classes"
     },
     {
+      "path": "public/icons/tabler/aspect-ratio.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "8586548e92830103d9906e5eb2356b448b05dae9f6775d84f83a67926e6b10cb",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
       "path": "public/icons/tabler/beach.svg",
       "provider": "tabler",
       "version": "3.50.0",

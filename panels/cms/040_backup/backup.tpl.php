@@ -14,7 +14,7 @@
 				<li><a href='restore/?name=<?= $backup['filenamebase'] ?>' class='button transparent ajax icononly' title='Restore'><i class="cmsIcon cmsIcon-arrow-rotate-left"></i></a></li>
 			<?php } ?>
 			<?php if (\Systopic\System\Auth\Session::hasRole('admin')) { ?>
-				<li><a  data-on_click='userConfirm' data-action='remove?name=<?= basename($backup["download"][0]) ?>' class='button transparent ajax icononly' data-confirm='Delete this backup?' title='Delete'><i class="cmsIcon cmsIcon-trash"></i></a></li>
+				<li><button type="button" data-cms-action  data-on_click='userConfirm' data-action='remove?name=<?= basename($backup["download"][0]) ?>' class='button transparent ajax icononly' data-confirm='Delete this backup?' title='Delete'><i class="cmsIcon cmsIcon-trash"></i></button></li>
 			<?php } ?>
 			<?php if (\Systopic\System\Auth\Session::hasRole('admin')) { ?>
 				<li class="seperator">

@@ -15,4 +15,4 @@ $checked = is_object($values) ? ($values->value ?? false) : ($values['value'] ??
 if (in_array($checked, [1, '1', true, 'true', 'on'], true)) $picked[] = $choice;
 $result = ProjectFile::setField($path, 'var:media_groups', (string) $this->state->group, $field, implode($templates ? ';' : ', ', $picked));
 if ($result === false) message::error('That choice was not saved.');
-else { $this->parent->updateView('main'); message::confirm('Saved.'); }
+else { $this->parent->updateView('main'); }

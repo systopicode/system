@@ -19,13 +19,13 @@ body.cms .cmslightbox > section > .userTabs + main{
     padding-top: 1.35rem;
 }
 
-body.cms .cmslightbox .userTabs button{
+body.cms .cmslightbox .userTabs button:where(:not([data-cms-action])){
     position: relative;
     z-index: 1;
     flex: 0 0 auto;
     min-height: 0;
     margin: 0;
-    padding: 0.7rem 0;
+    padding: 0.7rem 0.4rem;
     border: 0;
     border-bottom: 2px solid transparent;
     border-radius: 0;
@@ -36,12 +36,12 @@ body.cms .cmslightbox .userTabs button{
     white-space: nowrap;
 }
 
-body.cms .cmslightbox .userTabs button[aria-selected="true"]{
+body.cms .cmslightbox .userTabs button:where(:not([data-cms-action]))[aria-selected="true"]{
     border-bottom-color: var(--cmsHighlightColor);
     color: var(--cmsTextColor);
 }
 
-body.cms .cmslightbox .userTabs button:hover{
+body.cms .cmslightbox .userTabs button:where(:not([data-cms-action])):hover{
     background: none;
     color: var(--cmsTextColor);
 }
@@ -137,8 +137,8 @@ body.cms .cmslightbox .userTabs button:hover{
     z-index: 8100;
 }
 
-.cms .cmslightbox.qrZoom ul.barmenu button,
-.cms .cmslightbox.qrZoom ul.barmenu button:enabled:not(.disabled):hover{
+.cms .cmslightbox.qrZoom ul.barmenu button:where(:not([data-cms-action])),
+.cms .cmslightbox.qrZoom ul.barmenu button:where(:not([data-cms-action])):enabled:not(.disabled):hover{
     display: flex;
     align-items: center;
     justify-content: center;
@@ -301,9 +301,9 @@ body.cms .cmslightbox .userTabs button:hover{
     padding: 0.55rem 0 0;
 }
 
-.cms .userEdit .signInTools > button.cmsBoxMore,
-.cms .userEdit .signInTools > button.cmsBoxMore:enabled:not(.disabled):hover,
-.cms .userEdit .signInTools > button.cmsBoxMore:focus-visible{
+.cms .userEdit .signInTools > button:where(:not([data-cms-action])).cmsBoxMore,
+.cms .userEdit .signInTools > button:where(:not([data-cms-action])).cmsBoxMore:enabled:not(.disabled):hover,
+.cms .userEdit .signInTools > button:where(:not([data-cms-action])).cmsBoxMore:focus-visible{
     flex: 0 0 auto;
     width: auto;
     min-height: 0;

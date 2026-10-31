@@ -57,65 +57,36 @@ body > main:has(> div.content .dashboard) > div.content{
 	color: var(--cmsSubText);
 }
 
-/* fixed columns (Panel::dashboardColumns): a moved widget leaves the others where they are */
-.dashboard .dashWidgets{
-	display: grid;
-	grid-template-columns: repeat(3, minmax(0, 1fr));
-	gap: 0 1.25rem;
-	margin-bottom: 1.25rem;
+/* One real stack per active view; no third column below a two-column grid. */
+.dashboard .dashWidgets {
+    --dashboard-columns: 3;
+    display: grid;
+    grid-template-columns: repeat(var(--dashboard-columns), minmax(0, 1fr));
+    align-items: start;
+    gap: 1.25rem;
+    margin-bottom: 1.25rem;
 }
+.dashColumn { display: flex; flex-direction: column; min-width: 0; gap: 1.25rem; }
+.dashboard .dashColumn > .dashWidget { margin: 0; min-width: 0; }
+@media (max-width: 1279px) { .dashboard .dashWidgets { --dashboard-columns: 2; } }
+@media (max-width: 700px) { .dashboard .dashWidgets { --dashboard-columns: 1; } }
 
-.dashColumn{
-	display: flex;
-	flex-direction: column;
-	min-width: 0;
+/* Column ends stay usable as invisible line targets, including empty columns. */
+.dashDrop {
+    display: none;
+    position: relative;
+    flex: 0 0 0;
+    height: 0;
+    padding: .625rem 0;
+    margin-top: -.625rem;
+    border: 0;
+    background: none;
 }
-
-/* Narrower than three columns: the first two stay put, the third sits
-   underneath with its widgets side by side. Flattening them into one list
-   left System alone under Recent media. */
-@media (max-width: 1279px){
-    .dashboard .dashWidgets { grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; row-gap: 1.25rem; }
-    .dashboard .dashColumn { display: flex; flex-direction: column; gap: 1.25rem; }
-    .dashboard .dashColumn > .dashWidget { margin: 0; }
-    .dashboard .dashColumn:nth-child(3) {
-        grid-column: 1 / -1;
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 1.25rem;
-        align-items: start;
-    }
-    .dashboard .dashDrop { margin-bottom: 0; }
-}
-
-@media (max-width: 700px){
-    .dashboard .dashWidgets { grid-template-columns: minmax(0, 1fr); }
-    .dashboard .dashColumn,
-    .dashboard .dashColumn:nth-child(3) {
-        display: flex;
-        flex-direction: column;
-        align-items: stretch;
-        grid-template-columns: none;
-    }
-    .dashboard .dashWidget { width: 100%; align-self: stretch; }
-}
-
-/* the end of a column, empty ones included */
-.dashDrop{
-	display: none;
-	flex: 1 0 4rem;
-	margin-bottom: 1.25rem;
-	border: 1px dashed var(--cmsLineStrong);
-	border-radius: var(--cmsRadiusLg);
-}
-
-body.widgetDragging .dashDrop{
-	display: block;
-}
-
-.dashDrop.dropTarget{
-	border-color: var(--cmsHighlightColor);
-	background: color-mix(in srgb, var(--cmsHighlightColor) 8%, transparent);
+.dashDrop:only-child { margin-top: 0; }
+body.widgetDragging .dashDrop { display: block; }
+.dashCustomize.dropTarget {
+    border-color: var(--cmsHighlightColor);
+    background: color-mix(in srgb, var(--cmsHighlightColor) 12%, var(--cmsCanvas));
 }
 
 .dashWidget{
@@ -139,6 +110,8 @@ body.cms .dashHead .dashHeadMore{
 
 /* customize: drag by the title, the cross hides, hidden ones come back above */
 .dashCustomize{
+	min-height: 4rem;
+	box-sizing: border-box;
 	display: flex;
 	flex-wrap: wrap;
 	align-items: center;
@@ -214,9 +187,7 @@ body.cms .dashHead .dashHeadMore{
 }
 
 /* Sorting is a stack of titles. The body comes back when editing ends. */
-.dashWidgets.is-editing .dashWidget{
-	margin-bottom: 0.5rem;
-}
+
 
 .dashWidgets.is-editing .dashWidget > :not(header, .sort, .dashHide){
 	display: none;
@@ -277,38 +248,23 @@ body.dragging .dashWidgets .dashWidget > div.sort.v{
 }
 
 .dashWidget > div.sort.v.insertBefore{
-	top: -0.95rem;
-	padding-top: 0.5rem;
-	padding-bottom: 3rem;
+	top: -.625rem;
+	padding-top: .625rem;
+	padding-bottom: .625rem;
 }
 
 .dashWidget > div.sort.v.insertAfter{
-	bottom: -0.95rem;
-	padding-top: 3rem;
-	padding-bottom: 0.5rem;
+	bottom: -.625rem;
+	padding-top: .625rem;
+	padding-bottom: .625rem;
 }
 
-.dashboard .dashHide{
-	position: absolute;
-	top: 0.5rem;
-	right: 0.5rem;
-	z-index: 6;
-	display: grid;
-	place-items: center;
-	width: 2rem;
-	height: 2rem;
-	margin: 0;
-	padding: 0;
-	border: 0;
-	border-radius: 50%;
-	background: var(--cmsPanelAlt);
-	color: var(--cmsTextColor);
-	cursor: pointer;
-}
-
-.dashboard .dashHide:hover{
-	background: var(--cmsError);
-	color: #fff;
+.dashboard .dashHide {
+    position: absolute;
+    top: .5rem;
+    right: .5rem;
+    z-index: 6;
+    margin: 0;
 }
 
 /* lists: pages, tasks, sign-ins */
@@ -322,7 +278,7 @@ body.dragging .dashWidgets .dashWidget > div.sort.v{
 	border-top: 1px solid var(--cmsLine);
 }
 
-.dashList li > :is(a, div){
+.dashList li > :is(:is(a, button:where([data-cms-action])), div){
 	display: flex;
 	align-items: center;
 	gap: 0.75rem;
@@ -331,11 +287,11 @@ body.dragging .dashWidgets .dashWidget > div.sort.v{
 	text-decoration: none;
 }
 
-.dashList li > a:hover{
+.dashList li > :is(a, button:where([data-cms-action])):hover{
 	background: var(--cmsPanelAlt);
 }
 
-.dashList li > :is(a, div) > i{
+.dashList li > :is(:is(a, button:where([data-cms-action])), div) > i{
 	flex: none;
 	width: 1.1rem;
 	color: var(--cmsMuted);
@@ -361,7 +317,7 @@ body.dragging .dashWidgets .dashWidget > div.sort.v{
 }
 
 .dashList .presence.is-stale{
-	background: #ffc107;
+	background: var(--cmsWarning);
 }
 
 @media (prefers-reduced-motion: reduce){
@@ -373,7 +329,7 @@ body.dragging .dashWidgets .dashWidget > div.sort.v{
 	50%{ opacity: 0.4; transform: scale(0.82); }
 }
 
-.dashList li > :is(a, div) > span:not(.dashInitials, .presence){
+.dashList li > :is(:is(a, button:where([data-cms-action])), div) > span:not(.dashInitials, .presence){
 	display: flex;
 	flex: 1 1 auto;
 	flex-direction: column;
@@ -411,19 +367,19 @@ body.dragging .dashWidgets .dashWidget > div.sort.v{
 	background: var(--cmsPanelAlt);
 }
 
-.dashTasks :is(summary, li > a) > i:first-child{
+.dashTasks :is(summary, li > :is(a, button:where([data-cms-action]))) > i:first-child{
 	flex: none;
 	width: 1.1rem;
 	color: var(--cmsMuted);
 	text-align: center;
 }
 
-.dashTasks :is(summary, li > a) > span{
+.dashTasks :is(summary, li > :is(a, button:where([data-cms-action]))) > span{
 	flex: 1 1 auto;
 	min-width: 0;
 }
 
-.dashTasks :is(summary, li > a) > span small{
+.dashTasks :is(summary, li > :is(a, button:where([data-cms-action]))) > span small{
 	display: block;
 	line-height: 1.3;
 }
@@ -437,7 +393,7 @@ body.dragging .dashWidgets .dashWidget > div.sort.v{
 	background: color-mix(in srgb, var(--cmsWarning) 25%, transparent);
 }
 
-.dashTasks :is(summary, li > a) > i:last-child{
+.dashTasks :is(summary, li > :is(a, button:where([data-cms-action]))) > i:last-child{
 	color: var(--cmsMuted);
 	font-size: 0.75rem;
 	transition: transform .15s;
@@ -488,7 +444,7 @@ body.dragging .dashWidgets .dashWidget > div.sort.v{
 	border-top: 0;
 }
 
-.dashTasks details > ul li > a{
+.dashTasks details > ul li > :is(a, button:where([data-cms-action])){
 	display: flex;
 	align-items: center;
 	justify-content: space-between;
@@ -500,7 +456,7 @@ body.dragging .dashWidgets .dashWidget > div.sort.v{
 	text-decoration: none;
 }
 
-.dashTasks details > ul li > a small{
+.dashTasks details > ul li > :is(a, button:where([data-cms-action])) small{
 	display: inline;
 	flex: 0 0 auto;
 	padding: 0.05rem 0.45rem;
@@ -516,7 +472,7 @@ body.dragging .dashWidgets .dashWidget > div.sort.v{
 	padding-bottom: 0.75rem;
 }
 
-.dashTasks details > ul li > a:hover{
+.dashTasks details > ul li > :is(a, button:where([data-cms-action])):hover{
 	background: color-mix(in srgb, var(--cmsHighlightColor) 24%, var(--cmsCanvas));
 	text-decoration: none;
 }
@@ -558,7 +514,7 @@ body.dragging .dashWidgets .dashWidget > div.sort.v{
 	border-bottom: 1px solid var(--cmsLine);
 }
 
-.dashboard .dashTabs button{
+.dashboard .dashTabs button:where(:not([data-cms-action])){
 	margin: 0 0 -1px;
 	padding: 0.5rem 0;
 	border: 0;
@@ -571,13 +527,13 @@ body.dragging .dashWidgets .dashWidget > div.sort.v{
 	cursor: pointer;
 }
 
-.dashboard .dashTabs button[aria-selected="true"]{
+.dashboard .dashTabs button:where(:not([data-cms-action]))[aria-selected="true"]{
 	border-bottom-color: var(--cmsHighlightColor);
 	color: var(--cmsTextColor);
 	font-weight: 500;
 }
 
-body.cms .dashboard .dashTabs button:hover{
+body.cms .dashboard .dashTabs button:where(:not([data-cms-action])):hover{
 	background: none;
 	color: var(--cmsTextColor);
 }
@@ -590,7 +546,7 @@ body.cms .dashboard .dashTabs button:hover{
 	background: var(--cmsLine);
 }
 
-.dashFigures a{
+.dashFigures :is(a, button:where([data-cms-action])){
 	display: grid;
 	grid-template-columns: auto 1fr;
 	align-items: center;
@@ -601,7 +557,7 @@ body.cms .dashboard .dashTabs button:hover{
 	text-decoration: none;
 }
 
-.dashFigures a:hover{
+.dashFigures :is(a, button:where([data-cms-action])):hover{
 	background: var(--cmsPanelAlt);
 }
 
@@ -629,7 +585,7 @@ body.cms .dashboard .dashTabs button:hover{
 	padding: 1rem 1.25rem;
 }
 
-.dashThumbs a{
+.dashThumbs :is(a, button:where([data-cms-action])){
 	position: relative;
 	aspect-ratio: 1;
 	overflow: hidden;
@@ -644,13 +600,13 @@ body.cms .dashboard .dashTabs button:hover{
 	object-fit: cover;
 }
 
-.dashThumbs a.is-mark{
+.dashThumbs :is(a, button:where([data-cms-action])).is-mark{
 	display: flex;
 	align-items: center;
 	justify-content: center;
 }
 
-.dashThumbs a.is-mark > i.thumbType{
+.dashThumbs :is(a, button:where([data-cms-action])).is-mark > i.thumbType{
 	position: static;
 	width: auto;
 	height: auto;
@@ -743,6 +699,8 @@ body.cms .dashboard .dashTabs button:hover{
 
 /* hidden widgets and the legal line */
 .dashHidden{
+	flex-basis: 100%;
+	min-height: 2.25rem;
 	display: flex;
 	flex-wrap: wrap;
 	align-items: center;
@@ -772,7 +730,7 @@ body.cms .dashboard .dashTabs button:hover{
 	gap: 0.25rem 1rem;
 }
 
-.dashFooter a{
+.dashFooter :is(a, button:where([data-cms-action])){
 	color: inherit;
 }
 
@@ -795,34 +753,7 @@ body.cms .dashboard .dashTabs button:hover{
     body.widgetDragging .dashboard .dashWidget{
         overflow: visible;
     }
-    body.widgetDragging .dashboard .dashDrop{
-        display: block;
-        position: relative;
-        flex: 0 0 1.25rem;
-        margin: 0;
-        border: 0;
-        background: none;
-    }
-    /* One place between two widgets. insertAfter of the one above and
-       insertBefore of the one below are the same gap; only the latter draws. */
-    body.widgetDragging .dashboard .dashWidget > div.sort.v.insertAfter{
-        display: none;
-    }
-    body.widgetDragging .dashboard .dashWidget > div.sort.v.insertBefore.dropTarget::after,
-    body.widgetDragging .dashboard .dashDrop.dropTarget::before{
-        content: "";
-        position: absolute;
-        left: 12px;
-        right: 12px;
-        top: 0;
-        height: 2px;
-        border-radius: 1px;
-        background: var(--cmsHighlightColor);
-        pointer-events: none;
-    }
-    body.widgetDragging > .draghelper{
-        visibility: hidden;
-    }
+
 }
 
 /* Phone cards already form one column; let the title use that width. */
@@ -838,18 +769,25 @@ body.cms .dashboard .dashTabs button:hover{
 .cleanupCardLegal { border-top: 1px solid var(--cmsLine); margin-top: 1rem; padding-top: 1rem; }
 .cleanupCardLegal > p { margin: .5rem 0; font-size: .85rem; }
 .cleanupOperatorHint { display: flex; align-items: flex-start; gap: .5rem; color: var(--cmsSubText); }
-.cleanupOperatorHint > i { color: #ffc107; flex: 0 0 auto; margin-top: .2rem; }
+.cleanupOperatorHint > i { color: var(--cmsWarning); flex: 0 0 auto; margin-top: .2rem; }
 .cleanupLegalLinks { display: flex; flex-wrap: wrap; gap: .5rem 1.25rem; margin-top: .75rem; font-size: .85rem; }
-.cleanupLegalLinks a { display: inline-flex; align-items: center; gap: .4rem; color: var(--cmsTextColor); }
+.cleanupLegalLinks :is(a, button:where([data-cms-action])) { display: inline-flex; align-items: center; gap: .4rem; color: var(--cmsTextColor); }
 
 /* These actionable notices cannot be hidden through widget customisation. */
 .dashNotices { display: grid; gap: .5rem; margin-bottom: 1.25rem; }
 .dashNotice { display: flex; align-items: center; gap: .75rem; padding: .65rem 1rem; border: 1px solid var(--cmsLine); border-radius: var(--cmsRadius); background: var(--cmsCanvas); }
-.dashNotice > i { flex: 0 0 auto; color: #ffc107; }
+.dashNotice > i { flex: 0 0 auto; color: var(--cmsWarning); }
 .dashNotice > p { flex: 1 1 auto; min-width: 0; margin: 0; font-size: .85rem; color: var(--cmsTextColor); }
 .dashNotice > .button { flex: 0 0 auto; margin: 0; }
 @media (max-width: 600px) {
     .dashNotice { flex-wrap: wrap; align-items: flex-start; }
     .dashNotice > p { flex-basis: calc(100% - 2rem); }
     .dashNotice > .button { margin-left: auto; }
+}
+
+/* Holding a title starts customization, never native text selection. */
+.dashWidget > header[data-on_longpress] {
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
 }

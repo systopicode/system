@@ -10,5 +10,7 @@ if ($this->action === 'probeMediaTools') {
     foreach (\Systopic\System\Runtime\Capabilities::TOOLS as $name => $purpose) {
         $this->binaryProbes[$name] = \Systopic\System\Runtime\Capabilities::probe($name);
     }
-    $this->updateView('main');
+    $this->updateView('media');
 }
+
+if ($this->action === 'recheck') $this->updateView('main');

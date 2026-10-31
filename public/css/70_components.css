@@ -22,6 +22,7 @@
 }
 
 .widget > header,
+.widget > summary,
 .widget > footer,
 .cmslightbox section > footer{
 	display: flex;
@@ -61,7 +62,8 @@ pre.backupLog{
 	color: var(--cmsTextColor);
 }
 
-.widget > header{
+.widget > header,
+.widget > summary{
 	border-bottom: 1px solid var(--cmsLine);
 }
 
@@ -83,7 +85,7 @@ pre.backupLog{
 	margin-bottom: 0;
 }
 
-.widget footer button,
+.widget footer button:where(:not([data-cms-action])),
 .widget footer .button{
 	margin: 0 0 0 0.4rem;
 }
@@ -156,7 +158,8 @@ pre.backupLog{
 }
 
 .widget > header h1,
-.widget > header h2{
+.widget > header h2,
+.widget > summary h2{
 	display: flex;
 	align-items: center;
 	gap: 0.5rem;
@@ -219,16 +222,14 @@ pre.backupLog{
 	margin: 0;
 }
 
-.cms .widget > header + .tableScroll > table :is(th, td):first-child:not(.pageSettingDrag),
-.cms .widget > .tagsHint + .tableScroll > table :is(th, td):first-child:not(.pageSettingDrag),
+.cms .widget > .tableScroll > table :is(th, td):first-child:not(.pageSettingDrag),
 section.cms > .tableScroll > table :is(th, td):first-child:not(.pageSettingDrag){
-	padding-left: 1.25rem;
+	padding-left: var(--cmsCardPadding);
 }
 
-.cms .widget > header + .tableScroll > table :is(th, td):last-child,
-.cms .widget > .tagsHint + .tableScroll > table :is(th, td):last-child,
+.cms .widget > .tableScroll > table :is(th, td):last-child,
 section.cms > .tableScroll > table :is(th, td):last-child{
-	padding-right: 1.25rem;
+	padding-right: var(--cmsCardPadding);
 }
 
 /* A table that fills the content is the same card as a widget. */
@@ -260,7 +261,8 @@ section.cms:has(> .tableScroll){
 }
 
 .cmsBox > header,
-.cmsBox > summary{
+.cmsBox > summary,
+.widget > summary{
 	display: flex;
 	flex-wrap: wrap;
 	align-items: flex-start;
@@ -282,7 +284,8 @@ body.cms .cmslightbox .cmsBox > header{
 	z-index: auto;
 }
 
-.cmsBox > summary{
+.cmsBox > summary,
+.widget > summary{
 	cursor: pointer;
 	list-style: none;
 }
@@ -295,17 +298,20 @@ body.cms .cmslightbox .cmsBox > header{
 	content: "";
 }
 
-.cmsBox > summary::after{
+.cmsBox > summary::after,
+.widget > summary::after{
 	content: ""; width: 1em; height: 1em; background-color: currentColor; -webkit-mask: var(--icon-chevron-down) center / contain no-repeat; mask: var(--icon-chevron-down) center / contain no-repeat;
 	flex: 0 0 auto;
 	margin-left: auto;
+	font-family: inherit;
 	font-size: 0.8rem;
 	font-weight: 400;
 	line-height: 1.4;
 	color: var(--cmsMuted);
 }
 
-.cmsBox[open] > summary::after{
+.cmsBox[open] > summary::after,
+.widget[open] > summary::after{
 	transform: rotate(180deg);
 }
 
@@ -360,8 +366,8 @@ body.cms .cmslightbox .cmsBox > header{
 
 .cmsBox > header > .button,
 .cmsBox > summary > .button,
-.cmsBox > header > a.button,
-.cmsBox > summary > a.button{
+.cmsBox > header > :is(a, button:where([data-cms-action])).button,
+.cmsBox > summary > :is(a, button:where([data-cms-action])).button{
 	flex: 0 0 auto;
 	align-self: center;
 	margin: 0;
@@ -383,7 +389,7 @@ body.cms .cmslightbox .cmsBox > header{
 	margin: 0;
 }
 
-.cms button.cmsBoxMore{
+.cms button:where(:not([data-cms-action])).cmsBoxMore{
 	display: inline-flex;
 	justify-content: flex-start;
 	align-items: center;
@@ -402,8 +408,8 @@ body.cms .cmslightbox .cmsBox > header{
 	text-align: left;
 }
 
-.cms button.cmsBoxMore:enabled:not(.disabled):hover,
-.cms button.cmsBoxMore:focus-visible{
+.cms button:where(:not([data-cms-action])).cmsBoxMore:enabled:not(.disabled):hover,
+.cms button:where(:not([data-cms-action])).cmsBoxMore:focus-visible{
 	background: transparent;
 	color: var(--cmsHighlightColor);
 }
@@ -607,7 +613,7 @@ body.cms .cmslightbox .cmsBox > header{
 }
 
 .userDevice > .presence.is-stale{
-	background: #ffc107;
+	background: var(--cmsWarning);
 }
 
 .userDevice > .presence.is-on{
@@ -643,5 +649,63 @@ body.cms .cmslightbox .cmsBox > header{
 @media (prefers-reduced-motion: reduce){
 	.userDevice > .presence.is-on{ animation: none; }
 }
+.cms .logFilters { display:flex; flex-wrap:wrap; gap:.75rem; align-items:end; padding:.75rem var(--cmsCardPadding); }
+.cms .logFilters .field { flex:1 1 7rem; min-width:0; margin:0; }
+.cms .logFilters small { flex-basis:100%; color:var(--cmsMuted); }
+
+
+.cms .themeContrast { margin-top:1rem; padding-top:1rem; border-top:1px solid var(--cmsLine); }
+.cms .themeContrast > summary { display:flex; justify-content:space-between; cursor:pointer; font-weight:600; }
+.cms .themeContrast > .tagsHint { margin-block:1rem; }
+
+.cms .mediaCheckInfo { margin-top:1rem; border-top:1px solid var(--cmsLine); padding-top:.8rem; }
+.cms .mediaCheckInfo > summary { display:flex; justify-content:space-between; align-items:center; cursor:pointer; font-weight:600; }
+.cms .mediaCheckInfo > main { padding-top:.8rem; }
+
+.cms .logFilters .logReset { flex:0 0 auto; }
+.cms .logFilters .logReset .button { margin:0; min-height:2.25rem; }
+
+
+.cms .themeContrast .tableScroll { max-width:48rem; margin-top:.8rem; }
+.cms .themeContrast td { vertical-align:middle; }
+
+.cms :is(.themeContrast,.cleanupTasks,.cleanupStatus,.cleanupSummary) .cmsIcon-circle-check {color:var(--cmsSuccess);}
+.cms :is(.themeContrast,.cleanupTasks,.cleanupStatus,.cleanupSummary) :is(.cmsIcon-circle-exclamation,.cmsIcon-triangle-exclamation) {color:var(--cmsWarning);}
+.cms :is(.themeContrast,.cleanupTasks,.cleanupStatus,.cleanupSummary) .cmsIcon-circle-xmark {color:var(--cmsError);}
+
+/* Header actions and their titles share one centre line. */
+.cms .widget > header > :is(h1,h2,.button,button:where(:not([data-cms-action]))) { margin-block:0; }
+.cms .logFilters > .field { display:flex; flex-direction:column; gap:.25rem; flex-basis:9rem; width:0; min-width:min(9rem,100%); }
+.cms .logFilters > .field > span { position:static; transform:none; margin:0; }
+.cms .logFilters > .field > :is(input,select) { width:100%; min-width:0; max-width:100%; min-inline-size:0; max-inline-size:100%; height:var(--cmsControl); box-sizing:border-box; margin:0; }
+.cms .logFilters > .logReset { flex:0 0 auto; width:auto; min-width:0; align-self:end; }
+/* A headerless log uses the same clipping as the normal list widget. */
+.cmslightbox .widget.is-list > .tableScroll { border-radius:inherit; overflow:hidden auto; }
+
 /* Icon catalogue links reuse standard CMS buttons and the wrapping action row. */
 .cms .themeIcons .cmsBoxActions { justify-content: flex-start; }
+
+/* Local language flag previews and project SVG overrides. */
+.cms .languageFlagHelp { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:.75rem; padding:.75rem; }
+.cms .languageFlagHelp > .tagsHint { flex:1 1 24rem; margin:0; }
+.cms .languageFlagHelp > .button { flex:0 0 auto; margin:0; }
+.cms .languageFlagControl { display:flex; align-items:center; gap:.25rem; }
+.cms .languageRowActions { display:flex; align-items:center; justify-content:flex-end; gap:.25rem; }
+.cms .languageFlagCell > .languageFlag { width:2rem; height:1.5rem; object-fit:contain; flex:0 0 auto; border-radius:2px; box-shadow:0 0 0 1px var(--cmsLine); }
+.cms .languageFlagMissing { display:inline-flex; align-items:center; justify-content:center; width:2rem; height:1.5rem; color:var(--cmsMuted); }
+.cms .languageFlagControl form { display:inline-flex; margin:0; }
+.cms .languageFlagChoose { position:relative; margin:0; overflow:hidden; }
+.cms .languageFlagChoose input[type=file] { position:absolute; inset:0; width:100%; height:100%; opacity:0; cursor:pointer; margin:0; padding:0; }
+.cms .languageFlagChoose:focus-within { outline:2px solid var(--cmsInteractive); outline-offset:2px; }
+.cms .languageFlagReset .button { margin:0; }
+
+@media (pointer: coarse) { .cms .languageFlagChoose, .cms .languageFlagReset .button { min-height:44px; } }
+
+/* External-link markers consistently follow their visible label. */
+.cms :is(a, button:where([data-cms-action])).cmsExternalLink { display:inline-flex; align-items:center; gap:.4em; }
+.cms :is(a, button:where([data-cms-action])).cmsExternalLink > i:is(.cmsIcon-arrow-up-right-from-square,.cmsIcon-up-right-from-square) { order:1; flex:0 0 auto; }
+.cms :is(a, button:where([data-cms-action])).cmsExternalLink:not(.button) { display:inline; overflow-wrap:anywhere; }
+.cms :is(a, button:where([data-cms-action])).cmsExternalLink:not(.button) > i:is(.cmsIcon-arrow-up-right-from-square,.cmsIcon-up-right-from-square) { margin-inline-start:.3em; }
+
+.widget > summary { align-items:center; }
+.widget > summary::-webkit-details-marker { display:none; }

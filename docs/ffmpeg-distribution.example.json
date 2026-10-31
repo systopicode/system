@@ -1,0 +1,24 @@
+{
+  "schema": 1,
+  "suite": "FFmpeg",
+  "version": null,
+  "platform": null,
+  "binaries": {
+    "ffmpeg": {
+      "file": "ffmpeg",
+      "sha256": null,
+      "downloadUrl": null
+    },
+    "ffprobe": {
+      "file": "ffprobe",
+      "sha256": null,
+      "downloadUrl": null
+    }
+  },
+  "buildConfiguration": null,
+  "applicableLicense": null,
+  "correspondingSources": [],
+  "buildScripts": [],
+  "thirdPartyNotices": [],
+  "distributionStatus": "requires-build-review"
+}

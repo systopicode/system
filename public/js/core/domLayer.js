@@ -291,6 +291,7 @@
 			var pins = [];
 			var seen = new Set();
 			var saved = (window.sys && sys.core && sys.core.server && sys.core.server.pendingScroll) || [];
+            var revealVersion = saved.revealVersion ?? sys.core.server.scrollRevealVersion;
             if (saved.inputVersion !== undefined && saved.inputVersion !== sys.core.server.scrollInputVersion) saved = [];
 			layer.rootNodes.forEach(node => {
 				var el = node && node.parentElement;
@@ -304,7 +305,7 @@
 					if (oy === 'auto' || oy === 'scroll' || top > 0) {
 						saved.forEach(item => {
 							try {
-								if (el.matches(item.selector) && item.top > top) {
+								if (el.matches(item.selector) && item.top > top && (sys.core.server.scrollReveals?.get(el) || 0) <= revealVersion) {
 									top = item.top;
 								}
 							} catch (error) {}
@@ -328,7 +329,7 @@
 					} catch (error) {
 						return;
 					}
-					if (!el || !item.top || !sys.core.server.pinScroll) {
+					if (!el || !item.top || !sys.core.server.pinScroll || (sys.core.server.scrollReveals?.get(el) || 0) > revealVersion) {
 						return;
 					}
 					sys.core.server.pinScroll(el, item.top)();

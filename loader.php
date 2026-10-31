@@ -47,10 +47,10 @@ foreach ([
 unset($__configFile, $__projectSettings);
 /* * **************************** CHECK AND DEFINE CONSTANTS (AFTER SETTINGS.PHP) ************************** */
 
-defined('PUBLIC_PAGE_NAME') || define('PUBLIC_PAGE_NAME', 'fluxo cms');
-defined('PUBLIC_PAGE_TITLE') || define('PUBLIC_PAGE_TITLE', 'fluxo cms');
-defined('PUBLIC_PAGE_DESCRIPTION') || define('PUBLIC_PAGE_DESCRIPTION', 'fluxo cms');
-defined('PUBLIC_PAGE_KEYWORDS') || define('PUBLIC_PAGE_KEYWORDS', 'fluxo cms');
+defined('PUBLIC_PAGE_NAME') || define('PUBLIC_PAGE_NAME', 'fluxo');
+defined('PUBLIC_PAGE_TITLE') || define('PUBLIC_PAGE_TITLE', 'fluxo');
+defined('PUBLIC_PAGE_DESCRIPTION') || define('PUBLIC_PAGE_DESCRIPTION', 'fluxo');
+defined('PUBLIC_PAGE_KEYWORDS') || define('PUBLIC_PAGE_KEYWORDS', 'fluxo');
 // what settings.php used to have to define - a project without one, or one
 // that leaves something out, still runs. Defined only where missing.
 defined('PUBLIC_APP_NAME') || define('PUBLIC_APP_NAME', PUBLIC_PAGE_NAME);
@@ -61,8 +61,8 @@ defined('META_DESCRIPTION') || define('META_DESCRIPTION', '');
 defined('META_PAGE_TOPIC') || define('META_PAGE_TOPIC', '');
 defined('META_ROBOTS') || define('META_ROBOTS', 'index, follow');
 defined('DEFAULT_LANG') || define('DEFAULT_LANG', 'de');
-defined('PUBLIC_PAGE_AUTHOR') || define('PUBLIC_PAGE_AUTHOR', 'fluxo cms');
-defined('PUBLIC_PAGE_COPYRIGHT') || define('PUBLIC_PAGE_COPYRIGHT', 'fluxo cms');
+defined('PUBLIC_PAGE_AUTHOR') || define('PUBLIC_PAGE_AUTHOR', 'fluxo');
+defined('PUBLIC_PAGE_COPYRIGHT') || define('PUBLIC_PAGE_COPYRIGHT', 'fluxo');
 scripttime('post includes pre DB');
 
 /* * **************************** DB CONNECT ************************** */

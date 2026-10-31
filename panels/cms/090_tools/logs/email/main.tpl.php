@@ -4,12 +4,13 @@
 <section class="widget is-list logList">
 	<header>
 		<h2>Messages</h2>
-		<input class="listSearch" type="search" placeholder="Search" data-on_input="filterLog" autocomplete="off">
+		<input class="listSearch" type="search" aria-label="Search email log" placeholder="Search"  autocomplete="off">
 		<a target="_self" href="<?= htmlspecialchars($this->getHref(\http::$root) . 'downloadLog') ?>" class="button" title="Download"><i class="cmsIcon cmsIcon-file-arrow-down"></i><span>Download</span></a>
 		<?php if (\Systopic\System\Auth\Session::isSuperuser()) { ?>
-		<a data-on_click="userConfirm" data-action="clearLog" data-confirm="Delete this log file?" class="button" title="Clear"><i class="cmsIcon cmsIcon-broom"></i><span>Clear</span></a>
+		<button type="button" data-cms-action aria-label="Clear email log" data-on_click="userConfirm" data-action="clearLog" data-confirm="Delete this log file?" class="button" title="Clear"><i class="cmsIcon cmsIcon-broom"></i><span>Clear</span></button>
 		<?php } ?>
 	</header>
+    <?= \Systopic\System\Logs\Filters::controls() ?>
     <?php
     // Define EMAILLOGFILE constant if not already defined
     if (!defined('EMAILLOGFILE')) {
@@ -36,6 +37,7 @@
 			    <th>Date</th>
 			    <th>Status</th>
 			    <th>To</th>
+                <th>User</th>
 			    <th>Subject</th>
 			    <th></th>
 			</tr>
@@ -106,15 +108,18 @@
 			    // Create unique ID for this entry
 			    $entryId = md5($timestamp . $from . $to . $subject . $entryIndex);
 			    $pill = ($status === 'error' || $status === 'failed') ? 'is-bad' : ($status === 'success' ? 'is-ok' : '');
-			    $rows[] = compact('timestamp', 'status', 'to', 'subject', 'error', 'entryId', 'pill') + ['index' => $entryIndex];
+			    preg_match('/User:\s*([^|]+)/', $headerLine, $actorMatch);
+                $actor = trim((string) ($jsonData['username'] ?? ($actorMatch[1] ?? '')));
+                $rows[] = compact('actor', 'timestamp', 'status', 'to', 'subject', 'error', 'entryId', 'pill') + ['index' => $entryIndex];
 			    $entryIndex++;
 			}
 			foreach (array_reverse($rows) as $row) {
 			    ?>
-			    <tr>
+			    <tr<?= \Systopic\System\Logs\Filters::attributes($row['timestamp'], $row['actor'], $row['status']) ?>>
 				<td><?= htmlspecialchars($row['timestamp']) ?></td>
 				<td><span class="logPill <?= $row['pill'] ?>"><?= htmlspecialchars($row['status']) ?></span></td>
 				<td><?= htmlspecialchars($row['to']) ?></td>
+                <td><?= \Systopic\System\Logs\Filters::userLink($row['actor']) ?></td>
 				<td><?= htmlspecialchars($row['subject']) ?></td>
 				<td class="icons">
 				    <ul>

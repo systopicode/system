@@ -6,8 +6,8 @@ $imprint = \Systopic\System\Settings\LegalLinks::url('imprint');
 <main class="authText">
 	<div class="authScroll">
 	<p>The provider of this website, and of this login, is named in the imprint required by § 5 DDG:</p>
-	<p><a href="<?= htmlspecialchars($imprint, ENT_QUOTES) ?>" target="_blank" rel="noopener"><?= htmlspecialchars($imprint, ENT_QUOTES) ?></a></p>
+	<p><a class="cmsExternalLink" href="<?= htmlspecialchars($imprint, ENT_QUOTES) ?>" target="_blank" rel="noopener"><?= htmlspecialchars($imprint, ENT_QUOTES) ?><i class="cmsIcon cmsIcon-arrow-up-right-from-square" aria-hidden="true"></i></a></p>
 	<p>That page carries the name, the address, a way to make contact and, where the law requires them, the register, the registration number, the VAT id and the person responsible for the content. Those details are not repeated here.</p>
-	<p>fluxo cms is the software used to edit the website. It is published by systopic GmbH. The operator named in the imprint is responsible for this installation.</p>
+	<p>fluxo is the software used to edit the website. It is published by systopic GmbH. The operator named in the imprint is responsible for this installation.</p>
 	</div>
 </main>

@@ -66,5 +66,4 @@ if (!ThemeFile::save((string) \http::dataset('key'), $raw)) {
     \message::error('That colour was not saved.');
     return;
 }
-\message::confirm('Saved.');
 $this->updateView();

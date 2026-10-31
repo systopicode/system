@@ -188,6 +188,12 @@ final class Files
             $size = @getimagesize($path);
             if ($size !== false) {
                 [$media->width, $media->height] = [(int) $size[0], (int) $size[1]];
+                if ($mime === 'image/jpeg' && function_exists('exif_read_data')) {
+                    $exif = @exif_read_data($path);
+                    if (in_array((int) ($exif['Orientation'] ?? 1), [5,6,7,8], true)) {
+                        [$media->width, $media->height] = [$media->height, $media->width];
+                    }
+                }
             }
         }
     }
@@ -223,6 +229,18 @@ final class Files
         }
         $data = json_decode((string) file_get_contents($file), true);
         return is_array($data) ? $data : [];
+    }
+
+    /** Apply relative controls to an already rendered format without discarding its saved look. */
+    public static function composeTune(array $previous, array $change): array
+    {
+        $combined = $change;
+        foreach (['b','c','s'] as $channel) {
+            $combined[$channel] = max(0, min(200, (int) round(($previous[$channel] ?? 100) * ($change[$channel] ?? 100) / 100)));
+        }
+        $combined['r'] = (($change['r'] ?? 0) + (!empty($change['f']) ? -1 : 1) * ($previous['r'] ?? 0) + 360) % 360;
+        $combined['f'] = (int) ((bool) ($previous['f'] ?? 0) !== (bool) ($change['f'] ?? 0));
+        return $combined;
     }
 
     /** null removes the format. An empty list removes every format. */

@@ -13,4 +13,5 @@ $passkeyEscape = static fn($value): string => htmlspecialchars((string) $value, 
         <button type="button" class="submit" data-on_click="passkeyAction" data-passkey-mode="create"><i class="cmsIcon cmsIcon-user-viewfinder" aria-hidden="true"></i>Add passkey</button>
     </div>
     <p class="authFoot"><a class="authSkip" href="<?= $passkeyEscape(\http::$root . 'cms/auth/continueWithoutPasskey') ?>"><span>Continue without a passkey</span><i class="cmsIcon cmsIcon-arrow-right"></i></a></p>
+    <?php $authSuccessHidden = true; include dirname(__DIR__, 3) . '/src/Auth/signed-in.tpl.php'; ?>
 </main>

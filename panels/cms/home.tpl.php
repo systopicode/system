@@ -8,10 +8,16 @@
  */
 $e = static fn($v): string => htmlspecialchars((string) $v, ENT_QUOTES);
 $widgets = $this->dashboardWidgets();
-['order' => $order, 'hidden' => $hidden] = $this->dashboardLayout();
+$layout = $this->dashboardLayout();
+['order' => $order, 'hidden' => $hidden] = $layout;
+$order = $layout['layouts'][3] ?? $order;
 $columns = $this->dashboardColumns(array_keys($widgets), $order);
 $sorted = array_merge(...$columns);
-$this->state->dashboard = array_merge(...array_map(static fn(array $column, int $i): array => $i === 0 ? $column : ['|', ...$column], $columns, array_keys($columns)));
+$layouts = [];
+foreach ($layout['layouts'] as $count => $savedOrder) {
+    $layouts[$count] = \Systopic\System\Dashboard\Layout::order(\Systopic\System\Dashboard\Layout::columns(array_keys($widgets), $savedOrder, (int) $count));
+}
+$layouts[3] = \Systopic\System\Dashboard\Layout::order($columns);
 $editing = !empty($this->state->dashEdit);
 $title = static function (string $file): string {
 	preg_match('~<h2[^>]*>(.*?)</h2>~s', (string) file_get_contents($file), $m);
@@ -36,7 +42,7 @@ $revision = \Systopic\System\Sys\Release::revision();
 			<button type="button" class="button dashHeadMore" data-cms-more aria-label="More" aria-expanded="false"><i class="cmsIcon cmsIcon-ellipsis"></i></button>
 			<div class="cmsPageToolsMenu dashHeadMenu">
 				<button type="button" class="button" data-on_click="dashEdit"><i class="cmsIcon <?= $editing ? 'cmsIcon-check' : 'cmsIcon-grid-2' ?>"></i><span><?= $editing ? 'Done' : 'Customize' ?></span></button>
-				<a class="button" href="<?= $e($site) ?>" target="_blank" rel="noopener"><i class="cmsIcon cmsIcon-up-right-from-square"></i><span>View website</span></a>
+				<a class="button cmsExternalLink" href="<?= $e($site) ?>" target="_blank" rel="noopener"><span>View website</span><i class="cmsIcon cmsIcon-up-right-from-square" aria-hidden="true"></i></a>
 			</div>
 		</nav>
 	</header>
@@ -44,19 +50,17 @@ $revision = \Systopic\System\Sys\Release::revision();
 	<?php if ($editing) {
 		$off = array_values(array_intersect($sorted, $hidden));
 		?>
-		<div class="dashCustomize">
-			<p>Drag a widget by its title to move it, the cross hides it.</p>
-			<?php if ($off !== []) { ?>
-				<p class="dashHidden">
-					<span>Add:</span>
-					<?php foreach ($off as $key) { ?>
-						<button type="button" class="button" data-on_click="showWidget" data-widget="<?= $e($key) ?>"><i class="cmsIcon cmsIcon-plus"></i><?= $title($widgets[$key]['file']) ?></button>
-					<?php } ?>
-				</p>
-			<?php } ?>
+		<div class="dashCustomize" data-drop_accept="widget" data-on_drop="hideDroppedWidget">
+			<p>Drag a widget by its title to move it. Drop it here or use the cross to hide it.</p>
+			<p class="dashHidden">
+				<?php if ($off !== []) { ?><span>Add:</span><?php } ?>
+				<?php foreach ($off as $key) { ?>
+					<button type="button" class="button" data-drag_type="widget" data-on_click="showWidget" data-widget="<?= $e($key) ?>"><?= $title($widgets[$key]['file']) ?></button>
+				<?php } ?>
+			</p>
 		</div>
 	<?php } ?>
-	<div class="widgets dashWidgets<?= $editing ? ' is-editing' : '' ?>">
+	<div class="widgets dashWidgets<?= $editing ? ' is-editing' : '' ?>" data-layouts="<?= $e(json_encode($layouts)) ?>">
 		<?php foreach ($columns as $column => $keys) { ?>
 			<div class="dashColumn">
 				<?php foreach ($keys as $key) {
@@ -69,7 +73,7 @@ $revision = \Systopic\System\Sys\Release::revision();
 						<?php if ($editing) { ?>
 							<div class="sort v insertBefore" data-drop_accept="widget" data-on_drop="insertWidgetBefore"></div>
 							<div class="sort v insertAfter" data-drop_accept="widget" data-on_drop="insertWidgetAfter"></div>
-							<button type="button" class="dashHide" data-on_click="hideWidget" title="Hide"><i class="cmsIcon cmsIcon-xmark"></i></button>
+							<button type="button" class="button transparent icononly dashHide" data-on_click="hideWidget" title="Hide"><i class="cmsIcon cmsIcon-xmark"></i></button>
 						<?php } ?>
 						<?php $panel->render($file); ?>
 					</section>
@@ -81,11 +85,11 @@ $revision = \Systopic\System\Sys\Release::revision();
 		<?php } ?>
 	</div>
 	<footer class="authFooter dashFooter">
-		<span>© <?= date('Y') ?> systopic GmbH · <a class="ajax" href="legal/?page=releases" title="Release notes">GUI <?= $e($gui) ?><?= $revision !== '' ? ' · ' . $e($revision) : '' ?></a></span>
+		<span>© <?= date('Y') ?> systopic GmbH · <a class="ajax" href="<?= $e(\http::$root . 'cms/legal/') ?>?page=releases" title="Release notes">GUI <?= $e($gui) ?><?= $revision !== '' ? ' · ' . $e($revision) : '' ?></a></span>
 		<nav>
-			<a class="ajax" href="legal/?page=license"><i class="cmsIcon cmsIcon-file-contract"></i> License</a>
-			<a class="ajax" href="legal/?page=imprint"><i class="cmsIcon cmsIcon-building"></i> Imprint</a>
-			<a class="ajax" href="legal/?page=privacy"><i class="cmsIcon cmsIcon-shield-halved"></i> Privacy</a>
+			<a class="ajax" href="<?= $e(\http::$root . 'cms/legal/') ?>?page=license"><i class="cmsIcon cmsIcon-file-contract"></i> License</a>
+			<a class="ajax" href="<?= $e(\http::$root . 'cms/legal/') ?>?page=imprint"><i class="cmsIcon cmsIcon-building"></i> Imprint</a>
+			<a class="ajax" href="<?= $e(\http::$root . 'cms/legal/') ?>?page=privacy"><i class="cmsIcon cmsIcon-shield-halved"></i> Privacy</a>
 			<a href="https://fluxo-help.1f2c.de" target="_blank" rel="noopener"><i class="cmsIcon cmsIcon-question-circle"></i> Help</a>
 		</nav>
 	</footer>

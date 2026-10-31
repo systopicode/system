@@ -17,7 +17,7 @@ $me = $this->me;
 $ownDevices = $me ? DeviceQuery::ofUser($this->scope, (int) $me->id) : [];
 $here = Devices::current();
 $codesOn = LoginCodes::available();
-$screenCode = preg_replace('~[^0-9A-Za-z\-]~', '', (string) \http::get('screen', ''));
+$screenCode = preg_replace('~[^0-9A-Za-z\-]~', '', (string) \http::post('screen', \http::get('screen', '')));
 $pending = ($codesOn && $screenCode !== '') ? LoginCodes::peek($screenCode, [Codes::PAIR_USER, Codes::PAIR_SCREEN]) : null;
 $mayPersons = $me && \Systopic\System\Auth\SignInRights::allows($this->scope, $me, \Systopic\System\Auth\SignInRights::PERSONS);
 $mayScreens = $me && \Systopic\System\Auth\SignInRights::allows($this->scope, $me, \Systopic\System\Auth\SignInRights::SCREENS);
@@ -67,7 +67,7 @@ $deviceRow = static function ($device) use ($e, $when, $here, $me): void {
 	?>
 	<div class="userDevice">
 		<i class="<?= $e(DeviceName::icon((string) $device->userAgent)) ?>" aria-hidden="true"></i>
-		<span class="presence<?= $presence !== '' ? ' ' . $presence : '' ?>" title="<?= $e($presenceTitle) ?>"></span>
+		<span class="presence<?= $presence !== '' ? ' ' . $presence : '' ?>" title="<?= $e($presenceTitle) ?>" role="img" aria-label="<?= $e($presenceTitle) ?>"></span>
 		<span>
 			<b><?= $e($device->name) ?></b>
 			<?= $device->client === 'app' ? 'App' : 'Browser' ?>
@@ -76,7 +76,7 @@ $deviceRow = static function ($device) use ($e, $when, $here, $me): void {
 				if ($paired !== '') { ?><br><?= $e($paired) ?><?php } ?></small>
 		</span>
 		<?php if (!$here || (int) $here->id !== (int) $device->id) { ?>
-			<button type="button" class="button transparent icononly" data-on_click="userConfirm" data-action="revokeOwnDevice" data-device_id="<?= (int) $device->id ?>" data-confirm="Sign this device out?" aria-label="Revoke" title="Sign out"><i class="<?= $e(DeviceName::slash((string) $device->userAgent)) ?>" aria-hidden="true"></i></button>
+			<button type="button" class="button transparent icononly" data-on_click="userConfirm" data-action="revokeOwnDevice" data-device_id="<?= (int) $device->id ?>" data-confirm="Sign this device out?" aria-label="Sign out device: <?= $e((string) $device->name) ?>; last seen <?= $e($when($device->lastSeen)) ?>" title="Sign out device"><i class="<?= $e(DeviceName::slash((string) $device->userAgent)) ?>" aria-hidden="true"></i></button>
 		<?php } ?>
 	</div>
 	<?php
@@ -88,6 +88,7 @@ $field = static fn(string $label, string $type, string $action, ?string $value, 
 $preview = $this->fakeRoles;
 ?>
 <section class="cms profile">
+    <h1 class="cmsA11yStatus">Account</h1>
 	<div class="profileHead">
 		<div class="profilePortrait">
 			<div class="portraitFrame">
@@ -98,7 +99,7 @@ $preview = $this->fakeRoles;
 							<img referrerpolicy="no-referrer" src="<?= $e($portrait) ?>" alt="">
 						<?php } ?>
 					</div>
-					<input type="file" name="portrait" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" onchange="this.form.requestSubmit()">
+					<input type="file" aria-label="Upload profile picture" title="Upload profile picture" name="portrait" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" onchange="this.form.requestSubmit()">
 				</form>
 				<?php if ($me && Portrait::hasFile((int) $me->id)) { ?>
 					<button type="button" class="portraitRemove" data-on_click="removePortrait" title="Remove photo"><i class="cmsIcon cmsIcon-trash"></i></button>
@@ -129,21 +130,20 @@ $preview = $this->fakeRoles;
 		</div>
 	</div>
 	<?php if ($preview !== []) { ?>
-		<p class="profilePreview"><i class="cmsIcon cmsIcon-eye"></i>Viewing the CMS as <?= $e(implode(', ', $preview)) ?>. <a data-on_click="unsetFakeRoles">Stop</a></p>
+		<p class="profilePreview"><i class="cmsIcon cmsIcon-eye"></i>Viewing the CMS as <?= $e(implode(', ', $preview)) ?>. <button type="button" data-cms-action data-on_click="unsetFakeRoles">Stop</button></p>
 	<?php } ?>
 	<div class="profileGrid">
 		<?php if ($me) { ?>
 			<section class="widget">
-				<header><h2><i class="cmsIcon cmsIcon-id-card"></i>Account</h2></header>
+				<header><h2><i class="cmsIcon cmsIcon-id-card"></i>General</h2></header>
 				<main class="fieldGrid">
 					<?= \message::flush('account') ?>
 					<?= $field('Username', 'text', 'updateUserName', $me->name, 'off') ?>
 					<?= $field('Full name', 'text', 'updateUserFullname', $me->fullname) ?>
 					<?= $field('Email', 'email', 'updateUserEmail', $me->email, 'off') ?>
 				</main>
-			</section>
-			<section class="widget">
-				<header><h2><i class="cmsIcon cmsIcon-lock"></i>Password</h2></header>
+				<details class="cmsBox profilePassword">
+				<summary><h3><i class="cmsIcon cmsIcon-lock"></i>Change password</h3></summary>
 				<form method="post" action="changePassword">
 					<main class="fieldGrid">
 						<?= \message::flush('password') ?>
@@ -152,6 +152,7 @@ $preview = $this->fakeRoles;
 					</main>
 					<footer><button class="button submit" type="submit"><i class="cmsIcon cmsIcon-check"></i>Save password</button></footer>
 				</form>
+				</details>
 			</section>
 		<?php } ?>
 		<?php if ($me) { echo \Systopic\System\Auth\Passkeys::render($me, 'widget'); } ?>
@@ -192,7 +193,7 @@ $preview = $this->fakeRoles;
 				<p class="tagsHint">Light is used until Dark or System is chosen for this account.</p>
 				<div class="appearanceChoices" role="radiogroup" aria-label="Appearance">
 					<?php foreach (['light' => ['cmsIcon cmsIcon-sun', 'Light', 'Light background.'], 'dark' => ['cmsIcon cmsIcon-moon', 'Dark', 'Dark background.'], 'system' => ['cmsIcon cmsIcon-circle-half-stroke', 'System', 'Matches this device.']] as $value => $choice) { ?>
-						<button type="button" role="radio" data-on_click="updateAppearance" data-value="<?= $value ?>" aria-checked="<?= $appearance === $value ? 'true' : 'false' ?>"><i class="<?= $choice[0] ?>"></i><span><?= $choice[1] ?></span><small><?= $choice[2] ?></small></button>
+						<button type="button" role="radio" tabindex="<?= $appearance === $value ? '0' : '-1' ?>" data-on_click="updateAppearance" data-value="<?= $value ?>" aria-checked="<?= $appearance === $value ? 'true' : 'false' ?>"><i class="<?= $choice[0] ?>"></i><span><?= $choice[1] ?></span><small><?= $choice[2] ?></small></button>
 					<?php } ?>
 				</div>
 			</main>
@@ -226,7 +227,7 @@ $preview = $this->fakeRoles;
 	$offerUrl = $offer ? \Systopic\System\Auth\CodeMail::link($offer['code']) : '';
 	$offerSvg = ($offerUrl !== '' && class_exists('qr')) ? \qr::svgMarkup(\qr::payload('url', ['url' => $offerUrl]), 4, 'M', 'qr-code') : '';
 ?>
-<div class="cms cmslightbox remoteLoginBox"<?= $remoteOpen ? '' : ' hidden' ?><?= $offer ? ' data-code-value="' . $e($offer['code']) . '"' : '' ?>>
+<div class="cms cmslightbox remoteLoginBox" data-feedback="parameters"<?= $remoteOpen ? '' : ' hidden' ?><?= $offer ? ' data-code-value="' . $e($offer['code']) . '"' : '' ?>>
 	<section>
 		<header>
 			<h1>Remote login</h1>
@@ -266,10 +267,10 @@ $preview = $this->fakeRoles;
 				</div>
 				<div class="cms message qrScanMsg" data-qr-msg hidden></div>
 				<div class="qrScanDim remoteAbort" data-qr-dim hidden>
-					<button type="button" class="button submit" data-qr-again><i class="cmsIcon cmsIcon-rotate-right"></i> <span data-qr-label>Try again</span></button>
+					<button type="button" class="button submit" data-qr-again><i class="cmsIcon cmsIcon-arrows-rotate"></i> <span data-qr-label>Try again</span></button>
 				</div>
 			</div>
-			<form class="remoteCode" data-code-form method="get" action="<?= $e($this->href) ?>"<?= ($remoteOpen || $offerSvg === '') ? '' : ' hidden' ?>>
+			<form class="remoteCode" data-feedback="parameters" data-code-form method="post" action="<?= $e($this->href) ?>"<?= ($remoteOpen || $offerSvg === '') ? '' : ' hidden' ?>>
 				<div class="remoteCodeEntry">
 					<div class="authCodeSlots" data-code-slots>
 						<?php for ($slot = 0; $slot < 8; $slot++) {
@@ -316,7 +317,7 @@ $preview = $this->fakeRoles;
 		</header>
 		<main>
 			<?php if (!$asScreen) { ?>
-				<form method="post" action="approveRemote">
+				<form data-feedback="parameters" method="post" action="approveRemote">
 					<input type="hidden" name="code" value="<?= $e($screenCode) ?>">
 					<?php if ($offerPeople) {
 						$firstSelf = (int) $people[0]['user_id'] === (int) $me->id;
@@ -346,7 +347,7 @@ $preview = $this->fakeRoles;
 			<?php } elseif ($screens === []) { ?>
 				<p class="cmsBoxLead">There is no screen account yet.</p>
 			<?php } else { ?>
-				<form method="post" action="approveRemote">
+				<form data-feedback="parameters" method="post" action="approveRemote">
 					<input type="hidden" name="code" value="<?= $e($screenCode) ?>">
 					<div data-identify-other>
 						<p class="cmsBoxLead">You, <?= $meLabel ?>, are signing this device in. You identify the user on that device as <strong data-identify-name><?= $accountLabel($screens[0]) ?></strong>.</p>

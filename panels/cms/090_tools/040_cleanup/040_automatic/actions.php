@@ -31,4 +31,4 @@ try {
         }
     }
 } catch (\Throwable) { \message::error('Cleanup could not run. Check maintenance storage and project permissions.'); }
-$this->updateView('main');
+$this->updateView('main', true);

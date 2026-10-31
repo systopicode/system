@@ -51,7 +51,7 @@ final class TagGroupsPanel
             ->append('div.row div.tagsRow')->foreach($group->tags, static function ($div, Tag $tag) {
                 $div->append(self::item($tag));
             })->close()
-            ->append('div.row input')->placeholder('Add tag')->data([
+            ->append('div.row input')->placeholder('Add tag')->attr('aria-label', 'Add tag')->data([
                 'on_keyup' => 'enterNewTag',
             ]);
     }
@@ -128,7 +128,7 @@ final class TagGroupsPanel
                 })
                 ->close()
                 ->append('form.tagAdd')->attr('method', 'put')->attr('action', $action . 'addTag' . $query)
-                ->append('input[name=name]')->placeholder('Add tag')->attr('autocomplete', 'off')->close()
+                ->append('input[name=name]')->placeholder('Add tag')->attr('aria-label', 'Add tag')->attr('autocomplete', 'off')->close()
                 ->append('input[type=hidden][name=group_id]')->value((string) $group->id)->close()
                 ->append('input[type=hidden][name=node_id]')->value((string) $nodeId);
         });

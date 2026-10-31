@@ -7,6 +7,9 @@ sys.core.server.command = function (call) {
 
 	};
 	switch (response.command) {
+        case 'requestResult':
+            call.requestError = response.data?.ok === false;
+            break;
 		case 'updateSettings':
 			//c(response.updateSettings,3).open();
 			$.extend(settings, response.updateSettings);
@@ -354,7 +357,11 @@ sys.core.server.command = function (call) {
 			break;
 		case 'updateDocument':
 			if (settings.inApp) {
+                // A background request may have waited while the user scrolled.
+                // Preserve the position immediately before replacing the DOM.
+                var backgroundScroll = call.background ? sys.core.server.scrollPositions() : null;
 				sys.renderer.updateDocument();
+                if (backgroundScroll) sys.core.server.restoreScroll(backgroundScroll);
 				// Fire onUpdate* for layers marked layersUpdated (e.g. search
 				// results). Legacy did NOT call panelTree.update here — only
 				// after loadJS via loader.onScriptsReady. If this response

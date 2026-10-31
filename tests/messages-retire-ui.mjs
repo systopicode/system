@@ -1,0 +1,32 @@
+import assert from 'node:assert/strict';
+import {readFile} from 'node:fs/promises';
+const {chromium}=await import(process.env.FLUXO_PLAYWRIGHT_MODULE);
+const browser=await chromium.launch({channel:'chrome',headless:true});
+try {
+ const page=await browser.newPage();
+ const errors=[];page.on('pageerror',e=>errors.push(e.message));
+ await page.clock.install();
+ const source=await readFile('public/js/gui/ui.js','utf8');
+ await page.addInitScript({content:source.slice(source.indexOf('// Shared messages retire'))});
+ await page.goto('data:text/html,<style>.message{margin:20px}.message:empty{display:none}.error{padding:16px;border:1px solid red}</style><div data-system-messages class="cms message"><div class="error"><p>Save failed</p></div></div><div id="next">Content below</div>');
+ const original=await page.locator('#next').evaluate(el=>el.getBoundingClientRect().top);
+ await page.clock.runFor(9900);
+ assert.equal(await page.locator('.error').count(),1,'error stays for the full reading period');
+ await page.clock.runFor(250);
+ await page.waitForTimeout(180);
+ const middle=await page.locator('#next').evaluate(el=>el.getBoundingClientRect().top);
+ assert.ok(middle<original&&middle>8,'height shrinks progressively instead of jumping');
+ await page.waitForTimeout(600);
+ assert.equal(await page.locator('.error').count(),0,'expired message is removed without a leftover gap');
+ assert.deepEqual(errors,[],'head-loaded message observer waits for DOM readiness');
+ const touch=await browser.newPage({hasTouch:true,isMobile:true,viewport:{width:390,height:844}});
+ await touch.clock.install();
+ await touch.addInitScript({content:source.slice(source.indexOf('// Shared messages retire'))});
+ await touch.goto('data:text/html,<div data-system-messages class="cms message cmsActionMessages"><div class="error"><p>Touch notice</p></div></div>');
+ await touch.locator('.error').dispatchEvent('pointerenter',{pointerType:'touch'});
+ await touch.clock.runFor(10100);
+ await touch.waitForTimeout(650);
+ assert.equal(await touch.locator('.error').count(),0,'touch hover cannot suspend the reading timeout');
+ await touch.close();
+ console.log('ok: message has reading time, smooth measured collapse, no leftover space, and safe head loading');
+}finally{await browser.close()}

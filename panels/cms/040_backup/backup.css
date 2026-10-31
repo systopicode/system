@@ -5,7 +5,7 @@ body.backup main > div.pylon {
     display: none;
 }
 
-body.backup .cms table.hover ul li:last-child a.button {
+body.backup .cms table.hover ul li:last-child :is(a, button:where([data-cms-action])).button {
     padding: 4px 6px;
 }
 
@@ -35,7 +35,7 @@ body.backup .backupProgress .bar{
     height: 2rem;
 }
 
-body.backup .cmslightbox:has(.backupLog) .barmenu > li > a{
+body.backup .cmslightbox:has(.backupLog) .barmenu > li > :is(a, button:where([data-cms-action])){
     display: inline-flex;
     align-items: center;
     justify-content: center;

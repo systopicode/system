@@ -175,6 +175,8 @@ sys.core.server = new function () {
     };
     server.headersFor = method => {
         var headers = {};
+        // A presentation hint only; never used to grant access or identify a device.
+        if (/Macintosh/.test(navigator.userAgent) && navigator.maxTouchPoints > 1) headers["X-Fluxo-Device"] = "iPad";
         server.headerHooks.forEach(fn => {
             try {
                 Object.assign(headers, fn(method) || {});
@@ -295,7 +297,9 @@ sys.core.server = new function () {
                 });
             }
         });
+        found.windowY = window.scrollY;
         found.inputVersion = server.scrollInputVersion;
+        found.revealVersion = server.scrollRevealVersion;
         return found;
     };
     /**
@@ -307,6 +311,7 @@ sys.core.server = new function () {
      */
     server.pinScroll = (el, top) => {
         var inputVersion = server.scrollInputVersion;
+        var revealVersion = server.scrollRevealVersion;
         var prev = el.style.minHeight;
         var before = el.clientHeight;
         var held = false;
@@ -319,7 +324,7 @@ sys.core.server = new function () {
             }
         }
         return () => {
-            if (server.scrollInputVersion !== inputVersion) { el.style.minHeight = prev; return; }
+            if (server.scrollInputVersion !== inputVersion || (server.scrollReveals.get(el) || 0) > revealVersion) { el.style.minHeight = prev; return; }
             if (!el.isConnected) {
                 return;
             }
@@ -347,14 +352,15 @@ sys.core.server = new function () {
     // Explicit navigation owns its scroller; older delayed restores must yield.
     server.scrollRevealVersion = 0;
     server.scrollReveals = new WeakMap();
-    server.revealScroll = (el, top) => {
+    server.revealScroll = (el, top, behavior = 'instant') => {
         server.scrollReveals.set(el, ++server.scrollRevealVersion);
-        el.scrollTop = top;
+        if (behavior === 'smooth' && el.scrollTo && !matchMedia('(prefers-reduced-motion: reduce)').matches) el.scrollTo({top, behavior: 'smooth'});
+        else el.scrollTop = top;
     };
 
     /** A box built anew gets its place back, also once its images have their height. */
     server.restoreScroll = positions => {
-        var revealVersion = server.scrollRevealVersion;
+        var revealVersion = positions?.revealVersion ?? server.scrollRevealVersion;
         var inputVersion = positions?.inputVersion ?? server.scrollInputVersion;
         var apply = () => {
             if (server.scrollInputVersion !== inputVersion) return;
@@ -370,8 +376,8 @@ sys.core.server = new function () {
                 }
                 sys.core.server.pinScroll(el, position.top)();
             });
-            if (sys.core.server.pendingY) {
-                window.scrollTo(0, sys.core.server.pendingY);
+            if (positions?.windowY || sys.core.server.pendingY) {
+                window.scrollTo(0, positions?.windowY || sys.core.server.pendingY);
             }
         };
         apply();
@@ -415,6 +421,7 @@ sys.core.server.call = function (data) {
 
     call.send = function (inputUrl) { // url object or string
         var hooks, doneFunc, failFunc, ondonefirstFunc, onloadstartFunc, onupdateFunc, changeLocation;
+        var feedbackToken, feedbackOk = false;
         // Back and forward already moved the address. Pushing it again
         // stacks a copy, so the next back stays on the same page.
         call.fromHistory = sys.core.server.historyMode === 'pop';
@@ -490,7 +497,7 @@ sys.core.server.call = function (data) {
                     } catch (e) {
                         p('NO JSON!', sys.core.server.callContext(call, method, xhrRootHref, xhr), responseStr);
                         l(responseStr);
-                        if (typeof responseStr === 'string' && /class="authCard"|Sign in to fluxo cms/.test(responseStr)) {
+                        if (typeof responseStr === 'string' && /class="authCard"|Sign in to fluxo/.test(responseStr)) {
                             location.href = sys.core.server.loginUrl();
                             return;
                         }
@@ -502,6 +509,7 @@ sys.core.server.call = function (data) {
                         }
                     }
                     if (call.responses) {
+                        const previousErrors = new Map([...document.querySelectorAll('[data-system-messages] > .error')].map(el => [el, el.textContent]));
                         call.responses.sort(sys.core.server.sortCommands);
                         if (ondonefirstFunc) {
                             if (call.responses[0] && call.responses[0].command === 'done') {
@@ -524,9 +532,24 @@ sys.core.server.call = function (data) {
                                 break;
                             }
                         }
+                        // Redirects can reuse an unchanged navigation DOM layer. Its
+                        // selection must follow the rendered module, not that old layer.
+                        const mainItems = [...document.querySelectorAll('body > main > div.main nav > ul > li[data-name]')];
+                        const activeModule = mainItems.find(item => document.body.classList.contains(item.dataset.name));
+                        if (activeModule) mainItems.forEach(item => {
+                            const selected = item === activeModule;
+                            item.classList.toggle('active', selected);
+                            const link = item.querySelector(':scope > a');
+                            if (selected) link?.setAttribute('aria-current', 'page');
+                            else link?.removeAttribute('aria-current');
+                        });
                         if (backupStep && !backupContinues) {
                             sys.core.server.backupBusy = false;
                         }
+                        const serverError = call.requestError === true || (call.requestError === undefined && [...document.querySelectorAll('[data-system-messages] > .error')].some(el => !el.closest('[data-client-action-messages]') && (!previousErrors.has(el) || previousErrors.get(el) !== el.textContent))) || call.dataPassedToCallbackFunction?.error === true;
+                        if (feedbackToken) feedbackToken.serverError = serverError;
+                        if (call.event) call.event.requestFailed = serverError;
+                        feedbackOk = !serverError;
                         if (doneFunc) {
                             //l('***************** ondone call', call.dataPassedToCallbackFunction);
                             doneFunc(call.dataPassedToCallbackFunction);
@@ -589,7 +612,10 @@ sys.core.server.call = function (data) {
         // After the handler above - once per request, also when it failed, was
         // aborted, or a command threw: whoever waits for quiet sees the page
         // as this answer left it, and never waits for good.
-        xhr.addEventListener('loadend', () => sys.core.server.settled());
+        xhr.addEventListener('loadend', () => {
+            window.cmsFeedback?.finish(feedbackToken, feedbackOk);
+            sys.core.server.settled();
+        });
 
         if (call.event) {
             obj.extend(call.data, call.event.data);
@@ -663,6 +689,16 @@ sys.core.server.call = function (data) {
             sys.core.server.backupBusy = true;
         }
 
+
+        var log = () => {
+            if (call.event) {
+                // l(call.event);
+                l('XHR:' + method.toUpperCase() + ' sent to ' + xhrRootHref + ' - event:' + call.event.type, ' - data:', call.data, ' - event:', event);
+            } else {
+                l('XHR:' + method.toUpperCase() + ' sent to ' + xhrRootHref + ' - no event involved');
+            }
+        };
+        const sendRequest = () => {
         // A GET is a navigation here (anchor click, form with method get),
         // and a navigation is what the server diffs. Name the state this
         // window is showing so it compares against the right tree — see
@@ -687,22 +723,15 @@ sys.core.server.call = function (data) {
             xhrRootHref = sys.http.diffUrl(xhrRootHref);
         }
 
-        var log = () => {
-            if (call.event) {
-                // l(call.event);
-                l('XHR:' + method.toUpperCase() + ' sent to ' + xhrRootHref + ' - event:' + call.event.type, ' - data:', call.data, ' - event:', event);
-            } else {
-                l('XHR:' + method.toUpperCase() + ' sent to ' + xhrRootHref + ' - no event involved');
-            }
-        };
         xhr.open(method, xhrRootHref, true);
         xhr.setRequestHeader("X-Requested-With", "XMLHttpRequest");
         var extraHeaders = sys.core.server.headersFor(method);
         for (var headerName in extraHeaders) {
             xhr.setRequestHeader(headerName, extraHeaders[headerName]);
         }
+        feedbackToken = window.cmsFeedback?.begin(call, method);
         sys.core.server.inFlight++;
-        sys.core.server.showBusy();
+        if (!call.background) sys.core.server.showBusy();
         switch (method) {
             case 'get':
                 // anchors and forms with method get
@@ -770,6 +799,10 @@ sys.core.server.call = function (data) {
                 }
                 break;
         }
+        };
+        if (method === 'get' && call.event && ['click', 'popstate'].includes(call.event.type) && call.data.history !== false && call.data.dataset?.history !== 'false' && window.cmsFeedback) {
+            window.cmsFeedback.navigate(sendRequest);
+        } else sendRequest();
         return hooks;
     };
 

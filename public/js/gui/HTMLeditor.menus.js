@@ -23,7 +23,7 @@ function HTMLeditorRightClick(clicktype, event, elements) {
 	};
 
 	var history = editor ? {
-		undo: cmd('Undo', 'arrow-rotate-left', 'undoHTMLeditor', {disabled: !wysiwyg.canStep(editor, -1), reopen: true}),
+		undo: cmd('Undo', 'editor-undo', 'undoHTMLeditor', {disabled: !wysiwyg.canStep(editor, -1), reopen: true}),
 		redo: cmd('Redo', 'arrow-rotate-right', 'redoHTMLeditor', {disabled: !wysiwyg.canStep(editor, 1), reopen: true})
 	} : {};
 	var inline = {

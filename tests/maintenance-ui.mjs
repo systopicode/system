@@ -15,6 +15,7 @@ try {
   assert.equal(await page.locator('.cleanupSetup').evaluate(e=>e.open),false);
   await page.locator('.cleanupSetup > summary').click();
   assert.equal(await page.locator('.cleanupSetup').evaluate(e=>e.open),true);
+  await page.locator('.cleanupMethod > summary').filter({hasText:'HTTPS request'}).click();
   assert.match(await page.locator('.cleanupSetup').innerText(),/HTTPS is required/);
   const size=await page.evaluate(()=>({width:document.documentElement.clientWidth,scroll:document.documentElement.scrollWidth}));
   assert.ok(size.scroll<=size.width+2,`page overflow at ${width}`);

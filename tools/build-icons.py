@@ -52,6 +52,9 @@ css+='}\n'
 css+='''.cmsIcon { --icon-mask: var(--icon-help-circle); --icon-primary: currentColor; --icon-secondary: currentColor; --icon-secondary-opacity: .7; display: inline-block; position: relative; flex: 0 0 auto; width: 1.25em; height: 1em; vertical-align: -.125em; font-style: normal; line-height: 1; text-indent: 0; }
 .cmsIcon::before, .cmsIcon.cmsIcon-duotone::after { content: ""; display: block; position: absolute; left: 50%; top: 50%; width: 1.2em; height: 1.2em; transform: translate(-50%, -50%); background-color: var(--icon-primary); -webkit-mask: var(--icon-mask) center / contain no-repeat; mask: var(--icon-mask) center / contain no-repeat; }
 .cmsIcon.cmsIcon-duotone::after { background-color: var(--icon-secondary); opacity: var(--icon-secondary-opacity); -webkit-mask-image: var(--icon-secondary-mask, none); mask-image: var(--icon-secondary-mask, none); }
+.cmsIcon.cmsIcon-duotone { isolation: isolate; }
+.cmsIcon.cmsIcon-duotone::before { z-index: 1; }
+.cmsIcon.cmsIcon-duotone::after { z-index: 0; }
 .cmsIcon.thumbBroken::before { -webkit-mask-size: 1em 1em; mask-size: 1em 1em; }
 .cmsIcon-spin { animation: icon-spin 1s linear infinite; }
 @keyframes icon-spin { to { transform: rotate(360deg); } }

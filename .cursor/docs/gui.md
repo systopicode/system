@@ -1,7 +1,7 @@
 # fluxo GUI — how to work on it
 
 This is the hand-over for anyone (human or AI) who continues the admin GUI
-("fluxo cms") — the panels behind `https://<host>/cms/`. Read it once before
+("fluxo") — the panels behind `https://<host>/cms/`. Read it once before
 you change a panel, a stylesheet or a script.
 
 A project's own look (colours, logo, share image, mails) and the files of
@@ -160,8 +160,7 @@ columns and one phone column (700px and below).
 **Authentication**: [auth-passkeys.md](auth-passkeys.md) covers automatic HTTPS
 origins, login/autofill, setup, rights, schema upgrades and security emails.
 Passkey messages use the regular server-rendered message container; global
-banner styling lives in `20_base.css`. The supplied fingerprint SVG is the
-Tabler-based animated artwork.
+banner styling lives in `20_base.css`. Passkey artwork uses adapted Tabler Outline SVGs with explicit ink roles.
 
 **Link check** (`Systopic\Cms\Queries\LinkCheck`): `broken()` lists links of
 live pages to pages, aliases or `var/` files that are gone (To do
@@ -311,12 +310,11 @@ Rules:
   `.is-wide`), `.widgets` (grid of widgets), `label.field > span + input`,
   `td.icons > ul > li > a.button.icononly`, `.barmenu`, `.cmslightbox[data-size]`,
   `.tree`, `.dropdown`/`.contextmenu`, chips/tags (`tags.css`).
-- Icons: local Tabler Outline (`cmsIcon`) and Solar Line Duotone (`cmsIcon cmsIcon-duotone`) in main navigation.
-- Flags: `<img src="https://flagcdn.com/{code}.svg">` (see
-  `cms/panels/cms/010_pages/controls.tpl.php`).
+- Icons: local Tabler Outline SVG masks (`cmsIcon cmsIcon-<key>`), Solar Line Duotone for main navigation (`cmsIcon cmsIcon-duotone cmsIcon-<key>`). Registry: `src/Ui/icon-map.json`; extension adapter: `Ui\Icons::classes()`.
+- Flags: local `LanguageFlags` SVGs with project overrides; previews/upload/reset
+  live in Global Settings / Languages. No remote flag fallback.
 
-Fonts in use (`system/public/fonts/`): `InterVariable.woff2` (GUI),
-`public/icons/ (local SVG masks)`, `public/icons/ (local SVG masks)`.
+Fonts in use (`system/public/fonts/`): `InterVariable.woff2` (GUI). Icons use local SVG assets under `public/icons/`, with no icon fonts.
 Nothing else — placeholder images drawn by `mediaImage.php` use the Imagick
 default font.
 
@@ -550,8 +548,7 @@ Known places where the core still knows the cms (fix step by step):
   on the reply goes through `sysdebug.trimXhrResponse`. Logout:
   `cms/logout?to=<path>`. Every link but logout opens in a new tab. Icons:
   the panel's `$icon` without `cmsIcon-duotone`; the shadow root links
-  `css/11_fontawesome.min.css`, the `@font-face` rules sit in the document
-  (a shadow root ignores them).
+  `css/11_icons.css`; its `:host` variables support local SVG masks in the shadow root. No document-level icon font declarations are needed.
 - Pages sidebar (`cms/panels/cms/010_pages/sidebar/`): section headers carry a
   link icon (`a.sidebarInfo` in `main.tpl.php`: Meta → default values,
   Settings → `cms/settings/pagesettings/`, Tags → `cms/settings/tags/`). The
@@ -571,3 +568,5 @@ Apps without pages lost their styling (spaceticker's login), and giving them
 the cms would also bring pages, sites and the frontend. A separate
 `systopic/gui` package only pays off once a project runs the system without
 any backend — none does. The GUI stays in `systopic/system`.
+
+External links with an external-link marker use `cmsExternalLink`: visible label first, then the decorative `cmsIcon-arrow-up-right-from-square` with `aria-hidden="true"`. Icon-only actions keep their existing layout.

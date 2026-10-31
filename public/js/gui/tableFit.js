@@ -15,7 +15,7 @@ sys.fitTables.known = new Map();
 // the row is tapped. Desktop stays a table, so a drag never toggles a
 // scrollbar on the parent.
 sys.fitTables.fit = function (box) {
-	var phone = window.matchMedia('(max-width: 1024px), (orientation: portrait) and (max-width: 1400px)').matches;
+	var phone = !box.hasAttribute('data-table-scroll') && window.matchMedia('(max-width: 767px)').matches;
 	box.classList.toggle('stacked', phone);
 	box.classList.toggle('is-foldable', phone);
 	box.querySelectorAll('[data-table-fold]').forEach(function (button) {
@@ -63,7 +63,7 @@ sys.fitTables.fit = function (box) {
 };
 
 if (!sys.fitTables.media) {
-	sys.fitTables.media = window.matchMedia('(max-width: 1024px), (orientation: portrait) and (max-width: 1400px)');
+	sys.fitTables.media = window.matchMedia('(max-width: 767px)');
 	sys.fitTables.media.addEventListener('change', function () {
 		document.querySelectorAll('.tableScroll').forEach(sys.fitTables.fit);
 	});
@@ -87,7 +87,7 @@ sys.fitTables.observer = new ResizeObserver(function (entries) {
 
 document.addEventListener('click', function (event) {
 	var row = event.target.closest && event.target.closest('.tableScroll.stacked.is-foldable > table > tbody > tr');
-	if (!row || !window.matchMedia('(max-width: 1024px), (orientation: portrait) and (max-width: 1400px)').matches) {
+	if (!row) {
 		return;
 	}
 	// The grip is the place that opens the row. Fields and the template

@@ -4,7 +4,7 @@
 // or embed its own commands. The keyboard stays down (inputmode none) until
 // "Type" in the bar asks for it - it would cover half the page.
 function initContenteditableContextMenus() {
-	var selectionTimer, downInEditor = false;
+	var selectionTimer, downInEditor = false, keyboardMenu = false;
 
 	// the bar opens where the pointer pressed, not at the top of a large element
 	var lastPoint = null;
@@ -13,7 +13,7 @@ function initContenteditableContextMenus() {
 	};
 	/** pointed: the bar of the link, image or video itself, whatever the selection holds. */
 	var openFor = function (target, rect, pointed) {
-		$(target).trigger($.Event('contextmenu', {target: target, anchorRect: rect, pointed: !!pointed}));
+		$(target).trigger($.Event('contextmenu', {target: target, anchorRect: rect, pointed: !!pointed, keyboard: keyboardMenu}));
 	};
 	/** The bar for the media it was opened for, or where the caret or the selection is. */
 	var show = function (media) {
@@ -70,9 +70,24 @@ function initContenteditableContextMenus() {
 		downInEditor = !!wysiwygOf(e.target);
 		lastPoint = downInEditor ? pointOf(e) : lastPoint;
 		var editor = e.pointerType === 'touch' && wysiwygOf(e.target);
-		if (editor && !editor.hasAttribute('data-typing')) {
-			editor.setAttribute('inputmode', 'none');
-		}
+        if (editor && !editor.hasAttribute('data-typing')) {
+            editor.setAttribute('inputmode', 'none');
+            if (!editor.hasAttribute('data-selecting')) {
+                // A tap opens tools. Only the explicit Type action focuses the editor.
+                e.preventDefault();
+                var currentSelection = getSelection();
+                if (!currentSelection.isCollapsed && editor.contains(currentSelection.anchorNode)) return;
+                var caret = document.caretRangeFromPoint?.(e.clientX, e.clientY);
+                if (!caret && document.caretPositionFromPoint) {
+                    var position = document.caretPositionFromPoint(e.clientX, e.clientY);
+                    if (position) { caret = document.createRange(); caret.setStart(position.offsetNode, position.offset); caret.collapse(true); }
+                }
+                if (caret && editor.contains(caret.startContainer)) {
+                    editorRange = caret.cloneRange();
+                    var selection = getSelection(); selection.removeAllRanges(); selection.addRange(caret);
+                }
+            }
+        }
 	}, true);
 	// a pressed image would be selected, tinted and offered as text.
 	// one built into the page would be dragged instead of opening the bar.
@@ -117,7 +132,12 @@ function initContenteditableContextMenus() {
 			e.preventDefault();
 		}
 		// a link in a field is text to edit, never followed
-		wysiwygOf(e.target) && e.target.closest('a') && e.preventDefault();
+        var clickedLink = wysiwygOf(e.target) && e.target.closest('a');
+        if (clickedLink) {
+            e.preventDefault();
+            e.stopPropagation();
+            return openFor(clickedLink, pointOf(e), true);
+        }
 		var fixed = fixedMediaOf(e.target);
 		if (fixed && fixedMediaNodeId(fixed)) {
 			e.preventDefault();
@@ -138,7 +158,13 @@ function initContenteditableContextMenus() {
 			e.preventDefault();
 			return openFor(media.matches('a') && media.querySelector('img') || media, pointOf(e), true);
 		}
-		if (editor.hasAttribute('data-typing') || !getSelection().isCollapsed) {
+		if (editor.hasAttribute('data-selecting') && !getSelection().isCollapsed) {
+            editor.removeAttribute('data-selecting');
+            e.preventDefault();
+            return show();
+        }
+        if (!getSelection().isCollapsed) { e.preventDefault(); return show(); }
+        if (editor.hasAttribute('data-typing')) {
 			return;
 		}
 		openFor(hit, pointOf(e));
@@ -150,7 +176,7 @@ function initContenteditableContextMenus() {
 		if (current.rangeCount && wysiwygOf(current.anchorNode)) {
 			editorRange = current.getRangeAt(0).cloneRange();
 			if (editorPointer === 'touch' && !current.isCollapsed) {
-				selectionTimer = setTimeout(show, 500);
+				selectionTimer = setTimeout(show, 350);
 			}
 		}
 	});
@@ -184,6 +210,9 @@ function initContenteditableContextMenus() {
 		}
 	});
 	document.addEventListener('keydown', function (e) {
+        if (e.altKey && e.key === 'F10' && wysiwygOf(e.target)) {
+            e.preventDefault();keyboardMenu=true;show();keyboardMenu=false;return;
+        }
 		if (!/^(Shift|Meta|Control|Alt)$/.test(e.key) && wysiwygOf(e.target) && openBar()) {
 			closeAllMenus();
 		}
@@ -191,6 +220,13 @@ function initContenteditableContextMenus() {
 	// the bar stays where it was opened: scrolling the page ends it
 	document.addEventListener('scroll', function (e) {
 		var bar = openBar();
+        // Keyboard focus/caret movement may scroll the editor after opening the bar.
+        // Keep keyboard actions reachable and follow their field instead of removing focus.
+		if (bar && bar.contains(document.activeElement) && (bar.dataset.keyboard === 'true' || document.activeElement.matches('input,textarea'))) {
+            const anchor=bar.cmsMenuOpener;
+            if(anchor?.isConnected)placeEditorMenu(bar,anchor.getBoundingClientRect(),anchor);
+            return;
+        }
 		bar && !bar.contains(e.target) && closeAllMenus();
 	}, true);
 
@@ -280,7 +316,7 @@ var restoreEditorRange = function () {
 	if (!editor || !editor.isConnected) {
 		return;
 	}
-	editor.focus({preventScroll: true});
+	if (editorPointer !== 'touch') editor.focus({preventScroll: true});
 	selection.removeAllRanges();
 	selection.addRange(editorRange);
 };
@@ -292,6 +328,10 @@ var menuCommand = function (func, reopen) {
 		}
 		restoreEditorRange();
 		var result = func.apply(this, arguments);
+        if (result && typeof result.then === 'function') {
+            result.then(function () { closeAllMenus(); });
+            return;
+        }
 		if (result !== false) {
 			closeAllMenus();
 			reopen && editorBubble(arguments[0] && arguments[0].data && arguments[0].data.target);
@@ -318,8 +358,7 @@ var visibleArea = function (node) {
 /**
  * Puts the bar above its anchor (the point pressed, or the caret) in the
  * visible part of the page, below when there is no room. With selected text on
- * touch the system's own menu (copy, paste …) pops up at the text and can't be
- * turned off, so the bar docks at the edge of the screen away from the text.
+ * touch, prefer below the selection so the native menu can remain above it.
  */
 var placeEditorMenu = function (menu, rect, target) {
 	rect = rect || menu.anchorRect;
@@ -329,9 +368,10 @@ var placeEditorMenu = function (menu, rect, target) {
 	var gap = 10, edge = 8;
 	var width = menu.offsetWidth, height = menu.offsetHeight;
 	var area = visibleArea(target);
-	var docked = editorPointer === 'touch' && !getSelection().isCollapsed && !(target && target.closest && target.closest('img, video, iframe, a'));
+	var docked = false; // Keep touch selections anchored to their text, like the caret.
 	var fits = {above: rect.top - gap - height >= area.top + edge, below: rect.bottom + gap + height <= area.bottom - edge};
-	var side = docked ? (rect.top > (area.top + area.bottom) / 2 ? 'top' : 'bottom') : fits.above ? 'above' : fits.below && 'below';
+	var touchSelection = editorPointer === 'touch' && !getSelection().isCollapsed;
+	var side = touchSelection && fits.below ? 'below' : docked ? (rect.top > (area.top + area.bottom) / 2 ? 'top' : 'bottom') : fits.above ? 'above' : fits.below && 'below';
 	var top = {above: rect.top - gap - height, below: rect.bottom + gap, top: area.top, bottom: area.bottom}[side];
 	top = side ? top : Math.max(rect.top, area.top) + gap;
 	top = Math.max(area.top + edge, Math.min(top, area.bottom - height - edge));
@@ -364,15 +404,29 @@ var contextMenuWW = function (params, event) {
 	var ul = $('<ul></ul>');
 	var mediaBar = target && target.closest && target.closest('img, video, iframe');
 	if (editorPointer === 'touch' && wysiwygOf(target) && !mediaBar) {
-		$('<li><a href="javascript:void(0)" title="Type"><i class="cmsIcon cmsIcon-keyboard"></i></a></li>')
-			.appendTo(ul).children('a').on('click', startTyping);
+		$('<li><button type="button" data-cms-action title="Type"><i class="cmsIcon cmsIcon-keyboard"></i></button></li>')
+			.appendTo(ul).children('a,button[data-cms-action]').on('click', startTyping);
+        $('<li><button type="button" data-cms-action title="Select text"><i class="cmsIcon cmsIcon-text-select"></i></button></li>')
+            .appendTo(ul).children('button').on('click', function () {
+                var editor = wysiwygOf(target);
+                if (!editor || !editorRange) return;
+                closeAllMenus();
+                editor.setAttribute('data-selecting', '');
+                editor.setAttribute('inputmode', 'none');
+                var selection = getSelection();
+                selection.removeAllRanges();
+                selection.addRange(editorRange.cloneRange());
+                if (selection.isCollapsed && selection.modify) selection.modify('extend', 'forward', 'word');
+            });
+
 	}
 	$.each(params, function (key, item) {
 		if (item.active === false) {
 			return;
 		}
 		var li = $('<li></li>').toggleClass('selected', !!item.selected).toggleClass('disabled', !!item.disabled).toggleClass('is-drag', !!item.drag).toggleClass('sep', !!item.sep && ul.children().length > 0);
-		var a = $('<a href="javascript:void(0)"><i class="' + item.className + '"></i></a>').attr('title', item.title).attr('aria-label', item.title);
+		var a = $('<button type="button" data-cms-action><i class="' + item.className + '"></i></button>').attr('title', item.title).attr('aria-label', item.title);
+        if(item.selected !== undefined)a.attr('aria-pressed',String(!!item.selected));
 		li.append(a).appendTo(ul);
 		if (item.drag) {
 			a.on('pointerdown', function (e) {
@@ -391,10 +445,11 @@ var contextMenuWW = function (params, event) {
 			return;
 		}
 		li.addClass('hasChildren');
-		var subul = $('<ul></ul>').appendTo(li);
+		var subul = $('<ul></ul>').attr('id','cms-editor-sub-'+(++cmsMenuSequence)).appendTo(li);
+        a.attr('aria-expanded','false').attr('aria-controls',subul.attr('id'));
 		$.each(item.subs, function (subKey, subItem) {
 			$('<li></li>').toggleClass('selected', !!subItem.selected)
-				.append($('<a href="javascript:void(0)"></a>').text(subItem.title).on('click', subItem.param, menuCommand(window[subItem.func], subItem.reopen)))
+				.append($('<button type="button" data-cms-action></button>').text(subItem.title).on('click', subItem.param, menuCommand(window[subItem.func], subItem.reopen)))
 				.appendTo(subul);
 		});
 	});
@@ -407,16 +462,20 @@ var contextMenuWW = function (params, event) {
 		rect = {left: x, right: x, top: y, bottom: y};
 	}
 	placeEditorMenu(this.domObj[0], rect, target);
+    this.domObj[0].dataset.keyboard = event.keyboard ? 'true' : 'false';
+    prepareMenuKeyboard(this.domObj[0], target.closest?.('[contenteditable]') || target, !!event.keyboard);
 
 	// the press keeps the focus in the editor; a tap opens what hover opens
 	this.domObj.on('mousedown', function (e) {
-		$(e.target).is('input, button') || e.preventDefault();
+		$(e.target).is('input, button:not([data-cms-action])') || e.preventDefault();
 	});
 	this.domObj.find('li.hasChildren').on('mouseenter', function () {
+        this.querySelector(':scope > a,:scope > button[data-cms-action]')?.setAttribute('aria-expanded','true');
 		fitEditorSubmenu(this);
-	}).children('a').on('click', function () {
+	}).on('mouseleave',function(){this.querySelector(':scope > a,:scope > button[data-cms-action]')?.setAttribute('aria-expanded',String(this.classList.contains('open')));}).children('a,button[data-cms-action]').on('click', function () {
 		var li = $(this).parent().toggleClass('open');
-		li.siblings().removeClass('open');
+        this.setAttribute('aria-expanded',String(li.hasClass('open')));
+		li.siblings().removeClass('open').children('a[aria-expanded],button[data-cms-action][aria-expanded]').attr('aria-expanded','false');
 		fitEditorSubmenu(li[0]);
 	});
 };

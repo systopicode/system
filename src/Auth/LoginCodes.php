@@ -252,7 +252,7 @@ final class LoginCodes
         if ($screen->type !== User::SCREEN) {
             throw new \InvalidArgumentException('login code: only a screen account can be paired with a screen code');
         }
-        if (!$screen->isActive || (int) $screen->id <= 1) {
+        if ((!$screen->isActive || $screen->isBlocked) || (int) $screen->id <= 1) {
             self::$error = self::INVALID;
             return false;
         }
@@ -279,11 +279,11 @@ final class LoginCodes
     public static function approvePerson(string $input, User $account, User $by): bool
     {
         self::$error = '';
-        if ((int) $account->id <= 1 || !$account->isActive || ($account->type !== null && $account->type !== '' && $account->type !== User::PERSON)) {
+        if ((int) $account->id <= 1 || (!$account->isActive || $account->isBlocked) || ($account->type !== null && $account->type !== '' && $account->type !== User::PERSON)) {
             self::$error = self::INVALID;
             return false;
         }
-        if ((int) $by->id <= 1 || $by->type === User::SCREEN || !$by->isActive) {
+        if ((int) $by->id <= 1 || $by->type === User::SCREEN || (!$by->isActive || $by->isBlocked)) {
             self::$error = self::INVALID;
             return false;
         }
@@ -317,6 +317,7 @@ final class LoginCodes
             self::$error = self::INVALID;
             return null;
         }
+        if ($code->user?->isBlocked) { self::$error = self::INVALID; return null; }
         if ($code->approvedAt === null) {
             return null;
         }
@@ -364,7 +365,7 @@ final class LoginCodes
         }
         $normalized = Operator::normalize($input);
         $code = $normalized === '' ? null : CodeQuery::byHash($scope, Operator::hash($normalized, $secret));
-        if (!Operator::usable($code, $purposes, $now)) {
+        if (!Operator::usable($code, $purposes, $now) || $code?->user?->isBlocked) {
             $scope->save(FailureOperator::failed($failures, $ip, $now));
             self::$error = self::INVALID;
             return null;
@@ -421,7 +422,7 @@ final class LoginCodes
 
     private static function label(?User $user): string
     {
-        if ($user === null) {
+        if ($user === null || $user->isBlocked) {
             return '';
         }
         $name = trim((string) ($user->name ?: $user->email));

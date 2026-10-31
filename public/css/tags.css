@@ -59,21 +59,6 @@
     }
     .cms .layout.tags .tag > div.sort.h.insertBefore{ left: 0; right: auto; }
     .cms .layout.tags .tag > div.sort.h.insertAfter{ left: auto; right: 0; }
-    body.tagDragging .draghelper.tagGhost{
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        border: 0;
-        background: var(--cmsMainColor);
-        color: #fff;
-        font-size: 0.75rem;
-        font-weight: 600;
-        line-height: 1;
-        white-space: nowrap;
-        box-shadow: 0 10px 24px rgb(0 20 25 / 28%);
-        transition: none;
-        z-index: 4000;
-    }
     body.tagDragging .layout.tags .tag:has(> .sort.dropTarget)::after{
         content: "";
         position: absolute;
@@ -104,22 +89,7 @@
     }
 }
 
-/* The thing that follows the pointer is the tag name, not the hover veil. */
-body.tagDragging .draghelper.tagGhost{
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border: 0;
-    background: var(--cmsMainColor);
-    color: #fff;
-    font-size: 0.75rem;
-    font-weight: 600;
-    line-height: 1;
-    white-space: nowrap;
-    box-shadow: 0 10px 24px rgb(0 20 25 / 28%);
-    transition: none;
-    z-index: 4000;
-}
+
 
 body.tagDragging .layout.tags .tag.dropHover{
     outline: 2px dashed color-mix(in srgb, var(--cmsHighlightColor) 62%, transparent);
@@ -410,7 +380,7 @@ body.tagDragging:has(.layout.tags .tag.dropTarget) .draghelper{
     overflow: hidden;
 }
 
-.cms .layout.tags .tag > .tagActions button{
+.cms .layout.tags .tag > .tagActions button:where(:not([data-cms-action])){
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -430,17 +400,17 @@ body.tagDragging:has(.layout.tags .tag.dropTarget) .draghelper{
     cursor: pointer;
 }
 
-.cms .layout.tags .tag > .tagActions button i{
+.cms .layout.tags .tag > .tagActions button:where(:not([data-cms-action])) i{
     font-size: 0.5rem;
     line-height: 1;
     color: #14181c !important;
 }
 
-.cms .layout.tags .tag > .tagActions button:hover{
+.cms .layout.tags .tag > .tagActions button:where(:not([data-cms-action])):hover{
     background: var(--cmsHighlightColor);
 }
 
-.cms .layout.tags .tag > .tagActions button:hover i{
+.cms .layout.tags .tag > .tagActions button:where(:not([data-cms-action])):hover i{
     color: #14181c !important;
 }
 
@@ -493,10 +463,10 @@ body.tagDragging .cms .layout.tags .tag.dragged > .tagActions{
     color: inherit !important;
 }
 
-.cms .tag a {
+.cms .tag :is(a, button:where([data-cms-action])) {
 	margin-left:10px;
 }
-.cms .tag.active a {
+.cms .tag.active :is(a, button:where([data-cms-action])) {
     color: inherit !important;
 }
 .cms .tag:not(.active){
@@ -505,7 +475,7 @@ body.tagDragging .cms .layout.tags .tag.dragged > .tagActions{
 }
 
 
-.cms .tag a i{
+.cms .tag :is(a, button:where([data-cms-action])) i{
 	display: block;
 	margin: 0;
 }
@@ -603,8 +573,8 @@ body.tagDragging .cms .layout.tags .tag.dragged > .tagActions{
     margin: 0;
 }
 
-.cmslightbox .tagAssignments a,
-.cmslightbox .tagAssignments button{
+.cmslightbox .tagAssignments :is(a, button:where([data-cms-action])),
+.cmslightbox .tagAssignments button:where(:not([data-cms-action])){
     display: inline-flex;
     flex: 0 0 auto;
     align-items: center;
@@ -620,8 +590,8 @@ body.tagDragging .cms .layout.tags .tag.dragged > .tagActions{
     cursor: pointer;
 }
 
-.cmslightbox .tagAssignments a:hover,
-.cmslightbox .tagAssignments button:hover{
+.cmslightbox .tagAssignments :is(a, button:where([data-cms-action])):hover,
+.cmslightbox .tagAssignments button:where(:not([data-cms-action])):hover{
     background: var(--cmsButtonBg);
     color: var(--cmsTextColor);
 }
@@ -634,10 +604,10 @@ body.tagDragging .cms .layout.tags .tag.dragged > .tagActions{
 
 @media (pointer: coarse) {
     .cms .layout.tags .tag { min-height: 1.8rem; padding-inline: 0.7rem; margin: 2px 5px 3px 0; }
-    .cms .layout.tags .tag > .tagActions button { width: 1.15rem; height: 1.15rem; flex-basis: 1.15rem; }
-    .cms .layout.tags .tag > .tagActions button i { font-size: 0.7rem; }
+    .cms .layout.tags .tag > .tagActions button:where(:not([data-cms-action])) { width: 1.15rem; height: 1.15rem; flex-basis: 1.15rem; }
+    .cms .layout.tags .tag > .tagActions button:where(:not([data-cms-action])) i { font-size: 0.7rem; }
     .cms .layout.tags .tag > .tagActions .tagGrip { padding-inline: 0.35rem; }
-    .cmslightbox .tagAssignments :is(a, button) { width: 2.5rem; height: 2.5rem; }
+    .cmslightbox .tagAssignments :is(:is(a, button:where([data-cms-action])), button:where(:not([data-cms-action]))) { width: 2.5rem; height: 2.5rem; }
     /* One cue, drawn by the shared drag helper, centred on its gap line. */
     body.tagDragging .layout.tags .tag:has(> .sort.dropTarget)::after { display: none; }
 }

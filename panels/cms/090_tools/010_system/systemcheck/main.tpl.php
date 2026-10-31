@@ -2,11 +2,25 @@
 include 'checks.inc.php';
 
 $card = static function (string $title, array $rows): void {
+    $root = \http::$root;
+    $remedy = match ($title) {
+        'Folders' => ['Check filesystem ownership and grant the PHP user write access only to the listed project folders.', $root . 'cms/settings/environment/', 'Environment'],
+        'Mail & login' => ['Review the active environment and use Send test email to verify SMTP acceptance.', $root . 'cms/settings/environment/', 'Mail & login settings'],
+        'Optional media tools', 'Functions', 'Extensions' => ['Review PHP extensions, disabled functions and project-local binaries with your host. Optional tools can be installed under var/bin/.', $root . 'cms/settings/mediasettings/', 'Media settings'],
+        'Background tasks (optional CLI)' => ['Open cleanup for execution status, a manual run and optional scheduling instructions.', $root . 'cms/tools/cleanup/automatic/', 'Cleanup'],
+        'Server' => ['Live-update configuration belongs to this installation; review the environment connection and allowed addresses.', $root . 'cms/settings/environment/', 'Environment'],
+        default => null,
+    };
+
 	echo '<section class="widget"><header><h2>' . htmlspecialchars($title) . '</h2></header><main><ul class="toolCheck">';
 	foreach ($rows as $row) {
 		echo '<li class="' . htmlspecialchars((string) $row['status']) . '">' . $row['label'] . '</li>';
 	}
-	echo '</ul></main></section>';
+	echo '</ul>';
+    if ($remedy && array_filter($rows, static fn($row) => ($row['status'] ?? '') !== 'confirm')) {
+        echo '<p class="tagsHint">' . htmlspecialchars($remedy[0], ENT_QUOTES) . '</p><a class="button transparent" href="' . htmlspecialchars($remedy[1], ENT_QUOTES) . '"><i class="cmsIcon cmsIcon-arrow-right"></i><span>' . htmlspecialchars($remedy[2], ENT_QUOTES) . '</span></a>';
+    }
+    echo '</main></section>';
 };
 
 $php = [
@@ -21,7 +35,7 @@ $php = [
 ?>
 <h1>System check</h1>
 <p class="tagsHint">What this server is running, and what the CMS still needs. The download is one PHP file: open it on a server before the CMS is installed, then delete it.</p>
-<p><a class="button submit" target="_self" href="<?= htmlspecialchars($this->getHref(\http::$root) . 'download') ?>"><i class="cmsIcon cmsIcon-file-arrow-down"></i><span>Download</span></a></p>
+<p><button type="button" class="button" data-action-feedback data-on_click="recheck"><i class="cmsIcon cmsIcon-arrows-rotate"></i>Recheck</button> <a class="button submit" target="_self" href="<?= htmlspecialchars($this->getHref(\http::$root) . 'download') ?>"><i class="cmsIcon cmsIcon-file-arrow-down"></i><span>Download</span></a></p>
 <div class="widgets">
 	<?php
 	$card('PHP', $php);
@@ -43,14 +57,9 @@ $php = [
 		$card('3rd party', array_values($var_thirdParty));
 	}
 	$card('Functions', array_values($var_functions));
-    $card('Optional media tools', array_values($var_binaries));
+
     ?>
-    <section class="widget"><header><h2>Media support</h2><button type="button" class="button" data-on_click="probeMediaTools"><i class="cmsIcon cmsIcon-flask"></i>Test media tools</button></header><main>
-    <p>Check whether this host can start the optional video and image tools. No media files are changed.</p>
-    <dl class="cleanupActivity"><dt>Image editing</dt><dd><?= class_exists('Imagick') ? 'Imagick is installed' : 'Requires the Imagick PHP extension' ?></dd><dt>Backup archives</dt><dd><?= class_exists('ZipArchive') ? 'ZipArchive is installed' : 'Requires the ZipArchive PHP extension' ?></dd></dl>
-    <p class="tagsHint">The test checks startup only. Supported formats, PDF permissions and large conversions still depend on the host.</p>
-    <details class="cleanupDetails"><summary><i class="cmsIcon cmsIcon-circle-info"></i>About this check<i class="cmsIcon cmsIcon-chevron-down cleanupChevron"></i></summary><main><p>Project-local tools in <code>var/bin/</code>, <code>bin/</code> and platform subfolders are supported. The version test has a short timeout and never downloads tools or changes permissions.</p><p>Missing optional tools limit the related media feature. Cron and Centrifugo are not required for ordinary editing. Backups also need sufficient disk space and runtime.</p></main></details>
-    </main></section>
+    <?php $this->withView('media'); ?>
     <?php
 	$card('Server', array_values($var_server));
 	?>

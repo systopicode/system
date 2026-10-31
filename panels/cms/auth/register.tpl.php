@@ -1,16 +1,14 @@
-<h1>Create account</h1>
-<p class="authLead">Use an email address your administrator has allowed.</p>
-<main>
-	<div class="row">
-		<?= message::flush() ?>
-	</div>
-	<div class="row">
-		<form method=post action=createAccount  onsubmit='this.classList.add("loading")'>
+<?php
+$authTitle = 'Create account';
+$authLead = 'Use an email address your administrator has allowed.';
+ob_start();
+?>
+<form class="appLoginForm" method=post action=createAccount  onsubmit='this.classList.add("loading")'>
 			<div class="row">
 				<div class='inputGroup'><i class="cmsIcon cmsIcon-envelope"></i>
 					<input required spellcheck="false" autocapitalize="off" placeholder="Email" type=email autocomplete="username"
 						   name=email_create
-						   value="<?= http::post('email_create') ?>"/>
+						   value="<?= htmlspecialchars((string) http::post('email_create'), ENT_QUOTES) ?>"/>
 					<span class='bar'></span>
 				</div>
 			</div>
@@ -21,5 +19,6 @@
 				</div>
 			</div>
 		</form>
-	</div>
-</main>
+<?php
+$authForm = ob_get_clean();
+include dirname(__DIR__, 3) . '/src/Auth/form.card.tpl.php';

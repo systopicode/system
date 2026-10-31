@@ -1,14 +1,8 @@
 <?php
-
-declare(strict_types=1);
 namespace Systopic\System\Panels\Root\Cms\Tools\Maintenance\Cleanup;
-
-class Panel extends \Systopic\System\Panels\PanelNode
-{
-    public ?array $cleanupPreview = null;
-
-    public ?string $webcronKey = null;
-
-    public function __construct($name, $parent = null) { parent::__construct($name, $parent); $this->label = 'Cleanup'; }
-    public function buildGranted() { return \Systopic\System\Auth\Session::isSuperuser(); }
+class Panel extends \Systopic\System\Panels\PanelNode {
+    public function getNaviItem(): ?\htmlElement { return null; }
+    public function onLoad() {
+        if ($this->inPath()) \http::redirect(\http::$root . 'cms/tools/cleanup/automatic/' . (($_SERVER['QUERY_STRING'] ?? '') !== '' ? '?' . $_SERVER['QUERY_STRING'] : ''));
+    }
 }

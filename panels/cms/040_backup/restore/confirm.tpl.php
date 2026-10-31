@@ -6,6 +6,7 @@ $state = $this->parent->state;
 $chosen = [\Systopic\System\Panels\Root\Cms\Backup\Panel::class, 'chosen'];
 $e = static fn($v): string => htmlspecialchars((string) $v, ENT_QUOTES);
 $superuser = \Systopic\System\Auth\Session::isSuperuser();
+$preflight = $contents === null ? null : \Systopic\System\Backup\Preflight::inspect(\fs::toNative($this->parent->backupdirpath), $name, \fs::toNative($this->parent->tmpdirpath));
 $showList = false;
 if (is_array($contents)) {
 	$showList = !empty($contents['database']) || !empty($contents['media']) || !empty($contents['environment']);
@@ -21,10 +22,16 @@ if (is_array($contents)) {
 	<?php if ($contents === null) { ?>
 		<p>This backup was not found.</p>
 	<?php } else { ?>
+        <?php if ($preflight['errors'] || $preflight['warnings']): ?>
+        <div class="cms message is-stay restoreWarnings">
+        <?php foreach ($preflight['errors'] as $problem): ?><div class="error"><p class="message"><?= $e($problem) ?></p></div><?php endforeach; ?>
+        <?php foreach ($preflight['warnings'] as $note): ?><div class="warning"><p class="message"><?= $e($note) ?></p></div><?php endforeach; ?>
+        </div>
+        <?php endif; ?>
 		<p>Restore this backup? The selected parts replace what is on this server.</p>
 		<p class="backupConfirmName"><?= $e($name) ?></p>
 		<hr>
-		<form id="backupRestoreForm" method="put" action="createTaskList?name=<?= urlencode($name) ?>">
+		<form id="backupRestoreForm" data-feedback="parameters" method="put" action="createTaskList?name=<?= urlencode($name) ?>">
 			<?php if ($showList) { ?>
 				<ul class="checkBoxList">
 					<?php if (!empty($contents['database'])) { ?>
@@ -78,6 +85,6 @@ if (is_array($contents)) {
 </main>
 <?php if ($contents !== null) { ?>
 <footer>
-	<button type="submit" name="action" value="createTaskList?name=<?= urlencode($name) ?>" form="backupRestoreForm" class="button submit"><i class="cmsIcon cmsIcon-arrow-rotate-left"></i><span>Restore</span></button>
+	<button type="submit" name="action" value="createTaskList?name=<?= urlencode($name) ?>" form="backupRestoreForm" <?= !empty($preflight['errors']) ? 'disabled' : '' ?> class="button submit"><i class="cmsIcon cmsIcon-arrow-rotate-left"></i><span>Restore</span></button>
 </footer>
 <?php } ?>

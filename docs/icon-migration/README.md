@@ -21,7 +21,7 @@ python3 tools/build-icons.py --archives-dir /tmp/fluxo-icon-archives
 python3 tools/build-icons.py --archives-dir /tmp/fluxo-icon-archives --check
 ```
 
-The build emits the registered Tabler subset, the retained monochrome Solar info-circle, independent primary/secondary Phosphor masks, CSS and JS registry keys. Tabler retains upstream stroke 2. Phosphor geometry is retained; the source Duotone opacity is removed only from the split masks so CSS controls each layer independently. Navigation secondary opacity is 40% normally and 50% when selected; primary contours remain opaque. Icon glyphs are 1.2em independently of their thumbnail/button containers.
+The build emits the registered Tabler subset, the retained monochrome Solar info-circle, independent primary/secondary Phosphor masks, CSS and JS registry keys. Tabler retains upstream stroke 2. Phosphor geometry is retained; the source Duotone opacity is removed only from the split masks so CSS controls each layer independently. Navigation secondary opacity is 40% normally and 100% when selected, using an opaque mix of 60% highlight colour and 40% white (no dark-background bleed-through); primary contours keep the same frame-text colour in both states. Icon glyphs are 1.2em independently of their thumbnail/button containers.
 
 Passkey artwork uses original Phosphor fingerprint/user-focus/lock-open Duotone geometry with theme ink roles. The existing nine-second phase sequence, success state and reduced-motion handling are retained. Its source and SHA-256 hash are recorded in `assets.json`; it is a reviewed template, not overwritten by the generator. Full licences and attribution are exposed through ThirdParty and the License view. Theme includes side-by-side Tabler Outline and Phosphor Duotone buttons with external-link icons on the right. Privacy states that all icon assets are local.
 
@@ -52,3 +52,7 @@ All registered keys were rechecked against their original FA meaning and consume
 ## Confirmed normal-icon selection
 
 The user explicitly retained the Solar info-circle for small-size readability. The shared `broom` key now maps to the original Tabler `eraser` asset, covering cleanup and log clearing, including dynamically supplied keys. The old Solar broom SVG has been removed. Existing semantic keys and action behaviour are unchanged. No project-specific panel files are modified.
+
+## Action icon consistency — 31 October 2026
+
+Restore (`arrow-rotate-left` → Tabler restore) identifies restoring defaults or saved state. History/clock remains only for history and time references. In the unified image editor, Discard unsaved edits uses `editor-undo`; Reset saved adjustments uses Restore. The separate crop reset retains Restore. Genuine left/right image rotation retains rotate-2/rotate-clockwise-2. Retry, Reload, Recheck, QR retries, automatic path rebuilding and sign-in-key regeneration use `arrows-rotate` → Refresh. Undo/Redo in the text editor and data/action semantics are unchanged. No blanket replacement of history or rotation keys was made.

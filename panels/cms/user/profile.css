@@ -75,7 +75,7 @@ header.cms .rightAlign form{
     font-weight: 500;
 }
 
-.profile .profileHead a{
+.profile .profileHead :is(a, button:where([data-cms-action])){
     display: inline-flex;
     align-items: center;
     gap: 0.35rem;
@@ -92,13 +92,13 @@ header.cms .rightAlign form{
     font-size: 0.875rem;
 }
 
-.profilePreview a{
+.profilePreview :is(a, button:where([data-cms-action])){
     font-weight: 600;
     cursor: pointer;
 }
 
 .profileGrid{
-    columns: 22rem;
+    columns: 3 22rem;
     column-gap: 1.25rem;
 }
 
@@ -225,16 +225,16 @@ header.cms .rightAlign form{
     box-shadow: 0 0 0 3px var(--cmsHighlightColor);
 }
 
-.profile .widget > form{
+.profile .profilePassword > form{
     display: flex;
     flex-direction: column;
 }
 
-.profile .widget > form > main{
+.profile .profilePassword > form > main{
     padding: var(--cmsCardPadding);
 }
 
-.profile .widget > form > footer{
+.profile .profilePassword > form > footer{
     display: flex;
     justify-content: flex-end;
     margin: 0;
@@ -242,7 +242,7 @@ header.cms .rightAlign form{
     border-top: 1px solid var(--cmsLine);
 }
 
-.profile .widget > form > footer .button{
+.profile .profilePassword > form > footer .button{
     margin: 0;
 }
 
@@ -474,3 +474,8 @@ header.cms .rightAlign form{
     font-size: 1.15rem;
     text-align: center;
 }
+
+.profile .profilePassword{ margin: 0; border: 0; border-top: 1px solid var(--cmsLine); border-radius: 0; box-shadow: none; }
+.profile .profilePassword > summary h3{ display: flex; align-items: center; gap: .5rem; margin: 0; font-size: 1rem; }
+
+.profile .profilePassword > summary{ align-items: center; }

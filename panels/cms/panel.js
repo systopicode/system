@@ -330,3 +330,93 @@
 
 // The gear lives in the debug tool (placeSettingsLink). This used to add a
 // second one, fixed to the viewport corner, which covered a debug frame.
+
+sys.fitDashboards = function ($set) {
+    $set.findInSet('.dashWidgets').each(function () { sys.fitDashboards.init({element: this}); });
+};
+
+// Dashboard only: reuse the shared drag/long-press engine and keep one DOM copy.
+sys.fitDashboards.init = function (event) {
+    var box = event.element || event.sourceElement;
+    if (!box || !box.matches('.dashWidgets')) return;
+    if (box.dashboardObserver) box.dashboardObserver.disconnect();
+    if (!box.dashboardButtonsBound) {
+        var keepButton = down => {
+            if (down.target.closest('.dashHide')) down.stopPropagation();
+            if (down.target.closest('header[data-on_longpress]')) {
+                // Preserve the visible column plan before the editor collapses bodies.
+                var count = parseInt(box.dataset.columns, 10) || 1;
+                var baseOrder;
+                try { baseOrder = JSON.parse(box.dataset.layouts)[3]; } catch (_) {}
+                baseOrder = [...new Set((baseOrder || [...box.querySelectorAll('.dashWidget')].map(card => card.dataset.widget)).filter(key => key !== '|'))];
+                var plan = [...box.querySelectorAll(':scope > .dashColumn')].flatMap((column,i) =>
+                    [...(i ? ['|'] : []), ...[...column.querySelectorAll('.dashWidget')].map(card => card.dataset.widget)]);
+                if (plan.length && sys.fitDashboards.plans) sys.fitDashboards.plans.set(count + ':' + JSON.stringify(baseOrder), plan);
+                window.getSelection()?.removeAllRanges();
+            }
+        };
+        box.addEventListener('pointerdown', keepButton, true);
+        box.addEventListener('mousedown', keepButton, true);
+        box.dashboardButtonsBound = true;
+    }
+    var layouts;
+    try { layouts = JSON.parse(box.dataset.layouts); } catch (_) { layouts = {}; }
+    var cards = new Map([...box.querySelectorAll('.dashWidget')].map(card => [card.dataset.widget, card]));
+    cards.forEach(card => {
+        var header = card.querySelector(':scope > header');
+        if (!header) return;
+        if (box.classList.contains('is-editing')) delete header.dataset.on_longpress;
+        else header.dataset.on_longpress = 'dashEdit';
+    });
+    var base = [...new Set((layouts[3] || [...cards.keys()]).filter(key => key !== '|'))];
+    var end = box.querySelector('.dashDrop');
+    var previous = 0;
+    sys.fitDashboards.plans = sys.fitDashboards.plans || new Map();
+    function place() {
+        if (!box.isConnected) { if (previous) box.dashboardObserver?.disconnect(); return; }
+        var count = parseInt(getComputedStyle(box).getPropertyValue('--dashboard-columns'), 10) || 1;
+        if (previous === count || document.body.classList.contains('widgetDragging')) return;
+        previous = count;
+        var order = layouts[count];
+        if (!order) {
+            var signature = count + ':' + JSON.stringify(base);
+            order = sys.fitDashboards.plans.get(signature);
+            if (!order) {
+                var groups = Array.from({length: count}, () => []), heights = new Array(count).fill(0);
+                base.forEach(key => {
+                    var column = heights.indexOf(Math.min(...heights));
+                    groups[column].push(key);
+                    var card = cards.get(key);
+                    heights[column] += card ? card.getBoundingClientRect().height + 20 : 0;
+                });
+                order = groups.flatMap((group, i) => i ? ['|', ...group] : group);
+                sys.fitDashboards.plans.set(signature, order);
+            }
+        }
+        var columns = Array.from({length: count}, () => {
+            var column = document.createElement('div'); column.className = 'dashColumn'; return column;
+        });
+        var index = 0;
+        order.forEach(key => {
+            if (key === '|') { index = Math.min(count - 1, index + 1); return; }
+            if (cards.has(key)) columns[index].appendChild(cards.get(key));
+        });
+        columns.forEach((column, i) => {
+            if (end) { var drop = end.cloneNode(true); drop.dataset.column = i; column.appendChild(drop); }
+        });
+        box.replaceChildren(...columns);
+        box.dataset.columns = count;
+        box.querySelectorAll('[data-on_drop]').forEach(zone => {
+            zone.dataset.columns = count;
+            zone.dataset.order = JSON.stringify(order);
+        });
+        // Newly created end targets need the same event binding as any other drop zone.
+        if (end) sys.initEvents($(box).find('.dashDrop'));
+    }
+    box.dashboardObserver = new ResizeObserver(place);
+    box.dashboardObserver.observe(box);
+    place();
+};
+
+// Also initialise the first full document; later AJAX fragments use initEvents.
+sys.onload(function () { sys.fitDashboards($(document.body)); });

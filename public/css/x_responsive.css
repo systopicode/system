@@ -109,7 +109,7 @@ body.cms > .cmsMobileHeader > .cmsMobileMenuClose, body.cms > .cmsMobileHeader >
 		overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
 	}
 	.cmsMobileHeader .cmsStage > i { font-size: 0.95rem; }
-	.cmsMobileHeader button, .cmsMobileHeader a, .cmsMobileWindowBar button {
+	.cmsMobileHeader button:where(:not([data-cms-action])), .cmsMobileHeader :is(a, button:where([data-cms-action])), .cmsMobileWindowBar button:where(:not([data-cms-action])) {
 		display: inline-flex;
 		align-items: center;
 		justify-content: center;
@@ -202,7 +202,7 @@ body.cms > .cmsMobileHeader > .cmsMobileMenuClose, body.cms > .cmsMobileHeader >
 		box-shadow: 0 100vh 0 0 var(--cmsBgColor);
 	}
 	body.cms:has(> main > div.pylon) > main > div.pylon nav > ul { padding: 0.5rem 0; }
-	body.cms:has(> main > div.pylon) > main > div.pylon nav > ul li a {
+	body.cms:has(> main > div.pylon) > main > div.pylon nav > ul li :is(a, button:where([data-cms-action])) {
 		padding-left: var(--cmsInsetLeft);
 		padding-right: var(--cmsInsetRight);
 	}
@@ -212,7 +212,7 @@ body.cms > .cmsMobileHeader > .cmsMobileMenuClose, body.cms > .cmsMobileHeader >
 		margin-left: calc(var(--cmsInsetLeft) + 0.2rem);
 		padding-left: 0.65rem;
 	}
-	body.cms:has(> main > div.pylon) > main > div.pylon nav > ul li ul li a {
+	body.cms:has(> main > div.pylon) > main > div.pylon nav > ul li ul li :is(a, button:where([data-cms-action])) {
 		padding-left: 0.65rem;
 	}
 	/* Fixed descendants must escape desktop's clipping and stacking contexts. */
@@ -253,8 +253,8 @@ body.cms > .cmsMobileHeader > .cmsMobileMenuClose, body.cms > .cmsMobileHeader >
 		padding: 0 52px 1.25rem 16px;
 		box-sizing: border-box;
 	}
-	body.cms[data-cms-window="menu"] > main > div.main a.cmsBrand,
-	body.cms.cmsMobile[data-cms-window="menu"] > main > div.main a.cmsBrand {
+	body.cms[data-cms-window="menu"] > main > div.main :is(a, button:where([data-cms-action])).cmsBrand,
+	body.cms.cmsMobile[data-cms-window="menu"] > main > div.main :is(a, button:where([data-cms-action])).cmsBrand {
 		flex: 0 0 auto;
 		display: flex;
 		align-items: center;
@@ -265,29 +265,29 @@ body.cms > .cmsMobileHeader > .cmsMobileMenuClose, body.cms > .cmsMobileHeader >
 		padding: env(safe-area-inset-top) 0 0;
 		justify-content: flex-start;
 	}
-	body.cms.cmsMobile > main > div.main a.cmsBrand img.brandFull { height: 36px; }
+	body.cms.cmsMobile > main > div.main :is(a, button:where([data-cms-action])).cmsBrand img.brandFull { height: 36px; }
 	body.cms.cmsMobile > main > div.main nav > ul { padding: 1.15rem 0 0.15rem; }
 	body.cms[data-cms-window="menu"] > main > div.main nav > ul { padding-top: 0.35rem; }
 	body.cms.cmsMobile > main > div.main nav > ul li { margin: 0; }
-	body.cms.cmsMobile > main > div.main nav > ul li a,
-	body.cms.cmsMobile > main:has(> div.content .dashboard) > div.main nav ul li a {
+	body.cms.cmsMobile > main > div.main nav > ul li :is(a, button:where([data-cms-action])),
+	body.cms.cmsMobile > main:has(> div.content .dashboard) > div.main nav ul li :is(a, button:where([data-cms-action])) {
 		flex-direction: row; justify-content: flex-start; gap: 12px; min-height: 0; padding: 8px 16px; line-height: 1;
 	}
-	body.cms.cmsMobile > main > div.main nav > ul li a i,
-	body.cms.cmsMobile > main:has(> div.content .dashboard) > div.main nav ul li a i {
+	body.cms.cmsMobile > main > div.main nav > ul li :is(a, button:where([data-cms-action])) i,
+	body.cms.cmsMobile > main:has(> div.content .dashboard) > div.main nav ul li :is(a, button:where([data-cms-action])) i {
 		flex: 0 0 2.25rem; width: 2.25rem; height: 2.25rem; font-size: 1.45rem; line-height: 1;
 		display: inline-flex; align-items: center; justify-content: center;
 	}
-	body.cms.cmsMobile > main > div.main nav > ul li.active > a:before,
-	body.cms.cmsMobile > main:has(> div.content .dashboard) > div.main nav ul li.active > a:before {
+	body.cms.cmsMobile > main > div.main nav > ul li.active > :is(a, button:where([data-cms-action])):before,
+	body.cms.cmsMobile > main:has(> div.content .dashboard) > div.main nav ul li.active > :is(a, button:where([data-cms-action])):before {
 		left: 0; top: 6px; bottom: 6px; width: 4px; border-radius: 4px;
 	}
-	body.cms.cmsMobile > main > div.main nav > ul li a span,
-	body.cms.cmsMobile > main:has(> div.content .dashboard) > div.main nav ul li a span { width: auto; font-size: 15px; line-height: 1.2; text-align: left; }
-	body.cms.cmsMobile > main > div.main a.cmsBrand,
-	body.cms.cmsMobile > main:has(> div.content .dashboard) > div.main a.cmsBrand { justify-content: flex-start; padding-left: 16px; }
-	body .cms a.cmsBrand img.brandMark { display: none; }
-	body .cms a.cmsBrand img.brandFull { display: block; width: auto; max-width: 100%; height: 30px; }
+	body.cms.cmsMobile > main > div.main nav > ul li :is(a, button:where([data-cms-action])) span,
+	body.cms.cmsMobile > main:has(> div.content .dashboard) > div.main nav ul li :is(a, button:where([data-cms-action])) span { width: auto; font-size: 15px; line-height: 1.2; text-align: left; }
+	body.cms.cmsMobile > main > div.main :is(a, button:where([data-cms-action])).cmsBrand,
+	body.cms.cmsMobile > main:has(> div.content .dashboard) > div.main :is(a, button:where([data-cms-action])).cmsBrand { justify-content: flex-start; padding-left: 16px; }
+	body .cms :is(a, button:where([data-cms-action])).cmsBrand img.brandMark { display: none; }
+	body .cms :is(a, button:where([data-cms-action])).cmsBrand img.brandFull { display: block; width: auto; max-width: 100%; height: 30px; }
 	body > main > div.content, body > main > div.main + div.content {
 		width: 100%; min-width: 0; max-width: none;
 		margin: 0; border-radius: var(--cmsRadiusLg); box-shadow: none; clip-path: none;
@@ -350,21 +350,21 @@ body.cms > .cmsMobileHeader > .cmsMobileMenuClose, body.cms > .cmsMobileHeader >
 		user-select: none;
 	}
 	.cmsMobileWindowBar strong { flex: 1; font-size: 15px; }
-	.cmsMobileWindowBar button { font-size: 26px; }
+	.cmsMobileWindowBar button:where(:not([data-cms-action])) { font-size: 26px; }
 	.cmsMobileGrip, .cmsMobileWindowBar { cursor: grab; }
 	.cmsMobileGrip { position: absolute; top: 0; left: calc(50% - 60px); width: 120px; height: 44px; z-index: 2; }
 	.cmsMobileGrip:after { content: ""; position: absolute; top: 8px; left: calc(50% - 18px); width: 36px; height: 4px; background: var(--cmsMuted); border-radius: 4px; }
 	body[data-cms-window="menu"] .main > header { flex-shrink: 0; }
 	body.cms .cmsMobileDrawerHeader .cmsBrand { flex: 1; min-width: 0; width: auto; }
 	/* A branch only opens its children. The child that is open keeps the mark. */
-	body.cms.cmsMobile[data-cms-window="base"] > main > div.pylon nav > ul > li.active:has(> ul) > a {
+	body.cms.cmsMobile[data-cms-window="base"] > main > div.pylon nav > ul > li.active:has(> ul) > :is(a, button:where([data-cms-action])) {
 		background: transparent; color: inherit; font-weight: inherit;
 	}
-	body.cms.cmsMobile[data-cms-window="base"] > main > div.pylon nav > ul > li.active:has(> ul) > a i { color: var(--cmsMuted); }
-	body.cms.cmsMobile[data-cms-window="base"] > main > div.pylon nav li li.active > a {
+	body.cms.cmsMobile[data-cms-window="base"] > main > div.pylon nav > ul > li.active:has(> ul) > :is(a, button:where([data-cms-action])) i { color: var(--cmsMuted); }
+	body.cms.cmsMobile[data-cms-window="base"] > main > div.pylon nav li li.active > :is(a, button:where([data-cms-action])) {
 		background: var(--cmsActive); color: var(--cmsMainColor); font-weight: 600;
 	}
-	body.cms.cmsMobile[data-cms-window="base"] > main > div.pylon nav li li.active > a i { color: var(--cmsMainColor); }
+	body.cms.cmsMobile[data-cms-window="base"] > main > div.pylon nav li li.active > :is(a, button:where([data-cms-action])) i { color: var(--cmsMainColor); }
 	body.cms > main > div.content > header.cmsMobileEditHeader,
 	body.cms .cmslightbox > section > header.cmsMobileEditHeader {
 		display: flex; position: relative; flex: 0 0 auto;
@@ -386,7 +386,7 @@ body.cms > .cmsMobileHeader > .cmsMobileMenuClose, body.cms > .cmsMobileHeader >
 		line-height: 1.3;
 		letter-spacing: -0.01em;
 	}
-	body.cms header.cmsMobileEditHeader:not(:has(a, button, .button, input, select, textarea, nav, form, label, h1)) {
+	body.cms header.cmsMobileEditHeader:not(:has(:is(a, button:where([data-cms-action])), button:where(:not([data-cms-action])), .button, input, select, textarea, nav, form, label, h1)) {
 		padding: 10px var(--cmsInsetRight) 2px var(--cmsInsetLeft); min-height: 0; border-bottom: 0;
 	}
 	/* A flex heading does not ellipsis: the text runs out over the button.
@@ -402,9 +402,9 @@ body.cms > .cmsMobileHeader > .cmsMobileMenuClose, body.cms > .cmsMobileHeader >
 		text-overflow: ellipsis;
 		white-space: nowrap;
 	}
-	.cms .widget > header :is(.button, button, a.button),
-	body.cms header.cmsMobileEditHeader :is(.button, button, a.button, ul.barmenu),
-	body.cms .cmslightbox > section > header :is(.button, button, a.button, ul.barmenu) {
+	.cms .widget > header :is(.button, button:where(:not([data-cms-action])), :is(a, button:where([data-cms-action])).button),
+	body.cms header.cmsMobileEditHeader :is(.button, button:where(:not([data-cms-action])), :is(a, button:where([data-cms-action])).button, ul.barmenu),
+	body.cms .cmslightbox > section > header :is(.button, button:where(:not([data-cms-action])), :is(a, button:where([data-cms-action])).button, ul.barmenu) {
 		position: relative;
 		z-index: 1;
 		flex: 0 0 auto;
@@ -412,10 +412,10 @@ body.cms > .cmsMobileHeader > .cmsMobileMenuClose, body.cms > .cmsMobileHeader >
 	body.cms header.cmsMobileEditHeader { align-items: center; }
 	body.cms header.cmsMobileEditHeader .rightAlign { flex-wrap: nowrap; align-items: center; gap: 8px; min-width: 0; margin-left: auto; }
 	body.cms header.cmsMobileEditHeader .rightAlign > .button,
-	body.cms header.cmsMobileEditHeader .rightAlign > a.button,
-	body.cms header.cmsMobileEditHeader .rightAlign > button.button,
+	body.cms header.cmsMobileEditHeader .rightAlign > :is(a, button:where([data-cms-action])).button,
+	body.cms header.cmsMobileEditHeader .rightAlign > button:where(:not([data-cms-action])).button,
 	body.cms header.cmsMobileEditHeader .rightAlign > label.button,
-	body.cms .widget > header :is(a.button, button.button, .button):not(.tagGroupRename, .tagGroupDelete) {
+	body.cms .widget > header :is(:is(a, button:where([data-cms-action])).button, button:where(:not([data-cms-action])).button, .button):not(.tagGroupRename, .tagGroupDelete) {
 		flex: 0 0 auto; height: 2rem; min-height: 2rem;
 		padding: 0 0.75rem;
 		align-self: center; margin: 0;
@@ -451,18 +451,18 @@ body.cms > .cmsMobileHeader > .cmsMobileMenuClose, body.cms > .cmsMobileHeader >
 		display: flex; flex-direction: column; align-items: stretch; gap: 2px;
 	}
 	body.cms header.cmsMobileEditHeader .cmsPageToolsMenu > .button,
-	body.cms header.cmsMobileEditHeader .cmsPageToolsMenu > a,
+	body.cms header.cmsMobileEditHeader .cmsPageToolsMenu > :is(a, button:where([data-cms-action])),
 	body.cms header.cmsMobileEditHeader .cmsPageToolsMenu > label,
 	body > .cmsPageToolsMenu.is-open > .button,
-	body > .cmsPageToolsMenu.is-open > a,
+	body > .cmsPageToolsMenu.is-open > :is(a, button:where([data-cms-action])),
 	body > .cmsPageToolsMenu.is-open > label {
 		display: flex; align-items: center; justify-content: flex-start; gap: 10px;
 		width: 100%; height: auto; min-height: 44px; margin: 0; padding: 8px 12px;
 		border: 0; border-radius: 10px; background: transparent; color: var(--cmsTextColor);
 		font-size: 15px; line-height: 1.2; text-align: left;
 	}
-	body.cms header.cmsMobileEditHeader .cmsPageToolsMenu > :is(.button, a, label):hover,
-	body > .cmsPageToolsMenu.is-open > :is(.button, a, label):hover,
+	body.cms header.cmsMobileEditHeader .cmsPageToolsMenu > :is(.button, :is(a, button:where([data-cms-action])), label):hover,
+	body > .cmsPageToolsMenu.is-open > :is(.button, :is(a, button:where([data-cms-action])), label):hover,
 	body.cms .cmsPageToolsMenu > .cmsMobileOnly:hover {
 		background: var(--cmsHover);
 	}
@@ -494,11 +494,11 @@ body.cms > .cmsMobileHeader > .cmsMobileMenuClose, body.cms > .cmsMobileHeader >
 	body.cms .cmsPageTools:has(> [aria-expanded="true"]) > .cmsPageToolsMenu { display: flex; flex-direction: column; align-items: stretch; gap: 4px; }
 	body.cms header.cms .cmsPageToolsMenu > .leftAlign { flex: 0 0 auto; width: 100%; margin: 0; }
 	body.cms header.cms .cmsPageToolsMenu .langSwitch { width: 100%; }
-	body.cms header.cms .cmsPageToolsMenu .langSwitch > button { width: 100%; justify-content: flex-start; min-height: 44px; }
-	body.cms header.cms .cmsPageToolsMenu .langSwitch > button span { display: inline; }
+	body.cms header.cms .cmsPageToolsMenu .langSwitch > button:where(:not([data-cms-action])) { width: 100%; justify-content: flex-start; min-height: 44px; }
+	body.cms header.cms .cmsPageToolsMenu .langSwitch > button:where(:not([data-cms-action])) span { display: inline; }
 	body.cms header.cms .cmsPageToolsMenu .langMenu { position: static; width: 100%; box-shadow: none; }
 	body.cms header.cms .cmsPageToolsMenu .deviceSwitch { display: flex; margin: 0; padding: 4px 0; border: 0; justify-content: space-around; }
-	body.cms header.cms .cmsPageToolsMenu .deviceSwitch button { width: 44px; height: 44px; min-height: 44px; }
+	body.cms header.cms .cmsPageToolsMenu .deviceSwitch button:where(:not([data-cms-action])) { width: 44px; height: 44px; min-height: 44px; }
 	body.cms .cmsPageToolsMenu > .cmsMobileOnly { display: flex; align-items: center; justify-content: flex-start; gap: 12px; min-height: 44px; margin: 0; padding: 8px 12px; border: 0; border-radius: 8px; background: transparent; color: var(--cmsTextColor); text-align: left; font-size: 14px; }
 	body.cms .cmsPageToolsMenu > .cmsMobileOnly:hover { background: var(--cmsHover); }
 	body.cms .cmsPageToolsMenu > [hidden] { display: none; }
@@ -532,17 +532,17 @@ body.cms > .cmsMobileHeader > .cmsMobileMenuClose, body.cms > .cmsMobileHeader >
 	body > main > div.pylon > footer .mmlResize { display: none; }
 	[data-on_draginit="draginitPylonwidth"], [data-on_draginit="draginitSidebarwidth"] { display: none; }
 	body > main > div.pylon > footer .mmlContent > label { pointer-events: none; }
-	body > footer.cmsStatusbar { display: none; }
+	body footer.cmsStatusbar { display: none; }
 	/* Upload progress remains visible even though the desktop footer is gone. */
-	body > footer.cmsStatusbar:has(.cmsJobs.on) { display: flex; position: fixed; bottom: var(--mobileBottom); left: 0; right: 0; z-index: 2400; height: 28px; padding: 0 8px; background: var(--cmsFrame); }
-	body > footer.cmsStatusbar:has(.cmsJobs.on) > :not(.cmsJobs) { display: none; }
+	body footer.cmsStatusbar:has(.cmsJobs.on) { display: flex; position: fixed; bottom: var(--mobileBottom); left: 0; right: 0; z-index: 8001; height: 28px; padding: 0 8px; background: var(--cmsFrame); }
+	body footer.cmsStatusbar:has(.cmsJobs.on) > :not(.cmsJobs) { display: none; }
 	.cmslightbox {
 		align-items: flex-end;
 		padding: 0;
 		background: rgb(0 20 25 / 35%);
 	}
 	.cmslightbox > section, .cmslightbox[data-size] > section { width: 100%; min-width: 0; max-width: 100%; max-height: calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom)); border-radius: 18px 18px 0 0; }
-	.cmsMobileHeader button:focus-visible, .cmsMobileWindowBar button:focus-visible { outline: 2px solid var(--cmsHighlightColor); outline-offset: -3px; }
+	.cmsMobileHeader button:where(:not([data-cms-action])):focus-visible, .cmsMobileWindowBar button:where(:not([data-cms-action])):focus-visible { outline: 2px solid var(--cmsHighlightColor); outline-offset: -3px; }
 	/* The menu always uses the wide desktop arrangement, including on Dashboard. */
 	body.cms.cmsMobile:has(> .cmsMobileHeader) > main > div.main {
 		display: flex; flex-direction: column; width: 100%; min-width: 0; max-width: none;
@@ -554,29 +554,29 @@ body.cms > .cmsMobileHeader > .cmsMobileMenuClose, body.cms > .cmsMobileHeader >
 		display: flex; flex-direction: column; align-items: stretch; width: 100%; padding: 0; text-align: left;
 	}
 	body.cms.cmsMobile > main > div.main .bottomMenu > div,
-	body.cms.cmsMobile > main > div.main .bottomMenu > div > a,
-	body.cms.cmsMobile > main > div.main .bottomMenu a.cmsHelp,
-	body.cms.cmsMobile > main:has(> div.content .dashboard) .cms div.bottomMenu a.cmsHelp {
+	body.cms.cmsMobile > main > div.main .bottomMenu > div > :is(a, button:where([data-cms-action])),
+	body.cms.cmsMobile > main > div.main .bottomMenu :is(a, button:where([data-cms-action])).cmsHelp,
+	body.cms.cmsMobile > main:has(> div.content .dashboard) .cms div.bottomMenu :is(a, button:where([data-cms-action])).cmsHelp {
 		display: flex; flex-direction: row; align-items: center; justify-content: flex-start;
 		gap: 12px; width: 100%; min-height: 0; padding: 2px 16px; text-align: left;
 		font-size: 15px; line-height: 1;
 	}
-	body.cms.cmsMobile > main > div.main .bottomMenu > div > a > img,
-	body.cms.cmsMobile > main > div.main .bottomMenu > div > a > i,
-	body.cms.cmsMobile > main > div.main .bottomMenu a.cmsHelp i,
-	body.cms.cmsMobile > main:has(> div.content .dashboard) .cms div.bottomMenu a.cmsHelp i {
+	body.cms.cmsMobile > main > div.main .bottomMenu > div > :is(a, button:where([data-cms-action])) > img,
+	body.cms.cmsMobile > main > div.main .bottomMenu > div > :is(a, button:where([data-cms-action])) > i,
+	body.cms.cmsMobile > main > div.main .bottomMenu :is(a, button:where([data-cms-action])).cmsHelp i,
+	body.cms.cmsMobile > main:has(> div.content .dashboard) .cms div.bottomMenu :is(a, button:where([data-cms-action])).cmsHelp i {
 		flex: 0 0 2.25rem; width: 2.25rem; height: 2.25rem; font-size: 1.45rem; line-height: 1;
 		display: inline-flex; align-items: center; justify-content: center;
 	}
 	body.cms > main > div.main .cmsStage { margin-left: 16px; }
-	body.cms.cmsMobile > main > div.main nav > ul li a span,
+	body.cms.cmsMobile > main > div.main nav > ul li :is(a, button:where([data-cms-action])) span,
 	body.cms.cmsMobile > main > div.main .bottomMenu .cmsHelp span { width: auto; text-align: left; font-size: 15px; }
-	body.cms.cmsMobile > main > div.main .bottomMenu a.cmsAccount,
-	body.cms.cmsMobile > main:has(> div.content .dashboard) .cms div.bottomMenu a.cmsAccount {
+	body.cms.cmsMobile > main > div.main .bottomMenu :is(a, button:where([data-cms-action])).cmsAccount,
+	body.cms.cmsMobile > main:has(> div.content .dashboard) .cms div.bottomMenu :is(a, button:where([data-cms-action])).cmsAccount {
 		display: flex; flex-direction: row; align-items: center; justify-content: flex-start;
 		gap: 12px; width: 100%; margin: 0; padding: 2px 16px;
 	}
-	body.cms.cmsMobile > main > div.main .bottomMenu a.cmsAccount .signet,
+	body.cms.cmsMobile > main > div.main .bottomMenu :is(a, button:where([data-cms-action])).cmsAccount .signet,
 	body.cms.cmsMobile > main:has(> div.content .dashboard) .bottomMenu .signet {
 		flex: 0 0 2.25rem; width: 2.25rem; height: 2.25rem; margin: 0;
 	}
@@ -586,12 +586,12 @@ body.cms > .cmsMobileHeader > .cmsMobileMenuClose, body.cms > .cmsMobileHeader >
 		height: 2.25rem; min-height: 0; margin: 0; padding: 0; line-height: 1.2; text-align: left;
 		background: none;
 	}
-	body.cms.cmsMobile .bottomMenu a.cmsAccount:is(:hover, :focus-within) {
+	body.cms.cmsMobile .bottomMenu :is(a, button:where([data-cms-action])).cmsAccount:is(:hover, :focus-within) {
 		background: var(--cmsOnDark);
 		border-radius: var(--cmsRadius);
 	}
-	body.cms.cmsMobile .bottomMenu a.cmsAccount:is(:hover, :focus-within) .signet:after { content: none; }
-	body.cms.cmsMobile .bottomMenu a.cmsAccount a:is(:hover, :focus, :focus-visible) {
+	body.cms.cmsMobile .bottomMenu :is(a, button:where([data-cms-action])).cmsAccount:is(:hover, :focus-within) .signet:after { content: none; }
+	body.cms.cmsMobile .bottomMenu :is(a, button:where([data-cms-action])).cmsAccount :is(a, button:where([data-cms-action])):is(:hover, :focus, :focus-visible) {
 		background: none;
 		outline: none;
 	}
@@ -604,7 +604,7 @@ body.cms > .cmsMobileHeader > .cmsMobileMenuClose, body.cms > .cmsMobileHeader >
 	}
 	.cmsMobileDashboardBrand img { display: block; width: auto; height: 28px; }
 	body.cms.cmsDashboard > .cmsMobileHeader > [data-cms-module] { visibility: hidden; }
-	body.cms.cmsDashboard > .cmsMobileHeader > a[aria-label="Search"] { margin-left: auto; }
+	body.cms.cmsDashboard > .cmsMobileHeader > :is(a, button:where([data-cms-action]))[aria-label="Search"] { margin-left: auto; }
 	/* Windows meet the lower edge; the frame and rounded shoulder remain above.
 	   A strip hangs off the screen and travels with the sheet, so the slide
 	   does not uncover the petrol along the bottom. */
@@ -707,14 +707,14 @@ body.cms > .cmsMobileHeader > .cmsMobileMenuClose, body.cms > .cmsMobileHeader >
 	body.cms .cmslightbox.cmsFind > section > header > .cmsMobileGrip { height: 36px; }
 	body.cms .cmslightbox > section > .cmsMobileGrip { z-index: 6; touch-action: none; }
 	body.cms .cmslightbox > section:before { content: none; }
-	body.cms > :is(ul.contextmenu, .splitApplyList):before {
+	body.cms > :is(ul.contextmenu, .splitApplyList):not(.imageEditorMenu):before {
 		content: ""; position: absolute; top: 6px; left: calc(50% - 18px);
 		width: 36px; height: 4px; border-radius: 4px; background: var(--cmsMuted);
 	}
-	body.cms .cmslightbox section > header :is(a, li):has([class*="xmark"]) { display: none; }
+	body.cms .cmslightbox section > header :is(:is(a, button:where([data-cms-action])), li):has([class*="xmark"]) { display: none; }
 	body.cms .cmslightbox section > header .barmenu:not(:has(li:not(:has([class*="xmark"])))) { display: none; }
 	/* Tree actions are an in-viewport sheet, never a popover off the right edge. */
-	body.cms > :is(ul.contextmenu, .splitApplyList) {
+	body.cms > :is(ul.contextmenu, .splitApplyList):not(.imageEditorMenu) {
 		position: fixed; z-index: 9000; left: var(--sheetSide) !important; right: var(--sheetSide);
 		top: auto !important; bottom: 0; width: auto !important; min-width: 0; max-width: none;
 		max-height: 75dvh; overflow: auto; padding-top: 18px;
@@ -722,7 +722,7 @@ body.cms > .cmsMobileHeader > .cmsMobileMenuClose, body.cms > .cmsMobileHeader >
 		box-shadow: 0 0 0 100vmax rgb(0 20 25 / 35%);
 	}
 	body.cms > ul.contextmenu ul { flex-wrap: wrap; }
-	body.cms > ul.contextmenu li a, body.cms > .splitApplyList > :is(a, button) { min-height: 44px; white-space: normal; }
+	body.cms > ul.contextmenu li :is(a, button:where([data-cms-action])), body.cms > .splitApplyList > :is(:is(a, button:where([data-cms-action])), button:where(:not([data-cms-action]))) { min-height: 44px; white-space: normal; }
 
 	body.cms > main > div.content,
 	body.cms .cmslightbox > section { --cmsCardPadding: 1rem; }
@@ -805,7 +805,7 @@ body.cms > .cmsMobileHeader > .cmsMobileMenuClose, body.cms > .cmsMobileHeader >
 		width: auto;
 		margin: 0;
 	}
-	.cms nav a:focus:not(:focus-visible) {
+	.cms nav :is(a, button:where([data-cms-action])):focus:not(:focus-visible) {
 		outline: none;
 	}
 	body.cms > main > div.content[data-cms-sheet="1"] section.cms {
@@ -857,4 +857,10 @@ body.cms > .cmsMobileHeader > .cmsMobileMenuClose, body.cms > .cmsMobileHeader >
     body.cms .cmslightbox, body.cms .cmslightbox.cmsFind {
         background: color-mix(in srgb, var(--cmsMainColor) 65%, transparent);
     }
+}
+
+/* Two labelled header actions need their own line on narrow cards. */
+@media (max-width:600px) {
+ .cms .widget > header:has(> .button ~ .button) { flex-wrap:wrap; padding-block:.5rem; gap:.4rem; }
+ .cms .widget > header:has(> .button ~ .button) > :is(h1,h2) { flex:1 0 100%; white-space:normal; overflow:visible; }
 }
