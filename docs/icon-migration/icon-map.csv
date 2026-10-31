@@ -5,7 +5,7 @@ arrow-down-to-line,Tabler Outline,download,
 arrow-left,Tabler Outline,arrow-left,
 arrow-right,Tabler Outline,arrow-right,
 arrow-right-from-bracket,Tabler Outline,logout,
-arrow-rotate-left,Tabler Outline,arrow-back-up,
+arrow-rotate-left,Tabler Outline,restore,
 arrow-rotate-right,Tabler Outline,arrow-forward-up,
 arrow-turn-down-right,Tabler Outline,corner-down-right,
 arrow-up-from-bracket,Tabler Outline,upload,
@@ -19,7 +19,7 @@ bolt,Tabler Outline,bolt,
 box-archive,Tabler Outline,archive,
 brackets-curly,Tabler Outline,braces,
 briefcase-medical,Tabler Outline,first-aid-kit,
-broom,Solar Line Duotone,broom-line-duotone,
+broom,Tabler Outline,eraser,
 bug,Tabler Outline,bug,
 building,Tabler Outline,building,
 buildings,Tabler Outline,buildings,
@@ -41,7 +41,7 @@ chevron-up,Tabler Outline,chevron-up,
 circle-check,Tabler Outline,circle-check,
 circle-exclamation,Tabler Outline,exclamation-circle,
 circle-half-stroke,Tabler Outline,circle-half-2,
-circle-info,Tabler Outline,info-circle,
+circle-info,Solar Line Duotone,info-circle-line-duotone,
 circle-play,Tabler Outline,circle-play,
 circle-question,Tabler Outline,help-circle,
 circle-xmark,Tabler Outline,circle-x,
@@ -51,6 +51,7 @@ cloud-arrow-up,Tabler Outline,cloud-upload,
 code-merge,Tabler Outline,git-merge,
 comment-sms,Tabler Outline,message,
 compass,Tabler Outline,compass,
+contrast,Tabler Outline,contrast,
 copy,Tabler Outline,copy,
 cpu,Tabler Outline,cpu,
 crop-simple,Tabler Outline,crop,
@@ -61,7 +62,10 @@ desktop,Tabler Outline,device-desktop,
 diamond-turn-right,Tabler Outline,direction-sign,
 display-slash,Tabler Outline,device-desktop-off,
 download,Tabler Outline,download,
+droplet-half,Tabler Outline,droplet-half,
+droplet-half-2,Tabler Outline,droplet-half-2,
 edit,Tabler Outline,pencil,
+editor-undo,Tabler Outline,arrow-back-up,
 ellipsis,Tabler Outline,dots,
 ellipsis-v,Tabler Outline,dots-vertical,
 envelope,Tabler Outline,mail,
@@ -137,6 +141,7 @@ mobile-screen-button,Tabler Outline,device-mobile,
 mobile-slash,Tabler Outline,device-mobile-off,
 moon,Tabler Outline,moon,
 music,Tabler Outline,music,
+palette,Tabler Outline,palette,
 paper-plane,Tabler Outline,send,
 paragraph,Tabler Outline,pilcrow,
 pen,Tabler Outline,pencil,
@@ -181,6 +186,7 @@ tablet-screen,Tabler Outline,device-tablet,
 tablet-screen-button,Tabler Outline,device-tablet,
 tag,Tabler Outline,tag,
 tags,Tabler Outline,tags,
+text-select,Tabler Outline,cursor-text,
 text-slash,Tabler Outline,typography-off,
 times,Tabler Outline,x,
 times-circle,Tabler Outline,circle-x,
@@ -209,13 +215,15 @@ volume-slash,Tabler Outline,volume-off,
 wrench,Tabler Outline,tool,
 xmark,Tabler Outline,x,
 xmark-large,Tabler Outline,x,
-address-book,Solar Line Duotone,notebook-line-duotone,primary/secondary masks
-box-archive,Solar Line Duotone,archive-line-duotone,primary/secondary masks
-calendar-days,Solar Line Duotone,calendar-date-line-duotone,primary/secondary masks
-circle-question,Solar Line Duotone,question-circle-line-duotone,primary/secondary masks
-files,Solar Line Duotone,documents-line-duotone,primary/secondary masks
-gear,Solar Line Duotone,settings-line-duotone,primary/secondary masks
-magnifying-glass,Solar Line Duotone,magnifer-line-duotone,primary/secondary masks
-sitemap,Solar Line Duotone,structure-line-duotone,primary/secondary masks
-users,Solar Line Duotone,users-group-rounded-line-duotone,primary/secondary masks
-wrench,Solar Line Duotone,tuning-2-line-duotone,primary/secondary masks
+address-book,Phosphor Duotone,address-book,primary/secondary masks
+box-archive,Phosphor Duotone,archive,primary/secondary masks
+calendar-days,Phosphor Duotone,calendar-dots,primary/secondary masks
+circle-question,Phosphor Duotone,question,primary/secondary masks
+display,Phosphor Duotone,monitor,primary/secondary masks
+files,Phosphor Duotone,files,primary/secondary masks
+gear,Phosphor Duotone,gear-six,primary/secondary masks
+magnifying-glass,Phosphor Duotone,magnifying-glass,primary/secondary masks
+sitemap,Phosphor Duotone,tree-structure,primary/secondary masks
+user,Phosphor Duotone,user,primary/secondary masks
+users,Phosphor Duotone,users,primary/secondary masks
+wrench,Phosphor Duotone,wrench,primary/secondary masks

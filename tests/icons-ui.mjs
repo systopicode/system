@@ -21,6 +21,8 @@ try {
  const page=await browser.newPage();const errors=[],bad=[],requests=[];
  page.on('pageerror',e=>errors.push(e.message));page.on('response',r=>{if(r.status()>=400)bad.push(r.url());});page.on('request',r=>requests.push(r.url()));
  await page.goto(origin,{waitUntil:'networkidle'});
+ assert.equal(await page.locator('svg.passkeyIcon').count(),3,'passkey artwork is parsed as real SVG');
+ assert.ok(await page.locator('svg.passkeyIcon path').count()>0,'original SVG paths are rendered');
  await page.evaluate(async assets=>{await Promise.all(assets.map(async path=>{const image=new Image();image.src=path;await image.decode();}));},[...new Set(Object.values(registry.outline))].map(name=>'/public/icons/'+(name.endsWith('-line-duotone')?'solar/':'tabler/')+name+'.svg'));
 
  assert.ok(requests.filter(u=>u.endsWith('.svg')).length>=Object.keys(registry.duotone).length*2,'the full displayed icon catalogue actually loads its SVG images');
@@ -36,7 +38,7 @@ try {
  assert.equal(await page.locator('#legacy').getAttribute('class'),'fa-regular fa-check','legacy markup is not upgraded');
  assert.equal(await page.evaluate(()=>cmsIcons.classes('fa-duotone fa-gear')),'cmsIcon cmsIcon-circle-question');
  assert.equal(await page.evaluate(()=>cmsIcons.classes('cmsIcon cmsIcon-duotone cmsIcon-wrench')),'cmsIcon cmsIcon-wrench cmsIcon-duotone');
- assert.equal(registry.duotone.wrench,'tuning-2-line-duotone','Tools uses existing Solar Duotone sliders');
+ assert.equal(registry.duotone.wrench,'wrench','Tools uses original Phosphor Duotone wrench');
 
  for(const key of ['image-slash','video-slash','file-slash','gif','video']) assert.notEqual(registry.outline[key],undefined,'dynamic media key '+key);
  for(const selector of ['.is-mark .thumbType','.thumbBroken']) {

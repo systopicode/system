@@ -14,7 +14,7 @@ $manifest=json_decode(file_get_contents(dirname(__DIR__).'/docs/icon-migration/a
 foreach($manifest['assets'] as $asset) check('asset integrity '.$asset['path'], hash_file('sha256',dirname(__DIR__).'/'.$asset['path']) === $asset['sha256']);
 foreach(['public/css/11_fontawesome.min.css','public/fonts/fontawesome/fa-regular-400.woff2','public/fonts/fontawesome/fa-duotone-regular-400.woff2'] as $old) check('removed provider asset '.$old,!file_exists(dirname(__DIR__).'/'.$old));
 $art=file_get_contents(dirname(__DIR__).'/src/Auth/passkey-icons.tpl.php');
-check('licensed passkey artwork',str_contains($art,'Tabler Icons 3.50.0') && !str_contains($art,'Font Awesome') && substr_count($art,'viewBox="0 0 24 24"')===3);
+check('licensed passkey artwork',str_contains($art,'Phosphor Icons 2.1.1') && !str_contains($art,'Font Awesome') && substr_count($art,'viewBox="0 0 256 256"')===3);
 
 $notices=\Systopic\System\Sys\ThirdParty::entries();
 $names=array_column($notices,'name');
@@ -26,3 +26,7 @@ check('blocked user is distinct from superuser', Icons::registry()['outline']['u
 check('role assignment is distinct from edit user', Icons::registry()['outline']['user-tag']!==Icons::registry()['outline']['pen-to-square']);
 foreach (\Systopic\System\Media\Presentation::ICONS as $ext=>$key) check('actual extension producer '.$ext, isset(Icons::registry()['outline'][$key]));
 foreach (['iPhone Mobile','iPad Tablet','Macintosh'] as $agent) foreach ([\Systopic\System\Auth\DeviceName::icon($agent),\Systopic\System\Auth\DeviceName::slash($agent)] as $value) check('actual device producer '.$agent, Icons::classes($value)===$value);
+
+check('cleanup uses shared Tabler eraser', Icons::registry()['outline']['broom'] === 'eraser');
+check('Solar broom removed', !is_file(dirname(__DIR__).'/public/icons/solar/broom-line-duotone.svg'));
+check('Solar info retained', Icons::registry()['outline']['circle-info'] === 'info-circle-line-duotone');

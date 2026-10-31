@@ -39,176 +39,221 @@
         }
       ],
       "unpackedSize": 11955043
+    },
+    "phosphor": {
+      "shasum": "62a4cfbec9772f1a613a647da214fbb96f3ad39d",
+      "tarball": "https://registry.npmjs.org/@phosphor-icons/core/-/core-2.1.1.tgz",
+      "fileCount": 9081,
+      "integrity": "sha512-v4ARvrip4qBCImOE5rmPUylOEK4iiED9ZyKjcvzuezqMaiRASCHKcRIuvvxL/twvLpkfnEODCOJp5dM4eZilxQ==",
+      "signatures": [
+        {
+          "sig": "MEQCIB7g1lPtmvGnz/HqBgBzNenqHFftZHLkaCpr4MzRnxtmAiAOQ4OetJBTH8vt66pplDi2nw5wOfN+7M5mi9deD/TSvg==",
+          "keyid": "SHA256:jl3bwswu80PjjokCgh0o2w5c2U4LhQAE57gj9cz1kzA"
+        }
+      ],
+      "unpackedSize": 6476685
     }
   },
   "assets": [
     {
-      "path": "public/icons/solar/archive-line-duotone-primary.svg",
-      "provider": "solar",
-      "version": "1.2.13",
-      "sha256": "dc9e64edd7dd41ddfdd9e62fc1ff708e72ceb9851c46c71ae22af742845b3a10",
-      "source": "https://registry.npmjs.org/@iconify-json/solar/-/solar-1.2.13.tgz",
-      "changes": "stroke 2; separated opaque primary/secondary masks; luminance-mask geometry flattened where present"
+      "path": "public/icons/phosphor/address-book-primary.svg",
+      "provider": "phosphor",
+      "version": "2.1.1",
+      "sha256": "83fd8b6790d3504cf4bc3311cf78c71e2808f0dbdbcf6a640df40aa685cb4e6a",
+      "source": "https://registry.npmjs.org/@phosphor-icons/core/-/core-2.1.1.tgz",
+      "changes": "original Phosphor Duotone geometry; separated primary/secondary masks"
     },
     {
-      "path": "public/icons/solar/archive-line-duotone-secondary.svg",
-      "provider": "solar",
-      "version": "1.2.13",
-      "sha256": "4569dfed41c7dc636e54ab8f1069881da6494c5c52334dcf5999c2a939a93dda",
-      "source": "https://registry.npmjs.org/@iconify-json/solar/-/solar-1.2.13.tgz",
-      "changes": "stroke 2; separated opaque primary/secondary masks; luminance-mask geometry flattened where present"
+      "path": "public/icons/phosphor/address-book-secondary.svg",
+      "provider": "phosphor",
+      "version": "2.1.1",
+      "sha256": "a202b90563541098a57d21ef4b0f0cd5a4ba63f0e2f22c7dbe9f9a7d440a3f6c",
+      "source": "https://registry.npmjs.org/@phosphor-icons/core/-/core-2.1.1.tgz",
+      "changes": "original Phosphor Duotone geometry; separated primary/secondary masks"
     },
     {
-      "path": "public/icons/solar/broom-line-duotone.svg",
-      "provider": "solar",
-      "version": "1.2.13",
-      "sha256": "b72bbd2885b31d21f973a6a35de9cee8ff4e1ee62b0bb8f31621983e4163685e",
-      "source": "https://registry.npmjs.org/@iconify-json/solar/-/solar-1.2.13.tgz",
-      "changes": "stroke 2; original Solar broom geometry rendered monochrome"
+      "path": "public/icons/phosphor/archive-primary.svg",
+      "provider": "phosphor",
+      "version": "2.1.1",
+      "sha256": "a71e609d89ab6945bf9dd559875ad7ca441d577f7baa1da18d7eed4afec6efb0",
+      "source": "https://registry.npmjs.org/@phosphor-icons/core/-/core-2.1.1.tgz",
+      "changes": "original Phosphor Duotone geometry; separated primary/secondary masks"
     },
     {
-      "path": "public/icons/solar/calendar-date-line-duotone-primary.svg",
-      "provider": "solar",
-      "version": "1.2.13",
-      "sha256": "c74ba9194325fe82aa2b8f185f6f9534c208d721cc83a76b3bd59b6f5dd8aaf2",
-      "source": "https://registry.npmjs.org/@iconify-json/solar/-/solar-1.2.13.tgz",
-      "changes": "stroke 2; separated opaque primary/secondary masks; luminance-mask geometry flattened where present"
+      "path": "public/icons/phosphor/archive-secondary.svg",
+      "provider": "phosphor",
+      "version": "2.1.1",
+      "sha256": "bd74b0e4f530d3b454595c5df5aa1b5098fb17f6313614655e3432bf92cf3104",
+      "source": "https://registry.npmjs.org/@phosphor-icons/core/-/core-2.1.1.tgz",
+      "changes": "original Phosphor Duotone geometry; separated primary/secondary masks"
     },
     {
-      "path": "public/icons/solar/calendar-date-line-duotone-secondary.svg",
-      "provider": "solar",
-      "version": "1.2.13",
-      "sha256": "0a229c28a976a9776f6686a64667465c5e6d372f1974cb3fbce5fe6ef50b70b9",
-      "source": "https://registry.npmjs.org/@iconify-json/solar/-/solar-1.2.13.tgz",
-      "changes": "stroke 2; separated opaque primary/secondary masks; luminance-mask geometry flattened where present"
+      "path": "public/icons/phosphor/calendar-dots-primary.svg",
+      "provider": "phosphor",
+      "version": "2.1.1",
+      "sha256": "c35a4b2abb6c54713a5b269968b61aefbc745307815f8f4ac42b66bbdb928936",
+      "source": "https://registry.npmjs.org/@phosphor-icons/core/-/core-2.1.1.tgz",
+      "changes": "original Phosphor Duotone geometry; separated primary/secondary masks"
     },
     {
-      "path": "public/icons/solar/documents-line-duotone-primary.svg",
-      "provider": "solar",
-      "version": "1.2.13",
-      "sha256": "2495609b950b9048d09b1a952096c4e9e8b06d773fbe50fae9be9eef4a70081a",
-      "source": "https://registry.npmjs.org/@iconify-json/solar/-/solar-1.2.13.tgz",
-      "changes": "stroke 2; separated opaque primary/secondary masks; luminance-mask geometry flattened where present"
+      "path": "public/icons/phosphor/calendar-dots-secondary.svg",
+      "provider": "phosphor",
+      "version": "2.1.1",
+      "sha256": "d2f7e31b0659daff649496c66b9f3c8bb82d74d1952b94703cbe1ccec648e255",
+      "source": "https://registry.npmjs.org/@phosphor-icons/core/-/core-2.1.1.tgz",
+      "changes": "original Phosphor Duotone geometry; separated primary/secondary masks"
     },
     {
-      "path": "public/icons/solar/documents-line-duotone-secondary.svg",
-      "provider": "solar",
-      "version": "1.2.13",
-      "sha256": "c572e263c07f5890e1b95415802454c3fab1b2888e420eea1221f5f4b443eda4",
-      "source": "https://registry.npmjs.org/@iconify-json/solar/-/solar-1.2.13.tgz",
-      "changes": "stroke 2; separated opaque primary/secondary masks; luminance-mask geometry flattened where present"
+      "path": "public/icons/phosphor/files-primary.svg",
+      "provider": "phosphor",
+      "version": "2.1.1",
+      "sha256": "fd2c6c20e2c400991b01f475c3bdf21fe0f678908a29166e3fe61d2262d1e821",
+      "source": "https://registry.npmjs.org/@phosphor-icons/core/-/core-2.1.1.tgz",
+      "changes": "original Phosphor Duotone geometry; separated primary/secondary masks"
     },
     {
-      "path": "public/icons/solar/magnifer-line-duotone-primary.svg",
-      "provider": "solar",
-      "version": "1.2.13",
-      "sha256": "bc6c4e2bcdcba53314285867ce2eac5e2518f5f31d4cd1e0a2bf5208bd185852",
-      "source": "https://registry.npmjs.org/@iconify-json/solar/-/solar-1.2.13.tgz",
-      "changes": "stroke 2; separated opaque primary/secondary masks; luminance-mask geometry flattened where present"
+      "path": "public/icons/phosphor/files-secondary.svg",
+      "provider": "phosphor",
+      "version": "2.1.1",
+      "sha256": "f9f3a3f5d400c174a371b84853d236765202e5e0cd8ff29a06301c973e938c57",
+      "source": "https://registry.npmjs.org/@phosphor-icons/core/-/core-2.1.1.tgz",
+      "changes": "original Phosphor Duotone geometry; separated primary/secondary masks"
     },
     {
-      "path": "public/icons/solar/magnifer-line-duotone-secondary.svg",
-      "provider": "solar",
-      "version": "1.2.13",
-      "sha256": "41a283d8df7e2e460c5db596f781aac7dbd4d84c47b0e7d601658696275a4593",
-      "source": "https://registry.npmjs.org/@iconify-json/solar/-/solar-1.2.13.tgz",
-      "changes": "stroke 2; separated opaque primary/secondary masks; luminance-mask geometry flattened where present"
+      "path": "public/icons/phosphor/gear-six-primary.svg",
+      "provider": "phosphor",
+      "version": "2.1.1",
+      "sha256": "ef3512bcb99f8917462138f97f447a31c2f5a5f375e0b134f4f8b4b25fa9952d",
+      "source": "https://registry.npmjs.org/@phosphor-icons/core/-/core-2.1.1.tgz",
+      "changes": "original Phosphor Duotone geometry; separated primary/secondary masks"
     },
     {
-      "path": "public/icons/solar/notebook-line-duotone-primary.svg",
-      "provider": "solar",
-      "version": "1.2.13",
-      "sha256": "8aeb9912f50ac799318d670ae4c183c5eb7a553730cce5217690bab99ee2c98e",
-      "source": "https://registry.npmjs.org/@iconify-json/solar/-/solar-1.2.13.tgz",
-      "changes": "stroke 2; separated opaque primary/secondary masks; luminance-mask geometry flattened where present"
+      "path": "public/icons/phosphor/gear-six-secondary.svg",
+      "provider": "phosphor",
+      "version": "2.1.1",
+      "sha256": "f2a5838a72262cd984cdeb9bc89cc5629df26d0bfee4b5db7f85eb6ca665028d",
+      "source": "https://registry.npmjs.org/@phosphor-icons/core/-/core-2.1.1.tgz",
+      "changes": "original Phosphor Duotone geometry; separated primary/secondary masks"
     },
     {
-      "path": "public/icons/solar/notebook-line-duotone-secondary.svg",
-      "provider": "solar",
-      "version": "1.2.13",
-      "sha256": "54a8d7661a8758170f71cc80c41a8b1fe0f75703c5d0d08b340a8458db4e9a7f",
-      "source": "https://registry.npmjs.org/@iconify-json/solar/-/solar-1.2.13.tgz",
-      "changes": "stroke 2; separated opaque primary/secondary masks; luminance-mask geometry flattened where present"
+      "path": "public/icons/phosphor/magnifying-glass-primary.svg",
+      "provider": "phosphor",
+      "version": "2.1.1",
+      "sha256": "055157cb037ce8c1d921c0d508e7dc659b6aa36e63b188c3cc26ff945ae26be9",
+      "source": "https://registry.npmjs.org/@phosphor-icons/core/-/core-2.1.1.tgz",
+      "changes": "original Phosphor Duotone geometry; separated primary/secondary masks"
     },
     {
-      "path": "public/icons/solar/question-circle-line-duotone-primary.svg",
-      "provider": "solar",
-      "version": "1.2.13",
-      "sha256": "7afbc62e813bdee404b04ec4954fb883f195ccbdad51a8fbc599904b0b893ec6",
-      "source": "https://registry.npmjs.org/@iconify-json/solar/-/solar-1.2.13.tgz",
-      "changes": "stroke 2; separated opaque primary/secondary masks; luminance-mask geometry flattened where present"
+      "path": "public/icons/phosphor/magnifying-glass-secondary.svg",
+      "provider": "phosphor",
+      "version": "2.1.1",
+      "sha256": "8da3a9fafd09ab2afee3393348e693234f60dd4b29074c3d3f304787eb57e251",
+      "source": "https://registry.npmjs.org/@phosphor-icons/core/-/core-2.1.1.tgz",
+      "changes": "original Phosphor Duotone geometry; separated primary/secondary masks"
     },
     {
-      "path": "public/icons/solar/question-circle-line-duotone-secondary.svg",
-      "provider": "solar",
-      "version": "1.2.13",
-      "sha256": "de4fae9c576c307d8c1b0335cca2975e9e47a6f939d6bcb415848ece8a2384c0",
-      "source": "https://registry.npmjs.org/@iconify-json/solar/-/solar-1.2.13.tgz",
-      "changes": "stroke 2; separated opaque primary/secondary masks; luminance-mask geometry flattened where present"
+      "path": "public/icons/phosphor/monitor-primary.svg",
+      "provider": "phosphor",
+      "version": "2.1.1",
+      "sha256": "31d48945fe278092418a7c327d5641030eeb543a9f012a11e88a46c2f2b27b14",
+      "source": "https://registry.npmjs.org/@phosphor-icons/core/-/core-2.1.1.tgz",
+      "changes": "original Phosphor Duotone geometry; separated primary/secondary masks"
     },
     {
-      "path": "public/icons/solar/settings-line-duotone-primary.svg",
-      "provider": "solar",
-      "version": "1.2.13",
-      "sha256": "e0622157d5f075abc57d169f7d46b382c58cb7a14cb45197e0c3fdf3e9b74bf5",
-      "source": "https://registry.npmjs.org/@iconify-json/solar/-/solar-1.2.13.tgz",
-      "changes": "stroke 2; separated opaque primary/secondary masks; luminance-mask geometry flattened where present"
+      "path": "public/icons/phosphor/monitor-secondary.svg",
+      "provider": "phosphor",
+      "version": "2.1.1",
+      "sha256": "ebc9936d5fb1afa4adfc3147481f2b1c64d67ed7c3957a259559cce8cba5532f",
+      "source": "https://registry.npmjs.org/@phosphor-icons/core/-/core-2.1.1.tgz",
+      "changes": "original Phosphor Duotone geometry; separated primary/secondary masks"
     },
     {
-      "path": "public/icons/solar/settings-line-duotone-secondary.svg",
-      "provider": "solar",
-      "version": "1.2.13",
-      "sha256": "260791be2c65928352adc12628b8b4739ed9ee8842596eaa30a3b0c64c678164",
-      "source": "https://registry.npmjs.org/@iconify-json/solar/-/solar-1.2.13.tgz",
-      "changes": "stroke 2; separated opaque primary/secondary masks; luminance-mask geometry flattened where present"
+      "path": "public/icons/phosphor/question-primary.svg",
+      "provider": "phosphor",
+      "version": "2.1.1",
+      "sha256": "4e84b8a48a4913479c970f58856935e3131055ed866ff048dfa092f9214e75b1",
+      "source": "https://registry.npmjs.org/@phosphor-icons/core/-/core-2.1.1.tgz",
+      "changes": "original Phosphor Duotone geometry; separated primary/secondary masks"
     },
     {
-      "path": "public/icons/solar/structure-line-duotone-primary.svg",
-      "provider": "solar",
-      "version": "1.2.13",
-      "sha256": "46c4851483e772f3f760cf40bd14913a1ba701e0feb1be530a8a11e25c57cc7f",
-      "source": "https://registry.npmjs.org/@iconify-json/solar/-/solar-1.2.13.tgz",
-      "changes": "stroke 2; separated opaque primary/secondary masks; luminance-mask geometry flattened where present"
+      "path": "public/icons/phosphor/question-secondary.svg",
+      "provider": "phosphor",
+      "version": "2.1.1",
+      "sha256": "cad8efae1c90fd3ce9349f69e891ce22dd86e3f1f464f7c014f93bd0346ce02c",
+      "source": "https://registry.npmjs.org/@phosphor-icons/core/-/core-2.1.1.tgz",
+      "changes": "original Phosphor Duotone geometry; separated primary/secondary masks"
     },
     {
-      "path": "public/icons/solar/structure-line-duotone-secondary.svg",
-      "provider": "solar",
-      "version": "1.2.13",
-      "sha256": "4696bbfe877391c2e0539a4cd0d79fff27814f9aed18b34271cad500c7050630",
-      "source": "https://registry.npmjs.org/@iconify-json/solar/-/solar-1.2.13.tgz",
-      "changes": "stroke 2; separated opaque primary/secondary masks; luminance-mask geometry flattened where present"
+      "path": "public/icons/phosphor/tree-structure-primary.svg",
+      "provider": "phosphor",
+      "version": "2.1.1",
+      "sha256": "be4c9df0299e29916b94ad20acd382d21267111509349e4770cc369ebc278ac7",
+      "source": "https://registry.npmjs.org/@phosphor-icons/core/-/core-2.1.1.tgz",
+      "changes": "original Phosphor Duotone geometry; separated primary/secondary masks"
     },
     {
-      "path": "public/icons/solar/tuning-2-line-duotone-primary.svg",
-      "provider": "solar",
-      "version": "1.2.13",
-      "sha256": "937ab4c83a9f250c628d9418d925ed0a75c39098f728fa1887872b376a27f898",
-      "source": "https://registry.npmjs.org/@iconify-json/solar/-/solar-1.2.13.tgz",
-      "changes": "stroke 2; separated opaque primary/secondary masks; luminance-mask geometry flattened where present"
+      "path": "public/icons/phosphor/tree-structure-secondary.svg",
+      "provider": "phosphor",
+      "version": "2.1.1",
+      "sha256": "3c9a3e5ea21a2c22a9a843c400c8cfcaa2a74a2e5b7a43923e3fd029a668d42d",
+      "source": "https://registry.npmjs.org/@phosphor-icons/core/-/core-2.1.1.tgz",
+      "changes": "original Phosphor Duotone geometry; separated primary/secondary masks"
     },
     {
-      "path": "public/icons/solar/tuning-2-line-duotone-secondary.svg",
-      "provider": "solar",
-      "version": "1.2.13",
-      "sha256": "97ea16a2735765fa22708f04efbbdc2c99673a51a22c45f791beeb2c8c872e85",
-      "source": "https://registry.npmjs.org/@iconify-json/solar/-/solar-1.2.13.tgz",
-      "changes": "stroke 2; separated opaque primary/secondary masks; luminance-mask geometry flattened where present"
+      "path": "public/icons/phosphor/user-primary.svg",
+      "provider": "phosphor",
+      "version": "2.1.1",
+      "sha256": "ae045d836c6f4076b45d1693333a0cf564fa24907d8daea28545b2091d1ec57f",
+      "source": "https://registry.npmjs.org/@phosphor-icons/core/-/core-2.1.1.tgz",
+      "changes": "original Phosphor Duotone geometry; separated primary/secondary masks"
     },
     {
-      "path": "public/icons/solar/users-group-rounded-line-duotone-primary.svg",
-      "provider": "solar",
-      "version": "1.2.13",
-      "sha256": "1dd07c5e9d8f4904a727062c49e4c69d53dc0109f1d09b9aa7c2429079c548b9",
-      "source": "https://registry.npmjs.org/@iconify-json/solar/-/solar-1.2.13.tgz",
-      "changes": "stroke 2; separated opaque primary/secondary masks; luminance-mask geometry flattened where present"
+      "path": "public/icons/phosphor/user-secondary.svg",
+      "provider": "phosphor",
+      "version": "2.1.1",
+      "sha256": "cfa6fb937de89d093f2f23c2068a70dddac602ae82722f567a26af750dc51b24",
+      "source": "https://registry.npmjs.org/@phosphor-icons/core/-/core-2.1.1.tgz",
+      "changes": "original Phosphor Duotone geometry; separated primary/secondary masks"
     },
     {
-      "path": "public/icons/solar/users-group-rounded-line-duotone-secondary.svg",
+      "path": "public/icons/phosphor/users-primary.svg",
+      "provider": "phosphor",
+      "version": "2.1.1",
+      "sha256": "40cfebf79902dcf0414182b575d475a7db1f1ee575f3fdb31448ea493a05c125",
+      "source": "https://registry.npmjs.org/@phosphor-icons/core/-/core-2.1.1.tgz",
+      "changes": "original Phosphor Duotone geometry; separated primary/secondary masks"
+    },
+    {
+      "path": "public/icons/phosphor/users-secondary.svg",
+      "provider": "phosphor",
+      "version": "2.1.1",
+      "sha256": "2a7982362c271edb801208312845d595828b5df5c914c75c93dd8b6654939cd1",
+      "source": "https://registry.npmjs.org/@phosphor-icons/core/-/core-2.1.1.tgz",
+      "changes": "original Phosphor Duotone geometry; separated primary/secondary masks"
+    },
+    {
+      "path": "public/icons/phosphor/wrench-primary.svg",
+      "provider": "phosphor",
+      "version": "2.1.1",
+      "sha256": "00ecb83bca917fa34f69e3fb3e13c036912a8bef7c9d3dd2be94e6cc2d358a93",
+      "source": "https://registry.npmjs.org/@phosphor-icons/core/-/core-2.1.1.tgz",
+      "changes": "original Phosphor Duotone geometry; separated primary/secondary masks"
+    },
+    {
+      "path": "public/icons/phosphor/wrench-secondary.svg",
+      "provider": "phosphor",
+      "version": "2.1.1",
+      "sha256": "b8384a83836c1d4688f16a8dca8eef5619f4727ce90bc311b42ca1db6d67d4a8",
+      "source": "https://registry.npmjs.org/@phosphor-icons/core/-/core-2.1.1.tgz",
+      "changes": "original Phosphor Duotone geometry; separated primary/secondary masks"
+    },
+    {
+      "path": "public/icons/solar/info-circle-line-duotone.svg",
       "provider": "solar",
       "version": "1.2.13",
-      "sha256": "ab49e53a518ca64e87711c34b39f9269987ced6f1d3f1e9436ff6e8b47146103",
+      "sha256": "d620aff216708643e744e4ef7710541894281d4c82260a31ce7f45df354f3a40",
       "source": "https://registry.npmjs.org/@iconify-json/solar/-/solar-1.2.13.tgz",
-      "changes": "stroke 2; separated opaque primary/secondary masks; luminance-mask geometry flattened where present"
+      "changes": "stroke 2; original Solar geometry rendered monochrome"
     },
     {
       "path": "public/icons/tabler/address-book.svg",
@@ -539,6 +584,14 @@
       "changes": "regular stroke 2 retained, removed provider classes"
     },
     {
+      "path": "public/icons/tabler/contrast.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "38b309d522c6de0245f4f2322a3e56be840f74e54e63aaa64691107d2654a2eb",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
       "path": "public/icons/tabler/copy.svg",
       "provider": "tabler",
       "version": "3.50.0",
@@ -575,6 +628,14 @@
       "provider": "tabler",
       "version": "3.50.0",
       "sha256": "e24fc0f0f58bc2d028593e3fa56917923937832d9affa45970cd3ceed0d16e5f",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
+      "path": "public/icons/tabler/cursor-text.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "eb63ad33850ed5fd7b0daf5b0574ac9eda53577b0d5f0b9a92bb6d139775dc8c",
       "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
       "changes": "regular stroke 2 retained, removed provider classes"
     },
@@ -687,6 +748,22 @@
       "provider": "tabler",
       "version": "3.50.0",
       "sha256": "f4d0e8f474b3f6355e553f626a1c9f6bac7681c402880c1a2494238241eae03c",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
+      "path": "public/icons/tabler/droplet-half-2.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "18bc07a478c863c25d3711cb6ca89daa92e77d46d661d3e4d0838d003a3d5cda",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
+      "path": "public/icons/tabler/droplet-half.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "d03b7d45f6e3c2864a3b5d6a61ab820b13507c2037a414dc225b4f4fc9edb1e1",
       "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
       "changes": "regular stroke 2 retained, removed provider classes"
     },
@@ -1019,14 +1096,6 @@
       "changes": "regular stroke 2 retained, removed provider classes"
     },
     {
-      "path": "public/icons/tabler/info-circle.svg",
-      "provider": "tabler",
-      "version": "3.50.0",
-      "sha256": "cbd71800b8d37a06fcc29987525d31ff078468a877c058d1954185c90b2c1f3a",
-      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
-      "changes": "regular stroke 2 retained, removed provider classes"
-    },
-    {
       "path": "public/icons/tabler/italic.svg",
       "provider": "tabler",
       "version": "3.50.0",
@@ -1235,6 +1304,14 @@
       "changes": "regular stroke 2 retained, removed provider classes"
     },
     {
+      "path": "public/icons/tabler/palette.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "bf4aca6b449a472fe21ff83a4ab8565e88b227852af43948af999bd20fe3e51f",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
       "path": "public/icons/tabler/password.svg",
       "provider": "tabler",
       "version": "3.50.0",
@@ -1343,6 +1420,14 @@
       "provider": "tabler",
       "version": "3.50.0",
       "sha256": "5a187715189b76b29bbb451ba2755e56595211a1233dcc88ecc949ce12af4de0",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
+      "path": "public/icons/tabler/restore.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "72ade3e46a087f07b4f87967ea5b65f013e7784e7dd8c5c0628af3dce052e8c5",
       "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
       "changes": "regular stroke 2 retained, removed provider classes"
     },
@@ -1670,15 +1755,15 @@
   "artwork": [
     {
       "path": "src/Auth/passkey-icons.tpl.php",
-      "provider": "tabler",
-      "version": "3.50.0",
+      "provider": "phosphor",
+      "version": "2.1.1",
       "sourceAssets": [
         "fingerprint",
-        "user-scan",
+        "user-focus",
         "lock-open"
       ],
-      "sha256": "d53a55ed5e523701df238ecd0dcd5f671f021c1a51601e810d04404f84c8097c",
-      "changes": "stroke 0.9, explicit ink roles, tone fills; existing animation timings preserved"
+      "sha256": "0a877327057bc8046d247a7c4159014a51456a9d0c4971ddf61aace5f0a7e006",
+      "changes": "original Duotone geometry, ink roles; existing animation timings preserved"
     }
   ]
 }

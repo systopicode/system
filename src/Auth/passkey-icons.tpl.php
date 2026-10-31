@@ -1,26 +1,6 @@
-<!-- Tabler Icons 3.50.0 (MIT). Adapted stroke, tone fills and ink roles; notices: legal/third-party/Tabler-MIT.txt. -->
+<!-- Phosphor Icons 2.1.1 (MIT). Original Duotone geometry; ink roles adapted. -->
 <span class="passkeyIcons" aria-hidden="true">
-<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="0.9" stroke-linecap="round" stroke-linejoin="round" class="passkeyIcon passkeyIcon-fingerprint" aria-hidden="true" focusable="false">
-  <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-  <path d="M18.9 7a8 8 0 0 1 1.1 5v1a6 6 0 0 0 .8 3" data-ink="primary" />
-  <path d="M8 11a4 4 0 0 1 8 0v1a10 10 0 0 0 2 6" data-ink="primary" />
-  <path d="M12 11v2a14 14 0 0 0 2.5 8" data-ink="secondary" />
-  <path d="M8 15a18 18 0 0 0 1.8 6" data-ink="primary" />
-  <path d="M4.9 19a22 22 0 0 1 -.9 -7v-1a8 8 0 0 1 12 -6.95" data-ink="primary" />
-</svg>
-<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="0.9" stroke-linecap="round" stroke-linejoin="round" class="passkeyIcon passkeyIcon-scan" aria-hidden="true" focusable="false">
-  <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-  <path d="M10 9a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" data-ink="primary" data-tone-fill="" />
-  <path d="M8 16a2 2 0 0 1 2 -2h4a2 2 0 0 1 2 2" data-ink="primary" data-tone-fill="" />
-  <path d="M3 7v-2a2 2 0 0 1 2 -2h2" data-ink="primary" />
-  <path d="M3 17v2a2 2 0 0 0 2 2h2" data-ink="primary" />
-  <path d="M17 3h2a2 2 0 0 1 2 2v2" data-ink="primary" />
-  <path d="M17 21h2a2 2 0 0 0 2 -2v-2" data-ink="primary" />
-</svg>
-<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="0.9" stroke-linecap="round" stroke-linejoin="round" class="passkeyIcon passkeyIcon-success" aria-hidden="true" focusable="false">
-  <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-  <path d="M5 13a2 2 0 0 1 2 -2h10a2 2 0 0 1 2 2v6a2 2 0 0 1 -2 2h-10a2 2 0 0 1 -2 -2l0 -6" data-ink="primary" data-tone-fill="" />
-  <path d="M11 16a1 1 0 1 0 2 0a1 1 0 1 0 -2 0" data-ink="primary" />
-  <path d="M8 11v-5a4 4 0 0 1 8 0" data-ink="primary" />
-</svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" fill="currentColor" class="passkeyIcon passkeyIcon-fingerprint" aria-hidden="true" focusable="false"><path d="M224,128a96,96,0,1,1-96-96A96,96,0,0,1,224,128Z" data-ink="secondary" /><path d="M72,128a134.63,134.63,0,0,1-14.16,60.47,8,8,0,1,1-14.32-7.12A118.8,118.8,0,0,0,56,128,71.73,71.73,0,0,1,83,71.8,8,8,0,1,1,93,84.29,55.76,55.76,0,0,0,72,128Zm56-8a8,8,0,0,0-8,8,184.12,184.12,0,0,1-23,89.1,8,8,0,0,0,14,7.76A200.19,200.19,0,0,0,136,128,8,8,0,0,0,128,120Zm0-32a40,40,0,0,0-40,40,8,8,0,0,0,16,0,24,24,0,0,1,48,0,214.09,214.09,0,0,1-20.51,92A8,8,0,1,0,146,226.83,230,230,0,0,0,168,128,40,40,0,0,0,128,88Zm0-64A104.11,104.11,0,0,0,24,128a87.76,87.76,0,0,1-5,29.33,8,8,0,0,0,15.09,5.33A103.9,103.9,0,0,0,40,128a88,88,0,0,1,176,0,282.24,282.24,0,0,1-5.29,54.45,8,8,0,0,0,6.3,9.4,8.22,8.22,0,0,0,1.55.15,8,8,0,0,0,7.84-6.45A298.37,298.37,0,0,0,232,128,104.12,104.12,0,0,0,128,24ZM94.4,152.17A8,8,0,0,0,85,158.42a151,151,0,0,1-17.21,45.44,8,8,0,0,0,13.86,8,166.67,166.67,0,0,0,19-50.25A8,8,0,0,0,94.4,152.17ZM128,56a72.85,72.85,0,0,0-9,.56,8,8,0,0,0,2,15.87A56.08,56.08,0,0,1,184,128a252.12,252.12,0,0,1-1.92,31A8,8,0,0,0,189,168a8.39,8.39,0,0,0,1,.06,8,8,0,0,0,7.92-7,266.48,266.48,0,0,0,2-33A72.08,72.08,0,0,0,128,56Zm57.93,128.25a8,8,0,0,0-9.75,5.75c-1.46,5.69-3.15,11.4-5,17a8,8,0,0,0,5,10.13,7.88,7.88,0,0,0,2.55.42,8,8,0,0,0,7.58-5.46c2-5.92,3.79-12,5.35-18.05A8,8,0,0,0,185.94,184.26Z" data-ink="primary" /></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" fill="currentColor" class="passkeyIcon passkeyIcon-scan" aria-hidden="true" focusable="false"><path d="M160,112a32,32,0,1,1-32-32A32,32,0,0,1,160,112Z" data-ink="secondary" /><path d="M224,40V76a8,8,0,0,1-16,0V48H180a8,8,0,0,1,0-16h36A8,8,0,0,1,224,40Zm-8,132a8,8,0,0,0-8,8v28H180a8,8,0,0,0,0,16h36a8,8,0,0,0,8-8V180A8,8,0,0,0,216,172ZM76,208H48V180a8,8,0,0,0-16,0v36a8,8,0,0,0,8,8H76a8,8,0,0,0,0-16ZM40,84a8,8,0,0,0,8-8V48H76a8,8,0,0,0,0-16H40a8,8,0,0,0-8,8V76A8,8,0,0,0,40,84Zm136,92a8,8,0,0,1-6.41-3.19,52,52,0,0,0-83.2,0,8,8,0,1,1-12.8-9.62A67.94,67.94,0,0,1,101,141.51a40,40,0,1,1,53.94,0,67.94,67.94,0,0,1,27.43,21.68A8,8,0,0,1,176,176Zm-48-40a24,24,0,1,0-24-24A24,24,0,0,0,128,136Z" data-ink="primary" /></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" fill="currentColor" class="passkeyIcon passkeyIcon-success" aria-hidden="true" focusable="false"><path d="M216,96V208a8,8,0,0,1-8,8H48a8,8,0,0,1-8-8V96a8,8,0,0,1,8-8H208A8,8,0,0,1,216,96Z" data-ink="secondary" /><path d="M208,80H96V56a32,32,0,0,1,32-32c15.37,0,29.2,11,32.16,25.59a8,8,0,0,0,15.68-3.18C171.32,24.15,151.2,8,128,8A48.05,48.05,0,0,0,80,56V80H48A16,16,0,0,0,32,96V208a16,16,0,0,0,16,16H208a16,16,0,0,0,16-16V96A16,16,0,0,0,208,80Zm0,128H48V96H208V208Zm-68-56a12,12,0,1,1-12-12A12,12,0,0,1,140,152Z" data-ink="primary" /></svg>
 </span>

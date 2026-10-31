@@ -5,7 +5,7 @@ Asset source: @iconify-json/solar 1.2.13, info.json identifies 480 Design and CC
 License: Creative Commons Attribution 4.0 International (CC BY 4.0)
 https://creativecommons.org/licenses/by/4.0/
 
-Changes for Fluxo CMS: selected Line Duotone icons; separated primary/secondary SVG masks, removed per-path opacity in the derived masks so theme colours and opacity can be applied independently. Stroke weight increased from 1.5 to 2 for visual consistency with regular Tabler Outline. Geometry retained. No endorsement by the icon authors is implied.
+Changes for Fluxo CMS: only the original Line Duotone info-circle is retained, rendered monochrome by removing opacity. Stroke weight increased from 1.5 to 2. Geometry retained. No endorsement by the icon authors is implied.
 The CMS software licence does not restrict the rights granted for these icon assets.
 
 Attribution 4.0 International

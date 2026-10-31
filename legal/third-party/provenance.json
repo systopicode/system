@@ -47,7 +47,11 @@
     },
     "Solar-CC-BY-4.0.txt": {
       "source": "https://registry.npmjs.org/@iconify-json/solar/-/solar-1.2.13.tgz (package/info.json); https://creativecommons.org/licenses/by/4.0/legalcode.txt; Fluxo modification notice",
-      "sha256": "216dfdfccf92667fe5bd8cc7ec1e694a0691258627f2486b6a55cadc6d12ac66"
+      "sha256": "269392f4a0b57c614b0ce39559dcf2f098c097fc5ca464aee61945ecab101a9b"
+    },
+    "Phosphor-MIT.txt": {
+      "source": "https://registry.npmjs.org/@phosphor-icons/core/-/core-2.1.1.tgz (package/LICENSE)",
+      "sha256": "b5b1f1da112d18ea2147decfd48ddc1bf2b5aeb6c265381579340e95b15a2bb2"
     }
   }
 }

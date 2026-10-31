@@ -86,3 +86,7 @@ main.is-passkey-signing-in .passkeyLoginCancel { display: none; }
     .passkeys:is(.passkeyLogin, .passkeyOnboarding)[data-step="success"] .passkeyIcon-fingerprint { opacity: 0; }
 }
 
+
+/* Phosphor Duotone uses filled original paths, with independent tone colours. */
+.passkeys .passkeyIcon { fill: var(--passkeyInk); stroke: none; }
+.passkeys .passkeyIcon [data-ink="secondary"] { fill: var(--passkeyTone); stroke: none; }

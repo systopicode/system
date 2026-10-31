@@ -338,7 +338,7 @@ main > div.main nav > ul li.active > a:before{
 }
 
 main > div.main nav i.cmsIcon-duotone{
-    --icon-secondary-opacity: .75;
+    --icon-secondary-opacity: .4;
 }
 
 main > div.main nav > ul li.active span{
@@ -349,11 +349,11 @@ main > div.main nav > ul li.active span{
 main > div.main nav > ul li.active i{
     --icon-primary: #fff;
     --icon-secondary: var(--cmsHighlightColor);
-    --icon-secondary-opacity: 1;
+    --icon-secondary-opacity: .5;
     color: var(--cmsHighlightColor);
 }
 
-/* Solar layers inherit --icon-primary and --icon-secondary independently. */
+/* Duotone layers inherit --icon-primary and --icon-secondary independently. */
 
 /****************************** UNTERES MENÜ ***************************/
 .cms div.bottomMenu{

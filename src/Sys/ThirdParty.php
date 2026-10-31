@@ -10,7 +10,8 @@ final class ThirdParty
     {
         $items = [
             ['Tabler Icons 3.50.0 — Outline', 'Paweł Kuna', 'MIT', 'https://github.com/tabler/tabler-icons/tree/v3.50.0', ['Tabler-MIT.txt']],
-            ['Solar Icons — Line Duotone (asset data 1.2.13; adapted masks)', '480 Design', 'CC BY 4.0', 'https://github.com/480-Design/Solar-Icon-Set', ['Solar-CC-BY-4.0.txt']],
+            ['Phosphor Icons 2.1.1 — Duotone', 'Phosphor Icons', 'MIT', 'https://github.com/phosphor-icons/core', ['Phosphor-MIT.txt']],
+            ['Solar Icons — monochrome info-circle subset (asset data 1.2.13)', '480 Design', 'CC BY 4.0', 'https://github.com/480-Design/Solar-Icon-Set', ['Solar-CC-BY-4.0.txt']],
             ['jQuery 3.7.1', 'OpenJS Foundation and other contributors', 'MIT', 'https://github.com/jquery/jquery/tree/3.7.1', ['jquery-MIT.txt']],
             ['jsQR 1.4.0', 'Cosmo Wolfe, Jefff Nelson and contributors', 'Apache-2.0', 'https://github.com/cozmo/jsQR', ['jsqr-Apache-2.0.txt']],
             ['WebAuthn (lbuchs/webauthn)', 'Lukas Buchs; Thomas Bleeker (CBOR / ByteBuffer)', 'MIT', 'https://github.com/lbuchs/WebAuthn', ['webauthn-MIT.txt']],

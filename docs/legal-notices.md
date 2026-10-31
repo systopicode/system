@@ -1,3 +1,7 @@
+## Aktueller Icon-Stand (31. Oktober 2026)
+
+Font Awesome wird nicht mehr ausgeliefert. Die aktiven lokalen Icon-Sets sind Tabler Outline und Phosphor Duotone; nur der ausdrücklich beibehaltene Solar-Info-Kreis bleibt als einfarbige Ausnahme enthalten. Cleanup verwendet den Tabler-Radierer. Privacy-, Theme- und Lizenzansicht entsprechen diesem Stand. Die folgenden datierten Font-Awesome-Hinweise dokumentieren die Situation vor der Migration; die Git-Historie und frühere Veröffentlichungen bleiben gesondert zu prüfen.
+
 # Lizenz und System/CMS-Datenschutzhinweis
 
 ## Aktueller Stand — 29. Oktober 2026

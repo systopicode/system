@@ -7,7 +7,7 @@
     "arrow-up-from-bracket": "upload",
     "arrow-up-right-from-square": "external-link",
     "up-right-from-square": "external-link",
-    "arrow-rotate-left": "arrow-back-up",
+    "arrow-rotate-left": "restore",
     "arrow-rotate-right": "arrow-forward-up",
     "arrow-turn-down-right": "corner-down-right",
     "arrows-left-right-to-line": "arrows-horizontal",
@@ -15,13 +15,13 @@
     "arrows-repeat": "repeat",
     "bars": "menu-2",
     "box-archive": "archive",
-    "broom": "broom-line-duotone",
+    "broom": "eraser",
     "calendar": "calendar",
     "chart-simple": "chart-bar",
     "check-circle": "circle-check",
     "circle-exclamation": "exclamation-circle",
     "circle-half-stroke": "circle-half-2",
-    "circle-info": "info-circle",
+    "circle-info": "info-circle-line-duotone",
     "circle-question": "help-circle",
     "circle-xmark": "circle-x",
     "clock-rotate-left": "history",
@@ -212,18 +212,31 @@
     "download": "download",
     "phone": "phone",
     "cpu": "cpu",
-    "calendar-circle-plus": "calendar-plus"
+    "calendar-circle-plus": "calendar-plus",
+    "palette": "palette",
+    "droplet-half": "droplet-half",
+    "contrast": "contrast",
+    "droplet-half-2": "droplet-half-2",
+    "text-select": "cursor-text",
+    "editor-undo": "arrow-back-up"
   },
   "duotone": {
-    "gear": "settings-line-duotone",
-    "users": "users-group-rounded-line-duotone",
-    "sitemap": "structure-line-duotone",
-    "box-archive": "archive-line-duotone",
-    "magnifying-glass": "magnifer-line-duotone",
-    "circle-question": "question-circle-line-duotone",
-    "files": "documents-line-duotone",
-    "wrench": "tuning-2-line-duotone",
-    "calendar-days": "calendar-date-line-duotone",
-    "address-book": "notebook-line-duotone"
-  }
+    "gear": "gear-six",
+    "users": "users",
+    "sitemap": "tree-structure",
+    "box-archive": "archive",
+    "magnifying-glass": "magnifying-glass",
+    "circle-question": "question",
+    "files": "files",
+    "wrench": "wrench",
+    "calendar-days": "calendar-dots",
+    "address-book": "address-book",
+    "user": "user",
+    "display": "monitor"
+  },
+  "tablerFilled": {},
+  "cssAliases": {
+    "info-circle": "info-circle-line-duotone"
+  },
+  "phosphorVersion": "2.1.1"
 }

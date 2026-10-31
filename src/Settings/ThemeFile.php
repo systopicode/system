@@ -253,10 +253,10 @@ final class ThemeFile
         echo '</div></main></section>';
         ThemeAssets::render($panel);
         echo '<section class="widget themeIcons"><header><h2>Icon sets</h2></header><main>';
-        echo '<p>Tabler Outline is used for controls and content. Solar Line Duotone is used for the main-navigation icons, including the Tools sliders, and custom main-navigation panels. The cleanup broom uses the existing Solar geometry in one colour. All icons are served locally.</p>';
+        echo '<p>Tabler Outline is used for controls and content. Small information hints use the original Solar info-circle motif in one colour. Phosphor Duotone is used for main navigation, including Tools (Wrench), custom main-navigation panels and the passkey animation. Cleanup and log clearing use the Tabler eraser. All icons are served locally.</p>';
         echo '<nav class="cmsBoxActions" aria-label="Icon set search">';
-        echo '<a class="button" href="https://tabler.io/icons?style=outline" target="_blank" rel="noopener noreferrer"><i class="cmsIcon cmsIcon-arrow-up-right-from-square" aria-hidden="true"></i>Tabler Outline</a>';
-        echo '<a class="button" href="https://icon-sets.iconify.design/solar/?suffixes=Line+Duotone" target="_blank" rel="noopener noreferrer"><i class="cmsIcon cmsIcon-arrow-up-right-from-square" aria-hidden="true"></i>Solar Line Duotone</a>';
+        echo '<a class="button cmsExternalLink" href="https://tabler.io/icons?style=outline" target="_blank" rel="noopener noreferrer">Tabler Outline<i class="cmsIcon cmsIcon-arrow-up-right-from-square" aria-hidden="true"></i></a>';
+        echo '<a class="button cmsExternalLink" href="https://phosphoricons.com/?weight=duotone" target="_blank" rel="noopener noreferrer">Phosphor Duotone<i class="cmsIcon cmsIcon-arrow-up-right-from-square" aria-hidden="true"></i></a>';
         echo '</nav>';
         echo '</main></section>';
 
