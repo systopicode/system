@@ -38,15 +38,16 @@ $screens = ($this->accountKind ?? '') === \Systopic\System\Tables\Users\Model::S
 						<?php [$status, $statusTitle] = Presence::userMark((int) $user->id); ?>
 						<td class="userStatusCell"><span class="userStatus <?= $status ?>" title="<?= $e($statusTitle) ?>" role="img" aria-label="<?= $e($statusTitle) ?>"></span></td>
 						<td>
-							<?= $e($user->name) ?>
+							<span class="userListIdentity"><img class="userListAvatar" alt="" loading="lazy" src="<?= $e(\Systopic\System\Auth\Portrait::src((int) $user->id, $user->email, $screens)) ?>"><span class="userListName"><?= $e($user->name) ?></span>
                             <?php if ($user->isBlocked): ?><i class="cmsIcon cmsIcon-user-lock userSuper userBlocked" title="Blocked" aria-label="Blocked"></i><?php endif; ?>
 							<?php if ($user->isSuperuser) { ?>
 								<i class="cmsIcon cmsIcon-user-shield userSuper" title="Superuser" role="img" aria-label="Superuser"></i>
 							<?php } ?>
+                            </span>
 						</td>
 						<td><?= $e($user->fullname) ?></td>
 						<?php if (!$screens) { ?><td><?= $e($user->email) ?></td><?php } ?>
-						<td><?= $user->lastLogin ? $e(\Systopic\System\Sys\LocalTime::format($user->lastLogin, 'j M Y, H:i')) : 'Unknown' ?></td>
+						<td><?= $user->lastLogin ? $e(\Systopic\System\Sys\LocalTime::format($user->lastLogin, \Systopic\System\Sys\LocalTime::DATETIME)) : 'Unknown' ?></td>
 						<td>
 							<div class="roles" data-drop_accept="role" data-on_drop="addRoleToUser">
 								<?php

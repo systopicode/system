@@ -17,7 +17,7 @@ $frontendLogo = \Systopic\System\Auth\Branding::href('img/logo.svg') ?? \Systopi
 	<?php } ?>
 	<?php $this->withView($this->form ?: 'login'); ?>
 	<?php if (!in_array((string) ($this->form ?? 'login'), ['login', 'signedIn', 'passkeySetup', 'loggedOut', 'identify', 'resetPassword', 'resetCode', 'activationCode', 'setPassword', 'register'], true)) { ?>
-		<p class="authFoot"><a class="authSwitch ajax" href="<?= htmlspecialchars((string) $this->href, ENT_QUOTES) ?>?method=choose"><i class="cmsIcon cmsIcon-arrow-left"></i> Use another method</a></p>
+		<p class="authFoot"><a class="button transparent authSwitch ajax" href="<?= htmlspecialchars((string) $this->href, ENT_QUOTES) ?>?method=choose"><i class="cmsIcon cmsIcon-arrow-left"></i> Use another method</a></p>
 	<?php } ?>
 </div>
 <?php include('footer.tpl.php'); ?>

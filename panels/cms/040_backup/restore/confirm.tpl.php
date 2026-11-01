@@ -7,6 +7,13 @@ $chosen = [\Systopic\System\Panels\Root\Cms\Backup\Panel::class, 'chosen'];
 $e = static fn($v): string => htmlspecialchars((string) $v, ENT_QUOTES);
 $superuser = \Systopic\System\Auth\Session::isSuperuser();
 $preflight = $contents === null ? null : \Systopic\System\Backup\Preflight::inspect(\fs::toNative($this->parent->backupdirpath), $name, \fs::toNative($this->parent->tmpdirpath));
+$backupDate = '';
+foreach ($this->parent->backupfilestable ?? [] as $backupRecord) {
+    if (($backupRecord['filenamebase'] ?? '') === $name) {
+        $backupDate = (new \DateTimeImmutable($backupRecord['date']))->format(\Systopic\System\Sys\LocalTime::DATETIME_SECONDS);
+        break;
+    }
+}
 $showList = false;
 if (is_array($contents)) {
 	$showList = !empty($contents['database']) || !empty($contents['media']) || !empty($contents['environment']);
@@ -28,9 +35,10 @@ if (is_array($contents)) {
         <?php foreach ($preflight['warnings'] as $note): ?><div class="warning"><p class="message"><?= $e($note) ?></p></div><?php endforeach; ?>
         </div>
         <?php endif; ?>
-		<p>Restore this backup? The selected parts replace what is on this server.</p>
-		<p class="backupConfirmName"><?= $e($name) ?></p>
-		<hr>
+        <div class="cms message is-stay restoreCheck"><div class="<?= !empty($preflight['errors']) ? 'error' : 'info' ?>"><p class="message"><strong><?= !empty($preflight['errors']) ? 'Archive checks failed.' : 'Archive structure checked.' ?></strong> A restore has not been tested. Structure checks do not verify SQL execution or every media file.</p></div></div>
+        <details class="restoreArchive"><summary>Backup<?= $backupDate !== '' ? ' · ' . $e($backupDate) : ' file' ?></summary><code><?= $e($name) ?></code></details>
+        <h2 class="restoreSelectionTitle">What to restore</h2>
+        <p class="tagsHint">Choose which parts of this installation to replace.</p>
 		<form id="backupRestoreForm" data-feedback="parameters" method="put" action="createTaskList?name=<?= urlencode($name) ?>">
 			<?php if ($showList) { ?>
 				<ul class="checkBoxList">
@@ -77,10 +85,11 @@ if (is_array($contents)) {
 					<?php } ?>
 				</ul>
 				<?php if ($superuser && (!empty($contents['environment']) || !empty($contents['pageSettings']) || !empty($contents['mediaSettings']))) { ?>
-					<p class="tagsHint">Settings and the environment stay off. They replace sign-in, mail and the theme.</p>
+					<p class="tagsHint">Settings and environment are not selected by default. Including them can replace sign-in, mail and theme configuration.</p>
 				<?php } ?>
 			<?php } ?>
-		</form>
+        </form>
+        <div class="cms message is-stay restoreReplaceWarning"><div class="warning"><p class="message">Selected parts will overwrite current data. Changes made after this backup can be lost. Create a current backup before restoring.</p></div></div>
 	<?php } ?>
 </main>
 <?php if ($contents !== null) { ?>

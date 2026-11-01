@@ -114,7 +114,10 @@ h1{margin:0 0 .35rem;font-size:1.6rem;font-weight:650;letter-spacing:-.02em}
 section{background:#fff;border:1px solid #d7dee2;border-radius:.75rem;overflow:hidden}
 h2{margin:0;padding:.8rem 1rem;border-bottom:1px solid #e6ebed;font-size:1rem}
 ul{list-style:none;margin:0;padding:.8rem 1rem;display:flex;flex-direction:column;gap:.4rem}
-li{margin:0;padding:.4rem .7rem;border-radius:.45rem;font-size:.875rem;line-height:1.4}
+li{display:flex;align-items:center;gap:.5rem;margin:0;padding:.4rem .7rem;border-radius:.45rem;font-size:.875rem;line-height:1.4}
+li.ok>span:first-child{color:#4fb95e}
+li.warn>span:first-child{color:#a17600}
+li.bad>span:first-child{color:#d6454c}
 li.ok{background:color-mix(in srgb,#7cb249 18%,#fff)}
 li.warn{background:color-mix(in srgb,#fcb60c 32%,#fff)}
 li.bad{background:color-mix(in srgb,#c44536 14%,#fff)}
@@ -123,7 +126,7 @@ echo '<main><h1>Server check</h1><p class="lead">Nothing was installed. This onl
 foreach ($cards as $title => $rows) {
 	echo '<section><h2>' . $e($title) . '</h2><ul>';
 	foreach ($rows as $item) {
-		echo '<li class="' . $e($item['status']) . '">' . $e($item['label']) . '</li>';
+		echo '<li class="' . $e($item['status']) . '"><span aria-hidden="true">' . (['ok'=>'✓','warn'=>'!','bad'=>'×'][$item['status']] ?? '•') . '</span><span>' . $e($item['label']) . '</span></li>';
 	}
 	echo '</ul></section>';
 }

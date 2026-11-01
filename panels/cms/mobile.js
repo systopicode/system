@@ -100,6 +100,9 @@ function chromeColor() {
 		});
 	}
 	if (!mobile.matches || !document.body) {
+		// The mobile Safari edge otherwise covers the desktop status footer.
+		var edge = document.getElementById('cmsChromeEdge');
+		if (edge) edge.remove();
 		var stale = document.getElementById('cmsChromeColor');
 		if (stale) stale.remove();
 		if (document.documentElement) document.documentElement.style.background = '';
@@ -790,7 +793,7 @@ if (window.visualViewport) {
 		chromeColor();
 		// iOS pans the layout to the focused field. A sheet then sits with its
 		// header above the screen and the results in the middle.
-		if (pinning || !mobile.matches || vv.offsetTop < 2 || !document.querySelector('.cmslightbox.cmsFind')) return;
+		if (pinning || !touch || vv.offsetTop < 2 || !document.querySelector('.cmslightbox.cmsFind')) return;
 		pinning = true;
 		window.scrollTo(0, 0);
 		pinning = false;
@@ -805,5 +808,21 @@ mobileObserver.observe(root, {childList: true, subtree: true});
 mobileState.destroy = function () { mobileEvents.abort(); mobileObserver.disconnect(); };
 mobileState.sync = syncMobile;
 syncMobile();
+
+// Safari can chain a background touch into layout-viewport panning while its keyboard is open.
+// Only the visible search results may consume a vertical gesture.
+var searchTouchY=0;
+document.addEventListener('touchstart',function(event){searchTouchY=event.touches[0]?.clientY||0;},{passive:true,signal:mobileEvents.signal});
+document.addEventListener('touchmove',function(event){
+ if(!document.documentElement.classList.contains('cms-keyboard')||!document.querySelector('.cmsFind:not([hidden])'))return;
+ var results=event.target.closest?.('.cmsFindResults'),y=event.touches[0]?.clientY||searchTouchY,delta=y-searchTouchY;searchTouchY=y;
+ var scroll=results;
+ while(scroll&&scroll.closest('.cmsFind')){
+  var style=getComputedStyle(scroll);
+  if(/auto|scroll/.test(style.overflowY)&&scroll.scrollHeight>scroll.clientHeight+1&&((delta>0&&scroll.scrollTop>0)||(delta<0&&scroll.scrollTop+scroll.clientHeight<scroll.scrollHeight-1)))return;
+  scroll=scroll.parentElement;
+ }
+ if(event.cancelable)event.preventDefault();
+},{passive:false,signal:mobileEvents.signal});
 
 }());

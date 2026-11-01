@@ -191,7 +191,7 @@ body.dragging section.cms{
     left: 0;
     width: 0.85rem;
     transform: translateX(-100%);
-    background: linear-gradient(to left, color-mix(in srgb, var(--cmsTextColor) 22%, transparent), transparent);
+    background: linear-gradient(to left, color-mix(in srgb, var(--cmsTextColor) 12%, transparent), transparent);
     pointer-events: none;
     opacity: 1;
 }
@@ -567,3 +567,5 @@ div.table .tc{
 }
 
 .cms .tableScroll[data-table-scroll] > table { min-width:42rem; }
+
+.cms .projectFiles table.scalars thead th:not(:empty) { text-align: left; }

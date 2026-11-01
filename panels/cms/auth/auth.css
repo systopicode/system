@@ -519,7 +519,7 @@ main.is-passkey-signing-in .passkeyLogin--quiet {
 
 .authCard .authCodeSlots {
 	display: grid;
-	grid-template-columns: repeat(4, 2.15rem) 0.85rem repeat(4, 2.15rem);
+	grid-template-columns: repeat(4, minmax(0, 2.15rem)) 0.85rem repeat(4, minmax(0, 2.15rem));
 	justify-content: center;
 	align-items: center;
 	gap: 0.3rem;
@@ -529,7 +529,7 @@ main.is-passkey-signing-in .passkeyLogin--quiet {
 
 .authCard .authCodeSlots input {
 	box-sizing: border-box;
-	width: 2.15rem;
+	width: 100%;
 	min-width: 0;
 	height: 2.6rem;
 	margin: 0;
@@ -759,40 +759,10 @@ body.appBody:has(.authCard) .authCard p.authFoot:has(:is(:is(a, button:where([da
 
 body.cms:has(.authCard) .authCard p.authFoot:has(:is(:is(a, button:where([data-cms-action])).authBack, :is(a, button:where([data-cms-action])).authSwitch)) :is(:is(a, button:where([data-cms-action])).authBack, :is(a, button:where([data-cms-action])).authSwitch),
 body.appBody:has(.authCard) .authCard p.authFoot:has(:is(:is(a, button:where([data-cms-action])).authBack, :is(a, button:where([data-cms-action])).authSwitch)) :is(:is(a, button:where([data-cms-action])).authBack, :is(a, button:where([data-cms-action])).authSwitch) {
-	margin-left: -0.95rem;
+	margin-left: 0;
 }
 
-.cms .authCard .authFoot :is(:is(a, button:where([data-cms-action])).authBack, :is(a, button:where([data-cms-action])).authSkip, :is(a, button:where([data-cms-action])).authSwitch, button:where(:not([data-cms-action])).authSwitch),
-.cms .authCard .authFoot :is(:is(a, button:where([data-cms-action])).authSwitch, button:where(:not([data-cms-action])).authSwitch):hover,
-.cms .authCard .authFoot :is(:is(a, button:where([data-cms-action])).authBack, :is(a, button:where([data-cms-action])).authSkip):hover {
-	display: inline-flex;
-	align-items: center;
-	justify-content: center;
-	gap: 0.4rem;
-	width: auto;
-	min-height: 0;
-	margin: 0;
-	padding: 0.45rem 0.95rem;
-	border: 0;
-	border-radius: var(--cmsRadius);
-	background: transparent;
-	color: var(--cmsMuted);
-	font-size: 0.875rem;
-	font-weight: 500;
-	line-height: 1.2;
-	cursor: pointer;
-	box-shadow: none;
-}
-
-.cms .authCard .authFoot :is(:is(a, button:where([data-cms-action])).authSwitch, button:where(:not([data-cms-action])).authSwitch):hover,
-.cms .authCard .authFoot :is(:is(a, button:where([data-cms-action])).authBack, :is(a, button:where([data-cms-action])).authSkip):hover {
-	background: var(--cmsHover);
-	color: var(--cmsTextColor);
-}
-
-.cms .authCard .authFoot :is(:is(a, button:where([data-cms-action])).authBack, :is(a, button:where([data-cms-action])).authSkip, :is(a, button:where([data-cms-action])).authSwitch, button:where(:not([data-cms-action])).authSwitch) i {
-	font-size: 0.7rem;
-}
+.cms .authCard .authFoot .button { width: auto; margin: 0; color: var(--cmsSubText); }
 
 /* Method switches slide like a phone stack. Transforms are set inline so both panes move together. */
 /* Stage reaches into the card padding so authFoot’s negative margins aren’t clipped mid-slide. */

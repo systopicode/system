@@ -3,7 +3,6 @@
 $maintenance = $this->child('maintenance');
 $groups = [
     ['System','cpu',[$this->child('system')]],
-    ['Website checks','magnifying-glass',[$this->child('website')]],
     ['Cleanup','broom',[$this->child('cleanup')]],
     ['Logs','file-lines',[$this->child('logs')]],
     ['Database','database',[$this->child('database')]],
@@ -11,7 +10,7 @@ $groups = [
     ['Media repair','photo-film',[$this->child('media')]],
     ['Migration','repeat',[$this->child('migration')]],
 ];
-$labels = ['links' => 'Links', 'misses' => 'Unknown addresses', 'rewrite' => 'URL paths', 'trash' => 'Trash', 'unused' => 'Unused media', 'duplicates' => 'Duplicates', 'cleanup' => 'Automatic cleanup'];
+$labels = ['links' => 'Links', 'misses' => 'Incoming · 404', 'rewrite' => 'URL paths', 'trash' => 'Trash', 'unused' => 'Unused media', 'duplicates' => 'Duplicates', 'cleanup' => 'Automatic cleanup'];
 $e = static fn($v) => htmlspecialchars((string) $v, ENT_QUOTES);
 // The framework's eachChild/getNavi walk uses the active navigator context.
 // These presentation groups also reference panels outside that context.
@@ -20,7 +19,7 @@ $groupChildren = static function ($parent) {
     for ($child = $parent->firstChild; $child !== null; $child = $child->next) {
         $child->label = match ($parent->name . '/' . $child->name) {
             'website/links' => 'Links',
-            'website/misses' => 'Unknown addresses',
+            'website/misses' => 'Incoming · 404',
             'website/paths' => 'URL paths',
             'cleanup/automatic' => 'Automatic cleanup',
             'cleanup/trash' => 'Trash',
@@ -64,6 +63,14 @@ for ($panel = $this->firstChild; $panel !== null; $panel = $panel->next) {
 }
 for ($panel = $maintenance?->firstChild; $panel !== null; $panel = $panel->next) {
     if (!in_array($panel->name, ['links','misses','rewrite','trash','unused','duplicates','cleanup','media'], true)) $additional[] = $panel->getNaviItem();
+}
+$website = $this->child('website');
+if ($website && $website->inNavi) {
+    echo '</ul><hr><h2 class="pylonGroupTitle">Pages</h2><ul>';
+    $website->label = 'Website checks';
+    $item = $website->getNaviItem();
+    if ($item && $website->inPath()) $item->append($groupChildren($website));
+    echo $item;
 }
 if (array_filter($additional)) echo '</ul><hr><h2 class="pylonGroupTitle">Extensions</h2><ul>' . implode('', $additional);
 ?>

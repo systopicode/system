@@ -622,8 +622,8 @@ body.cms :is(button:where(:not([data-cms-action])), :is(a, button:where([data-cm
 .cms input[type="checkbox"].switch + div{
     position: relative;
     display: block;
-    flex: 0 0 36px;
-    width: 36px;
+    flex: 0 0 42px;
+    width: 42px;
     height: 20px;
     margin-left: auto;
     border-radius: 10px;
@@ -637,9 +637,9 @@ body.cms :is(button:where(:not([data-cms-action])), :is(a, button:where([data-cm
     position: absolute;
     top: 2px;
     left: 2px;
-    width: 16px;
+    width: 22px;
     height: 16px;
-    border-radius: 50%;
+    border-radius: 999px;
     background: #fff;
     box-shadow: 0 1px 2px rgba(0,0,0,.25);
     transition: left .2s ease;
@@ -984,9 +984,28 @@ body.cms ul.tree button:where(:not([data-cms-action])).treeMenu:hover{
 }
 
 /* A shared range control: identical track/thumb geometry in WebKit and Gecko. */
-.cms input[type="range"]{appearance:none;-webkit-appearance:none;min-height:1.5rem;height:1.5rem;padding:0;border:0;background:transparent;cursor:pointer;}
+.cms input[type="range"]{appearance:none;-webkit-appearance:none;min-height:1.5rem;height:1.5rem;padding:0;border:0;border-radius:999px;background:transparent;cursor:pointer;}
 .cms input[type="range"]::-webkit-slider-runnable-track{height:3px;border-radius:2px;background:var(--cmsLineStrong);}
 .cms input[type="range"]::-moz-range-track{height:3px;border:0;border-radius:2px;background:var(--cmsLineStrong);}
-.cms input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:1rem;height:1rem;margin-top:calc((3px - 1rem)/2);border:0;border-radius:50%;background:var(--cmsHighlightColor);box-shadow:0 1px 2px #0004;}
-.cms input[type="range"]::-moz-range-thumb{width:1rem;height:1rem;border:0;border-radius:50%;background:var(--cmsHighlightColor);box-shadow:0 1px 2px #0004;}
-.cms input[type="range"]:focus-visible{outline:2px solid var(--cmsInteractive);outline-offset:3px;border-radius:var(--cmsRadius);}
+.cms input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:1.5rem;height:1rem;margin-top:calc((3px - 1rem)/2);border:0;border-radius:999px;background:var(--cmsBrandInk,var(--cmsMainColor));box-shadow:0 1px 2px #0004;}
+.cms input[type="range"]::-moz-range-thumb{width:1.5rem;height:1rem;border:0;border-radius:999px;background:var(--cmsBrandInk,var(--cmsMainColor));box-shadow:0 1px 2px #0004;}
+.cms input[type="range"]:focus-visible{outline:2px solid var(--cmsInteractive);outline-offset:3px;border-radius:999px;box-shadow:none;}
+
+.cms :is(input:not([type=checkbox]):not([type=radio]):not([type=range]),textarea) { caret-color:var(--cmsTextColor); }
+
+.cms input[type="range"]:focus:not(:focus-visible) { box-shadow:none; outline:none; }
+
+/* Labelled tertiary actions: visible boundary, with the shared control geometry. */
+.cms :is(.button, button:where(:not([data-cms-action]))).outline {
+    background: transparent;
+    text-decoration: none;
+    color: var(--cmsBrandInk);
+    border: 1px solid color-mix(in srgb, currentColor 18%, transparent);
+}
+.cms :is(.button, button:where(:not([data-cms-action]))).outline:not([disabled]):not(.disabled):is(:hover,:focus-visible) {
+    background: var(--cmsHover);
+    border-color: color-mix(in srgb, currentColor 32%, transparent);
+}
+.cms :is(.button, button:where(:not([data-cms-action]))).outline:not([disabled]):not(.disabled):active {
+    background: color-mix(in srgb, var(--cmsMainColor) 14%, transparent);
+}

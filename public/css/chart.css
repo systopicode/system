@@ -33,3 +33,39 @@ div.bar b:last-child{
 	border-radius: 0;
 	box-shadow: none;
 }
+
+/* Shared upload / restore progress: retain the existing fill and counter. */
+.cmslightbox.upload footer div.bar,
+body.backup .backupProgress div.bar {
+    border:0;
+    border-radius:var(--cmsRadius);
+    background:color-mix(in srgb, var(--cmsMainColor) 10%, var(--cmsCanvas));
+    color:var(--cmsTextColor);
+    overflow:hidden;
+    font-size:.85rem;
+    line-height:2rem;
+    min-height:2rem;
+    box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--cmsTextColor) 15%,transparent);
+}
+.cmslightbox.upload footer div.bar > div,
+body.backup .backupProgress div.bar > div {
+    background:var(--cmsMainColor);
+    color:var(--cmsHighlightText);
+    transition:width 160ms ease-out;
+}
+.cmslightbox.upload footer div.bar b,
+body.backup .backupProgress div.bar b { top:0; left:0; font-weight:600; color:inherit; }
+.cmslightbox.upload footer div.bar > b,
+body.backup .backupProgress div.bar > b {
+    inset:0; z-index:1; display:flex; align-items:center; justify-content:center;
+    color:var(--cmsTextColor);
+    background:color-mix(in srgb,var(--cmsCanvas) 82%,transparent);
+    border-radius:var(--cmsRadius); width:max-content; max-width:calc(100% - 1rem);
+    height:1.4rem; margin:auto; padding-inline:.6rem;
+}
+.cmslightbox.upload footer div.bar > div > b,
+body.backup .backupProgress div.bar > div > b { display:none; }
+@media (prefers-reduced-motion:reduce) {
+    .cmslightbox.upload footer div.bar > div,
+    body.backup .backupProgress div.bar > div { transition:none; }
+}

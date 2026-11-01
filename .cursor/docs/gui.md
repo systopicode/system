@@ -301,10 +301,10 @@ Rules:
   `--cmsMainColor`, `--cmsHighlightColor`, `--cmsLine`, `--cmsMuted`,
   `--cmsSuccess`, `--cmsError`, `--cmsWarning`, `--cmsRadius`,
   `--cmsShadow`, … (all in `18_ui.css`).
-- **There are two button styles, no third**: `.button` (grey,
-  `--cmsButtonBg`, derived from `--cmsBgColor`) and `.button.submit`
-  (highlight). `.button.icononly` is the square icon variant. Need a
-  different look? Change the token, not the markup.
+- **Reuse shared button variants**: `.button` is secondary and `.button.submit`
+  is primary/highlight. The shared outline and transparent variants serve quiet
+  links and icon actions; `.button.icononly` controls their square geometry.
+  Recolour these through tokens, rather than adding panel-specific button systems.
 - Building blocks to reuse before writing new CSS:
   `section.widget` (with `header > h2`, optional `.is-list` for a table,
   `.is-wide`), `.widgets` (grid of widgets), `label.field > span + input`,

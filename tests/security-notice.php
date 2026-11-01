@@ -4,12 +4,16 @@ require __DIR__ . '/bootstrap.php';
 use Systopic\System\Auth\SecurityNotice;
 use Systopic\System\Tables\Users\Model as User;
 use Systopic\System\Tables\Passkeys\Model as Key;
+class http { public static string $hostUrl = 'https://fixture.test'; }
+class httpHelper { public static function filepathToHref(string $path): string { return '/fixture/' . basename($path); } }
 class fs {
     public static string $projectRoot;
     public static string $siteRoot;
     public static string $sysRoot;
     public static function toNative(string $s): string { return $s; }
+    public static function toInternal(string $s): string { return $s; }
     public static function isFile(string $s): bool { return is_file($s); }
+    public static function glob(string $pattern): array { return glob($pattern) ?: []; }
     public static function file_get_contents(string $s): string { return file_get_contents($s); }
 }
 class emailSmtp {
@@ -22,6 +26,8 @@ class emailSmtp {
     public function Body($text): static { $this->mail['body']=$text; return $this; }
     public function send(): bool { if(self::$fail) throw new RuntimeException('SMTP unavailable'); self::$sent[]=$this->mail; return true; }
 }
+class NoticeThemeAssets { public static function href(string $slot): string { return ''; } }
+class_alias(NoticeThemeAssets::class, \Systopic\System\Settings\ThemeAssets::class);
 $work=sys_get_temp_dir().'/fluxo-notice-'.bin2hex(random_bytes(4)).'/';
 mkdir($work.'overrides/img',0777,true);
 file_put_contents($work.'overrides/img/logo.svg','<svg xmlns="http://www.w3.org/2000/svg"></svg>');

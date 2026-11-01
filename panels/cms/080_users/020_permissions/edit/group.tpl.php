@@ -30,7 +30,7 @@ $color = ($group->color !== null && $group->color !== '') ? $group->color : '#8a
 	<section class="groupRights">
 		<div class="rightsHead">
 			<h2>Roles</h2>
-			<p class="tagsHint">Click a role to allow or remove it.</p>
+			<p class="tagsHint">Read allows viewing this group; Write allows making changes. Assigned accounts receive the permissions of their roles.</p>
 		</div>
 		<div>
 			<h2>Read</h2>

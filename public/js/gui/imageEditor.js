@@ -16,7 +16,11 @@ function url2mediaParams(url) {
 function runImageEditor(params) {
     const openedAt = location.href;
     const media = url2mediaParams(params.src);
-    if (!media || (document.querySelector('.imageEditor') && document.querySelector('.imageEditor')!==params.replaceEditor)) return;
+    if (!media) return;
+    const existing = document.querySelector('.imageEditor');
+    if (existing && existing !== params.replaceEditor) {
+        if (!params.inline || !existing.classList.contains('inlineImageCrop') || !existing.requestReplace?.()) return;
+    }
     const $ = window.jQuery;
     return cmsQuery(settings.siteRoot + 'cms/pages/getImageEditor', {
         media_id: media.media_id, image_format: media.media_crop_format,
@@ -32,6 +36,7 @@ function runImageEditor(params) {
         if (!crop || !cropImage || !outer || !controls) return;
         outer.querySelector('img').style.opacity = '.35';
         const scrim = document.createElement('div'); scrim.className = 'imageEditorScrim';
+        if(params.inline){editor.classList.add('inlineImageCrop');scrim.classList.add('inlineImageCropScrim');}
         params.onReplace?.();
         document.body.append(scrim, editor);
         const previewFrame = params.domObj[0].closest('.frameView');
@@ -45,7 +50,7 @@ function runImageEditor(params) {
         let ratio = Number(editor.dataset.cropRatio)||0;
         const fixedRatio = ratio;
         const unified=!!params.unified;
-        let cropping=!unified;
+        let cropping=!unified, toggleCropping, cropStart;
         const savedTune=JSON.parse(editor.dataset.tune || '{}');
         let tune={b:savedTune.b??100,c:savedTune.c??100,s:savedTune.s??100,r:savedTune.r??0,f:savedTune.f??0};
         const initialTune={...tune};
@@ -66,6 +71,7 @@ function runImageEditor(params) {
         const px = value => value+'px';
         const area = () => {
             const bar = editor.querySelector('.cropBar');
+            if(params.inline){const r=params.domObj[0].getBoundingClientRect();return {left:r.left+scrollX,top:r.top+scrollY,right:r.right+scrollX,bottom:r.bottom+scrollY};}
             const gap=Math.max(48,Math.min(96,innerWidth*.06));
             const a = {left:gap+scrollX,top:bar.offsetTop+bar.offsetHeight+gap+scrollY,
                 right:innerWidth-gap+scrollX,bottom:innerHeight-gap-(unified?48:0)+scrollY};
@@ -97,6 +103,17 @@ function runImageEditor(params) {
             }
             editor.querySelector('[data-crop-reset]').disabled = saving || !changed();
             editor.querySelector('.cropBar .submit').disabled = saving || !changed();
+            if(params.inline){
+                const content=params.domObj[0].closest('.cmsContent')?.getBoundingClientRect();
+                const sidebar=document.querySelector('aside.cms')?.getBoundingClientRect();
+                const bounds={top:Math.max(0,content?.top||0),left:Math.max(0,content?.left||0),
+                    right:Math.min(innerWidth,content?.right||innerWidth,sidebar?.width?sidebar.left:innerWidth),
+                    bottom:Math.min(innerHeight-32,content?.bottom||innerHeight)};
+                [crop,controls].forEach(el=>{const r=el.getBoundingClientRect();
+                    el.style.clipPath=`inset(${Math.max(-12,bounds.top-r.top)}px ${Math.max(-12,r.right-bounds.right)}px ${Math.max(-12,r.bottom-bounds.bottom)}px ${Math.max(-12,bounds.left-r.left)}px)`;
+                });
+            }
+            const status=editor.querySelector('.editorStatus');if(status){status.hidden=!changed()&&!saving;status.innerHTML=saving?'<i class="spin"></i> Saving…':changed()?'<i class="cmsIcon cmsIcon-circle-exclamation"></i> Unsaved changes':'';}
         }
         function fit(initial=false) {
             if (saving) return;
@@ -127,7 +144,9 @@ function runImageEditor(params) {
             window.removeEventListener('popstate',close,true);
             window.removeEventListener('beforeunload',guard);
             window.removeEventListener('resize',resize);
+            sourceObserver?.disconnect();
             document.removeEventListener('keydown',keys,true);
+            if(params.inline){document.removeEventListener('scroll',followPage,true);document.removeEventListener('cms:rendered',checkPage);}
             document.removeEventListener('pointermove',move,true);
             document.removeEventListener('pointerup',up,true);
             document.removeEventListener('pointercancel',cancelPointer,true);
@@ -151,7 +170,13 @@ function runImageEditor(params) {
             crop.insertAdjacentHTML('beforeend','<div class="imageEditorSaving" role="status" aria-label="Saving crop"><i class="cmsIcon cmsIcon-spinner cmsIcon-spin" aria-hidden="true"></i></div>');
             timer=setTimeout(error,30000);
             preview=params.is_backgroundimage?new Image():params.domObj[0];
-            ready=()=>{if(params.is_backgroundimage)params.domObj.css('background-image','url('+preview.src+')');close();};
+            ready=()=>{
+                if(params.is_backgroundimage)params.domObj.css('background-image','url('+preview.src+')');
+                if(params.inline)document.querySelectorAll('.cmsContent img').forEach(img=>{
+                    if(img!==preview && (img.currentSrc || img.src).split('?')[0]===params.src.split('?')[0])img.src=preview.src;
+                });
+                close();
+            };
             failed=error;
             preview.addEventListener('load',ready,{once:true});preview.addEventListener('error',failed,{once:true});
             cmsQuery(unified?params.saveUrl+'saveImageEdit':settings.siteRoot+'cms/pages/updateMediaCrop',{
@@ -181,6 +206,14 @@ function runImageEditor(params) {
             if(saving || event.button!==0 || event.target.closest('.cropBar,.aspectRatioSelector'))return;
             event.preventDefault();
             const handle=event.target.closest('[data-crop-handle]');
+            if(unified && !cropping && !handle && typeof sys.longPress==='function'){
+                sys.longPress(event,editor,()=>{
+                    if(saving || cropping || !editor.isConnected)return;
+                    gesture=null;pinch=null;editor.classList.remove('is-interacting','longPressed','pressing');
+                    toggleCropping?.();
+                    if(editor.hasPointerCapture?.(event.pointerId))editor.releasePointerCapture(event.pointerId);
+                });
+            }
             if(!handle && cropping && !event.target.closest('img'))return;
             if(unified && !cropping){
                 const a=area();
@@ -328,7 +361,12 @@ function runImageEditor(params) {
         editor.querySelector('[data-crop-original]').addEventListener('click',()=>{
             if(saving || fixedRatio)return;const originalRatio=Number(editor.dataset.originalRatio)||1;frame.h=frame.w/originalRatio;if(ratio)ratio=originalRatio;fit();
         });
-        function requestClose(){if(!saving && (!changed() || confirm(unified?'Discard image changes?':'Discard crop changes?')))close();}
+        function requestClose(){if(saving || (changed() && !confirm(unified?'Discard image changes?':'Discard crop changes?')))return false;close();return true;}
+        editor.requestClose = requestClose;
+        editor.requestReplace = () => {
+            if (saving || !confirm('Another crop is open. Discard it and start the new crop?')) return false;
+            close(); return true;
+        };
         editor.querySelector('[data-crop_cancel]').addEventListener('click',requestClose);
         editor.querySelector('.cropBar .submit').addEventListener('click',()=>apply());
         editor.querySelectorAll('[data-aspectratio]').forEach(button=>button.addEventListener('click',event=>{
@@ -340,7 +378,7 @@ function runImageEditor(params) {
             const bar=editor.querySelector('.cropBar'),hint=bar.querySelector('span');
             const reset=bar.querySelector('[data-crop-reset]');reset.title='Discard unsaved edits';reset.setAttribute('aria-label','Discard unsaved edits');reset.querySelector('.cmsIcon').className='cmsIcon cmsIcon-eraser';
             hint.classList.add('imageEditorHint');editor.append(hint);
-            hint.textContent='Drag to move · Pinch or scroll to zoom';
+            hint.innerHTML='<span>Drag to move · Pinch or scroll to zoom</span><span class="editorStatus" role="status"></span>';
             const control=(label,icon,action)=>{
                 const button=document.createElement('button');button.type='button';button.className='button';button.title=label;button.setAttribute('aria-label',label);
                 button.innerHTML=`<i class="cmsIcon cmsIcon-${icon}" aria-hidden="true"></i>`;
@@ -361,14 +399,23 @@ function runImageEditor(params) {
                 b.classList.add('splitApplyMenu');b.dataset.tuneKey=key;b.dataset.menuSelected='';b.setAttribute('aria-pressed','false');b.setAttribute('aria-expanded','false');
             }
             slider.querySelector('input').addEventListener('input',event=>{tune[slider.dataset.tuneKey]=Number(event.target.value);render();});
-            const resetSaved=control('Reset saved adjustments','arrow-rotate-left',()=>{tune={b:100,c:100,s:100,r:0,f:0};render();});resetSaved.dataset.editorUtility='';
+            const resetSaved=control('Reset saved adjustments and crop','arrow-rotate-left',()=>{tune={b:100,c:100,s:100,r:0,f:0};const aspect=Number(editor.dataset.originalRatio)||1;
+                const center={x:frame.x+frame.w/2,y:frame.y+frame.h/2};
+                const h=Math.min(frame.h,frame.w/(fixedRatio||aspect)),w=h*(fixedRatio||aspect);
+                frame={x:center.x-w/2,y:center.y-h/2,w,h};ratio=fixedRatio;
+                const imageH=Math.max(h,w/aspect),imageW=imageH*aspect;
+                image={x:center.x-imageW/2,y:center.y-imageH/2,w:imageW,h:imageH};
+                render();fit(true);});resetSaved.dataset.editorUtility='';
             control('Flip horizontally','reflect-horizontal',()=>{tune.f=tune.f?0:1;render();});
             control('Rotate right','rotate-right',()=>{tune.r=(tune.r+90)%360;render();});
             control('Rotate left','rotate-left',()=>{tune.r=(tune.r+270)%360;render();});
-            const cropTool=control('Crop image','crop-simple',()=>{
+            toggleCropping=()=>{
+                if(cropping && cropStart && JSON.stringify(selection())!==JSON.stringify(cropStart.selection) && !confirm('Keep this crop?')) { frame={...cropStart.frame};image={...cropStart.image};ratio=cropStart.ratio; }
+                if(!cropping)cropStart={frame:{...frame},image:{...image},ratio,selection:selection()};
                 cropping=!cropping;cropTool.classList.toggle('selected',cropping);cropTool.setAttribute('aria-pressed',String(cropping));
                 hint.textContent=cropping?'Move image · Pinch or scroll to zoom':'Drag to move · Pinch or scroll to zoom';render();fit();
-            });cropTool.setAttribute('aria-pressed','false');
+            };
+            const cropTool=control('Crop image','crop-simple',toggleCropping);cropTool.setAttribute('aria-pressed','false');
             const formatSplit=document.createElement('div');formatSplit.className='splitApply editorFormat';bar.prepend(formatSplit);
             const formatButton=document.createElement('button');formatButton.type='button';formatButton.className='button splitApplyMenu';formatButton.title='Image format';formatButton.setAttribute('aria-label','Image format');formatButton.setAttribute('aria-expanded','false');formatButton.innerHTML='<i class="cmsIcon cmsIcon-images"></i><i class="cmsIcon cmsIcon-chevron-down"></i>';formatSplit.append(formatButton);
             const formatList=document.createElement('div');formatList.className='splitApplyList imageEditorMenu';formatList.hidden=true;formatSplit.append(formatList);
@@ -395,7 +442,7 @@ function runImageEditor(params) {
             // Retain the existing split-Apply pattern rather than a second primary action.
             const applyButton=bar.querySelector('.submit');applyButton.innerHTML='<i class="cmsIcon cmsIcon-check" aria-hidden="true"></i>Apply';
             const split=document.createElement('div');split.className='splitApply';bar.append(split);split.append(applyButton);
-            const cancel=bar.querySelector('[data-crop_cancel]');cancel.innerHTML='<i class="cmsIcon cmsIcon-xmark" aria-hidden="true"></i>Cancel';
+            const cancel=bar.querySelector('[data-crop_cancel]');cancel.innerHTML='<i class="cmsIcon cmsIcon-xmark" aria-hidden="true"></i>';cancel.classList.add('transparent','icononly');cancel.title='Close';cancel.setAttribute('aria-label','Close');
             const commit=document.createElement('div');commit.className='editorCommit';bar.insertBefore(commit,split);commit.append(split,cancel);
             const menu=document.createElement('button');menu.type='button';menu.className='button submit splitApplyMenu';menu.title='Apply options';menu.setAttribute('aria-label','Apply options');menu.setAttribute('aria-expanded','false');menu.dataset.editorApply='';menu.innerHTML='<i class="cmsIcon cmsIcon-chevron-down"></i>';split.append(menu);
             const list=document.createElement('div');list.className='splitApplyList imageEditorMenu';list.hidden=true;split.append(list);list.append(all);
@@ -416,14 +463,40 @@ function runImageEditor(params) {
                 event.preventDefault();event.stopImmediatePropagation();
                 const open=[...document.querySelectorAll('.splitApplyList.is-open')].find(list=>editor.contains(list.splitHome));
                 if(open){const opener=open.splitHome.querySelector('.splitApplyMenu');closeSplitMenus();opener?.focus({preventScroll:true});return;}
+                if(unified && cropping){
+                    if(cropStart){frame={...cropStart.frame};image={...cropStart.image};ratio=cropStart.ratio;}
+                    cropStart=null;toggleCropping();return;
+                }
                 requestClose();
             }
             if(event.key==='Enter'&&!event.target.closest('button,input, [data-aspectratio]')){event.preventDefault();event.stopImmediatePropagation();apply();}
         }
-        function resize(){if(!saving)fit();}
+        let sourceSize = {width: params.domObj[0].getBoundingClientRect().width};
+        let sourceObserver;
+        function followPage(){
+            if(!params.inline || !editor.isConnected)return;
+            const r=params.domObj[0].getBoundingClientRect();
+            if (sourceSize.width > 0 && r.width > 0 && Math.abs(r.width-sourceSize.width) > .1) {
+                const scale=r.width/sourceSize.width;
+                frame={x:frame.x*scale,y:frame.y*scale,w:frame.w*scale,h:frame.h*scale};
+                image={x:image.x*scale,y:image.y*scale,w:image.w*scale,h:image.h*scale};
+            }
+            sourceSize.width=r.width;
+            origin={x:r.left+scrollX,y:r.top+scrollY};render();
+            const bar=editor.querySelector('.cropBar');
+            const content=params.domObj[0].closest('.cmsContent')?.getBoundingClientRect();
+            const sidebar=document.querySelector('aside.cms')?.getBoundingClientRect();
+            const left=Math.max(8,content?.left||8),right=Math.min(innerWidth-8,content?.right||innerWidth-8,sidebar?.width?sidebar.left:innerWidth-8);
+            bar.style.maxWidth=Math.max(0,right-left-16)+'px';
+            bar.style.left=(left+(right-left)/2)+'px';
+            bar.style.top=Math.max(8,r.top-bar.offsetHeight-8)+'px';
+        }
+        function checkPage(){if(!params.domObj[0].isConnected)close();}
+        function resize(){if(params.inline)followPage();else if(!saving)fit();}
         document.addEventListener('keydown',keys,true);
         document.addEventListener('pointermove',move,true);document.addEventListener('pointerup',up,true);document.addEventListener('pointercancel',cancelPointer,true);
         window.addEventListener('popstate',close,true);window.addEventListener('beforeunload',guard);window.addEventListener('resize',resize);
         render();fit(true);
+        if(params.inline){sourceObserver=new ResizeObserver(followPage);sourceObserver.observe(params.domObj[0]);followPage();document.addEventListener('scroll',followPage,true);document.addEventListener('cms:rendered',checkPage);}
     });
 }

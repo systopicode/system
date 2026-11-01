@@ -161,7 +161,10 @@
 			var words = denied
 				? (host.getAttribute('data-allow') || 'Allow access')
 				: (host.getAttribute('data-again') || 'Try again');
-            if (host.dataset.qrHost === 'login') again.classList.toggle('submit', !denied);
+            if (host.dataset.qrHost === 'login') {
+                again.classList.toggle('submit', !denied);
+                again.classList.add('authScan');
+            }
 			var label = again.querySelector('[data-qr-label]');
 			if (label) label.textContent = words;
 			else again.textContent = words;

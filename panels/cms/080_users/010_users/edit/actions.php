@@ -63,6 +63,24 @@ switch ($this->action) {
 		$this->updateView('user');
 		break;
 
+    case 'moreEmails':
+        if (!\Systopic\System\Auth\Session::isSuperuser()) break;
+        $this->state->userTab = 'email';
+        $this->state->emailsAll = empty($this->state->emailsAll);
+        $this->updateView('user');
+        break;
+
+    case 'clearEmails':
+        if (!\Systopic\System\Auth\Session::isSuperuser()) {
+            \message::error('Only a superuser can delete email logs.');
+            break;
+        }
+        $this->state->userTab = 'email';
+        \Systopic\System\Maintenance\RetainedLogs::clearEmailsFor((string) $user->email);
+        \message::confirm('Email log for this account deleted.');
+        $this->updateView('user');
+        break;
+
 	case 'moreSignIns':
 		$this->state->userTab = 'signins';
 		$this->state->signInsAll = empty($this->state->signInsAll);

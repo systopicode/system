@@ -5,6 +5,10 @@
  */
 function HTMLeditorRightClick(clicktype, event, elements) {
 	var target = event.target;
+    if(clicktype === 'anchor' && target.querySelector?.('img,video,iframe')){
+        target=target.querySelector('img,video,iframe');
+        clicktype={IMG:'image',VIDEO:'video',IFRAME:'iframe'}[target.nodeName];
+    }
 	var editor = wysiwygOf(target);
 	var anchorNode = getSelection().anchorNode || target;
 	var at = anchorNode.nodeType === 1 ? anchorNode : anchorNode.parentElement;
@@ -14,6 +18,10 @@ function HTMLeditorRightClick(clicktype, event, elements) {
 	var param = {target: target};
 	var cmd = function (title, icon, func, extra) {
 		return Object.assign({title: title, className: 'cmsIcon cmsIcon-' + icon, func: func, param: param}, extra);
+	};
+	var cropCommand = function () {
+		var available = typeof url2mediaParams === 'function' && url2mediaParams(target.currentSrc || target.src || '');
+		return cmd(available ? 'Crop on page' : 'Crop on page — choose an image format first', 'crop-simple', 'cropImageOnPage', {disabled: !available});
 	};
 	var format = function (title, icon, data, extra) {
 		return Object.assign({title: title, className: 'cmsIcon cmsIcon-' + icon, func: 'formatHTMLeditor', param: data, reopen: true}, extra);
@@ -49,7 +57,8 @@ function HTMLeditorRightClick(clicktype, event, elements) {
 		removeAnchor: cmd('Remove link', 'link-slash', 'removeAnchor', {active: inLink})
 	};
 	var classItem = function (el, sep) {
-		var name = el && el.getAttribute('class');
+		el = wysiwyg.blockFor(el);
+		var name = el && [...el.classList].filter(name => name !== 'cmsMediaOn').join(' ');
 		return cmd(name ? 'CSS classes: ' + name : 'CSS classes', 'tag', 'editBlockClass', {selected: !!name, active: !!el, sep: sep, param: {target: el || target}});
 	};
 	var blockClass = {blockClass: classItem(wysiwyg.blockFor(at), true)};
@@ -127,6 +136,7 @@ function HTMLeditorRightClick(clicktype, event, elements) {
 			items = {
 				edit: cmd(clicktype === 'fixedVideo' ? 'Edit' : 'Crop and adjust', 'pen', 'formatImage')
 			};
+			if (clicktype === 'fixedImage') items.crop = cropCommand();
 			break;
 		case 'image':
 			var linked = !!target.closest('a');
@@ -136,6 +146,7 @@ function HTMLeditorRightClick(clicktype, event, elements) {
 				move: cmd('Move', 'up-down-left-right', 'editorBeginMediaMove', {drag: true}),
 				formats: imageFormats,
 				edit: cmd('Crop and adjust', 'pen', 'formatImage', {sep: imageFormats.active === false}),
+				crop: cropCommand(),
 				anchor: cmd(linked ? 'Edit link' : 'Insert link', linked ? 'pen' : 'link', 'createHTMLeditorLink', {selected: linked, sep: true}),
 				unlink: cmd('Remove link', 'link-slash', 'removeAnchor', {active: linked}),
 				blockClass: classItem(target, true)

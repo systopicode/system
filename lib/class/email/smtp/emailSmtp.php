@@ -67,17 +67,6 @@ class emailSmtp extends SMTPMailer {
     }
 
 
-    protected function generateMessageID() {
-        $cleanNumber = preg_replace('/[^0-9]/', '', microtime(false));
-        $local = $_SERVER['HTTP_HOST'] ?? $_SERVER['SERVER_NAME'] ?? $_SERVER['SERVER_ADDR'] ?? '';
-        return sprintf(
-            "<%s.%s@%s>",
-            base_convert($cleanNumber, 10, 36),
-            base_convert(bin2hex(openssl_random_pseudo_bytes(8)), 16, 36),
-            $local
-        );
-    }
-
     // interface allows shorthands and chaining calls
 
     function __call($name, $args) {

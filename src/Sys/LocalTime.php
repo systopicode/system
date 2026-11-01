@@ -12,6 +12,9 @@ namespace Systopic\System\Sys;
 final class LocalTime
 {
     public const COOKIE = 'cmsTimezone';
+    public const DATE = 'd.m.Y';
+    public const DATETIME = 'd.m.Y H:i';
+    public const DATETIME_SECONDS = 'd.m.Y H:i:s';
 
     private static ?\DateTimeZone $zone = null;
 
@@ -43,7 +46,7 @@ final class LocalTime
         return $date->setTimezone(self::zone());
     }
 
-    public static function format(string|int|\DateTimeInterface|null $time, string $format): string
+    public static function format(string|int|\DateTimeInterface|null $time, string $format = self::DATETIME): string
     {
         return $time === null || $time === '' ? '' : self::of($time)->format($format);
     }

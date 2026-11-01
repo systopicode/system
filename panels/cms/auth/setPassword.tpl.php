@@ -9,15 +9,16 @@ if (!$keyValid) {
     return;
 }
 $authTitle = 'Choose a password';
-$authLead = 'At least 5 characters, with an uppercase letter, a number and a symbol.';
+$authLead = 'At least 15 characters. You can use spaces and a passphrase.';
 ob_start();
 ?>
-<form class="appLoginForm" method=post action=setPassword  onsubmit='this.classList.add("loading")'>
+<form class="appLoginForm" method=post action=setPassword data-password-check data-password-strict="<?= STAGE === 'LIVE' ? 'true' : 'false' ?>" onsubmit='this.classList.add("loading")'>
 			<input type=hidden name=key value="<?= htmlspecialchars((string) http::get('key', http::post('key')), ENT_QUOTES) ?>"/>
 			<div class="row">
 				<div class='inputGroup'><i class="cmsIcon cmsIcon-lock"></i>
 					<input type=password name="password" placeholder='New Password' required spellcheck="false" autocapitalize="off"
 						   autocomplete="new-password">
+					<button type="button" class="authReveal" aria-label="Show password" onclick="var i=this.parentElement.querySelector('input');var show=i.type==='password';i.type=show?'text':'password';this.setAttribute('aria-label',show?'Hide password':'Show password');this.querySelector('i').className=show?'cmsIcon cmsIcon-eye-slash':'cmsIcon cmsIcon-eye';"><i class="cmsIcon cmsIcon-eye"></i></button>
 					<span class='bar'></span>
 				</div>
 			</div>
@@ -25,12 +26,13 @@ ob_start();
 				<div class='inputGroup'><i class="cmsIcon cmsIcon-lock"></i>
 					<input type=password name="password_repeat" placeholder='Repeat New Password' required spellcheck="false" autocapitalize="off"
 						   autocomplete="new-password">
+					<button type="button" class="authReveal" aria-label="Show password" onclick="var i=this.parentElement.querySelector('input');var show=i.type==='password';i.type=show?'text':'password';this.setAttribute('aria-label',show?'Hide password':'Show password');this.querySelector('i').className=show?'cmsIcon cmsIcon-eye-slash':'cmsIcon cmsIcon-eye';"><i class="cmsIcon cmsIcon-eye"></i></button>
 					<span class='bar'></span>
 				</div>
 			</div>
 			<div class="row">
 				<br>
-				<button class="submit"><i class="cmsIcon cmsIcon-check"></i> Save password and sign in</button>
+				<button type="submit" class="submit" disabled><i class="cmsIcon cmsIcon-check"></i> Save password and sign in</button>
 				<!--	<button name=action value=setPasswordAndMakeSuperuser>Set Password and make Superuser</button> -->
 			</div>
 		</form>

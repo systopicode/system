@@ -84,6 +84,50 @@ final class RetainedLogs
         } finally { flock($file, LOCK_UN); fclose($file); }
     }
 
+    /** Remove only records addressed to this account, under the writer lock. */
+    public static function clearEmailsFor(string $email): int
+    {
+        if (!\Systopic\System\Auth\Session::isSuperuser()) throw new \RuntimeException('Only superusers can clear logs.');
+        if (trim($email) === '') return 0;
+        $path = self::path('email');
+        if (!is_file($path)) return 0;
+        $file = fopen($path, 'r+');
+        if (!$file) throw new \RuntimeException('Email log could not be opened.');
+        try {
+            if (!flock($file, LOCK_EX)) throw new \RuntimeException('Email log is busy.');
+            if (fstat($file)['size'] > 16777216) throw new \RuntimeException('Large log needs supervised cleanup.');
+            $original = stream_get_contents($file);
+            if ($original === false) throw new \RuntimeException('Email log could not be read.');
+            $records = self::records($original, 'email');
+            $kept = []; $count = 0;
+            foreach ($records as $record) {
+                if (self::emailRecordMatches($record, $email)) $count++;
+                else $kept[] = $record;
+            }
+            if ($count) {
+                $raw = implode('', $kept);
+                rewind($file);
+                if (fwrite($file, $raw) !== strlen($raw) || !ftruncate($file, strlen($raw)) || !fflush($file)) {
+                    rewind($file); fwrite($file, $original); ftruncate($file, strlen($original)); fflush($file);
+                    throw new \RuntimeException('Email log could not be saved; original restoration attempted.');
+                }
+            }
+            return $count;
+        } finally { flock($file, LOCK_UN); fclose($file); }
+    }
+
+    private static function emailRecordMatches(string $record, string $email): bool
+    {
+        if (!preg_match('/^JSON_DATA: (.+)$/m', $record, $match)) return false;
+        $data = json_decode($match[1], true);
+        foreach ((array) ($data['recipients'] ?? []) as $recipient) {
+            if (!is_string($recipient)) continue;
+            if (preg_match('/<([^<>]+)>/', $recipient, $match)) $recipient = $match[1];
+            if (strcasecmp(trim($recipient), trim($email)) === 0) return true;
+        }
+        return false;
+    }
+
     /** Only exact recipient addresses, never the sending administrator's attribution. */
     public static function emailsFor(string $email): array
     {
@@ -101,11 +145,7 @@ final class RetainedLogs
             if (!preg_match('/^JSON_DATA: (.+)$/m', $record, $m)) continue;
             $data = json_decode($m[1], true);
             if (!is_array($data) || !is_array($data['recipients'] ?? null)) continue;
-            foreach ($data['recipients'] as $recipient) {
-                if (!is_string($recipient)) continue;
-                if (preg_match('/<([^<>]+)>/', $recipient, $match)) $recipient = $match[1];
-                if (strcasecmp(trim($recipient), trim($email)) === 0) { $rows[] = $data; break; }
-            }
+            if (self::emailRecordMatches($record, $email)) $rows[] = $data;
         }
         return array_reverse($rows);
     }

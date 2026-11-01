@@ -125,6 +125,15 @@ final class EnvironmentFile
             if ($kind === null) {
                 return null;
             }
+            // Reject invalid values instead of silently casting them to zero/false.
+            if ($kind === 'bool' && !in_array(strtolower($raw), ['0', '1', 'true', 'false'], true)) return null;
+            if (in_array($kind, ['int', 'nullint'], true) && !($kind === 'nullint' && trim($raw) === '')) {
+                if (!preg_match('/^[0-9]+$/D', $raw) || filter_var($raw, FILTER_VALIDATE_INT) === false || (int) $raw < 1) return null;
+                if ($group === 'mail' && $key === 'port' && (int) $raw > 65535) return null;
+            }
+            if ($group === 'mail' && $key === 'secure' && !in_array($raw, ['tls', 'ssl', 'none'], true)) return null;
+            if ($group === 'mail' && $key === 'from' && $raw !== '' && !filter_var($raw, FILTER_VALIDATE_EMAIL)) return null;
+            if ($group === 'auth' && $key === 'default_login_method' && !in_array($raw, ['', 'code', 'device', 'passkey', 'password'], true)) return null;
             if ($group === 'mail' && $key === 'testRecipient') {
                 $raw = trim($raw);
                 if ($raw !== '' && !filter_var($raw, FILTER_VALIDATE_EMAIL)) return null;
@@ -250,6 +259,7 @@ final class EnvironmentFile
     {
         $dir = self::directory();
         $base = basename($file);
+        if ($file !== $base || is_link(($dir ?? '') . DIRECTORY_SEPARATOR . $base)) return null;
         if ($dir === null || !preg_match('/^(?:[A-Za-z0-9][A-Za-z0-9._-]*\.config\.json|config\.local\.json)$/', $base)) {
             return null;
         }
@@ -292,11 +302,7 @@ final class EnvironmentFile
         if ($path === null) {
             return false;
         }
-        $lock = fopen(sys_get_temp_dir() . '/fluxo-config-' . md5($path) . '.lock', 'c');
-        if ($lock === false || !flock($lock, LOCK_EX)) {
-            return false;
-        }
-        try {
+        return \Systopic\System\Config\FileWriter::locked($path, static function () use ($path, $change): bool {
             $raw = file_get_contents($path);
             try {
                 $data = $raw === false ? null : json_decode($raw, true, 512, JSON_THROW_ON_ERROR);
@@ -311,22 +317,7 @@ final class EnvironmentFile
                 return false;
             }
             $json = json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
-            $temp = $path . '.' . getmypid() . '.tmp';
-            if ($json === false || file_put_contents($temp, $json . "\n") === false) {
-                return false;
-            }
-            $perms = fileperms($path);
-            if ($perms !== false) {
-                chmod($temp, $perms & 0777);
-            }
-            if (!rename($temp, $path)) {
-                @unlink($temp);
-                return false;
-            }
-            return true;
-        } finally {
-            flock($lock, LOCK_UN);
-            fclose($lock);
-        }
+            return $json !== false && \Systopic\System\Config\FileWriter::write($path, $json . "\n", 0600);
+        });
     }
 }

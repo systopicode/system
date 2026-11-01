@@ -59,7 +59,7 @@ if ($pending && $pending->purpose === Codes::PAIR_USER && $mayPersons && $me) {
 		return strcasecmp((string) $a['user_name'], (string) $b['user_name']);
 	});
 }
-$when = static fn($time): string => \Systopic\System\Sys\LocalTime::format($time, 'j M Y, H:i');
+$when = static fn($time): string => \Systopic\System\Sys\LocalTime::format($time, \Systopic\System\Sys\LocalTime::DATETIME);
 $e = static fn($v): string => htmlspecialchars((string) $v, ENT_QUOTES);
 $devicesShown = array_slice($ownDevices, 0, 3);
 $deviceRow = static function ($device) use ($e, $when, $here, $me): void {
@@ -89,6 +89,7 @@ $preview = $this->fakeRoles;
 ?>
 <section class="cms profile">
     <h1 class="cmsA11yStatus">Account</h1>
+	<?php $this->render("actions-bar.tpl.php"); ?>
 	<div class="profileHead">
 		<div class="profilePortrait">
 			<div class="portraitFrame">
@@ -114,7 +115,7 @@ $preview = $this->fakeRoles;
 				<p><?= $e($me->email) ?></p>
 			<?php } ?>
 			<?php if ($me?->lastLogin) { ?>
-				<p><i class="cmsIcon cmsIcon-user-clock"></i>Signed in <?= $e(\Systopic\System\Sys\LocalTime::format($me->lastLogin, 'j M Y, H:i')) ?></p>
+				<p><i class="cmsIcon cmsIcon-user-clock"></i>Signed in <?= $e(\Systopic\System\Sys\LocalTime::format($me->lastLogin, \Systopic\System\Sys\LocalTime::DATETIME)) ?></p>
 			<?php } ?>
 			<ul class="profileRoles">
 				<?php if (\Systopic\System\Auth\Session::isSuperuser(true)) { ?>
@@ -132,7 +133,7 @@ $preview = $this->fakeRoles;
 	<?php if ($preview !== []) { ?>
 		<p class="profilePreview"><i class="cmsIcon cmsIcon-eye"></i>Viewing the CMS as <?= $e(implode(', ', $preview)) ?>. <button type="button" data-cms-action data-on_click="unsetFakeRoles">Stop</button></p>
 	<?php } ?>
-	<div class="profileGrid">
+	<div class="profileGrid widgets">
 		<?php if ($me) { ?>
 			<section class="widget">
 				<header><h2><i class="cmsIcon cmsIcon-id-card"></i>General</h2></header>
@@ -142,15 +143,15 @@ $preview = $this->fakeRoles;
 					<?= $field('Full name', 'text', 'updateUserFullname', $me->fullname) ?>
 					<?= $field('Email', 'email', 'updateUserEmail', $me->email, 'off') ?>
 				</main>
-				<details class="cmsBox profilePassword">
-				<summary><h3><i class="cmsIcon cmsIcon-lock"></i>Change password</h3></summary>
-				<form method="post" action="changePassword">
+				<details class="cmsBox profilePassword"<?= $this->action === 'changePassword' ? ' open' : '' ?>>
+				<summary><h3><i class="cmsIcon cmsIcon-input-password"></i>Change password</h3><span class="button transparent icononly summaryToggle" aria-hidden="true"><i class="cmsIcon cmsIcon-chevron-down"></i></span></summary>
+				<form method="post" action="changePassword" data-password-check data-password-strict="<?= STAGE === 'LIVE' ? 'true' : 'false' ?>">
 					<main class="fieldGrid">
 						<?= \message::flush('password') ?>
 						<label class="field"><span>New password</span><input type="password" name="password" autocomplete="new-password" required></label>
 						<label class="field"><span>Repeat new password</span><input type="password" name="password_repeat" autocomplete="new-password" required></label>
 					</main>
-					<footer><button class="button submit" type="submit"><i class="cmsIcon cmsIcon-check"></i>Save password</button></footer>
+					<footer><button class="button submit" type="submit" disabled><i class="cmsIcon cmsIcon-check"></i>Save password</button></footer>
 				</form>
 				</details>
 			</section>
@@ -184,13 +185,13 @@ $preview = $this->fakeRoles;
 		<?php if ($me) {
 			$appearance = (string) ($me->appearance ?? '');
 			if (!in_array($appearance, ['light', 'dark', 'system'], true)) {
-				$appearance = 'light';
+				$appearance = 'system';
 			}
 		?>
 		<section class="widget">
 			<header><h2><i class="cmsIcon cmsIcon-sun"></i>Appearance</h2></header>
 			<main>
-				<p class="tagsHint">Light is used until Dark or System is chosen for this account.</p>
+				<p class="tagsHint">System follows this device unless you choose Light or Dark.</p>
 				<div class="appearanceChoices" role="radiogroup" aria-label="Appearance">
 					<?php foreach (['light' => ['cmsIcon cmsIcon-sun', 'Light', 'Light background.'], 'dark' => ['cmsIcon cmsIcon-moon', 'Dark', 'Dark background.'], 'system' => ['cmsIcon cmsIcon-circle-half-stroke', 'System', 'Matches this device.']] as $value => $choice) { ?>
 						<button type="button" role="radio" tabindex="<?= $appearance === $value ? '0' : '-1' ?>" data-on_click="updateAppearance" data-value="<?= $value ?>" aria-checked="<?= $appearance === $value ? 'true' : 'false' ?>"><i class="<?= $choice[0] ?>"></i><span><?= $choice[1] ?></span><small><?= $choice[2] ?></small></button>

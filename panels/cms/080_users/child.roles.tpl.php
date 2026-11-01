@@ -36,7 +36,7 @@ $e = static fn($v): string => htmlspecialchars((string) $v, ENT_QUOTES);
 						</td>
 					</tr>
 				<?php } ?>
-                <?php if (!$hasRoles) { ?><tr><td colspan="4"><p class="tagsHint">No roles yet. Use “Add role” to create the first one.</p></td></tr><?php } ?>
+                <?php if (!$hasRoles) { ?><tr><td colspan="4"><p class="tagsHint">No roles configured yet.</p></td></tr><?php } ?>
 			</tbody>
 		</table>
 	</div>

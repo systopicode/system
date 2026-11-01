@@ -8,7 +8,7 @@ System-only change; no commits or pushes. No public avatar API is used.
 2. People without a photo get a local Notionists SVG, selected by SHA-256 of the trimmed, lower-case email. With no email, the account ID is used. Screens use Bottts with an account-derived seed. The same person email, style version and options give the same SVG across installations.
 3. Generated files live beside uploads under the installation's `public/var/avatars/` URL: `<id>.generated-<fingerprint>.svg`. They are never mistaken for uploaded photos by `hasFile()`.
 4. Cache hits reuse the file. Email/theme/style changes produce a new fingerprint and clear stale generated variants only after successful replacement. Uploading/removing a photo clears automatic variants; user deletion also clears the avatar files.
-5. Invalid cache SVGs regenerate. Atomic temporary-file/rename avoids partially written images. If generation or storage is unavailable, the existing Solar person/display Duotone fallback is returned.
+5. Invalid cache SVGs regenerate. Atomic temporary-file/rename avoids partially written images. If generation or storage is unavailable, the centrally registered local Phosphor person/display Duotone fallback is returned.
 
 The two style definitions stay gzip-compressed on disk. Only the required definition is decoded temporarily in PHP memory on a render cache miss. No unpacked second copy is installed and no target-host Composer, Node or service process is required.
 
@@ -50,3 +50,41 @@ FLUXO_PHP=/path/to/php FLUXO_PLAYWRIGHT_MODULE=/path/to/playwright/index.mjs nod
 ```
 
 The reference installation is temporary and is not shipped. The optional UI-test output directory is controlled by `FLUXO_AVATAR_ARTIFACTS`.
+
+## Simplified screen robots (1 November 2026)
+
+Screen accounts keep Bottts with the existing theme palette. The selected original components
+are eyes `happy`, `round`; mouth `smile01`; and tops
+`antenna`, `antennaCrooked`, `bulb01`, `horns`, `pyramid`, `radar`. Decorative texture is disabled.
+DiceBear 10 expects `eyesVariant`, `mouthVariant` and `topVariant`; the older bare component
+option names do not restrict the selection. No artwork or third-party asset is modified.
+
+The current cache fingerprints are `screen-theme-8` and `person-theme-4`. Generated SVGs refresh
+on their next normal request; user-uploaded images retain precedence. Screens use the derived navigation text colour for the shell, the main theme colour for
+friendly facial features, and the highlight colour for antenna accents. Named black/white
+artwork colours are mapped outside luminance masks only, keeping mask coverage unchanged.
+People use a scale of 1.12 and a -2 percent vertical offset to reduce empty space above the head.
+The local Phosphor fallback is unchanged.
+
+The fingerprint also includes the effective renderer options, so changes to scale or component
+selection invalidate old generated files automatically. Scale is a factor (`1.12`), not the
+percentage value `112`. A stale valid SVG can otherwise remain cached despite a rendering fix.
+
+## Navigation palette for screens
+
+The robot shell and side components use the same standard derivation as `--cmsFrameText`:
+main-colour hue, 55 percent of its saturation, and 77 percent HSL lightness. Original antenna
+components use the highlight colour. The existing light avatar backdrop is retained.
+Faces use the main theme colour; if its base-colour contrast against the shell is below 4.5:1,
+black or white supplies the more readable fallback. Luminance masks retain their coverage.
+This is a base-colour check, not a blanket accessibility guarantee for translucent artwork.
+
+DiceBear receives the derived shell through `baseColor` and the backdrop through
+`backgroundColor`. Those options accept lists of candidates; a list is not automatically
+assigned to different artwork parts. Antenna colouring therefore targets the original
+component's fill rather than introducing new shapes. No artwork paths are modified.
+
+The derivation is cached per palette within the request and included through the render options
+in the avatar fingerprint. Person avatars, uploaded photos and the local fallback are unchanged.
+The server matches the standard navigation formula; arbitrary custom CSS overrides of
+`--cmsFrameText` are not evaluated by the SVG renderer.

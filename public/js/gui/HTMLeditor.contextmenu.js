@@ -402,7 +402,7 @@ var contextMenuWW = function (params, event) {
 	this.domWrapper = $("<div class='cms'></div>");
 	this.domObj = $('<div class="HTMLeditorMenu" role="toolbar"></div>');
 	var ul = $('<ul></ul>');
-	var mediaBar = target && target.closest && target.closest('img, video, iframe');
+	var mediaBar = target && target.closest && (target.closest('img, video, iframe') || target.closest('a')?.querySelector('img, video, iframe'));
 	if (editorPointer === 'touch' && wysiwygOf(target) && !mediaBar) {
 		$('<li><button type="button" data-cms-action title="Type"><i class="cmsIcon cmsIcon-keyboard"></i></button></li>')
 			.appendTo(ul).children('a,button[data-cms-action]').on('click', startTyping);
@@ -426,6 +426,7 @@ var contextMenuWW = function (params, event) {
 		}
 		var li = $('<li></li>').toggleClass('selected', !!item.selected).toggleClass('disabled', !!item.disabled).toggleClass('is-drag', !!item.drag).toggleClass('sep', !!item.sep && ul.children().length > 0);
 		var a = $('<button type="button" data-cms-action><i class="' + item.className + '"></i></button>').attr('title', item.title).attr('aria-label', item.title);
+        a.prop('disabled', !!item.disabled);
         if(item.selected !== undefined)a.attr('aria-pressed',String(!!item.selected));
 		li.append(a).appendTo(ul);
 		if (item.drag) {
@@ -493,6 +494,12 @@ function initMediaFormatChip() {
 		if (rect.width < 2 || rect.height < 2) {
 			chip.hidden = true;
 			return;
+		}
+		var preview = el.closest('article.cmsContent');
+		if (preview) {
+			var bounds = preview.closest('.cmsPreview')?.getBoundingClientRect() || preview.getBoundingClientRect();
+			var headerBottom = document.querySelector('.pageHead')?.getBoundingClientRect().bottom || 0;
+			if (rect.top < Math.max(0, bounds.top, headerBottom) || rect.bottom <= bounds.top) { chip.hidden = true; return; }
 		}
 		chip.textContent = mediaFormatLabel(el);
 		chip.hidden = false;

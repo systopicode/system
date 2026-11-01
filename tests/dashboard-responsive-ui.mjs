@@ -36,6 +36,12 @@ try{
  await page.locator('.dashWidgets').evaluate(box=>box.classList.add('is-editing'));
  await page.evaluate(()=>init());assert.deepEqual(await layout(),tablet,'editing preserves derived tablet membership');
  assert.equal(await page.locator('.dashWidget > header').first().getAttribute('data-on_longpress'),null,'editing titles keep immediate drag rather than toggle mode');
+ // Preserve a hold across the actual dashboard renderer callback, including release-before-response.
+ await page.evaluate(()=>{document.querySelector('.dashWidgets').classList.remove('is-editing');init();window.handoffs=[];sys.processEvent=e=>{if(e.type==='longpress')return {done:fn=>window.completeEdit=()=>{const old=document.querySelector('.dashWidgets'),fresh=old.cloneNode(true);fresh.classList.add('is-editing');fresh.removeAttribute('data-columns');const cards=[...fresh.querySelectorAll('.dashWidget')];fresh.replaceChildren(...[0,1,2].map(i=>{const col=document.createElement('div');col.className='dashColumn';col.append(...cards.slice(i*2,i*2+2));return col;}));old.replaceWith(fresh);fn();}};handoffs.push({type:e.type,key:e.currentTarget.dataset.widget,pointer:e.pointerType});};document.querySelector('.dashWidget > header').cmsLongPress({clientX:100,clientY:150,pointerId:31,pointerType:'touch'});completeEdit();});
+ assert.deepEqual(await page.evaluate(()=>handoffs),[{type:'pointerdown',key:'a',pointer:'touch'}],'same held widget enters shared drag after edit render');
+ assert.equal((await layout()).length,2,'responsive placement finishes before drag freezes incoming three-column fragment');
+ await page.evaluate(()=>{document.querySelector('.dashWidgets').classList.remove('is-editing');init();handoffs=[];document.querySelector('.dashWidget > header').cmsLongPress({clientX:100,clientY:150,pointerId:32,pointerType:'touch'});document.dispatchEvent(new PointerEvent('pointerup',{pointerId:32}));completeEdit();});
+ assert.deepEqual(await page.evaluate(()=>handoffs),[],'released hold does not create a delayed drag');
  const saved={1:['f','e','d','c','b','a'],2:['f','b','|','a','c','d','e'],3:legacy};
  await page.locator('.dashWidgets').evaluate((box,layouts)=>{box.dataset.layouts=JSON.stringify(layouts);},saved);
  await page.evaluate(()=>init());assert.deepEqual(await layout(),[['f','b'],['a','c','d','e']]);
@@ -54,11 +60,33 @@ try{
  await first.dispatchEvent('pointerdown',{pointerId:6,pointerType:'touch',clientX:80,clientY:100});await page.waitForTimeout(430);assert.equal(await page.evaluate(()=>started),1,'touch hold starts exactly once');
  await first.dispatchEvent('pointerup',{pointerId:6,pointerType:'touch'});
  await page.locator('.dashHide').first().dispatchEvent('pointerdown',{pointerId:7,pointerType:'touch',clientX:80,clientY:100});await page.waitForTimeout(430);assert.equal(await page.evaluate(()=>started),1,'hide button does not start widget dragging');
- await page.evaluate(()=>{const held=document.querySelector('.dashWidget'),r=held.getBoundingClientRect();window.accepted=0;window.testDrag=new sys.core.event.drag({e:$.Event('pointerdown',{currentTarget:held,target:held,clientX:r.x+3,clientY:r.y+3,originalEvent:{target:held,pointerType:'touch',preventDefault(){},stopPropagation(){}}})},{accept:()=>accepted++});const target=document.querySelectorAll('.dashWidget')[1],b=target.getBoundingClientRect();$(document).trigger($.Event('pointermove',{target,clientX:b.x+b.width/2,clientY:b.bottom-1}));});
+ await page.evaluate(()=>{const held=document.querySelector('.dashWidget'),r=held.getBoundingClientRect();window.accepted=0;window.testDrag=new sys.core.event.drag({e:$.Event('pointerdown',{cmsHeld:true,currentTarget:held,target:held,clientX:r.x+3,clientY:r.y+3,originalEvent:{target:held,pointerType:'touch',preventDefault(){},stopPropagation(){}}})},{accept:()=>accepted++});if(!document.querySelector('.draghelper'))throw new Error('held handoff did not start drag immediately');const target=document.querySelectorAll('.dashWidget')[1],b=target.getBoundingClientRect();$(document).trigger($.Event('pointermove',{target,clientX:b.x+b.width/2,clientY:b.bottom-1}));});
  await page.waitForTimeout(50);
  assert.equal(await page.locator('.draghelper').evaluate(e=>getComputedStyle(e).visibility),'visible','shared helper remains visible on phone');
  await page.evaluate(()=>{const target=document.querySelectorAll('.dashWidget')[1],b=target.getBoundingClientRect();$(document).trigger($.Event('pointerup',{target,clientX:b.x+b.width/2,clientY:b.bottom-1}));});
  assert.equal(await page.evaluate(()=>accepted),1,'valid dashboard drop accepted once');
+ // An empty column exposes a theme-aware target only during a drag.
+ await page.setViewportSize({width:1440,height:1400});await page.waitForTimeout(100);
+ await page.evaluate(()=>{const col=document.querySelectorAll('.dashColumn')[1];col.querySelectorAll('.dashWidget').forEach(e=>e.remove());if(!col.querySelector('.dashDrop'))col.insertAdjacentHTML('beforeend','<div class="dashDrop" data-drop_accept="widget" data-on_drop="insertWidgetEnd" data-column="1"></div>');document.body.classList.add('widgetDragging');});
+ const emptyDrop=page.locator('.dashColumn').nth(1).locator('.dashDrop');
+ assert.ok(await emptyDrop.evaluate(e=>e.getBoundingClientRect().height)>=70);
+ assert.equal(await emptyDrop.evaluate(e=>getComputedStyle(e).borderStyle),'dashed');
+ assert.notEqual(await emptyDrop.evaluate(e=>getComputedStyle(e).backgroundColor),'rgba(0, 0, 0, 0)');
+ for(const pointerType of ['mouse','touch']) {
+ await page.evaluate(pointerType=>{const held=document.querySelector('.dashWidget'),r=held.getBoundingClientRect();window.emptyAccepted=0;window.emptyDrag=new sys.core.event.drag({e:$.Event('pointerdown',{cmsHeld:true,currentTarget:held,target:held,clientX:r.x+3,clientY:r.y+3,originalEvent:{target:held,pointerType,preventDefault(){},stopPropagation(){}}})},{accept:()=>emptyAccepted++});const target=document.querySelectorAll('.dashColumn')[1].querySelector('.dashDrop'),b=target.getBoundingClientRect();$(document).trigger($.Event('pointermove',{target,clientX:b.x+b.width/2,clientY:b.y+b.height/2}));},pointerType);
+ await page.waitForTimeout(80);
+ assert.equal(await emptyDrop.evaluate(e=>getComputedStyle(e).borderStyle),'solid');
+ assert.equal(await page.locator('.draghelper').evaluate(e=>e.classList.contains('line')),false,'empty column uses a box, not insertion line');
+ assert.ok(await page.locator('.draghelper').evaluate(e=>e.getBoundingClientRect().height)>60);
+ await page.screenshot({path:'/private/tmp/fluxo-empty-column-hover.png'});
+ await page.evaluate(()=>{const target=document.querySelectorAll('.dashColumn')[1].querySelector('.dashDrop'),b=target.getBoundingClientRect();$(document).trigger($.Event('pointerup',{target,clientX:b.x+b.width/2,clientY:b.y+b.height/2}));});
+ assert.equal(await page.evaluate(()=>emptyAccepted),1);
+ await page.evaluate(()=>document.body.classList.add('widgetDragging'));
+ assert.equal(await emptyDrop.evaluate(e=>getComputedStyle(e).borderStyle),'dashed');
+ }
+ await page.screenshot({path:'/private/tmp/fluxo-empty-column.png'});
+ await page.evaluate(()=>document.body.classList.remove('widgetDragging'));
+ assert.equal(await emptyDrop.isVisible(),false);
  // Empty and first populated hidden-widget rails keep the same height.
  for (const width of [390,1024,1440]) {
   await page.setViewportSize({width,height:1400});
@@ -68,5 +96,32 @@ try{
   assert.ok(Math.abs(await rail.evaluate(e=>e.getBoundingClientRect().height)-empty)<=1,'first hidden widget does not change rail height');
   await rail.evaluate(e=>e.remove());
  }
+ // Regression: shrinking earlier widgets must not leave the held title behind.
+ await page.setViewportSize({width:1440,height:1400});
+ await page.setContent(markup({3:legacy}));
+ await page.addScriptTag({content:await read('public/js/ext/jquery.js')});
+ await page.evaluate(()=>{$.fn.findInSet=function(sel){return this.filter(sel).add(this.find(sel));};});
+ await page.evaluate(()=>init());
+ await page.evaluate(()=>{
+  sys.processEvent=e=>{
+   if(e.type==='longpress')return{done:fn=>{fn();setTimeout(()=>{const old=document.querySelector('.dashWidgets'),fresh=old.cloneNode(true);fresh.classList.add('is-editing');old.replaceWith(fresh);init();},20);}};
+   window.carried=new sys.core.event.drag({e});
+  };
+  const header=document.querySelectorAll('.dashWidget > header')[1],r=header.getBoundingClientRect();
+  window.holdPoint={x:r.left+30,y:r.top+20};
+  header.cmsLongPress({clientX:holdPoint.x,clientY:holdPoint.y,pointerId:70,pointerType:'touch'});
+ });
+ await page.locator('.draghelper').waitFor({state:'visible'});
+ const carried=await page.evaluate(()=>{const r=document.querySelector('.draghelper').getBoundingClientRect();return{top:r.top,bottom:r.bottom,point:holdPoint.y};});
+ assert.ok(carried.point>=carried.top&&carried.point<=carried.bottom,'held title stays under pointer after collapse '+JSON.stringify(carried));
+ assert.equal(await page.evaluate(()=>carried.dropObj),null,'layout handoff does not select the rail under a stationary finger');
+ await page.evaluate(()=>$(document).trigger($.Event('pointermove',{target:document.querySelector('.dashWidget'),clientX:holdPoint.x+2,clientY:holdPoint.y+2,pointerId:70})));
+ assert.equal(await page.evaluate(()=>carried.dropObj),null,'tiny touch jitter does not activate an unintended target');
+ // A held widget continues through a scrollable content area.
+ await page.evaluate(()=>{const d=document.querySelector('.dashboard');d.style.cssText='height:260px;min-height:0;flex:none;overflow-y:auto;position:relative';d.insertAdjacentHTML('beforeend','<div style="height:1200px;flex:none"></div>');const r=d.getBoundingClientRect();window.edgePoint={x:r.left+50,y:r.top+245};$(document).trigger($.Event('pointermove',{target:d,clientX:edgePoint.x,clientY:edgePoint.y,pointerId:70}));});
+ await page.waitForTimeout(200);
+ assert.ok(await page.locator('.dashboard').evaluate(e=>e.scrollTop>0),'held drag scrolls the content');
+ assert.equal(await page.locator('.draghelper').isVisible(),true,'held widget remains during scroll');
+ await page.evaluate(()=>$(document).trigger($.Event('pointercancel',{pointerId:70})));
  console.log('ok: legacy layout; stable 1/2/3 stacks; per-view saved order; no gaps; global hide button; touch hold, scroll cancellation and shared drop feedback');
 }finally{await browser.close();}

@@ -70,8 +70,8 @@ and the edit bar.
   a fix every project needs belongs in the package.
 - Override CSS sits in the `project` layer, so it beats the GUI without
   `!important` and without matching the GUI's specificity.
-- The GUI has two button styles (`.button`, `.button.submit`). A theme
-  recolours them through the tokens; it adds no third.
+- The GUI uses shared primary, secondary, outline and transparent button variants.
+  A theme recolours their tokens; it does not add a separate button system.
 - Check the result in four places: dashboard, login, a system mail (reset
   password), the edit bar on the website.
 
@@ -111,3 +111,12 @@ cms/panels/cms/010_pages/       → /cms/pages/
 - Checks for the dashboard To do (broken links, images without label) are
   queries in `Dashboard.live.sql`; a panel shows the details, like
   Tools → Maintenance → Links (`gui.md`, Search and Link check).
+
+## Auth metadata
+
+Auth keeps system branding for system return destinations. For a validated public
+frontend return destination it can use that frontend's assets. Favicon discovery
+accepts both `img/favicons/` and legacy `img/favicon/`, including a 96px PNG
+fallback. When project icons exist, missing optional ICO, mask and browserconfig
+files must not silently reintroduce the framework branding. Auth also emits the
+configured main colour as `theme-color`.

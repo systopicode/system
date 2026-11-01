@@ -764,6 +764,6 @@ final class Setup
             return false;
         }
         $json = (string) preg_replace_callback('~^(?: {4})+~m', fn($m) => str_repeat("\t", intdiv(strlen($m[0]), 4)), $json);
-        return file_put_contents($file, $json . "\n") !== false;
+        return \Systopic\System\Config\FileWriter::write($file, $json . "\n", 0600);
     }
 }

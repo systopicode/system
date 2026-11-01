@@ -5,6 +5,9 @@ namespace {
     class fs {
         public static string $siteRoot;
         public static string $sysRoot;
+        public static function glob(string $pattern): array { return glob($pattern) ?: []; }
+        public static function file_get_contents(string $path): string { return file_get_contents($path); }
+        public static function isFile(string $path): bool { return is_file($path); }
         public static function toNative(string $path): string { return $path; }
         public static function toInternal(string $path): string { return $path; }
     }

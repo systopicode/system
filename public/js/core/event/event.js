@@ -185,7 +185,9 @@ document.addEventListener('pointerdown', function (down) {
     var element = down.target.closest('[data-on_longpress]');
     if (!element || down.target.closest('a, button, input, select, textarea, label, [contenteditable]')) return;
     sys.longPress(down, element, function () {
-        if (element.isConnected) sys.processEvent($.Event('longpress', {currentTarget: element, target: element}));
+        if (!element.isConnected) return;
+        if (typeof element.cmsLongPress === 'function') element.cmsLongPress(down);
+        else sys.processEvent($.Event('longpress', {currentTarget: element, target: element}));
     });
 });
 

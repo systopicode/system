@@ -24,7 +24,7 @@ The sign-in success view lasts two seconds. Continue now in the existing footer 
 
 Automated checks: `node tests/loader-ready.mjs`; `FLUXO_PLAYWRIGHT_MODULE=… node tests/gui-feedback-ui.mjs`; `… node tests/auth-success-footer-ui.mjs`; `php tests/auth-continue.php`; `php tests/sign-in-feedback.php`.
 
-Field feedback resolves an unambiguous replacement after a response rebuilds a form, so the success/error contour is applied to the visible field. Success retires after 2.5 seconds. Feedback uses one contour and the existing CSS spinner; the entire desktop statusbar keeps its position above lightbox backdrops; its message has no separate stacking override.
+Field feedback resolves an unambiguous replacement after a response rebuilds a form, so the success/error contour is applied to the visible field. Success retires after 2.5 seconds. Feedback uses one contour and the existing CSS spinner. Each lightbox has a local status footer; the page status is visually hidden while a dialog is open. Nested dialogs show their own context rather than lifting the global footer above every backdrop. Dirty-state tracking is retained when a footer is hidden. The mobile Safari bottom colour surface is removed when returning to desktop, so it cannot cover the restored global footer.
 
 Pages text editing now commits on blur: rendered plain text fields, WYSIWYG, meta description, rewrite paths, sidebar text/group values, publishing dates, media labels and SVG source. Search inputs remain live; toggles, selectors and explicit structural actions remain immediate. Explicit link insertion saves before closing its dialog. Completed toolbar edits made while focus is already outside the WYSIWYG field also commit, so they cannot be left unsaved without a future blur.
 
@@ -39,3 +39,30 @@ The CMS multi-upload uses the shared lightbox and jobs status line. Each batch r
 Queued uploads carry a stable random identity. Session-scoped completion receipts bind it to the file and destination. Repeated chunks write at their fixed offsets, and repeated completed requests return success without creating another medium. This does not add cross-session/server-crash exactly-once semantics.
 
 Site renaming is an explicit reviewed action. Typing a new domain no longer triggers a rename. Meta defaults explain each value's origin and link to the corresponding Site, Page Settings or Theme editor. Accessibility findings and verification scope are documented in `accessibility-review-2026-10-30.md`.
+
+## Save errors and display dates (1 November 2026)
+
+Failed editable fields retain their red contour until edited, retried or discarded. The
+short-lived outline of an explicit action is separate. A failed response that rebuilds a
+field must preserve the latest local value, not replace it with an older server value.
+`tests/gui-feedback-ui.mjs` covers both cases, edits in flight and guarded navigation.
+
+Display dates use `LocalTime::DATE` (`d.m.Y`), `DATETIME` (`d.m.Y H:i`) and
+`DATETIME_SECONDS` (`d.m.Y H:i:s`). Use these constants for new CMS display code.
+`LocalTime::format()` converts to the existing user display zone; formatting a
+`DateTimeInterface` directly preserves its zone. Publishing, backup archive dates and
+raw dated mail/backup log entries keep their existing server/source-time semantics.
+Do not change SQL timestamps, serialized metadata, file names, filter attributes or
+native date/datetime input values. Native date controls follow the browser locale.
+
+Checks: `php tests/display-dates.php` on PHP 8.4 and 8.5, plus
+`FLUXO_PLAYWRIGHT_MODULE=… node tests/log-filters-ui.mjs`.
+
+## Search and editor follow-up (1 November 2026)
+
+- Reopening global search focuses the end of its retained query; result updates preserve the current caret.
+- WYSIWYG CSS-class tools exclude the temporary `cmsMediaOn` hover marker. Class names remain space-separated authored content.
+- Image-editor split menus anchor 4 px below their trigger, like other split menus; transparent Close uses frame text colour.
+- Upload/backup progress reuses the existing fill/counter state with one centered, contrast-backed counter.
+- Account, Tags and Backup actions share a single root toolbar, preserving view replacement and widget headers.
+- Dashboard edit-mode handoff does not infer a drop from layout moving under a stationary finger. A subsequent movement beyond 5 px restores normal hit-testing. Physical iPad verification remains outstanding.

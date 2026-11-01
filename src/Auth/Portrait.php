@@ -44,8 +44,8 @@ final class Portrait
         $asset = \Systopic\System\Ui\Icons::registry()['duotone'][$key];
         $parts = [];
         foreach (['primary', 'secondary'] as $layer) {
-            $svg = (string) file_get_contents(__DIR__ . '/../../public/icons/solar/' . $asset . '-' . $layer . '.svg');
-            $parts[] = '<g' . ($layer === 'secondary' ? ' opacity=".35"' : '') . '>' . preg_replace('~^.*?<svg[^>]*>|</svg>\s*$~s', '', $svg) . '</g>';
+            $svg = (string) file_get_contents(__DIR__ . '/../../public/icons/phosphor/' . $asset . '-' . $layer . '.svg');
+            $parts[] = '<g fill="currentColor" transform="scale(.09375)"' . ($layer === 'secondary' ? ' opacity=".35"' : '') . '>' . preg_replace('~^.*?<svg[^>]*>|</svg>\s*$~s', '', $svg) . '</g>';
         }
         $svg = '<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="-5 -5 34 34" color="#' . $colors['ink'] . '"><circle cx="12" cy="12" r="17" fill="#' . $colors['background'] . '"/>' . implode('', $parts) . '</svg>';
         return 'data:image/svg+xml,' . rawurlencode($svg);
@@ -74,7 +74,7 @@ final class Portrait
             }
             return \http::$siteUrl . 'var/avatars/' . $name;
         } catch (\Throwable) {
-            // Missing zlib, invalid assets or unavailable storage retain the local Solar fallback.
+            // Missing zlib, invalid assets or unavailable storage retain the local Phosphor fallback.
             return null;
         }
     }

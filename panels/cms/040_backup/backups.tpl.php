@@ -1,12 +1,14 @@
 <?php
 if (empty($this->backupfilestable)) {
+    $this->render('actions-bar.tpl.php');
 	echo html::section()->class('cms')->h1('No backups yet.');
-    echo '<p class="tagsHint">Use “New backup” to save a snapshot of this installation.</p>';
+    echo '<p class="tagsHint">No backup is available for restoring this installation.</p>';
 	return;
 }
 ?>
-<section class="cms">
-    <h1>Backup</h1>
+<section class="widget is-list">
+    <header><h2>Backups</h2><?php $this->render('actions-bar.tpl.php'); ?></header>
+    <p class="tagsHint">An archive marked complete has finished creation. Restore performs additional structure checks before replacement; a completed archive is not a tested recovery.</p>
 	<div class="tableScroll">
 		<table class="hover">
 			<thead>

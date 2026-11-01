@@ -20,7 +20,7 @@ $passkeyRow = static function ($key) use ($escape, $canRemove, $own, $noAutofill
 			<details class="passkeyItem" data-passkey-row>
 				<summary>
 					<i class="cmsIcon cmsIcon-user-viewfinder" aria-hidden="true"></i>
-					<span class="passkeyItemLabel"><strong><?= $escape($key->name) ?></strong><small>Last used <?= $key->lastUsedAt ? $escape(\Systopic\System\Sys\LocalTime::format($key->lastUsedAt, 'j M Y, H:i')) : 'never' ?></small></span>
+					<span class="passkeyItemLabel"><strong><?= $escape($key->name) ?></strong><small>Last used <?= $key->lastUsedAt ? $escape(\Systopic\System\Sys\LocalTime::format($key->lastUsedAt, \Systopic\System\Sys\LocalTime::DATETIME)) : 'never' ?></small></span>
 					<i class="cmsIcon cmsIcon-chevron-down" aria-hidden="true"></i>
 				</summary>
 				<div class="passkeyItemFields">
@@ -35,7 +35,7 @@ $passkeyRow = static function ($key) use ($escape, $canRemove, $own, $noAutofill
 			<div class="passkeyItem" data-passkey-row <?= !$canRemove ? 'data-readonly' : '' ?>>
 				<div class="passkeyItemHead">
 					<i class="cmsIcon cmsIcon-user-viewfinder" aria-hidden="true"></i>
-					<span class="passkeyItemLabel"><strong><?= $escape($key->name) ?></strong><small>Last used <?= $key->lastUsedAt ? $escape(\Systopic\System\Sys\LocalTime::format($key->lastUsedAt, 'j M Y, H:i')) : 'never' ?></small></span>
+					<span class="passkeyItemLabel"><strong><?= $escape($key->name) ?></strong><small>Last used <?= $key->lastUsedAt ? $escape(\Systopic\System\Sys\LocalTime::format($key->lastUsedAt, \Systopic\System\Sys\LocalTime::DATETIME)) : 'never' ?></small></span>
 					<?php if ($canRemove) { ?><button type="button" class="button transparent icononly" data-on_click="passkeyAction" data-passkey-mode="remove" data-key_id="<?= (int) $key->id ?>" aria-label="Remove passkey"><i class="cmsIcon cmsIcon-trash" aria-hidden="true"></i></button><?php } ?>
 				</div>
 			</div>

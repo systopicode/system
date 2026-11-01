@@ -85,10 +85,12 @@ sys.core.event.drag = function (event, hooks) { // 2. param raus
                 ? document.elementFromPoint(e.clientX, e.clientY) : e.target;
             target = target || e.target;
             markMediaPolicy(target);
-            var nextDrop = nearestZone(target, target.closest('[data-drop_accept]'));
+            if (e.cmsHandoff) drag.handoffPoint = {x:e.clientX,y:e.clientY};
+            if (drag.handoffPoint && Math.hypot(e.clientX-drag.handoffPoint.x,e.clientY-drag.handoffPoint.y) > 5) drag.handoffPoint = null;
+            var nextDrop = drag.handoffPoint ? null : nearestZone(target, target.closest('[data-drop_accept]'));
 			// Resting on a row that can take the item switches from the sort
 			// line to that row. Until then the line stays.
-			nextDrop = holdForOnto(target, nextDrop);
+			nextDrop = drag.handoffPoint ? null : holdForOnto(target, nextDrop);
 			// Pages change cue at the midpoint. Other lists keep a few pixels
 			// so the line does not flicker between two neighbours.
 			if (drag.type !== 'page' && isLine(drag.dropObj) && isLine(nextDrop) && drag.dropObj !== nextDrop && distance(nextDrop) + 10 > distance(drag.dropObj)) {
@@ -566,7 +568,8 @@ sys.core.event.drag = function (event, hooks) { // 2. param raus
 				borderRadius: 1
 			};
 		}
-		if ((zone && obj.classList.contains('v') && !obj.classList.contains('insertInto')) || obj.classList.contains('dashDrop')) {
+		var emptyDashboardColumn = obj.classList.contains('dashDrop') && obj.parentElement && obj.parentElement.children.length === 1;
+		if ((zone && obj.classList.contains('v') && !obj.classList.contains('insertInto')) || (obj.classList.contains('dashDrop') && !emptyDashboardColumn)) {
 			var after = obj.classList.contains('insertAfter');
 			var rowBox = obj.closest && obj.closest('tr');
 			var treeLabel = !rowBox && obj.parentElement && obj.closest && obj.closest('ul.tree') ? obj.parentElement : null;
@@ -613,13 +616,14 @@ sys.core.event.drag = function (event, hooks) { // 2. param raus
     var rejectedMediaZone = null;
     function mediaPolicyRejected(zone) {
         if (drag.type !== 'media' || !zone) return false;
+        if(zone.closest('.editor.plaintext'))return true;
         var policy = zone.closest('[data-media-accept]');
         if (!policy) return false;
         var ext = drag.dragObj.getAttribute('data-media-extension') || '';
         return (policy.getAttribute('data-media-accept') || '').split(',').indexOf('.' + ext) === -1;
     }
     function markMediaPolicy(target) {
-        var policy = target && target.closest && target.closest('[data-media-accept]');
+        var policy = target && target.closest && target.closest('[data-media-accept],.editor.plaintext');
         var rejected = policy && mediaPolicyRejected(policy) ? policy : null;
         if (rejectedMediaZone && rejectedMediaZone !== rejected) rejectedMediaZone.classList.remove('dropRejected');
         if (rejected) rejected.classList.add('dropRejected');
@@ -682,6 +686,8 @@ sys.core.event.drag = function (event, hooks) { // 2. param raus
 		window.addEventListener('blur', cancelHold);
 	}
 	$(document).bind(moveType, mousemove);
+    // A dashboard hold already passed the shared recogniser before its edit render.
+    if (e.cmsHeld) { mouseHeld=true; beginDrag(); mousemove(e); }
 	$(document).bind(upType, mouseup);
 	e.preventDefault();
 

@@ -29,6 +29,11 @@ final class InstanceFiles
     /** @return list<string> what was done, one line per change or hint */
     public static function renameSite(string $configDir, string $old, string $new): array
     {
+        return self::lockedFiles(self::files($configDir), static fn() => self::renameSiteLocked($configDir, $old, $new));
+    }
+
+    private static function renameSiteLocked(string $configDir, string $old, string $new): array
+    {
         $log = [];
         foreach (self::files($configDir) as $file) {
             $data = self::read($file, $log);
@@ -68,6 +73,11 @@ final class InstanceFiles
     /** @return list<string> */
     public static function removeSite(string $configDir, string $name): array
     {
+        return self::lockedFiles(self::files($configDir), static fn() => self::removeSiteLocked($configDir, $name));
+    }
+
+    private static function removeSiteLocked(string $configDir, string $name): array
+    {
         $log = [];
         foreach (self::files($configDir) as $file) {
             $data = self::read($file, $log);
@@ -92,6 +102,11 @@ final class InstanceFiles
      * @return list<string>
      */
     public static function addSite(string $configDir, string $name, array $known): array
+    {
+        return self::lockedFiles(self::files($configDir), static fn() => self::addSiteLocked($configDir, $name, $known));
+    }
+
+    private static function addSiteLocked(string $configDir, string $name, array $known): array
     {
         $log = [];
         $known = array_map('strtolower', $known);
@@ -234,11 +249,19 @@ final class InstanceFiles
         return $data;
     }
 
+    /** Stable lock order also coordinates site edits with Environment saves. */
+    private static function lockedFiles(array $files, callable $change): array
+    {
+        if ($files === []) return $change();
+        $file = array_shift($files);
+        return FileWriter::locked($file, static fn() => self::lockedFiles($files, $change), [basename($file) . ': configuration lock unavailable; not saved']);
+    }
+
     private static function write(string $file, array $data): void
     {
         $json = (string) json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
         // four spaces per level → one tab, as the files are written by hand
         $json = (string) preg_replace_callback('~^( {4})+~m', static fn($m) => str_repeat("\t", intdiv(strlen($m[0]), 4)), $json);
-        file_put_contents($file, $json . "\n");
+        if ($json === '' || !FileWriter::write($file, $json . "\n", 0600)) throw new \RuntimeException('Configuration could not be saved: ' . basename($file));
     }
 }

@@ -232,6 +232,7 @@ function initDropdownMenus($set) {
 				width: width
 			});
 			var children = $element.children(".dropdownContent");
+            children.removeClass("right").css({left:0,right:"auto"});
 			if ($(children).is(':off-right')) {
 				$(children).addClass('right');
 				$(this).find(".before").css({
@@ -289,10 +290,12 @@ document.addEventListener('click', function (event) {
 			var rect = split.getBoundingClientRect();
 			var width = list.classList.contains('unifiedAdjustSlider') ? Math.min(320,window.innerWidth-32) : Math.max(rect.width, list.scrollWidth);
 			list.style.width = width + 'px';
-			var toolbarBottom=list.classList.contains('imageEditorMenu') ? (split.closest('.cropBar')?.getBoundingClientRect().bottom || rect.bottom) : rect.bottom;
+			var bar=split.closest('.cropBar');
+            var toolbarBottom = Math.max(rect.bottom,bar ? bar.getBoundingClientRect().bottom-parseFloat(getComputedStyle(bar).paddingBottom) : rect.bottom);
             list.style.top = (toolbarBottom + 4) + 'px';
             if(list.classList.contains('imageEditorMenu')){list.style.maxHeight=Math.max(48,window.innerHeight-toolbarBottom-12)+'px';list.style.overflowY='auto';}
-			list.style.left = Math.max(8, Math.min(rect.left, window.innerWidth - width - 8)) + 'px';
+			list.style.maxWidth = 'calc(100vw - 16px)';
+			list.style.left = (rect.left + width <= window.innerWidth - 8 ? rect.left : rect.right - Math.min(width, window.innerWidth - 16)) + 'px';
 			split.classList.add('is-open');
             if(button.hasAttribute('data-menu-selected')){button.classList.add('selected');button.setAttribute('aria-pressed','true');}
             prepareMenuKeyboard(list, button, event.detail === 0);

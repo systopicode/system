@@ -532,10 +532,10 @@ body.cms > .cmsMobileHeader > .cmsMobileMenuClose, body.cms > .cmsMobileHeader >
 	body > main > div.pylon > footer .mmlResize { display: none; }
 	[data-on_draginit="draginitPylonwidth"], [data-on_draginit="draginitSidebarwidth"] { display: none; }
 	body > main > div.pylon > footer .mmlContent > label { pointer-events: none; }
-	body footer.cmsStatusbar { display: none; }
+	body > footer.cmsStatusbar { display: none; }
 	/* Upload progress remains visible even though the desktop footer is gone. */
-	body footer.cmsStatusbar:has(.cmsJobs.on) { display: flex; position: fixed; bottom: var(--mobileBottom); left: 0; right: 0; z-index: 8001; height: 28px; padding: 0 8px; background: var(--cmsFrame); }
-	body footer.cmsStatusbar:has(.cmsJobs.on) > :not(.cmsJobs) { display: none; }
+	body > footer.cmsStatusbar:has(.cmsJobs.on) { display: flex; position: fixed; bottom: var(--mobileBottom); left: 0; right: 0; z-index: 1; height: 28px; padding: 0 8px; background: var(--cmsFrame); }
+	body > footer.cmsStatusbar:has(.cmsJobs.on) > :not(.cmsJobs) { display: none; }
 	.cmslightbox {
 		align-items: flex-end;
 		padding: 0;
@@ -707,14 +707,14 @@ body.cms > .cmsMobileHeader > .cmsMobileMenuClose, body.cms > .cmsMobileHeader >
 	body.cms .cmslightbox.cmsFind > section > header > .cmsMobileGrip { height: 36px; }
 	body.cms .cmslightbox > section > .cmsMobileGrip { z-index: 6; touch-action: none; }
 	body.cms .cmslightbox > section:before { content: none; }
-	body.cms > :is(ul.contextmenu, .splitApplyList):not(.imageEditorMenu):before {
+	body.cms > ul.contextmenu:before {
 		content: ""; position: absolute; top: 6px; left: calc(50% - 18px);
 		width: 36px; height: 4px; border-radius: 4px; background: var(--cmsMuted);
 	}
 	body.cms .cmslightbox section > header :is(:is(a, button:where([data-cms-action])), li):has([class*="xmark"]) { display: none; }
 	body.cms .cmslightbox section > header .barmenu:not(:has(li:not(:has([class*="xmark"])))) { display: none; }
 	/* Tree actions are an in-viewport sheet, never a popover off the right edge. */
-	body.cms > :is(ul.contextmenu, .splitApplyList):not(.imageEditorMenu) {
+	body.cms > ul.contextmenu {
 		position: fixed; z-index: 9000; left: var(--sheetSide) !important; right: var(--sheetSide);
 		top: auto !important; bottom: 0; width: auto !important; min-width: 0; max-width: none;
 		max-height: 75dvh; overflow: auto; padding-top: 18px;
@@ -864,3 +864,6 @@ body.cms > .cmsMobileHeader > .cmsMobileMenuClose, body.cms > .cmsMobileHeader >
  .cms .widget > header:has(> .button ~ .button) { flex-wrap:wrap; padding-block:.5rem; gap:.4rem; }
  .cms .widget > header:has(> .button ~ .button) > :is(h1,h2) { flex:1 0 100%; white-space:normal; overflow:visible; }
 }
+
+/* Dialog action edges share the header close-control inset at every size. */
+body.cms .cmslightbox > section > :is(header,header.cmsMobileEditHeader,footer) { padding-right:calc(var(--cmsCardPadding) / 2); }

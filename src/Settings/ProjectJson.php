@@ -72,6 +72,11 @@ final class ProjectJson
     /** @param array<string, mixed> $data */
     public static function put(string $path, array $data): bool
     {
+        return \Systopic\System\Config\FileWriter::locked($path, static fn() => self::putLocked($path, $data), false);
+    }
+
+    private static function putLocked(string $path, array $data): bool
+    {
         $dir = dirname($path);
         if (!is_dir($dir) && !mkdir($dir, 0775, true) && !is_dir($dir)) {
             return false;
@@ -81,45 +86,85 @@ final class ProjectJson
         } catch (\Throwable) {
             return false;
         }
-        return file_put_contents($path, $json . "\n", LOCK_EX) !== false;
+        return \Systopic\System\Config\FileWriter::write($path, $json . "\n");
     }
 
     public static function replace(string $path, string $id, string $text): ?string
+    {
+        return \Systopic\System\Config\FileWriter::locked($path, static fn() => self::replaceLocked($path, $id, $text), null);
+    }
+
+    private static function replaceLocked(string $path, string $id, string $text): ?string
     {
         return self::open($path)?->replaceLeaf($id, $text);
     }
 
     public static function saveItem(string $path, string $id, string $key, string $text): ?bool
     {
+        return \Systopic\System\Config\FileWriter::locked($path, static fn() => self::saveItemLocked($path, $id, $key, $text), false);
+    }
+
+    private static function saveItemLocked(string $path, string $id, string $key, string $text): ?bool
+    {
         return self::open($path)?->writeItem($id, $key, $text);
     }
 
     public static function renameItem(string $path, string $id, string $key, string $text): ?bool
+    {
+        return \Systopic\System\Config\FileWriter::locked($path, static fn() => self::renameItemLocked($path, $id, $key, $text), false);
+    }
+
+    private static function renameItemLocked(string $path, string $id, string $key, string $text): ?bool
     {
         return self::open($path)?->rename($id, $key, $text);
     }
 
     public static function addItem(string $path, string $id): ?bool
     {
+        return \Systopic\System\Config\FileWriter::locked($path, static fn() => self::addItemLocked($path, $id), false);
+    }
+
+    private static function addItemLocked(string $path, string $id): ?bool
+    {
         return self::open($path)?->add($id);
     }
 
     public static function removeItem(string $path, string $id, string $key): ?bool
+    {
+        return \Systopic\System\Config\FileWriter::locked($path, static fn() => self::removeItemLocked($path, $id, $key), false);
+    }
+
+    private static function removeItemLocked(string $path, string $id, string $key): ?bool
     {
         return self::open($path)?->remove($id, $key);
     }
 
     public static function moveItem(string $path, string $id, string $from, string $to, bool $after): ?bool
     {
+        return \Systopic\System\Config\FileWriter::locked($path, static fn() => self::moveItemLocked($path, $id, $from, $to, $after), false);
+    }
+
+    private static function moveItemLocked(string $path, string $id, string $from, string $to, bool $after): ?bool
+    {
         return self::open($path)?->move($id, $from, $to, $after);
     }
 
     public static function setField(string $path, string $id, string $key, string $field, string $text): ?bool
     {
+        return \Systopic\System\Config\FileWriter::locked($path, static fn() => self::setFieldLocked($path, $id, $key, $field, $text), false);
+    }
+
+    private static function setFieldLocked(string $path, string $id, string $key, string $field, string $text): ?bool
+    {
         return self::open($path)?->putField($id, $key, $field, $text);
     }
 
     public static function setImageSizing(string $path, string $key, string $mode): bool
+    {
+        return \Systopic\System\Config\FileWriter::locked($path, static fn() => self::setImageSizingLocked($path, $key, $mode), false);
+    }
+
+    private static function setImageSizingLocked(string $path, string $key, string $mode): bool
     {
         $doc = self::open($path);
         if ($doc === null || !in_array($mode, ['megapixels', 'pixels'], true) || !isset($doc->data['formats'][$key])) return false;

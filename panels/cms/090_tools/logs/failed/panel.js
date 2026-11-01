@@ -11,7 +11,7 @@ if (window.sys?.lib?.add) {
         const entries = window.cmsFeedback?.failures() || [];
         for (const entry of entries) {
             const row = body.insertRow();
-            row.insertCell().textContent = new Date(entry.time).toLocaleString();
+            row.insertCell().textContent = new Intl.DateTimeFormat('de-DE', {day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit',second:'2-digit',hourCycle:'h23'}).format(new Date(entry.time)).replace(', ', ' ');
             row.insertCell().textContent = entry.kind;
             const link = document.createElement('a');
             link.className = 'button transparent'; link.href = entry.url;

@@ -74,6 +74,7 @@ pre.backupLog{
 }
 
 .cmslightbox section > footer{
+	padding-inline: calc(var(--cmsCardPadding) + .5rem);
 	border-top-color: var(--cmsLineStrong);
 }
 
@@ -304,7 +305,7 @@ body.cms .cmslightbox .cmsBox > header{
 	flex: 0 0 auto;
 	margin-left: auto;
 	font-family: inherit;
-	font-size: 0.8rem;
+	font-size: 1rem;
 	font-weight: 400;
 	line-height: 1.4;
 	color: var(--cmsMuted);
@@ -703,9 +704,40 @@ body.cms .cmslightbox .cmsBox > header{
 
 /* External-link markers consistently follow their visible label. */
 .cms :is(a, button:where([data-cms-action])).cmsExternalLink { display:inline-flex; align-items:center; gap:.4em; }
-.cms :is(a, button:where([data-cms-action])).cmsExternalLink > i:is(.cmsIcon-arrow-up-right-from-square,.cmsIcon-up-right-from-square) { order:1; flex:0 0 auto; }
+.cms :is(a, button:where([data-cms-action])).cmsExternalLink > i:is(.cmsIcon-arrow-up-right-from-square,.cmsIcon-up-right-from-square) { order:-1; flex:0 0 auto; }
 .cms :is(a, button:where([data-cms-action])).cmsExternalLink:not(.button) { display:inline; overflow-wrap:anywhere; }
-.cms :is(a, button:where([data-cms-action])).cmsExternalLink:not(.button) > i:is(.cmsIcon-arrow-up-right-from-square,.cmsIcon-up-right-from-square) { margin-inline-start:.3em; }
+.cms :is(a, button:where([data-cms-action])).cmsExternalLink:not(.button) > i:is(.cmsIcon-arrow-up-right-from-square,.cmsIcon-up-right-from-square) { margin-inline-end:.3em; }
 
 .widget > summary { align-items:center; }
 .widget > summary::-webkit-details-marker { display:none; }
+
+/* A summary can use the shared button-sized disclosure affordance. */
+:is(.cmsBox,.widget) > summary:has(> .summaryToggle)::after { display:none; }
+.cms :is(.widget,.cmsBox) > summary > .summaryToggle { margin:0 0 0 auto; }
+details[open] > summary > .summaryToggle i { transform:rotate(180deg); }
+/* Semantic check icons share the message palette, never the theme highlight. */
+.cmsIcon.is-success { color:var(--cmsSuccess); }
+.cmsIcon.is-warning { color:var(--cmsWarning); }
+.cmsIcon.is-error { color:var(--cmsError); }
+
+.userListIdentity { display:inline-flex;align-items:center;gap:.5rem;vertical-align:middle;max-width:100%; }
+.userListName { min-width:4ch;max-width:14rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis; }
+.userListIdentity > .userSuper { flex:none;margin:0; }
+.userListAvatar { width:1.75rem;height:1.75rem;object-fit:cover;border-radius:50%;flex:none; }
+
+/* Nested cards share the page surface rather than another white panel. */
+.widget .cmsBox { background: var(--cmsBgColor); }
+:is(.cmsBox,.widget) > summary { align-items: center; }
+.summaryToggle { width: var(--cmsControl); height: var(--cmsControl); min-height: var(--cmsControl); padding: .4rem; display: inline-flex; align-items: center; justify-content: center; flex: 0 0 var(--cmsControl); }
+
+/* Accordion actions share the same control geometry as widget header actions. */
+:is(.widget,.cmsBox) > summary:hover > .summaryToggle,
+:is(.widget,.cmsBox) > summary:focus-visible > .summaryToggle {
+    background: color-mix(in srgb, var(--cmsMainColor) 12%, transparent);
+}
+:is(.widget,.cmsBox) > summary > .summaryToggle i { margin: 0; }
+.widget > header .button:last-of-type { margin-right: 0; }
+
+/* Shared password guidance, including activation/reset forms. */
+.passwordRule { display: flex; align-items: center; gap: .5rem; margin-block: .35rem; }
+.passwordRule .cmsIcon { flex-shrink: 0; }

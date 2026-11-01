@@ -95,8 +95,8 @@ $line = static function (array $row) use ($e): string {
 		</div>
 	</div>
 	<?php if ($step !== '') { ?>
-		<p class="authFoot"><a class="authSwitch ajax" href="<?= $e($this->href) ?>"><i class="cmsIcon cmsIcon-arrow-left"></i><span>Back</span></a></p>
+		<p class="authFoot"><a class="button transparent authSwitch ajax" href="<?= $e($this->href) ?>"><i class="cmsIcon cmsIcon-arrow-left"></i><span>Back</span></a></p>
 	<?php } else { ?>
-		<p class="authFoot"><a class="authSwitch ajax" href="?method=code"><i class="cmsIcon cmsIcon-arrow-left"></i><span>Scan another code</span></a></p>
+		<p class="authFoot"><a class="button transparent authSwitch ajax" href="?method=code"><i class="cmsIcon cmsIcon-arrow-left"></i><span>Scan another code</span></a></p>
 	<?php } ?>
 </main>

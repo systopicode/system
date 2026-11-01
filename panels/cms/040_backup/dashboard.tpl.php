@@ -11,7 +11,7 @@ $days = $last === null ? null : (int) floor((time() - (int) strtotime((string) $
 <header><h2><i class="cmsIcon cmsIcon-box-archive"></i>Backup</h2></header>
 <main class="dashBackup">
 	<?php if ($last === null) { ?>
-		<p><i class="cmsIcon cmsIcon-triangle-exclamation"></i> No backup yet.</p>
+		<p><i class="cmsIcon cmsIcon-triangle-exclamation is-warning"></i> No backup yet.</p>
 	<?php } else { ?>
 		<p class="<?= $days > 7 ? 'dashWarn' : '' ?>">
 			<strong>Last backup <?= $e(Cms::ago((string) $last['date'])) ?></strong>

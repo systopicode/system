@@ -61,7 +61,7 @@ if ($authMethod === 'device' && is_array($authPair) && $authPairUrl !== '' && cl
     $qr = \qr::svgMarkup(\qr::payload('url', ['url' => $authPairUrl]), 4, 'M', 'qr-code');
 }
 
-$switch = '<p class="authFoot"><a class="authSwitch ajax" href="?method=choose"><i class="cmsIcon cmsIcon-arrow-left"></i><span>Use another method</span></a></p>';
+$switch = '<p class="authFoot"><a class="button transparent authSwitch ajax" href="?method=choose"><i class="cmsIcon cmsIcon-arrow-left"></i><span>Use another method</span></a></p>';
 $showSwitch = ($authMethod === 'passkey' && $authPasskey)
     || (in_array($authMethod, ['device', 'code'], true) && $authCodes)
     || $authMethod === 'password';
@@ -89,9 +89,9 @@ $codeChars = str_split(substr(strtoupper((string) preg_replace('/[^0-9A-Z]/', ''
                     <div data-code-live>
                         <div class="authQr"><?= $qr ?></div>
                         <p class="authCodeLine"><?= $e($authPair['code'] ?? '') ?></p>
-                        <p class="authLead">Valid for 10 minutes. <?= $e($authPairLead ?? 'Scan this in the account on the phone that is already signed in, or open the link there.') ?></p>
+                        <p class="authLead">Valid for 10 minutes. <?= $e($authPairLead ?? 'Scan this in the account on a device that is already signed in, or open the link there.') ?></p>
                     </div>
-                    <p class="authNote" data-code-expired hidden>This code has expired. Reload the page for a new one.</p>
+                    <div class="cms message" data-code-expired hidden><div class="warning"><p>The key has expired. Reload the page for a new one.</p></div></div>
                 </div>
             <?php } else { ?>
                 <p class="authNote">A code is not ready yet. Reload this page, or use another method.</p>
@@ -195,7 +195,7 @@ $codeChars = str_split(substr(strtoupper((string) preg_replace('/[^0-9A-Z]/', ''
                 </a>
                 <a class="authMethod ajax" href="?method=device">
                     <i class="cmsIcon cmsIcon-qrcode"></i>
-                    <span><b>Remote login</b><small>Use a phone that is already signed in.</small></span>
+                    <span><b>Remote login</b><small>Use a device that is already signed in.</small></span>
                     <i class="cmsIcon cmsIcon-chevron-right"></i>
                 </a>
             <?php } ?>

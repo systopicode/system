@@ -23,7 +23,7 @@ final class Overview
         return (int) ($run['lastSuccess'] ?? (!empty($run['ok']) ? ($run['time'] ?? 0) : 0));
     }
 
-    public static function time(int $stamp): string { return $stamp > 0 ? date('j M Y, H:i T', $stamp) : 'Not run yet'; }
+    public static function time(int $stamp): string { return $stamp > 0 ? date('d.m.Y H:i T', $stamp) : 'Not run yet'; }
 
     public static function needsAttention(): bool
     {

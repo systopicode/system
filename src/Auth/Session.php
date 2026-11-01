@@ -188,8 +188,13 @@ final class Session
     public static function check(string $name, string $password): ?User
     {
         $scope = Scope::default();
+        $now = new \DateTimeImmutable();
+        $ip = (string) ($_SERVER['REMOTE_ADDR'] ?? 'cli');
+        $failures = \Systopic\System\Queries\AuthFailures\AuthFailures::of($scope, $ip);
+        if (\Systopic\System\Tables\AuthFailures\Operator::blocked($failures, $now)) return null;
         $user = UserLookup::byName($scope, $name);
         if ($user === null || $user->isBlocked || !Password::verify($user->passwordHash, $password)) {
+            $scope->save(\Systopic\System\Tables\AuthFailures\Operator::failed($failures, $ip, $now));
             return null;
         }
         if (Password::needsRehash($user->passwordHash)) {

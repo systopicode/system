@@ -180,3 +180,7 @@ body.appBody .qrScan button:where(:not([data-cms-action])).authSkip{
 }
 
 
+
+.cms .qrZoomStage :is(.fileFrame, .frameView), .cms .qrZoom svg.qr-code, .cms .fileFrame:has(svg.qr-code), .cms .fileFrame svg.qr-code { background: #fff; background-image: none; }
+
+.cms .qrZoom svg.qr-code, .cms .fileFrame svg.qr-code { color:#1e3b46;fill:#1e3b46; }

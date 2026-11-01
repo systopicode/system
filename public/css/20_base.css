@@ -655,3 +655,7 @@ article.cmsContent div.cmsOwn{
 .cms.cmsActionMessages > div:last-child { margin-bottom:0; }
 
 .cms div.bottomMenu div.signet:hover::before { content: ""; position: absolute; left: 50%; top: 50%; width: 1.35rem; height: 1.35rem; transform: translate(-50%, -50%); background: #fff; -webkit-mask: var(--icon-settings) center / contain no-repeat; mask: var(--icon-settings) center / contain no-repeat; z-index: 4; pointer-events: none; }
+
+.cms div.bottomMenu .cmsAccount:focus-visible { border-radius:var(--cmsRadius); }
+.cms div.bottomMenu .cmsAccount:not(:has(.cmsAccountName)):focus-visible { border-radius:50%; }
+.cms div.bottomMenu div.signet { position:relative; }

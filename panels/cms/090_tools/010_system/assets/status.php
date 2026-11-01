@@ -9,7 +9,7 @@ use Systopic\System\Http\Assets;
 
 $e = static fn(mixed $s): string => htmlspecialchars((string) $s, ENT_QUOTES);
 $status = Assets::status();
-$newest = $status['newest'] === null ? '—' : date('j M Y, H:i', $status['newest']);
+$newest = $status['newest'] === null ? '—' : date(\Systopic\System\Sys\LocalTime::DATETIME, $status['newest']);
 $rows = [
 	'Mode' => $status['mode'],
 	'Files' => (string) $status['files'],

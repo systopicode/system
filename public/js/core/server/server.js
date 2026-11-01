@@ -478,6 +478,8 @@ sys.core.server.call = function (data) {
             sys.core.server.pendingY = 0;
         }
         call.scrolled = liveScroll;
+        var actionButton = call.event?.element?.closest?.('button[data-loading]');
+        if (actionButton && !actionButton.disabled && !actionButton.matches('[role=tab],.cmsBoxMore,.summaryToggle')) actionButton.classList.add('loading');
         var xhr = new XMLHttpRequest();
         xhr.onreadystatechange = () => {
 
@@ -613,6 +615,7 @@ sys.core.server.call = function (data) {
         // aborted, or a command threw: whoever waits for quiet sees the page
         // as this answer left it, and never waits for good.
         xhr.addEventListener('loadend', () => {
+            actionButton?.classList.remove('loading');
             window.cmsFeedback?.finish(feedbackToken, feedbackOk);
             sys.core.server.settled();
         });

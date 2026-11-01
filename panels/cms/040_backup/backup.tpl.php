@@ -1,5 +1,5 @@
 <tr>
-	<td><?= $backup['date']; ?></td>
+	<td><?= htmlspecialchars((new \DateTimeImmutable($backup['date']))->format(\Systopic\System\Sys\LocalTime::DATETIME_SECONDS), ENT_QUOTES) ?></td>
 	<!--<td><?= $backup['timefinished']; ?></td> -->
 	<!--<td><?= $backup['duration']; ?></td> -->
 	<td><?= $backup['totalsize']; ?></td>
@@ -17,7 +17,7 @@
 				<li><button type="button" data-cms-action  data-on_click='userConfirm' data-action='remove?name=<?= basename($backup["download"][0]) ?>' class='button transparent ajax icononly' data-confirm='Delete this backup?' title='Delete'><i class="cmsIcon cmsIcon-trash"></i></button></li>
 			<?php } ?>
 			<?php if (\Systopic\System\Auth\Session::hasRole('admin')) { ?>
-				<li class="seperator">
+				<li>
 				<?php } ?>
 				<?php if (\Systopic\System\Auth\Session::hasRole('admin')) { ?>
 				<li>

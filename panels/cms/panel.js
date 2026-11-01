@@ -367,6 +367,55 @@ sys.fitDashboards.init = function (event) {
         if (!header) return;
         if (box.classList.contains('is-editing')) delete header.dataset.on_longpress;
         else header.dataset.on_longpress = 'dashEdit';
+        header.cmsLongPress = box.classList.contains('is-editing') ? null : down => {
+            // Carry this same hold through the existing server-rendered edit transition.
+            let held = true, point = {x:down.clientX,y:down.clientY};
+            let renderWatch;
+            const titleRect=header.getBoundingClientRect();
+            const grip={x:down.clientX-titleRect.left,y:down.clientY-titleRect.top};
+            const move = e => { if(e.pointerId===down.pointerId)point={x:e.clientX,y:e.clientY}; };
+            const end = () => { held=false;cleanup(); };
+            const cleanup = () => {
+                renderWatch?.disconnect();
+                document.removeEventListener('pointermove',move,true);
+                document.removeEventListener('pointerup',end,true);
+                document.removeEventListener('pointercancel',end,true);
+                window.removeEventListener('blur',end);
+            };
+            document.addEventListener('pointermove',move,true);
+            document.addEventListener('pointerup',end,true);
+            document.addEventListener('pointercancel',end,true);
+            window.addEventListener('blur',end);
+            const carryHold = () => {
+                if(!held)return;
+                let replacement=[...document.querySelectorAll('.dashWidgets.is-editing .dashWidget')].find(el=>el.dataset.widget===card.dataset.widget);
+                if(!replacement)return;
+                // A connected AJAX fragment must finish responsive placement before
+                // dragging freezes layout; otherwise server columns leave an extra row.
+                const nextBox=replacement.closest('.dashWidgets');
+                const columns=parseInt(getComputedStyle(nextBox).getPropertyValue('--dashboard-columns'),10)||1;
+                if(Number(nextBox.dataset.columns)!==columns) {
+                    sys.fitDashboards.init({element:nextBox});
+                    replacement=[...nextBox.querySelectorAll('.dashWidget')].find(el=>el.dataset.widget===card.dataset.widget);
+                }
+                held=false; // Exactly one handoff, even if completion follows insertion.
+                cleanup();
+                replacement.cmsTouchMouseUntil=0;
+                // The edit render collapses all bodies. Anchor the new drag to
+                // the same place in the title, then move it back under the hold.
+                const title=replacement.querySelector(':scope > header').getBoundingClientRect();
+                const start={x:title.left+Math.min(Math.max(0,grip.x),title.width),y:title.top+Math.min(Math.max(0,grip.y),title.height)};
+                sys.processEvent($.Event('pointerdown',{currentTarget:replacement,target:replacement,
+                    clientX:start.x,clientY:start.y,pointerId:down.pointerId,pointerType:down.pointerType,cmsHeld:true,
+                    originalEvent:{target:replacement,pointerId:down.pointerId,pointerType:down.pointerType,preventDefault(){},stopPropagation(){}}}));
+                $(document).trigger($.Event('pointermove',{target:replacement,clientX:point.x,clientY:point.y,pointerId:down.pointerId,cmsHandoff:true}));
+            };
+            // Event completion can precede the view insertion. Carry the hold
+            // when the replacement is connected, not when the request resolves.
+            renderWatch = new MutationObserver(carryHold);
+            renderWatch.observe(document.body,{childList:true,subtree:true});
+            sys.processEvent($.Event('longpress',{currentTarget:header,target:header})).done(carryHold);
+        };
     });
     var base = [...new Set((layouts[3] || [...cards.keys()]).filter(key => key !== '|'))];
     var end = box.querySelector('.dashDrop');

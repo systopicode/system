@@ -44,3 +44,13 @@ body.backup .cmslightbox:has(.backupLog) .barmenu > li > :is(a, button:where([da
     margin: 0;
 }
 
+
+body.backup .backupConfirm { display:block; }
+body.backup .backupConfirm > .restoreCheck { margin:0 0 1rem; }
+body.backup .backupConfirm .restoreArchive { margin:0 0 1.25rem; }
+body.backup .backupConfirm .restoreArchive summary { cursor:pointer; font-size:.875rem; color:var(--cmsSubText); }
+body.backup .backupConfirm .restoreArchive code { display:block; margin-top:.5rem; overflow-wrap:anywhere; font-size:.8rem; }
+body.backup .backupConfirm .restoreSelectionTitle { margin:0 0 .4rem; font-size:1.125rem; }
+body.backup .backupConfirm .restoreSelectionTitle + p { margin:0 0 1rem; }
+body.backup .backupConfirm .restoreReplaceWarning { margin:1.25rem 0 0; }
+body.backup .backupConfirm .checkBoxList { margin:0; }

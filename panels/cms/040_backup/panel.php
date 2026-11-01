@@ -418,25 +418,8 @@ class Panel extends CmsPanel
 
 	private function replaceFile(string $path, string $bytes): bool
 	{
-		$dir = dirname($path);
-		if (!is_dir($dir) && !mkdir($dir, 0775, true) && !is_dir($dir)) {
-			return false;
-		}
-		$temp = $path . '.' . getmypid() . '.tmp';
-		if (file_put_contents($temp, $bytes) === false) {
-			return false;
-		}
-		if (is_file($path)) {
-			$perms = fileperms($path);
-			if ($perms !== false) {
-				@chmod($temp, $perms & 0777);
-			}
-		}
-		if (!rename($temp, $path)) {
-			@unlink($temp);
-			return false;
-		}
-		return true;
+        return \Systopic\System\Config\FileWriter::locked($path,
+            static fn() => \Systopic\System\Config\FileWriter::write($path, $bytes, 0600));
 	}
 
 	function log(string $info): void

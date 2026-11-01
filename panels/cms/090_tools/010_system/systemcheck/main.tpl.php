@@ -14,7 +14,10 @@ $card = static function (string $title, array $rows): void {
 
 	echo '<section class="widget"><header><h2>' . htmlspecialchars($title) . '</h2></header><main><ul class="toolCheck">';
 	foreach ($rows as $row) {
-		echo '<li class="' . htmlspecialchars((string) $row['status']) . '">' . $row['label'] . '</li>';
+
+        $status = (string) $row['status'];
+        $icon = match ($status) { 'confirm' => 'circle-check is-success', 'error' => 'circle-xmark is-error', 'warning' => 'triangle-exclamation is-warning', default => 'circle-info' };
+        echo '<li class="' . htmlspecialchars($status) . '"><i class="cmsIcon cmsIcon-' . $icon . '" aria-hidden="true"></i><span>' . $row['label'] . '</span></li>';
 	}
 	echo '</ul>';
     if ($remedy && array_filter($rows, static fn($row) => ($row['status'] ?? '') !== 'confirm')) {
@@ -35,7 +38,7 @@ $php = [
 ?>
 <h1>System check</h1>
 <p class="tagsHint">What this server is running, and what the CMS still needs. The download is one PHP file: open it on a server before the CMS is installed, then delete it.</p>
-<p><button type="button" class="button" data-action-feedback data-on_click="recheck"><i class="cmsIcon cmsIcon-arrows-rotate"></i>Recheck</button> <a class="button submit" target="_self" href="<?= htmlspecialchars($this->getHref(\http::$root) . 'download') ?>"><i class="cmsIcon cmsIcon-file-arrow-down"></i><span>Download</span></a></p>
+<p><button type="button" class="button" data-action-feedback data-loading data-on_click="recheck"><i class="cmsIcon cmsIcon-arrows-rotate"></i>Recheck</button> <a class="button submit" target="_self" href="<?= htmlspecialchars($this->getHref(\http::$root) . 'download') ?>"><i class="cmsIcon cmsIcon-file-arrow-down"></i><span>Download</span></a></p>
 <div class="widgets">
 	<?php
 	$card('PHP', $php);

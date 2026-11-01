@@ -155,6 +155,7 @@ try {
  await page.setViewportSize({width:1440,height:900});
  await page.waitForFunction(() => !document.querySelector('.content').inert);
  assert.equal(await page.locator('.cmsMobileHeader').isVisible(), false);
+ assert.equal(await page.locator('#cmsChromeEdge').count(), 0, 'mobile Safari edge must not cover desktop footer');
  assert.equal(await page.locator('.content').evaluate(node=>node.inert), false);
  assert.equal(await page.locator('[data-cms-more]').isVisible(), false);
  assert.equal(await page.locator('.main .cmsMobileOnly.cmsStage').isVisible(), false);

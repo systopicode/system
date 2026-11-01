@@ -364,7 +364,7 @@ body.dragging.debug .draghelper{
 /* Quiet request feedback shares the existing footer, without message banners. */
 .cms .cmsSaveState, body > .cmsSaveState { position: relative; display: inline-flex; align-items: center; gap: .4rem; margin-inline: .6rem; font-size: .75rem; line-height: 1.35; }
 .cmsSaveState[hidden], .cmsLoadState[hidden] { display: none !important; }
-.cmsLoadState { position: fixed; z-index: 100000; inset: .75rem .75rem auto auto; display: flex; align-items: center; gap: .65rem; padding: .65rem .9rem; max-width: calc(100vw - 1.5rem); background: var(--cmsCanvas); color: var(--cmsTextColor); border: 1px solid var(--cmsInteractive); border-radius: var(--cmsRadius); box-shadow: 0 .2rem 1rem #0003; font-size: .9rem; }
+.cmsLoadState.cms { position: fixed; z-index: 100000; inset: .75rem .75rem auto auto; display: flex; align-items: center; gap: .65rem; padding: .65rem .9rem; max-width: calc(100vw - 1.5rem); background: var(--cmsCanvas); color: var(--cmsTextColor); border: 1px solid var(--cmsInteractive); border-radius: var(--cmsRadius); box-shadow: 0 .2rem 1rem #0003; font-size: .9rem; }
 .cmsLoadState.is-error { border-color: #d89716; }
 .cms .cmsEmptyState { padding: 1.25rem; text-align: center; color: var(--cmsMuted); white-space: normal; }
 

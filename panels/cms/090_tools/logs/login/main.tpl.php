@@ -39,7 +39,7 @@ $shown = static fn(array $parts): bool => $query === '' || mb_stripos(implode(' 
 				<tbody>
 					<?php foreach ($lines as $parts) { ?>
 						<tr<?= \Systopic\System\Logs\Filters::attributes((DateTimeImmutable::createFromFormat('d.m.Y-H:i:s', $parts[0]) ?: new DateTimeImmutable('@0'))->format('c'), $parts[1], $parts[2]) ?><?= $shown($parts) ? '' : ' hidden' ?>>
-							<td><?= $e(($d = DateTimeImmutable::createFromFormat('d.m.Y-H:i:s', $parts[0])) ? \Systopic\System\Sys\LocalTime::format($d, 'd.m.Y H:i:s') : $parts[0]) ?></td>
+							<td><?= $e(($d = DateTimeImmutable::createFromFormat('d.m.Y-H:i:s', $parts[0])) ? \Systopic\System\Sys\LocalTime::format($d, \Systopic\System\Sys\LocalTime::DATETIME_SECONDS) : $parts[0]) ?></td>
 							<td><?= \Systopic\System\Logs\Filters::userLink($parts[1]) ?></td>
 							<td><?= $e($parts[2]) ?></td>
 							<td><?= $e(LoginLog::methodLabel($parts[4])) ?></td>

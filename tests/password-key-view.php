@@ -1,6 +1,7 @@
 <?php
 declare(strict_types=1);
 require __DIR__ . '/bootstrap.php';
+define('STAGE', 'DEV');
 class http { public static string $root = '/'; public static function get($k,$default=''){return $default;} public static function post($k,$default=''){return $default;} }
 class message { public static function flush(...$args): string { return ''; } }
 use Systopic\System\Tables\Users\Model;

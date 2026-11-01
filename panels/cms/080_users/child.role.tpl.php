@@ -30,7 +30,7 @@ $field = static function (string $label, string $type, string $action, ?string $
 	<section class="groupRights">
 		<div class="rightsHead">
 			<h2>Permissions</h2>
-			<p class="tagsHint">Click a permission to allow or remove it.</p>
+			<p class="tagsHint">Read allows viewing a permission group; Write allows making changes. These permissions apply to accounts with this role.</p>
 		</div>
 		<div>
 			<h2>Read</h2>

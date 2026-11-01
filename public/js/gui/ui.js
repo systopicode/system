@@ -211,12 +211,18 @@ function renameUserAdminTitle(button) {
     const fieldValue = el => el.isContentEditable ? el.innerHTML : /^(checkbox|radio)$/.test(el.type) ? el.checked : el.value;
     const eligible = el => el?.matches?.(editable) && !el.closest('[data-feedback=none],[data-feedback=parameters]') && !el.closest('.authCard') && (el.closest('form:not([method="get"]),.ajax,[data-on_input],[data-on_change],[data-on_blur],[data-on_focusout]'));
     const feedbackFields = new Map();
+    let feedbackSequence = 0;
     const mobileFeedback = matchMedia('(max-width: 1024px), (orientation: portrait) and (max-width: 1400px)');
     const line = () => {
-        const lines = [...document.querySelectorAll('.cmsSaveState')];
-        // A render can recreate the footer while its old status lives outside it on mobile.
-        lines.slice(1).forEach(el => el.remove());
-        return lines[0];
+        if (statusBox && !statusBox.isConnected) {
+            const title = statusBox.querySelector('header h1,header h2')?.textContent.trim();
+            statusBox = [...document.querySelectorAll('.cmslightbox')].find(box => !box.hidden && box.className === statusBox.className && box.querySelector('header h1,header h2')?.textContent.trim() === title) || null;
+        }
+        if (statusBox?.isConnected) return statusBox.querySelector('footer.cmsDialogStatus .cmsSaveState');
+        const lines = [...document.querySelectorAll('body > footer.cmsStatusbar .cmsSaveState, body > .cmsSaveState.is-mobile')];
+        const current = lines.find(el => !el.hidden) || lines[0];
+        lines.forEach(el => { if (el !== current) el.remove(); });
+        return current;
     };
     function currentField(el) {
         if (el.isConnected) return el;
@@ -229,7 +235,7 @@ function renameUserAdminTitle(button) {
     function markField(el, next) {
         const feedback=line();
         if(feedback){
-            if(!feedback.id)feedback.id='cms-save-feedback';
+            if(!feedback.id)feedback.id='cms-save-feedback-'+(++feedbackSequence);
             const ids=new Set((el.getAttribute('aria-describedby')||'').split(/\s+/).filter(Boolean));
             if(next==='error')ids.add(feedback.id);else ids.delete(feedback.id);
             if(ids.size)el.setAttribute('aria-describedby',[...ids].join(' '));else el.removeAttribute('aria-describedby');
@@ -238,7 +244,8 @@ function renameUserAdminTitle(button) {
         if (!next) { delete el.dataset.saveState; feedbackFields.delete(el); return; }
         el.dataset.saveState = next;
         if (el.matches('[data-feedback=none]')) { delete el.dataset.saveState; return; }
-        if (next === 'saved' || next === 'error') feedbackFields.set(el, setTimeout(() => markField(el, ''), next === 'error' ? 6000 : 2500));
+        // Failed saves stay marked until the field is edited, retried or discarded.
+        if (next === 'saved' || (next === 'error' && !eligible(el))) feedbackFields.set(el, setTimeout(() => markField(el, ''), next === 'error' ? 6000 : 2500));
     }
     function paint() {
         const el = line();
@@ -247,9 +254,9 @@ function renameUserAdminTitle(button) {
         const topBox = [...document.querySelectorAll('.cmslightbox')].filter(box => !box.hidden && box.getClientRects().length).at(-1);
         const hidden = !message || !!(topBox && topBox !== statusBox);
         if (el.hidden !== hidden) el.hidden = hidden;
-        const host = mobileFeedback.matches ? document.body : document.querySelector('footer.cmsStatusbar');
+        const host = statusBox?.isConnected ? statusBox.querySelector('footer.cmsDialogStatus') : (mobileFeedback.matches ? document.body : document.querySelector('body > footer.cmsStatusbar'));
         if (host && el.parentElement !== host) host.append(el);
-        el.classList.toggle('is-mobile', mobileFeedback.matches);
+        el.classList.toggle('is-mobile', mobileFeedback.matches && !statusBox?.isConnected);
         const icons = {saved:'circle-check',error:'circle-xmark',changed:'circle-exclamation',saving:'spinner',loading:'spinner'};
         let icon = el.querySelector('i'), text = el.querySelector('span');
         if (!icon || !text) {
@@ -343,7 +350,13 @@ function renameUserAdminTitle(button) {
             if (!ok) token.fields.forEach(([field]) => {
                 const live = currentField(field);
                 if (live !== field && dirty.has(field)) {
-                    dirty.delete(field); dirty.set(live, fieldValue(live));
+                    // An error response may redraw the field with its old server value.
+                    // Keep the user's latest local edit, including edits made in flight.
+                    const value = dirty.has(live) ? dirty.get(live) : dirty.get(field);
+                    dirty.delete(field); dirty.set(live, value);
+                    if (live.isContentEditable) live.innerHTML = value;
+                    else if (/^(checkbox|radio)$/.test(live.type)) live.checked = value;
+                    else live.value = value;
                     if (originals.has(field)) originals.set(live, originals.get(field));
                 }
                 markField(live, 'error');
@@ -456,7 +469,6 @@ function renameUserAdminTitle(button) {
 /** Shared focus and keyboard behavior; existing close actions keep their own routes. */
 (function () {
     const opened = new Map();
-    let footer = document.querySelector('footer.cmsStatusbar');
     let previous = document.activeElement;
     const visible = el => !el.hidden && !!el.getClientRects().length;
     const boxes = () => [...document.querySelectorAll('.cmslightbox')].filter(visible);
@@ -465,17 +477,30 @@ function renameUserAdminTitle(button) {
     function sync() {
         const active = boxes();
         document.body.classList.toggle('cms-dialog-open', active.length > 0);
-        // ui.js can load before the footer is rendered. Keep the existing node
-        // when a dialog is removed, and carry it into every topmost overlay.
-        // A fresh body render may bring a new footer while the previous one
-        // is parked in a modal. Keep one shared node, never two overlays.
-        const footers = [...document.querySelectorAll('footer.cmsStatusbar')];
-        const renderedFooter = footers.find(node => !node.closest('.cmslightbox'));
-        if (renderedFooter) footer = renderedFooter;
-        else if (!footer?.isConnected) footer = footers[0] || footer;
-        footers.forEach(node => { if (node !== footer) node.remove(); });
-        const footerHost = active.at(-1) || document.body;
-        if (footer && footer.parentElement !== footerHost) footerHost.append(footer);
+        active.forEach(box => {
+            if (!box.querySelector('footer.cmsDialogStatus')) {
+                const footer = document.createElement('footer');
+                footer.className = 'cmsStatusbar cmsDialogStatus cms';
+                footer.innerHTML = '<span class="cmsSaveState" role="status" aria-live="polite" hidden></span>';
+                (box.querySelector(':scope > section') || box).append(footer);
+            }
+        });
+        document.querySelectorAll(':is(.widget,.cmsBox) > summary').forEach(summary => {
+            if (summary.querySelector(':scope > .summaryToggle')) return;
+            const toggle = document.createElement('button');
+            toggle.type = 'button';
+            toggle.className = 'button transparent icononly summaryToggle';
+            toggle.dataset.feedback = 'none';
+            toggle.tabIndex = -1; // The native summary is the keyboard toggle.
+            toggle.setAttribute('aria-label', 'Toggle section');
+            toggle.addEventListener('click', event => {
+                event.preventDefault();
+                event.stopPropagation();
+                summary.parentElement.open = !summary.parentElement.open;
+            });
+            toggle.innerHTML = '<i class="cmsIcon cmsIcon-chevron-down"></i>';
+            summary.append(toggle);
+        });
         opened.forEach((opener, box) => {
             if (!active.includes(box)) {
                 const replacement = active.find(next => !opened.has(next) && next.className === box.className && next.querySelector('header h1,header h2')?.textContent.trim() === box.querySelector('header h1,header h2')?.textContent.trim());
@@ -491,6 +516,8 @@ function renameUserAdminTitle(button) {
             const title = box.querySelector('header h1,header h2');
             if (title && !box.hasAttribute('aria-label') && !box.hasAttribute('aria-labelledby')) box.setAttribute('aria-label', title.textContent.trim());
             if (!box.contains(document.activeElement)) (box.querySelector('[autofocus]') || controls(box)[0] || box).focus({preventScroll:true});
+            const query = box.matches('.cmsFind') && box.querySelector('input[name=query]');
+            if (query) query.setSelectionRange(query.value.length, query.value.length);
         });
         previous = document.activeElement;
         window.cmsFeedback?.refresh();
@@ -747,4 +774,44 @@ document.addEventListener('click',event=>{
     },true);
     function start(){new MutationObserver(schedule).observe(document.body,{childList:true,subtree:true,attributes:true,attributeFilter:['hidden']});sync();}
     if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start);else start();
+})();
+
+// Explain the shared new-password rule before a form can be submitted.
+(function () {
+    const validate = form => {
+        const password = form.querySelector('[name="password"]');
+        const repeat = form.querySelector('[name="password_repeat"]');
+        const submit = form.querySelector('[type="submit"]');
+        if (!password || !repeat || !submit) return;
+        const value = password.value;
+        const strong = Array.from(value).length >= 15;
+        const repetitive = /^(.{1,6})\1+$/us.test(value.trim().toLowerCase());
+        let hint = form.querySelector('[data-password-hint]');
+        if (!hint) {
+            hint = document.createElement('p'); hint.dataset.passwordHint = '';
+            hint.className = 'tagsHint'; hint.setAttribute('aria-live', 'polite');
+            (repeat.closest('label, .row') || repeat).after(hint);
+        }
+        const length = Array.from(value).length;
+        const rules = [
+            [strong, strong ? 'At least 15 characters.' : `Add ${15 - length} more character${15 - length === 1 ? '' : 's'} (minimum 15).`],
+            ...(strong ? [[!repetitive, repetitive ? 'Avoid repeating the same characters or short pattern.' : 'No simple repeated pattern. Common passwords are checked when saving.']] : []),
+            [!!repeat.value && value === repeat.value, !repeat.value ? 'Repeat your password.' : value !== repeat.value ? 'Repeat the same password in both fields.' : 'Passwords match.']
+        ];
+        hint.replaceChildren(...rules.map(([ok, text]) => {
+            const row = document.createElement('span'); row.className = 'passwordRule';
+            const icon = document.createElement('i'); icon.className = `cmsIcon cmsIcon-${ok ? 'circle-check' : 'circle-exclamation'}`;
+            icon.style.color = `var(${ok ? '--cmsSuccess' : '--cmsWarning'})`; icon.setAttribute('aria-hidden', 'true');
+            row.append(icon, document.createTextNode(text)); return row;
+        }));
+        repeat.setCustomValidity(repeat.value && value !== repeat.value ? "Passwords do not match." : '');
+        submit.disabled = !value || !strong || repetitive || value !== repeat.value;
+    };
+    const init = () => document.querySelectorAll('form[data-password-check]').forEach(validate);
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
+    document.addEventListener('cms:rendered', init);
+    document.addEventListener('input', event => {
+        const form = event.target.closest('form[data-password-check]');
+        if (form) validate(form);
+    });
 })();

@@ -6,9 +6,18 @@ function insertHtmlAtCursor(html) {
 		if (!range) {
 			return false;
 		}
-		if ($(range.startContainer.parentNode).closest('.editor').length > 0 || $(range.startContainer.parentNode).hasClass('editor')) {
+        var start = range.startContainer.nodeType === 1 ? range.startContainer : range.startContainer.parentNode;
+		if ($(start).closest('.editor').length > 0) {
 			node = range.createContextualFragment(html);
+            var last = node.lastChild;
 			range.insertNode(node);
+            if (last) {
+                range.setStartAfter(last);
+                range.collapse(true);
+                var selection = window.getSelection();
+                selection.removeAllRanges();
+                selection.addRange(range);
+            }
 		} else {
 			return 'nodeditor';
 		}
@@ -70,20 +79,19 @@ function editBlockClass(event) {
 	var same = /^(IMG|VIDEO|IFRAME|TABLE)$/.test(block.nodeName) ? block.nodeName : 'p,h1,h2,h3,h4,h5,h6,ul,ol';
 	document.querySelectorAll('.editor[contenteditable=true] :is(' + same + ')[class]').forEach(function (el) {
 		el.classList.forEach(function (name) {
-			used.indexOf(name) < 0 && used.push(name);
+			name !== 'cmsMediaOn' && used.indexOf(name) < 0 && used.push(name);
 		});
 	});
 	var form = document.createElement('form');
 	form.className = 'HTMLeditorClass';
-	var kind = {P: 'paragraph', UL: 'list', OL: 'list', TABLE: 'table', IMG: 'image', VIDEO: 'video', IFRAME: 'embed'}[block.nodeName] || 'headline';
-	form.innerHTML = '<input name="className" list="HTMLeditorClasses" placeholder="CSS classes of this ' + kind + '" autocapitalize="off" autocomplete="off" spellcheck="false">'
+	form.innerHTML = '<input name="className" list="HTMLeditorClasses" placeholder="CSS classes (space-separated)" autocapitalize="off" autocomplete="off" spellcheck="false">'
 		+ '<datalist id="HTMLeditorClasses"></datalist>'
 		+ '<button type="submit" title="Apply"><i class="cmsIcon cmsIcon-check"></i></button>';
 	used.sort().forEach(function (name) {
 		form.querySelector('datalist').appendChild(new Option(name));
 	});
 	var input = form.querySelector('input');
-	input.value = block.getAttribute('class') || '';
+	input.value = [...block.classList].filter(name => name !== 'cmsMediaOn').join(' ');
 	form.addEventListener('submit', function (e) {
 		e.preventDefault();
 		wysiwyg.setBlockClass(block, input.value);
@@ -138,6 +146,15 @@ function fixedMediaNodeId(el) {
 }
 
 /** The editor of the image or video, in the format it shows now. */
+/** Reuse the crop controller, keeping the page and neighbouring images visible. */
+function cropImageOnPage(event) {
+    const el=event.data.target, rect=el.getBoundingClientRect();
+    const src=el.currentSrc || el.src;
+    if(!url2mediaParams(src))return;
+    return runImageEditor({inline:true,src,domObj:$(el),display_width:rect.width,display_height:rect.height,
+        offset_left:rect.left+scrollX,offset_top:rect.top+scrollY});
+}
+
 function formatImage(event) {
 	var el = event.data.target;
 	var media = editorMediaRef(el);

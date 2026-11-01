@@ -131,7 +131,7 @@ class Panel extends PanelNode {
 			$seconds < 86400 => $plural(intdiv($seconds, 3600), 'hour'),
 			$seconds < 172800 => 'yesterday',
 			$seconds < 604800 => $plural(intdiv($seconds, 86400), 'day'),
-			default => \Systopic\System\Sys\LocalTime::format($time, 'j M Y'),
+			default => \Systopic\System\Sys\LocalTime::format($time, \Systopic\System\Sys\LocalTime::DATE),
 		};
 	}
 

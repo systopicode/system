@@ -12,4 +12,4 @@ $successPortrait = (string) ($successProfile['portrait'] ?? '');
     <div class="authProgress" aria-hidden="true"><span></span></div>
     <p class="authWait">Redirecting in 2 seconds …</p>
 </div>
-<p class="authFoot" data-success-footer<?= !empty($authSuccessHidden) ? ' hidden' : '' ?>><a class="authSkip" target="_self" data-success-continue href="<?= htmlspecialchars((string) (isset($this) ? ($this->successTarget ?? \http::$root . 'cms/') : \http::$root . 'cms/'), ENT_QUOTES) ?>"><span>Continue now</span><i class="cmsIcon cmsIcon-arrow-right" aria-hidden="true"></i></a></p>
+<p class="authFoot" data-success-footer<?= !empty($authSuccessHidden) ? ' hidden' : '' ?>><a class="button transparent authSkip" target="_self" data-success-continue href="<?= htmlspecialchars((string) (isset($this) ? ($this->successTarget ?? \http::$root . 'cms/') : \http::$root . 'cms/'), ENT_QUOTES) ?>"><span>Continue now</span><i class="cmsIcon cmsIcon-arrow-right" aria-hidden="true"></i></a></p>

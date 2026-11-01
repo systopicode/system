@@ -39,10 +39,15 @@ div.imageEditor .cropGrid{
 /* at the top of the frame: the bottom edge belongs to the height handle */
 div.imageEditor .cropBar{
 	position: fixed;
-	top: max(1rem, env(safe-area-inset-top));
+	top: 0;
+	padding: max(1rem, env(safe-area-inset-top)) max(1rem, env(safe-area-inset-right)) max(1rem, env(safe-area-inset-top)) max(1rem, env(safe-area-inset-left));
+    box-sizing: border-box;
+	backdrop-filter: blur(18px);
+	-webkit-backdrop-filter: blur(18px);
 	bottom: auto;
-	left: 1rem;
-	width: calc(100vw - 2rem) !important;
+	left: 0;
+    right: 0;
+	width: 100% !important;
 	z-index: 2001;
 	display: flex;
 	flex-wrap: wrap;
@@ -187,3 +192,33 @@ body.cms div.imageEditor.unifiedImageEditor .cropBar > button.selected{border-co
 body.cms div.imageEditor .cropBar button[data-crop_cancel]{width:auto;height:var(--cmsControl);min-height:var(--cmsControl);margin:0;flex:0 0 auto;padding-inline:.75rem;gap:.4rem;}
 
 div.imageEditor .cropBar .editorCommit{display:flex;align-items:center;gap:.5rem;flex:0 0 auto;}
+
+body.cms div.imageEditor .cropBar button[data-crop_cancel] { width:var(--cmsControl); padding:0; background:transparent; }
+div.imageEditor .cropBar .editorCommit { margin-left:auto; }
+div.unifiedImageEditor .imageEditorHint { display:flex; align-items:center; justify-content:center; gap:.65rem; }
+div.unifiedImageEditor .imageEditorHint .editorStatus { color:var(--cmsStatusWarning,var(--cmsWarning)); }
+
+body.cms div.imageEditor .cropBar button[data-crop_cancel] { color:var(--cmsFrameText); }
+
+/* Close is a shared transparent button on the dark editor surface. */
+body.cms div.imageEditor .cropBar button[data-crop_cancel]:enabled:not(.disabled):is(:hover,:focus,:active) {
+    color:var(--cmsFrameText);
+    background:color-mix(in srgb,var(--cmsFrameText) 25%,transparent);
+}
+body.cms div.imageEditor .cropBar button[data-crop_cancel]:focus-visible {
+    outline:2px solid var(--cmsFrameText);outline-offset:2px;border-radius:var(--cmsRadius);
+}
+
+/* The on-page entry shares the crop controller, with the surrounding page visible. */
+div.imageEditorScrim.inlineImageCropScrim{background:transparent;pointer-events:none;}
+div.imageEditor.inlineImageCrop .dragimage{visibility:hidden;}
+div.imageEditor.inlineImageCrop .cropBar{background:var(--cmsMainColor);width:max-content !important;max-width:calc(100vw - 32px);left:50%;right:auto;transform:translateX(-50%);border-radius:var(--cmsRadius);padding:.5rem;container-type:normal;}
+div.imageEditor.inlineImageCrop .cropBar{flex-wrap:nowrap;}
+div.imageEditor.inlineImageCrop .cropBar > span{flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;}
+div.imageEditor.inlineImageCrop .cropBar > button{flex-shrink:0;}
+body.cms div.imageEditor.inlineImageCrop .cropBar button[data-crop_cancel]{order:10;border-color:transparent;box-shadow:none;background:transparent;}
+body.cms div.imageEditor.inlineImageCrop .cropBar button[data-crop_cancel]:enabled:not(.disabled):is(:hover,:focus,:active){background:color-mix(in srgb,var(--cmsFrameText) 25%,transparent);}
+
+/* Reserve the hint width so changing instructions cannot shift the actions. */
+div.imageEditor.inlineImageCrop .cropBar { padding:.5rem; gap:.4rem; box-shadow:0 .35rem 1.2rem rgb(0 0 0 / .18); }
+div.imageEditor.inlineImageCrop .cropBar > span { width:25rem; max-width:38vw; flex:0 1 25rem; }

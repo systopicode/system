@@ -25,6 +25,7 @@ final class ThirdParty
     public static function entries(): array
     {
         $items = [
+            ['Common-password screening lists — SHA-256 subset for passwords of 15+ characters', 'Daniel Miessler; Django Software Foundation and individual contributors', 'MIT / BSD-3-Clause', 'https://github.com/danielmiessler/SecLists', ['SecLists-MIT.txt', 'Django-BSD.txt']],
             ['DiceBear PHP 10.6.0 — local restricted renderer', 'Florian Körner and DiceBear contributors; Fluxo adaptation by systopic', 'MIT', 'https://github.com/dicebear/dicebear-php/tree/06e118c61373a62e7727ad45d44574c6a33a81cd', ['DiceBear-MIT.txt']],
             ['Notionists and Bottts 10.6.0 — local avatar artwork', 'Zoish; Pablo Stanley', 'CC0 1.0 / artist permission for personal and commercial use', 'https://github.com/dicebear/styles/tree/22a9abebc54ed68275da811573204ad83db646b8', ['DiceBear-Styles-NOTICE.txt', 'CC0-1.0.txt']],
             ['flag-icons 7.3.2 — local SVG subset', 'Panayiotis Lipiridis', 'MIT', 'https://github.com/lipis/flag-icons/tree/v7.3.2', ['flag-icons-MIT.txt']],

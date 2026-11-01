@@ -19,7 +19,7 @@ final class EnvironmentForm
         $e = static fn($value): string => htmlspecialchars((string) $value, ENT_QUOTES);
         echo '<div class="projectFiles">';
         echo '<h1>Environment</h1>';
-        echo '<p class="tagsHint">Leave a field to save it. A database password takes effect on the next request.</p>';
+        echo '<p class="tagsHint">Connection settings affect access to this installation. A new database password takes effect on the next request.</p>';
         echo \message::flush();
         $files = EnvironmentFile::files();
         if ($files === []) {
@@ -225,7 +225,7 @@ final class EnvironmentForm
         }
         echo '<div class="envHubOrigins"><div class="envHubAddressHeader"><h3>Browser addresses</h3>';
         if (Session::isSuperuser()) echo '<button type="button" class="button" data-on_click="addAddress" data-file="' . $e($file) . '"><i class="cmsIcon cmsIcon-plus"></i>Add domain / IP</button>';
-        echo '</div><p class="cmsBoxLead">Add each domain or IP under “Where this config applies”. After saving, its address appears here. Use Add beside a missing permission to allow it in the hub. “Shared permission” means it was already in the hub config; newly added permissions belong to this project.</p>';
+        echo '</div><p class="cmsBoxLead">Browser origins must be allowed by the shared live-update server. The addresses below come from “Where this config applies”. Shared permissions already exist in the hub configuration; newly added permissions belong to this project.</p>';
         if ($invalidIp) echo '<p class="envHubInvalid">An IP address below is invalid. Correct the marked field before adding its hub permission.</p>';
         echo '<ul class="envOrigins">';
         foreach ($origins as $origin) {
@@ -253,7 +253,7 @@ final class EnvironmentForm
         $ready = strlen((string) ($auth['secret'] ?? '')) >= 32;
         echo '<section class="cmsBox"><header><div class="cmsBoxTitles"><h2>Sign-in</h2>';
         if (!$ready) {
-            echo '<p class="cmsBoxLead">One-time codes need a sign-in key. Creating it writes the key, how long a device stays, and how long a screen stays.</p></div></header>';
+            echo '<p class="cmsBoxLead">A sign-in key enables one-time codes for this environment. Device and screen lifetimes control how long that access remains valid.</p></div></header>';
             echo '<div class="cmsBoxActions is-start">';
             echo '<button type="button" class="button" data-on_click="createAuth" data-file="' . $e($file) . '"><i class="cmsIcon cmsIcon-key-skeleton"></i> Create sign-in key</button>';
             echo '</div></section>';
@@ -287,7 +287,7 @@ final class EnvironmentForm
         echo '<div class="tableScroll"><table class="scalars"><tbody>';
         foreach ($schema as $key => $kind) {
             $value = $values[$key] ?? ($kind === 'bool' ? false : '');
-            echo '<tr><td><span>' . $e(self::label($key)) . '<small>' . $e($key) . '</small></span></td><td>';
+            echo '<tr' . ($group === 'debug' ? ' data-debug-option="' . $e($key) . '"' : '') . '><td><span>' . $e($group === 'debug' && $key === 'displayErrors' ? 'Display PHP errors' : self::label($key)) . '<small>' . $e($key) . '</small></span></td><td>';
             self::control($file, $group, $key, $kind, $value);
             echo '</td></tr>';
         }
@@ -299,7 +299,7 @@ final class EnvironmentForm
                 try { $recipient = \Systopic\System\Mail\Delivery::testRecipient(); }
                 catch (\RuntimeException) { $recipient = 'Invalid recipient — delivery blocked'; }
                 echo '<main><p class="tagsHint">Effective delivery: <strong>' . $e($transport) . '</strong> → <strong>' . $e($recipient) . '</strong>. Local overrides apply. SMTP acceptance confirms handover to this server, not delivery to the inbox.</p></main>';
-                echo '<footer><button type="button" class="button" data-action-feedback data-on_click="testMail" data-file="' . $e($file) . '"><i class="cmsIcon cmsIcon-paper-plane"></i>Send test email</button><a class="button transparent" href="' . $e(\http::$root . 'cms/tools/logs/email/') . '"><i class="cmsIcon cmsIcon-envelope"></i>Email log</a></footer>';
+                echo '<footer><button type="button" class="button" data-action-feedback data-loading data-on_click="testMail" data-file="' . $e($file) . '"><i class="cmsIcon cmsIcon-paper-plane"></i>Send test email</button><a class="button outline" href="' . $e(\http::$root . 'cms/tools/logs/email/') . '"><i class="cmsIcon cmsIcon-envelope"></i>Email log</a></footer>';
             }
         }
         echo '</section>';
@@ -353,7 +353,7 @@ final class EnvironmentForm
     private static function control(string $file, string $group, string $key, string $kind, mixed $value): void
     {
         $e = static fn($v): string => htmlspecialchars((string) $v, ENT_QUOTES);
-        $attrs = ' aria-label="' . $e(self::label($key)) . '" data-file="' . $e($file) . '" data-group="' . $e($group) . '" data-key="' . $e($key) . '" name="value" autocomplete="off"';
+        $attrs = ' aria-label="' . $e(self::label($key)) . '" data-file="' . $e($file) . '" data-group="' . $e($group) . '" data-key="' . $e($key) . '" name="value" autocomplete="off" data-1p-ignore data-lpignore="true" data-bwignore="true"';
         if ($kind === 'bool') {
             $checked = $value === true || $value === 1 || $value === '1' ? ' checked' : '';
             echo '<label class="projectSwitch"><input type="checkbox" class="switch" data-on_change="save"' . $attrs . $checked . '><div><div></div></div></label>';

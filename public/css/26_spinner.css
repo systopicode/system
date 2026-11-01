@@ -33,7 +33,7 @@ form.loading button:where(:not([data-cms-action])):not(.authReveal):before,
     content: '';
     border-radius: 50%;
     border: 2px solid var(--cmsHighlightColor);
-    border-top-color: transparent;
+    border-top-color: var(--cmsOnHighlight);
     animation: spinner .6s linear infinite;
 }
 
@@ -42,7 +42,7 @@ form.loading button:where(:not([data-cms-action])):not(.authReveal):before,
 .cms button:where(:not([data-cms-action])).submit.loading:before,
 .cms .button.submit.loading:before{
     border-color: var(--cmsOnHighlight);
-    border-top-color: transparent;
+    border-top-color: var(--cmsOnHighlight);
 }
 
 .cms form.loading button:where(:not([data-cms-action])).submit,
@@ -51,20 +51,23 @@ form.loading button:where(:not([data-cms-action])):not(.authReveal):before,
 .cms .button.submit.loading,
 .cms .submit.loading{
 	background: var(--cmsHighlightColor);
-	color: transparent;
+	color: var(--cmsOnHighlight);
 	pointer-events: none;
 }
 
-.cms form.loading button:where(:not([data-cms-action])):not(.authReveal),
-.cms form.loading .button:not(.authReveal),
-.cms button:where(:not([data-cms-action])).loading,
-.cms .button.loading,
-.cms form.loading button:where(:not([data-cms-action])):not(.authReveal) i,
-.cms button:where(:not([data-cms-action])).loading i,
-.cms .button.loading i{
-	color: transparent;
-	pointer-events: none;
+/* Keep labels and geometry; the existing icon slot carries the spinner. */
+.cms :is(button, .button).loading,
+.cms form.loading :is(button, .button):not(.authReveal) { position: relative; pointer-events: none; }
+.cms :is(button, .button).loading > i,
+.cms form.loading :is(button, .button):not(.authReveal) > i { visibility: hidden; }
+.cms :is(button, .button).loading:before,
+.cms form.loading :is(button, .button):not(.authReveal):before {
+    left: 1.25rem; right: auto; top: 50%; margin: -.5rem 0 0 0;
+    border-color: currentColor; border-top-color: transparent;
 }
+.cms :is(button, .button).submit.loading:before,
+.cms form.loading :is(button, .button).submit:before { border-color: var(--cmsOnHighlight); border-top-color: transparent; }
+.cms [role=tab].loading:before { content: none; }
 
 form.loading button:where(:not([data-cms-action])).authReveal{
 	pointer-events: none;
@@ -100,7 +103,7 @@ form.loading button:where(:not([data-cms-action])).authReveal:before{
     margin: -8px 0 0 -8px;
     border-radius: 50%;
     border: 2px solid currentColor;
-    border-top-color: transparent;
+    border-top-color: var(--cmsOnHighlight);
     animation: spinner .6s linear infinite;
 }
 

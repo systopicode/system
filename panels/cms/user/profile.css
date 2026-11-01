@@ -105,7 +105,8 @@ header.cms .rightAlign form{
 .profileGrid > .widget{
     break-inside: avoid;
     margin: 0 0 1.25rem;
-    display: inline-block;
+    display: flow-root;
+    vertical-align: top;
     width: 100%;
 }
 
@@ -237,8 +238,11 @@ header.cms .rightAlign form{
 .profile .profilePassword > form > footer{
     display: flex;
     justify-content: flex-end;
+    align-items: center;
+    background: var(--cmsCanvas);
     margin: 0;
-    padding: .75rem var(--cmsCardPadding);
+    padding: 0 var(--cmsCardPadding);
+    min-height: 3rem;
     border-top: 1px solid var(--cmsLine);
 }
 
@@ -475,7 +479,13 @@ header.cms .rightAlign form{
     text-align: center;
 }
 
-.profile .profilePassword{ margin: 0; border: 0; border-top: 1px solid var(--cmsLine); border-radius: 0; box-shadow: none; }
+.profile .profilePassword{ padding: 0; margin: 0; border: 0; border-top: 1px solid var(--cmsLine); border-radius: 0; box-shadow: none; }
 .profile .profilePassword > summary h3{ display: flex; align-items: center; gap: .5rem; margin: 0; font-size: 1rem; }
 
-.profile .profilePassword > summary{ align-items: center; }
+.profile .profilePassword,
+.profile .profilePassword > summary { background: var(--cmsCanvas); }
+.profile .profilePassword > summary { box-sizing: border-box; align-items: center; padding: 0 var(--cmsCardPadding); min-height: 3rem; }
+.profile .profilePassword > form > main { padding-bottom: .75rem; }
+.profile .portraitDrop { border-radius: 50%; }
+.profile .widget > footer:has([data-action="resetState"]) { align-items:flex-end; }
+.profile .widget > footer [data-action="resetState"] { align-self:flex-end; margin-left:auto; }

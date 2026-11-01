@@ -22,7 +22,7 @@ final class ProjectForm
         $filename = $path !== null ? basename($path) : (ProjectFile::FILES[$which] ?? '');
         echo '<div class="projectFiles">';
         echo '<h1>' . $e($title) . '</h1>';
-        echo '<p class="tagsHint">Leave a field to write it into ' . $e($filename) . '. Drag the handle to change the order.</p>';
+        echo '<p class="tagsHint">' . ($which === 'media' ? 'Image and video formats control generated media. Groups define where files can be used and which uploads are allowed.' : 'Shared defaults for this project. Page-specific settings can provide their own values.') . '</p>';
         echo \message::flush();
         if ($path === null) {
             echo '<p>Missing ' . $e($filename) . '.</p>';
@@ -301,7 +301,7 @@ final class ProjectForm
             self::control($which, $leaf, 'save');
             echo '</div>';
         }
-        echo '<div class="languageFlagHelp"><p class="tagsHint">Flags are served locally. Upload an SVG to choose a different flag for this project (maximum 128 KB).</p><a class="button cmsExternalLink" href="' . $e(LanguageFlags::SOURCE) . '" target="_blank" rel="noopener noreferrer">Download SVG flags<i class="cmsIcon cmsIcon-arrow-up-right-from-square" aria-hidden="true"></i></a></div>';
+        echo '<div class="languageFlagHelp"><p class="tagsHint">Custom flags apply only to this project. SVG only, up to 128 KB.</p><a class="button cmsExternalLink" href="' . $e(LanguageFlags::SOURCE) . '" target="_blank" rel="noopener noreferrer">Download SVG flags<i class="cmsIcon cmsIcon-arrow-up-right-from-square" aria-hidden="true"></i></a></div>';
         self::recordTable($which, $group, false);
         echo '</div>';
     }

@@ -469,3 +469,15 @@ body.editorMediaDrop *{
 
 /* Keyboard focus must enter a submenu immediately, without waiting for visibility animation. */
 div.HTMLeditorMenu[data-keyboard="true"] li > ul { transition:none; }
+
+.editorMediaHold.is-gap { overflow:hidden; opacity:.25; outline:1px dashed var(--cmsHighlightColor); }
+.editorMediaHold.is-gap > * { width:100%; height:100%; object-fit:contain; pointer-events:none; }
+body.editorMediaDropInvalid, body.editorMediaDropInvalid * { cursor:not-allowed !important; }
+
+.editor.dropRejected { outline:2px solid var(--cmsError) !important; outline-offset:2px; }
+
+div.HTMLeditorMenu:has(form.HTMLeditorClass) { isolation:isolate; }
+div.HTMLeditorMenu:has(form.HTMLeditorClass)::before { z-index:-1; }
+
+/* Crop has a smaller native glyph; match the neighbouring media actions. */
+.HTMLeditorMenu .cmsIcon-crop-simple { transform: scale(1.3); }

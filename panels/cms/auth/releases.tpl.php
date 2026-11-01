@@ -6,7 +6,7 @@ $e = static fn(string $v): string => htmlspecialchars($v, ENT_QUOTES);
 <main class="authText">
 	<div class="authScroll">
 	<?php foreach ($this->releases as $version => $release) { ?>
-		<h2>GUI <?= $e((string) $version) ?> <small><?= $e($release['date']) ?></small></h2>
+		<h2>GUI <?= $e((string) $version) ?> <small><?= $e((new \DateTimeImmutable($release['date']))->format(\Systopic\System\Sys\LocalTime::DATE)) ?></small></h2>
 		<?php foreach (['new' => 'New', 'fixed' => 'Fixed'] as $key => $title) {
 			if (empty($release[$key])) {
 				continue;

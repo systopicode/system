@@ -23,6 +23,18 @@ try {
     check('invalid recipient rejected without changing saved value', !EnvironmentFile::set('DEV.test.config.json','mail','testRecipient','invalid') && EnvironmentFile::read('DEV.test.config.json')['mail']['testRecipient'] === 'sink@example.test');
     check('empty recipient permits system fallback', EnvironmentFile::set('DEV.test.config.json','mail','testRecipient',''));
     check('test switch can be disabled without touching other settings', EnvironmentFile::set('DEV.test.config.json','mail','testMode','0') && EnvironmentFile::read('DEV.test.config.json')['mail']['testMode'] === false && EnvironmentFile::read('DEV.test.config.json')['untouched'] === 42);
+    check('invalid port rejected', !EnvironmentFile::set('DEV.test.config.json','mail','port','70000'));
+    check('non-numeric port rejected', !EnvironmentFile::set('DEV.test.config.json','mail','port','abc'));
+    check('invalid boolean rejected', !EnvironmentFile::set('DEV.test.config.json','mail','testMode','maybe'));
+    check('invalid TLS mode rejected', !EnvironmentFile::set('DEV.test.config.json','mail','secure','other'));
+    check('path traversal rejected', EnvironmentFile::path('../DEV.test.config.json') === null);
+    $snapshot = file_get_contents($file);
+    check('unknown configuration fields rejected', !EnvironmentFile::set('DEV.test.config.json','db','unknown','value'));
+    check('invalid writes leave file unchanged', file_get_contents($file) === $snapshot);
+    check('mail edit preserves database configuration', EnvironmentFile::set('DEV.test.config.json','db','name','fixture_database') && EnvironmentFile::set('DEV.test.config.json','mail','testRecipient','sink@example.test') && EnvironmentFile::read('DEV.test.config.json')['db']['name'] === 'fixture_database');
+    file_put_contents($file, '{invalid json');
+    check('broken JSON cannot be overwritten by a field save', !EnvironmentFile::set('DEV.test.config.json','mail','testRecipient','sink@example.test') && file_get_contents($file) === '{invalid json');
+    file_put_contents($file, $snapshot);
     $origins = CentrifugoHub::projectOrigins([['serverName'=>'dev.local','serverIp'=>'192.168.10.66','path'=>'/project/'],['serverName'=>'dev.local'],['serverName'=>'evil.test/path'],['serverName'=>'*.test'],['serverIp'=>'::1']], 'https');
     check('addresses deduplicate, include IP and exclude paths and wildcards', $origins===['https://dev.local','https://192.168.10.66','https://[::1]']);
     check('exact and configured wildcard origins match', CentrifugoHub::originAllowed('https://dev.local',['https://dev.local']) && CentrifugoHub::originAllowed('https://a.example.test',['https://*.example.test']));

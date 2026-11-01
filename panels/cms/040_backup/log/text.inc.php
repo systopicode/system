@@ -10,6 +10,11 @@ $when = static function (string $raw): string {
 	}
 	return rtrim(rtrim(number_format($seconds, 1, '.', ''), '0'), '.') . ' s';
 };
+$displayTime = static function (string $raw): string {
+    if (!preg_match('/^\d{4}-\d{2}-\d{2}[T ]/', $raw)) return $raw;
+    try { return (new \DateTimeImmutable($raw))->format(\Systopic\System\Sys\LocalTime::DATETIME_SECONDS); }
+    catch (\Throwable) { return $raw; }
+};
 $rows = [];
 foreach (preg_split('/\R/', $text) ?: [] as $line) {
 	$line = trim($line);
@@ -46,7 +51,7 @@ if ($rows === []) {
 			<?php foreach ($rows as $row) { ?>
 				<tr<?= \Systopic\System\Logs\Filters::attributes($row[1], '', $row[0]) ?>>
 					<td><?= $e($row[0]) ?></td>
-					<td><?= $e($row[1]) ?></td>
+					<td><?= $e($displayTime($row[1])) ?></td>
 					<td><?= $e($row[2]) ?></td>
 				</tr>
 			<?php } ?>

@@ -71,7 +71,7 @@ body > main:has(> div.content .dashboard) > div.content{
 @media (max-width: 1279px) { .dashboard .dashWidgets { --dashboard-columns: 2; } }
 @media (max-width: 700px) { .dashboard .dashWidgets { --dashboard-columns: 1; } }
 
-/* Column ends stay usable as invisible line targets, including empty columns. */
+/* Populated column ends use lines; empty columns expose a full drop surface. */
 .dashDrop {
     display: none;
     position: relative;
@@ -84,6 +84,16 @@ body > main:has(> div.content .dashboard) > div.content{
 }
 .dashDrop:only-child { margin-top: 0; }
 body.widgetDragging .dashDrop { display: block; }
+body.widgetDragging .dashColumn > .dashDrop:only-child {
+    flex: 0 0 auto;
+    height: 5rem;
+    border: 1px dashed var(--cmsHighlightColor);
+    border-radius: var(--cmsRadius);
+    background: color-mix(in srgb, var(--cmsHighlightColor) 12%, var(--cmsCanvas));
+}
+body.widgetDragging .dashColumn > .dashDrop:only-child.dropTarget {
+    border-style: solid;
+}
 .dashCustomize.dropTarget {
     border-color: var(--cmsHighlightColor);
     background: color-mix(in srgb, var(--cmsHighlightColor) 12%, var(--cmsCanvas));
@@ -787,7 +797,21 @@ body.cms .dashboard .dashTabs button:where(:not([data-cms-action])):hover{
 
 /* Holding a title starts customization, never native text selection. */
 .dashWidget > header[data-on_longpress] {
+    touch-action:none;
     -webkit-user-select: none;
     user-select: none;
     -webkit-touch-callout: none;
+}
+
+.dashWidgets.is-editing .dashWidget { outline:0; border:1px dashed var(--cmsLineStrong); }
+
+/* The widget clips its children: draw the hold ring inside the title. */
+.dashWidget > header:is(.pressing,.longPressed) {
+    transform:none;
+    position:relative;
+    border-radius:var(--cmsRadiusLg);
+    outline-offset:-3px;
+    animation:none;
+    outline:2px solid var(--cmsHighlightColor);
+    box-shadow:none;
 }

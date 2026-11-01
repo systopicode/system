@@ -7,17 +7,23 @@ sys.core.loader.__class = function () { // class to control availability of scri
 	loader.scriptsLoaded = new Map();
     loader.scriptsFailed = new Map();
     let loadingDeadline;
+    loader.state = 'loading';
+    loader.paintStatus = () => {
+        const state = loader.state;
+        const line = document.querySelector('.cmsLoadState');
+        if (!line) return;
+        line.hidden = state === 'ready';
+        line.classList.toggle('is-error', state === 'error');
+        line.querySelector('i').className = state === 'error' ? 'cmsIcon cmsIcon-circle-exclamation' : 'cmsIcon cmsIcon-spinner cmsIcon-spin';
+        line.querySelector('span').textContent = state === 'error' ? 'Some tools could not load. Reload to try again.' : 'Preparing your workspace…';
+        line.querySelector('button').hidden = state !== 'error';
+    };
+    document.addEventListener('cms:rendered', loader.paintStatus);
     loader.status = (state) => {
         clearTimeout(loadingDeadline);
         if (state === 'loading') loadingDeadline = setTimeout(() => loader.status('error'), 30000);
-        const line = document.querySelector('.cmsLoadState');
-        if (line) {
-            line.hidden = state === 'ready';
-            line.classList.toggle('is-error', state === 'error');
-            line.querySelector('i').className = state === 'error' ? 'cmsIcon cmsIcon-circle-exclamation' : 'cmsIcon cmsIcon-spinner cmsIcon-spin';
-            line.querySelector('span').textContent = state === 'error' ? 'Some tools could not load. Reload to try again.' : 'Loading tools…';
-            line.querySelector('button').hidden = state !== 'error';
-        }
+        loader.state = state;
+        loader.paintStatus();
         document.dispatchEvent(new CustomEvent('cms:loading', {detail: state}));
     };
 
@@ -131,6 +137,7 @@ sys.onload(() => {
 		l('sys.onload => replaceBodyFromPhpClassesData');
 		sys.dom.body = new sys.core.dom.layer.__class();
 		sys.dom.body.createRootLayer(sys.singletons.dom.renderer.__data);
+        sys.loader.paintStatus();
 	} else {
 		if (document.getElementById('siteDomRendererPlaceholder')) {
 			// sys.onLibReady(() => sys.siteRenderer.updateDocument()); -> moved to php routeRenderer::clientData_export()

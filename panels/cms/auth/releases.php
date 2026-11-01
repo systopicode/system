@@ -8,6 +8,35 @@
  * @return array<string, array{date: string, new?: list<string>, fixed?: list<string>}>
  */
 return [
+    '0.5.7' => [
+        'date' => '2026-11-01',
+        'new' => [
+            'Empty dashboard columns show a drop area while moving widgets. Its border becomes solid when it accepts a widget.',
+            'Dialogs show their own action and save status, including nested dialogs.',
+            'Publishing explains whether a page is public, scheduled, expired or in the trash, using server time.',
+            'Branch publishing and trash actions explain their scope and affected languages before confirmation.',
+            'Media usage lists identify pages and languages that reference a file, including replacement previews.',
+            'Multi-upload results retain per-file progress and allow failed files to be retried without repeating completed uploads.',
+        ],
+        'fixed' => [
+            'Auth metadata keeps project favicons consistent, supports legacy favicon folders and exposes the theme colour. Code inputs fit narrow screens.',
+            'Screen avatars combine the derived navigation colour, dark facial details and highlight-coloured antennas on the existing light backdrop. Generated person portraits are slightly larger with less space above the head; obsolete cached renders are renewed.',
+            'Holding a dashboard title keeps the same widget under the pointer when customization opens.',
+            'Returning from the mobile layout restores the bottom status bar.',
+            'Widget accordions share button-sized chevrons, hover feedback and consistent header spacing.',
+            'Change password uses the account card surface and standard footer spacing.',
+            'Upload and backup progress bars use the theme colours and rounded tracks.',
+            'Status checks use the success, warning and error colours. Screen portraits retain locally generated avatars in the theme palette.',
+            'Image editing keeps Close at the right, supports holding to crop and restores the crop when saved adjustments are reset.',
+            'Settings keep table labels left-aligned. Debug controls follow the main Debug switch without a reload.',
+            'Failed field saves stay marked and retain local input even when an error response redraws the field.',
+            'Displayed dates use DD.MM.YYYY with 24-hour times. Stored timestamps and browser date inputs retain their required formats.',
+            'Replacement notices span both preview columns while the metadata sidebar starts directly below the dialog header. Narrow layouts stack the previews.',
+            'Restore separates archive structure checks, selected contents and the overwrite warning. A structure check is not presented as a tested recovery.',
+            'Dashboard page links retain the language shown in the result. To-do hints explain the purpose of each check.',
+            'Publishing status, sidebar labels and shared action confirmations use English consistently.',
+        ],
+    ],
     '0.5.6' => [
         'date' => '2026-10-28',
         'new' => [

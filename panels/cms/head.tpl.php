@@ -33,10 +33,10 @@
 	// behind the content remains separate from the root/browser chrome tint.
 	$themeColor = $brandColor;
 	$canvasColor = '#' . \Systopic\System\Sys\Theme::color('cmsBgColor');
-	$appearance = 'light';
+	$appearance = 'system';
 	if (!$onAuth) {
 		$choice = (string) (\Systopic\System\Auth\Session::current()->user?->appearance ?? '');
-		if (in_array($choice, ['dark', 'system'], true)) {
+		if (in_array($choice, ['light', 'dark', 'system'], true)) {
 			$appearance = $choice;
 		}
 	}
@@ -60,7 +60,7 @@
 		root.setAttribute('data-appearance', choice);
 		apply();
 		mq.addEventListener('change', function () {
-			if ((root.getAttribute('data-appearance') || 'light') === 'system') apply();
+			if ((root.getAttribute('data-appearance') || 'system') === 'system') apply();
 		});
 		new MutationObserver(apply).observe(root, { attributes: true, attributeFilter: ['data-appearance'] });
 	})();
@@ -84,8 +84,24 @@
     <?php if (!$skipApp) { ?>
     <link rel="manifest" href="<?= htmlspecialchars(\Systopic\System\Sys\WebApp::href(), ENT_QUOTES) ?>">
     <?php } ?>
-    <link rel="mask-icon" href="<?= $asset('img/favicons/safari-pinned-tab.svg') ?>" color="<?= $brandColor ?>">
-    <link rel="shortcut icon" href="<?= $asset('img/favicons/favicon.ico') ?>">
+    <?php
+    // Optional legacy icons must not override a project's primary favicon with
+    // the framework's branding when that project supplies only SVG/PNG icons.
+    $customIcons = $svgOwn || $pngOwn || $frontendSvg !== null || $frontendPng !== null;
+    $ownIcon = static function (string $file) use ($overrideRoot, $onAuth): ?string {
+        $frontend = $onAuth ? \Systopic\System\Auth\Branding::href($file) : null;
+        if ($frontend !== null) return $frontend;
+        $path = \Systopic\System\Sys\Packages::panelAsset($file);
+        return $path !== null && str_starts_with(\fs::toNative($path), $overrideRoot)
+            ? \Systopic\System\Sys\Packages::panelAssetHref($file) : null;
+    };
+    $maskIcon = $ownIcon('img/favicons/safari-pinned-tab.svg');
+    $shortcutIcon = $ownIcon('img/favicons/favicon.ico');
+    if (!$customIcons || $maskIcon !== null) { ?>
+    <link rel="mask-icon" href="<?= htmlspecialchars($maskIcon ?? \Systopic\System\Sys\Packages::panelAssetHref('img/favicons/safari-pinned-tab.svg'), ENT_QUOTES) ?>" color="<?= $brandColor ?>">
+    <?php } if (!$customIcons || $shortcutIcon !== null) { ?>
+    <link rel="shortcut icon" href="<?= htmlspecialchars($shortcutIcon ?? \Systopic\System\Sys\Packages::panelAssetHref('img/favicons/favicon.ico'), ENT_QUOTES) ?>">
+    <?php } ?>
     <meta name="apple-mobile-web-app-title" content="<?= htmlspecialchars(\Systopic\System\Sys\WebApp::shortName(), ENT_QUOTES) ?>">
     <?php if (!$skipApp) { ?>
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -97,14 +113,14 @@
     <meta name="author" content="systopic GmbH"/>
     <meta name="copyright" content="systopic GmbH"/>
     <meta name="abstract" content="fluxo"/>
+    <?php if (!$customIcons || $ownIcon('img/favicons/browserconfig.xml') !== null) { ?>
     <meta name="msapplication-config" content="<?= $asset('img/favicons/browserconfig.xml') ?>">
+    <?php } ?>
 	<?php $shareImage = http::$hostUrl . htmlspecialchars(($onAuth ? \Systopic\System\Auth\Branding::href('img/share_default.jpg') : null) ?? \Systopic\System\Settings\ThemeAssets::href('share'), ENT_QUOTES); ?>
 	<meta property='og:image' content='<?= $shareImage ?>' />
 	<meta itemprop='image' content='<?= $shareImage ?>' />
 
-	<?php if (!$onAuth) { ?>
 	<meta name="theme-color" content="<?= $themeColor ?>">
-	<?php } ?>
 	<meta name="color-scheme" content="<?= $onAuth ? 'dark' : ($appearance === 'dark' ? 'dark' : ($appearance === 'system' ? 'light dark' : 'light')) ?>">
 	<meta name="msapplication-TileColor" content="<?= $brandColor ?>">
 

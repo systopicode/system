@@ -19,7 +19,7 @@ if (window.sys?.lib?.add) {
         };
         const a=luminance(style.color),b=luminance(style.backgroundColor);probe.remove();
         const ratio=(Math.max(a,b)+.05)/(Math.min(a,b)+.05);
-        const icon=document.createElement('i');icon.className='cmsIcon cmsIcon-'+(ratio>=4.5?'circle-check':'triangle-exclamation');
+        const icon=document.createElement('i');icon.className='cmsIcon '+(ratio>=4.5?'is-success cmsIcon-circle-check':'is-warning cmsIcon-triangle-exclamation');
         target.replaceChildren(icon,document.createTextNode(' '));
         target.append(Number.isFinite(ratio)?ratio.toFixed(2)+':1 — '+(ratio>=4.5?'Sufficient for normal text':'Low contrast in the current appearance'):'Check the rendered colours manually.');
     }

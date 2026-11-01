@@ -11,11 +11,11 @@ $root = rtrim((string) \http::$root, '/');
     <div class="cleanupCardLegal">
         <strong>Privacy information</strong>
         <?php if (LegalLinks::details('operator') === '') { ?>
-        <p class="cleanupOperatorHint"><i class="cmsIcon cmsIcon-triangle-exclamation"></i>Operator details not entered here. Add them in Settings or verify they are covered by your linked imprint and privacy policy.</p>
+        <p class="cleanupOperatorHint"><i class="cmsIcon cmsIcon-triangle-exclamation is-warning"></i>Operator details not entered here. Add them in Settings or verify they are covered by your linked imprint and privacy policy.</p>
         <?php } else { ?><p class="tagsHint">Operator details are included in System Privacy.</p><?php } ?>
         <div class="cleanupLegalLinks">
         <?php foreach (['imprint' => 'Imprint', 'privacy' => 'Privacy policy'] as $kind => $label) { ?>
-        <a class="button transparent cmsExternalLink" href="<?= $e(LegalLinks::url($kind)) ?>" target="_blank" rel="noopener noreferrer"><?= $e($label) ?><i class="cmsIcon cmsIcon-arrow-up-right-from-square" aria-hidden="true"></i></a>
+        <a class="button outline cmsExternalLink" href="<?= $e(LegalLinks::url($kind)) ?>" target="_blank" rel="noopener noreferrer"><?= $e($label) ?><i class="cmsIcon cmsIcon-arrow-up-right-from-square" aria-hidden="true"></i></a>
         <?php } ?>
         </div>
     </div>

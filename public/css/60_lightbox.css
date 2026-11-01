@@ -89,7 +89,7 @@ html.cms-keyboard .cmslightbox:not(.fileEditor) > section{
         font-size: 1.25rem;
     }
     body.cms .cmslightbox section > header :is(:is(a, button:where([data-cms-action])), button:where(:not([data-cms-action]))):has([class*="xmark"]) i{
-        width: 1.25em;
+        width: 1.25rem;
         font-size: 1.25rem;
         text-align: center;
     }
@@ -180,7 +180,7 @@ body.cms .cmslightbox > section > header h1{
 .cmslightbox section > footer{
     flex-direction: row;
     justify-content: flex-end;
-    padding: 0 1.25rem;
+    padding: .5rem calc(var(--cmsCardPadding) + .5rem);
     background: var(--cmsBgColor);
 }
 
@@ -589,7 +589,7 @@ body .cmslightbox section > div.layout > aside:not(.cms) > div > div{
     margin: 0;
     padding: 0;
     border: 0;
-    border-radius: 0;
+    border-radius: 999px;
     background: transparent;
     appearance: none;
     cursor: pointer;
@@ -1012,13 +1012,6 @@ div.imageEditor .editorAspect > button{
 .cmslightbox .embedFrame .extVideo__hint { max-width: 30rem; margin: 0; color: var(--cmsSubText); }
 .cmslightbox .embedFrame .extVideo__btn { display: inline-flex; align-items: center; gap: .5rem; }
 
-/* Fullscreen editors leave the persistent desktop statusbar its own space. */
-@media (min-width: 1025px) and (orientation: landscape), (min-width: 1401px) {
-    body:has(> footer.cmsStatusbar) .cmslightbox[data-size="3"] {
-        bottom: var(--cmsStatusBar);
-    }
-}
-
 .cmslightbox.fileEditor .fileFrame.imageCropAlignContainer { border:1px dashed color-mix(in srgb, var(--cmsMainColor) 34%, var(--cmsLine)); border-radius:var(--cmsRadius); }
 
 .cmslightbox [data-preview-loading] { position:absolute; top:calc(50% - 1.25rem);left:calc(50% - 1.25rem);font-size:2.5rem;pointer-events:none;color:var(--cmsHighlightColor); }
@@ -1038,21 +1031,10 @@ div.imageEditor .editorAspect > button{
 .cmslightbox.fileEditor .fileFrame { padding:12px; box-sizing:border-box; }
 .cmslightbox .frameView[hidden] { display:none; }
 
-/* Native modal dialogs live above the document stacking contexts. */
-.cmslightbox > footer.cmsStatusbar { position:fixed; inset:auto 0 0; margin:0; width:100%; }
-
-body.cms-dialog-open:has(.cmsPreview) footer.cmsStatusbar .cmsStatusInfo { visibility:hidden; }
-
-
-/* Reserve the shared footer in the dialog's own available height, including native dialogs. */
-@media (min-width:1025px) and (orientation:landscape), (min-width:1401px) {
-    body.cms-dialog-open .cmslightbox:has(> footer.cmsStatusbar) {
-        padding-bottom: calc(var(--cmsStatusBar) + .75rem);
-    }
-}
-body.cms-dialog-open footer.cmsStatusbar {
-    background: color-mix(in srgb, var(--cmsFrame) 86%, transparent);
-}
+/* Each dialog owns its context status; the page footer remains on the page. */
+.cmslightbox footer.cmsDialogStatus { display:flex; position:static; width:auto; margin:0; min-height:2rem; height:auto; flex:0 0 auto; padding:.25rem calc(var(--cmsCardPadding) + .5rem); border:0; border-top:1px solid var(--cmsLineStrong); border-radius:0; background:var(--cmsCanvas); }
+.cmslightbox footer.cmsDialogStatus:has(.cmsSaveState[hidden]) { display:none; }
+body.cms-dialog-open > footer.cmsStatusbar { visibility:hidden; }
 
 /* Format and existing tools share one row; the active slider overlays the preview. */
 .cmslightbox .fileImageTools{display:grid;grid-template-columns:minmax(5rem,1fr) auto;align-items:center;gap:.4rem;position:relative;}
@@ -1090,3 +1072,27 @@ div.unifiedImageEditor .cropBar :is(button[data-editor-utility],button[data-crop
 div.imageEditor.unifiedImageEditor:not(.is-cropping) :is([data-crop-original],[data-crop-grid]){display:none;}
 
 div.imageEditor.unifiedImageEditor .cropBar [hidden]{display:none !important;}
+
+/* Match actions to the glyph edge of the inset Close button. */
+
+/* File replacement needs a readable flow on phones, including its usage list. */
+@media (max-width: 767px) {
+    body .cmslightbox.upload section > div.layout { flex-direction:column; overflow:auto; }
+    body .cmslightbox.upload section > div.layout > main.uploadStage { flex:0 0 auto; flex-direction:column; width:100%; overflow:visible; padding:1rem; }
+    body .cmslightbox.upload .uploadPane { flex:0 0 auto; width:100%; min-height:14rem; }
+    body .cmslightbox.upload .uploadPane > div { height:auto; padding:0; overflow:visible; }
+    body .cmslightbox.upload .currentFile { min-height:12rem; }
+    body .cmslightbox.upload section > div.layout > aside.cms { flex:0 0 auto; width:100%; min-width:0; max-width:none; border-left:0; border-top:1px solid var(--cmsLine); overflow:visible; }
+    body .cmslightbox.upload aside.cms > .flexContainer,
+    body .cmslightbox.upload aside.cms .scrollContainer,
+    body .cmslightbox.upload aside.cms .scrollContainerContent { height:auto; max-height:none; flex:0 0 auto; overflow:visible; }
+}
+
+/* Replacement notice belongs to the preview content, beside the sidebar. */
+body .cmslightbox.upload main.uploadStage:has(> .uploadNotice) { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); grid-template-rows:auto minmax(0,1fr); row-gap:0; }
+body .cmslightbox.upload main.uploadStage > .uploadNotice { grid-column:1 / -1; height:auto; padding:0; margin:.75rem 1.25rem 0; overflow:visible; }
+body .cmslightbox.upload main.uploadStage > .uploadNotice > .info { margin:0; }
+@media(max-width:767px){
+    body .cmslightbox.upload main.uploadStage:has(> .uploadNotice){display:flex;}
+    body .cmslightbox.upload main.uploadStage > .uploadNotice{flex:0 0 auto;margin:0;}
+}

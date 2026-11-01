@@ -418,3 +418,14 @@ body > main > div.main nav .cmsStage{
 }
 
 /****************************** BENACHRICHTIGUNGEN ***************************/
+
+/* Module actions share the content gutter and title alignment. */
+.cmsPanelActions {display:flex;align-items:center;gap:.75rem;width:100%;min-width:0;flex-wrap:wrap;}
+
+/* Content actions use the same alignment as section actions; no extra panel header. */
+.cmsPanelActions {justify-content:flex-end;margin-bottom:var(--cmsCardPadding);}
+
+.widget > header > .cmsPanelActions{width:auto;margin:0 0 0 auto;}
+.cmsPanelActions > .rightAlign{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:.4rem;}
+.cmsPanelActions > .rightAlign > .button{margin:0;}
+.profile > .cmsPanelActions,.tagsHint + .cmsPanelActions{padding-inline:var(--cmsCardPadding);}

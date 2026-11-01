@@ -1,4 +1,5 @@
 <?php
+require __DIR__.'/mail-theme-fixture.php';
 require __DIR__.'/bootstrap.php';
 define('STAGE','DEV');
 class emailSmtp {

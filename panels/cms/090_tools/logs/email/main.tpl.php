@@ -66,7 +66,6 @@
 			    // Extract timestamp
 			    preg_match('/\[([^\]]+)\]/', $headerLine, $timestampMatch);
 			    $timestamp = $timestampMatch[1] ?? '';
-			    $dateOrder = $timestamp ? date('Y-m-d H:i:s', strtotime($timestamp)) : '';
 			    
 			    // Extract status
 			    preg_match('/Status:\s*([^|]+)/', $headerLine, $statusMatch);
@@ -116,7 +115,7 @@
 			foreach (array_reverse($rows) as $row) {
 			    ?>
 			    <tr<?= \Systopic\System\Logs\Filters::attributes($row['timestamp'], $row['actor'], $row['status']) ?>>
-				<td><?= htmlspecialchars($row['timestamp']) ?></td>
+				<td><?= htmlspecialchars(($row['timestamp'] === '' ? '' : (new \DateTimeImmutable($row['timestamp']))->format(\Systopic\System\Sys\LocalTime::DATETIME_SECONDS))) ?></td>
 				<td><span class="logPill <?= $row['pill'] ?>"><?= htmlspecialchars($row['status']) ?></span></td>
 				<td><?= htmlspecialchars($row['to']) ?></td>
                 <td><?= \Systopic\System\Logs\Filters::userLink($row['actor']) ?></td>

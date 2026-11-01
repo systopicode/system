@@ -34,7 +34,7 @@ contrast in light/dark appearance. Restore only into a separate test installatio
 
 Account blocking lives under Access. A blocked account does not offer access grants, invitations or sign-in codes; attempts to invoke those actions directly are rejected too. Unblocking uses the standard user-unlock icon.
 
-Colour contrast is a collapsible section of Colours. Settings/Tools widget titles use text consistently; dashboard widgets retain their icons. Restore preflight still runs on display and before execution, but the interface only shows actionable warnings/errors rather than a routine success card.
+Colour contrast is a collapsible section of Colours. Settings/Tools widget titles use text consistently; dashboard widgets retain their icons. Restore preflight runs on display and before execution. The confirmation view separates the archive-structure result from its limitations and the overwrite warning; it does not claim that recovery was tested.
 
 The mail section shows the effective SMTP destination and test recipient, including local overrides. SMTP acceptance is handover, not proof of inbox delivery. When accepted messages are absent, inspect the mail provider's queue/bounce/spam results. Do not bypass DEV recipient routing to diagnose that issue.
 
@@ -53,3 +53,16 @@ Blocked accounts keep read-only device/passkey lists, including revoked device r
 - Tools use `/tools/website/{links,misses,paths}/`, `/tools/cleanup/{trash,unused,duplicates,automatic}/` and `/tools/media/`. Old maintenance bookmarks redirect to the canonical pages. Internal links and panel JavaScript routes use the canonical paths.
 - Media-tool probing updates the separate `media` view; Recheck refreshes the whole check. The downloadable checker also searches project `var/bin/`, `bin/` and platform subfolders and labels optional missing capabilities as warnings.
 - Screen portraits retain their stable seed and theme colours but omit Bottts' decorative texture. These are DiceBear SVGs. Screen pairing uses its own success text and the account portrait.
+
+## Restore presentation (1 November 2026)
+
+The restore confirmation shows a compact structure-check notice, a disclosure with the
+archive identifier and its display date, the existing component selection, and a separate
+overwrite warning. The technical archive identifier remains unchanged. Settings and
+environment remain unselected by default; authorization and preflight blocking are unchanged.
+No trial restore is performed by opening this screen. Test actual recovery only in a separate,
+disposable installation. Read-only desktop, iPad-sized and narrow views were checked; these
+checks do not certify restoration of a production backup.
+
+The unused legacy AWS SES mailer was removed from System. Project-specific SES integration
+belongs in that project; the shared SMTP mailer remains available.

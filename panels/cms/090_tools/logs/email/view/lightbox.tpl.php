@@ -144,7 +144,7 @@ if (empty($output)) {
 		    <dl>
 			<div><dt>From</dt><dd><?= htmlspecialchars($from) ?></dd></div>
 			<div><dt>To</dt><dd><?= htmlspecialchars($who) ?></dd></div>
-			<div><dt>Date</dt><dd><?= htmlspecialchars($timestamp) ?></dd></div>
+			<div><dt>Date</dt><dd><?= htmlspecialchars(($timestamp === '' ? '' : (new \DateTimeImmutable($timestamp))->format(\Systopic\System\Sys\LocalTime::DATETIME_SECONDS))) ?></dd></div>
 			<div><dt>Status</dt><dd><span class="logPill <?= $pill ?>"><?= htmlspecialchars($status) ?></span></dd></div>
 			<?php if ($user !== '' && $user !== 'not logged in') { ?>
 			    <div><dt>Sent by</dt><dd><?= htmlspecialchars($user) ?><?php if ($userId !== '') { ?> <span class="logActorId">#<?= htmlspecialchars($userId) ?></span><?php } ?></dd></div>

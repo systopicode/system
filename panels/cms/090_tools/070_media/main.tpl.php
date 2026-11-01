@@ -5,7 +5,7 @@
 	<section class="widget">
 		<header><h2>Permissions</h2></header>
 		<main>
-			<p class="tagsHint">Files the website cannot read, so they answer with an error. Show lists them. Fix makes them readable.</p>
+			<p class="tagsHint">Missing read permissions can cause broken media on the website. Repair sets the affected original and generated files to permissions 0664.</p>
 			<div class="mediaResult showPermissionsContainer"></div>
 		</main>
 		<footer>
@@ -17,7 +17,7 @@
 	<section class="widget">
 		<header><h2>Type</h2></header>
 		<main>
-			<p class="tagsHint">Files stored without a type. Show lists up to 100 and the type it would write. Update writes it for up to 2000 files.</p>
+			<p class="tagsHint">Missing file types can prevent correct previews and handling. Types are detected from the originals. Preview: up to 100 files; update: up to 2000 per run.</p>
 			<div class="mediaResult showMimeContainer"></div>
 		</main>
 		<footer>
@@ -29,7 +29,7 @@
 	<section class="widget">
 		<header><h2>Size</h2></header>
 		<main>
-			<p class="tagsHint">Images stored without a width and height. Show lists up to 100. Update writes the size for up to 2000.</p>
+			<p class="tagsHint">Missing dimensions can affect image previews and generated formats. Dimensions are read from the originals. Preview: up to 100 images; update: up to 2000 per run.</p>
 			<div class="mediaResult showMediaContainer"></div>
 		</main>
 		<footer>
@@ -41,7 +41,7 @@
 	<section class="widget">
 		<header><h2>Crops</h2></header>
 		<main>
-			<p class="tagsHint">A generated size of an image or a video. Clear cache deletes those files; they are rebuilt when a page needs them. Remove frames deletes the saved crop of an image, so it uses the automatic frame again.</p>
+			<p class="tagsHint">Generated formats are rebuilt when needed after cache clearing. Removing crop frames discards saved crops and returns to automatic framing. Originals are kept.</p>
 			<label class="field" for="cropFormat"><span>Format</span>
 			<select id="cropFormat" name="value">
 				<option value="" selected>Choose a format</option>

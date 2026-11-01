@@ -744,9 +744,18 @@ aside.cms > nav.sidebarTabs { flex-shrink: 0; z-index: 2; background: var(--cmsC
 aside.cms > .flexContainer { display: flex; flex-direction: column; height: auto; overflow: hidden; }
 aside.cms > .flexContainer > .scrollContainer { flex: 1 1 0; min-height: 0; height: auto; overscroll-behavior-y: contain; touch-action: pan-y; }
 
-aside.cms .mediaUsage .relationLink > i { margin-top:.15rem; flex-shrink:0; }
-aside.cms .mediaUsage .relationLink small { display:block; color:var(--cmsMuted); font-size:.75rem; font-weight:normal; }
+/* Page references share one hover surface in Pages and media dialogs. */
+aside.cms .relationIncoming li { display:flex;align-items:center;gap:.2rem;background:var(--cmsButtonBg);border:0;border-radius:var(--cmsRadius);margin-bottom:.35rem;padding:.2rem .25rem; }
+aside.cms .relationIncoming .relationLink.sideAction { display:flex;flex:1;min-width:0;align-items:center;justify-content:flex-start;text-align:left;gap:.5rem;margin:0;padding:.5rem;border:0;outline:0;box-shadow:none;background:transparent;text-decoration:none; }
+aside.cms .relationIncoming .relationLink.sideAction:is(:hover,:focus-visible) { background:transparent;box-shadow:none;text-decoration:none; }
+aside.cms .relationIncoming li:has(.relationLink:is(:hover,:focus-visible)) { background:var(--cmsHover); }
+aside.cms .relationIncoming .relationLink.sideAction:focus-visible { outline:2px solid var(--cmsInteractive);outline-offset:-2px; }
+aside.cms .relationIncoming .relationLink > i {flex:none;margin:0;}
+aside.cms .relationIncoming .relationLink > span {min-width:0;overflow-wrap:anywhere;}
+aside.cms .relationIncoming .relationLink small {display:block;color:var(--cmsMuted);font-size:.75rem;font-weight:normal;}
 
-aside.cms .mediaUsage .relationIncoming .relationLink { justify-content:flex-start; align-items:center; text-align:left; width:100%; }
-
-aside.cms .mediaUsage .relationLink:is(:hover,:focus-visible) { border-color:transparent; box-shadow:none; text-decoration:none; }
+/* Match standalone sidebar labels, including fields saved on blur. */
+aside.cms .settingGroup > div > label {
+    display:block; margin-top:.65rem; font-size:.75rem;
+    font-weight:500; color:var(--cmsMuted);
+}

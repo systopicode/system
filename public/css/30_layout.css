@@ -64,7 +64,7 @@ body > main[data-debug]{
 footer.cmsStatusbar{
     flex: 0 0 var(--cmsStatusBar);
     position: relative;
-    z-index: 8001;
+    z-index: 1;
     margin-top: calc(-1 * var(--cmsStatusBar));
     height: var(--cmsStatusBar);
     min-height: 0;
@@ -119,9 +119,9 @@ footer.cmsStatusbar .cmsJobs .spin{
 }
 
 footer.cmsStatusbar .cmsJobs .bar{
-    width: 4.5rem;
-    height: 3px;
-    border-radius: 2px;
+    width: 6rem;
+    height: 6px;
+    border-radius: 999px;
     background: color-mix(in srgb, var(--cmsFrameText) 28%, transparent);
     overflow: hidden;
 }
@@ -130,6 +130,11 @@ footer.cmsStatusbar .cmsJobs .bar i{
     display: block;
     height: 100%;
     background: var(--cmsHighlightColor);
+    border-radius: inherit;
+    transition: width 160ms ease-out;
+}
+@media (prefers-reduced-motion: reduce) {
+    footer.cmsStatusbar .cmsJobs .bar i { transition: none; }
 }
 
 footer.cmsStatusbar .cmsStatusInfo{

@@ -16,6 +16,9 @@ try {
  assert.equal(await page.evaluate(()=>parameterVisible),false,'session selection does not announce Saved');
  await page.evaluate(()=>{const token=cmsFeedback.begin({event:{target:document.querySelector('#execute'),type:'submit'}},'put');window.actionVisible=token.visible;cmsFeedback.finish(token,true);});
  assert.equal(await page.evaluate(()=>actionVisible),true,'explicit action keeps Working/Done feedback');
+ await page.evaluate(()=>{document.body.insertAdjacentHTML('beforeend','<button id="createCode" data-feedback="none">Create code</button>');const source=document.querySelector('#createCode'),token=cmsFeedback.begin({event:{target:source,element:source,type:'click'}},'put');window.codeVisible=token.visible;cmsFeedback.finish(token,true);});
+ assert.equal(await page.evaluate(()=>codeVisible),false,'create code does not announce Saved');
+ assert.equal(await page.locator('#createCode').getAttribute('data-save-state'),null);
  await page.locator('#a').fill('first');
  assert.equal(await page.locator('.cmsSaveState > span').textContent(),'Unsaved changes');
  assert.equal(await page.locator('.cmsSaveState i').getAttribute('aria-hidden'),'true');
@@ -42,6 +45,8 @@ try {
  assert.equal(await page.evaluate(()=>cmsFeedback.canLeave()),false,'do not leave while save is pending');
  await page.evaluate(()=>cmsFeedback.finish(bToken,false));
  assert.equal(await page.locator('#b').getAttribute('data-save-state'),'error');
+ await page.waitForTimeout(6200);
+ assert.equal(await page.locator('#b').getAttribute('data-save-state'),'error','failed save remains marked until resolved');
 
  assert.equal(await page.locator('.cmsSaveState > span').textContent(),'Not saved. Check the field or try again.');
  await page.evaluate(()=>{window.retryEvents=0;document.querySelector('#b').addEventListener('blur',()=>retryEvents++);});
@@ -67,10 +72,11 @@ try {
  await page.evaluate(()=>{
    const field=document.querySelector('[name=rebuild]');
    const token=cmsFeedback.begin({event:{target:field,type:'blur'}},'put');
-   field.outerHTML='<input name="rebuild" data-on_blur="saveRebuilt" value="retry">';
+   field.outerHTML='<input name="rebuild" data-on_blur="saveRebuilt" value="old server value">';
    cmsFeedback.finish(token,false);
  });
  assert.equal(await page.locator('[name=rebuild]').getAttribute('data-save-state'),'error');
+ assert.equal(await page.locator('[name=rebuild]').inputValue(),'retry','failed response redraw preserves local input instead of restoring the old server value');
  await page.evaluate(()=>{
    const token=cmsFeedback.begin({event:{target:document.querySelector('[name=rebuild]'),type:'blur'}},'put');
    cmsFeedback.finish(token,true);
@@ -168,7 +174,7 @@ try {
  await page.evaluate(()=>document.querySelector('#previewFixture').close());
  await page.waitForFunction(()=>!document.querySelector('#previewFixture'));
  await page.evaluate(()=>{document.body.insertAdjacentHTML('beforeend','<div class="cmslightbox" id="editGuardFixture"><div class="fileFrame"></div></div>');});
- assert.equal(await page.evaluate(()=>{const e=new Event('beforeunload',{cancelable:true});window.dispatchEvent(e);return e.defaultPrevented;}),true,'file edit mode guards unloading');
+ assert.equal(await page.evaluate(()=>{const e=new Event('beforeunload',{cancelable:true});window.dispatchEvent(e);return e.defaultPrevented;}),false,'unchanged file preview does not guard unloading');
  await page.evaluate(()=>document.querySelector('#editGuardFixture').remove());
  assert.deepEqual(errors,[]);
  console.log('ok: concurrent autosaves, newer edits, failed save, navigation guard, Escape cancel, dialog focus/Tab/Escape/restore, and empty lists');

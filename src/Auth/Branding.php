@@ -18,9 +18,9 @@ final class Branding
     {
         if (!self::frontend()) return null;
         $names = match ($file) {
-            'img/icon.svg' => ['img/favicons/favicon.svg', 'img/icon.svg'],
-            'img/favicons/favicon-32x32.png', 'img/favicons/favicon-16x16.png' => [$file, 'img/favicons/favicon-96x96.png'],
-            default => [$file],
+            'img/icon.svg' => ['img/favicons/favicon.svg', 'img/favicon/favicon.svg', 'img/icon.svg'],
+            'img/favicons/favicon-32x32.png', 'img/favicons/favicon-16x16.png' => [$file, 'img/favicon/' . basename($file), 'img/favicons/favicon-96x96.png', 'img/favicon/favicon-96x96.png'],
+            default => str_starts_with($file, 'img/favicons/') ? [$file, 'img/favicon/' . basename($file)] : [$file],
         };
         foreach ([(string) \fs::$siteRoot, rtrim((string) \fs::$projectRoot, '/\\') . '/public/'] as $root) {
           foreach ($names as $name) {

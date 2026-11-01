@@ -13,10 +13,9 @@ final class Webcron
         $dir = Runner::directory();
         if (!is_dir($dir) && !mkdir($dir, 0700, true) && !is_dir($dir)) throw new \RuntimeException('Maintenance folder unavailable.');
         $secret = bin2hex(random_bytes(32));
-        $temp = self::file() . '.' . bin2hex(random_bytes(4)) . '.tmp';
-        if (file_put_contents($temp, hash('sha256', $secret), LOCK_EX) === false) throw new \RuntimeException('Webcron key could not be saved.');
-        chmod($temp, 0600);
-        if (!rename($temp, self::file())) { @unlink($temp); throw new \RuntimeException('Webcron key could not be saved.'); }
+        if (!\Systopic\System\Config\FileWriter::write(self::file(), hash('sha256', $secret), 0600)) {
+            throw new \RuntimeException('Webcron key could not be saved.');
+        }
         return $secret;
     }
     public static function disable(): void { if (self::enabled() && !unlink(self::file())) throw new \RuntimeException('Webcron key could not be removed.'); }

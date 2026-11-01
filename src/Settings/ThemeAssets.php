@@ -321,7 +321,7 @@ final class ThemeAssets
         if (!is_dir($dir) && !mkdir($dir, 0775, true) && !is_dir($dir)) {
             return false;
         }
-        return file_put_contents($dest, $bytes) !== false;
+        return \Systopic\System\Config\FileWriter::write($dest, $bytes);
     }
 
     private static function writeRaster(string $tmp, string $dest, bool $jpg): bool
@@ -350,11 +350,17 @@ final class ThemeAssets
             $white = imagecolorallocate($flat, 255, 255, 255);
             imagefilledrectangle($flat, 0, 0, imagesx($img), imagesy($img), $white);
             imagecopy($flat, $img, 0, 0, 0, 0, imagesx($img), imagesy($img));
-            $ok = imagejpeg($flat, $dest, 90);
+            ob_start();
+            $ok = imagejpeg($flat, null, 90);
+            $bytes = (string) ob_get_clean();
+            $ok = $ok && self::write($dest, $bytes);
             imagedestroy($flat);
         } else {
             imagesavealpha($img, true);
-            $ok = imagepng($img, $dest);
+            ob_start();
+            $ok = imagepng($img);
+            $bytes = (string) ob_get_clean();
+            $ok = $ok && self::write($dest, $bytes);
         }
         imagedestroy($img);
         return $ok;
@@ -373,7 +379,10 @@ final class ThemeAssets
         imagefilledrectangle($out, 0, 0, $size, $size, $clear);
         imagealphablending($out, true);
         imagecopyresampled($out, $src, 0, 0, 0, 0, $size, $size, imagesx($src), imagesy($src));
-        $ok = imagepng($out, $dest);
+        ob_start();
+        $ok = imagepng($out);
+        $bytes = (string) ob_get_clean();
+        $ok = $ok && self::write($dest, $bytes);
         imagedestroy($out);
         return $ok;
     }

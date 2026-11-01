@@ -818,6 +818,7 @@ class PanelNode implements ClientExportable, RenderNode
             }
             return match ($this->name) {
                 'system' => 'cmsIcon cmsIcon-server',
+                'website' => 'cmsIcon cmsIcon-magnifying-glass',
                 'database' => 'cmsIcon cmsIcon-database',
                 'maintenance' => 'cmsIcon cmsIcon-wrench',
                 'debug' => 'cmsIcon cmsIcon-bug',

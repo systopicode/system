@@ -197,7 +197,7 @@ final class LoginLog
             return '';
         }
         $origin = self::origin($account, $at);
-        $line = 'Paired ' . \Systopic\System\Sys\LocalTime::format($at, 'j M Y, H:i');
+        $line = 'Paired ' . \Systopic\System\Sys\LocalTime::format($at, \Systopic\System\Sys\LocalTime::DATETIME);
         if ($origin['how'] !== '') {
             $line .= ' · ' . $origin['how'];
         }

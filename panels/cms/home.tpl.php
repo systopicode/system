@@ -36,7 +36,7 @@ $revision = \Systopic\System\Sys\Release::revision();
 	<header class="dashHead">
 		<div>
 			<h1><?= $e($greeting . $first) ?></h1>
-			<p><?= $e($now->format('l, j F Y')) ?></p>
+			<p><?= $e($now->format(\Systopic\System\Sys\LocalTime::DATE)) ?></p>
 		</div>
 		<nav>
 			<button type="button" class="button dashHeadMore" data-cms-more aria-label="More" aria-expanded="false"><i class="cmsIcon cmsIcon-ellipsis"></i></button>
@@ -51,7 +51,7 @@ $revision = \Systopic\System\Sys\Release::revision();
 		$off = array_values(array_intersect($sorted, $hidden));
 		?>
 		<div class="dashCustomize" data-drop_accept="widget" data-on_drop="hideDroppedWidget">
-			<p>Drag a widget by its title to move it. Drop it here or use the cross to hide it.</p>
+			<p>This layout is personal to your account. Hidden widgets remain available to add again.</p>
 			<p class="dashHidden">
 				<?php if ($off !== []) { ?><span>Add:</span><?php } ?>
 				<?php foreach ($off as $key) { ?>

@@ -14,14 +14,14 @@ $isMe = (int) $user->id === (int) \Systopic\System\Auth\Session::id();
 $devices = $this->devices;
 $viewer = \Systopic\System\Auth\Session::isSuperuser();
 $e = static fn($v): string => htmlspecialchars((string) $v, ENT_QUOTES);
-$when = static fn(?DateTimeImmutable $d): string => \Systopic\System\Sys\LocalTime::format($d, 'j M Y, H:i');
+$when = static fn(?DateTimeImmutable $d): string => \Systopic\System\Sys\LocalTime::format($d, \Systopic\System\Sys\LocalTime::DATETIME);
 $field = static function (string $label, string $value, ?string $action = null, string $type = 'text', string $class = '') use ($e): string {
 	$input = $action === null
 		? '<input type="' . $type . '" readonly value="' . $e($value) . '">'
 		: '<input type="' . $type . '" autocapitalize="off" name="value" data-on_blur="' . $action . '" value="' . $e($value) . '" autocomplete="off" data-1p-ignore data-lpignore="true" readonly onpointerdown="this.readOnly=false" onkeydown="this.readOnly=false" spellcheck="off">';
 	return '<label class="field' . ($class !== '' ? ' ' . $class : '') . '"><span>' . $label . '</span>' . $input . '</label>';
 };
-$logged = static fn(string $date): string => ($d = DateTimeImmutable::createFromFormat('d.m.Y-H:i:s', $date)) ? \Systopic\System\Sys\LocalTime::format($d, 'j M Y, H:i') : $date;
+$logged = static fn(string $date): string => ($d = DateTimeImmutable::createFromFormat('d.m.Y-H:i:s', $date)) ? \Systopic\System\Sys\LocalTime::format($d, \Systopic\System\Sys\LocalTime::DATETIME) : $date;
 $accountLabel = trim((string) ($user->name ?: $user->email));
 $activationHours = \Systopic\System\Tables\Users\Operator::ACTIVATION_DAYS * 24;
 $mailNote = static function (string $kind) use ($accountLabel, $logged): string {
@@ -181,11 +181,17 @@ if ($heading === '') {
             <div class="cmsBoxBody">
             <?php $emails = \Systopic\System\Maintenance\RetainedLogs::emailsFor((string) $user->email); ?>
             <?php if ($emails === []) { ?><p class="profileEmpty">No messages logged for this email address.</p><?php } ?>
-            <?php foreach ($emails as $mail) { ?>
+            <?php $emailTotal = count($emails); $emailsAll = !empty($this->state->emailsAll); foreach ($emailsAll ? $emails : array_slice($emails, 0, 3) as $mail) { ?>
                 <details class="userMailEntry">
                     <summary><i class="cmsIcon cmsIcon-envelope"></i> <?= $e($mail['subject'] ?? '') ?> <small><?= $e($mail['timestamp'] ?? '') ?> · <?= $e($mail['status'] ?? '') ?></small></summary>
                     <div class="userMailContent"><?= $e(trim((string) ($mail['textContent'] ?? '')) ?: strip_tags((string) ($mail['htmlContent'] ?? '')) ?: (string) ($mail['contentPreview'] ?? 'Message content not logged.')) ?></div>
                 </details>
+            <?php } ?>
+            <?php if ($emailTotal > 0) { ?>
+            <div class="signInTools">
+                <?php if ($emailTotal > 3) { ?><button type="button" class="cmsBoxMore" data-feedback="none" data-on_click="moreEmails"><?= $emailsAll ? 'Show less' : 'Show all messages (' . $emailTotal . ')' ?> <i class="cmsIcon cmsIcon-chevron-<?= $emailsAll ? 'up' : 'down' ?>"></i></button><?php } ?>
+                <button type="button" class="button" data-on_click="userConfirm" data-action="clearEmails" data-confirm="Clear email log entries addressed to this account only?" data-user_id="<?= (int) $user->id ?>"><i class="cmsIcon cmsIcon-broom"></i>Clear user log</button>
+            </div>
             <?php } ?>
             </div>
         </section>
@@ -225,7 +231,7 @@ if ($heading === '') {
 					<header><div class="cmsBoxTitles"><h2>Pairing</h2><p class="cmsBoxLead">A code signs a device in as this screen. It is shown here and is not sent by email.</p></div></header>
 					<div class="accessRow">
 						<div>
-							<button type="button" class="button submit" data-on_click="inviteCode"><i class="cmsIcon cmsIcon-qrcode"></i> Create code</button>
+							<button type="button" class="button submit" data-feedback="none" data-on_click="inviteCode"><i class="cmsIcon cmsIcon-qrcode"></i> Create code</button>
 							<p class="cmsBoxLead">Valid for 10 minutes. Shown here.</p>
 						</div>
 					</div>
@@ -239,19 +245,17 @@ if ($heading === '') {
 					<header><div class="cmsBoxTitles"><h2>Sign-in code</h2><p class="cmsBoxLead"><?php if (!$user->firstLogin) { ?>This person has not signed in yet. A code is the first way in and makes the account active.<?php } else { ?>A code signs this person in on another device. A signed-in account can confirm that device instead.<?php } ?></p></div></header>
 					<div class="accessRow">
 						<div>
-							<button type="button" class="button submit" data-on_click="inviteCode"><i class="cmsIcon cmsIcon-qrcode"></i> Create code</button>
+							<button type="button" class="button submit" data-feedback="none" data-on_click="inviteCode"><i class="cmsIcon cmsIcon-qrcode"></i> Create code</button>
 							<p class="cmsBoxLead">Valid for 10 minutes. Shown here.</p>
 						</div>
 						<div>
 							<button type="button" class="button" data-on_click="userConfirm" data-action="inviteMail" data-confirm="Send an invitation code to this user?"><i class="cmsIcon cmsIcon-paper-plane"></i> Send invitation code</button>
 							<p class="cmsBoxLead">Valid for 24 hours.<?= ($note = $mailNote(LoginLog::MAILED_INVITATION)) !== '' ? ' ' . $e($note) : '' ?></p>
 						</div>
-						<?php if (!$user->firstLogin) { ?>
 							<div>
 								<button type="button" class="button" data-on_click="userConfirm" data-action="resendActivationEmail" data-confirm="Send a password link to this user?"><i class="cmsIcon cmsIcon-paper-plane"></i> Email a password link</button>
 								<p class="cmsBoxLead">Valid for <?= (int) $activationHours ?> hours.<?= ($note = $mailNote(LoginLog::MAILED_PASSWORD)) !== '' ? ' ' . $e($note) : '' ?></p>
 							</div>
-						<?php } ?>
 					</div>
 				</section>
 			<?php } elseif (!$isScreen && (string) $user->email !== '') { ?>
@@ -314,7 +318,7 @@ if ($heading === '') {
 			<header>
 				<div class="cmsBoxTitles">
 					<h2>Reset layout</h2>
-					<p class="cmsBoxLead">Puts every module back to its defaults for this user, at their next click.</p>
+					<p class="cmsBoxLead">Resets the saved module layouts for this account on its next interaction.</p>
 				</div>
 			</header>
 			<div class="cmsBoxActions">

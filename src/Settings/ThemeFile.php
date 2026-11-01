@@ -28,6 +28,11 @@ final class ThemeFile
 
     public static function save(string $key, string $raw): bool
     {
+        return \Systopic\System\Config\FileWriter::locked(self::path(), static fn() => self::saveLocked($key, $raw));
+    }
+
+    private static function saveLocked(string $key, string $raw): bool
+    {
         if (!isset(self::FIELDS[$key])) {
             return false;
         }
@@ -35,14 +40,21 @@ final class ThemeFile
         if (strlen($hex) !== 6 || !ctype_xdigit($hex)) {
             return false;
         }
+        $saved = self::readFile(self::path());
         $values = [];
         foreach (self::FIELDS as $name => $label) {
-            $values[$name] = $name === $key ? $hex : Theme::color($name);
+            preg_match('/--' . preg_quote($name, '/') . '\s*:\s*#([a-f0-9]{6})\b/i', $saved, $match);
+            $values[$name] = $name === $key ? $hex : ($match[1] ?? Theme::color($name));
         }
         return self::writeColors($values);
     }
 
     public static function resetColors(): bool
+    {
+        return \Systopic\System\Config\FileWriter::locked(self::path(), static fn() => self::resetColorsLocked());
+    }
+
+    private static function resetColorsLocked(): bool
     {
         $values = [];
         foreach (self::FIELDS as $name => $label) {
@@ -63,20 +75,7 @@ final class ThemeFile
         if (!is_dir($dir) && !mkdir($dir, 0775, true) && !is_dir($dir)) {
             return false;
         }
-        $temp = $path . '.' . getmypid() . '.tmp';
-        if (file_put_contents($temp, $css) === false) {
-            return false;
-        }
-        if (is_file($path)) {
-            $perms = fileperms($path);
-            if ($perms !== false) {
-                chmod($temp, $perms & 0777);
-            }
-        }
-        if (!rename($temp, $path)) {
-            @unlink($temp);
-            return false;
-        }
+        if (!\Systopic\System\Config\FileWriter::write($path, $css)) return false;
         $legacy = dirname($path) . '/zz_cms_theme.css';
         if (is_file($legacy)) {
             @unlink($legacy);
@@ -203,20 +202,7 @@ final class ThemeFile
             return false;
         }
         $text = rtrim(str_replace("\r\n", "\n", $css), "\n") . "\n";
-        $temp = $path . '.' . getmypid() . '.tmp';
-        if (file_put_contents($temp, $text) === false) {
-            return false;
-        }
-        if (is_file($path)) {
-            $perms = fileperms($path);
-            if ($perms !== false) {
-                chmod($temp, $perms & 0777);
-            }
-        }
-        if (!rename($temp, $path)) {
-            @unlink($temp);
-            return false;
-        }
+        if (!\Systopic\System\Config\FileWriter::write($path, $text)) return false;
         if ($dropLegacy) {
             $legacy = $dir . '/cms_overrides.css';
             if (is_file($legacy) && $legacy !== $path) {
@@ -239,9 +225,9 @@ final class ThemeFile
         echo 'var chrome=document.getElementById("cmsSafariChrome");if(chrome)chrome.textContent=' . json_encode('html{background-color:' . $main . '}body.cms>.cmsMobileHeader{background-color:' . $main . '}') . ';';
         echo 'document.querySelectorAll(".themeSwatches input").forEach(function(input){input.addEventListener("input",function(){var dot=input.parentElement.querySelector("i");if(dot)dot.style.backgroundColor=input.value;var hex=input.parentElement.querySelector("small");if(hex)hex.textContent=input.value;});});';
         echo '</script>';
-        echo '<div class="projectFiles themeEditor">';
         echo '<h1>Theme</h1>';
-        echo '<p class="tagsHint">Main, highlight, background and text. Everything else follows. The stage marker keeps its own colours.</p>';
+        echo '<p class="tagsHint">These colours define the CMS appearance. The public website and stage marker keep their own colours.</p>';
+        echo '<div class="projectFiles themeEditor">';
         echo \message::flush();
         echo '<section class="widget"><header><h2>Colours</h2><button type="button" class="button" data-on_click="resetColors"><i class="cmsIcon cmsIcon-arrow-rotate-left"></i>Reset to default</button></header><main>';
         echo '<div class="themeSwatches">';
@@ -266,14 +252,14 @@ final class ThemeFile
         if ($pagesHere) {
             echo '<section class="widget"><header><h2>Page overrides</h2></header>';
             echo '<form method="post" action="saveCss">';
-            echo '<main><p class="tagsHint">pages_overrides.css. Only the page preview, and only while the pages panel is installed. Selectors are parsed into the page.</p>';
+            echo '<main><p class="tagsHint">Styles the website preview inside the CMS without changing the public website stylesheet.</p>';
             echo '<textarea class="themeCss" name="css" aria-label="Public website CSS" spellcheck="false" autocomplete="off" autocapitalize="off">' . $e(self::readCss()) . '</textarea></main>';
             echo '<footer><button type="submit" class="button submit"><i class="cmsIcon cmsIcon-check"></i>Save CSS</button></footer>';
             echo '</form></section>';
         }
         echo '<section class="widget"><header><h2>System overrides</h2></header>';
         echo '<form method="post" action="saveSystemCss">';
-        echo '<main><p class="tagsHint">system_overrides.css. Loaded in the CMS only, not on the public site, and not parsed into the page preview.</p>';
+        echo '<main><p class="tagsHint">Custom styles for the CMS interface. The public website and page preview are unaffected.</p>';
         echo '<textarea class="themeCss" name="css" aria-label="CMS system overrides CSS" spellcheck="false" autocomplete="off" autocapitalize="off">' . $e(self::readSystemCss()) . '</textarea></main>';
         echo '<footer><button type="submit" class="button submit"><i class="cmsIcon cmsIcon-check"></i>Save CSS</button></footer>';
         echo '</form></section></div>';

@@ -39,10 +39,6 @@
     margin: 0;
 }
 
-section.cms:has(> .themeEditor){
-    padding-top: 0.5rem;
-}
-
 .themeEditor .themeSwatches{
     display: flex;
     flex-wrap: wrap;
@@ -237,18 +233,6 @@ section.cms:has(> .themeEditor){
     flex: 1 1 auto;
 }
 
-/* The heading is a heading. The shadow belonged to the whole card and sat
-   around the title. The table keeps the frame. */
-.projectFiles > .widget,
-.pageSettings.widget{
-    background: transparent;
-    border: 0;
-    box-shadow: none;
-    overflow: visible;
-}
-
-.projectFiles > .widget > header,
-.pageSettings.widget > header,
 .projectFiles .projectBar{
     display: flex;
     flex-direction: row;
@@ -275,24 +259,6 @@ section.cms:has(> .themeEditor){
 .projectFiles .projectBar .button{
     flex: 0 0 auto;
     margin: 0;
-}
-
-/* The heading is loose. The table is the card, with the same radius as a widget.
-   A stacked phone list stays open so the grey sheet shows between the rows. */
-.projectFiles > .widget > .tableScroll:not(.stacked),
-.pageSettings.widget > .tableScroll:not(.stacked){
-    background: var(--cmsCanvas);
-    border: 1px solid var(--cmsLine);
-    border-radius: var(--cmsRadiusLg);
-    box-shadow: var(--cmsShadow);
-    overflow-x: auto;
-    overflow-y: hidden;
-}
-.projectFiles > .widget > .tableScroll.stacked,
-.pageSettings.widget > .tableScroll.stacked{
-    background: transparent;
-    border: 0;
-    box-shadow: none;
 }
 
 .projectFiles .widget > header .button,
@@ -339,11 +305,12 @@ section.cms:has(> .themeEditor){
     color: var(--cmsMuted);
 }
 
-/* the drop zones sit on the row - Safari needs the transform for that */
+/* A transformed table row can hide the native Safari input caret.
+   Only establish the drop-zone containing block during an actual drag. */
 .projectFiles tbody tr{
     position: relative;
-    transform: translate(0);
 }
+body.settingDragging .projectFiles tbody tr{ transform:translate(0); }
 
 .projectFiles td.pageSettingDrag{
     position: static;
@@ -377,7 +344,7 @@ body.settingDragging .projectFiles td label{
     pointer-events: none;
 }
 
-.cms .projectFiles .widget .tableScroll table :is(th:first-child, td.pageSettingDrag){
+.cms .projectFiles .widget .tableScroll table :is(th:first-child:empty, td.pageSettingDrag){
     width: 2.5rem;
     min-width: 2.5rem;
     max-width: 2.5rem;
@@ -619,8 +586,8 @@ body:has(> .projectTemplatesMenu.is-sheet)::after{
 }
 
 @media (pointer: coarse) {
-    .cms .projectFiles .widget .tableScroll table :is(th:first-child, td.pageSettingDrag),
-    .cms .pageSettings .tableScroll table :is(th:first-child, td.pageSettingDrag) {
+    .cms .projectFiles .widget .tableScroll table :is(th:first-child:empty, td.pageSettingDrag),
+    .cms .pageSettings .tableScroll table :is(th:first-child:empty, td.pageSettingDrag) {
         padding-inline: 0.25rem; width: 2rem; min-width: 2rem; max-width: 2rem;
     }
     body.settingDragging .tableScroll tr:has(.dragged),
@@ -716,3 +683,13 @@ body:has(> .projectTemplatesMenu.is-sheet)::after{
 
 /* Tablet uses the regular scrollable table; keep format controls readable. */
 .projectFiles .tableScroll:not(.stacked) > table:has(.imageFormatRow){min-width:64rem;}
+
+.cms .projectFiles .widget .tableScroll table th { text-align:left; }
+
+/* A sizing cell must contain its controls rather than let flex minima overlap. */
+.projectFiles .tableScroll:not(.stacked) .imageFormatRow .formatSizing { min-width: 30rem; }
+.projectFiles .formatSizing > label { min-width: 0; }
+.projectFiles .formatSizing input { width:100%; min-width:0; box-sizing:border-box; }
+
+.projectFiles .tableScroll:not(.stacked) .formatSizing > label:first-child { flex:0 0 11rem; }
+.projectFiles .formatSizing > label > select { width:100%; min-width:0; box-sizing:border-box; }

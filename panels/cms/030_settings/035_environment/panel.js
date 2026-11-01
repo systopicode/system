@@ -7,8 +7,21 @@
 	};
 	sys.lib.add(setup, function () {
 		sys.lib.applyParentConstructor(this, setup, []);
+        // Autofill must never silently rewrite environment settings on blur.
+        this.save = event => {
+            const field = event.sourceElement || event.element;
+            if (!field) return;
+            if (field.matches('input:not([type="checkbox"])') && field.value === field.defaultValue) return;
+            if (field.matches('input:not([type="checkbox"])') && !field.cmsConnectionEdited) return;
+            if (typeof field.checkValidity === 'function' && !field.checkValidity()) {
+                field.reportValidity();
+                return;
+            }
+            sys.core.server.sendEventCall(event);
+        };
         this.saveMatch = event => {
             var field = event.sourceElement;
+            if (field && !field.cmsConnectionEdited) return;
             if (field && typeof field.checkValidity === 'function' && !field.checkValidity()) {
                 field.setAttribute('aria-invalid', 'true');
                 field.reportValidity();
@@ -49,3 +62,26 @@ document.addEventListener('input', event => {
     var field = event.target;
     if (field.matches?.('.envFile input[data-field="serverIp"]') && field.checkValidity()) field.removeAttribute('aria-invalid');
 });
+
+// Preserve Render/Time preferences while Debug is off; PHP error output is independent.
+function refreshDebugControls(){
+ document.querySelectorAll('.envFile').forEach(file=>{
+  const refresh=()=>{
+   const debug=file.querySelector('input[data-group="debug"][data-key="debug"]');
+   if(!debug)return;
+   file.querySelectorAll('input[data-group="debug"][data-key="render"],input[data-group="debug"][data-key="time"]').forEach(input=>{input.disabled=!debug.checked;});
+  };
+  if(!file.cmsDebugBound){
+   file.cmsDebugBound=true;
+   file.addEventListener('change',event=>{if(event.target.matches?.('[data-group="debug"][data-key="debug"]'))refresh();},true);
+  }
+  refresh();
+ });
+}
+sys.onload(refreshDebugControls);
+sys.onJSReady(refreshDebugControls);
+
+// beforeinput covers typing, paste and mobile keyboards, unlike autofill on load.
+document.addEventListener('beforeinput', event => {
+    if (event.target.matches?.('.envFile input:not([type="checkbox"])')) event.target.cmsConnectionEdited = true;
+}, true);
