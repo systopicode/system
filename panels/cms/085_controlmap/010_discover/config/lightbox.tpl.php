@@ -6,10 +6,13 @@
  * buildGranted() / actionGranted() ask — what decides as long as no config
  * does. Below, each layer's file as it is.
  *
+ * The project's column (config/controlmap.json) is edited here: the pen
+ * takes a key over with what it comes to now, then each role is switched
+ * on and off, the cross gives it back to the layers below (actions.php).
+ *
  * @var \Systopic\System\Panels\Root\Cms\Controlmap\Discover\Config\Panel $this
  */
 
-use Systopic\System\Controlmap\Grant;
 use Systopic\System\Queries\UserRights\UserRights;
 
 $e = static fn($v): string => htmlspecialchars((string) $v, ENT_QUOTES);
@@ -24,6 +27,20 @@ $roles = static function (array $keys) use ($e, $known): string {
 			: "<span class='term is-unknown' title='No role has this key'>{$e($key)}</span>";
 	}
 	return $html === '' ? "<span class='term is-nobody' title='An empty list: nobody but a superuser'>nobody</span>" : $html;
+};
+// the project's cell: a pen to take the key over, or every role to switch, and a cross
+$editable = static function (string $key, ?array $list) use ($e, $known): string {
+	if ($list === NULL) {
+		return "<span class='configSet' data-on_click='overrideConfig' data-key='{$e($key)}' title='Decide it for this installation, starting from what it comes to now'><i class='fa-regular fa-pen'></i></span>";
+	}
+	$html = '';
+	foreach (array_values(array_unique([...array_map('strval', array_keys($known)), ...$list])) as $role) {
+		$on = in_array($role, $list, TRUE);
+		$html .= "<span class='term roleToggle" . ($on ? ' is-on' : '') . (isset($known[$role]) ? '' : ' is-unknown') . "'"
+			. " data-on_click='toggleConfigRole' data-key='{$e($key)}' data-role='{$e($role)}'"
+			. " title='" . ($on ? 'Take it out' : 'Let it in') . "'>{$e($role)}</span>";
+	}
+	return $html . "<span class='configUnset' data-on_click='unsetConfig' data-key='{$e($key)}' title='Inherit again: out of config/controlmap.json'><i class='fa-regular fa-xmark'></i></span>";
 };
 $focus = $this->focus;
 ?>
@@ -66,7 +83,7 @@ $focus = $this->focus;
 					'build' => array_keys($panel->grants['build'] ?? []),
 					'actions' => array_keys($panel->grants['action'] ?? []),
 				];
-				$row = function (string $key, string $label) use ($e, $map, $panel, $layers, $roles, $inCode, $focus): string {
+				$row = function (string $key, string $label) use ($e, $map, $panel, $layers, $roles, $editable, $inCode, $focus): string {
 					$grant = $map->effective($panel, $key);
 					$isAction = str_starts_with($key, 'action.');
 					$notInCode = $isAction && !isset($panel->actions[substr($key, 7)]);
@@ -86,7 +103,8 @@ $focus = $this->focus;
 					$html .= '</td>';
 					foreach ($layers as $layer) {
 						$list = \Systopic\System\Controlmap\Map::flatten($layer['data'] ?? [])[$key] ?? NULL;
-						$html .= "<td class='" . ($focus === 'layer.' . $layer['layer'] ? 'is-focus' : '') . "'>" . ($list === NULL ? '' : $roles($list)) . '</td>';
+						$cell = $layer['layer'] === 'config' ? $editable($key, $list) : ($list === NULL ? '' : $roles($list));
+						$html .= "<td class='" . ($focus === 'layer.' . $layer['layer'] ? 'is-focus' : '') . ($layer['layer'] === 'config' ? ' is-editable' : '') . "'>$cell</td>";
 					}
 					$html .= "<td class='effective'>";
 					if ($grant === NULL) {
@@ -102,7 +120,8 @@ $focus = $this->focus;
 				?>
 				<p class="tagsHint">
 					Who may see the panel and run its actions, as the configs say it — each layer replaces the one left of it, key by key.
-					Where no config says anything, the code decides (<em>In code</em>). Read only: nothing at runtime asks the configs yet.
+					Where no config says anything, the code decides (<em>In code</em>). The column <em>config</em> is this installation's
+					(config/controlmap.json) and is edited here; the packages' files are not. Nothing at runtime asks the configs yet.
 				</p>
 				<table class="discoverList configMap">
 					<thead>

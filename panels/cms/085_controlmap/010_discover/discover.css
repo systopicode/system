@@ -201,3 +201,23 @@
 	color: var(--cmsMuted);
 	cursor: pointer;
 }
+/* the project's column: a pen to take a key over, then each role on/off, a cross to inherit again */
+.cms table.discoverList.configMap td.is-editable :is(.configSet, .configUnset, .roleToggle){
+	cursor: pointer;
+}
+.cms table.discoverList.configMap td.is-editable :is(.configSet, .configUnset){
+	display: inline-block;
+	padding: 0 0.3rem;
+	color: var(--cmsMuted);
+}
+.cms table.discoverList.configMap td.is-editable :is(.configSet, .configUnset):hover{
+	color: var(--cmsTextColor);
+}
+.cms table.discoverList.configMap span.term.roleToggle:not(.is-on){
+	background: none;
+	outline: 1px dashed var(--cmsLine);
+	color: var(--cmsMuted);
+}
+.cms table.discoverList.configMap span.term.roleToggle:hover{
+	outline: 1px solid var(--cmsTextColor);
+}

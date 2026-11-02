@@ -149,13 +149,27 @@ Sie zeigt je Schlüssel die Spalten „In code“, jede Ebene und „Effective�
 Herkunft, darunter die Dateien. Das `</>` hinter einem Chip öffnet die
 Stelle in syscoder. Rollen-Schlüssel, die keine Rolle hat, sind markiert.
 
+**Bearbeiten** (`Map::write()`, nur die Spalte `config`, also
+`config/controlmap.json`; die `panel.config.json` der Pakete bleiben, wie
+sie sind):
+
+- Der Stift übernimmt einen Schlüssel in die Projekt-Ebene. Er startet mit
+  dem, was gerade wirksam ist. Entscheidet noch der Code, startet er mit den
+  Rollen, die der Code abfragt.
+- Danach wird jede Rolle einzeln an- und ausgeschaltet. Alle aus heißt
+  `[]`, also niemand außer dem Superuser.
+- Das Kreuz nimmt den Schlüssel wieder heraus, das Panel erbt dann wieder.
+  Bleibt nichts übrig, wird die Datei gelöscht.
+- Geschrieben wird über eine temporäre Datei und `rename`.
+
 ## Offen (nächste Schritte)
 
 1. **Baum + Map-GUI:** je Panel `build`, `actions` (Default) und je Action
    eine Rollenliste. Die Vererbung wird angezeigt („geerbt von cms/pages“).
-2. **Configs:** lesen und anzeigen erledigt 2026-11-02, siehe unten
-   „Configs“. Offen: bearbeiten (nur die Projekt-Ebene) und zur Laufzeit
-   ein zusammengeführtes PHP-Array in `var/`.
+2. **Configs:** lesen, anzeigen und die Projekt-Ebene bearbeiten erledigt
+   2026-11-02, siehe oben „Configs“. Offen: zur Laufzeit ein
+   zusammengeführtes PHP-Array in `var/`; ein neues benanntes Recht in der
+   GUI anlegen (heute nur über die JSON).
 3. **Rollen-Schlüssel:** erledigt 2026-11-02, siehe [acl.md](acl.md)
    „Rollen-Schlüssel und Rollen des Systems“. `role_key` statt
    `role_builtin`, `hasRole()` nur nach Schlüssel (ein unbekannter wirft),

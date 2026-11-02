@@ -192,6 +192,86 @@ final class Map
         return $out;
     }
 
+    /** @return array<string, list<string>> what the project's layer (config/controlmap.json) says about the panel, by key */
+    public function projectSays(DiscoveredPanel $panel): array
+    {
+        $entry = $this->project[$panel->path] ?? null;
+        return is_array($entry) ? self::flatten($entry) : [];
+    }
+
+    /**
+     * Set one key of a panel in the project's layer (config/controlmap.json)
+     * — or, with null, take it out, so the panel inherits again. Sections
+     * and panels left empty go; the panels stay sorted by path. Written to
+     * a temporary file and moved, so a reader never sees half of it; left empty, the file goes.
+     *
+     * Only the project's layer is written: a package's panel.config.json is
+     * the package's (and in a project a symlink into packages/).
+     *
+     * @param list<string>|null $roles
+     * @throws \RuntimeException when the file is there but no JSON object
+     */
+    public function write(string $path, string $key, ?array $roles): void
+    {
+        if ($this->projectError !== null) {
+            throw new \RuntimeException("controlmap: {$this->projectFile}: {$this->projectError}");
+        }
+        $data = $this->project ?? [];
+        $entry = is_array($data[$path] ?? null) ? $data[$path] : [];
+        [$section, $name] = match (true) {
+            $key === 'build', $key === 'actions' => [$key, null],
+            str_starts_with($key, 'action.') => ['action', substr($key, 7)],
+            str_starts_with($key, 'right.') => ['rights', substr($key, 6)],
+            default => throw new \InvalidArgumentException("controlmap: no key $key"),
+        };
+        $roles = $roles === null ? null : array_values(array_unique($roles));
+        // an empty list of roles ("nobody") stays, an empty section goes
+        if ($name === null) {
+            if ($roles === null) {
+                unset($entry[$section]);
+            } else {
+                $entry[$section] = $roles;
+            }
+        } else {
+            $list = (array) ($entry[$section] ?? []);
+            if ($roles === null) {
+                unset($list[$name]);
+            } else {
+                $list[$name] = $roles;
+            }
+            ksort($list);
+            if ($list === []) {
+                unset($entry[$section]);
+            } else {
+                $entry[$section] = $list;
+            }
+        }
+        if ($entry === []) {
+            unset($data[$path]);
+        } else {
+            $data[$path] = $entry;
+        }
+        ksort($data);
+
+        $file = \fs::toNative($this->projectFile);
+        if ($data === []) {   // nothing decided here any more: no file
+            if (is_file($file) && !unlink($file)) {
+                throw new \RuntimeException("controlmap: cannot remove $file");
+            }
+            $this->project = null;
+            $this->own = [];
+            return;
+        }
+        $json = json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) . "\n";
+        $tmp = $file . '.' . getmypid() . '.tmp';
+        if (file_put_contents($tmp, $json) === false || !rename($tmp, $file)) {
+            @unlink($tmp);
+            throw new \RuntimeException("controlmap: cannot write $file");
+        }
+        $this->project = $data;
+        $this->own = [];
+    }
+
     /** @return array{0: ?array, 1: ?string} the decoded file, or null; an error when it is there but no JSON object */
     private static function read(string $file): array
     {
