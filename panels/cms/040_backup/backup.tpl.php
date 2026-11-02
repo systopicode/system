@@ -13,13 +13,13 @@
 			<?php if (\Systopic\System\Auth\Session::hasOneRole('cmsAdmin', 'restore', 'recovery')) { ?>
 				<li><a href='restore/?name=<?= $backup['filenamebase'] ?>' class='button transparent ajax icononly' title='Restore'><i class="fa-regular fa-arrow-rotate-left"></i></a></li>
 			<?php } ?>
-			<?php if (\Systopic\System\Auth\Session::hasRole('cmsAdmin')) { ?>
+			<?php if (\Systopic\System\Controlmap\Access::action($this, 'remove')) { ?>
 				<li><a  data-on_click='userConfirm' data-action='remove?name=<?= basename($backup["download"][0]) ?>' class='button transparent ajax icononly' data-confirm='Delete this backup?' title='Delete'><i class="fa-regular fa-trash"></i></a></li>
 			<?php } ?>
-			<?php if (\Systopic\System\Auth\Session::hasRole('cmsAdmin')) { ?>
+			<?php if (\Systopic\System\Controlmap\Access::action($this, 'download')) { ?>
 				<li class="seperator">
 				<?php } ?>
-				<?php if (\Systopic\System\Auth\Session::hasRole('cmsAdmin')) { ?>
+				<?php if (\Systopic\System\Controlmap\Access::action($this, 'download')) { ?>
 				<li>
 					<?php
 					$i = 0;

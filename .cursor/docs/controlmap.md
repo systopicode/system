@@ -173,8 +173,10 @@ Ordner des Panels und seiner Vorfahren (`PanelNode::$altPaths`) und
 Was entscheidet, in dieser Reihenfolge:
 
 1. die eigene Config des Panels (irgendeine seiner Ebenen) für den Schlüssel
-2. der eigene Code: die Klasse des Panels deklariert `buildGranted()` bzw.
-   `actionGranted()` selbst
+2. der eigene Code: Der Ordner des Panels hat seine Klasse, und die Klasse
+   deklariert `buildGranted()` bzw. `actionGranted()` selbst. Eine Klasse,
+   die das Eltern-Panel vererbt (`$bequests`), zählt als Code des
+   Eltern-Panels, so wie dessen Config.
 3. die geerbte Config (vom Eltern-Panel, wie `Map::effective()`)
 4. der geerbte Code (`PanelNode`: jeder Eingeloggte)
 
@@ -221,7 +223,26 @@ Umsortieren unter demselben Elternknoten geht.
      Zusammengeführt wird je Schlüssel, eine Liste ersetzt die darunter
      (so kann ein Projekt auch einschränken). Die Paket-Ebene ist in der
      GUI nur lesbar (`vendor/` sind Symlinks auf `packages/`).
-4. **Laufzeit:** erledigt 2026-11-02, siehe „Laufzeit“. Offen: die
-   Overrides in den Panels (`buildGranted()`/`actionGranted()`) nach und
-   nach in `panel.config.json` überführen; ein Cache der zusammengeführten
-   Configs in `var/`, falls das Lesen je Request spürbar wird.
+4. **Laufzeit:** erledigt 2026-11-02, siehe „Laufzeit“. Offen: ein Cache
+   der zusammengeführten Configs in `var/`, falls das Lesen je Request
+   spürbar wird.
+5. **Prüfungen aus dem Code in Configs überführen**, Panel für Panel. Was
+   im Code bleibt, gilt nur noch, wo keine Config etwas sagt: für den
+   Recovery-User, der keine Datenbank hat, und als Rückfall, wenn jemand
+   die Config löscht (dann meist: nur der Superuser).
+   - Erledigt 2026-11-02 (system): `cms/settings` und `cms/users`
+     (`cmsAdmin`), `cms/settings/theme` (`[]`, nur Superuser),
+     `cms/backup` (Editoren sehen es; löschen, hochladen, herunterladen und
+     aufräumen dürfen Admins; `createDatabase` nur der Recovery-User im
+     Code), `backup/create` (Editoren), `backup/restore` (Admins, im Code
+     der Recovery-User mit `restore`), `backup/log` (`clear` für Admins).
+     Die Knöpfe in Backup fragen `Access::action()`.
+   - Erledigt 2026-11-02 (spaceticker): `cms/events`, `cms/contacts`
+     (Admin + Editor; die Ausnahme `|| STAGE === 'DEV'` ist weg, auf DEV
+     braucht man jetzt auch die Rolle), `devices` mit dem Recht
+     `pairScreens` (Admin). Der Link „Screen koppeln“ im Header prüft noch
+     `hasRole('cmsAdmin')`, weil das devices-Panel dort nicht gebaut ist.
+   - Bleibt im Code: `cms` selbst, wegen der Weiterleitung zum Login in
+     `buildGranted()`, und das Root-Panel von spaceticker.
+   - Offen: cms-Paket, EditBar und Vorschau (`appRequest`) fragen noch
+     `hasOneRole()`.

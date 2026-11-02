@@ -3,9 +3,7 @@
 /** @var \Systopic\System\Panels\PanelNode $this */
 
 switch ($this->action) {
-	case 'clear':
-		if (\Systopic\System\Auth\Session::hasRole('cmsAdmin')) {
-			fs::unlinkFile($this->parent->logfile->filepath);
-			http::redirect('./');
-		}
+	case 'clear':   // who may: ../panel.config.json (the controlmap)
+		fs::unlinkFile($this->parent->logfile->filepath);
+		http::redirect('./');
 }

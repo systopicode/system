@@ -19,8 +19,9 @@ use Systopic\System\Queries\UserRights\UserRights;
  * config/controlmap.json, no Discover. What decides, in this order:
  *
  *   1. the panel's own config (any of its layers) for the key
- *   2. the panel's own code — its class declares buildGranted() /
- *      actionGranted() itself
+ *   2. the panel's own code — its folder has its class, and the class
+ *      declares buildGranted() / actionGranted() itself (a class the
+ *      parent bequeaths is the parent's code, like the parent's config)
  *   3. the config it inherits (the parent's, see `Map::effective()`)
  *   4. the code it inherits (PanelNode: anybody signed in)
  *
@@ -74,7 +75,7 @@ final class Access
         if ($grant !== null && $grant->path === $panel->path) {
             return self::holds($grant->roles);
         }
-        if ((new \ReflectionMethod($node, $method))->getDeclaringClass()->getName() === $node::class) {
+        if ($node->hasOwnClass && (new \ReflectionMethod($node, $method))->getDeclaringClass()->getName() === $node::class) {
             return null;
         }
         return $grant === null ? null : self::holds($grant->roles);

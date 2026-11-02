@@ -6,11 +6,12 @@ switch ($this->action) {
 	case 'download':
 		// one part of a backup - var/backups/ itself is not served
 		// (public/.htaccess): a whole database and the media, admins only
+		// (panel.config.json)
 		$filename = (string) $this->backupName(http::get('name'));
 		$file = fs::toNative(fs::$siteRoot . 'var/backups/' . $filename);
 		$isZip = str_ends_with($filename, '.zip');
 		$isLog = $filename === 'backup.log';
-		if ($filename === '' || (!$isZip && !$isLog) || !\Systopic\System\Auth\Session::hasRole('cmsAdmin') || !is_file($file)) {
+		if ($filename === '' || (!$isZip && !$isLog) || !is_file($file)) {
 			http_response_code(404);
 			exit;
 		}

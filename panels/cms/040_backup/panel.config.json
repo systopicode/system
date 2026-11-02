@@ -1,0 +1,10 @@
+{
+	"build": ["cmsAdmin", "cmsEditor"],
+	"action": {
+		"clearTempdirs": ["cmsAdmin"],
+		"createDatabase": [],
+		"download": ["cmsAdmin"],
+		"remove": ["cmsAdmin"],
+		"upload": ["cmsAdmin"]
+	}
+}
