@@ -23,9 +23,9 @@ final class ClassScanner
     /**
      * @return array{
      *     class: ?string, extends: ?string,
-     *     grants: array{build?: list<string>, action?: list<string>},
+     *     grants: array{build?: array<string, int>, action?: array<string, int>},
      *     methods: array<string, int>, entry: list<string>,
-     * } methods: name => line
+     * } grants: term => line where it is asked; methods: name => line
      */
     public static function scan(string $file): array
     {
@@ -172,11 +172,14 @@ final class ClassScanner
         return false;
     }
 
-    /** @return list<string> what a grant method asks for */
+    /** @return array<string, int> what a grant method asks for => the line it is asked on (the first) */
     private static function grantTerms(Tokens $tokens, int $from, int $to): array
     {
         $terms = [];
-        $custom = false;
+        $add = static function (string $term, int $line) use (&$terms): void {
+            $terms[$term] ??= $line;
+        };
+        $custom = null;   // the line of the first call that says nothing known
         for ($i = $from; $i < $to; $i++) {
             $t = $tokens->at($i);
             if (!$t?->is(T_STRING)) {
@@ -185,7 +188,7 @@ final class ClassScanner
             if ($tokens->text($i + 1) !== '(') {
                 // a property: user::getActive()->is_superuser, Session::current()->isSuperuser
                 if ($tokens->text($i - 1) === '->' && in_array(strtolower($t->text), ['is_superuser', 'issuperuser'], true)) {
-                    $terms[] = 'superuser';
+                    $add('superuser', $t->line);
                 }
                 continue;
             }
@@ -196,39 +199,39 @@ final class ClassScanner
                     for ($k = $i + 2; $k < $close; $k++) {
                         $role = $tokens->literal($k);
                         if ($role !== null) {
-                            $terms[] = $role;
+                            $add($role, $tokens->at($k)->line);
                         }
                     }
                     $i = $close;
                     break;
                 case 'issuperuser':
-                    $terms[] = 'superuser';
+                    $add('superuser', $t->line);
                     break;
                 case 'known':
                 case 'active':
-                    $terms[] = 'signed in';
+                    $add('signed in', $t->line);
                     break;
                 case 'buildgranted':
                 case 'actiongranted':
-                    $terms[] = 'parent';
+                    $add('parent', $t->line);
                     break;
                 case 'current':
                 case 'getactive':
                     break;   // Session::current()->…, user::getActive()->… — the call that follows says what
                 default:
-                    $custom = true;
+                    $custom ??= $t->line;
             }
         }
-        if ($terms === [] && !$custom) {
+        if ($terms === [] && $custom === null) {
             $code = strtolower($tokens->join($from, $to));
-            $terms[] = match ($code) {
+            $add(match ($code) {
                 'returntrue;' => 'everyone',
                 'returnfalse;' => 'nobody',
                 default => 'custom',
-            };
-        } elseif ($custom) {
-            $terms[] = 'custom';
+            }, (int) $tokens->at($from)?->line);
+        } elseif ($custom !== null) {
+            $add('custom', $custom);
         }
-        return array_values(array_unique($terms));
+        return $terms;
     }
 }

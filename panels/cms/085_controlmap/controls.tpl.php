@@ -1,3 +1,0 @@
-<?php
-
-$this->withChildSelected('controls');

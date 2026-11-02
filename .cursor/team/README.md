@@ -57,3 +57,4 @@ Fehlt die Zeile, gilt die Tabelle oben.
 | 2026-10-30 | [Pylon so breit wie sein Inhalt, gezogene Breite für jedes Panel merken](2026-10-30-pylon-breite.md) | Oliver | Lars | offen | in cms/controlmap eingebaut, zur Entscheidung |
 | 2026-11-02 | [Query-Werte mit `%xx` werden beim Ajax-GET doppelt kodiert](2026-11-02-query-encoding.md) | Oliver | Lars | offen | in cms/controlmap umgangen (`nodeHref`, Punkte statt Slash) |
 | 2026-11-02 | [Mehrere Karten, eine Tabelle: gleich breite Spalten über Karten hinweg](2026-11-02-card-table.md) | Oliver | Lars | offen | in cms/controlmap/discover eingebaut (`cardTable`), zur Übernahme nach 24_table.css |
+| 2026-11-02 | [Nach dem Rendern verliert ein Feld im Pylon-`nav` den Fokus](2026-11-02-nav-blur.md) | Oliver | Lars | offen | in cms/controlmap umgangen (Feld außerhalb `nav`) |

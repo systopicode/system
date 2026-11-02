@@ -30,4 +30,10 @@ switch ($this->action) {
 		$this->parent->state->openFolds = [];
 		$this->parent->updateView('pylon');
 		break;
+
+	case 'filterPanels':       // the field above the tree, while showing all: the tree and the table
+		$this->state->filter = trim((string) http::values('filter'));
+		$this->updateView('main');
+		$this->parent->updateView('pylon');
+		break;
 }

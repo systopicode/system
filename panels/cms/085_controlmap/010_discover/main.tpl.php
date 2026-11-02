@@ -54,14 +54,21 @@ $selected = $map->selected;
 		Read off the folders and the code of this installation on every view, nothing is stored.
 	</p>
 	<?php
+	// the field above the tree filters (matches()); what matched is marked in the row
 	$rows = '';
+	$shown = 0;
 	foreach ($all as $panel) {
-		$rows .= $this->row($panel, $panel->depth);
+		if ($this->matches($panel)) {
+			$rows .= $this->row($panel, $panel->depth);
+			$shown++;
+		}
 	}
-	$filter = '<input type="search" class="discoverFilter" placeholder="Filter panels and actions" autocomplete="off"'
-		. ' oninput="const q = this.value.trim().toLowerCase(); this.closest(\'tbody\').querySelectorAll(\'tr:not(.cardHead, .cardColumns)\').forEach(r => r.hidden = q !== \'\' &amp;&amp; !r.textContent.toLowerCase().includes(q))">';
+	if ($rows === '') {
+		$rows = "<tr><td colspan='4' class='none'>No panel has „{$e($this->filter)}“.</td></tr>";
+	}
+	$title = $this->filter === '' ? 'Panels' : "Panels with „{$e($this->filter)}“: $shown";
 	?>
-	<table class="discoverList cardTable"><?= $card('Panels', $rows, $filter) ?></table>
+	<table class="discoverList cardTable"><?= $card($title, $rows) ?></table>
 	<?php return;
 } ?>
 

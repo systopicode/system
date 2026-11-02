@@ -9,15 +9,26 @@
 	color: var(--cmsMuted);
 }
 
-/* Open all / close all in the dark header, on the right */
+/* what the filter above the tree matched (discover's "show all") */
+.cms .controlmapTree ul.tree .name.is-match{
+	background: var(--cmsHighlightColor);
+	border-radius: var(--cmsRadius);
+	color: var(--cmsTextColor);
+}
+
+/* The dark header: search on the left; open all / close all and discover (sync) on the right */
 body > main > div.pylon.controlmapTree > header{
 	display: flex;
 	align-items: center;
-	justify-content: flex-end;
-	padding-right: 0.5rem;
+	justify-content: space-between;
+	padding: 0 0.5rem;
 }
 .cms .controlmapTree > header .treeNavi a{
 	color: var(--cmsFrameText);
+}
+.cms .controlmapTree > header .treeNavi a.active{
+	background: var(--cmsFrameLine);
+	color: #fff;
 }
 .cms .controlmapTree > header .treeNavi a:hover{
 	background: var(--cmsFrameLine);

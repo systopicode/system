@@ -21,8 +21,17 @@ class Panel extends CmsPanel {
 		get => !empty($this->state->showAll);
 	}
 
+	/**
+	 * What "Show all" is filtered by: the field above the tree
+	 * (`filterPanels`), or `?all=1&filter=cmsEditor` (the roles link here).
+	 * It filters the tree and the table alike (`matches()`).
+	 */
+	public string $filter {
+		get => (string) ($this->state->filter ?? '');
+	}
+
 	function getDefaultState() {
-		return (object) ['showAll' => FALSE];
+		return (object) ['showAll' => FALSE, 'filter' => ''];
 	}
 
 	/**
@@ -35,19 +44,57 @@ class Panel extends CmsPanel {
 		}
 		if (\http::get('all', NULL) !== NULL) {
 			$this->state->showAll = (bool) \http::get('all');
+			$this->state->filter = trim((string) \http::get('filter', ''));
 		} elseif (\http::get('panel', NULL) !== NULL) {
 			$this->state->showAll = FALSE;
 		}
-		$this->updateViews(['main', 'controls']);
+		$this->updateViews(['main']);   // the pylon the parent updates
+	}
+
+	/**
+	 * Does the panel have what "Show all" is filtered by — in its name,
+	 * access in code or actions? Not in its path nor its origins: every
+	 * panel below cms, or from the cms package, would match "cms". Without
+	 * a filter, or not showing all, every one does.
+	 */
+	public function matches(DiscoveredPanel $panel): bool {
+		$q = mb_strtolower($this->filter);
+		if (!$this->showAll || $q === '') {
+			return TRUE;
+		}
+		$text = [$panel->name];
+		foreach ($panel->grants as $terms) {
+			array_push($text, ...array_map('strval', array_keys($terms)));
+		}
+		foreach ($panel->actions as $action) {
+			$text[] = $action->name;
+		}
+		return str_contains(mb_strtolower(implode(' ', $text)), $q);
+	}
+
+	/** The panel or one below it matches: the tree shows it while filtering. */
+	public function leadsToMatch(DiscoveredPanel $panel): bool {
+		if ($this->matches($panel)) {
+			return TRUE;
+		}
+		foreach ($panel->children as $child) {
+			if ($this->leadsToMatch($child)) {
+				return TRUE;
+			}
+		}
+		return FALSE;
 	}
 
 	/**
 	 * One panel as a row of the table: name and path (indented by `$indent`
 	 * levels), where it comes from, what its code asks for access, its
-	 * actions as chips — an entry action (`$entryActions`) marked.
+	 * actions as chips — an entry action (`$entryActions`) marked. Access
+	 * and actions link to their line in syscoder; what "Show all" is
+	 * filtered by is marked (`is-match`, as the filter input does it).
 	 */
 	public function row(DiscoveredPanel $panel, int $indent = 0): string {
 		$e = static fn($v): string => htmlspecialchars((string) $v, ENT_QUOTES);
+		$match = $this->matcher();
 		$classTitle = $panel->className === NULL
 			? 'No class file: the parent bequeaths its class, or PanelNode'
 			: $panel->className . ($panel->extends !== NULL ? ' extends ' . $panel->extends : '') . ' (' . $panel->classFile . ')';
@@ -62,7 +109,8 @@ class Panel extends CmsPanel {
 		$grants = '';
 		foreach (['build' => ['fa-eye', 'buildGranted(): who sees the panel'], 'action' => ['fa-bolt', 'actionGranted(): who runs its actions']] as $key => [$icon, $title]) {
 			if (isset($panel->grants[$key])) {
-				$grants .= "<div title='$title'><i class='fa-regular $icon'></i>" . $this->terms($panel->grants[$key]) . '</div>';
+				$file = $panel->classFile === NULL ? NULL : $panel->dir . '/' . $panel->classFile;
+				$grants .= "<div title='$title'><i class='fa-regular $icon'></i>" . $this->terms($panel->grants[$key], $file) . '</div>';
 			}
 		}
 		if ($panel->grants === [] && !$panel->isPlain) {
@@ -79,7 +127,7 @@ class Panel extends CmsPanel {
 			$href = $colon === FALSE ? NULL : $this->syscoder($panel->dir . '/' . substr($first, 0, $colon), (int) substr($first, $colon + 1));
 			$tag = $href === NULL ? 'span' : 'a';
 			$link = $href === NULL ? '' : " href='{$e($href)}' target='syscoder'";
-			$actions .= "<$tag class='action" . ($action->entry ? ' is-entry' : '') . "'$link title='{$e($title)}'>"
+			$actions .= "<$tag class='action" . ($action->entry ? ' is-entry' : '') . $match($action->name) . "'$link title='{$e($title)}'>"
 				. ($action->entry ? "<i class='fa-regular fa-arrow-right-to-bracket'></i>" : '')
 				. "{$e($action->name)}</$tag>";
 		}
@@ -90,7 +138,7 @@ class Panel extends CmsPanel {
 			? $e($panel->name)
 			: "<a class='ajax' href='{$e(\Systopic\System\Panels\Root\Cms\Controlmap\Panel::nodeHref($panel->path))}' title='Show the panels below'>{$e($panel->name)}</a>";
 		return "<tr class='" . ($panel->isPlain ? 'plain' : '') . "' style='--depth: $indent'>"
-			. "<td class='panel' title='{$e($classTitle)}'><span class='name'>$name</span>$classLink<span class='path'>{$e($panel->path)}/</span></td>"
+			. "<td class='panel' title='{$e($classTitle)}'><span class='name" . $match($panel->name) . "'>$name</span>$classLink<span class='path'>{$e($panel->path)}/</span></td>"
 			. "<td class='origin'>$origins</td>"
 			. "<td class='grants'>$grants</td>"
 			. "<td class='actions'>$actions</td>"
@@ -117,14 +165,31 @@ class Panel extends CmsPanel {
 		return $base === NULL ? NULL : $base . '?file=' . rawurlencode(\fs::toInternal($file)) . '&line=' . max(1, $line);
 	}
 
-	/** @param list<string> $terms what a grant method asks for, as chips */
-	private function terms(array $terms): string {
+	/**
+	 * What a grant method asks for, as chips — each a link to its line in
+	 * the class file, where syscoder is there.
+	 *
+	 * @param array<string, int> $terms term => line
+	 */
+	private function terms(array $terms, ?string $file): string {
+		$e = static fn($v): string => htmlspecialchars((string) $v, ENT_QUOTES);
+		$match = $this->matcher();
 		$html = '';
-		foreach ($terms as $term) {
+		foreach ($terms as $term => $line) {
+			$term = (string) $term;
 			$known = in_array($term, ['custom', 'parent', 'superuser', 'signed in', 'everyone', 'nobody'], TRUE);
-			$html .= "<span class='term" . ($known ? ' is-' . str_replace(' ', '', $term) : '') . "'>"
-				. htmlspecialchars($term, ENT_QUOTES) . '</span>';
+			$href = $file === NULL ? NULL : $this->syscoder($file, $line);
+			$tag = $href === NULL ? 'span' : 'a';
+			$html .= "<$tag class='term" . ($known ? ' is-' . str_replace(' ', '', $term) : '') . $match($term) . "'"
+				. ($href === NULL ? '' : " href='{$e($href)}' target='syscoder' title='Line $line'")
+				. ">{$e($term)}</$tag>";
 		}
 		return $html;
+	}
+
+	/** ' is-match' for a text that has what "Show all" is filtered by, else '' */
+	public function matcher(): \Closure {
+		$q = $this->showAll ? mb_strtolower($this->filter) : '';
+		return static fn(string $text): string => $q !== '' && str_contains(mb_strtolower($text), $q) ? ' is-match' : '';
 	}
 }
