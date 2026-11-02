@@ -10,16 +10,16 @@
 	<td><?= ($backup['contentsLabel'] ?? '') !== '' ? htmlspecialchars((string) $backup['contentsLabel'], ENT_QUOTES) : '&mdash;' ?></td>
 	<td class="icons">
 		<ul>
-			<?php if (\Systopic\System\Auth\Session::hasOneRole('admin', 'restore', 'recovery')) { ?>
+			<?php if (\Systopic\System\Auth\Session::hasOneRole('cmsAdmin', 'restore', 'recovery')) { ?>
 				<li><a href='restore/?name=<?= $backup['filenamebase'] ?>' class='button transparent ajax icononly' title='Restore'><i class="fa-regular fa-arrow-rotate-left"></i></a></li>
 			<?php } ?>
-			<?php if (\Systopic\System\Auth\Session::hasRole('admin')) { ?>
+			<?php if (\Systopic\System\Auth\Session::hasRole('cmsAdmin')) { ?>
 				<li><a  data-on_click='userConfirm' data-action='remove?name=<?= basename($backup["download"][0]) ?>' class='button transparent ajax icononly' data-confirm='Delete this backup?' title='Delete'><i class="fa-regular fa-trash"></i></a></li>
 			<?php } ?>
-			<?php if (\Systopic\System\Auth\Session::hasRole('admin')) { ?>
+			<?php if (\Systopic\System\Auth\Session::hasRole('cmsAdmin')) { ?>
 				<li class="seperator">
 				<?php } ?>
-				<?php if (\Systopic\System\Auth\Session::hasRole('admin')) { ?>
+				<?php if (\Systopic\System\Auth\Session::hasRole('cmsAdmin')) { ?>
 				<li>
 					<?php
 					$i = 0;

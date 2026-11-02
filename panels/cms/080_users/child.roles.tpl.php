@@ -2,6 +2,21 @@
 /** @var \Systopic\System\Panels\Root\Cms\Users\Roles\Panel|\Systopic\System\Panels\Root\Cms\Users\Permissions\Panel $this */
 
 $e = static fn($v): string => htmlspecialchars((string) $v, ENT_QUOTES);
+// the icon before the key: a lock for the built-in roles, given to every request and asked by no
+// panel; else the controlmap, every panel whose code asks for it (superusers only, like the controlmap)
+$superuser = \Systopic\System\Auth\Session::isSuperuser();
+$controlmap = static function (\Systopic\System\Tables\Roles\Model $role) use ($e, $superuser): string {
+	if ($role->isBuiltin) {
+		return "<i class='fa-regular fa-lock' title='Built in: every " . ($role->key === 'everyone' ? 'request' : 'signed-in user') . " holds it, the key is fixed'></i>";
+	}
+	if (!$superuser || $role->key === NULL) {
+		return '';
+	}
+	$title = 'Where the code asks for ' . $role->key . ' (controlmap)'
+		. ($role->isSystem ? ' — a role of the system, its key is fixed' : '');
+	return "<a class='ajax' href='{$e(\http::$root . 'cms/controlmap/discover/?all=1&filter=' . rawurlencode((string) $role->key))}' title='{$e($title)}'>"
+		. "<i class='fa-regular fa-sitemap'></i></a>";
+};
 ?>
 <section class="widget is-list roleList">
 	<header>
@@ -14,6 +29,7 @@ $e = static fn($v): string => htmlspecialchars((string) $v, ENT_QUOTES);
 			<thead>
 				<tr>
 					<th>Name</th>
+					<th>Key</th>
 					<th>Color</th>
 					<th>Description</th>
 					<th></th>
@@ -27,6 +43,7 @@ $e = static fn($v): string => htmlspecialchars((string) $v, ENT_QUOTES);
 						<td>
 							<span class="roleName" data-drag_type="role" data-role_id="<?= (int) $role->id ?>"><?= $e($role->name) ?></span>
 						</td>
+						<td class="roleKey"><?= $controlmap($role) ?><code><?= $e($role->key) ?></code></td>
 						<td><span class="swatch" style="background:<?= $e($color) ?>"></span></td>
 						<td><?= $e($role->description) ?></td>
 						<td class="icons">

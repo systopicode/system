@@ -20,20 +20,42 @@ usm_users ── usm_users_at_roles ── usm_roles ── usm_roles_on_groups 
   Öffentlich ist eine Seite nie von allein, sondern über eine Gruppe (z. B.
   „öffentlich“), die die eingebaute Rolle `everyone` lesen darf.
 
-## Eingebaute Rollen
+## Rollen-Schlüssel und Rollen des Systems
 
-`usm_roles.role_builtin` (unique): `everyone` (jeder Aufruf, auch ohne
-Login) und `authenticated` (jeder Eingeloggte), definiert in
-`Roles\Operator::BUILTIN`. Erkannt werden sie nur am Schlüssel, der Name ist
-änderbar.
+Stand 2026-11-02. Jede Rolle hat einen Schlüssel, `usm_roles.role_key`
+(unique, camelCase, höchstens 32 Zeichen). Code und Configs fragen nur den
+Schlüssel, der Name ist ein änderbares Etikett.
 
-- `UserRights::builtinRoles()` legt fehlende Zeilen beim ersten Gebrauch an,
-  einmal pro Installation.
-- `Identity::rightsRoleIds()` gibt jedem `everyone` dazu, Eingeloggten
-  zusätzlich `authenticated`.
-- In der Rechte-Matrix stehen sie wie andere Rollen. Einem User zuweisen,
-  löschen oder als Fake-Rolle wählen kann man sie nicht
-  (`UserAdmin::assignableRoles()`, `Identity::allRoleNames`).
+```php
+Session::hasRole('cmsEditor');                 // nach Schlüssel; Superuser immer
+Session::hasOneRole('cmsAdmin', 'cmsEditor');
+```
+
+- **Ein Schlüssel, den keine Rolle hat, wirft eine `LogicException`.** So
+  fällt ein Altprojekt mit `hasRole('editor')` sofort auf, statt still nur
+  den Superuser durchzulassen. Ausnahme sind `recovery` und `restore`
+  (`Session::RECOVERY_ROLES`): Die hält nur der Recovery-User, der keine
+  Datenbank hat.
+- **Eingebaut** (`Roles\Operator::BUILTIN`, `isBuiltin`): `everyone` (jeder
+  Aufruf, auch ohne Login) und `authenticated` (jeder Eingeloggte). Niemand
+  weist sie zu, `Identity::rightsRoleIds()` gibt sie dazu. Einem User
+  zuweisen oder als Fake-Rolle wählen kann man sie nicht
+  (`UserAdmin::assignableRoles()`, `Identity::allRoleKeys`).
+- **Vom System mitgebracht** (`Roles\Operator::SYSTEM`): `cmsAdmin`,
+  `cmsEditor`, `cmsPageEditor`. Sie werden wie jede Rolle zugewiesen.
+- `isSystem` gilt für beide Sorten: Der Schlüssel ist fest, löschen geht
+  nicht. Andere Rollen bekommen ihren Schlüssel aus dem Namen
+  (`Operator::keyFrom()`, `Lobby Screen` → `lobbyScreen`), eine neue Rolle
+  `role<id>`. Im Rollen-Editor ist er änderbar.
+- `UserRights::keyedRoles()` liest alle Rollen mit Schlüssel und legt
+  fehlende Rollen des Systems beim ersten Gebrauch an, einmal pro
+  Installation.
+- **Umstieg:** Die Abfrage nennt `role_key`. In einer alten Datenbank legt
+  der Provisioner die Spalte an und führt `Migrations\RoleKey` aus: Die
+  Schlüssel kommen aus `role_builtin`, die alten Rollen `admin`/`editor`
+  werden zu `cmsAdmin`/`cmsEditor` (Name bleibt), alle anderen bekommen einen
+  Schlüssel aus dem Namen. `role_builtin` bleibt liegen, bis `db audit` sie
+  löscht.
 
 ## Seiten: Website und CMS
 

@@ -4,7 +4,7 @@
 
 include '../../child.role.actions.php';
 
-if ($this->action === 'removeRole' && $this->role !== null && (int) $this->role->id !== 1 && !$this->role->isBuiltin) {
+if ($this->action === 'removeRole' && $this->role !== null && (int) $this->role->id !== 1 && !$this->role->isSystem) {
 	$role = $this->role;
 	$gone = [];
 	foreach ($this->admin->users as $user) {

@@ -83,9 +83,14 @@ final class Identity
         }
     }
 
-    /** @return list<string> */
+    /** @return list<string> the labels, to show — code asks for `roleKeys` */
     public array $roleNames {
         get => $this->recovery ? $this->recoveryRoles : array_map(static fn(Role $r) => (string) $r->name, $this->roles);
+    }
+
+    /** @return list<string> what `Session::hasRole()` compares; the recovery user's are `recovery`, `restore` */
+    public array $roleKeys {
+        get => $this->recovery ? $this->recoveryRoles : array_map(static fn(Role $r) => (string) $r->key, $this->roles);
     }
 
     /** @return list<int> */
@@ -93,9 +98,9 @@ final class Identity
         get => array_map(static fn(Role $r) => (int) $r->id, $this->roles);
     }
 
-    /** @return list<string> the roles a superuser may take on — every role but the built-in ones, held anyway */
-    public array $allRoleNames {
-        get => array_values(array_map(static fn(Role $r) => (string) $r->name,
+    /** @return list<string> the keys of the roles a superuser may take on — every role but the built-in ones, held anyway */
+    public array $allRoleKeys {
+        get => array_values(array_map(static fn(Role $r) => (string) $r->key,
             array_filter(UserRights::roles($this->scope, null, true), static fn(Role $r) => !$r->isBuiltin)));
     }
 
@@ -140,13 +145,13 @@ final class Identity
             $all = UserRights::roles($this->scope, null, true);
             $fake = Session::fakeRoles();
             if ($fake !== []) {
-                $all = array_values(array_filter($all, static fn(Role $r) => in_array((string) $r->name, $fake, true)));
+                $all = array_values(array_filter($all, static fn(Role $r) => in_array((string) $r->key, $fake, true)));
             }
             $roleIds = array_map(static fn(Role $r) => (int) $r->id, $all);
         }
         // the built-in roles nobody assigns: everyone, and every signed-in user
         // (not for the recovery user, who may have no database)
-        $builtin = $this->recovery ? [] : UserRights::builtinRoles($this->scope);
+        $builtin = $this->recovery ? [] : UserRights::keyedRoles($this->scope);
         foreach (['everyone' => true, 'authenticated' => $this->user !== null] as $key => $holds) {
             if ($holds && isset($builtin[$key])) {
                 $roleIds[] = (int) $builtin[$key]->id;

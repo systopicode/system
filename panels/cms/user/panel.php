@@ -53,7 +53,7 @@ class Panel extends CmsPanel {
 		}
 	}
 
-	/** @var list<string> names of the roles adopted right now */
+	/** @var list<string> keys of the roles adopted right now */
 	public array $fakeRoles {
 		get => (array) (\Systopic\System\Auth\Session::current()->state->fakeRoles ?? []);
 	}

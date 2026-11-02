@@ -18,6 +18,7 @@ use Systopic\System\Tables\Nodes\AclInheritance;
 use Systopic\System\Tables\Nodes\Model as Node;
 use Systopic\System\Tables\Nodes\Operator as NodeOperator;
 use Systopic\System\Tables\Roles\Model as Role;
+use Systopic\System\Tables\Roles\Operator as RoleOperator;
 use Systopic\System\Tables\RolesOnGroups\Model as RoleOnGroup;
 use Systopic\System\Tables\UsersAtRoles\Model as UserAtRole;
 use Systopic\System\Tables\Users\Model as User;
@@ -119,8 +120,8 @@ $scope->results->invalidate(['cms_nodes']);
 
 // ---- rights -------------------------------------------------------------------
 
-$hrEditor = new Role(); $hrEditor->name = 'HREditor';
-$boardReader = new Role(); $boardReader->name = 'BoardReader';
+$hrEditor = new Role(); $hrEditor->name = 'HREditor'; $hrEditor->key = 'hrEditor';
+$boardReader = new Role(); $boardReader->name = 'BoardReader'; $boardReader->key = 'boardReader';
 $scope->save($hrEditor, $boardReader);
 $grant = static function (Role $role, Group $group, bool $read, bool $write) use ($scope): void {
     $link = new RoleOnGroup(); $link->role = $role; $link->group = $group; $link->read = $read; $link->write = $write;
@@ -165,10 +166,12 @@ check('session: the owner always may', Session::mayWrite($lone));
 
 // ---- built-in roles ---------------------------------------------------------
 
-$builtin = UserRights::builtinRoles($scope);
-check('the built-in roles are made at their first use', isset($builtin['everyone'], $builtin['authenticated']) && $builtin['everyone']->isBuiltin);
-check('… once', count(UserRights::builtinRoles($scope)) === 2
-    && (int) $connection->value('SELECT COUNT(*) FROM usm_roles WHERE role_builtin IS NOT NULL') === 2);
+$builtin = UserRights::keyedRoles($scope);
+$system = ['everyone', 'authenticated', 'cmsAdmin', 'cmsEditor', 'cmsPageEditor'];
+check('the system\'s roles are made at their first use', array_diff($system, array_keys($builtin)) === []
+    && $builtin['everyone']->isBuiltin && !$builtin['cmsEditor']->isBuiltin && $builtin['cmsEditor']->isSystem && !$builtin['hrEditor']->isSystem);
+check('… once', count(UserRights::keyedRoles($scope)) === 7
+    && (int) $connection->value("SELECT COUNT(*) FROM usm_roles WHERE role_key IN ('" . implode("','", $system) . "')") === 5);
 $public = new Group(); $public->name = 'public';
 $scope->save($public);
 $grant($builtin['everyone'], $public, true, false);
@@ -192,5 +195,50 @@ $as($ben);
 check('a group nobody may write shuts out the others', !Session::mayWrite($publicNode));
 $as($boss);
 check('… but not a superuser', Session::mayWrite($publicNode));
+
+// ---- roles by key -------------------------------------------------------------
+
+$throws = static function (callable $f): bool {
+    try {
+        $f();
+    } catch (\LogicException) {
+        return true;
+    }
+    return false;
+};
+$as($anna);
+check('hasRole asks the key', Session::hasRole('hrEditor') && !Session::hasRole('boardReader') && !Session::hasRole('cmsEditor'));
+check('… not the name: an old role name throws', $throws(static fn() => Session::hasRole('HREditor')) && $throws(static fn() => Session::hasRole('editor')));
+check('… the recovery roles nobody else holds', !Session::hasRole('recovery') && !Session::hasOneRole('restore'));
+$as($boss);
+check('a superuser holds every key', Session::hasRole('cmsPageEditor') && Session::hasRole('boardReader'));
+$renamed = $builtin['cmsEditor'];
+$renamed->name = 'Redaktion';
+$scope->save($renamed);
+$eddi = $user('eddi', $renamed);
+$as($eddi);
+check('a renamed role is the same role', Session::hasRole('cmsEditor') && Session::current()->roleNames === ['Redaktion']);
+check('a key comes from the name', RoleOperator::keyFrom('Lobby Screen', []) === 'lobbyScreen' && RoleOperator::keyFrom('CMS Admin', []) === 'cmsAdmin'
+    && RoleOperator::keyFrom('LobbyScreen', ['lobbyscreen']) === 'lobbyScreen2' && RoleOperator::keyFrom('3D Team', []) === 'role3DTeam');
+
+// a database from before: role_builtin, no role_key — Migrations\RoleKey on ADD COLUMN
+$connection->exec('DELETE FROM usm_users_at_roles');
+$connection->exec("DELETE FROM usm_roles_on_groups WHERE rog_role_id IN (SELECT role_id FROM usm_roles WHERE role_key IN ('cmsAdmin', 'cmsEditor', 'cmsPageEditor'))");
+$connection->exec("DELETE FROM usm_roles WHERE role_key IN ('cmsAdmin', 'cmsEditor', 'cmsPageEditor')");
+$connection->exec('ALTER TABLE usm_roles ADD COLUMN role_builtin varchar(32) NULL');
+$connection->exec("UPDATE usm_roles SET role_builtin = role_key WHERE role_key IN ('everyone', 'authenticated')");
+$connection->exec('ALTER TABLE usm_roles DROP COLUMN role_key');
+$connection->exec("INSERT INTO usm_roles (role_name) VALUES ('editor'), ('Lobby Screen')");
+$everyoneId = (int) $builtin['everyone']->id;
+$_SESSION = [];
+$before = new Scope($connection);
+Scope::setDefault($before);
+Session::reset();
+$keyed = UserRights::keyedRoles($before);
+check('migration: the built-in roles keep their rows', (int) $keyed['everyone']->id === $everyoneId);
+check('… the old editor is cmsEditor, its name stays', (string) ($keyed['cmsEditor']->name ?? '') === 'editor');
+check('… the others get a key from their name', isset($keyed['lobbyScreen'], $keyed['hrEditor'], $keyed['boardReader'], $keyed['cmsAdmin'], $keyed['cmsPageEditor']));
+check('… every role has one', (int) $connection->value("SELECT COUNT(*) FROM usm_roles WHERE role_key IS NULL AND role_id != 1 AND role_name <> ''") === 0);
+check('… and role_builtin stays for db audit', (int) $connection->value("SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'usm_roles' AND COLUMN_NAME = 'role_builtin'") === 1);
 
 echo "all ACL checks passed\n";

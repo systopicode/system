@@ -19,7 +19,7 @@ class Panel extends CmsPanel {
 	public bool $buildChildPanels = true;
 
 	function buildGranted() {
-		return \Systopic\System\Auth\Session::hasOneRole('userAdmin');
+		return \Systopic\System\Auth\Session::hasRole('cmsAdmin');
 	}
 
 	function onLoad() {

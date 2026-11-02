@@ -3,8 +3,8 @@
 
 $role = $this->role;
 $e = static fn($v): string => htmlspecialchars((string) $v, ENT_QUOTES);
-$field = static function (string $label, string $type, string $action, ?string $value) use ($e, $role): string {
-	return '<label class="field"><span>' . $label . '</span><input type="' . $type . '" autocapitalize="off" data-role_id="' . (int) $role->id . '" name="value" data-on_blur="' . $action . '" value="' . $e($value) . '" autocomplete="off" spellcheck="off"></label>';
+$field = static function (string $label, string $type, string $action, ?string $value, bool $readonly = false) use ($e, $role): string {
+	return '<label class="field"><span>' . $label . '</span><input type="' . $type . '" autocapitalize="off" data-role_id="' . (int) $role->id . '" name="value" data-on_blur="' . $action . '" value="' . $e($value) . '" autocomplete="off" spellcheck="off"' . ($readonly ? ' readonly' : '') . '></label>';
 };
 ?>
 <header>
@@ -17,6 +17,7 @@ $field = static function (string $label, string $type, string $action, ?string $
 	<?= \message::flush() ?>
 	<div class="fieldGrid is-stack">
 		<?= $field('Name', 'text', 'updateRoleName', $role->name) ?>
+		<?= $field('Key', 'text', 'updateRoleKey', $role->key, $role->isSystem) ?>
 		<?= $field('Description', 'text', 'updateRoleDescription', (string) $role->description) ?>
 		<label class="field roleColor">
 			<span>Color</span>
@@ -29,7 +30,9 @@ $field = static function (string $label, string $type, string $action, ?string $
 </main>
 <footer>
 	<?php if ($role->isBuiltin) { ?>
-		<p class="hint"><?= $role->builtin === 'everyone' ? 'Every visitor holds this role, signed in or not.' : 'Every signed-in user holds this role.' ?> It is given by the system: not assigned to users, and not to be deleted.</p>
+		<p class="hint"><?= $role->key === 'everyone' ? 'Every visitor holds this role, signed in or not.' : 'Every signed-in user holds this role.' ?> It is given by the system: not assigned to users, and not to be deleted.</p>
+	<?php } elseif ($role->isSystem) { ?>
+		<p class="hint">The system brings this role along: the code asks for its key. Assign it to users; it is not to be deleted.</p>
 	<?php } else { ?>
 		<button type="button" class="button" data-on_click="userConfirm" data-action="removeRole" data-confirm="Delete this role? This cannot be undone." data-role_id="<?= (int) $role->id ?>"><i class="fa-regular fa-trash"></i>Remove role</button>
 	<?php } ?>

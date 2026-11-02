@@ -40,7 +40,7 @@ switch ($this->action) {
 		break;
 
 	case 'toggleFakeRole':
-		$role = (string) \http::dataset('role_name');
+		$role = (string) \http::dataset('role_key');
 		if (in_array($role, $this->fakeRoles, TRUE)) {
 			\Systopic\System\Auth\Session::removeFakeRole($role);
 		} else {
@@ -102,7 +102,7 @@ switch ($this->action) {
 					: 'That code is wrong or has expired.')->target('devices');
 				$told = true;
 			} elseif ($code->purpose === Codes::PAIR_SCREEN) {
-				$allowed = Session::isSuperuser(true) || Session::hasOneRole('userAdmin');
+				$allowed = Session::isSuperuser(true) || Session::hasRole('cmsAdmin');
 				$screen = $allowed ? UserLookup::byId($this->scope, (int) \http::post('screen', 0)) : null;
 				if (!$allowed || $screen === null || $screen->type !== User::SCREEN) {
 					\message::error('A user admin confirms a screen.')->target('devices');

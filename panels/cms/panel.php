@@ -41,7 +41,7 @@ class Panel extends PanelNode {
 			}
 		}
 
-		return \Systopic\System\Auth\Session::hasRole('editor') ||
+		return \Systopic\System\Auth\Session::hasOneRole('cmsAdmin', 'cmsEditor', 'cmsPageEditor') ||
 				STAGE === 'x_DEV' ||
 				\app::request()->modulePath === ['cms', 'auth']
 		;

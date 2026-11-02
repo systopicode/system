@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Systopic\System\Queries\UserRights;
 
+use Systopic\Db\Schema\Migrations;
 use Systopic\Db\Schema\Provisioner;
 use Systopic\Db\Schema\Registry;
 use Systopic\Db\Scope;
@@ -27,34 +28,40 @@ final class UserRights
     }
 
     /**
-     * The built-in roles (`Roles\Operator::BUILTIN`), key => role.
+     * Every role with a key, key => role — the system's own ones
+     * (`Roles\Operator::BUILTIN`, `::SYSTEM`) always among them.
      *
      * The one place that writes on a read: a role that is missing is made
      * here, at its first use — the same as the provisioner makes a missing
      * column. That happens once per installation; a second request racing
      * the first hits the unique key and reads what the first one made.
      *
+     * The query names `role_key` and runs first on every request with
+     * rights, so the column of a database from before is added here — and
+     * `Migrations\RoleKey` gives the roles there are their keys.
+     *
      * @return array<string, Role>
      */
-    public static function builtinRoles(Scope $scope): array
+    public static function keyedRoles(Scope $scope): array
     {
         Registry::register(Role::class);
         $read = static function () use ($scope): array {
+            $provisioner = new Provisioner($scope->connection,
+                new Migrations(dirname(__DIR__, 2) . '/Migrations', 'Systopic\\System\\Migrations'));
             $out = [];
-            foreach ($scope->rows(__DIR__ . '/UserRights.builtin.sql', [],
-                provisioner: new Provisioner($scope->connection))->all(Role::class) as $role) {
-                $out[(string) $role->builtin] = $role;
+            foreach ($scope->rows(__DIR__ . '/UserRights.system.sql', [], provisioner: $provisioner)->all(Role::class) as $role) {
+                $out[(string) $role->key] = $role;
             }
             return $out;
         };
         $roles = $read();
-        $missing = RoleOperator::missingBuiltins($roles);
+        $missing = RoleOperator::missingSystemRoles($roles);
         if ($missing !== []) {
             try {
                 $scope->save(...$missing);
             } catch (\Throwable $e) {
                 // made by a request at the same moment — or a real error
-                if (RoleOperator::missingBuiltins($read()) !== []) {
+                if (RoleOperator::missingSystemRoles($read()) !== []) {
                     throw $e;
                 }
             }

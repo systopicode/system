@@ -177,7 +177,7 @@ if ($heading === '') {
 					break;
 				}
 			}
-			$canAuth = \Systopic\System\Auth\Session::hasOneRole('admin');
+			$canAuth = \Systopic\System\Auth\Session::hasRole('cmsAdmin');
 			if (!$codes) { ?>
 				<section class="cmsBox">
 					<header>

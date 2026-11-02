@@ -19,7 +19,7 @@ $here = Devices::current();
 $codesOn = LoginCodes::available();
 $screenCode = preg_replace('~[^0-9A-Za-z\-]~', '', (string) \http::get('screen', ''));
 $pending = ($codesOn && $screenCode !== '') ? LoginCodes::peek($screenCode, [Codes::PAIR_USER, Codes::PAIR_SCREEN]) : null;
-$canScreens = Session::isSuperuser(true) || Session::hasOneRole('userAdmin');
+$canScreens = Session::isSuperuser(true) || Session::hasRole('cmsAdmin');
 $screens = [];
 if ($pending && $pending->purpose === Codes::PAIR_SCREEN && $canScreens) {
 	try {

@@ -15,7 +15,18 @@ if ($role !== null) {
 		case 'updateRoleName':
 		case 'updateRoleDescription':
 		case 'updateRoleColor':
-			$this->scope->save(RoleOperator::assign($role, strtolower(substr($this->action, 10)), (string) \http::values('value')));
+		case 'updateRoleKey':
+			$field = strtolower(substr($this->action, 10));
+			$before = $field === 'key' || $field === 'name' ? $role->$field : NULL;
+			try {
+				$this->scope->save(RoleOperator::assign($role, $field, (string) \http::values('value')));
+			} catch (\InvalidArgumentException $e) {
+				\message::error(ucfirst($e->getMessage()) . '.');
+			} catch (\PDOException $e) {
+				// name and key are unique
+				$role->$field = $before;
+				\message::error("Another role has this $field.");
+			}
 			$this->updateView('lightbox');
 			$this->parent->updateView('main');
 			break;

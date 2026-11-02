@@ -25,7 +25,7 @@ class Panel extends PanelNode {
 	}
 
 	function buildGranted() {
-		return \Systopic\System\Auth\Session::hasOneRole('admin');
+		return \Systopic\System\Auth\Session::hasRole('cmsAdmin');
 	}
 
 	function onLoadThisClass() {

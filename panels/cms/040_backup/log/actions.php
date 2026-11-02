@@ -4,7 +4,7 @@
 
 switch ($this->action) {
 	case 'clear':
-		if (\Systopic\System\Auth\Session::hasRole('admin')) {
+		if (\Systopic\System\Auth\Session::hasRole('cmsAdmin')) {
 			fs::unlinkFile($this->parent->logfile->filepath);
 			http::redirect('./');
 		}

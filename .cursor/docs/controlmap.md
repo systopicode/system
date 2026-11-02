@@ -113,8 +113,24 @@ same-origin ist.
    - Das Projekt speichert Abweichungen in `config/controlmap.json`, das
      wandert per Sync.
    - Zur Laufzeit wird das zu einem PHP-Array in `var/` zusammengeführt.
-3. **Rollen-Schlüssel:** `role_builtin` zu einem stabilen `role_key`
-   verallgemeinern. Die Configs nennen den Key, umbenennen bricht nichts.
+3. **Rollen-Schlüssel:** erledigt 2026-11-02, siehe [acl.md](acl.md)
+   „Rollen-Schlüssel und Rollen des Systems“. `role_key` statt
+   `role_builtin`, `hasRole()` nur nach Schlüssel (ein unbekannter wirft),
+   das System legt `cmsAdmin`, `cmsEditor` und `cmsPageEditor` an. Noch offen
+   dazu:
+   - `cmsPageEditor` bearbeitet Seiten, darf im Seitenbaum aber nur die
+     Reihenfolge ändern, nie `parent_id` (in der Vergangenheit eine häufige
+     Fehlerquelle). `insertBefore`/`insertAfter` können heute beides, die
+     Unterscheidung muss also in den Code: ein benanntes Recht `move` in
+     der Map (`rights`), das die Action selbst abfragt, sobald sich der
+     Elternknoten ändert; `insertAsFirstChild` fragt es immer. Das
+     Kontextmenü blendet das Umhängen aus. Offen: wie das Drag-Feedback im
+     Client (Lars) erfährt, wohin nicht abgelegt werden darf.
+   - Ebenen der Configs: `panel.config.json` je Herkunft (Reihenfolge wie
+     die Ordner, die letzte gewinnt), darüber `config/controlmap.json`.
+     Zusammengeführt wird je Schlüssel, eine Liste ersetzt die darunter
+     (so kann ein Projekt auch einschränken). Die Paket-Ebene ist in der
+     GUI nur lesbar (`vendor/` sind Symlinks auf `packages/`).
 4. **Laufzeit:** `PanelBuilder` (`buildGranted`) und der Dispatch in
    `app.php` (`actionGranted`) fragen die Map. Danach entfallen die
    Overrides in den Panels und werden zu Defaults der Configs.

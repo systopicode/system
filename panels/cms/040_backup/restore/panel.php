@@ -17,7 +17,7 @@ class Panel extends BackupPanel
 {
 	public function buildGranted(): bool
 	{
-		return \Systopic\System\Auth\Session::hasOneRole('admin', 'restore');
+		return \Systopic\System\Auth\Session::hasOneRole('cmsAdmin', 'restore');
 	}
 
 	public function onLoad(): void

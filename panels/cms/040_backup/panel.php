@@ -33,9 +33,9 @@ class Panel extends CmsPanel
 	public function buildGranted(): bool
 	{
 		if ($this->name === 'backup') {
-			return \Systopic\System\Auth\Session::hasOneRole('editor', 'textEditor') || \Systopic\System\Auth\Session::isRecovery();
+			return \Systopic\System\Auth\Session::hasOneRole('cmsAdmin', 'cmsEditor') || \Systopic\System\Auth\Session::isRecovery();
 		}
-		return \Systopic\System\Auth\Session::hasOneRole('editor');
+		return \Systopic\System\Auth\Session::hasOneRole('cmsAdmin', 'cmsEditor');
 	}
 
 	/** The panel is open to editors and the recovery user — its actions are not. */
@@ -45,8 +45,8 @@ class Panel extends CmsPanel
 			return parent::actionGranted($action);
 		}
 		return match ($action) {
-			'remove', 'clearTempdirs', 'upload' => \Systopic\System\Auth\Session::hasRole('admin'),
-			'createDatabase'          => \Systopic\System\Auth\Session::hasRole('recovery') && \Systopic\System\Auth\Session::isRecovery(),
+			'remove', 'clearTempdirs', 'upload' => \Systopic\System\Auth\Session::hasRole('cmsAdmin'),
+			'createDatabase'          => \Systopic\System\Auth\Session::isRecovery() && \Systopic\System\Auth\Session::hasRole('recovery'),
 			default                   => parent::actionGranted($action),
 		};
 	}

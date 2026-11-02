@@ -10,7 +10,7 @@ switch ($this->action) {
 		$file = fs::toNative(fs::$siteRoot . 'var/backups/' . $filename);
 		$isZip = str_ends_with($filename, '.zip');
 		$isLog = $filename === 'backup.log';
-		if ($filename === '' || (!$isZip && !$isLog) || !\Systopic\System\Auth\Session::hasRole('admin') || !is_file($file)) {
+		if ($filename === '' || (!$isZip && !$isLog) || !\Systopic\System\Auth\Session::hasRole('cmsAdmin') || !is_file($file)) {
 			http_response_code(404);
 			exit;
 		}
