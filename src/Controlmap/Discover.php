@@ -96,7 +96,7 @@ final class Discover
      * @param list<string> $altPaths every folder of the panel, in registration order
      * @return array<string, string> origin => its folder (the last, if one has two)
      */
-    private static function dirs(array $altPaths): array
+    public static function dirs(array $altPaths): array
     {
         $dirs = [];
         foreach ($altPaths as $path) {

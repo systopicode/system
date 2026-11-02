@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Systopic\System\Panels;
 
+use Systopic\System\Controlmap\Access;
 use Systopic\System\Controlmap\ActionScanner;
 
 /**
@@ -21,7 +22,8 @@ use Systopic\System\Controlmap\ActionScanner;
  *    neither the request is no browser's and no CSRF — so the CLI agent's
  *    requests pass, unless a payload sets the headers to test the rule.
  *    The panel's `$entryActions` pass by GET from anywhere.
- * 2. **The panel grants it** (`actionGranted()`).
+ * 2. **The panel grants it** — the controlmap where a config says it,
+ *    else `actionGranted()` (`Controlmap\Access::action()`).
  * 3. **A method is marked** — `method()`: a request calls a method of the
  *    panel by the action's name only when it carries `#[Action]`. A public
  *    method without it is a helper of the templates. When nothing else
@@ -39,7 +41,7 @@ final class ActionGuard
     public static function check(PanelNode $panel, string $action): void
     {
         self::origin($panel, $action);
-        if (!$panel->actionGranted($action)) {
+        if (!Access::action($panel, $action)) {
             throw ActionRefused::notGranted($panel, $action);
         }
     }

@@ -52,6 +52,15 @@ class PanelNode implements ClientExportable, RenderNode
      */
     public string $absPath = '';
 
+    /**
+     * Every folder of the panel, one per root that has it, in registration
+     * order (`FolderHit::$altPaths`): where its panel.config.json lie
+     * (`Controlmap\Access`).
+     *
+     * @var list<string>
+     */
+    public array $altPaths = [];
+
     /** Nesting depth; root = 0. */
     public int $level = 0;
 

@@ -107,7 +107,14 @@ $focus = $this->focus;
 						$html .= "<td class='" . ($focus === 'layer.' . $layer['layer'] ? 'is-focus' : '') . ($layer['layer'] === 'config' ? ' is-editable' : '') . "'>$cell</td>";
 					}
 					$html .= "<td class='effective'>";
-					if ($grant === NULL) {
+					// as Controlmap\Access decides: an inherited config does not
+					// overrule what the panel's own class decides
+					$ownCode = $key === 'build' ? isset($panel->grants['build'])
+						: (!str_starts_with($key, 'right.') && isset($panel->grants['action']));
+					if ($grant !== NULL && $grant->path !== $panel->path && $ownCode) {
+						$html .= "<span class='none'>the code decides</span>"
+							. "<span class='from' title='{$e($grant->from)}'>its own code, not what {$e($grant->path)}/ hands down</span>";
+					} elseif ($grant === NULL) {
 						$html .= "<span class='none'>the code decides</span>";
 					} else {
 						$html .= $roles($grant->roles);

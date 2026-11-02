@@ -11,6 +11,7 @@ use Systopic\System\Panels\PanelNode;
 // The file helpers ActionScanner reads actions.php with, without the legacy lib.
 final class fs
 {
+    public static $projectRoot = null;   // no config/controlmap.json: the controlmap leaves it to the code
     public static function isFile(string $path): bool { return is_file($path); }
     public static function toNative(string $path): string { return $path; }
     public static function cwd(): string { return (string) getcwd(); }

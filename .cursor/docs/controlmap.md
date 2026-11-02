@@ -105,8 +105,8 @@ same-origin ist.
 
 ## Configs (`Controlmap\Map`)
 
-Stand 2026-11-02: gelesen und in cms/controlmap angezeigt. Zur Laufzeit
-fragt noch niemand danach.
+Stand 2026-11-02: gelesen, in cms/controlmap angezeigt und bearbeitet, und
+die Laufzeit fragt danach (unten „Laufzeit“).
 
 **Ebenen** je Panel, die spätere ersetzt die frühere Schlüssel für
 Schlüssel:
@@ -162,6 +162,36 @@ sie sind):
   Bleibt nichts übrig, wird die Datei gelöscht.
 - Geschrieben wird über eine temporäre Datei und `rename`.
 
+## Laufzeit (`Controlmap\Access`)
+
+`PanelBuilder` fragt `Access::build($child)`, `ActionGuard`
+`Access::action($panel, $action)`, der Code eines Panels
+`Access::right($this, 'move')`. Gelesen werden die `panel.config.json` der
+Ordner des Panels und seiner Vorfahren (`PanelNode::$altPaths`) und
+`config/controlmap.json`, ohne Discover.
+
+Was entscheidet, in dieser Reihenfolge:
+
+1. die eigene Config des Panels (irgendeine seiner Ebenen) für den Schlüssel
+2. der eigene Code: die Klasse des Panels deklariert `buildGranted()` bzw.
+   `actionGranted()` selbst
+3. die geerbte Config (vom Eltern-Panel, wie `Map::effective()`)
+4. der geerbte Code (`PanelNode`: jeder Eingeloggte)
+
+Eine geerbte Config lockert also nie, was ein Panel in seinem Code selbst
+entscheidet. Die Lightbox in cms/controlmap zeigt „Effective“ nach derselben
+Regel.
+
+Eine Rollenliste lässt den Superuser immer durch, außer wenn er als Rolle
+schaut (Fake-Rollen). `everyone` lässt jeden Aufruf durch, `authenticated`
+jeden Eingeloggten. Alle anderen Rollen prüft `Session::hasOneRole()`. Ein
+Schlüssel, den keine Rolle hat, wird übersprungen, es wird nicht geworfen.
+Der Recovery-User hat keine Datenbank, bei ihm entscheidet der Code.
+
+Geprüft 2026-11-02 in smp.de per CLI, als Benutzer nur mit
+`cmsPageEditor`: Umhängen wird abgelehnt (Meldung, DB unverändert),
+Umsortieren unter demselben Elternknoten geht.
+
 ## Offen (nächste Schritte)
 
 1. **Baum + Map-GUI:** je Panel `build`, `actions` (Default) und je Action
@@ -178,16 +208,20 @@ sie sind):
    - `cmsPageEditor` bearbeitet Seiten, darf im Seitenbaum aber nur die
      Reihenfolge ändern, nie `parent_id` (in der Vergangenheit eine häufige
      Fehlerquelle). `insertBefore`/`insertAfter` können heute beides, die
-     Unterscheidung muss also in den Code: ein benanntes Recht `move` in
-     der Map (`rights`), das die Action selbst abfragt, sobald sich der
-     Elternknoten ändert; `insertAsFirstChild` fragt es immer. Das
-     Kontextmenü blendet das Umhängen aus. Offen: wie das Drag-Feedback im
-     Client (Lars) erfährt, wohin nicht abgelegt werden darf.
+     Unterscheidung steckt deshalb im Code. Umgesetzt 2026-11-02: Ein
+     benanntes Recht `move` steht in der Map (`rights`).
+     `insertBefore`/`insertAfter`/`insertAsFirstChild` fragen
+     `Access::right($this, 'move')`, sobald sich der Elternknoten ändert.
+     Ohne das Recht zeigen sie eine Meldung und zeichnen den Baum neu, der
+     Knoten springt zurück. Im Kontextmenü gibt es kein Umhängen. Offen: wie
+     das Drag-Feedback im Client (Lars) erfährt, wohin nicht abgelegt
+     werden darf.
    - Ebenen der Configs: `panel.config.json` je Herkunft (Reihenfolge wie
      die Ordner, die letzte gewinnt), darüber `config/controlmap.json`.
      Zusammengeführt wird je Schlüssel, eine Liste ersetzt die darunter
      (so kann ein Projekt auch einschränken). Die Paket-Ebene ist in der
      GUI nur lesbar (`vendor/` sind Symlinks auf `packages/`).
-4. **Laufzeit:** `PanelBuilder` (`buildGranted`) und der Dispatch in
-   `app.php` (`actionGranted`) fragen die Map. Danach entfallen die
-   Overrides in den Panels und werden zu Defaults der Configs.
+4. **Laufzeit:** erledigt 2026-11-02, siehe „Laufzeit“. Offen: die
+   Overrides in den Panels (`buildGranted()`/`actionGranted()`) nach und
+   nach in `panel.config.json` überführen; ein Cache der zusammengeführten
+   Configs in `var/`, falls das Lesen je Request spürbar wird.

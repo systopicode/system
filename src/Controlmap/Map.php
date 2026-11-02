@@ -71,6 +71,12 @@ final class Map
         [$this->project, $this->projectError] = self::read($projectFile);
     }
 
+    /** Add a panel the constructor did not get — Access adds the ones a request builds, one by one. */
+    public function register(DiscoveredPanel $panel): void
+    {
+        $this->byPath[$panel->path] ??= $panel;
+    }
+
     public function panel(string $path): ?DiscoveredPanel
     {
         return $this->byPath[$path] ?? null;
