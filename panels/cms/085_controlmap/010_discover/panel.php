@@ -88,9 +88,10 @@ class Panel extends CmsPanel {
 	/**
 	 * One panel as a row of the table: name and path (indented by `$indent`
 	 * levels), where it comes from, what its code asks for access, its
-	 * actions as chips — an entry action (`$entryActions`) marked. Access
-	 * and actions link to their line in syscoder; what "Show all" is
-	 * filtered by is marked (`is-match`, as the filter input does it).
+	 * actions as chips — an entry action (`$entryActions`) marked. A click
+	 * on a chip opens the panel in the configs (the lightbox `config/`), its
+	 * </> the line in syscoder; what "Show all" is filtered by is marked
+	 * (`is-match`).
 	 */
 	public function row(DiscoveredPanel $panel, int $indent = 0): string {
 		$e = static fn($v): string => htmlspecialchars((string) $v, ENT_QUOTES);
@@ -102,15 +103,15 @@ class Panel extends CmsPanel {
 		$origins = '';
 		foreach ($panel->origins as $origin) {
 			$winning = $origin === $panel->origin;
-			$origins .= "<span class='origin" . ($winning ? ' is-winning' : '') . "' title='"
-				. ($winning ? 'Class and templates come from here' : 'Contributes folders') . "'>{$e($origin)}</span>";
+			$origins .= $this->chip('origin' . ($winning ? ' is-winning' : ''), $e($origin), $panel->path, 'layer.' . $origin, NULL,
+				($winning ? 'Class and templates come from here' : 'Contributes folders') . ' — its panel.config.json');
 		}
 
 		$grants = '';
-		foreach (['build' => ['fa-eye', 'buildGranted(): who sees the panel'], 'action' => ['fa-bolt', 'actionGranted(): who runs its actions']] as $key => [$icon, $title]) {
+		foreach (['build' => ['fa-eye', 'buildGranted(): who sees the panel', 'build'], 'action' => ['fa-bolt', 'actionGranted(): who runs its actions', 'actions']] as $key => [$icon, $title, $focus]) {
 			if (isset($panel->grants[$key])) {
 				$file = $panel->classFile === NULL ? NULL : $panel->dir . '/' . $panel->classFile;
-				$grants .= "<div title='$title'><i class='fa-regular $icon'></i>" . $this->terms($panel->grants[$key], $file) . '</div>';
+				$grants .= "<div title='$title'><i class='fa-regular $icon'></i>" . $this->terms($panel->grants[$key], $file, $panel->path, $focus) . '</div>';
 			}
 		}
 		if ($panel->grants === [] && !$panel->isPlain) {
@@ -124,12 +125,10 @@ class Panel extends CmsPanel {
 			// the first place it is named, in syscoder
 			$first = (string) ($action->places[0] ?? '');
 			$colon = strrpos($first, ':');
-			$href = $colon === FALSE ? NULL : $this->syscoder($panel->dir . '/' . substr($first, 0, $colon), (int) substr($first, $colon + 1));
-			$tag = $href === NULL ? 'span' : 'a';
-			$link = $href === NULL ? '' : " href='{$e($href)}' target='syscoder'";
-			$actions .= "<$tag class='action" . ($action->entry ? ' is-entry' : '') . $match($action->name) . "'$link title='{$e($title)}'>"
-				. ($action->entry ? "<i class='fa-regular fa-arrow-right-to-bracket'></i>" : '')
-				. "{$e($action->name)}</$tag>";
+			$code = $colon === FALSE ? NULL : $this->syscoder($panel->dir . '/' . substr($first, 0, $colon), (int) substr($first, $colon + 1));
+			$actions .= $this->chip('action' . ($action->entry ? ' is-entry' : '') . $match($action->name),
+				($action->entry ? "<i class='fa-regular fa-arrow-right-to-bracket'></i>" : '') . $e($action->name),
+				$panel->path, 'action.' . $action->name, $code, $title);
 		}
 		$classHref = $panel->classFile === NULL ? NULL : $this->syscoder($panel->dir . '/' . $panel->classFile, 1);
 		$classLink = $classHref === NULL ? '' : " <a class='code' href='{$e($classHref)}' target='syscoder' title='{$e($panel->classFile)} in syscoder'><i class='fa-regular fa-code'></i></a>";
@@ -166,25 +165,36 @@ class Panel extends CmsPanel {
 	}
 
 	/**
-	 * What a grant method asks for, as chips — each a link to its line in
-	 * the class file, where syscoder is there.
+	 * What a grant method asks for, as chips — `$focus` (build, actions) in
+	 * the lightbox, the </> its line in the class file.
 	 *
 	 * @param array<string, int> $terms term => line
 	 */
-	private function terms(array $terms, ?string $file): string {
+	private function terms(array $terms, ?string $file, string $path, string $focus): string {
 		$e = static fn($v): string => htmlspecialchars((string) $v, ENT_QUOTES);
 		$match = $this->matcher();
 		$html = '';
 		foreach ($terms as $term => $line) {
 			$term = (string) $term;
 			$known = in_array($term, ['custom', 'parent', 'superuser', 'signed in', 'everyone', 'nobody'], TRUE);
-			$href = $file === NULL ? NULL : $this->syscoder($file, $line);
-			$tag = $href === NULL ? 'span' : 'a';
-			$html .= "<$tag class='term" . ($known ? ' is-' . str_replace(' ', '', $term) : '') . $match($term) . "'"
-				. ($href === NULL ? '' : " href='{$e($href)}' target='syscoder' title='Line $line'")
-				. ">{$e($term)}</$tag>";
+			$html .= $this->chip('term' . ($known ? ' is-' . str_replace(' ', '', $term) : '') . $match($term), $e($term),
+				$path, $focus, $file === NULL ? NULL : $this->syscoder($file, $line), "Line $line");
 		}
 		return $html;
+	}
+
+	/**
+	 * A chip: its label opens the panel in the configs (`config/`, the
+	 * lightbox) at `$focus`; a </> behind it the code, where syscoder is
+	 * there. `$label` is HTML.
+	 */
+	private function chip(string $class, string $label, string $path, string $focus, ?string $code, string $title): string {
+		$e = static fn($v): string => htmlspecialchars((string) $v, ENT_QUOTES);
+		$config = Config\Panel::href($this->href, $path, $focus);
+		return "<span class='$class' title='{$e($title)}'>"
+			. "<a class='ajax' href='{$e($config)}'>$label</a>"
+			. ($code === NULL ? '' : "<a class='code' href='{$e($code)}' target='syscoder' title='In syscoder'><i class='fa-regular fa-code'></i></a>")
+			. '</span>';
 	}
 
 	/** ' is-match' for a text that has what "Show all" is filtered by, else '' */

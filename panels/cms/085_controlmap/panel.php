@@ -5,6 +5,7 @@ namespace Systopic\System\Panels\Root\Cms\Controlmap;
 
 use Systopic\System\Controlmap\Discover;
 use Systopic\System\Controlmap\DiscoveredPanel;
+use Systopic\System\Controlmap\Map;
 use Systopic\System\Panels\Root\Cms\Panel as CmsPanel;
 
 /**
@@ -30,6 +31,13 @@ class Panel extends CmsPanel {
 
 	/** @var list<DiscoveredPanel>|null */
 	private ?array $found = NULL;
+
+	/** The configs over these panels: who may, merged and inherited (`Controlmap\Map`). */
+	public Map $map {
+		get => $this->mapped ??= new Map($this->panels, rtrim(str_replace('\\', '/', (string) \fs::$projectRoot), '/') . '/config/controlmap.json');
+	}
+
+	private ?Map $mapped = NULL;
 
 	/** The logical path chosen in the tree; '' is the root. */
 	public string $selectedPath {

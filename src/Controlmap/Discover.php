@@ -79,6 +79,7 @@ final class Discover
                 origin: self::origin($hit->absPath),
                 dir: $dir,
                 origins: array_values(array_unique(array_map(self::origin(...), $hit->altPaths))),
+                dirs: self::dirs($hit->altPaths),
                 classFile: $classFile,
                 className: $class['class'] ?? null,
                 extends: $class['extends'] ?? null,
@@ -89,6 +90,19 @@ final class Discover
             );
         }
         return $out;
+    }
+
+    /**
+     * @param list<string> $altPaths every folder of the panel, in registration order
+     * @return array<string, string> origin => its folder (the last, if one has two)
+     */
+    private static function dirs(array $altPaths): array
+    {
+        $dirs = [];
+        foreach ($altPaths as $path) {
+            $dirs[self::origin($path)] = rtrim(str_replace('\\', '/', $path), '/');
+        }
+        return $dirs;
     }
 
     /** The package a folder belongs to — `system`, `cms` … — or `project`. */

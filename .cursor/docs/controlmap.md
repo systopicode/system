@@ -103,16 +103,59 @@ wenn sie nichts allein aufgrund der Session ändert. QR-Codes und Mails
 sollten besser auf eine Seite zeigen (`…/?id=`), deren Button dann
 same-origin ist.
 
+## Configs (`Controlmap\Map`)
+
+Stand 2026-11-02: gelesen und in cms/controlmap angezeigt. Zur Laufzeit
+fragt noch niemand danach.
+
+**Ebenen** je Panel, die spätere ersetzt die frühere Schlüssel für
+Schlüssel:
+
+1. `panel.config.json` im Panel-Ordner jeder Herkunft, in der Reihenfolge
+   der Ordner (`system`, `cms` …, `project`). Das ist der Standard dessen,
+   der den Code liefert.
+2. `config/controlmap.json` des Projekts, nach logischem Pfad. Das
+   entscheidet die Installation.
+
+```json
+// cms: panels/cms/010_pages/panel.config.json
+{ "build":   ["cmsAdmin", "cmsEditor", "cmsPageEditor"],
+  "actions": ["cmsEditor"],
+  "action":  { "deletePage": ["cmsAdmin"] },
+  "rights":  { "move": ["cmsAdmin", "cmsEditor"] } }
+
+// Projekt: config/controlmap.json
+{ "cms/pages": { "action": { "publish": ["cmsAdmin"] } } }
+```
+
+Die Werte sind Rollen-Schlüssel. Eine Liste ersetzt die darunter, `[]`
+heißt: niemand außer dem Superuser.
+
+**Vererbung**, wenn die eigenen Ebenen nichts sagen (`Map::effective()`):
+
+| Schlüssel | eigener Wert, sonst … |
+|---|---|
+| `build` | `build` des Eltern-Panels |
+| `actions` | `build` des Panels, sonst `actions` des Eltern-Panels |
+| `action.x` | `actions` des Panels (wie oben weiter) |
+| `right.x` | `right.x` der Vorfahren bis zur Wurzel, sonst `actions` des Panels |
+
+Sagt keine Ebene irgendwo etwas: `null`, dann entscheidet der Code
+(`buildGranted()`, `actionGranted()`) wie bisher.
+
+**Anzeige:** In Discover öffnet ein Klick auf einen Chip (Herkunft, Access
+in code, Action) die Lightbox `discover/config/?path=cms.pages&focus=…`.
+Sie zeigt je Schlüssel die Spalten „In code“, jede Ebene und „Effective“ mit
+Herkunft, darunter die Dateien. Das `</>` hinter einem Chip öffnet die
+Stelle in syscoder. Rollen-Schlüssel, die keine Rolle hat, sind markiert.
+
 ## Offen (nächste Schritte)
 
 1. **Baum + Map-GUI:** je Panel `build`, `actions` (Default) und je Action
    eine Rollenliste. Die Vererbung wird angezeigt („geerbt von cms/pages“).
-2. **Configs:**
-   - Pakete liefern `panel.config.json` neben `panel.php` als Default mit
-     generischen Rollen (`editor`).
-   - Das Projekt speichert Abweichungen in `config/controlmap.json`, das
-     wandert per Sync.
-   - Zur Laufzeit wird das zu einem PHP-Array in `var/` zusammengeführt.
+2. **Configs:** lesen und anzeigen erledigt 2026-11-02, siehe unten
+   „Configs“. Offen: bearbeiten (nur die Projekt-Ebene) und zur Laufzeit
+   ein zusammengeführtes PHP-Array in `var/`.
 3. **Rollen-Schlüssel:** erledigt 2026-11-02, siehe [acl.md](acl.md)
    „Rollen-Schlüssel und Rollen des Systems“. `role_key` statt
    `role_builtin`, `hasRole()` nur nach Schlüssel (ein unbekannter wirft),

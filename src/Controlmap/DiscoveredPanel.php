@@ -18,6 +18,7 @@ final class DiscoveredPanel
     /**
      * @param string                          $dir     the winning folder: class file and actions.php are read from here
      * @param list<string>                    $origins every package (or 'project') that has the folder, in registration order
+     * @param array<string, string>           $dirs    origin => its folder: where its panel.config.json lies (Map)
      * @param array{build?: array<string, int>, action?: array<string, int>} $grants what the class's own buildGranted() / actionGranted() ask for => the line
      * @param array<string, DiscoveredAction> $actions
      * @param list<self>                      $children
@@ -29,6 +30,7 @@ final class DiscoveredPanel
         public readonly string $origin,
         public readonly string $dir,
         public readonly array $origins,
+        public readonly array $dirs,
         public readonly ?string $classFile,
         public readonly ?string $className,
         public readonly ?string $extends,
