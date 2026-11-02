@@ -88,9 +88,9 @@ class Panel extends CmsPanel {
 
 		$name = $panel->children === []
 			? $e($panel->name)
-			: "<a class='ajax' href='./?panel=" . rawurlencode($panel->path) . "' title='Show the panels below'>{$e($panel->name)}</a>";
+			: "<a class='ajax' href='{$e(\Systopic\System\Panels\Root\Cms\Controlmap\Panel::nodeHref($panel->path))}' title='Show the panels below'>{$e($panel->name)}</a>";
 		return "<tr class='" . ($panel->isPlain ? 'plain' : '') . "' style='--depth: $indent'>"
-			. "<td class='panel' title='{$e($classTitle)}'><span class='name'>$name</span>$classLink<span class='path'>{$e($panel->path)}</span></td>"
+			. "<td class='panel' title='{$e($classTitle)}'><span class='name'>$name</span>$classLink<span class='path'>{$e($panel->path)}/</span></td>"
 			. "<td class='origin'>$origins</td>"
 			. "<td class='grants'>$grants</td>"
 			. "<td class='actions'>$actions</td>"

@@ -7,7 +7,7 @@
  * @var \Systopic\System\Panels\Root\Cms\Controlmap\Discover\Panel $this
  */
 
-$panel = rawurlencode($this->parent->selectedPath);
+$again = $this->showAll ? './?all=1' : \Systopic\System\Panels\Root\Cms\Controlmap\Panel::nodeHref($this->parent->selectedPath);
 ?>
 <div class="rightAlign">
 	<?php if ($this->showAll) { ?>
@@ -15,5 +15,5 @@ $panel = rawurlencode($this->parent->selectedPath);
 	<?php } else { ?>
 		<a class="button ajax" href="./?all=1" title="Every panel in one table"><i class="fa-regular fa-list-tree"></i><span>Show all</span></a>
 	<?php } ?>
-	<a class="button ajax" href="./?<?= $this->showAll ? 'all=1' : 'panel=' . $panel ?>" title="Read the folders and the code again"><i class="fa-regular fa-magnifying-glass-arrows-rotate"></i><span>Discover</span></a>
+	<a class="button ajax" href="<?= htmlspecialchars($again, ENT_QUOTES) ?>" title="Read the folders and the code again"><i class="fa-regular fa-magnifying-glass-arrows-rotate"></i><span>Discover</span></a>
 </div>

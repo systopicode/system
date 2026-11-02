@@ -1,13 +1,64 @@
 /* cms/controlmap/discover — the panels as a table, indented by depth */
 
-.cms .discover > header{
+/* One table, several cards. Each tbody.card is a white card, so the
+   columns line up across the cards; separate tables size each on its own.
+   The cells stay transparent and the tbody paints the card: border-radius
+   does not round a tbody, clip-path does, and the shadow comes from the
+   table (drop-shadow follows the clipped cards, box-shadow would be cut).
+   No .tableScroll around it: its overflow would cut the shadow.
+   For every panel: .cursor/team/2026-11-02-card-table.md */
+.cms table.cardTable.cardTable{
+	background: transparent;
+	filter: drop-shadow(var(--cmsShadow));
+}
+.cms table.cardTable.cardTable > tbody.card{
+	background: var(--cmsCanvas);
+	clip-path: inset(0 round var(--cmsRadiusLg));
+	box-shadow: inset 0 0 0 1px var(--cmsLine);
+}
+.cms table.cardTable.cardTable > tbody > tr > :is(th, td){
+	background: transparent;
+}
+.cms table.cardTable.cardTable > tbody.cardGap > tr > td{
+	height: 1.25rem;
+	padding: 0;
+	border: none;
+}
+.cms table.cardTable.cardTable > tbody > tr.cardHead > th{
+	padding: 0.45rem 0.75rem;   /* the title in line with the first column */
+	border-bottom: 1px solid var(--cmsLine);
+}
+.cms table.cardTable.cardTable > tbody > tr.cardHead header{
 	display: flex;
 	align-items: center;
 	gap: 1rem;
+	min-height: 2.1rem;
 }
-.cms .discover .discoverFilter{
-	margin-left: auto;
-	max-width: 18rem;
+.cms table.cardTable.cardTable > tbody > tr.cardHead h2{
+	flex: 1 1 auto;
+	margin: 0;
+	color: var(--cmsTextColor);
+}
+.cms table.cardTable.cardTable > tbody > tr:is(.cardHead, .cardColumns):hover > :is(th, td){
+	background: transparent;
+	box-shadow: none;
+}
+.cms table.cardTable.cardTable tr[hidden]{
+	display: none;
+}
+.cms table.cardTable.cardTable td.none{
+	color: var(--cmsMuted);
+}
+.cms .discoverList .discoverFilter{
+	flex: 0 1 18rem;
+	margin: 0;
+}
+/* `.cms table input` (24_table.css) sets the background shorthand and so
+   drops the magnifier of 50_forms.css; inside a card head it comes back */
+.cms table.cardTable.cardTable > tbody > tr.cardHead input[type="search"]{
+	background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 14 14'%3E%3Ccircle cx='6' cy='6' r='4.5' fill='none' stroke='%236b7c84' stroke-width='1.6'/%3E%3Cpath d='M9.4 9.4L13 13' stroke='%236b7c84' stroke-width='1.6' stroke-linecap='round'/%3E%3C/svg%3E");
+	background-repeat: no-repeat;
+	background-position: left 0.7rem center;
 }
 
 .cms table.discoverList.discoverList :is(th, td){

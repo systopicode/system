@@ -9,6 +9,21 @@
 	color: var(--cmsMuted);
 }
 
+/* Open all / close all in the dark header, on the right */
+body > main > div.pylon.controlmapTree > header{
+	display: flex;
+	align-items: center;
+	justify-content: flex-end;
+	padding-right: 0.5rem;
+}
+.cms .controlmapTree > header .treeNavi a{
+	color: var(--cmsFrameText);
+}
+.cms .controlmapTree > header .treeNavi a:hover{
+	background: var(--cmsFrameLine);
+	color: #fff;
+}
+
 /* As wide as the tree, up to most of the screen; pulled, the pulled width
    (GUI proposal for every pylon: .cursor/team/2026-10-30-pylon-breite.md) */
 body > main > div.pylon.controlmapTree{

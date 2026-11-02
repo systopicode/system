@@ -8,6 +8,9 @@
  * marked; every other one runs only from this site's own pages
  * (ActionGuard).
  *
+ * All of it is one table, each white card a `tbody.card`: so the columns
+ * are as wide in "This panel" as in "Below" (discover.css, `cardTable`).
+ *
  * @var \Systopic\System\Panels\Root\Cms\Controlmap\Discover\Panel $this
  */
 
@@ -32,7 +35,15 @@ foreach ($all as $panel) {
 }
 $granting = count(array_filter($all, static fn(DiscoveredPanel $p) => $p->grants !== []));
 
-$head = '<thead><tr><th>Panel</th><th>From</th><th>Access in code</th><th>Actions</th></tr></thead>';
+// one card: its title row, the column heads, the rows
+$card = static function (string $title, string $rows, string $tools = ''): string {
+	return "<tbody class='card'>"
+		. "<tr class='cardHead'><th colspan='4'><header><h2>$title</h2>$tools</header></th></tr>"
+		. "<tr class='cardColumns'><th>Panel</th><th>From</th><th>Access in code</th><th>Actions</th></tr>"
+		. $rows
+		. '</tbody>';
+};
+$gap = "<tbody class='cardGap'><tr><td colspan='4'></td></tr></tbody>";
 $selected = $map->selected;
 ?>
 <?php if ($this->showAll) { ?>
@@ -42,27 +53,19 @@ $selected = $map->selected;
 		<?= $granting ?> panels decide access in their own code.
 		Read off the folders and the code of this installation on every view, nothing is stored.
 	</p>
-	<section class="widget is-list discover">
-		<header>
-			<h2>Panels</h2>
-			<input type="search" class="discoverFilter" placeholder="Filter panels and actions" autocomplete="off"
-				   oninput="const q = this.value.trim().toLowerCase(); this.closest('section').querySelectorAll('tbody tr').forEach(r => r.hidden = q !== '' && !r.textContent.toLowerCase().includes(q))">
-		</header>
-		<div class="tableScroll">
-			<table class="discoverList">
-				<?= $head ?>
-				<tbody>
-					<?php foreach ($all as $panel) {
-						echo $this->row($panel, $panel->depth);
-					} ?>
-				</tbody>
-			</table>
-		</div>
-	</section>
+	<?php
+	$rows = '';
+	foreach ($all as $panel) {
+		$rows .= $this->row($panel, $panel->depth);
+	}
+	$filter = '<input type="search" class="discoverFilter" placeholder="Filter panels and actions" autocomplete="off"'
+		. ' oninput="const q = this.value.trim().toLowerCase(); this.closest(\'tbody\').querySelectorAll(\'tr:not(.cardHead, .cardColumns)\').forEach(r => r.hidden = q !== \'\' &amp;&amp; !r.textContent.toLowerCase().includes(q))">';
+	?>
+	<table class="discoverList cardTable"><?= $card('Panels', $rows, $filter) ?></table>
 	<?php return;
 } ?>
 
-<h1><?= $e($selected?->path ?? $map->rootLabel) ?></h1>
+<h1><?= $e($selected === NULL ? $map->rootLabel : $selected->path . '/') ?></h1>
 <p class="tagsHint">
 	<?php if ($selected === NULL) { ?>
 		The top-level panels of this installation: <?= count($all) ?> panels, <?= $actionCount ?> actions in all.
@@ -72,32 +75,18 @@ $selected = $map->selected;
 	Read off the folders and the code on every view, nothing is stored.
 </p>
 
-<?php if ($selected !== NULL) { ?>
-	<section class="widget is-list discover">
-		<header><h2>This panel</h2></header>
-		<div class="tableScroll">
-			<table class="discoverList">
-				<?= $head ?>
-				<tbody><?= $this->row($selected) ?></tbody>
-			</table>
-		</div>
-	</section>
-<?php } ?>
-
-<section class="widget is-list discover">
-	<header><h2><?= $selected === NULL ? 'Panels' : 'Below' ?></h2></header>
-	<?php if ($map->selectedChildren === []) { ?>
-		<p class="tagsHint">No panels below.</p>
-	<?php } else { ?>
-		<div class="tableScroll">
-			<table class="discoverList">
-				<?= $head ?>
-				<tbody>
-					<?php foreach ($map->selectedChildren as $panel) {
-						echo $this->row($panel);
-					} ?>
-				</tbody>
-			</table>
-		</div>
-	<?php } ?>
-</section>
+<?php
+$below = '';
+foreach ($map->selectedChildren as $panel) {
+	$below .= $this->row($panel);
+}
+if ($below === '') {
+	$below = "<tr><td colspan='4' class='none'>No panels below.</td></tr>";
+}
+?>
+<table class="discoverList cardTable">
+	<?php if ($selected !== NULL) {
+		echo $card('This panel', $this->row($selected)) . $gap;
+	} ?>
+	<?= $card($selected === NULL ? 'Panels' : 'Below', $below) ?>
+</table>
