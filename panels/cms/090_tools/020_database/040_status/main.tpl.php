@@ -91,7 +91,7 @@ if ($state['shown'] !== []): ?>
 							No class describes this table.
 							<?= isset($orphans[$table->name])
 								? 'It sits under a prefix the model uses, so it is orphaned.'
-								: 'The audit proposes nothing for it: no primary key, or a prefix no class uses - out of scope, not orphaned.' ?>
+								: 'Its prefix is none the model uses, so it is another application\'s - out of scope, not orphaned.' ?>
 						</td>
 					</tr>
 				<?php endif; ?>
