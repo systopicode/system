@@ -3,21 +3,22 @@
 
 $role = $this->role;
 $e = static fn($v): string => htmlspecialchars((string) $v, ENT_QUOTES);
-$field = static function (string $label, string $type, string $action, ?string $value) use ($e, $role): string {
-	return '<label class="field"><span>' . $label . '</span><input type="' . $type . '" autocapitalize="off" data-role_id="' . (int) $role->id . '" name="value" data-on_blur="' . $action . '" value="' . $e($value) . '" autocomplete="off" spellcheck="off"></label>';
+$field = static function (string $label, string $type, string $action, ?string $value, bool $readonly = false) use ($e, $role): string {
+	return '<label class="field"><span>' . $label . '</span><input type="' . $type . '" autocapitalize="off" data-role_id="' . (int) $role->id . '" name="value" data-on_blur="' . $action . '" value="' . $e($value) . '" autocomplete="off" spellcheck="off"' . ($readonly ? ' readonly' : '') . '></label>';
 };
 ?>
 <header class="tagEditTitle">
 	<h1><?= $e($role->name) ?></h1>
 	<button type="button" class="tagGroupRename" onclick="renameUserAdminTitle(this)" data-rename-url="<?= $e($this->href . 'updateRoleName?role_id=' . (int) $role->id) ?>" title="Rename" aria-label="Rename"><i class="cmsIcon cmsIcon-pen"></i></button>
 	<ul class="barmenu">
-		<?php if ((int) $role->id !== 1) { ?><li><button type="button" class="button icononly" aria-label="Remove" title="Remove" data-on_click="userConfirm" data-action="removeRole" data-confirm="Delete this role? This cannot be undone." data-role_id="<?= (int) $role->id ?>"><i class="cmsIcon cmsIcon-trash"></i></button></li><?php } ?>
+		<?php if (!$role->isSystem && !$role->isBuiltin && (int) $role->id !== 1) { ?><li><button type="button" class="button icononly" aria-label="Remove" title="Remove" data-on_click="userConfirm" data-action="removeRole" data-confirm="Delete this role? This cannot be undone." data-role_id="<?= (int) $role->id ?>"><i class="cmsIcon cmsIcon-trash"></i></button></li><?php } ?>
 		<li><a class="ajax" href="../" aria-label="Close"><i class="cmsIcon cmsIcon-xmark"></i></a></li>
 	</ul>
 </header>
 <main class="roleEdit">
 	<?= \message::flush() ?>
 	<div class="fieldGrid is-stack">
+		<?= $field('Key', 'text', 'updateRoleKey', $role->key, $role->isSystem) ?>
 		<?= $field('Description', 'text', 'updateRoleDescription', (string) $role->description) ?>
 		<label class="field roleColor">
 			<span>Color</span>
@@ -54,3 +55,10 @@ $field = static function (string $label, string $type, string $action, ?string $
 		</div>
 	</section>
 </main>
+<footer>
+	<?php if ($role->isBuiltin) { ?>
+		<p class="hint"><?= $role->key === 'everyone' ? 'Every visitor holds this role, signed in or not.' : 'Every signed-in user holds this role.' ?> It is given by the system: not assigned to users, and not to be deleted.</p>
+	<?php } elseif ($role->isSystem) { ?>
+		<p class="hint">The system brings this role along: the code asks for its key. Assign it to users; it is not to be deleted.</p>
+	<?php } ?>
+</footer>

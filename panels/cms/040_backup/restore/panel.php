@@ -15,9 +15,10 @@ use Systopic\System\Panels\Root\Cms\Backup\Panel as BackupPanel;
  */
 class Panel extends BackupPanel
 {
+	/** Who may: panel.config.json. The recovery user before a restore (an empty database) may too. */
 	public function buildGranted(): bool
 	{
-		return \Systopic\System\Auth\Session::hasOneRole('admin', 'restore');
+		return \Systopic\System\Auth\Session::isRecovery() ? \Systopic\System\Auth\Session::hasRole('restore') : \Systopic\System\Auth\Session::isSuperuser();
 	}
 
 	public function onLoad(): void

@@ -7,7 +7,7 @@ namespace Systopic\System\Panels\Root\Cms\Settings\Theme;
 use Systopic\System\Panels\Root\Cms\Settings\Panel as SettingsPanel;
 
 /**
- * The four CMS colours. Superusers only. Template settings, tags and media
+ * The four CMS colours. Superusers only (panel.config.json: an empty list). Template settings, tags and media
  * stay in the CMS package.
  */
 class Panel extends SettingsPanel
@@ -20,11 +20,6 @@ class Panel extends SettingsPanel
     {
         parent::__construct($name, $parent);
         $this->label = 'Theme';
-    }
-
-    function buildGranted()
-    {
-        return \Systopic\System\Auth\Session::isSuperuser();
     }
 
     function onLoad() {}

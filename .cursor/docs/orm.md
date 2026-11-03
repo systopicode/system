@@ -148,6 +148,15 @@ Verbreitern einer Spalte.
   `Connection::isMariaDb()` zutrifft. Wer `COLUMN_DEFAULT` selbst liest, muss
   es auch durch diese Funktion schicken.
 
+**Falle Spalte mit Fremdschlüssel löschen (2026-10-29, behoben in systopic/db):**
+- *Symptom:* `db audit` → `drop column cms_nodes.node_group_id` scheitert mit
+  `1828 Cannot drop column … needed in a foreign key constraint`, auch mit
+  ausgeschalteten FK-Checks.
+- *Ursache:* Die FK-Checks prüfen nur Daten, nicht die Struktur. Solange ein
+  Constraint auf der Spalte liegt, lässt MySQL sie nicht löschen.
+- *Lösung:* Die `DropColumn`-Aktion löscht zuerst jeden Fremdschlüssel auf
+  der Spalte (eigene und eingehende), dann die Spalte.
+
 ---
 
 ## 2 · Lesen: die Scope

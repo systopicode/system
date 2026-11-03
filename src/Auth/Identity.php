@@ -28,6 +28,9 @@ final class Identity
     /** @var array{read: list<int>, write: list<int>}|null */
     private ?array $rights = null;
 
+    /** @var list<int>|null */
+    private ?array $rightsRoleIds = null;
+
     /**
      * @param list<string> $recoveryRoles the roles of the recovery user
      */
@@ -80,9 +83,14 @@ final class Identity
         }
     }
 
-    /** @return list<string> */
+    /** @return list<string> the labels, to show — code asks for `roleKeys` */
     public array $roleNames {
         get => $this->recovery ? $this->recoveryRoles : array_map(static fn(Role $r) => (string) $r->name, $this->roles);
+    }
+
+    /** @return list<string> what `Session::hasRole()` compares; the recovery user's are `recovery`, `restore` */
+    public array $roleKeys {
+        get => $this->recovery ? $this->recoveryRoles : array_map(static fn(Role $r) => (string) $r->key, $this->roles);
     }
 
     /** @return list<int> */
@@ -90,37 +98,66 @@ final class Identity
         get => array_map(static fn(Role $r) => (int) $r->id, $this->roles);
     }
 
-    /** @return list<string> the roles a superuser may take on (every role) */
-    public array $allRoleNames {
-        get => array_map(static fn(Role $r) => (string) $r->name, UserRights::roles($this->scope, null, true));
+    /** @return list<string> the keys of the roles a superuser may take on — every role but the built-in ones, held anyway */
+    public array $allRoleKeys {
+        get => array_values(array_map(static fn(Role $r) => (string) $r->key,
+            array_filter(UserRights::roles($this->scope, null, true), static fn(Role $r) => !$r->isBuiltin)));
     }
 
     // ------------------------------------------------------- rights
 
     /**
      * The groups the user may read / write. A superuser holds every role —
-     * or, with fake roles, only those; anybody else the assigned ones.
+     * or, with fake roles, only those; anybody else the assigned ones. On
+     * top, for everybody: the built-in role `everyone`, and `authenticated`
+     * for a signed-in user.
      */
     public array $readGroupIds { get => $this->rights()['read']; }
 
     public array $writeGroupIds { get => $this->rights()['write']; }
 
+    /**
+     * The ACLs the user may read / write: those with a group of the above.
+     * Not kept here but asked each time — the scope caches the query and
+     * throws it away when a new ACL is written in this request.
+     *
+     * @var list<int>
+     */
+    public array $readAclIds { get => UserRights::acls($this->scope, $this->rightsRoleIds())['read']; }
+
+    /** @var list<int> */
+    public array $writeAclIds { get => UserRights::acls($this->scope, $this->rightsRoleIds())['write']; }
+
     /** @return array{read: list<int>, write: list<int>} */
     private function rights(): array
     {
-        if ($this->rights !== null) {
-            return $this->rights;
+        return $this->rights ??= UserRights::groups($this->scope, $this->rightsRoleIds());
+    }
+
+    /** @return list<int> the roles the rights come from — a superuser's all, or the faked ones */
+    private function rightsRoleIds(): array
+    {
+        if ($this->rightsRoleIds !== null) {
+            return $this->rightsRoleIds;
         }
         $roleIds = $this->roleIds;
         if ($this->isSuperuser) {
             $all = UserRights::roles($this->scope, null, true);
             $fake = Session::fakeRoles();
             if ($fake !== []) {
-                $all = array_values(array_filter($all, static fn(Role $r) => in_array((string) $r->name, $fake, true)));
+                $all = array_values(array_filter($all, static fn(Role $r) => in_array((string) $r->key, $fake, true)));
             }
             $roleIds = array_map(static fn(Role $r) => (int) $r->id, $all);
         }
-        return $this->rights = UserRights::groups($this->scope, $roleIds);
+        // the built-in roles nobody assigns: everyone, and every signed-in user
+        // (not for the recovery user, who may have no database)
+        $builtin = $this->recovery ? [] : UserRights::keyedRoles($this->scope);
+        foreach (['everyone' => true, 'authenticated' => $this->user !== null] as $key => $holds) {
+            if ($holds && isset($builtin[$key])) {
+                $roleIds[] = (int) $builtin[$key]->id;
+            }
+        }
+        return $this->rightsRoleIds = array_values(array_unique($roleIds));
     }
 
     // --------------------------------------------------- legacy surface
@@ -153,6 +190,8 @@ final class Identity
             'role_colors' => array_map(static fn(Role $r) => (string) $r->color, $this->roles),
             'read_group_ids' => $this->readGroupIds,
             'write_group_ids' => $this->writeGroupIds,
+            'read_acl_ids' => $this->readAclIds,
+            'write_acl_ids' => $this->writeAclIds,
             'roles' => $this->roles,
             default => $this->column($name),
         };

@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace Systopic\System\Auth;
 
 use Systopic\Db\Scope;
+use Systopic\Db\TableRow;
 use Systopic\System\Queries\UserLookup\UserLookup;
+use Systopic\System\Queries\UserRights\UserRights;
 use Systopic\System\Setup\Setup;
 use Systopic\System\Tables\Users\Model as User;
 
@@ -17,7 +19,7 @@ use Systopic\System\Tables\Users\Model as User;
  *
  *   Session::current()              the Identity (user, roles, group rights)
  *   Session::known(), ::id()
- *   Session::hasRole('editor')      fake roles count when set (a superuser "viewing as")
+ *   Session::hasRole('cmsEditor')   by key; fake roles count when set (a superuser "viewing as")
  *   Session::login($user), ::logout()
  *   Session::state()                the panels' state tree, stored at the end of the request
  *
@@ -39,6 +41,9 @@ final class Session
     private const STATE_KEY = 'systopic_user_state';
     private const RECOVERY_KEY = 'systopic_recovery';
     private const RETURN_KEY = 'systopic_return_to';
+
+    /** The roles of the recovery user: no row in `usm_roles`, and no other user holds them. */
+    public const RECOVERY_ROLES = ['recovery', 'restore'];
 
     /** An interactive sign-in. Restoring a device cookie does not set it. */
     public const PASSKEY_GRANT = 'systopic_passkey_grant';
@@ -76,14 +81,32 @@ final class Session
 
     // ----------------------------------------------------------- roles
 
+    /**
+     * Does the user hold the role with this key (`usm_roles.role_key`,
+     * e.g. `cmsEditor`)? A superuser holds every one.
+     *
+     * Names are not compared: a role may be renamed. A key no role has is a
+     * mistake in the code — an old project asking `hasRole('editor')` — and
+     * throws, rather than letting only the superuser in without anybody
+     * noticing. The recovery user has no database to ask and holds
+     * `recovery` or `restore` (`RECOVERY_ROLES`), which nobody else holds.
+     *
+     * @throws \LogicException for a key no role has
+     */
     public static function hasRole(string $role, bool $ignoreFakeRoles = false): bool
     {
+        $identity = self::current();
+        if ($identity->recovery || in_array($role, self::RECOVERY_ROLES, true)) {
+            return $identity->recovery && in_array($role, $identity->roleKeys, true);
+        }
+        if (!isset(UserRights::keyedRoles(Scope::default())[$role])) {
+            throw new \LogicException("hasRole('$role'): no role has this key (usm_roles.role_key) — roles are asked by key, not by name (cmsEditor, cmsAdmin …, see Roles\\Operator::SYSTEM)");
+        }
         $fake = self::fakeRoles();
         if ($fake !== [] && !$ignoreFakeRoles) {
             return in_array($role, $fake, true);
         }
-        $identity = self::current();
-        return in_array($role, $identity->roleNames, true) || $identity->isSuperuser;
+        return in_array($role, $identity->roleKeys, true) || $identity->isSuperuser;
     }
 
     public static function hasOneRole(string ...$roles): bool
@@ -105,16 +128,16 @@ final class Session
         return $ignoreFakeRoles || self::fakeRoles() === [];
     }
 
-    /** @return list<string> */
+    /** @return list<string> the keys of the roles viewed as */
     public static function fakeRoles(): array
     {
         return array_values((array) (self::state()->fakeRoles ?? []));
     }
 
-    /** View the CMS as a role (only one the user holds; a superuser holds every one). */
+    /** View the CMS as a role, by key (only one the user holds; a superuser holds every one). */
     public static function addFakeRole(?string $role = null): void
     {
-        if ($role === null || !self::hasRole($role, true)) {
+        if ($role === null || !isset(UserRights::keyedRoles(Scope::default())[$role]) || !self::hasRole($role, true)) {
             return;
         }
         $state = self::state();
@@ -135,17 +158,20 @@ final class Session
     // ---------------------------------------------------------- rights
 
     /**
-     * May the user read / write a row with `user_id` and `group_id` (legacy
-     * records and ORM rows alike)? The owner always; no group: superusers.
+     * May the user read / write a row with an owner and an ACL or a group
+     * (legacy records and ORM rows alike)? The owner and a superuser (not
+     * viewing as a role) always; neither ACL nor group: nobody else. A row
+     * with an ACL (`cms_nodes`) is judged by it, a row with one group
+     * (`pwk_patchworks` for now) by that.
      */
     public static function mayRead(object $item): bool
     {
-        return self::may($item, self::current()->readGroupIds);
+        return self::may($item, 'read');
     }
 
     public static function mayWrite(object $item): bool
     {
-        return self::may($item, self::current()->writeGroupIds);
+        return self::may($item, 'write');
     }
 
     // ----------------------------------------------------- in and out
@@ -419,17 +445,35 @@ final class Session
         return self::recoveryTrusted() ? Identity::recovery($scope, $roles) : Identity::anonymous($scope);
     }
 
-    /** @param list<int> $groupIds */
-    private static function may(object $item, array $groupIds): bool
+    /** @param 'read'|'write' $right */
+    private static function may(object $item, string $right): bool
     {
-        $owner = $item->user_id ?? (method_exists($item, 'relationId') ? $item->relationId('user') : null);
+        // a superuser holds every role, but a group no role may write would
+        // still shut them out — they may anyway (unless viewing as a role)
+        if (self::isSuperuser()) {
+            return true;
+        }
+        $row = $item instanceof TableRow ? $item : null;
+        $owner = $row !== null
+            ? (property_exists($row, 'user') ? $row->relationId('user') : null)
+            : ($item->user_id ?? null);
         if ($owner !== null && (int) $owner === self::id()) {
             return true;
         }
-        $group = $item->group_id ?? (method_exists($item, 'relationId') ? $item->relationId('group') : null);
-        if ($group === null || (int) $group === 0) {
+        $identity = self::current();
+        $hasAcl = $row !== null ? property_exists($row, 'acl') : isset($item->acl_id);
+        if ($hasAcl) {
+            $id = $row !== null ? $row->relationId('acl') : $item->acl_id;
+            $allowed = $right === 'read' ? $identity->readAclIds : $identity->writeAclIds;
+        } else {
+            $id = $row !== null
+                ? (property_exists($row, 'group') ? $row->relationId('group') : null)
+                : ($item->group_id ?? null);
+            $allowed = $right === 'read' ? $identity->readGroupIds : $identity->writeGroupIds;
+        }
+        if ($id === null || (int) $id === 0) {
             return self::isSuperuser();
         }
-        return in_array((int) $group, $groupIds, true);
+        return in_array((int) $id, $allowed, true);
     }
 }

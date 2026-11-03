@@ -34,12 +34,13 @@ final class ClientData
         if ($active->user !== null) {
             $data['active'] = $active->id;
             $data['active_fake_roles'] = Session::fakeRoles();
-            $data['superuser_roles'] = $active->isSuperuser ? $active->allRoleNames : [];
+            $data['superuser_roles'] = $active->isSuperuser ? $active->allRoleKeys : [];
             $data['ids']['#' . $active->id] = [
                 'id' => $active->id,
                 'name' => $active->name,
                 'role_ids' => $active->roleIds,
                 'role_names' => $active->roleNames,
+                'role_keys' => $active->roleKeys,
                 'read' => $active->readGroupIds,
                 'write' => $active->writeGroupIds,
                 'isSuperuser' => $active->isSuperuser,

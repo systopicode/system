@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Systopic\System\Panels\Builder;
 
+use Systopic\System\Controlmap\Access;
 use Systopic\System\Debug\BoxTree;
 use Systopic\System\Panels\PanelNode;
 use Systopic\System\Panels\PanelRootFolder;
@@ -99,10 +100,12 @@ class PanelBuilder
             $child  = $this->constructPanel($hit->name, $parent, $hit);
             $this->createReferences($child, $parent, $hit->folder);
             $child->absPath = $hit->absPath;
+            $child->altPaths = $hit->altPaths;
 
             $isSelected = ($hit->name === $parent->childSelectedName);
 
-            if ($this->accessControlEnabled && !$child->buildGranted()) {
+            // the controlmap where a config says it, else buildGranted()
+            if ($this->accessControlEnabled && !Access::build($child)) {
                 if (defined('DEBUG') && DEBUG()) {
                     $this->buildLog[] = [
                         'event'  => 'accessDenied',

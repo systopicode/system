@@ -30,25 +30,24 @@ class Panel extends CmsPanel
 	 */
 	public array $backupfilestable = [];
 
+	/**
+	 * Who may is in panel.config.json (the controlmap): editors see the
+	 * panel, admins delete, upload, download, clear. What stays here is for
+	 * the recovery user, who has no database to ask the configs — and,
+	 * without a config, for the superuser.
+	 */
 	public function buildGranted(): bool
 	{
-		if ($this->name === 'backup') {
-			return \Systopic\System\Auth\Session::hasOneRole('editor', 'textEditor') || \Systopic\System\Auth\Session::isRecovery();
-		}
-		return \Systopic\System\Auth\Session::hasOneRole('editor');
+		return \Systopic\System\Auth\Session::isRecovery() || \Systopic\System\Auth\Session::isSuperuser();
 	}
 
-	/** The panel is open to editors and the recovery user — its actions are not. */
+	/** As buildGranted(); creating the database only when it is not reachable. */
 	public function actionGranted($action = null)
 	{
-		if ($this->name !== 'backup') {
-			return parent::actionGranted($action);
+		if ($action === 'createDatabase') {
+			return \Systopic\System\Auth\Session::isRecovery() && \Systopic\System\Auth\Session::hasRole('recovery');
 		}
-		return match ($action) {
-			'remove', 'clearTempdirs', 'upload' => \Systopic\System\Auth\Session::hasRole('admin'),
-			'createDatabase'          => \Systopic\System\Auth\Session::hasRole('recovery') && \Systopic\System\Auth\Session::isRecovery(),
-			default                   => parent::actionGranted($action),
-		};
+		return \Systopic\System\Auth\Session::isRecovery() || \Systopic\System\Auth\Session::isSuperuser();
 	}
 
 	/**

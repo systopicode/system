@@ -18,6 +18,13 @@ use Systopic\System\Tables\Users\Model as User;
 class Panel extends PanelNode {
 
 	/**
+	 * Opened from outside (ActionGuard): the link of an activation or reset
+	 * mail (the key authorises it), and the forms and legal pages a site
+	 * links to. None of them changes anything by itself.
+	 */
+	public array $entryActions = ['activate', 'reset', 'login', 'register', 'resetPassword', 'license', 'imprint', 'privacy', 'releases'];
+
+	/**
 	 * Which form `main.tpl.php` shows: login, register, resetPassword,
 	 * resetCode, activationCode, setPassword. Actions set it.
 	 */

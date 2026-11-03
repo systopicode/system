@@ -52,9 +52,9 @@ class Panel extends CmsPanel {
 		}
 	}
 
-	/** @var list<Role> */
+	/** @var list<Role> the roles a user can be given — not the built-in ones */
 	public array $roles {
-		get => array_values($this->admin->roles);
+		get => array_values($this->admin->assignableRoles());
 	}
 
 	/** The user of the row an action came from. */

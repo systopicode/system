@@ -43,3 +43,5 @@ require_once __DIR__ . '/lib/ffmpeg.bin.php';
 // Shared-hosting housekeeping: existing expiry rules, bounded and project-local.
 \Systopic\System\Maintenance\Tasks::register();
 \Systopic\System\Sys\Hooks\Hooks::on('afterConnect', static fn() => \Systopic\System\Maintenance\Runner::boot(), 1000);
+// Inherited ACLs of the nodes follow a move or an ACL change, after the commit.
+\Systopic\Db\Scope::addObserver(new \Systopic\System\Tables\Nodes\AclInheritance());

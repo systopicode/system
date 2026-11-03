@@ -46,4 +46,25 @@ final class Model extends TableRow
         get => $this->__get__(__PROPERTY__);
         set => $this->__set__(__PROPERTY__, $value);
     }
+
+    /**
+     * What code and configs call the role (`Session::hasRole('cmsEditor')`,
+     * the controlmap): it says which role it is, the name is only its label
+     * and may change. The system's own roles have theirs from
+     * `Operator::BUILTIN` and `Operator::SYSTEM`; a role somebody made gets
+     * one from its name (`Operator::keyFrom()`).
+     */
+    #[Col(length: 32, index: Index::Unique)]
+    public ?string $key = null {
+        get => $this->__get__(__PROPERTY__);
+        set => $this->__set__(__PROPERTY__, $value);
+    }
+
+    // ---- virtual: computed, not a column -----------------------------------
+
+    /** Held by every request on its own (`Operator::BUILTIN`): not assigned to a user. */
+    public bool $isBuiltin { get => isset(Operator::BUILTIN[(string) $this->key]); }
+
+    /** One of the system's own roles: its key is fixed, and it is not to be deleted. */
+    public bool $isSystem { get => $this->isBuiltin || isset(Operator::SYSTEM[(string) $this->key]); }
 }

@@ -39,8 +39,10 @@ passt nicht zusammen.
   Rücksprache“).
 - Am Ende immer eine Tabelle: Repo, Stand vorher, Stand nachher.
 
-`.cursor/docs/` liegt im Repo. Pläne, Regeln und Prüfskripte unter `.cursor/`
-bleiben lokal und wandern nur per Sync zwischen den Arbeitsplätzen.
+`.cursor/docs/` liegt im Repo, ebenso `.cursor/team/` (Vorschläge an den
+Lead eines anderen Bereichs, siehe [team/README.md](../team/README.md)).
+Pläne, Regeln und Prüfskripte unter `.cursor/` bleiben lokal und wandern nur
+per Sync zwischen den Arbeitsplätzen.
 
 ## Sync für Dateien, Git für die Geschichte
 
@@ -52,10 +54,16 @@ bleiben lokal und wandern nur per Sync zwischen den Arbeitsplätzen.
 - **Committet wird auf dem Arbeitsplatz, an dem gearbeitet wurde.** Kommt
   ein Stand per Sync an, wird dort nichts neu committet. Git wird nur
   nachgezogen (siehe unten).
-- **Committet wird je Thema**: wenn etwas fertig ist und ein neues Thema
-  beginnt, nicht nach jedem Prompt. Zwischenstände bleiben uncommittet.
+- **Committet wird je Feature, erst wenn es abgeschlossen ist** (Regel des
+  Benutzers, 2026-10-29). Abgeschlossen ist es, wenn der Benutzer es sagt
+  oder wenn das Thema wechselt. Im Zweifel fragt Claude nach („Ist X fertig,
+  soll ich committen?“). **Nicht** nach jedem Prompt und nicht nach jeder
+  Korrektur: Nachbesserungen (Abstand, Farbe, Spalte) gehören in den Commit
+  des Features, nicht in je einen eigenen. Zwischenstände bleiben
+  uncommittet.
 - **Pushen nur nach Rücksprache.** Claude committet lokal und pusht, wenn
-  der Benutzer es sagt („bitte pushen“). Liegen beim Ende einer Sitzung
+  der Benutzer es sagt („bitte pushen“), auch das erst nach Abschluss des
+  Features. Liegen beim Ende einer Sitzung
   ungepushte Commits vor, fragt Claude nach. Gepusht wird als `ohjay666`
   bzw. `sabietzki` (Lars) über den Git Credential Manager, mit
   `GIT_TERMINAL_PROMPT=0`, damit nichts auf eine Eingabe wartet. Der

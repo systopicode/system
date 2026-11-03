@@ -40,29 +40,24 @@ while ($openChildLimit-- > 0 && $nav->openChildSelected(false)) { // false: skip
 $module = $nav->getActive(); // deepest opened panel — used by action dispatch below
 
 if (!empty($action)) {
-	if (!$module->actionGranted($action)) {
-		header('HTTP/1.0 403 Forbidden');
-		die('no access to execute actions in this module:(');
-	}
-	if (isset($module->$action) && $module->$action instanceof \Closure) {
-		$module->$action->call($module);
-	}
-	if (method_exists($module, $action) && is_callable([$module, $action])) {
-		$parentClass = get_parent_class($module);
-		if ($parentClass && method_exists($parentClass, $action)) {
-			// Inherited API methods (e.g. PanelNode::updateView / updateViews) must
-			// NOT be invoked as HTTP actions — their signature is not the action
-			// contract. Fall through to actions.php instead of aborting the request
-			// (legacy `return` skipped runActions and left AJAX without updateDocument).
-			logroute('app.php — skip inherited method, fall through to actions.php', [
-				'action'      => $action,
-				'parentClass' => $parentClass,
-			]);
-		} else {
+	// The guard throws when a rule stops the action (ActionGuard: the
+	// request comes from this site, the panel grants it). Then nothing of the
+	// action runs, the debug output shows why, and the panel renders as it is.
+	try {
+		\Systopic\System\Panels\ActionGuard::check($module, $action);
+		if (isset($module->$action) && $module->$action instanceof \Closure) {
+			$module->$action->call($module);
+		}
+		// a method of the action's name only with #[Action] - any other public
+		// method is a helper of the templates; one that nothing else runs throws
+		if (\Systopic\System\Panels\ActionGuard::method($module, $action) !== null) {
 			$module->$action();
 		}
+		$module->runActions();
+	} catch (\Systopic\System\Panels\ActionRefused $refused) {
+		p($refused);
+		\Systopic\System\Panels\ActionGuard::refused($refused);
 	}
-	$module->runActions();
 }
 
 if (is_file('menus.config.php')) {

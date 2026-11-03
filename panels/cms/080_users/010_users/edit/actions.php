@@ -125,7 +125,7 @@ switch ($this->action) {
 
 	case 'toggleUserRole':
 		$role = $this->admin->role((int) \http::dataset('role_id'));
-		if ($role !== null) {
+		if ($role !== null && !$role->isBuiltin) {
 			$link = $this->admin->assignment($user, $role);
 			if ($link !== null) {
 				$this->scope->remove($link);
@@ -236,7 +236,7 @@ switch ($this->action) {
 
 	case 'createAuth':
 		$this->state->userTab = 'access';
-		if (!\Systopic\System\Auth\Session::hasOneRole('admin')) {
+		if (!\Systopic\System\Auth\Session::hasRole('cmsAdmin')) {
 			\message::error('Only an administrator can create the sign-in key.');
 		} elseif (!\Systopic\System\Settings\EnvironmentFile::createAuth((string) \http::dataset('file'))) {
 			\message::error('The sign-in key was not created.');

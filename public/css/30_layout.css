@@ -50,13 +50,14 @@ body > main > div.pylon:after{
 
 /********STATUSLEISTE***************/
 /* Debug: the CMS on a faint checkerboard, open at the bottom - the sides
-   hold the debug tool's tabs. */
-body:has(> main[data-debug]){
+   hold the debug tool's tabs. Not while a debug window elsewhere shows them
+   (data-sysdebug-remote, tools/debug js/remote.js). */
+:root:not([data-sysdebug-remote]) body:has(> main[data-debug]){
     padding: 22px 32px 0;
     background: repeating-conic-gradient(#e4e8ec 0 25%, #eef1f4 0 50%) 0 0 / 16px 16px;
 }
 
-body > main[data-debug]{
+:root:not([data-sysdebug-remote]) body > main[data-debug]{
     border-radius: var(--cmsRadiusLg) var(--cmsRadiusLg) 0 0;
     overflow: clip;
 }

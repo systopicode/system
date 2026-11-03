@@ -79,6 +79,17 @@ final class UserAdmin
         return $this->users[(int) $id] ?? null;
     }
 
+    /**
+     * The roles a user can be given: all but the built-in ones, which every
+     * request holds on its own (`Roles\Operator::BUILTIN`).
+     *
+     * @return array<int, Role> by id
+     */
+    public function assignableRoles(): array
+    {
+        return array_filter($this->roles, static fn(Role $role): bool => !$role->isBuiltin);
+    }
+
     public function role(?int $id): ?Role
     {
         return $this->roles[(int) $id] ?? null;

@@ -53,13 +53,20 @@ class Panel extends CmsPanel {
 		}
 	}
 
-	/** @var list<string> names of the roles adopted right now */
+	/** @var list<string> keys of the roles adopted right now */
 	public array $fakeRoles {
 		get => (array) (\Systopic\System\Auth\Session::current()->state->fakeRoles ?? []);
 	}
 
 	function buildGranted() {
 		return TRUE;
+	}
+
+	function getDefaultState() {
+		$state = parent::getDefaultState();
+		$state->hijackerId = NULL;   // set by cms/users' hijackUser, for "Back to my account"
+		$state->hijackedId = NULL;
+		return $state;
 	}
 
 	function getNaviItem(): ?\htmlElement {

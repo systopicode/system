@@ -20,7 +20,7 @@ $codesOn = LoginCodes::available();
 $screenCode = preg_replace('~[^0-9A-Za-z\-]~', '', (string) \http::post('screen', \http::get('screen', '')));
 $pending = ($codesOn && $screenCode !== '') ? LoginCodes::peek($screenCode, [Codes::PAIR_USER, Codes::PAIR_SCREEN]) : null;
 $mayPersons = $me && \Systopic\System\Auth\SignInRights::allows($this->scope, $me, \Systopic\System\Auth\SignInRights::PERSONS);
-$mayScreens = $me && \Systopic\System\Auth\SignInRights::allows($this->scope, $me, \Systopic\System\Auth\SignInRights::SCREENS);
+$mayScreens = $me && (Session::hasRole('cmsAdmin') || \Systopic\System\Auth\SignInRights::allows($this->scope, $me, \Systopic\System\Auth\SignInRights::SCREENS));
 $actorIsSuper = Session::isSuperuser(true);
 $screens = [];
 if ($pending && $pending->purpose === Codes::PAIR_SCREEN && $mayScreens) {

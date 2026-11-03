@@ -1,7 +1,9 @@
 # local only - never part of the package. The docs are the exception:
-# they travel with the repo, plans and tools stay on the machine.
+# they travel with the repo, plans and tools stay on the machine. So does
+# team/: proposals for the lead of another area (team/README.md).
 /.cursor/*
 !/.cursor/docs/
+!/.cursor/team/
 /.vscode/
 /vendor/
 /composer.lock

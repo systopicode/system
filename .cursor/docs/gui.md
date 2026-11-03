@@ -1,4 +1,5 @@
 # fluxo GUI — how to work on it
+Lead: Lars (sabietzki)
 
 This is the hand-over for anyone (human or AI) who continues the admin GUI
 ("fluxo") — the panels behind `https://<host>/cms/`. Read it once before
@@ -439,6 +440,8 @@ rather than combining gaps with card margins.
 - Debug: `main[data-debug]` (body classes are rewritten at runtime) puts
   the CMS on a checkerboard, padded top and sides, open at the bottom
   (`30_layout.css`). The petrol system frame stays as it is. The main menu ends above the status bar.
+  Not while a remote debug window shows the prompts: then the debug tool
+  sets `data-sysdebug-remote` on the root (tools: `debug/js/remote.js`).
 - Signing in ends with a full load (`auth Panel::enterCms()`, a `redirect`
   with method `load`): the login's css would otherwise stay in the document.
 - `LoginLog::entries($names)` reads `var/log/login.log`, newest first; the

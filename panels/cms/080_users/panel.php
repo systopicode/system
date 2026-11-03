@@ -18,10 +18,6 @@ class Panel extends CmsPanel {
 	public ?int $naviOrder = 20;
 	public bool $buildChildPanels = true;
 
-	function buildGranted() {
-		return \Systopic\System\Auth\Session::hasOneRole('userAdmin');
-	}
-
 	function onLoad() {
 		// Only while this panel is the one on screen. Unconditionally it marked
 		// a view on EVERY request - including every keystroke of an ajax input

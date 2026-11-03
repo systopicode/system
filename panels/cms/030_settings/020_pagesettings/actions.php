@@ -18,7 +18,7 @@ if ((string) $this->action === 'saveAuthMethod') {
 if (in_array((string) $this->action, ['uploadFlag', 'resetFlag'], true)) {
     $token = (string) (\http::posted('flagToken') ?? \http::put('flagToken') ?? '');
     $code = (string) \http::get('code');
-    if (!\Systopic\System\Auth\Session::hasOneRole('admin') || strtoupper((string) \http::$method) !== 'POST' || !\Systopic\System\Settings\LanguageFlags::checkToken($token)) {
+    if (!\Systopic\System\Auth\Session::hasRole('cmsAdmin') || strtoupper((string) \http::$method) !== 'POST' || !\Systopic\System\Settings\LanguageFlags::checkToken($token)) {
         \message::error('Reload the settings page and try again.');
     } elseif ($this->action === 'uploadFlag') {
         $error = \Systopic\System\Settings\LanguageFlags::store($code);

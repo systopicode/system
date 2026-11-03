@@ -22,8 +22,9 @@
 				if (user.isSuperuser) {
 					return users.superuser_roles;
 				}
-				return user.role_names;
+				return user.role_keys;
 			}
+			// by key (cmsEditor), like Session::hasRole()
 			user.hasRole = role => {
 				return user.getRoles().includes(role);
 			}
@@ -48,7 +49,7 @@
 			}
 		}
 		if (!users.active) {
-			users.active = new user({role_names: []});
+			users.active = new user({role_names: [], role_keys: []});
 		}
 	});
 })();

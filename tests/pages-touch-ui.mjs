@@ -130,7 +130,7 @@ try {
   await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(()=>requestAnimationFrame(resolve)))));
   assert.ok(await page.locator('[data-relation-section="aliases"]').evaluate(n=>Math.abs(n.getBoundingClientRect().top-n.closest('.scrollContainer').getBoundingClientRect().top-8)<2));
   await page.waitForFunction(()=>{const n=document.querySelector('li.active > label'),a=n.getBoundingClientRect(),b=n.closest('div.tree').getBoundingClientRect();return a.top>=b.top&&a.bottom<=b.bottom;});
-  const pagesCss=await read('../cms/panels/cms/010_pages/module.css');
+  const pagesCss=await read('../cms/panels/cms/010_pages/panel.css');
   await page.setContent(`<style>${css}\n${pagesCss}</style><body class="cms"><aside class="cms"><div class="pageRelations"><ul class="relationIncoming"><li><a class="sideAction relationLink"><span>Alias</span></a><button class="button transparent icononly small" id="remove-relation">Remove</button></li></ul></div></aside><button class="button" id="normal-button">Normal</button></body>`);
   const radius=await page.locator('#normal-button').evaluate(n=>getComputedStyle(n).borderRadius);
   assert.equal(await page.locator('#remove-relation').evaluate(n=>getComputedStyle(n).borderLeftWidth),'0px');

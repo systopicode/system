@@ -97,7 +97,7 @@ class appRequest
 			return;
 		}
 		$this->editingContextParsed = true;
-		if (\Systopic\System\Auth\Session::hasRole('pageAdmin')) {
+		if (\Systopic\System\Auth\Session::hasOneRole('cmsAdmin', 'cmsEditor', 'cmsPageEditor')) {
 			$this->showTrashed_value = !http::params('showtrashed', TRUE) || http::params('showtrashed', FALSE);
 			$this->preview_value = $this->showTrashed_value || !http::params('preview', TRUE) || http::params('preview', FALSE);
 			$this->showEditableAreas_value = http::params('showeditableareas');

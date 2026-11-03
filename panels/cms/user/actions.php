@@ -18,6 +18,9 @@ if (str_starts_with((string) $this->action, 'passkey')) {
 
 switch ($this->action) {
 	case 'logout':
+		// signed out as a taken-on user: no way back for whoever signs in next
+		$this->state->hijackerId = NULL;
+		$this->state->hijackedId = NULL;
 		\Systopic\System\Auth\LoginLog::write(\Systopic\System\Auth\Session::current()->name, 'logged out', \Systopic\System\Auth\LoginLog::LOGOUT_BUTTON);
 		\Systopic\System\Auth\Session::logout();
 		// A full document, so the sign-in page brings its own styles.
@@ -53,7 +56,7 @@ switch ($this->action) {
 		break;
 
 	case 'toggleFakeRole':
-		$role = (string) \http::dataset('role_name');
+		$role = (string) \http::dataset('role_key');
 		if (in_array($role, $this->fakeRoles, TRUE)) {
 			\Systopic\System\Auth\Session::removeFakeRole($role);
 		} else {
@@ -65,6 +68,33 @@ switch ($this->action) {
 	case 'resetState':
 		\Systopic\System\Auth\Session::resetState();
 		\http::refresh($this->href);
+		break;
+
+	case 'ransomUser':
+		// Back from cms/users' hijackUser to the superuser who hijacked.
+		// A real form post, not an ajax click: the browser must store the
+		// new session cookie and only then follow the redirect. An ajax
+		// navigation kept the ghost session.
+		//
+		// Only from the account that was taken on, and only to a superuser:
+		// the state lives in the browser's session, and somebody signing in
+		// there after a hijack must not inherit the way back.
+		$hijacker = (int) ($this->state->hijackerId ?? 0);
+		$hijacked = (int) ($this->state->hijackedId ?? 0);
+		$this->state->hijackerId = NULL;
+		$this->state->hijackedId = NULL;
+		$back = $hijacker > 0 && $hijacked === (int) Session::id()
+			? UserLookup::byId($this->scope, $hijacker)
+			: NULL;
+		if ($back !== NULL && $back->isSuperuser) {
+			Session::logout(false);   // back to the superuser, same device
+			Session::login($back);
+			\Systopic\System\Auth\LoginLog::write(Session::current()->name, 'logged in', \Systopic\System\Auth\LoginLog::SWITCH);
+			if (session_status() === PHP_SESSION_ACTIVE) {
+				session_write_close();
+			}
+		}
+		\http::redirect($this->href);
 		break;
 
 	case 'unsetFakeRoles':
@@ -98,7 +128,7 @@ switch ($this->action) {
 					: 'That code is wrong or has expired.')->target('remoteLogin');
 				$told = true;
 			} elseif ($code->purpose === Codes::PAIR_SCREEN) {
-				$allowed = \Systopic\System\Auth\SignInRights::allows($this->scope, $me, \Systopic\System\Auth\SignInRights::SCREENS);
+				$allowed = Session::hasRole('cmsAdmin') || \Systopic\System\Auth\SignInRights::allows($this->scope, $me, \Systopic\System\Auth\SignInRights::SCREENS);
 				$screen = $allowed ? UserLookup::byId($this->scope, (int) \http::post('screen', 0)) : null;
 				$screenOk = $screen !== null && $screen->type === User::SCREEN && $screen->isActive && (int) $screen->id > 1;
 				if (!$allowed) {

@@ -6,7 +6,7 @@ namespace Systopic\System\Tables\Nodes;
 
 use Systopic\Db\Schema\Col;
 use Systopic\Db\TableRow;
-use Systopic\System\Tables\Groups\Model as Group;
+use Systopic\System\Tables\Acls\Model as Acl;
 use Systopic\System\Tables\Nodes\Model as Node;
 use Systopic\System\Tables\Users\Model as User;
 
@@ -61,24 +61,31 @@ final class Model extends TableRow
         set => $this->__set__(__PROPERTY__, $value);
     }
 
-    public ?bool $permissionsInherit = true {
-        get => $this->__get__(__PROPERTY__);
-        set => $this->__set__(__PROPERTY__, $value);
-    }
-
-    /** A bit mask, 508 by default. Sixteen bits are more than enough. */
-    #[Col(unsigned: true)]
-    public ?int $permissions = 508 {
-        get => $this->__get__(__PROPERTY__);
-        set => $this->__set__(__PROPERTY__, $value);
-    }
-
+    /** The owner: may always read and write the node. */
     public ?User $user {
         get => $this->__get__(__PROPERTY__);
         set => $this->__set__(__PROPERTY__, $value);
     }
 
-    public ?Group $group {
+    /**
+     * The groups that may see the node — the **effective** ACL, always
+     * stored, inherited or not. NULL is no group: owner and superusers only.
+     *
+     * Stored rather than looked up along the parents, so a search filters on
+     * `node_acl_id IN (:readAclIds)` like any other table. `AclInheritance`
+     * keeps the copies right after every commit.
+     */
+    public ?Acl $acl {
+        get => $this->__get__(__PROPERTY__);
+        set => $this->__set__(__PROPERTY__, $value);
+    }
+
+    /**
+     * True: `$acl` is the parent's, and follows it. False: the node has an
+     * ACL of its own, and inheritance stops here. On a root, inheriting from
+     * nothing is no group.
+     */
+    public bool $aclInherit = true {
         get => $this->__get__(__PROPERTY__);
         set => $this->__set__(__PROPERTY__, $value);
     }

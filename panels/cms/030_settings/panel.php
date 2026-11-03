@@ -24,10 +24,6 @@ class Panel extends PanelNode {
 		get => Scope::default();
 	}
 
-	function buildGranted() {
-		return \Systopic\System\Auth\Session::hasOneRole('admin');
-	}
-
 	function onLoadThisClass() {
 		// Only while this panel is the one on screen. Unconditionally it marked
 		// a view on EVERY request - including every keystroke of an ajax input

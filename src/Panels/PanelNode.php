@@ -52,6 +52,15 @@ class PanelNode implements ClientExportable, RenderNode
      */
     public string $absPath = '';
 
+    /**
+     * Every folder of the panel, one per root that has it, in registration
+     * order (`FolderHit::$altPaths`): where its panel.config.json lie
+     * (`Controlmap\Access`).
+     *
+     * @var list<string>
+     */
+    public array $altPaths = [];
+
     /** Nesting depth; root = 0. */
     public int $level = 0;
 
@@ -154,6 +163,18 @@ class PanelNode implements ClientExportable, RenderNode
      * Set on a panel when the menu order should not follow the folder name.
      */
     public ?int $naviOrder = null;
+
+    /**
+     * Actions that may be opened from outside — the link of a mail, a
+     * bookmark, another site: by GET only, from any origin. Every other
+     * action runs only when the request comes from this site's own pages
+     * (`ActionGuard`). An entry action must not change anything on the
+     * strength of the session alone: what it does, the link itself has to
+     * authorise (a reset key), or it only shows something.
+     *
+     * @var list<string>
+     */
+    public array $entryActions = [];
 
     // -------------------------------------------------------------------------
     // View / render state
