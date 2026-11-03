@@ -237,7 +237,7 @@
 		var call = new sys.core.server.call({method: 'put', code: token});
         call.background = true;
         var invalid = function () { flash(host, 'error', host.getAttribute('data-invalid') || 'That code is wrong or has expired.'); showFields(host, true); };
-        call.send(settings.siteRoot + 'cms/auth/validateQr').done(function (data) {
+        call.send(settings.siteRoot + 'admin/auth/validateQr').done(function (data) {
             if (data && data.valid) run(); else invalid();
         }).fail(invalid);
 		return true;

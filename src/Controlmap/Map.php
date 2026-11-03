@@ -7,7 +7,7 @@ namespace Systopic\System\Controlmap;
 /**
  * The controlmap as the configs say it: who may build a panel, run its
  * actions, use a named right — read, merged and inherited, nothing stored.
- * Nobody at runtime asks it yet; cms/access/panelmap shows it.
+ * Nobody at runtime asks it yet; admin/access/panelmap shows it.
  *
  * **Layers**, per panel, the later replacing the earlier key by key:
  *
@@ -24,7 +24,7 @@ namespace Systopic\System\Controlmap;
  *   "rights":  { "move": ["cmsAdmin", "cmsEditor"] } }
  *
  * // config/controlmap.json
- * { "cms/pages": { "action": { "publish": ["cmsAdmin"] } } }
+ * { "admin/pages": { "action": { "publish": ["cmsAdmin"] } } }
  * ```
  *
  * A list replaces the one below, it does not add to it: so a project can
@@ -74,26 +74,37 @@ final class Map
         }
     }
 
-    /** Preserve project overrides written before the Access navigation rename. */
-    private static function renamedPanelPaths(array $project): array
+    /** Resolve saved overrides and links from earlier administration routes. */
+    public static function canonicalPanelPath(string $path): string
     {
         $renames = [
-            'cms/users/permissions' => 'cms/access/content',
-            'cms/users' => 'cms/access',
-            'cms/controlmap' => 'cms/access/panelmap',
+            'cms/users/permissions' => 'admin/access/content',
+            'admin/users/permissions' => 'admin/access/content',
+            'cms/users' => 'admin/access',
+            'admin/users' => 'admin/access',
+            'cms/controlmap' => 'admin/access/panelmap',
+            'admin/controlmap' => 'admin/access/panelmap',
+            'cms' => 'admin',
         ];
-        foreach ($project as $path => $entry) {
-            foreach ($renames as $old => $new) {
-                if ($path !== $old && !str_starts_with((string) $path, $old . '/')) {
-                    continue;
-                }
-                $target = $new . substr($path, strlen($old));
-                if (!array_key_exists($target, $project)) {
-                    $project[$target] = $entry;
-                }
-                unset($project[$path]);
-                break;
+        foreach ($renames as $old => $new) {
+            if ($path === $old || str_starts_with($path, $old . '/')) {
+                return $new . substr($path, strlen($old));
             }
+        }
+        return $path;
+    }
+
+    private static function renamedPanelPaths(array $project): array
+    {
+        foreach ($project as $path => $entry) {
+            $target = self::canonicalPanelPath((string) $path);
+            if ($target === (string) $path) {
+                continue;
+            }
+            if (!array_key_exists($target, $project)) {
+                $project[$target] = $entry;
+            }
+            unset($project[$path]);
         }
         return $project;
     }

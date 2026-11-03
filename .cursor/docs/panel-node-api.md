@@ -61,7 +61,7 @@ echo $this->getNavi(3);    // 3 Levels tief
 | `$this->folder` | `string` | Ordnername auf Disk, inkl. Präfix (`010_pages`) |
 | `$this->realPath` | `string[]` | Dateisystem-Pfad-Segmente (wichtig bei Multi-Root) |
 | `$this->label` | `string` | `name` als Überschrift, `str::name2label()` (`user_roles` → `User Roles`); eigene Beschriftung: `$this->label = 'Tags'` im Panel setzen |
-| `$this->href` | `string` | URL zu diesem Panel (`http::$root . 'cms/pages/'`) |
+| `$this->href` | `string` | URL zu diesem Panel (`http::$root . 'admin/pages/'`) |
 | `$this->getHref(http::$root)` | `string` | Explizit — bevorzugt in Klassencode |
 | `$this->inPath()` | `bool` | Panel liegt auf dem aktiven URL-Pfad |
 | `$this->isSelected()` | `bool` | Panel ist das tiefste URL-gewählte Panel |
@@ -168,7 +168,7 @@ function actionGranted($action = null): bool {
 }
 ```
 
-`buildGranted()` → `false` leitet auf den Auth-Panel um (`cms/auth/`).  
+`buildGranted()` → `false` leitet auf den Auth-Panel um (`admin/auth/`).
 `actionGranted()` → `false` bricht mit HTTP 403 ab.
 
 ---

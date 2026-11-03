@@ -8,7 +8,7 @@ use Systopic\System\Tables\Tags\Model as Tag;
 use Systopic\System\Tables\TagGroups\Model as TagGroup;
 
 /**
- * The tag panel under cms/settings/tags/ — the view, not the data.
+ * The tag panel under admin/settings/tags/ — the view, not the data.
  *
  * The successor of `tagGroup::toSettingsPanel()` and `tag::toSettingsItem()`.
  * Why that does not stay on the row classes is in section 13 of the design:

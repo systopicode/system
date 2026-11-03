@@ -64,7 +64,7 @@ Zum Formular-Modell (GET/POST/PUT, XHR-Default): [form-data.md](./form-data.md).
 Ablauf:
 
 1. Submit der Form (XHR, sofern kein `target`).
-2. `processEvent` → `fsUploader.flushForm(form)`: File/Drop nach `var/uploader/{id}` per **PUT** `storeSpan` (relativ am offenen Panel, nicht `cms/storeSpan`).
+2. `processEvent` → `fsUploader.flushForm(form)`: File/Drop nach `var/uploader/{id}` per **PUT** `storeSpan` (relativ am offenen Panel, nicht `admin/storeSpan`).
 3. Hidden `{name}_uploader` / `{name}_uploader_name`.
 4. Danach normaler Submit: **ohne `method`** = PUT (`http::form()` + `postedFile()`); `method="post"` = URL + Diff (`http::post()` + `postedFile()`).
 
@@ -100,7 +100,7 @@ Die Zone bekommt bei Klick (außer Datei-Input) `tabindex="0"` — Dateidialog b
 
 ## Actions
 
-`storeSpan` / `fetchFromUrl` laufen am **aktuell ausgewählten Panel** (`PanelNode::runActions` → `fsUploader::handleAction`). JS sendet relativ (`call.send('storeSpan')`), analog zu PWK `sendData`. Nicht gegen `cms/storeSpan` — das würde die CMS-Root selektieren und die Lightbox/das Formular ersetzen.
+`storeSpan` / `fetchFromUrl` laufen am **aktuell ausgewählten Panel** (`PanelNode::runActions` → `fsUploader::handleAction`). JS sendet relativ (`call.send('storeSpan')`), analog zu PWK `sendData`. Nicht gegen `admin/storeSpan` — das würde die CMS-Root selektieren und die Lightbox/das Formular ersetzen.
 
 | Action | Zweck |
 |---|---|
@@ -141,4 +141,4 @@ $uploader->reset()    // Temp löschen
 - Nach erfolgreichem `moveFile` `reset()` aufrufen. Cancel in Instant-Lightboxes ebenfalls `reset()`.
 - Mehrere Felder im selben Formular: jedes Wrap `data-upload="onsubmit"`, unterschiedliche `name`.
 - `$_FILES` bleibt Fallback, solange das Attribut fehlt.
-- Klasse wird im CMS-Root geladen (`fs::load('fsUploader')` in `panels/cms/panel.php`), damit das JS auf jeder CMS-Seite da ist.
+- Klasse wird im CMS-Root geladen (`fs::load('fsUploader')` in `panels/admin/panel.php`), damit das JS auf jeder CMS-Seite da ist.

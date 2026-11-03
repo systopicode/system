@@ -10,7 +10,7 @@ class http {public static string $method='POST';static function dataset(string $
 class message {public static array $errors=[];static function error($s){self::$errors[]=$s;}static function confirm($s){}static function warning($s){}}
 $root=sys_get_temp_dir().'/fluxo-maintenance-actions-'.bin2hex(random_bytes(5));mkdir($root);fs::$projectRoot=$root;
 $count=0;Runner::register('probe','Probe','Test',static function(bool $preview)use(&$count):array{if(!$preview)$count++;return ['count'=>1];});
-$panel=new class {public string $action='run';public ?string $webcronKey=null;public ?array $cleanupPreview=null;public bool $forced=false;function updateView($view,$force=false){$this->forced=$force;}function invoke(){include dirname(__DIR__).'/panels/cms/090_tools/040_cleanup/040_automatic/actions.php';}};
+$panel=new class {public string $action='run';public ?string $webcronKey=null;public ?array $cleanupPreview=null;public bool $forced=false;function updateView($view,$force=false){$this->forced=$force;}function invoke(){include dirname(__DIR__).'/panels/admin/090_tools/040_cleanup/040_automatic/actions.php';}};
 try{
  $panel->invoke();check('non-superuser cannot start cleanup', $count===0 && message::$errors!==[]);
  \Systopic\System\Auth\Session::$super=true;http::$method='GET';$panel->invoke();check('GET cannot start cleanup', $count===0);

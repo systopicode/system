@@ -8,7 +8,7 @@ use Systopic\Db\Schema\Registry;
 use Systopic\Db\Scope;
 use Systopic\System\Tables\Medias\Model as MediaRow;
 
-/** The media cms/tools/maintenance/media repairs — `MediaMaintenance.sql`. */
+/** The media admin/tools/maintenance/media repairs — `MediaMaintenance.sql`. */
 final class MediaMaintenance
 {
     /**

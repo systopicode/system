@@ -1,7 +1,7 @@
 import fs from 'node:fs/promises';
 import assert from 'node:assert/strict';
 const {chromium}=await import(process.env.FLUXO_PLAYWRIGHT_MODULE);
-const css=(await Promise.all((await fs.readdir('public/css')).filter(n=>n.endsWith('.css')).sort().map(n=>fs.readFile('public/css/'+n,'utf8')))).join('\n')+await fs.readFile('panels/cms/080_users/010_users/edit/user.css','utf8');
+const css=(await Promise.all((await fs.readdir('public/css')).filter(n=>n.endsWith('.css')).sort().map(n=>fs.readFile('public/css/'+n,'utf8')))).join('\n')+await fs.readFile('panels/admin/080_users/010_users/edit/user.css','utf8');
 const ui=await fs.readFile('public/js/gui/ui.js','utf8');
 const browser=await chromium.launch({channel:'chrome',headless:true});
 try {
@@ -26,7 +26,7 @@ try {
  const dark=await page.locator('#slow').evaluate(e=>({text:getComputedStyle(e).color,spinner:getComputedStyle(e,':before').borderRightColor}));assert.equal(dark.spinner,dark.text);
  await page.screenshot({path:`/private/tmp/fluxo-seven-${width}.png`});assert.deepEqual(errors,[]);await page.close();
  }
- const head=await fs.readFile('panels/cms/head.tpl.php','utf8');
+ const head=await fs.readFile('panels/admin/head.tpl.php','utf8');
  let script=head.slice(head.indexOf('(function () {'),head.indexOf('</script>',head.indexOf('(function () {'))).replace('<?= json_encode($appearance) ?>',JSON.stringify('system')).replace('<?= json_encode($darkGround) ?>',JSON.stringify('#161c1f')).replace('<?= json_encode($canvasColor) ?>',JSON.stringify('#eef2f4'));
  const appearance=await browser.newPage();await appearance.emulateMedia({colorScheme:'dark'});await appearance.setContent('<body>Appearance fixture</body>');await appearance.addScriptTag({content:script});assert.equal(await appearance.locator('html').getAttribute('data-mode'),'dark');await appearance.evaluate(()=>document.documentElement.setAttribute('data-appearance','light'));assert.equal(await appearance.locator('html').getAttribute('data-mode'),null);await appearance.evaluate(()=>document.documentElement.setAttribute('data-appearance','system'));await appearance.emulateMedia({colorScheme:'light'});await appearance.waitForFunction(()=>!document.documentElement.hasAttribute('data-mode'));await appearance.close();
  console.log('PASS System default follows light/dark; explicit Light remains honoured');

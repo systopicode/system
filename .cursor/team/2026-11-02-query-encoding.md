@@ -1,9 +1,9 @@
 # Query-Werte mit `%xx` werden beim Ajax-GET doppelt kodiert
-Von: Oliver · Für: Lars · Status: offen, in cms/controlmap umgangen · 2026-11-02
+Von: Oliver · Für: Lars · Status: offen, in admin/controlmap umgangen · 2026-11-02
 
 ## Anlass
 
-Im Baum von `cms/controlmap` zeigte ein Klick auf einen Knoten weder die
+Im Baum von `admin/controlmap` zeigte ein Klick auf einen Knoten weder die
 Markierung noch den Inhalt des Knotens. Die Links lauteten
 `./?panel=cms%2Ftools`. Beim Server kam `panel=cms%252Ftools` an, also
 `cms%2Ftools` nach dem Dekodieren. Den Knoten gibt es so nicht.
@@ -18,7 +18,7 @@ Die Ursache liegt im Client, nicht im Panel:
 
 Ein unkodierter `/` im Wert ist auch keine Lösung. `parseURL()` liest ihn
 als Teil des Pfads, und `historyPush` schreibt dann
-`…/discover/?panel=cms/?panel=cms/` in die Adresszeile.
+`…/discover/?panel=admin/?panel=admin/` in die Adresszeile.
 
 Betroffen ist jeder Link, dessen Query ein `%` enthält, also Leerzeichen,
 Umlaute, `&` oder `/` in einem Wert. Bisher fiel das nicht auf, weil die
@@ -61,11 +61,11 @@ http.query2qeryStr = query => {
 Vorher prüfen: Wer liest `url.query` sonst noch und erwartet die
 kodierte Form? Was liefert `queriesEqual()` beim Vergleich?
 
-## Umgehung in cms/controlmap
+## Umgehung in admin/controlmap
 
 `Controlmap\Panel::nodeHref()` schreibt den Pfad mit Punkten
 (`?panel=cms.tools`, wie `panelPath` im Client), `onLoad()` macht daraus
-wieder `cms/tools`. Kein Panel-Ordner enthält einen Punkt. Ist der
+wieder `admin/tools`. Kein Panel-Ordner enthält einen Punkt. Ist der
 Vorschlag übernommen, kann die Umgehung bleiben oder auf `rawurlencode`
 zurückgehen.
 
@@ -74,4 +74,4 @@ zurückgehen.
 - `lib/class/http/http.js`: `parseQuery`, `query2qeryStr`
 - `public/js/core/server/server.js`: `sendGet`
 - `public/js/core/lib/obj.js`: `getQueryString`
-- Umgehung: `panels/cms/085_controlmap/panel.php` (`nodeHref`)
+- Umgehung: `panels/admin/085_controlmap/panel.php` (`nodeHref`)

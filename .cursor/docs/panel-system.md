@@ -13,8 +13,8 @@ and just describes how the system is supposed to behave today.
 
 ## 1. Mental model
 
-A **Panel** is a logical screen unit (a CMS page like `cms`, `cms/pages`,
-`cms/pages/upload`, …) backed by a folder on disk. The folder may contain:
+A **Panel** is a logical screen unit (a CMS page like `cms`, `admin/pages`,
+`admin/pages/upload`, …) backed by a folder on disk. The folder may contain:
 
 - `panel.php` (modern) or `module.php` (legacy) — class definition
   (extends `Panels\PanelNode` directly or via an ancestor that does).
@@ -46,7 +46,7 @@ DomLayer events for diff rendering.
 
 Folders may carry a numeric ordering prefix that is stripped from the logical
 name. `010_pages` becomes `pages`; the prefix only affects sort order in
-navigations. URL paths use the logical name (`/cms/pages/`), the on-disk
+navigations. URL paths use the logical name (`/admin/pages/`), the on-disk
 `folder` keeps the prefix (`010_pages`).
 
 The conversion lives in `PanelTree::folderToName()` and is used by
@@ -88,12 +88,12 @@ the first panel whose own folder contains the requested template:
 PanelNavigator::findRenderRoot(string $viewName = 'body'): ?PanelNode
 ```
 
-Examples (with `panels/body.tpl.php` and `panels/cms/body.tpl.php` present):
+Examples (with `panels/body.tpl.php` and `panels/admin/body.tpl.php` present):
 
 | Selected URL          | Walk                     | Render-host       | Body file rendered             |
 |-----------------------|--------------------------|-------------------|--------------------------------|
-| `/cms/pages/`         | `pages → cms`            | `cms`             | `panels/cms/body.tpl.php`      |
-| `/cms/`               | `cms`                    | `cms`             | `panels/cms/body.tpl.php`      |
+| `/admin/pages/`         | `pages → cms`            | `cms`             | `panels/admin/body.tpl.php`      |
+| `/admin/`               | `cms`                    | `cms`             | `panels/admin/body.tpl.php`      |
 | `/otherpanel/sub/`    | `sub → otherpanel → app` | `app` (synthetic) | `panels/body.tpl.php`          |
 | `/`                   | `app`                    | `app`             | `panels/body.tpl.php`          |
 | `/standalone/` *(no body anywhere on chain)* | `standalone → app` (no body) | `null` | nothing — caller skips |
@@ -114,7 +114,7 @@ the synthetic root) is kept only for backward-compat callers; new code
 uses `findRenderRoot()`.
 
 There is **no URL-prefix mounting** anywhere in the configuration — the
-`/cms/` mount emerges purely because a `cms/` folder exists in some root.
+`/admin/` mount emerges purely because a `admin/` folder exists in some root.
 
 ### Dispatcher hand-off (`PanelTree::inApp()`)
 
@@ -123,7 +123,7 @@ There is **no URL-prefix mounting** anywhere in the configuration — the
 true in two cases:
 
 1. A real panel below the synthetic root was URL-selected (e.g.
-   `/cms/pages/` → selectedPanel ≠ rootPanel).
+   `/admin/pages/` → selectedPanel ≠ rootPanel).
 2. The synthetic root itself is "render-real" — it ships its own
    `panel.php` / `module.php` class file (`hasOwnClass=true`) **or** a
    `body.tpl.php` in any registered root. In that case even a bare `/`

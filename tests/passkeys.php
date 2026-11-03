@@ -183,7 +183,7 @@ rejects('authentication requires user verification', fn() => Passkeys::execute('
 $options = $beginLogin();
 $good = $assertResponse($options, $key->userHandle, 1);
 $result = Passkeys::execute('passkeyFinishLogin', $good, true);
-check('verified assertion logs into existing session', Session::id() === (int) $user->id && $result['redirect'] === '/cms/');
+check('verified assertion logs into existing session', Session::id() === (int) $user->id && $result['redirect'] === '/admin/');
 check('signature counter and last use persisted', $key->signCount === 1 && $key->lastUsedAt !== null);
 $as(null);
 $options = $beginLogin();
@@ -202,7 +202,7 @@ $discovery=$optionsArray(Passkeys::execute('passkeyBeginLogin',['conditional'=>t
 Passkeys::execute('passkeyFinishLogin',$assertResponse($discovery,$key->userHandle,2),true);
 check('autofill authenticates the credential owner in this project', Session::id()===(int)$user->id);
 $as(null);
-if($loginFixture=getenv('FLUXO_TEST_LOGIN_HTML')) { ob_start(); include dirname(__DIR__).'/panels/cms/auth/login.tpl.php'; file_put_contents($loginFixture,ob_get_clean()); }
+if($loginFixture=getenv('FLUXO_TEST_LOGIN_HTML')) { ob_start(); include dirname(__DIR__).'/panels/admin/auth/login.tpl.php'; file_put_contents($loginFixture,ob_get_clean()); }
 $options = $beginLogin();
 $user->isActive = false; $scope->save($user);
 rejects('inactive user cannot log in', fn() => Passkeys::execute('passkeyFinishLogin', $assertResponse($options, $key->userHandle, 2), true));
@@ -213,7 +213,7 @@ $_SESSION[Session::PASSKEY_GRANT] = ['user' => (int) $user->id, 'expires' => tim
 Passkeys::execute('passkeyRemove', ['keyId' => $key->id], false);
 check('owner can remove credential', Keys::byCredential($scope, $id) === null);
 check('password login offers setup to an account without keys', Passkeys::offerSetup($user) && Passkeys::setupPending());
-if ($setupFixture = getenv('FLUXO_TEST_ONBOARDING_HTML')) { ob_start(); include dirname(__DIR__).'/panels/cms/auth/passkeySetup.tpl.php'; file_put_contents($setupFixture, ob_get_clean()); }
+if ($setupFixture = getenv('FLUXO_TEST_ONBOARDING_HTML')) { ob_start(); include dirname(__DIR__).'/panels/admin/auth/passkeySetup.tpl.php'; file_put_contents($setupFixture, ob_get_clean()); }
 http::$root = '/different/';
 check('fresh login proof is project bound', !Passkeys::setupPending());
 http::$root = '/';
@@ -229,11 +229,11 @@ $_SESSION['systopic_passkey_offer']['expires'] = time() - 1;
 http::$hostUrl = 'https://192.168.1.2';
 $_SERVER['HTTP_ORIGIN'] = http::$hostUrl;
 $_SERVER['REQUEST_METHOD'] = 'GET';
-Session::rememberReturn('/cms/pages/?id=43');
-$continuation = new class { public string $action='continueWithoutPasskey'; public string $form=''; public function updateView($view): void {} public function enterCms(float $delay=0, ?string $target=null): void { if ($delay !== 2.0) throw new RuntimeException('Expected two-second success state'); throw new TestRedirect($target ?? '/cms/'); } };
-$continue = function (): void { include dirname(__DIR__).'/panels/cms/auth/actions.php'; };
+Session::rememberReturn('/admin/pages/?id=43');
+$continuation = new class { public string $action='continueWithoutPasskey'; public string $form=''; public function updateView($view): void {} public function enterCms(float $delay=0, ?string $target=null): void { if ($delay !== 2.0) throw new RuntimeException('Expected two-second success state'); throw new TestRedirect($target ?? '/admin/'); } };
+$continue = function (): void { include dirname(__DIR__).'/panels/admin/auth/actions.php'; };
 try { $continue->call($continuation); check('continuation redirects', false); }
-catch (TestRedirect $redirect) { check('IP access with expired setup proof can continue through ordinary navigation', $redirect->getMessage()==='/cms/pages/?id=43' && !Passkeys::setupPending()); }
+catch (TestRedirect $redirect) { check('IP access with expired setup proof can continue through ordinary navigation', $redirect->getMessage()==='/admin/pages/?id=43' && !Passkeys::setupPending()); }
 $as(null); $continue->call($continuation);
 check('expired session returns to normal login without a passkey error', $continuation->form==='login');
 $as($user); http::$hostUrl='https://cms.example.test';
@@ -242,7 +242,7 @@ unset($_SERVER['HTTP_ORIGIN'],$_SERVER['REQUEST_METHOD']);
 Passkeys::offerSetup($user);
 $options = $optionsArray(Passkeys::execute('passkeyBeginCreate', ['name'=>'Fresh login'], false));
 $created = Passkeys::execute('passkeyFinishCreate', $createResponse($options), false);
-check('fresh password login allows setup without entering password twice', $created['redirect'] === '/cms/' && !Passkeys::setupPending());
+check('fresh password login allows setup without entering password twice', $created['redirect'] === '/admin/' && !Passkeys::setupPending());
 check('accounts with a key are not prompted again', !Passkeys::offerSetup($user));
 $scope->remove(...Keys::ofUser($scope, (int)$user->id));
 $scope->remove($other, $user, ...(isset($reserved) ? [$reserved] : []));

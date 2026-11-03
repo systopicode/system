@@ -46,7 +46,7 @@ A diff request addresses two urls at once, separated by a tilde:
 /projects/x/public/kontakt/~/galerie/
 └ reference ──────────────┘ └ target┘
 
-/projects/x/public/cms/pages/?id=19~/cms/pages/?id=20
+/projects/x/public/admin/pages/?id=19~/admin/pages/?id=20
 └ reference ───────────────────────┘ └ target ──────┘
 ```
 
@@ -101,7 +101,7 @@ dispatcher, `parsePathString()` and everything downstream need no special
 case.
 
 It also rebuilds `$_GET`. PHP fills that from the *whole* query string, so on
-the second form above it holds `id="19~/cms/pages/?id=20"`. Fixing it at the
+the second form above it holds `id="19~/admin/pages/?id=20"`. Fixing it at the
 source rather than in `http::readGet()` also covers the two places that read
 the superglobal directly (`httpHelper`'s `ajax`, `mediaImage`'s `rebuild`).
 Keys that did **not** come from the url are preserved — that is what saves
@@ -121,7 +121,7 @@ rendering would put a JSON body in the address bar.
 `DomRendererSession`, one entry per url:
 
 ```php
-$_SESSION['domReferences']['/cms/pages/?id=18'] = [
+$_SESSION['domReferences']['/admin/pages/?id=18'] = [
     'byAddress' => [...],   // address → view name → DomLayer
     'root'      => DomLayer,
     'time'      => 1789644232,

@@ -2,7 +2,7 @@
 Lead: Lars (sabietzki)
 
 This is the hand-over for anyone (human or AI) who continues the admin GUI
-("fluxo") — the panels behind `https://<host>/cms/`. Read it once before
+("fluxo") — the panels behind `https://<host>/admin/`. Read it once before
 you change a panel, a stylesheet or a script.
 
 A project's own look (colours, logo, share image, mails) and the files of
@@ -26,10 +26,10 @@ section 11). Do not add new ones.
 
 **Generic in system, cms only adds or overrides what differs for pages.**
 Example: `system/public/css/27_tree.css` defines the tree,
-`cms/panels/cms/010_pages/pages.tree.css` only what the page tree does
-differently. Same for `cms/public/css/pages.css` (page header, preview).
+`admin/panels/admin/010_pages/pages.tree.css` only what the page tree does
+differently. Same for `admin/public/css/pages.css` (page header, preview).
 
-`panels/cms/` in both packages is the URL `/cms/`, not the package: the two
+`panels/admin/` in both packages is the URL `/admin/`, not the package: the two
 trees are merged by folder name. Settings live in system: page settings,
 media settings, tags, theme and environment. The cms package only adds the
 page editor under `030_settings/010_page`.
@@ -37,7 +37,7 @@ page editor under `030_settings/010_page`.
 Projects that use only `systopic/system` (and so the GUI in it):
 `pwk.systopic.net` (loads `00_theme` … `18_ui` from `system/public/css/` and
 `system/public/js/gui/` directly and uses `copyToClipboard`) and `spaceticker.app.src` (its panels
-extend `Systopic\System\Panels\Root\Cms\Panel`). Check both before you move
+extend `Systopic\System\Panels\Root\Admin\Panel`). Check both before you move
 or rename anything in `system/public` or `system/panels/cms`.
 
 In a project, `vendor/systopic/*` are symlinks to `~/Sites/packages/*`, so an
@@ -56,27 +56,33 @@ Packages::addFrontend(new \Systopic\Cms\Frontend());
 Hooks::on('afterConnect', static fn() => ...);
 ```
 
-- Panel trees of all packages are merged by folder name. `cms/panels/cms/010_pages`
-  and `system/panels/cms/080_users` both end up under `/cms/`.
+- Panel trees of all packages are merged by folder name. `admin/panels/admin/010_pages`
+  and `system/panels/admin/080_users` both end up under `/admin/`.
 - `addPanelAssets()` is how a package brings GUI CSS/JS that must be there
-  on every panel page (example: `cms/public/css/pages.css` for the page
-  header and preview). `system/panels/cms/head.tpl.php` loads them after the
+  on every panel page (example: `admin/public/css/pages.css` for the page
+  header and preview). `system/panels/admin/head.tpl.php` loads them after the
   system CSS/JS.
 
 ## 3. Panels
 
 A panel is a folder. Folder names map to URLs after the sort prefix is
-stripped: `080_access/010_users/` → `/cms/access/users/`.
+stripped: `080_access/010_users/` → `/admin/access/users/`.
 
 | File | Purpose |
 |---|---|
-| `panel.php` | Class `Panel` in the namespace of its path, e.g. `Systopic\System\Panels\Root\Cms\Users\Users`. Extends `Systopic\System\Panels\Root\Cms\Panel`. State, computed properties (`get =>` hooks), defaults (`getDefaultState()`). |
+| `panel.php` | Class `Panel` in the namespace of its path, e.g. `Systopic\System\Panels\Root\Admin\Users\Users`. Extends `Systopic\System\Panels\Root\Admin\Panel`. State, computed properties (`get =>` hooks), defaults (`getDefaultState()`). |
 | `actions.php` | `switch ($this->action)` — one `case` per action. Ends with `$this->updateView('main')` (or `updateViews([...])`) for what must be re-rendered. |
 | `*.tpl.php` | Views. `main.tpl.php` is the content, `controls.tpl.php` the header bar, `pylon.tpl.php` the left column, `sidebar.tpl.php` the right column, `lightbox.tpl.php` a dialog, `footer`/`status` the bottom. |
-| `panel.js` | Client code for the panel (`sys.lib.add(setup, fn)`, `route: 'panels.cms.users.users'`). |
+| `panel.js` | Client code for the panel (`sys.lib.add(setup, fn)`, `route: 'panels.admin.users.users'`). |
 | `*.css` | Styles only this panel needs (see section 5). |
 
-Layout (`system/panels/cms/body.tpl.php`): menu → `pylon` → content
+The administration routes and active panel folders are mounted at `admin/`.
+Old `/cms/` requests redirect to `/admin/pages/` when Pages is installed
+and to `/admin/` otherwise. Deep links retain their path and query. The
+Composer package identifier, database prefixes and shared `.cms` CSS scope
+are independent of the mount path.
+
+Layout (`system/panels/admin/body.tpl.php`): menu → `pylon` → content
 (`controls` header, `main`, `footer`) → `sidebar` → status bar → `lightbox`.
 A parent hands a slot down with `$this->withChildSelected('controls')`,
 `$this->withChildSelected()` (main) etc. `withView('users')` includes a view
@@ -107,12 +113,12 @@ should show them.
 ```
 
 Open it with a plain link `<a class="ajax" href="edit/?user_id=3">`, close it
-with `href="../"`. Example: `system/panels/cms/080_access/010_users/edit/`.
+with `href="../"`. Example: `system/panels/admin/080_access/010_users/edit/`.
 Only a change of panel redraws a lightbox: `?x=` on the same panel does not.
 
-**Dashboard** (`/cms/`, the logo): `system/panels/cms/home.tpl.php`, shown
+**Dashboard** (`/admin/`, the logo): `system/panels/admin/home.tpl.php`, shown
 when no child is selected or the selected one has no `main` (e.g.
-`cms/legal/`, the login footer texts as a lightbox). Any panel adds widgets
+`admin/legal/`, the login footer texts as a lightbox). Any panel adds widgets
 with `dashboard.tpl.php` or `dashboard.<name>.tpl.php` (first two levels
 below `cms`), rendered by that panel. The first `<h2>` is the title in the
 "Add:" row. Key: the path below `cms` plus the name, e.g. `pages.todo`.
@@ -123,7 +129,7 @@ widgets go to the end. Tabs inside a widget: `nav.dashTabs` with
 `<button data-on_click="dashTab" data-tab>`, the open one from
 `Panel::widgetTab($this, key, tabs)`. Version and revision:
 `Systopic\System\Sys\Release`. Texts of login and lightbox share
-`panels/cms/texts.css`.
+`panels/admin/texts.css`.
 
 Two traps: `data-on_click` on an `<a>` navigates to the action's name instead
 of running it - use a `<button>`. And app.php calls a panel method named like
@@ -133,7 +139,7 @@ The menu opens up wide whenever the content holds `.dashboard` (the brand
 anchor is not redrawn by AJAX, so never key layout on it). Times for the
 user: `Sys\LocalTime` (zone from the `cmsTimezone` cookie).
 
-**Search** (`system/panels/cms/search/`, Cmd+K or `a.cmsSearchLink` in the
+**Search** (`system/panels/admin/search/`, Cmd+K or `a.cmsSearchLink` in the
 menu): `Sys\Search::run()` walks every panel the user may open. Without code
 a panel is found by its menu name and the headings, `<label>`s and legends
 of its `*.tpl.php`. Its own records it adds in a method (pages, tags, users,
@@ -184,7 +190,7 @@ Unknown addresses sends one to a page by adding it as a non-primary
 rewrite path, so the next visit redirects to that page's own address.
 Forgetting a row only drops the log. To do `misses`.
 
-**Migration** (`cms/tools/migration/`): the existing CMS panel previews older
+**Migration** (`admin/tools/migration/`): the existing CMS panel previews older
 HTML links and images before converting them to `page:` / `media:` references.
 It uses the standard Tools navigation entry with the rotate-arrows icon,
 like System, Database, Maintenance and Logs. Access remains restricted by the
@@ -238,7 +244,7 @@ answers with the views to replace.
   closing reload only runs when the user is still on that page.
 - Quiet actions: `$renderStyle = 'none'` in an `actions.php` sets
   `PanelNode::$quiet`. `app.php` then renders nothing, stores no panel state
-  (an upload span to `cms/pages/upload/upload` would leave that panel
+  (an upload span to `admin/pages/upload/upload` would leave that panel
   selected) and `client::flushResponse(false)` ships no css or js. The end of
   an upload asks for what changed: `mediaAdded` (pages) draws only the
   `mml`, the backup upload only `backups`.
@@ -254,10 +260,10 @@ answers with the views to replace.
   (`Panel::DASH_COLUMNS`, `dashboardColumns()`); `insertWidgetEnd` with
   `data-column` drops at the end of one.
 - Switches (`input.switch + div`) take a sideways swipe on touch
-  (`panels/cms/panel.js`); the track has `touch-action: pan-y`.
+  (`panels/admin/panel.js`); the track has `touch-action: pan-y`.
 - Template picker (`details.projectTemplates`, `ProjectForm::templatePicker`):
   while open, its list (`.projectTemplatesMenu`) is parked on `document.body`
-  with `position: fixed` (`panels/cms/panel.js`). A settings row has
+  with `position: fixed` (`panels/admin/panel.js`). A settings row has
   `transform: translate(0)`, which traps a menu inside it under the next
   card, and `overflow: visible` on the widget would drop the card's radius.
   `data-some` on the `details` marks "Only the ticked": the inputs are not
@@ -291,7 +297,7 @@ Where styles live:
 
 One flat folder, loaded by name: the number prefix is the cascade order.
 A new file gets the number of where it belongs, never a subfolder.
-| `cms/public/css/pages.css` | Page header (crumbs, title, language and device switch) and the page preview. |
+| `admin/public/css/pages.css` | Page header (crumbs, title, language and device switch) and the page preview. |
 | `<panel>/*.css` | Only rules for that one panel. |
 
 Rules:
@@ -385,7 +391,7 @@ rather than combining gaps with card margins.
   ul, ol, table.
 - The site reset lives in the `preview` layer, above the `cms` layer: helpers
   for the edited content (frames, table cells) go unlayered into
-  `panels/cms/head.tpl.php`, and CMS table styles skip `.editor table`.
+  `panels/admin/head.tpl.php`, and CMS table styles skip `.editor table`.
 - iOS keyboard format buttons arrive as `beforeinput` and go through the same
   formatter.
 - Media formats: `editorFormats` (head.tpl.php) holds the image formats an
@@ -395,7 +401,7 @@ rather than combining gaps with card margins.
   a missing image format is made by `media.php` (the `.htaccess` sends a
   missing file under `var/` to the script), a missing video format by the
   project while the original plays.
-- The link dialog (`cms/pages/editor/editLink`) re-renders the page: the field
+- The link dialog (`admin/pages/editor/editLink`) re-renders the page: the field
   is found again by its data attributes and the place by text offsets. Its
   button saves the field, then closes the dialog. Tabs: address, page
   (`searchLinkPages`), file (the page's media library, thumbs from
@@ -403,7 +409,7 @@ rather than combining gaps with card margins.
   positions (`server.scrollPositions` / `restoreScroll`). A POST that renders
   (a lightbox opened by POST) is marked as rendered, so the next diff starts
   from what the window shows.
-- HTML mode (`cms/pages/editor/htmlmode`): `HtmlSource::pretty()` lays the
+- HTML mode (`admin/pages/editor/htmlmode`): `HtmlSource::pretty()` lays the
   field out (blocks on their own lines, indented, a line after `<br>` and per
   image/video), `compact()` drops those line breaks on save. Line breaks in
   the source are layout only.
@@ -456,7 +462,7 @@ rather than combining gaps with card margins.
   `methodLabel()` for lists. Lines of before have no method.
 - Site settings `PAGE_IS_PUBLIC` / `AUTO_LANGUAGE_DETECTION`:
   `Systopic\Cms\Pages\Route\SiteAccess`, asked in `Frontend::claims()`.
-  Not public: the project's `panels/auth` if it has one, else cms/auth.
+  Not public: the project's `panels/auth` if it has one, else admin/auth.
 - A drag of our own blocks the browser's native dragstart while it runs.
 - Device switch: `fit` (no fixed width) beside the widths from `PreviewWidths`.
 - Debug needs the project's `debug.php` (tools/debug, rolled out by the
@@ -514,7 +520,7 @@ same package, under their original path, and are no longer loaded:
 
 - `system/_legacy/public/css/dead-rules.css` — CSS rules whose classes no
   template or script uses anymore (grouped by source file).
-- `system/_legacy/public/js/cms/`, `_legacy/lib/…`.
+- `system/_legacy/public/js/admin/`, `_legacy/lib/…`.
 
 Outdated assets are deleted, not kept: old fonts, old icon sets. Only
 `cmsIcon` and `cmsIcon cmsIcon-duotone` have a font — `cmsIcon-light`,
@@ -547,7 +553,7 @@ Pages (tree, page header, language menu, preview, sidebar), Settings, Users
 language set to one that has pages — an Italian session shows an empty tree.
 
 Every change a user notices gets a line in the release notes,
-`system/panels/cms/auth/releases.php` (newest version first). The login
+`system/panels/admin/auth/releases.php` (newest version first). The login
 footer shows that version and links to the notes.
 
 Commit only when asked. Commit `system` and `cms` separately, each in its own
@@ -557,7 +563,7 @@ repository.
 
 Known places where the core still knows the cms (fix step by step):
 
-- `system/loader.php` and `public/js/core/server.js` — login URL `cms/auth/`.
+- `system/loader.php` and `public/js/core/server.js` — login URL `admin/auth/`.
 - `public/js/core/event.js` — checks `body.cms`.
 - `server.command.js`, `clientDocument.php` — call `insertHtmlAtCursor`,
   `openContextMenu`.
@@ -568,26 +574,26 @@ Known places where the core still knows the cms (fix step by step):
   `section.widget` per group. `EnvironmentFile::update()` does read-change-write
   under an exclusive lock (lock file in the system temp dir, not in the synced
   `config/`) and replaces the file by rename; unreadable JSON is never written.
-- Frontend edit bar: `cms/src/Pages/EditBar.php` (echoed by `cms/site.php` on a
+- Frontend edit bar: `admin/src/Pages/EditBar.php` (echoed by `admin/site.php` on a
   full render, define `FRONTEND_EDIT_BAR`, editors only) and
-  `cms/public/site/editBar.js` (custom element, shadow DOM). The section list
-  comes from the `editBarMenu` action in `panels/cms/actions.php`; with debug
+  `admin/public/site/editBar.js` (custom element, shadow DOM). The section list
+  comes from the `editBarMenu` action in `panels/admin/actions.php`; with debug
   on the reply goes through `sysdebug.trimXhrResponse`. Logout:
-  `cms/logout?to=<path>`. Every link but logout opens in a new tab. Icons:
+  `admin/logout?to=<path>`. Every link but logout opens in a new tab. Icons:
   the panel's `$icon` without `cmsIcon-duotone`; the shadow root links
   `css/11_icons.css`; its `:host` variables support local SVG masks in the shadow root. No document-level icon font declarations are needed.
-- Pages sidebar (`cms/panels/cms/010_pages/sidebar/`): section headers carry a
+- Pages sidebar (`admin/panels/admin/010_pages/sidebar/`): section headers carry a
   link icon (`a.sidebarInfo` in `main.tpl.php`: Meta → default values,
-  Settings → `cms/settings/pagesettings/`, Tags → `cms/settings/tags/`). The
+  Settings → `admin/settings/pagesettings/`, Tags → `admin/settings/tags/`). The
   share image drop zone is drawn by `Panel::shareImage()` from the page row
   (not `app::site()->shareImage`, whose page is the one of the request), with
   a hover overlay `.dropActions` holding the crop pen.
 - `Mail/Letter.php`, `Auth/Portrait.php` — read `00_theme.css` and the logo.
-- `app.php` — `$renderStyle = 'cms'`; `messageGuide.php` links to `cms/pages/…`.
+- `app.php` — `$renderStyle = 'cms'`; `messageGuide.php` links to `admin/pages/…`.
 - `core/event/event.pathItem.js` — saves WYSIWYG fields through `wysiwyg.html()`.
-- `HTMLeditor.funcs.js` — endpoints `cms/pages/editor/…`;
-  `imageEditor.js` — `cms/pages/getImageEditor`, `updateMediaCrop`.
-- `panels/cms/head.tpl.php` — inline `<style>` for `article.cmsContent
+- `HTMLeditor.funcs.js` — endpoints `admin/pages/editor/…`;
+  `imageEditor.js` — `admin/pages/getImageEditor`, `updateMediaCrop`.
+- `panels/admin/head.tpl.php` — inline `<style>` for `article.cmsContent
   [contenteditable]` (unlayered on purpose) belongs to the cms.
 
 Tried and dropped (24 Oct 2026): moving the GUI assets into `systopic/cms`.

@@ -162,11 +162,11 @@ scripttime('path ready');
 // Session gone: a click in the CMS must land on the login, not sit on a dead page.
 $reqPath = app::request()->modulePath;
 if (php_sapi_name() !== 'cli'
-	&& ($reqPath[0] ?? '') === 'cms'
+	&& ($reqPath[0] ?? '') === 'admin'
 	&& ($reqPath[1] ?? '') !== 'auth'
 	&& !\Systopic\System\Auth\Session::known()
 ) {
-	$loginUrl = rtrim((string) http::$root, '/') . '/cms/auth/';
+	$loginUrl = rtrim((string) http::$root, '/') . '/admin/auth/';
 	// an ajax call comes from the page on screen: that is where to come back to
 	\Systopic\System\Auth\Session::rememberReturn((string) (http::ajax() ? ($_SERVER['HTTP_REFERER'] ?? '') : ($_SERVER['REQUEST_URI'] ?? '')));
 	if (http::ajax()) {
@@ -218,9 +218,9 @@ $projectPanels = fs::$projectRoot ? fs::$projectRoot->getFolder('panels') : null
 
 // Register the panels-roots in resolution order (sys first, project last).
 // FolderResolver merges them with last-wins on name collisions, so a project
-// can add new top-level panels (e.g. cms/events) and override system panels
+// can add new top-level panels (e.g. admin/events) and override system panels
 // by placing a folder of the same logical name. The cms-mount emerges
-// automatically from the cms/ folder existing inside panels/.
+// automatically from the admin/ folder existing inside panels/.
 //
 // PROJECT_NAMESPACE: define this constant in the project's index.php to set
 // the root PHP namespace of the project (e.g. define('PROJECT_NAMESPACE', 'Spaceticker')).
@@ -230,7 +230,7 @@ $projectPanelNs = defined('PROJECT_NAMESPACE') ? PROJECT_NAMESPACE . '\Panels' :
 if ($sysPanels && $sysPanels->exists) {
 	$panelTree->addRoot(new \Systopic\System\Panels\PanelRootFolder($sysPanels, 'Systopic\System\Panels'));
 }
-// Packages with panels (systopic/cms: the page panels in cms/) sit between.
+// Packages with panels (systopic/cms: the page panels in admin/) sit between.
 foreach (\Systopic\System\Sys\Packages::panels() as $_pkgPanels) {
 	$_pkgDir = \fsDir::get(fs::toInternal($_pkgPanels['dir']));
 	if ($_pkgDir->exists) {
@@ -298,14 +298,14 @@ unset($_frontend, $_boot);
  * page resolution, and there site.php wins when ambiguous.
  *
  * The panel-first rule matters because a page id can also arrive as ?id=,
- * which is the CMS's own page selector: without it, /cms/pages/?id=20 resolves
+ * which is the CMS's own page selector: without it, /admin/pages/?id=20 resolves
  * to page 20 and renders the public website instead of the editor. It cannot
  * be folded into "site wins when ambiguous" either, because that rule exists
  * for the root URL "/", where no panel was selected by the path and both a
  * page and the synthetic app root are candidates.
  *
  * Note this only fires for panels that were actually BUILT — an anonymous
- * visitor on /cms/ fails buildGranted(), no panel is selected, and the request
+ * visitor on /admin/ fails buildGranted(), no panel is selected, and the request
  * falls through to the inApp() branch below exactly as before (login redirect).
  */
 $_panelTree = \Systopic\System\Panels\Tree\PanelTree::getInstance();

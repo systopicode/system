@@ -3,7 +3,7 @@ import {pathToFileURL} from 'node:url';
 import assert from 'node:assert/strict';
 const {chromium}=await import(pathToFileURL(process.env.FLUXO_PLAYWRIGHT_MODULE).href);
 const read=p=>readFile(new URL(p,import.meta.url),'utf8');
-const template=await read('../panels/cms/body.tpl.php');
+const template=await read('../panels/admin/body.tpl.php');
 const tail=template.slice(template.indexOf('var storedDevice'),template.indexOf('</script>',template.indexOf('var storedDevice')));
 const browser=await chromium.launch({channel:'chrome',headless:true});
 try {

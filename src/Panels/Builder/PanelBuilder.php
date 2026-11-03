@@ -141,7 +141,7 @@ class PanelBuilder
                 // Selected leaf — still expand its children when the panel
                 // requests it (loadChildPanels / legacy loadChildModules),
                 // so navigation templates calling eachChild() find siblings
-                // to iterate over even on URLs like /cms/.
+                // to iterate over even on URLs like /admin/.
                 if ($child->buildChildPanels
                  || $child->loadChildPanels
                  || $this->legacyBuildAllChildren($child)) {

@@ -13,7 +13,7 @@ namespace Systopic\System\Client;
  *   { route: string, data: object, onLibReady?: string[] }
  *
  * `route` is a dot-separated path into the sys.* namespace tree, e.g.
- * 'panels.cms.pages' or 'singletons.http'.
+ * 'panels.admin.pages' or 'singletons.http'.
  *
  * `onLibReady` is an optional list of sys.* function paths to call after
  * the lib layer has been built (e.g. 'sys.siteRenderer.updateDocument').

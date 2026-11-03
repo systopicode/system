@@ -14,7 +14,7 @@ use Systopic\System\Client\ClientExport;
  * return a typed ClientExport DTO instead of an untyped plain object.
  *
  * The returned route must be a dot-separated path matching the position of
- * the object in the JS tree, e.g. 'panels.cms.pages'.
+ * the object in the JS tree, e.g. 'panels.admin.pages'.
  */
 interface ClientExportable
 {

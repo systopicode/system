@@ -5,7 +5,7 @@ class httpHelper {
 
 	static function getHrefInfo($href) {
 		// 2do Definition:
-		// pfad /cms/pages/ vs /projekt.ordner/cms/pages/ vs ./cms/pages/
+		// pfad /admin/pages/ vs /projekt.ordner/admin/pages/ vs ./admin/pages/
 		// auf welches root beziehen sich relative pfade ?
 		// - aktuelle browser url => http konform
 		// 

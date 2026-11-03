@@ -56,7 +56,7 @@ final class ScreenPair
     /** The address the QR opens: the account page, which asks before it allows. */
     public static function url(string $code): string
     {
-        return \http::$siteUrl . 'cms/user/?screen=' . rawurlencode($code);
+        return \http::$siteUrl . 'admin/user/?screen=' . rawurlencode($code);
     }
 
     public static function begin(string $redirect, string $purpose = Codes::PAIR_SCREEN): ?array

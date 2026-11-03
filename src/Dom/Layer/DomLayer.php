@@ -587,8 +587,8 @@ class DomLayer implements DomLayerItem
      *
      * Every path in there starts with the same eighty characters, which is
      * eighty characters of nothing to read. What is left is the part that
-     * differs: 'vendor/systopic/system/panels/cms/010_pages/' rather than
-     * '/V/www/projects/x/vendor/systopic/system/panels/cms/010_pages/'. The
+     * differs: 'vendor/systopic/system/panels/admin/010_pages/' rather than
+     * '/V/www/projects/x/vendor/systopic/system/panels/admin/010_pages/'. The
      * system package sits under the project root as well (via the vendor
      * junction), so one root covers both.
      *

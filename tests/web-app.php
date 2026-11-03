@@ -48,10 +48,10 @@ namespace {
         copy(fs::$sysRoot . 'public/img/favicons/android-chrome-192x192.png', $icon);
         $manifest = (new ReflectionMethod(WebApp::class, 'manifest'))->invoke(null);
         expect($manifest['theme_color'] === '#123456', 'manifest respects theme overrides');
-        expect(str_starts_with($manifest['icons'][0]['src'], '/project/public/cms/icon-'), 'manifest icons stay inside the app scope');
+        expect(str_starts_with($manifest['icons'][0]['src'], '/project/public/admin/icon-'), 'manifest icons stay inside the app scope');
         expect(!str_contains($manifest['icons'][0]['src'], '?'), 'icon addresses have no query, or iOS drops them');
         expect(count($manifest['icons']) === 4, 'standard and maskable icons remain available');
-        expect($manifest['start_url'] === '/project/public/cms/' && $manifest['scope'] === '/project/public/cms/', 'installed app opens within the CMS scope');
+        expect($manifest['start_url'] === '/project/public/admin/' && $manifest['scope'] === '/project/public/admin/', 'installed app opens within the CMS scope');
         expect(str_contains(WebApp::href(), '?v='), 'manifest discovery invalidates old metadata');
     } finally {
         foreach (glob(fs::$siteRoot . 'overrides/css/*') ?: [] as $file) unlink($file);

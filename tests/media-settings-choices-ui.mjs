@@ -2,7 +2,7 @@ import {readFile} from 'node:fs/promises';
 import {pathToFileURL} from 'node:url';
 import assert from 'node:assert/strict';
 const {chromium}=await import(pathToFileURL(process.env.FLUXO_PLAYWRIGHT_MODULE).href);
-const css=await readFile(new URL('../panels/cms/030_settings/project.css',import.meta.url),'utf8');
+const css=await readFile(new URL('../panels/admin/030_settings/project.css',import.meta.url),'utf8');
 const browser=await chromium.launch({channel:'chrome',headless:true});
 try {
  for (const width of [390,1200]) {

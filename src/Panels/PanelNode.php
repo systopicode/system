@@ -31,7 +31,7 @@ class PanelNode implements ClientExportable, RenderNode
 
     public string $name = '';
 
-    /** Logical URL path segments from root to this panel. E.g. ['cms', 'pages']. */
+    /** Logical URL path segments from root to this panel. E.g. ['admin', 'pages']. */
     public array $path = [];
 
     /** Real (filesystem) folder names from root to this panel. */
@@ -46,7 +46,7 @@ class PanelNode implements ClientExportable, RenderNode
      * Set during build from the FolderHit so navigation can chdir to a panel
      * regardless of which root contributed it. Without this, eachChild() would
      * fail on multi-root setups: e.g. when iterating cms's children, the CWD
-     * is sys/modules/cms/, but `events` may live under projectRoot/modules/cms/
+     * is sys/modules/admin/, but `events` may live under projectRoot/modules/admin/
      * — opening it via the bare folder name silently fails (chdir error) and
      * desyncs the dir-stack.
      */
@@ -592,7 +592,7 @@ class PanelNode implements ClientExportable, RenderNode
     // Path helpers
     // =========================================================================
 
-    /** Returns the logical path as a slash-separated string. E.g. 'cms/pages/'. */
+    /** Returns the logical path as a slash-separated string. E.g. 'admin/pages/'. */
     public function getPath(): string
     {
         $str = implode('/', $this->path);
@@ -1063,7 +1063,7 @@ class PanelNode implements ClientExportable, RenderNode
             } elseif (($package = \Systopic\System\Sys\Packages::rootOf($sourceDir)) !== null) {
                 $root = $package;   // a package's panels (systopic/cms), settings.packageRoots
             }
-        } elseif (isset($this->root) && $this->root?->name === 'cms') {
+        } elseif (isset($this->root) && $this->root?->name === 'admin') {
             $root = 'sys';
         }
 

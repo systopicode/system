@@ -3,7 +3,7 @@ import {pathToFileURL} from 'node:url';
 import assert from 'node:assert/strict';
 const root=new URL('../',import.meta.url),read=p=>readFile(new URL(p,root),'utf8');
 const {chromium}=await import(pathToFileURL(process.env.FLUXO_PLAYWRIGHT_MODULE).href);
-const css=(await Promise.all((await readdir(new URL('public/css/',root))).filter(n=>n.endsWith('.css')).sort().map(n=>read('public/css/'+n)))).join('\n')+await read('panels/cms/dashboard.css');
+const css=(await Promise.all((await readdir(new URL('public/css/',root))).filter(n=>n.endsWith('.css')).sort().map(n=>read('public/css/'+n)))).join('\n')+await read('panels/admin/dashboard.css');
 const browser=await chromium.launch({channel:'chrome',headless:true});
 const legacy=['a','b','|','c','d','|','e','f'];
 const card=(id,h)=>`<section class="widget dashWidget" data-widget="${id}" data-drag_type="widget"><div class="sort v insertBefore" data-drop_accept="widget" data-widget="${id}" data-on_drop="insertWidgetBefore"></div><div class="sort v insertAfter" data-drop_accept="widget" data-widget="${id}" data-on_drop="insertWidgetAfter"></div><button class="button transparent icononly dashHide" data-on_click="hideWidget">×</button><header><h2>Widget ${id}</h2></header><main style="height:${h}px">Body</main></section>`;
@@ -14,7 +14,7 @@ try{
  await page.addScriptTag({content:await read('public/js/ext/jquery.js')});
  await page.evaluate(()=>{window.sys={lib:{add:(setup,ctor)=>window.cmsCtor=ctor,applyParentConstructor(){}},core:{},initEvents(){},onload(fn){fn();}};window.obj={extend:(...o)=>Object.assign({},...o)};for(const n of ['l','p','t','c','f'])window[n]=()=>({open(){}});});
  await page.evaluate(()=>{$.fn.findInSet=function(sel){return this.filter(sel).add(this.find(sel));};});
- await page.addScriptTag({content:await read('panels/cms/panel.js')});
+ await page.addScriptTag({content:await read('panels/admin/panel.js')});
  assert.equal(await page.locator('.dashWidgets').getAttribute('data-columns'),'3','first full document starts without a click');
  await page.evaluate(()=>{window.cms={};cmsCtor.call(cms);window.init=()=>sys.fitDashboards.init({element:document.querySelector('.dashWidgets')});init();});
  const layout=()=>page.locator('.dashColumn').evaluateAll(cols=>cols.map(c=>[...c.querySelectorAll('.dashWidget')].map(w=>w.dataset.widget)));

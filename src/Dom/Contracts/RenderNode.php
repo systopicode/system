@@ -71,7 +71,7 @@ interface RenderNode
      * SOURCE_PAGE.
      *
      * The two mix: the cms renders a page preview with the page navigator
-     * (panels/cms/010_pages/main.tpl.php), so panel layers and page layers
+     * (panels/admin/010_pages/main.tpl.php), so panel layers and page layers
      * end up in one tree. They are not interchangeable — getLayerPath() is a
      * folder path for one and a node-id chain for the other, and the client
      * resolves a panel path to a libnode under sys.panels. Without this the

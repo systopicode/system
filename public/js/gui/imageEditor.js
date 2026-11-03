@@ -22,7 +22,7 @@ function runImageEditor(params) {
         if (!params.inline || !existing.classList.contains('inlineImageCrop') || !existing.requestReplace?.()) return;
     }
     const $ = window.jQuery;
-    return cmsQuery(settings.siteRoot + 'cms/pages/getImageEditor', {
+    return cmsQuery(settings.siteRoot + 'admin/pages/getImageEditor', {
         media_id: media.media_id, image_format: media.media_crop_format,
         width: params.display_width, height: params.display_height, ajax: 1
     }).then(response => response.json()).then(response => {
@@ -179,7 +179,7 @@ function runImageEditor(params) {
             };
             failed=error;
             preview.addEventListener('load',ready,{once:true});preview.addEventListener('error',failed,{once:true});
-            cmsQuery(unified?params.saveUrl+'saveImageEdit':settings.siteRoot+'cms/pages/updateMediaCrop',{
+            cmsQuery(unified?params.saveUrl+'saveImageEdit':settings.siteRoot+'admin/pages/updateMediaCrop',{
                 media_id:media.media_id,image_format:media.media_crop_format,format:media.media_crop_format,target_id:params.targetId || 0,
                 width:frame.w/image.w,height:frame.h/image.h,
                 left:(frame.x+frame.w/2-image.x)/image.w,top:(frame.y+frame.h/2-image.y)/image.h,ajax:1,

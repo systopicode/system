@@ -29,7 +29,7 @@ This is one coordinated migration block. Item 8 remains open; do not call the fu
 - Archive integrity and `tools/build-icons.py --check`: deterministic output verified. The generator handles safe regular-file-only extraction without requiring newer tarfile filter arguments.
 - Cleanup tool tested only against disposable fixtures: dry run changes nothing; apply removes the three exact old provider files and preserves Inter.
 - Anonymous License response (decoded from its client-render JSON): exactly one Tabler credit, one Solar credit and complete notices, without the obsolete Pro section. Logged-in legal Lightbox also checked, including Close.
-- Actual running installation: `https://dev.local/projects/stefanpohlfilm.de/public/cms/`. Dashboard, navigation, Theme, Legal, Tools navigation and a known Pages/MML view inspected. Desktop, tablet and narrow Theme layouts inspected. No content, theme values, user permissions, media, backups or credentials were deliberately modified.
+- Actual running installation: `https://dev.local/projects/stefanpohlfilm.de/public/admin/`. Dashboard, navigation, Theme, Legal, Tools navigation and a known Pages/MML view inspected. Desktop, tablet and narrow Theme layouts inspected. No content, theme values, user permissions, media, backups or credentials were deliberately modified.
 - New icon-related PHP log errors: none observed. Existing panel-parent wiring warnings (`duplicates`, `tags`, `php`) were observed and are not concealed as a clean-console result.
 
 ## User-requested visual correction
@@ -41,7 +41,7 @@ Tools now uses Solar **toolbox**, not a sledgehammer. Image collections use **li
 ## Confirmed existing failures / unexecuted checks
 
 1. `system/tests/auth-continue-ui.mjs` fails because `.authFoot` resolves to both a visible footer and a hidden success footer. The identical failure was reproduced against the saved pre-migration source in a separate temporary tree. A trial selector adjustment exposed an additional existing `loggedOut` centring assertion; that trial was reverted. The original test is preserved unchanged.
-2. `cms/tests/editor-presence-ui.mjs` expects “Also open” but receives an empty string. This also fails in the isolated pre-migration baseline. The test was not rewritten to hide it.
+2. `admin/tests/editor-presence-ui.mjs` expects “Also open” but receives an empty string. This also fails in the isolated pre-migration baseline. The test was not rewritten to hide it.
 3. The full DB-backed `tests/passkeys.php` and its service-generated happy-dom fixture were not executed: a local MySQL probe without credentials was denied. No production/project database was used to get around this, and no credentials were guessed. Graphic/UI passkey checks are passing; real registration/login with platform hardware still needs a suitable test account/device.
 4. No fresh install from a not-yet-published System 1.3 release, production deployment, actual-installation cache purge, Firefox/Safari-specific complete suite, or all customer extensions was performed. These remain explicit release/integration checks.
 5. The full SketchUp viewer build source is not co-located in CMS. The three owned toolbar literals were migrated surgically, leaving the dependency bundle untouched. Rebuild provenance is a known packaging limitation, documented in the upgrade notes.

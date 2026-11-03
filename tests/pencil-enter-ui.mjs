@@ -1,7 +1,7 @@
 import {readFile} from 'node:fs/promises';
 import assert from 'node:assert/strict';
 const {chromium}=await import(process.env.FLUXO_PLAYWRIGHT_MODULE);
-const body=await readFile('panels/cms/body.tpl.php','utf8');
+const body=await readFile('panels/admin/body.tpl.php','utf8');
 const start=body.indexOf('// Keep the value before a short label edit.');
 const finish=body.indexOf("document.addEventListener('focusout'",start);
 const handler=body.slice(start,finish);

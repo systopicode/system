@@ -273,7 +273,7 @@ final class Session
         $path = (string) parse_url($url, PHP_URL_PATH);
         $query = (string) parse_url($url, PHP_URL_QUERY);
         $root = rtrim((string) \http::$root, '/') . '/';
-        if (!str_starts_with($path, $root) || preg_match('~^(cms/)?auth(/|$)~', substr($path, strlen($root)))) {
+        if (!str_starts_with($path, $root) || preg_match('~^(admin/)?auth(/|$)~', substr($path, strlen($root)))) {
             return;
         }
         \http::sessionStartOnce();

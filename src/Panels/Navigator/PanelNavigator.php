@@ -79,7 +79,7 @@ class PanelNavigator
      * whose own folder contains <viewName>.tpl.php on disk — see
      * findRenderRoot(). This is how a project can place a global
      * panels/body.tpl.php at the synthetic root while another panel
-     * (e.g. cms) overrides it with its own panels/cms/body.tpl.php.
+     * (e.g. cms) overrides it with its own panels/admin/body.tpl.php.
      *
      * Lazily ensures the root exists (ensureRoot) then navigates to its
      * folder. Corresponds to module::openRoot().
@@ -106,8 +106,8 @@ class PanelNavigator
         // Use the panel's absPath so we land in the SOURCE root of the
         // render-host panel regardless of selectedRoot pointing at a
         // different root for the selected leaf (e.g. project/panels for
-        // events). Without this, openRoot('body') for /cms/events/ would
-        // look up cms/body.tpl.php inside project/panels where it doesn't
+        // events). Without this, openRoot('body') for /admin/events/ would
+        // look up admin/body.tpl.php inside project/panels where it doesn't
         // exist.
         $rel     = $this->relativeOpenPath($root);
         $tplFile = $rel . $viewName . '.tpl.php';
@@ -132,7 +132,7 @@ class PanelNavigator
      * (e.g. "010_pages/"). In multi-root setups, where a panel's folder may
      * live in a different root than the current CWD (e.g. cms is at sys/,
      * but cms.events lives at projectRoot/), the path may walk up across
-     * roots (e.g. "../../../../projects/.../modules/cms/010_events/").
+     * roots (e.g. "../../../../projects/.../modules/admin/010_events/").
      *
      * fs::openDir/closeDir handle the resulting close-stack correctly by
      * remembering the popped CWD segments — so even cross-root chdir round
@@ -176,7 +176,7 @@ class PanelNavigator
      * are entry points of a render pass and are never included from another
      * template (body, optionally head). It allows a project to ship a
      * panels/body.tpl.php at the synthetic root while another panel
-     * (e.g. cms) overrides it with its own panels/cms/body.tpl.php; the
+     * (e.g. cms) overrides it with its own panels/admin/body.tpl.php; the
      * deepest match on the ancestor chain wins.
      *
      * Returns null when no ancestor on the chain ships the template — the
@@ -762,7 +762,7 @@ class PanelNavigator
      * result can be used directly as a filesystem path from the open CWD.
      *
      * Example: rootFolder->realPath = ['cms'], panel->realPath = ['cms', '010_pages']
-     * => returns ['010_pages'] (path inside the cms/ root).
+     * => returns ['010_pages'] (path inside the admin/ root).
      */
     private function relativeRealPath(PanelNode $panel): array
     {

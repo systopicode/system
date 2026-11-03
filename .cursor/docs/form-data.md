@@ -67,7 +67,7 @@ flowchart TD
 | Datei sofort | fsUploader `instant` / `sendData` | PUT | `storeSpan` / `onFinish` |
 | JS ohne Event | `sendCall(data, 'action')` | PUT | `http::put()` |
 
-Relativ am offenen Panel senden. Nicht GET/POST zu einem anderen Pfad (`cms/storeSpan`).
+Relativ am offenen Panel senden. Nicht GET/POST zu einem anderen Pfad (`admin/storeSpan`).
 
 ---
 

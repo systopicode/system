@@ -7,7 +7,7 @@ Seiten-Panel ausgeblendet, zwei Klicks später.
 
 ## Die zwei Ladewege
 
-**Vollreload.** [head.tpl.php:65-74](../../panels/cms/head.tpl.php#L65-L74) läuft
+**Vollreload.** [head.tpl.php:65-74](../../panels/admin/head.tpl.php#L65-L74) läuft
 den realPath des aktiven Panels nach oben ab und gibt pro Ordner — aus
 sys-, project- und site-Root — die gefundenen `*.css` aus:
 
@@ -45,7 +45,7 @@ auch wenn das Panel, zu dem es gehört, längst nicht mehr auf dem Schirm ist.
 main > div.pylon { display: none; }
 ```
 
-Kein Scope, keine Eingrenzung. Ab dem ersten Besuch von `/cms/backup/` ist der
+Kein Scope, keine Eingrenzung. Ab dem ersten Besuch von `/admin/backup/` ist der
 Pylon in **jedem** Panel weg — auch im Seiten-Panel, wo er den Seitenbaum
 enthält. Im Diff sah alles richtig aus (Server und Client zeigten den Layer),
 nur sichtbar war er nicht.
@@ -61,7 +61,7 @@ für die Seitenvorschau tut. Für **eigene** Markup-Regeln ist das richtig.
 
 Für diesen Fall funktioniert es nicht: der Pylon liegt **außerhalb** des
 Backup-Panels, eine Ebene höher im Shell-Layout
-([body.tpl.php:41](../../panels/cms/body.tpl.php#L41)). Ein Scope um das
+([body.tpl.php:41](../../panels/admin/body.tpl.php#L41)). Ein Scope um das
 Panel herum kann ihn per Definition nicht erreichen. Das gilt für jede Regel,
 die nach oben oder zur Seite greift: Pylon, Footer, Sidebar, Body-Hintergrund.
 

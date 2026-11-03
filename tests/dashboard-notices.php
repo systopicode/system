@@ -9,7 +9,7 @@ use Systopic\System\Maintenance\Runner;
 class fs {public static string $projectRoot;static function toNative(string $s):string{return $s;}}
 class http {public static string $root='/project/';}
 $dir=sys_get_temp_dir().'/fluxo-dashboard-notices-'.bin2hex(random_bytes(5));mkdir($dir.'/var',0700,true);fs::$projectRoot=$dir;
-$render=static function(){ob_start();include dirname(__DIR__).'/panels/cms/home.notices.tpl.php';return ob_get_clean();};
+$render=static function(){ob_start();include dirname(__DIR__).'/panels/admin/home.notices.tpl.php';return ob_get_clean();};
 try {
     Session::$superuser=false;
     check('ordinary users receive no administrative notices',trim($render())==='');
@@ -26,7 +26,7 @@ try {
     $fail=false;
     Runner::run('manual','failure');
     check('resolved cleanup failure removes the notice',trim($render())==='');
-    $home=file_get_contents(dirname(__DIR__).'/panels/cms/home.tpl.php');
+    $home=file_get_contents(dirname(__DIR__).'/panels/admin/home.tpl.php');
     check('notices are rendered before independently hideable widget list',strpos($home,"include __DIR__ . '/home.notices.tpl.php'")<strpos($home,'<div class="widgets dashWidgets'));
 } finally {
     foreach(glob($dir.'/var/maintenance/*')?:[] as $file)unlink($file);

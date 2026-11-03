@@ -29,6 +29,6 @@ final class Filters
             }
         }
         $id=(int)($users[$label]??0);
-        return $id ? '<a href="' . $e(\http::$root.'cms/access/users/edit/?user_id='.$id) . '">' . $e($label) . '</a>' : $e($label);
+        return $id ? '<a href="' . $e(\http::$root.'admin/access/users/edit/?user_id='.$id) . '">' . $e($label) . '</a>' : $e($label);
     }
 }

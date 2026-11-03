@@ -24,7 +24,7 @@ try {
  for(const ip of ['192.168.10.66','::1','2001:db8::1','']){await page.locator('#ip').fill(ip);assert.equal(await page.locator('#ip').evaluate(el=>el.checkValidity()),true,ip);}
  await page.locator('#ip').fill('192.168.10.666');assert.equal(await page.locator('#ip').evaluate(el=>el.checkValidity()),false);
  await page.evaluate(()=>{window.sys={lib:{add:(s,c)=>window.environmentCtor=c,applyParentConstructor(){}},core:{server:{sendEventCall(){window.sent=true;}}}};});
- await page.addScriptTag({content:await read('panels/cms/030_settings/035_environment/panel.js')});
+ await page.addScriptTag({content:await read('panels/admin/030_settings/035_environment/panel.js')});
  await page.evaluate(()=>{const env={};environmentCtor.call(env);window.env=env;env.saveMatch({sourceElement:document.querySelector('#ip')});});
  assert.equal(await page.locator('#ip').getAttribute('aria-invalid'),'true');
  assert.equal(await page.evaluate(()=>!!window.sent),false,'invalid address is not sent');

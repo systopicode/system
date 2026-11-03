@@ -35,8 +35,8 @@ final readonly class FolderHit
          * in registration order. The last entry equals $absPath. PanelBuilder
          * includes module.php from every entry — so a class defined in sys
          * still applies when site only contributes an empty same-named folder
-         * (e.g. site/modules/cms/ without its own module.php, while sys's
-         * cms_module class lives in sys/modules/cms/module.php).
+         * (e.g. site/modules/admin/ without its own module.php, while sys's
+         * cms_module class lives in sys/modules/admin/module.php).
          *
          * @var string[]
          */

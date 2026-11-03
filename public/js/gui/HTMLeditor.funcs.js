@@ -165,7 +165,7 @@ function formatImage(event) {
 	if (!id) {
 		return;
 	}
-	const editorUrl = settings.siteRoot + 'cms/pages/editor/file/?target_id=' + id + '&format=' + encodeURIComponent(media ? media.format : mediaFormatOf(el));
+	const editorUrl = settings.siteRoot + 'admin/pages/editor/file/?target_id=' + id + '&format=' + encodeURIComponent(media ? media.format : mediaFormatOf(el));
 	// The toolbar may already own focus. Keep the actual edited field in
 	// the blur-save flow before opening a dialog that can update the page.
 	(el.closest('.editor[contenteditable="true"]') || document.activeElement?.closest('.editor[contenteditable="true"]'))?.blur();
@@ -183,7 +183,7 @@ function HTMLeditorHTMLMode(event) {
 		}
 	}
 	data = $targetDomObj.data();
-	href = settings.siteRoot + "cms/pages/editor/htmlmode/?id=" + data.node_id + "&field=" + data.field;
+	href = settings.siteRoot + "admin/pages/editor/htmlmode/?id=" + data.node_id + "&field=" + data.field;
 
 	sys.core.server.sendCall({
 		method: 'post',
@@ -278,7 +278,7 @@ function createHTMLeditorLink(event) {
 		method: 'post',
         history: false,
 		post: post
-	}, settings.siteRoot + 'cms/pages/editor/editLink/')));
+	}, settings.siteRoot + 'admin/pages/editor/editLink/')));
 }
 
 /** "Save" in the link dialog: closing renders the page anew, so the field is saved first. */
@@ -407,7 +407,7 @@ function openAnchor(event) {
     var pageRef = ref.match(/^page:(\d+)(?:\?([^#]*))?(?:#.*)?$/);
     if (pageRef) {
         var params = new URLSearchParams(pageRef[2] || '');
-        var url = settings.siteRoot + 'cms/pages/?id=' + pageRef[1];
+        var url = settings.siteRoot + 'admin/pages/?id=' + pageRef[1];
         if (params.get('lang')) url += '&lang=' + encodeURIComponent(params.get('lang'));
         if (anchor.hasAttribute('download')) {
             var pageDownload = document.createElement('a');
@@ -444,7 +444,7 @@ function openAnchor(event) {
         var previewWindow = !knownDownload && anchor.getAttribute('target') !== '_self' ? window.open('about:blank', '_blank') : null;
         if (previewWindow) previewWindow.opener = null;
         var call = new sys.core.server.call({method: 'put', ref: ref});
-        call.send(settings.siteRoot + 'cms/pages/resolveEditorLink').done(data => follow(data, previewWindow)).fail(() => { if (previewWindow) previewWindow.close(); });
+        call.send(settings.siteRoot + 'admin/pages/resolveEditorLink').done(data => follow(data, previewWindow)).fail(() => { if (previewWindow) previewWindow.close(); });
         return;
     }
     if (!/^(?:https?:|mailto:|tel:|sms:|\/|#|\?|[^:]+$)/i.test(ref)) return;

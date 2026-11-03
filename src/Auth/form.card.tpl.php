@@ -9,5 +9,5 @@ $e = static fn($value): string => htmlspecialchars((string) $value, ENT_QUOTES);
         <div class="authMessages"><?= \message::flush([], true) ?></div>
         <?= $authForm ?>
     </div>
-    <p class="authFoot"><a class="button transparent authSwitch ajax" href="<?= $e(\http::$root . 'cms/auth/?method=choose') ?>"><i class="cmsIcon cmsIcon-arrow-left"></i><span>Use another method</span></a></p>
+    <p class="authFoot"><a class="button transparent authSwitch ajax" href="<?= $e(\http::$root . 'admin/auth/?method=choose') ?>"><i class="cmsIcon cmsIcon-arrow-left"></i><span>Use another method</span></a></p>
 </main>

@@ -5,8 +5,8 @@ import {pathToFileURL} from 'node:url';
 const root = new URL('../', import.meta.url);
 const read = path => readFile(new URL(path, root), 'utf8');
 const {chromium} = await import(process.env.FLUXO_PLAYWRIGHT_MODULE ? pathToFileURL(process.env.FLUXO_PLAYWRIGHT_MODULE).href : 'playwright');
-const css = (await Promise.all((await readdir(new URL('public/css/', root))).filter(n => n.endsWith('.css')).sort().map(n => read('public/css/' + n)))).join('\n') + await read('panels/cms/090_tools/tools.css');
-const controller = await read('panels/cms/mobile.js');
+const css = (await Promise.all((await readdir(new URL('public/css/', root))).filter(n => n.endsWith('.css')).sort().map(n => read('public/css/' + n)))).join('\n') + await read('panels/admin/090_tools/tools.css');
+const controller = await read('panels/admin/mobile.js');
 const tables = await read('public/js/gui/tableFit.js');
 const menus = await read('public/js/gui/dropdownMenus.js');
 const browser = await chromium.launch({channel:'chrome', headless:true});
@@ -15,8 +15,8 @@ try {
  const errors = [];
  page.on('pageerror', error => errors.push(error.message));
  await page.route('https://cms.example.test/**', route => route.fulfill({body:'<html></html>',contentType:'text/html'}));
- await page.goto('https://cms.example.test/cms/');
- await page.setContent(`<meta name="viewport" content="width=device-width,initial-scale=1"><style>${css}</style><body class="cms tools"><header class="cmsMobileHeader"><button data-cms-window="menu">Menu</button><strong data-cms-module></strong></header><main><div class="main"><nav><ul><li class="active"><a href="/cms/tools/">Tools</a></li></ul></nav></div><div class="pylon cms"><nav>Navigation</nav></div><div class="content"><h1>Tools</h1></div></main><button class="cmsMobileBackdrop" hidden></button></body>`);
+ await page.goto('https://cms.example.test/admin/');
+ await page.setContent(`<meta name="viewport" content="width=device-width,initial-scale=1"><style>${css}</style><body class="cms tools"><header class="cmsMobileHeader"><button data-cms-window="menu">Menu</button><strong data-cms-module></strong></header><main><div class="main"><nav><ul><li class="active"><a href="/admin/tools/">Tools</a></li></ul></nav></div><div class="pylon cms"><nav>Navigation</nav></div><div class="content"><h1>Tools</h1></div></main><button class="cmsMobileBackdrop" hidden></button></body>`);
  await page.evaluate(controller);
  await page.addScriptTag({content:await read("public/js/ext/jquery.js")});
 

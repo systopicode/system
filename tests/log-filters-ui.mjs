@@ -8,7 +8,7 @@ try {
  <tr data-log-time="${Date.parse('2026-02-01T12:00:00')/1000}" data-log-user=Bob data-log-result=error><td>Beta</td></tr>
  <tr data-log-time="" data-log-user=Alice data-log-result=error><td>Undated</td></tr>
  </tbody></table></section>`);
- await page.addScriptTag({path:'panels/cms/090_tools/logs/panel.js'});
+ await page.addScriptTag({path:'panels/admin/090_tools/logs/panel.js'});
  const shown=()=>page.locator('tbody tr:not([hidden])').count();
  assert.equal(await shown(),3);
  await page.locator('input[data-log-user]').fill('alice');assert.equal(await shown(),2);

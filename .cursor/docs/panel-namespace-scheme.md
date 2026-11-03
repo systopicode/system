@@ -18,17 +18,17 @@ Jede `panels/`-Root wird zu einem **benannten Modul** mit funktionalem Namespace
 
 Die `\Root\`-Ebene ist dabei die entscheidende Trennung:
 - `Systopic\System\Panels\PanelNode` — Infrastructure-Klasse (in `src/`)
-- `Systopic\System\Panels\Root\Cms\Panel` — Konkrete Panel-Implementierung (in `panels/`)
+- `Systopic\System\Panels\Root\Admin\Panel` — Konkrete Panel-Implementierung (in `panels/`)
 
 ### Beispiele
 
 | Ordner | Legacy-Klasse | Neue FQCN |
 |---|---|---|
-| `panels/cms/` | `cms_module` | `Systopic\System\Panels\Root\Cms\Panel` |
-| `panels/cms/040_backup/` | `backup_module` | `Systopic\System\Panels\Root\Cms\Backup\Panel` |
-| `panels/cms/040_backup/create/` | `backup_create_module` | `Systopic\System\Panels\Root\Cms\Backup\Create\Panel` |
-| `spaceticker/panels/cms/020_contacts/` | `cms_contacts_module` | `Spaceticker\Panels\Root\Cms\Contacts\Panel` |
-| `spaceticker/panels/cms/010_events/` | `cms_events_module` | `Spaceticker\Panels\Root\Cms\Events\Panel` |
+| `panels/admin/` | `cms_module` | `Systopic\System\Panels\Root\Admin\Panel` |
+| `panels/admin/040_backup/` | `backup_module` | `Systopic\System\Panels\Root\Admin\Backup\Panel` |
+| `panels/admin/040_backup/create/` | `backup_create_module` | `Systopic\System\Panels\Root\Admin\Backup\Create\Panel` |
+| `spaceticker/panels/admin/020_contacts/` | `cms_contacts_module` | `Spaceticker\Panels\Root\Admin\Contacts\Panel` |
+| `spaceticker/panels/admin/010_events/` | `cms_events_module` | `Spaceticker\Panels\Root\Admin\Events\Panel` |
 
 ## Warum kein PSR-4
 
@@ -108,10 +108,10 @@ PanelAutoloader::registerRoots($panelTree->getRoots());
 <?php
 declare(strict_types=1);
 
-namespace Systopic\System\Panels\Root\Cms\Backup;
+namespace Systopic\System\Panels\Root\Admin\Backup;
 
 class Panel extends \cms_module          // Schritt 1: Legacy-Basis
-// oder: class Panel extends \Systopic\System\Panels\Root\Cms\Panel  // Schritt 2: nach CMS-Migration
+// oder: class Panel extends \Systopic\System\Panels\Root\Admin\Panel  // Schritt 2: nach CMS-Migration
 {
     // Inhalt aus module.php übernehmen
     public bool $bequests = true;
@@ -132,9 +132,9 @@ Treffer → FQCN oder `class_alias` ergänzen.
 Projekt-Panel das System-Panel erweitert:
 
 ```php
-namespace Spaceticker\Panels\Root\Cms\Contacts;
+namespace Spaceticker\Panels\Root\Admin\Contacts;
 
-use Systopic\System\Panels\Root\Cms\Panel as CmsPanel;
+use Systopic\System\Panels\Root\Admin\Panel as CmsPanel;
 
 class Panel extends CmsPanel { ... }
 ```
@@ -149,15 +149,15 @@ define('PROJECT_NAMESPACE', 'Spaceticker');
 
 ## Bereits migrierte Panels (System)
 
-- `panels/cms/040_backup/` → `Systopic\System\Panels\Root\Cms\Backup\Panel`
-- `panels/cms/040_backup/create/` → `Systopic\System\Panels\Root\Cms\Backup\Create\Panel`
-- `panels/cms/040_backup/restore/` → `Systopic\System\Panels\Root\Cms\Backup\Restore\Panel`
+- `panels/admin/040_backup/` → `Systopic\System\Panels\Root\Admin\Backup\Panel`
+- `panels/admin/040_backup/create/` → `Systopic\System\Panels\Root\Admin\Backup\Create\Panel`
+- `panels/admin/040_backup/restore/` → `Systopic\System\Panels\Root\Admin\Backup\Restore\Panel`
 
 ## Offene Folgeschritte
 
 ### Inkrementell (Ordner für Ordner)
 - Restliche 31 System-Panels (`pages`, `settings`, `users`, etc.) migrieren
-- Basisklasse `cms_module` nach `Systopic\System\Panels\Root\Cms\Panel` überführen
+- Basisklasse `cms_module` nach `Systopic\System\Panels\Root\Admin\Panel` überführen
 - Projekt-Panels (spaceticker: 19 `module.php`) nach `Spaceticker\Panels\Root\...` migrieren
 
 ### Langfristig

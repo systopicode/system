@@ -33,7 +33,7 @@ $authForgot = $authForgot ?? null;
 $authRegister = $authRegister ?? null;
 $authForgotClass = $authForgotClass ?? '';
 $authEndpoint = $authEndpoint ?? '';
-$authProfile = $authProfile ?? (\http::$root . 'cms/user/');
+$authProfile = $authProfile ?? (\http::$root . 'admin/user/');
 $e = static fn($value): string => htmlspecialchars((string) $value, ENT_QUOTES);
 $authMessages = '<div class="authMessages">' . \message::flush([], true) . '</div>';
 

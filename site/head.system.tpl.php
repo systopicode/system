@@ -36,7 +36,7 @@ echo fsLoader::includeScriptFiles(fs::$sysRoot . 'public/js/core/server/',);
 // panel.js files end up in the client::flushScripts() output below.
 $_pt = \Systopic\System\Panels\Tree\PanelTree::getInstance();
 if ($_pt !== null) {
-	foreach (['cms', 'pages'] as $_panelName) {
+	foreach (['admin', 'pages'] as $_panelName) {
 		$_panel = $_pt->findByName($_panelName);
 		if ($_panel !== null) {
 			$_panel->loadJS();

@@ -24,7 +24,7 @@ fs::$siteRoot = $fixture;
 try {
     file_put_contents($fixture . '/var/backups/backup.log', "[2026-11-01T12:34:56+00:00] Finished - 1s 4MB\nUndated legacy entry - 1.2s 4MB\n");
     ob_start();
-    include dirname(__DIR__) . '/panels/cms/040_backup/log/text.inc.php';
+    include dirname(__DIR__) . '/panels/admin/040_backup/log/text.inc.php';
     $html = ob_get_clean();
     check('backup log displays European dates', str_contains($html, '01.11.2026 12:34:56'));
     check('backup log keeps machine timestamp for filtering', str_contains($html, 'data-log-time="' . strtotime('2026-11-01T12:34:56+00:00') . '"'));

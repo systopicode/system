@@ -299,7 +299,7 @@ final class EnvironmentForm
                 try { $recipient = \Systopic\System\Mail\Delivery::testRecipient(); }
                 catch (\RuntimeException) { $recipient = 'Invalid recipient — delivery blocked'; }
                 echo '<main><p class="tagsHint">Effective delivery: <strong>' . $e($transport) . '</strong> → <strong>' . $e($recipient) . '</strong>. Local overrides apply. SMTP acceptance confirms handover to this server, not delivery to the inbox.</p></main>';
-                echo '<footer><button type="button" class="button" data-action-feedback data-loading data-on_click="testMail" data-file="' . $e($file) . '"><i class="cmsIcon cmsIcon-paper-plane"></i>Send test email</button><a class="button outline" href="' . $e(\http::$root . 'cms/tools/logs/email/') . '"><i class="cmsIcon cmsIcon-envelope"></i>Email log</a></footer>';
+                echo '<footer><button type="button" class="button" data-action-feedback data-loading data-on_click="testMail" data-file="' . $e($file) . '"><i class="cmsIcon cmsIcon-paper-plane"></i>Send test email</button><a class="button outline" href="' . $e(\http::$root . 'admin/tools/logs/email/') . '"><i class="cmsIcon cmsIcon-envelope"></i>Email log</a></footer>';
             }
         }
         echo '</section>';

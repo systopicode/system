@@ -49,7 +49,7 @@ docblock of `src/Agent/AgentCli.php`.
 ```
 php public/index.php @<request-file.json>     # request from JSON file
 php public/index.php - < request.json          # request from STDIN
-php public/index.php '{"path":"/cms/"}'        # request inline (avoid: shells mangle JSON)
+php public/index.php '{"path":"/admin/"}'        # request inline (avoid: shells mangle JSON)
 ```
 
 Always prefer `@file` or `-` (STDIN). Inline JSON breaks on Windows
@@ -110,8 +110,8 @@ same: `require_once __DIR__ . '/agent-tmp.php';`.
 {
   // Mandatory: the request URI to dispatch (becomes $_SERVER['REQUEST_URI']).
   // Use the full URL path including the public/-stripping prefix the dev
-  // server would see, e.g. "/projects/spaceticker.app/public/cms/pages/".
-  "path": "/cms/pages/",
+  // server would see, e.g. "/projects/spaceticker.app/public/admin/pages/".
+  "path": "/admin/pages/",
 
   // Optional: HTTP method. Default GET.
   "method": "POST",
@@ -181,7 +181,7 @@ artefacts don't clobber each other (`cms`, `pages`, `events`, `contacts`,
 
 ```jsonc
 // C:/laragon/www/agents/tmp/spaceticker.app/cli-test-pages.json
-{ "path": "/projects/spaceticker.app/public/cms/pages/", "user": 2, "output": "json" }
+{ "path": "/projects/spaceticker.app/public/admin/pages/", "user": 2, "output": "json" }
 ```
 
 ```powershell
@@ -231,7 +231,7 @@ cmd /c "php index.php @cli-test-cms.json > var\cursor\cli-test-cms-result.json 2
 
 // step 2: visit a protected page on the same session
 // C:/laragon/www/agents/tmp/<project>/cli-test-after-login.json
-{ "path": "/cms/pages/", "sessionId": "agent-session-1", "output": "html" }
+{ "path": "/admin/pages/", "sessionId": "agent-session-1", "output": "html" }
 ```
 
 Both runs share `$_SESSION` because they pin the same `sessionId`.
@@ -239,7 +239,7 @@ Both runs share `$_SESSION` because they pin the same `sessionId`.
 ### Pipe a request through STDIN (no file)
 
 ```powershell
-'{"path":"/cms/","user":2}' | php index.php -
+'{"path":"/admin/","user":2}' | php index.php -
 ```
 
 Use this for one-shot probes that aren't worth saving as a `.json` file.

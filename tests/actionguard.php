@@ -63,7 +63,7 @@ check('from a sibling subdomain: refused', $refused('save') === 'origin');
 $request('GET', ['HTTP_SEC_FETCH_SITE' => 'none']);
 check('typed or bookmarked: refused', $refused('save') === 'origin');
 $request('GET', ['HTTP_SEC_FETCH_SITE' => 'cross-site']);
-check('a link from another site: refused (cms/pages/publish?id=5)', $refused('save') === 'origin');
+check('a link from another site: refused (admin/pages/publish?id=5)', $refused('save') === 'origin');
 check('… unless it is an entry action', $refused('open') === null);
 $request('PUT', ['HTTP_SEC_FETCH_SITE' => 'cross-site']);
 check('an entry action by PUT from outside: refused', $refused('open') === 'origin');

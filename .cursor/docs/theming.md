@@ -1,6 +1,6 @@
 # fluxo — a project's own look, and how a panel is built
 
-For people and agents. This is about fluxo (the GUI under `/cms/`, the
+For people and agents. This is about fluxo (the GUI under `/admin/`, the
 login, the system mails, the edit bar on the website), not the website's
 own frontend.
 
@@ -77,12 +77,12 @@ and the edit bar.
 
 ## 4. How a panel is built
 
-A panel is a folder below `panels/cms/` of a package (`system`, `cms`, …).
+A panel is a folder below `panels/admin/` of a package (`system`, `cms`, …).
 The trees of all packages are merged by folder name; the sort prefix
 (`080_`) orders the menu and is not part of the URL.
 
 ```
-cms/panels/cms/010_pages/       → /cms/pages/
+admin/panels/admin/010_pages/       → /admin/pages/
 	panel.php                    class Panel, state, getters
 	actions.php                  switch ($this->action) { case 'x': … }
 	main.tpl.php                 the content

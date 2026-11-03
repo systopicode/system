@@ -43,7 +43,7 @@ if (!isset($_GET['noheader'])) {
 }
 
 ob_flush();
-// Saving a crop is the CMS's business (cms/pages/updateMediaCrop); this file
+// Saving a crop is the CMS's business (admin/pages/updateMediaCrop); this file
 // only renders — a format that is missing, or one asked for with ?rebuild.
 $msg = "filename:$filename\n";
 $msg .= "fileexists:" . ($fileexists ? 'TRUE' : 'FALSE') . "\n";

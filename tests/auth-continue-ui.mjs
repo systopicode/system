@@ -8,11 +8,11 @@ const {chromium}=await import(pathToFileURL(process.env.FLUXO_PLAYWRIGHT_MODULE)
 const browser=await chromium.launch({channel:'chrome',headless:true});
 try {
  const page=await browser.newPage({colorScheme:'dark'});
- const css=await read('public/css/50_forms.css')+await read('panels/cms/auth/auth.css');
+ const css=await read('public/css/50_forms.css')+await read('panels/admin/auth/auth.css');
  await page.setContent(`<style>${css}</style><body class="cms"><div class="authCard"><main><p class="authFoot"><a class="authSkip">Continue →</a></p><p class="authFoot"><a class="authBack">← Back</a></p></main></div></body>`);
  assert.equal(await page.locator('.authFoot').first().evaluate(e=>getComputedStyle(e).justifyContent),'flex-end');
  assert.equal(await page.locator('.authFoot').last().evaluate(e=>getComputedStyle(e).justifyContent),'flex-start');
- const head=await read('panels/cms/head.tpl.php');
+ const head=await read('panels/admin/head.tpl.php');
  const start=head.indexOf('(function () {',head.indexOf('var choice')-100);
  const script=head.slice(start,head.indexOf('</script>',start)).replace('<?= json_encode($appearance) ?>','"system"').replace('<?= json_encode($darkGround) ?>','"#111111"').replace('<?= json_encode($canvasColor) ?>','"#ffffff"');
  await page.addScriptTag({content:script});
@@ -58,7 +58,7 @@ try {
  await page.setContent('<div class="authCard"><main class="authSignin"><div class="authPane"><div data-screen-pairing>Remote code</div></div><div data-auth-success hidden>Successfully signed in</div></main></div>');
  await page.evaluate(()=>{
   window.sys={lib:{add(setup,ctor){if(setup.shorthand){const instance={};ctor.call(instance);sys[setup.shorthand]=instance;}else window.authCtor=ctor;},applyParentConstructor(){}}};
-  window.fetch=async()=>({json:async()=>({paired:true,redirect:'/cms/'})});
+  window.fetch=async()=>({json:async()=>({paired:true,redirect:'/admin/'})});
   window.setInterval=fn=>{window.poll=fn;return 1;};
   const timeout=window.setTimeout;
   window.setTimeout=(fn,ms)=>{if(ms===2000){window.successDelay=ms;return 1;}return timeout(fn,ms);};
@@ -69,7 +69,7 @@ try {
  assert.equal(await page.locator('.authMethod').evaluate(e=>e.hidden),true);
  await page.evaluate(()=>{Object.defineProperty(window,'isSecureContext',{value:true,configurable:true});window.PublicKeyCredential=function(){};PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable=async()=>false;Object.defineProperty(navigator,'credentials',{value:{get:async()=>null},configurable:true});});
  assert.equal(await page.evaluate(()=>sys.passkeys.checkSupport()),true,'lack of platform biometrics does not block external authenticators');
- await page.addScriptTag({content:await read('panels/cms/auth/panel.js')});
+ await page.addScriptTag({content:await read('panels/admin/auth/panel.js')});
  await page.evaluate(()=>{
   document.querySelector('.authCard').insertAdjacentHTML('beforeend','<input name="username" value="test@example.test"><p class="authLinks"><a class="ajax" href="?view=resetPassword">Forgot</a></p>');
   const link=document.querySelector('.authLinks a');link.addEventListener('click',e=>e.preventDefault());link.click();

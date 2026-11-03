@@ -104,8 +104,8 @@ final class ThemeFile
 
     public static function pagesPanelPresent(): bool
     {
-        return class_exists(\Systopic\Cms\Panels\Root\Cms\Pages\Panel::class)
-            || is_dir(rtrim((string) \fs::$projectRoot, '/\\') . '/panels/cms/010_pages');
+        return class_exists(\Systopic\Cms\Panels\Root\Admin\Pages\Panel::class)
+            || is_dir(rtrim((string) \fs::$projectRoot, '/\\') . '/panels/admin/010_pages');
     }
 
     /**

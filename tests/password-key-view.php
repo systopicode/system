@@ -6,7 +6,7 @@ class http { public static string $root = '/'; public static function get($k,$de
 class message { public static function flush(...$args): string { return ''; } }
 use Systopic\System\Tables\Users\Model;
 $render = function (): string {
-    ob_start(); include dirname(__DIR__) . '/panels/cms/auth/setPassword.tpl.php'; return ob_get_clean();
+    ob_start(); include dirname(__DIR__) . '/panels/admin/auth/setPassword.tpl.php'; return ob_get_clean();
 };
 foreach (['missing', 'expired', 'consumed', 'valid'] as $state) {
     $user = null;

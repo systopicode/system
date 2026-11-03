@@ -3,7 +3,7 @@ declare(strict_types=1);
 require __DIR__ . '/bootstrap.php';
 class http { public static string $root='/project/'; public static string $assetsMode='direct'; public static function sessionStartOnce(): void {} }
 use Systopic\System\Auth\Branding;
-foreach ([['/project/about/',true],['/project/cms/pages/',false],['/project/cms',false],['/other/',false],[null,false]] as [$target,$expected]) {
+foreach ([['/project/about/',true],['/project/admin/pages/',false],['/project/cms',false],['/other/',false],[null,false]] as [$target,$expected]) {
     $_SESSION['systopic_return_to']=$target;
     check('frontend branding destination '.($target??'(none)'),Branding::frontend()===$expected);
 }
@@ -28,7 +28,7 @@ try {
     check('singular frontend favicon directory', str_starts_with(Branding::href('img/icon.svg') ?? '', '/project/img/favicon/favicon.svg?t='));
     check('frontend PNG size fallback', str_starts_with(Branding::href('img/favicons/favicon-32x32.png') ?? '', '/project/img/favicon/favicon-96x96.png?t='));
     check('missing optional icon stays absent', Branding::href('img/favicons/favicon.ico') === null);
-    $_SESSION['systopic_return_to'] = '/project/cms/pages/';
+    $_SESSION['systopic_return_to'] = '/project/admin/pages/';
     check('CMS destination never takes frontend icons', Branding::href('img/icon.svg') === null);
 } finally {
     unlink($dir . '/img/favicon/favicon.svg'); unlink($dir . '/img/favicon/favicon-96x96.png');

@@ -34,7 +34,7 @@ while ($openChildLimit-- > 0 && $nav->openChildSelected(false)) { // false: skip
 	// Per-panel auto-includes (legacy funcs.php and include.php) have been
 	// removed. Helpers belong in lib/ classes, request-time data belongs on
 	// the panel itself as public properties (set in onLoadThisClass /
-	// onLoadSelected). See cms/040_backup for the canonical migration pattern.
+	// onLoadSelected). See admin/040_backup for the canonical migration pattern.
 }
 
 $module = $nav->getActive(); // deepest opened panel — used by action dispatch below
@@ -81,7 +81,7 @@ if (!fs::openDir($panelTree->getSelectedRoot())) {
 $domRenderer->beginRender(); // activate slices output
 $domRenderer->setBodyClasses($panelTree->getBodyClasses());
 // a quiet answer (an upload span) renders nothing: storing would leave its panel
-// selected (cms/pages/upload) and the next render of the page would switch to it
+// selected (admin/pages/upload) and the next render of the page would switch to it
 if (!\Systopic\System\Panels\PanelNode::$quiet) {
 	\Systopic\System\Auth\Session::storeState();
 }
@@ -195,7 +195,7 @@ if (http::ajax()) {
 				//
 				// Every other template renders from inside its own folder
 				// (PanelNavigator::openRoot → fs::openDir), so a template may
-				// include a sibling or a parent relatively — cms/auth/head.tpl.php
+				// include a sibling or a parent relatively — admin/auth/head.tpl.php
 				// does exactly that. Included from here without changing
 				// directory, that relative path resolves against the project
 				// root and the whole <head> is silently lost: no css, no js,

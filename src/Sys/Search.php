@@ -8,7 +8,7 @@ use Systopic\Db\Scope;
 use Systopic\System\Panels\PanelNode;
 
 /**
- * The search of cms/search/ (Cmd+K). It walks every panel the user may open
+ * The search of admin/search/ (Cmd+K). It walks every panel the user may open
  * (only those are built), so a project's own panels take part without code:
  *
  * - a panel is found by its menu name and by the fixed texts of its views

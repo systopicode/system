@@ -8,7 +8,7 @@ $panel=new class {
  function dashboardWidgets(){return array_fill_keys(['a','b','c','d'],'widget');}
  function saveDashboardLayout($order,$hidden,$columns=3,$reordered=true){$this->layout=$reordered?Layout::save($this->layout,$order,$hidden,$columns):array_replace($this->layout,['hidden'=>$hidden]);}
  function updateView($view){$this->updated++;}
- function invoke(){include dirname(__DIR__).'/panels/cms/actions.php';}
+ function invoke(){include dirname(__DIR__).'/panels/admin/actions.php';}
 };
 $panel->state=(object)[];
 http::$data=['columns'=>2,'order'=>json_encode(['a','c','|','b','d']),'widget'=>'d'];http::$moved='a';$panel->invoke();

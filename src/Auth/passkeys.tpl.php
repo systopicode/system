@@ -44,7 +44,7 @@ $passkeyRow = static function ($key) use ($escape, $canRemove, $own, $noAutofill
 	<?php
 };
 ?>
-<div class="<?= $passkeyWidget ? 'passkeys' : 'cmsBox passkeys' ?>" data-passkey-user-id="<?= (int) $passkeyUser->id ?>" data-passkey-own="<?= $own ? '1' : '0' ?>" data-passkey-count="<?= count($keys) ?>" data-passkey-grant="<?= (Passkeys::setupPending() || Session::passkeyGrant()) ? '1' : '0' ?>" data-passkey-endpoint="<?= $escape(\http::$root . 'cms/user/') ?>" data-passkey-origin="<?= $escape(Passkeys::available() ? Passkeys::config()['origin'] : '') ?>" data-passkey-token="<?= $escape(PasskeyChallenge::token()) ?>">
+<div class="<?= $passkeyWidget ? 'passkeys' : 'cmsBox passkeys' ?>" data-passkey-user-id="<?= (int) $passkeyUser->id ?>" data-passkey-own="<?= $own ? '1' : '0' ?>" data-passkey-count="<?= count($keys) ?>" data-passkey-grant="<?= (Passkeys::setupPending() || Session::passkeyGrant()) ? '1' : '0' ?>" data-passkey-endpoint="<?= $escape(\http::$root . 'admin/user/') ?>" data-passkey-origin="<?= $escape(Passkeys::available() ? Passkeys::config()['origin'] : '') ?>" data-passkey-token="<?= $escape(PasskeyChallenge::token()) ?>">
     <?php if ($passkeyWidget) { ?>
         <section class="widget">
         <header><h2><i class="cmsIcon cmsIcon-user-key" aria-hidden="true"></i>Passkeys</h2></header>

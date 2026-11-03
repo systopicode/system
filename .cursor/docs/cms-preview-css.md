@@ -3,7 +3,7 @@
 How the public site's stylesheets reach the page preview inside the CMS —
 and only there — using `@scope` and cascade layers.
 
-The preview itself is `panels/cms/010_pages/main.tpl.php`: it renders the real
+The preview itself is `panels/admin/010_pages/main.tpl.php`: it renders the real
 page through the *page* navigator into `<article class="cmsContent">`, in the
 same document as the CMS chrome. See
 [panel-diff-rendering.md §6c](panel-diff-rendering.md) for what that does to
@@ -51,7 +51,7 @@ applying inside the preview.
 the specificity says** — so the site can style the preview without
 out-specifying `.cms .layout`, and without a single `!important`.
 
-Declared once in `panels/cms/head.tpl.php`, before anything that names a
+Declared once in `panels/admin/head.tpl.php`, before anything that names a
 layer:
 
 ```css

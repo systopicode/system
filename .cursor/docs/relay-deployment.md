@@ -28,7 +28,7 @@ Ohne root-Zugang: Teil B in der Variante „ohne root“.
   `packages/relay` und `projects/spaceticker.app` — **so, wie sie auf dem
   Rechner liegen**, nicht wie sie committet sind. In `packages/system` lagen am
   2026-10-14 fremde, nicht committete Änderungen (`asset.php`,
-  `panels/cms/body.tpl.php`, `site/head.loader.tpl.php`,
+  `panels/admin/body.tpl.php`, `site/head.loader.tpl.php`,
   `site/head.system.tpl.php`, `src/Config/InstanceFiles.php`,
   `src/Http/Assets.php`). Sie gehen mit, wenn sie nicht vorher geklärt sind.
 - Server: Architektur und freie Ports. Der Hub braucht zwei Ports auf

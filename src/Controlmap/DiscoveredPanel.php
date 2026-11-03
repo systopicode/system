@@ -9,7 +9,7 @@ namespace Systopic\System\Controlmap;
  * its class asks for access, which actions its code names, and the panels
  * below it.
  *
- * The path is the logical one (`cms/pages/sidebar`, folder prefixes like
+ * The path is the logical one (`admin/pages/sidebar`, folder prefixes like
  * `010_` dropped): that is what a config refers to, since a folder can be
  * renumbered and ids change between installations.
  */

@@ -5,14 +5,14 @@ import assert from 'node:assert/strict';
 const root=new URL('../',import.meta.url);
 const read=p=>readFile(new URL(p,root),'utf8');
 const {chromium}=await import(process.env.FLUXO_PLAYWRIGHT_MODULE ? pathToFileURL(process.env.FLUXO_PLAYWRIGHT_MODULE).href : 'playwright');
-const css=(await Promise.all((await readdir(new URL('public/css/',root))).filter(n=>n.endsWith('.css')).sort().map(n=>read('public/css/'+n)))).join('\n')+await read('panels/cms/dashboard.css')+await read('panels/cms/080_users/010_users/edit/user.css');
-const controller=await read('panels/cms/mobile.js'),tables=await read('public/js/gui/tableFit.js');
+const css=(await Promise.all((await readdir(new URL('public/css/',root))).filter(n=>n.endsWith('.css')).sort().map(n=>read('public/css/'+n)))).join('\n')+await read('panels/admin/dashboard.css')+await read('panels/admin/080_users/010_users/edit/user.css');
+const controller=await read('panels/admin/mobile.js'),tables=await read('public/js/gui/tableFit.js');
 const browser=await chromium.launch({channel:'chrome',headless:true});
 try {
  const page=await browser.newPage({viewport:{width:390,height:844},isMobile:true,hasTouch:true});
  await page.route('https://cms.example.test/**',r=>r.fulfill({body:'<html></html>',contentType:'text/html'}));
- await page.goto('https://cms.example.test/cms/settings/');
- await page.setContent(`<meta name="viewport" content="width=device-width, initial-scale=1"><style>${css}</style><body class="cms settings"><header class="cmsMobileHeader"><button data-cms-window="menu"></button><strong data-cms-module></strong></header><main><div class="main"><nav><li class="active"><a href="/cms/settings/">Settings</a></li></nav></div><div class="pylon cms"><header></header><nav><ul><li class="active"><a href="/cms/settings/pagesettings/">Global Settings</a></li></ul></nav></div><div class="content"></div></main><button class="cmsMobileBackdrop" hidden></button></body>`);
+ await page.goto('https://cms.example.test/admin/settings/');
+ await page.setContent(`<meta name="viewport" content="width=device-width, initial-scale=1"><style>${css}</style><body class="cms settings"><header class="cmsMobileHeader"><button data-cms-window="menu"></button><strong data-cms-module></strong></header><main><div class="main"><nav><li class="active"><a href="/admin/settings/">Settings</a></li></nav></div><div class="pylon cms"><header></header><nav><ul><li class="active"><a href="/admin/settings/pagesettings/">Global Settings</a></li></ul></nav></div><div class="content"></div></main><button class="cmsMobileBackdrop" hidden></button></body>`);
  await page.evaluate(controller);
  await page.evaluate(()=>document.addEventListener('click',e=>{const a=e.target.closest('a');if(!a)return;e.preventDefault();history.pushState({},'',a.href);document.querySelector('.content').innerHTML='<div class="flexRow"><div class="flexColumn"><section class="cms"><h1>Global Settings</h1></section></div></div>';}));
  await page.getByRole('link',{name:'Global Settings',exact:true}).click();
@@ -44,7 +44,7 @@ try {
  assert.ok(tabPosition.tab.right<=tabPosition.rail.right && tabPosition.tab.left>=tabPosition.rail.left);
  // Content-only modules must not inherit a detail sheet from a previous module.
  for (const module of ['backup','user']) {
-  await page.goto('https://cms.example.test/cms/'+module+'/');
+  await page.goto('https://cms.example.test/admin/'+module+'/');
   await page.setContent(`<meta name="viewport" content="width=device-width, initial-scale=1"><style>${css}</style><body class="cms ${module}"><header class="cmsMobileHeader"><button data-cms-window="menu"></button><strong data-cms-module></strong></header><button class="cmsMobileBackdrop" hidden></button><main><div class="main"></div><div class="content" data-cms-sheet="1"><header></header><section>Content</section></div></main></body>`);
   await page.evaluate(controller);
   assert.equal(await page.locator('.content').getAttribute('data-cms-sheet'),null, module+' remains ordinary content');

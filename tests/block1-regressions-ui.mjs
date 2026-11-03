@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 const {chromium}=await import(process.env.FLUXO_PLAYWRIGHT_MODULE);
 const browser=await chromium.launch({channel:'chrome',headless:true});
 try {
- const css=['00_theme','11_icons','13_icons','18_ui','19_appearance','20_base','23_pylon','25_widgets','26_spinner','27_tree','50_forms','60_lightbox','70_components'].map(n=>fs.readFileSync(`public/css/${n}.css`,'utf8')).join('\n')+fs.readFileSync('panels/cms/user/profile.css','utf8');
+ const css=['00_theme','11_icons','13_icons','18_ui','19_appearance','20_base','23_pylon','25_widgets','26_spinner','27_tree','50_forms','60_lightbox','70_components'].map(n=>fs.readFileSync(`public/css/${n}.css`,'utf8')).join('\n')+fs.readFileSync('panels/admin/user/profile.css','utf8');
  const page=await browser.newPage();const errors=[];page.on('pageerror',e=>errors.push(e.message));
  await page.setContent(`<style>${css}.profile{padding:20px}.fixturePreview{position:relative;width:300px;height:200px}</style><body class=cms><section class="cms profile"><div class=profileGrid>${Array.from({length:7},(_,i)=>`<section class=widget><header><h2>Widget ${i}</h2></header><main>Content</main></section>`).join('')}</div></section><ul class=tree><li class=active><label><a class=fold><i class="cmsIcon cmsIcon-chevron-right"></i></a><a class=label>Selected page</a></label></li></ul><label class=checkbox><input type=checkbox class=switch><div><div></div></div></label><div class="cms message cmsActionMessages" data-system-messages><div class=warning><p class=message>Backup warning</p></div></div><div class=cmslightbox><section><main><div class="fileFrame fixturePreview"><img id=preview></div></main></section></div></body>`);
  let prior=0;

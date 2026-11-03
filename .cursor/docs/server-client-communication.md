@@ -61,4 +61,4 @@ Kein HTML-Pendant. Form **ohne** `method` (oder Alias `method="put"`): JSON in `
 
 Binär (Chunks): Stream `/*json:<länge>*/` + JSON + Bytes. PHP: `http::readPut()` / `http::binary()`.
 
-Action an ein **anderes** Panel ohne Rendern: relative Action + **PUT**, nicht GET/POST-Pfad (`cms/storeSpan`).
+Action an ein **anderes** Panel ohne Rendern: relative Action + **PUT**, nicht GET/POST-Pfad (`admin/storeSpan`).

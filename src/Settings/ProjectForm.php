@@ -391,14 +391,14 @@ final class ProjectForm
                     $picked = \Systopic\System\Media\GroupPolicy::parse((string) ($values['file_extension'] ?? ''));
                     $rawTypes = trim((string) ($values['file_extension'] ?? ''));
                     $label = $rawTypes === '' || $rawTypes === '*' ? 'All supported types' : ($picked === [] ? 'No supported types' : count($picked) . (count($picked) === 1 ? ' file type' : ' file types'));
-                    echo '<a class="ajax button transparent" href="' . $e(rtrim((string) \http::$root, '/') . '/cms/settings/mediasettings/types/') . '?group=' . rawurlencode($item->key) . '">' . $e($label) . '<i class="cmsIcon cmsIcon-pen"></i></a></td>';
+                    echo '<a class="ajax button transparent" href="' . $e(rtrim((string) \http::$root, '/') . '/admin/settings/mediasettings/types/') . '?group=' . rawurlencode($item->key) . '">' . $e($label) . '<i class="cmsIcon cmsIcon-pen"></i></a></td>';
                     continue;
                 }
                 if ($mediaGroups && $column === $templateField) {
                     $values = self::valuesOf($group, $item);
                     $picked = array_filter(array_map('trim', explode(';', (string) ($values['templates'] ?? ''))));
                     $label = $picked === [] ? 'All templates' : count($picked) . (count($picked) === 1 ? ' template' : ' templates');
-                    echo '<a class="ajax button transparent" href="' . $e(rtrim((string) \http::$root, '/') . '/cms/settings/mediasettings/types/') . '?kind=templates&amp;group=' . rawurlencode($item->key) . '">' . $e($label) . '<i class="cmsIcon cmsIcon-pen"></i></a></td>';
+                    echo '<a class="ajax button transparent" href="' . $e(rtrim((string) \http::$root, '/') . '/admin/settings/mediasettings/types/') . '?kind=templates&amp;group=' . rawurlencode($item->key) . '">' . $e($label) . '<i class="cmsIcon cmsIcon-pen"></i></a></td>';
                     continue;
                 }
                 if ($column === $templateField) {

@@ -106,7 +106,7 @@ method“ auch.
 | Passwort | wie bisher, Passwörter werden nicht neu gehasht |
 | Passkey | Fingerabdruck, Gesicht oder Geräte-PIN. Die RP-ID ist nur der Host, jede Datenbank hat ihre eigenen Schlüssel |
 | Code | acht Felder, oder die Kamera liest den QR. Ein Screen-QR (`?screen=`) führt auf das Profil und wartet auf Erlaubnis |
-| Gerät hinzufügen | das angemeldete Profil zeigt einen Recover-QR (`cms/auth/?code=…&auto=1`). Darunter steht der Code, zehn Minuten |
+| Gerät hinzufügen | das angemeldete Profil zeigt einen Recover-QR (`admin/auth/?code=…&auto=1`). Darunter steht der Code, zehn Minuten |
 | Screen | der Screen zeigt seinen QR. Ein angemeldetes Gerät erlaubt ihn. Sehen allein meldet niemanden an |
 
 Die Kamera startet aus dem Klick (`getUserMedia({video:true, audio:false})`
@@ -132,7 +132,7 @@ installieren“ fragt.
 ## Ein Projekt anbinden
 
 Die eigene Auth eines Projekts entfällt. Nicht angemeldet geht es nach
-`cms/auth/`, die Rückkehr merkt sich `Session::rememberReturn()`.
+`admin/auth/`, die Rückkehr merkt sich `Session::rememberReturn()`.
 spaceticker hat `panels/auth/` deshalb nicht mehr.
 
 Was spaceticker dafür tut:

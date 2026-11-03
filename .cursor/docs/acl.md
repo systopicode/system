@@ -79,7 +79,7 @@ und den Seitenbaum im CMS. Gesetzt wird es von `PageAccess::readAcls()`
 
 `PageAccess::mayWrite($node)` / `mayEdit($page)` (Alias: auch das Original)
 gelten mit denselben Ausnahmen wie das Lesen (ohne `PAGE_ACL`, Superuser,
-Recovery: alles erlaubt). Geprüft wird in den Actions von `cms/pages`
+Recovery: alles erlaubt). Geprüft wird in den Actions von `admin/pages`
 (`refuses()` / `refusesEdit()` geben die Meldung aus):
 
 | Was | braucht Schreibrecht auf |
@@ -131,8 +131,8 @@ daher ist eine im selben Request angelegte ACL sofort dabei.
 Setzen über `Nodes\Operator::withAcl($node, $acl)` (eigene ACL) und
 `inheritingAcl($node)` (wieder erben), dann speichern.
 
-In der Oberfläche: Seitenleiste von `cms/pages/` → Content → Permissions
-(`packages/cms/panels/cms/010_pages/sidebar/045_permissions.tpl.php`,
+In der Oberfläche: Seitenleiste von `admin/pages/` → Content → Permissions
+(`packages/cms/panels/admin/010_pages/sidebar/045_permissions.tpl.php`,
 `actions.permissions.php`). Wer nicht Superuser ist, schaltet nur Gruppen
 um, auf die er Schreibrecht hat.
 

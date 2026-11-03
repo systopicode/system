@@ -6,7 +6,7 @@ const system=new URL('../',import.meta.url);
 const browser=await chromium.launch({channel:'chrome',headless:true});
 try {
  const page=await browser.newPage();let css='';
- for(const path of ['public/css/00_theme.css','public/css/18_ui.css','public/css/19_appearance.css','public/css/20_base.css','public/css/24_table.css','public/css/30_layout.css','public/css/50_forms.css','public/css/60_lightbox.css','public/css/70_components.css','public/css/x_responsive.css','panels/cms/090_tools/tools.css']) css+='\n'+await readFile(new URL(path,system),'utf8');
+ for(const path of ['public/css/00_theme.css','public/css/18_ui.css','public/css/19_appearance.css','public/css/20_base.css','public/css/24_table.css','public/css/30_layout.css','public/css/50_forms.css','public/css/60_lightbox.css','public/css/70_components.css','public/css/x_responsive.css','panels/admin/090_tools/tools.css']) css+='\n'+await readFile(new URL(path,system),'utf8');
  const html=await readFile('/private/tmp/fluxo-maintenance-view.html','utf8');
  for(const width of [390,1024,1440]) {
   await page.setViewportSize({width,height:900});
@@ -22,7 +22,7 @@ try {
   assert.equal(await page.locator('button').evaluateAll(buttons=>buttons.filter(b=>b.textContent.trim()&&!b.querySelector('i')).length),0,'every labelled button has an icon');
   assert.equal(await page.locator('.cleanupPolicy').first().evaluate(e=>getComputedStyle(e).display),'block');
  }
- const dashboard=await readFile(new URL('panels/cms/dashboard.css',system),'utf8');
+ const dashboard=await readFile(new URL('panels/admin/dashboard.css',system),'utf8');
  for(const mode of ['light','dark']) {
   await page.setContent(`<html data-mode="${mode}"><style>${css}${dashboard}</style><body class="cms"><div class="dashThumbs"><a><i class="thumbType">I</i></a><a class="is-mark"><i class="thumbType">Z</i></a></div></body></html>`);
   const ratio=await page.locator('.dashThumbs a:not(.is-mark) i').evaluate(el=>{

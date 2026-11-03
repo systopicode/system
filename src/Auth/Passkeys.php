@@ -128,7 +128,7 @@ final class Passkeys
     public static function completeSetup(): string
     {
         unset($_SESSION['systopic_passkey_offer']);
-        return Session::takeReturn() ?? \http::$root . 'cms/';
+        return Session::takeReturn() ?? \http::$root . 'admin/';
     }
 
     /** box: the user lightbox. widget: the same block in the profile grid. */
@@ -264,7 +264,7 @@ final class Passkeys
             // with a device, like every other login: otherwise no list shows it and no revocation reaches it
             Devices::issue($key->user);
             LoginLog::write((string) $key->user->name, 'logged in', LoginLog::PASSKEY);
-            return ['profile' => SignInFeedback::profile(), 'redirect' => Session::takeReturn() ?? $afterLogin ?? \http::$root . 'cms/'];
+            return ['profile' => SignInFeedback::profile(), 'redirect' => Session::takeReturn() ?? $afterLogin ?? \http::$root . 'admin/'];
         }
         if ($user === null || $login) {
             throw new DomainException('Invalid passkey request.');
