@@ -2,20 +2,34 @@
 /** @var \Systopic\System\Panels\Root\Cms\Users\Roles\Panel|\Systopic\System\Panels\Root\Cms\Users\Permissions\Panel $this */
 
 $e = static fn($v): string => htmlspecialchars((string) $v, ENT_QUOTES);
-// the icon before the key: a lock for the built-in roles, given to every request and asked by no
-// panel; else the controlmap, every panel whose code asks for it (superusers only, like the controlmap)
-$superuser = \Systopic\System\Auth\Session::isSuperuser();
-$controlmap = static function (\Systopic\System\Tables\Roles\Model $role) use ($e, $superuser): string {
+// the icons before the key, as many as apply:
+//   lock        a role of the system - built in, or created by it - its key is fixed
+//   controlmap  the key is named in the controlmap, a config or a panel's code (superusers
+//               only, like the controlmap: reading it off the code takes a moment)
+//   pages       the role may read or write content groups
+$roleKeys = \Systopic\System\Auth\Session::isSuperuser()
+	? \Systopic\System\Controlmap\Map::ofRequest()->roleKeys()
+	: [];
+$icons = function (\Systopic\System\Tables\Roles\Model $role) use ($e, $roleKeys): string {
+	$html = '';
 	if ($role->isBuiltin) {
-		return "<i class='fa-regular fa-lock' title='Built in: every " . ($role->key === 'everyone' ? 'request' : 'signed-in user') . " holds it, the key is fixed'></i>";
+		$html .= "<i class='fa-regular fa-lock' title='Built in: every " . ($role->key === 'everyone' ? 'request' : 'signed-in user') . " holds it, the key is fixed'></i>";
+	} elseif ($role->isSystem) {
+		$html .= "<i class='fa-regular fa-lock' title='A role of the system: it creates it, the key is fixed'></i>";
 	}
-	if (!$superuser || $role->key === NULL) {
-		return '';
+	if ($role->key !== NULL && isset($roleKeys[$role->key])) {
+		$html .= "<a class='ajax' href='{$e(\http::$root . 'cms/controlmap/discover/?all=1&filter=' . rawurlencode($role->key))}' title='{$e('Named in the controlmap: ' . $role->key)}'>"
+			. "<i class='fa-regular fa-sitemap'></i></a>";
 	}
-	$title = 'Where the code asks for ' . $role->key . ' (controlmap)'
-		. ($role->isSystem ? ' — a role of the system, its key is fixed' : '');
-	return "<a class='ajax' href='{$e(\http::$root . 'cms/controlmap/discover/?all=1&filter=' . rawurlencode((string) $role->key))}' title='{$e($title)}'>"
-		. "<i class='fa-regular fa-sitemap'></i></a>";
+	$groups = $this->admin->groupsOf($role);
+	if ($groups !== []) {
+		$title = 'In content groups: ' . implode(', ', array_map(
+			static fn(array $g): string => $g['group']->name . ' (' . implode(', ', array_keys(array_filter(['read' => $g['read'], 'write' => $g['write']]))) . ')',
+			$groups,
+		));
+		$html .= "<a class='ajax' href='{$e(\http::$root . 'cms/users/permissions/')}' title='{$e($title)}'><i class='fa-regular fa-files'></i></a>";
+	}
+	return $html;
 };
 ?>
 <section class="widget is-list roleList">
@@ -43,7 +57,7 @@ $controlmap = static function (\Systopic\System\Tables\Roles\Model $role) use ($
 						<td>
 							<span class="roleName" data-drag_type="role" data-role_id="<?= (int) $role->id ?>"><?= $e($role->name) ?></span>
 						</td>
-						<td class="roleKey"><?= $controlmap($role) ?><code><?= $e($role->key) ?></code></td>
+						<td class="roleKey"><?= $icons($role) ?><code><?= $e($role->key) ?></code></td>
 						<td><span class="swatch" style="background:<?= $e($color) ?>"></span></td>
 						<td><?= $e($role->description) ?></td>
 						<td class="icons">

@@ -34,7 +34,7 @@ class Panel extends CmsPanel {
 
 	/** The configs over these panels: who may, merged and inherited (`Controlmap\Map`). */
 	public Map $map {
-		get => $this->mapped ??= new Map($this->panels, rtrim(str_replace('\\', '/', (string) \fs::$projectRoot), '/') . '/config/controlmap.json');
+		get => $this->mapped ??= new Map($this->panels, Map::projectFile());
 	}
 
 	private ?Map $mapped = NULL;

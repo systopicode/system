@@ -128,7 +128,7 @@
 	color: var(--cmsRedirect);
 }
 /* what "Show all" is filtered by */
-.cms table.discoverList :is(.term, .action, .name).is-match{
+.cms table.discoverList :is(span.origin, .term, .action, .name).is-match{
 	background: var(--cmsHighlightColor);
 	border-radius: var(--cmsRadius);
 }

@@ -111,7 +111,7 @@ final class Access
 
     private static function map(): Map
     {
-        return self::$map ??= new Map([], rtrim(str_replace('\\', '/', (string) \fs::$projectRoot), '/') . '/config/controlmap.json');
+        return self::$map ??= new Map([], Map::projectFile());
     }
 
     /** The panel as the map knows it — registered with its ancestors on first use. */

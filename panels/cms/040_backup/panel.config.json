@@ -2,7 +2,7 @@
 	"build": ["cmsAdmin", "cmsEditor"],
 	"action": {
 		"clearTempdirs": ["cmsAdmin"],
-		"createDatabase": [],
+		"createDatabase": ["recovery"],
 		"download": ["cmsAdmin"],
 		"remove": ["cmsAdmin"],
 		"upload": ["cmsAdmin"]

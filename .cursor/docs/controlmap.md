@@ -233,8 +233,10 @@ Umsortieren unter demselben Elternknoten geht.
    - Erledigt 2026-11-02 (system): `cms/settings` und `cms/users`
      (`cmsAdmin`), `cms/settings/theme` (`[]`, nur Superuser),
      `cms/backup` (Editoren sehen es; löschen, hochladen, herunterladen und
-     aufräumen dürfen Admins; `createDatabase` nur der Recovery-User im
-     Code), `backup/create` (Editoren), `backup/restore` (Admins, im Code
+     aufräumen dürfen Admins; `createDatabase`: `["recovery"]`, der
+     Recovery-User über den Code, durch die Liste kommt sonst nur der
+     Superuser, bei ihm scheitert `CREATE DATABASE` an der vorhandenen DB),
+     `backup/create` (Editoren), `backup/restore` (Admins, im Code
      der Recovery-User mit `restore`), `backup/log` (`clear` für Admins).
      Die Knöpfe in Backup fragen `Access::action()`.
    - Erledigt 2026-11-02 (spaceticker): `cms/events`, `cms/contacts`
@@ -246,3 +248,30 @@ Umsortieren unter demselben Elternknoten geht.
      `buildGranted()`, und das Root-Panel von spaceticker.
    - Offen: cms-Paket, EditBar und Vorschau (`appRequest`) fragen noch
      `hasOneRole()`.
+6. **Alles in die Config** (Plan, Entscheidung 2026-11-03). Heute gilt
+   beides, Config und Code, mit einer Reihenfolge (siehe „Laufzeit“), die
+   man sich schlecht merkt. Ziel: eine Regel — wer darf, steht in der
+   Config; was bei Ablehnung passiert, im Code.
+   - **Config:** `build`, `actions`, `action.x`, `rights.x` und neu
+     `linkable` (statt `$entryActions`: per Link von überall erreichbar,
+     also GET). Auch die Projekt-Ebene darf `linkable` setzen oder
+     überschreiben: Die Configs bearbeiten nur Superuser, die wissen, was
+     sie tun.
+   - **Pseudo-Rollen** für das, was keine Rolle ist: `everyone`,
+     `authenticated`, neu `anonymous` (nur nicht eingeloggt, das Gegenstück
+     zu `authenticated` wie in Drupal; `guest` wie in Laravel/Joomla wäre
+     auch gegangen, `unknown` verwechselt man mit einem unbekannten
+     Schlüssel), `recovery`/`restore` (der Recovery-User, ohne Datenbank —
+     Lösung später, darf vorerst fehlen).
+   - **Code:** nur noch `onAccessDenied()` (cms: Weiterleitung zum Login;
+     auth: Eingeloggte weiter), `available()` für die Umgebung
+     (`RemoteDebug::available()` in relay/debug) und `#[Action]` (was eine
+     Action ist). `buildGranted()`/`actionGranted()` entfallen. Der Default,
+     wo nichts steht, kommt aus einer Wurzel-Config statt aus `PanelNode`.
+   - **Weg:** `STAGE === 'DEV'` in `cms::actionGranted()`.
+   - **Vorher: `auth` aus `cms` heraus nach oben.** Solange auth unter cms
+     liegt, nimmt ein abgelehntes cms den Login-Ast mit, deshalb heute die
+     Sonderregel in `cms::buildGranted()`. Verschieben erst nach dem Pull
+     von Lars' Umbau (Panels werden verschoben und umbenannt).
+   - Offen: Passkey-Setup — eingeloggt, muss aber auth sehen (`anonymous`
+     reicht nicht).

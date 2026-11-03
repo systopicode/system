@@ -7,7 +7,7 @@ namespace Systopic\System\Controlmap;
 /**
  * The controlmap as the configs say it: who may build a panel, run its
  * actions, use a named right — read, merged and inherited, nothing stored.
- * Nobody at runtime asks it yet; cms/controlmap shows it.
+ * Access asks it at runtime, cms/controlmap shows and edits it.
  *
  * **Layers**, per panel, the later replacing the earlier key by key:
  *
@@ -69,6 +69,18 @@ final class Map
             }
         }
         [$this->project, $this->projectError] = self::read($projectFile);
+    }
+
+    /** Every panel of the installation (Discover) under the project's configs. */
+    public static function ofRequest(): self
+    {
+        return new self(Discover::ofRequest()->panels(), self::projectFile());
+    }
+
+    /** config/controlmap.json of the running project. */
+    public static function projectFile(): string
+    {
+        return rtrim(str_replace('\\', '/', (string) \fs::$projectRoot), '/') . '/config/controlmap.json';
     }
 
     /** Add a panel the constructor did not get — Access adds the ones a request builds, one by one. */
@@ -164,6 +176,30 @@ final class Map
             }
         }
         return array_keys($rights);
+    }
+
+    /**
+     * Every role key the controlmap names: in a layer of any panel, or in
+     * a panel's own code (`hasRole('x')`, see ClassScanner).
+     *
+     * @return array<string, true>
+     */
+    public function roleKeys(): array
+    {
+        $keys = [];
+        foreach ($this->byPath as $panel) {
+            foreach ($this->own($panel) as $grant) {
+                foreach ($grant->roles as $role) {
+                    $keys[$role] = true;
+                }
+            }
+            foreach ($panel->grants as $terms) {
+                foreach (array_keys($terms) as $term) {
+                    $keys[(string) $term] = true;
+                }
+            }
+        }
+        return $keys;
     }
 
     private function parent(DiscoveredPanel $panel): ?DiscoveredPanel

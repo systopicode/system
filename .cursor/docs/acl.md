@@ -56,6 +56,12 @@ Session::hasOneRole('cmsAdmin', 'cmsEditor');
   werden zu `cmsAdmin`/`cmsEditor` (Name bleibt), alle anderen bekommen einen
   Schlüssel aus dem Namen. `role_builtin` bleibt liegen, bis `db audit` sie
   löscht.
+- **Rollenliste** (cms/users/roles, Spalte Key): vor dem Schlüssel so viele
+  Icons wie zutreffen. Schloss = Rolle des Systems (`isSystem`).
+  Controlmap = der Schlüssel steht in einer Config oder im Code eines
+  Panels (`Map::roleKeys()`), nur für Superuser, Link auf Discover mit
+  Filter. Seiten (`fa-files`) = die Rolle darf Content Groups lesen oder
+  schreiben (`UserAdmin::groupsOf()`), Link auf cms/users/permissions.
 
 ## Seiten: Website und CMS
 
