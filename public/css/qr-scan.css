@@ -72,7 +72,7 @@
 	width: 1.75rem;
 	height: 1.75rem;
 	border-radius: 50%;
-	border: 2px solid var(--cmsHighlightColor, #fcb60c);
+	border: var(--cmsSpinnerStroke, 2px) solid var(--cmsHighlightColor, #fcb60c);
 	border-top-color: transparent;
 	animation: spinner .6s linear infinite;
 }

@@ -9,14 +9,16 @@ function markContextTarget(src) {
 
 function openContextMenu(call) {
 	var $menu = $(call.html);
-	// p(call.response.html);
+	if (!$menu.length) return;
 	closeAllMenus();
 	var src = call.event && (call.event.sourceElement || call.event.element);
+	const triggerEvent = call.event?.e;
 	markContextTarget(src);
+	contextMenuSource = src;
 	menuOpener = src && src.closest ? src.closest('button, a') : null;
 	$menu.css({
-		left: call.event.e?.detail === 0 || !call.event.e?.clientX ? (menuOpener?.getBoundingClientRect().left || 8) : call.event.e.clientX,
-		top: (call.event.e?.detail === 0 || !call.event.e?.clientY ? (menuOpener?.getBoundingClientRect().bottom || 8) : call.event.e.clientY) + window.scrollY,
+		left: triggerEvent?.detail === 0 || !triggerEvent?.clientX ? (menuOpener?.getBoundingClientRect().left || 8) : triggerEvent.clientX,
+		top: (triggerEvent?.detail === 0 || !triggerEvent?.clientY ? (menuOpener?.getBoundingClientRect().bottom || 8) : triggerEvent.clientY) + window.scrollY,
 	});
 	$(document.body).append($menu);
 	var rect = $menu[0].getBoundingClientRect();
@@ -30,7 +32,7 @@ function openContextMenu(call) {
 		setTimeout(closeAllMenus, 200);
 	});
 	sys.initEvents($menu);
-    prepareMenuKeyboard($menu[0], menuOpener, call.event.e?.detail === 0);
+    prepareMenuKeyboard($menu[0], menuOpener, triggerEvent?.detail === 0);
 }
 /****************************** CONTEXT MENUS ***************************/
 function initContextMenuEvents() {
@@ -54,6 +56,7 @@ function initContextMenuEvents() {
 
 var contextMenus = [];
 function closeAllMenus() {
+	contextMenuSource = null;
 	document.querySelectorAll('.menuTarget').forEach(function (row) {
 		row.classList.remove('menuTarget');
 	});
@@ -72,6 +75,7 @@ function closeAllMenus() {
 // reach the body handler that used to close the menu. Capture runs first.
 // A second press on the button that opened the menu only closes it.
 var menuOpener = null;
+var contextMenuSource = null;
 var swallowClick = null;
 document.addEventListener('pointerdown', function (event) {
 	if (!document.querySelector('ul.contextmenu, div.dropdown.contextMenu, .HTMLeditorMenu')) {
@@ -308,7 +312,8 @@ document.addEventListener('click', function (event) {
 });
 
 document.addEventListener('cms:rendered', function () {
-	closeSplitMenus();
+    closeSplitMenus(list => !list.splitHome?.isConnected);
+    if (contextMenuSource && !contextMenuSource.isConnected) closeAllMenus();
 });
 
 // An entry closes its menu even when its own handler (ajax links) stops the click.
@@ -318,8 +323,10 @@ document.addEventListener('click', function (event) {
 	}
 }, true);
 
-function closeSplitMenus() {
+function closeSplitMenus(shouldClose = () => true) {
 	document.querySelectorAll('.splitApplyList.is-open').forEach(function (list) {
+        if (!shouldClose(list)) return;
+        list.splitHome?.classList.remove('is-open');
 		const opener=list.splitHome?.querySelector('.splitApplyMenu');
         opener?.setAttribute('aria-expanded','false');
         if(opener?.hasAttribute('data-menu-selected')){opener.classList.remove('selected');opener.setAttribute('aria-pressed','false');}
@@ -332,9 +339,6 @@ function closeSplitMenus() {
 		} else {
 			list.remove();
 		}
-	});
-	document.querySelectorAll('.splitApply.is-open').forEach(function (split) {
-		split.classList.remove('is-open');
 	});
 }
 
@@ -428,7 +432,11 @@ document.addEventListener('click', function(event) {
 
 // Scrolling the owning page dismisses popovers; scrolling inside a menu does not.
 document.addEventListener("scroll", function (event) {
- if (event.target instanceof Element && event.target.closest(".splitApplyList, ul.contextmenu, .dropdown.contextMenu")) return;
- closeSplitMenus();
- closeAllMenus();
+    const scroller = event.target;
+    if (scroller instanceof Element && scroller.closest(".splitApplyList, ul.contextmenu, .dropdown.contextMenu, .HTMLeditorMenu")) return;
+    const affects = opener => scroller === document || (opener && scroller instanceof Element && scroller.contains(opener));
+    closeSplitMenus(list => affects(list.splitHome));
+    const context = document.querySelector('ul.contextmenu, .dropdown.contextMenu');
+    const opener = contextMenuSource || context?.cmsMenuOpener;
+    if (context && (!opener || affects(opener))) closeAllMenus();
 }, true);

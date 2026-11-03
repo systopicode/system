@@ -137,10 +137,10 @@ class Panel extends CmsPanel {
 			? $e($panel->name)
 			: "<a class='ajax' href='{$e(\Systopic\System\Panels\Root\Cms\Controlmap\Panel::nodeHref($panel->path))}' title='Show the panels below'>{$e($panel->name)}</a>";
 		return "<tr class='" . ($panel->isPlain ? 'plain' : '') . "' style='--depth: $indent'>"
-			. "<td class='panel' title='{$e($classTitle)}'><span class='name" . $match($panel->name) . "'>$name</span>$classLink<span class='path'>{$e($panel->path)}/</span></td>"
-			. "<td class='origin'>$origins</td>"
+			. "<td class='panel' title='{$e($classTitle)}'><div><span class='name" . $match($panel->name) . "'>$name</span>$classLink<span class='path'>{$e($panel->path)}/</span></div></td>"
+			. "<td><div class='discoverChips'>$origins</div></td>"
 			. "<td class='grants'>$grants</td>"
-			. "<td class='actions'>$actions</td>"
+			. "<td><div class='discoverChips'>$actions</div></td>"
 			. '</tr>';
 	}
 

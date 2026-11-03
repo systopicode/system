@@ -24,6 +24,7 @@ sys.core.event.drag = function (event, hooks) { // 2. param raus
 	drag.moveY = 0;
 	drag.status = 'down';
 	drag.type = drag.dragObj.dataset.drag_type;
+	var pageId = drag.type === 'page' && drag.dragObj.closest('li[data-node_id]')?.dataset.node_id;
 	var css, keysHoldable = ['shift', 'ctrl', 'alt'];
 	drag.e = e;
 	// Touch captures the pointer on the element it went down on; released,
@@ -76,6 +77,16 @@ sys.core.event.drag = function (event, hooks) { // 2. param raus
 			beginDrag();
 		}
 		if (drag.status !== 'down') {
+			// Folding redraws the tree. Keep the live source for hit testing and cues.
+			if (pageId && !drag.dragObj.isConnected) {
+				var replacement = document.querySelector('body.pages ul.tree li[data-node_id="' + CSS.escape(pageId) + '"] > label[data-drag_type="page"]');
+				if (replacement) {
+					drag.dragObj = replacement;
+					replacement.classList.add('dragged');
+					replacement.previousElementSibling?.classList.add('beforeDragged');
+					replacement.nextElementSibling?.classList.add('afterDragged');
+				}
+			}
 			keysHoldable.forEach(key => drag.$helper[0].classList.remove(key));
 			drag.keysheld.forEach(key => drag.$helper[0].classList.add(key));
             // WebKit can keep a touch event targeted at the held row even
@@ -314,6 +325,10 @@ sys.core.event.drag = function (event, hooks) { // 2. param raus
 				return;
 			}
 			dwell.ready = true;
+			if (drag.type === 'page' && onto.closest('ul.tree')) {
+				var fold = onto.parentElement.querySelector(':scope > .fold[aria-expanded="false"]');
+				if (fold) $(fold).triggerHandler('click');
+			}
 			if (drag.e) {
 				mousemove(drag.e);
 			}

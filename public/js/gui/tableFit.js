@@ -41,17 +41,20 @@ sys.fitTables.fit = function (box) {
 	var heads = [];
 	var table = box.querySelector(':scope > table');
 	if (!table) return;
-	table.querySelectorAll(':scope > thead th').forEach(function (th, index) {
+	table.querySelectorAll(':scope > thead th, :scope > tbody:first-of-type > .tableWidgetColumns > th').forEach(function (th, index) {
 		heads[index] = (th.textContent || '').trim();
 	});
-	table.querySelectorAll(':scope > tbody > tr').forEach(function (row) {
+	table.querySelectorAll(':scope > tbody > tr:not(.tableWidgetTitle, .tableWidgetColumns, .tableWidgetGap)').forEach(function (row) {
 		Array.prototype.forEach.call(row.children, function (cell, index) {
 			if (cell.tagName !== 'TD' || !heads[index]) return;
 			if (cell.classList.contains('icons') || cell.querySelector('i[data-drag_type], .userStatus')) return;
 			cell.dataset.label = heads[index];
 		});
         const scalarControl = table.matches('.scalars') && row.cells.length === 2 ? row.cells[1] : null;
-        if (scalarControl?.querySelector(':scope > .projectSwitch:only-child')) scalarControl.dataset.tableInline = '';
+        if (scalarControl?.querySelector(':scope > .projectSwitch:only-child')) {
+            scalarControl.dataset.tableInline = '';
+            delete scalarControl.dataset.label;
+        }
         // Keep native table semantics and provide a separate, named toggle.
         var hiddenCells = [...row.children].filter(function (cell) {
             return cell.tagName === 'TD' && !cell.matches(':first-child, [data-table-inline], [data-table-desktop-only], :has(> .userStatus, > i[data-drag_type]), :has(> .userStatus, > i[data-drag_type]) + td, .icons, .projectRemove, .schemaApply');

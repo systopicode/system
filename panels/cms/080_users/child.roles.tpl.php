@@ -7,7 +7,7 @@ $e = static fn($v): string => htmlspecialchars((string) $v, ENT_QUOTES);
 $superuser = \Systopic\System\Auth\Session::isSuperuser();
 $controlmap = static function (\Systopic\System\Tables\Roles\Model $role) use ($e, $superuser): string {
 	if ($role->isBuiltin) {
-		return "<i class='fa-regular fa-lock' title='Built in: every " . ($role->key === 'everyone' ? 'request' : 'signed-in user') . " holds it, the key is fixed'></i>";
+		return "<i class='cmsIcon cmsIcon-lock' title='Built in: every " . ($role->key === 'everyone' ? 'request' : 'signed-in user') . " holds it, the key is fixed'></i>";
 	}
 	if (!$superuser || $role->key === NULL) {
 		return '';
@@ -15,7 +15,7 @@ $controlmap = static function (\Systopic\System\Tables\Roles\Model $role) use ($
 	$title = 'Where the code asks for ' . $role->key . ' (controlmap)'
 		. ($role->isSystem ? ' — a role of the system, its key is fixed' : '');
 	return "<a class='ajax' href='{$e(\http::$root . 'cms/controlmap/discover/?all=1&filter=' . rawurlencode((string) $role->key))}' title='{$e($title)}'>"
-		. "<i class='fa-regular fa-sitemap'></i></a>";
+		. "<i class='cmsIcon cmsIcon-sitemap'></i></a>";
 };
 ?>
 <section class="widget is-list roleList">

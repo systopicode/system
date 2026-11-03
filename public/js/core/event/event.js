@@ -160,7 +160,7 @@ sys.processPointerDown = function (e) {
 	// no emulated mousedown afterwards - it would start a second, mouse drag
 	if (!element.closest('tr')) down.preventDefault();
 	sys.longPress(down, element, function () {
-		sys.processEvent($.Event(down, {currentTarget: element}));
+		sys.processEvent($.Event(down, {currentTarget: element, cmsHeld: element.dataset.drag_type === 'page'}));
 	});
 };
 
@@ -551,7 +551,6 @@ sys.core.event = function (e) {
 			drag: function () {},
 			release: function () {},
 			accept: function () {
-				f(event.drag.e);
 				var dropEvent = new sys.core.event(event.drag.e);
 				dropEvent.dragEvent = event;
 				dropEvent.collectElementData();

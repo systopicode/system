@@ -50,14 +50,13 @@ body > main > div.pylon:after{
 
 /********STATUSLEISTE***************/
 /* Debug: the CMS on a faint checkerboard, open at the bottom - the sides
-   hold the debug tool's tabs. Not while a debug window elsewhere shows them
-   (data-sysdebug-remote, tools/debug js/remote.js). */
-:root:not([data-sysdebug-remote]) body:has(> main[data-debug]){
+   hold the debug tool's tabs. */
+body:has(> main[data-debug]){
     padding: 22px 32px 0;
     background: repeating-conic-gradient(#e4e8ec 0 25%, #eef1f4 0 50%) 0 0 / 16px 16px;
 }
 
-:root:not([data-sysdebug-remote]) body > main[data-debug]{
+body > main[data-debug]{
     border-radius: var(--cmsRadiusLg) var(--cmsRadiusLg) 0 0;
     overflow: clip;
 }
@@ -113,7 +112,7 @@ footer.cmsStatusbar .cmsJobs .job b{
 footer.cmsStatusbar .cmsJobs .spin{
     width: 0.7rem;
     height: 0.7rem;
-    border: 1.5px solid currentColor;
+    border: var(--cmsSpinnerStroke, 2px) solid currentColor;
     border-top-color: transparent;
     border-radius: 50%;
     animation: spinner .6s linear infinite;
@@ -280,6 +279,37 @@ body > main > div.pylon nav:has(+ footer){
     font-size: 0.9rem;
     line-height: 1;
 }
+
+body > main > div.pylon:has(> .pylonTreeToolbar) > header:empty {
+    display: none;
+}
+@media (min-width: 1025px) and (orientation: landscape), (min-width: 1401px) {
+    body.cms > main > div.pylon:has(> .pylonTreeToolbar) {
+        margin-top: .5rem;
+        border-inline-end: 1px solid var(--cmsLineStrong);
+    }
+    body.cms > main > div.pylon:has(> .pylonTreeToolbar)::after {
+        content: none;
+    }
+    body.cms > main > div.pylon:has(> .pylonTreeToolbar) + div.content {
+        box-shadow: none;
+    }
+    body.cms > main > div.pylon:has(> .pylonTreeToolbar) + div.content,
+    body.cms > main > div.pylon:has(> .pylonTreeToolbar) + div.content > header {
+        border-top-left-radius: 0;
+    }
+}
+
+.cms .pylonTitle.pylonTreeToolbar {
+    min-height: 3.25rem;
+    margin: 0;
+    padding: .5rem .75rem;
+    background: var(--cmsPanelAlt);
+    border-radius: var(--cmsRadiusLg) 0 0 0;
+}
+.cms .pylonTreeToolbar .searchInput { flex: 1 1 auto; min-width: 0; }
+.cms .pylonTreeToolbar .treeNavi { flex: 0 0 auto; margin-inline-start: auto; }
+.cms .pylonTreeToolbar + nav { border-radius: 0; }
 
 body > main > div.pylon:empty{
     display: none;
@@ -518,4 +548,10 @@ body.cms:not(.pages) > main > div.content > .flexRow > .flexColumn > section.cms
         min-height: 0;
         overflow: visible;
     }
+}
+
+/* Resolve the shared SVG URL relative to the System stylesheet. */
+.mediaDrop:empty::after {
+	-webkit-mask: var(--icon-photo) center / contain no-repeat;
+	mask: var(--icon-photo) center / contain no-repeat;
 }

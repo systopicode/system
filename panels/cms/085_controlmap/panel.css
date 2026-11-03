@@ -1,48 +1,34 @@
 /* cms/controlmap — the panel tree in the pylon */
 
-.cms .controlmapTree ul.tree li.plain > label{
+.cms .controlmapTree ul.controlmapNav li.plain > a{
 	opacity: 0.5;
 }
-.cms .controlmapTree ul.tree a.label .count{
+.cms .controlmapTree ul.controlmapNav a.label .count{
 	margin-left: auto;
 	font-size: 0.75rem;
 	color: var(--cmsMuted);
 }
 
 /* what the filter above the tree matched (discover's "show all") */
-.cms .controlmapTree ul.tree .name.is-match{
+.cms .controlmapTree ul.controlmapNav .name.is-match{
 	background: var(--cmsHighlightColor);
 	border-radius: var(--cmsRadius);
 	color: var(--cmsTextColor);
 }
 
-/* The dark header: search on the left; open all / close all and discover (sync) on the right */
-body > main > div.pylon.controlmapTree > header{
-	display: flex;
-	align-items: center;
-	justify-content: space-between;
-	padding: 0 0.5rem;
+body.cms.controlmap > main > div.content > section.cms {
+    min-width: 0;
 }
-.cms .controlmapTree > header .treeNavi a{
-	color: var(--cmsFrameText);
-}
-.cms .controlmapTree > header .treeNavi a.active{
-	background: var(--cmsFrameLine);
-	color: #fff;
-}
-.cms .controlmapTree > header .treeNavi a:hover{
-	background: var(--cmsFrameLine);
-	color: #fff;
-}
-
-/* As wide as the tree, up to most of the screen; pulled, the pulled width
-   (GUI proposal for every pylon: .cursor/team/2026-10-30-pylon-breite.md) */
-body > main > div.pylon.controlmapTree{
-	flex: 0 0 auto;
-	width: auto;
-	max-width: 60vw;
-}
-body > main > div.pylon.controlmapTree[style*="--pylonWidth"]{
-	width: var(--pylonWidth);
-	max-width: min(var(--pylonWidth), 80vw);
+.cms .controlmapNav li { position: relative; }
+.cms .controlmapNav li > a.label { padding-inline-start: 2rem; }
+.cms .controlmapNav button.fold {
+    position: absolute;
+    z-index: 1;
+    inset: .25rem auto auto .25rem;
+    width: 1.5rem;
+    height: 1.5rem;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: var(--cmsTextColor);
 }

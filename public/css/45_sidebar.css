@@ -232,7 +232,7 @@ aside.cms details.sidebarSection > summary .sidebarFold{
     border-radius: var(--cmsRadius);
     color: var(--cmsBrandInk);
     font-size: 0.7rem;
-    transition: transform .15s, background-color .15s;
+    transition: background-color .15s;
 }
 
 aside.cms details.sidebarSection > summary:hover .sidebarFold{
@@ -240,7 +240,7 @@ aside.cms details.sidebarSection > summary:hover .sidebarFold{
 }
 
 aside.cms details.sidebarSection:not([open]) > summary .sidebarFold{
-    transform: rotate(-90deg);
+    --icon-mask: var(--icon-chevron-right);
 }
 
 aside.cms details.sidebarSection > summary:hover{
@@ -511,6 +511,11 @@ aside.cms div.group{
 
 aside.cms label.checkbox{
     margin-bottom: 0.35rem;
+}
+
+aside.cms label.checkbox:has(> input.switch) > span{
+    font-size: .875rem;
+    line-height: 1.4;
 }
 
 aside.cms .sidebarItem select,

@@ -8,9 +8,6 @@
  * marked; every other one runs only from this site's own pages
  * (ActionGuard).
  *
- * All of it is one table, each white card a `tbody.card`: so the columns
- * are as wide in "This panel" as in "Below" (discover.css, `cardTable`).
- *
  * @var \Systopic\System\Panels\Root\Cms\Controlmap\Discover\Panel $this
  */
 
@@ -35,19 +32,22 @@ foreach ($all as $panel) {
 }
 $granting = count(array_filter($all, static fn(DiscoveredPanel $p) => $p->grants !== []));
 
-// one card: its title row, the column heads, the rows
-$card = static function (string $title, string $rows, string $tools = ''): string {
-	return "<tbody class='card'>"
-		. "<tr class='cardHead'><th colspan='4'><header><h2>$title</h2>$tools</header></th></tr>"
-		. "<tr class='cardColumns'><th>Panel</th><th>From</th><th>Access in code</th><th>Actions</th></tr>"
-		. $rows
-		. '</tbody>';
+$card = static function (string $title, string $rows, bool $gap = false) use ($e): string {
+	return '<tbody class="tableWidget">'
+		. ($gap ? '<tr class="tableWidgetGap" aria-hidden="true"><td colspan="4"></td></tr>' : '')
+		. '<tr class="tableWidgetTitle"><th scope="rowgroup" colspan="4"><h2>'
+		. $e($title) . '</h2></th></tr>'
+		. '<tr class="tableWidgetColumns"><th scope="col">Panel</th><th scope="col">From</th>'
+		. '<th scope="col">Access in code</th><th scope="col">Actions</th></tr>' . $rows . '</tbody>';
 };
-$gap = "<tbody class='cardGap'><tr><td colspan='4'></td></tr></tbody>";
+$table = static function (string $groups): string {
+	return '<div class="discoverLayout"><div class="tableScroll tableWidgets"><table class="discoverList tableWidgetGrid">'
+		. $groups . '</table></div></div>';
+};
 $selected = $map->selected;
 ?>
+<h1><?= $e($this->showAll ? 'All panels' : ($selected?->path !== NULL ? $selected->path . '/' : $map->rootLabel)) ?></h1>
 <?php if ($this->showAll) { ?>
-	<h1>All panels</h1>
 	<p class="tagsHint">
 		<?= count($all) ?> panels, <?= $actionCount ?> actions, <?= $entries ?> of them open from outside;
 		<?= $granting ?> panels decide access in their own code.
@@ -68,11 +68,10 @@ $selected = $map->selected;
 	}
 	$title = $this->filter === '' ? 'Panels' : "Panels with „{$e($this->filter)}“: $shown";
 	?>
-	<table class="discoverList cardTable"><?= $card($title, $rows) ?></table>
+	<?= $table($card($title, $rows)) ?>
 	<?php return;
 } ?>
 
-<h1><?= $e($selected === NULL ? $map->rootLabel : $selected->path . '/') ?></h1>
 <p class="tagsHint">
 	<?php if ($selected === NULL) { ?>
 		The top-level panels of this installation: <?= count($all) ?> panels, <?= $actionCount ?> actions in all.
@@ -91,9 +90,5 @@ if ($below === '') {
 	$below = "<tr><td colspan='4' class='none'>No panels below.</td></tr>";
 }
 ?>
-<table class="discoverList cardTable">
-	<?php if ($selected !== NULL) {
-		echo $card('This panel', $this->row($selected)) . $gap;
-	} ?>
-	<?= $card($selected === NULL ? 'Panels' : 'Below', $below) ?>
-</table>
+<?= $table(($selected === NULL ? '' : $card('This panel', $this->row($selected)))
+	. $card($selected === NULL ? 'Panels' : 'Below', $below, $selected !== NULL)) ?>

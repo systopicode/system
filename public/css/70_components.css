@@ -764,3 +764,111 @@ details[open] > summary > .summaryToggle i { transform:rotate(180deg); }
 .cms .themeContrast .tableScroll > table { width:100%; min-width:0; table-layout:fixed; }
 .cms .themeContrast .tableScroll > table td { white-space:normal; overflow-wrap:anywhere; }
 .cms .themeContrast .tableScroll > table td:first-child { width:44%; }
+
+/* Widget groups share one table grid and keep their own card surface. */
+.cms .tableWidgets > table.tableWidgetGrid.tableWidgetGrid {
+    border-collapse: separate;
+    border-spacing: 0;
+    background: transparent;
+}
+.cms .tableWidgets table.tableWidgetGrid .tableWidgetTitle > th {
+    background: var(--cmsCanvas);
+    border-bottom: 1px solid var(--cmsLine);
+    padding-inline: var(--cmsCardPadding);
+    text-align: start;
+    border-radius: var(--cmsRadiusLg) var(--cmsRadiusLg) 0 0;
+}
+.cms .tableWidgetTitle h2 {
+    margin: 0;
+    font-size: 1rem;
+}
+.cms .tableWidgets table.tableWidgetGrid tr.tableWidgetGap > td {
+    background: transparent;
+    height: 1rem;
+    padding: 0;
+    border: 0;
+}
+.cms .tableWidgets table.tableWidgetGrid .tableWidget > tr:not(.tableWidgetGap) > :first-child {
+    border-inline-start: 1px solid var(--cmsLine);
+}
+.cms .tableWidgets table.tableWidgetGrid .tableWidget > tr:not(.tableWidgetGap) > :last-child {
+    border-inline-end: 1px solid var(--cmsLine);
+}
+.cms .tableWidgets table.tableWidgetGrid .tableWidgetTitle > th {
+    border-top: 1px solid var(--cmsLine);
+}
+.cms .tableWidgets table.tableWidgetGrid .tableWidget > tr:last-child > td {
+    border-bottom: 1px solid var(--cmsLine);
+}
+.cms .tableWidgets table.tableWidgetGrid .tableWidget > tr:not(.tableWidgetTitle, .tableWidgetGap) > * {
+    background: var(--cmsCanvas);
+}
+.cms .tableWidget > tr:last-child > :first-child { border-bottom-left-radius: var(--cmsRadiusLg); }
+.cms .tableWidget > tr:last-child > :last-child { border-bottom-right-radius: var(--cmsRadiusLg); }
+.cms .tableWidgets table.tableWidgetGrid :is(.tableWidgetColumns, .tableWidget > tr:not(.tableWidgetTitle, .tableWidgetGap)) > :first-child {
+    padding-inline-start: var(--cmsCardPadding);
+}
+.cms .tableWidgets table.tableWidgetGrid :is(.tableWidgetColumns, .tableWidget > tr:not(.tableWidgetTitle, .tableWidgetGap)) > :last-child {
+    padding-inline-end: var(--cmsCardPadding);
+}
+.cms .tableWidgets.stacked .tableWidgetColumns { display: none; }
+.cms .tableWidgets.stacked.is-foldable > table > tbody > tr.tableWidgetTitle {
+    display: block;
+    padding: 0;
+    min-height: 0;
+    cursor: default;
+}
+.cms .tableWidgets.stacked .tableWidgetTitle > th {
+    display: block;
+    width: 100%;
+    box-sizing: border-box;
+}
+.cms .tableWidgets.stacked .tableWidget > tr:last-child {
+    border-radius: 0 0 var(--cmsRadiusLg) var(--cmsRadiusLg);
+    overflow: hidden;
+}
+.cms .tableWidgets.stacked table.tableWidgetGrid .tableWidget > tr:not(.tableWidgetTitle) > td {
+    background: transparent;
+}
+
+.cms .tableWidgets.stacked.is-foldable > table > tbody > tr.tableWidgetGap {
+    display: block;
+    min-height: 1rem;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    cursor: default;
+}
+.cms .tableWidgets.stacked table.tableWidgetGrid .tableWidget > tr:not(.tableWidgetTitle, .tableWidgetGap) > td {
+    border-inline: 0;
+    border-bottom: 0;
+}
+
+/* In the stacked layout the whole row group is the card. */
+.cms .tableWidgets.stacked > table.tableWidgetGrid > tbody.tableWidget {
+    border: 1px solid var(--cmsLine);
+    border-radius: var(--cmsRadiusLg);
+    box-shadow: var(--cmsShadow);
+    overflow: hidden;
+    background: var(--cmsCanvas);
+}
+.cms .tableWidgets.stacked > table.tableWidgetGrid > tbody.tableWidget + tbody.tableWidget {
+    margin-block-start: 1rem;
+}
+.cms .tableWidgets.stacked.is-foldable > table.tableWidgetGrid > tbody > tr.tableWidgetGap {
+    display: none;
+}
+.cms .tableWidgets.stacked table.tableWidgetGrid .tableWidgetTitle > th {
+    border-inline: 0;
+    border-top: 0;
+    border-radius: 0;
+}
+body.cms .tableWidgets.stacked.is-foldable > table.tableWidgetGrid > tbody.tableWidget > tr:not(.tableWidgetTitle, .tableWidgetGap) {
+    padding-inline: var(--cmsCardPadding);
+}
+.cms .tableWidgets.stacked.is-foldable > table.tableWidgetGrid > tbody.tableWidget > tr > td[data-table-heading] {
+    padding-inline: 0;
+}
+.cms .tableWidgets.stacked.is-foldable > table.tableWidgetGrid > tbody.tableWidget > tr.tableWidgetTitle {
+    border-bottom: 0;
+}

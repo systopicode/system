@@ -462,6 +462,20 @@ rather than combining gaps with card margins.
 - Debug needs the project's `debug.php` (tools/debug, rolled out by the
   tools manager, `rollouts` in `tools/debug/builder/config.local.json`);
   without it `DEBUG()` is false whatever the environment says.
+- A tree toolbar is a shared Pylon component. Place `div.pylonTitle.pylonTreeToolbar`
+  directly above the Pylon's `nav`. Keep the search field visible in
+  `.searchInput` and put tree actions in `ul.treeNavi`. The shared layout
+  aligns the top edge with the content and removes the shadow at their seam.
+  Panels such as Controlmap use the standard Pylon navigation. Pages has a
+  module-specific layout for its page tree and Media Library, with its toolbar
+  inside the navigation.
+- When several widgets need the same column widths, use a shared
+  `.tableWidgets.tableScroll` and `table.tableWidgetGrid`. Each
+  `tbody.tableWidget` has its own `.tableWidgetTitle` and
+  `.tableWidgetColumns` row. Use the standard column-header typography and
+  align the outer cells to `--cmsCardPadding`. The mobile table fitter uses
+  the column headings as field labels and adds accordions only to data rows.
+
 - The pylon width is `--pylonWidth` on `div.pylon`; `30_layout.css` caps it
   (30rem, 50vw up to 1200px window width). `panel.js` sets it while dragging.
 - A view that depends on GET parameters needs `updateView`/`updateViews`

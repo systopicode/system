@@ -1,63 +1,13 @@
-/* cms/controlmap/discover — the panels as a table, indented by depth */
-
-/* One table, several cards. Each tbody.card is a white card, so the
-   columns line up across the cards; separate tables size each on its own.
-   The cells stay transparent and the tbody paints the card: border-radius
-   does not round a tbody, clip-path does, and the shadow comes from the
-   table (drop-shadow follows the clipped cards, box-shadow would be cut).
-   No .tableScroll around it: its overflow would cut the shadow.
-   For every panel: .cursor/team/2026-11-02-card-table.md */
-.cms table.cardTable.cardTable{
-	background: transparent;
-	filter: drop-shadow(var(--cmsShadow));
-}
-.cms table.cardTable.cardTable > tbody.card{
-	background: var(--cmsCanvas);
-	clip-path: inset(0 round var(--cmsRadiusLg));
-	box-shadow: inset 0 0 0 1px var(--cmsLine);
-}
-.cms table.cardTable.cardTable > tbody > tr > :is(th, td){
-	background: transparent;
-}
-.cms table.cardTable.cardTable > tbody.cardGap > tr > td{
-	height: 1.25rem;
-	padding: 0;
-	border: none;
-}
-.cms table.cardTable.cardTable > tbody > tr.cardHead > th{
-	padding: 0.45rem 0.75rem;   /* the title in line with the first column */
-	border-bottom: 1px solid var(--cmsLine);
-}
-.cms table.cardTable.cardTable > tbody > tr.cardHead header{
-	display: flex;
-	align-items: center;
-	gap: 1rem;
-	min-height: 2.1rem;
-}
-.cms table.cardTable.cardTable > tbody > tr.cardHead h2{
-	flex: 1 1 auto;
-	margin: 0;
-	color: var(--cmsTextColor);
-}
-.cms table.cardTable.cardTable > tbody > tr:is(.cardHead, .cardColumns):hover > :is(th, td){
-	background: transparent;
-	box-shadow: none;
-}
-.cms table.cardTable.cardTable tr[hidden]{
-	display: none;
-}
-.cms table.cardTable.cardTable td.none{
-	color: var(--cmsMuted);
-}
-
 .cms table.discoverList.discoverList :is(th, td){
 	vertical-align: top;
+}
+.cms table.discoverList.discoverList tr:not(.tableWidgetColumns) > :is(th, td){
 	text-transform: none;
 	letter-spacing: normal;
 }
-.cms table.discoverList td.panel{
-	padding-left: calc(0.5rem + var(--depth, 0) * 1.25rem);
-	white-space: nowrap;
+.cms .tableWidgets table.discoverList.tableWidgetGrid td.panel{
+	padding-inline-start: calc(var(--cmsCardPadding) + min(var(--depth, 0), 4) * .75rem);
+	white-space: normal;
 }
 .cms table.discoverList td.panel .name{
 	font-weight: 600;
@@ -71,11 +21,11 @@
 	opacity: 0.5;
 }
 
-.cms table.discoverList :is(span.origin, span.term, span.action){
+.cms table.discoverList :is(span.origin, .term, span.action){
 	display: inline-block;
 	margin: 0 0.25rem 0.25rem 0;
 	padding: 0 0.4rem;
-	border-radius: var(--cmsRadius);
+	border-radius: 999px;
 	background: var(--cmsButtonBg);
 	font-size: 0.75rem;
 	line-height: 1.4rem;
@@ -101,30 +51,30 @@
 }
 .cms table.discoverList .action.is-entry{
 	background: none;
-	outline: 1px dashed var(--cmsRedirect);
+	background: color-mix(in srgb, var(--cmsRedirect) 10%, var(--cmsCanvas));
 	color: var(--cmsRedirect);
 }
 .cms table.discoverList .action.is-entry i{
 	margin-right: 0.25rem;
 }
 /* a chip: the label opens the configs (lightbox), the </> behind it the code */
-.cms table.discoverList :is(span.origin, span.term, span.action) > a{
+.cms table.discoverList :is(span.origin, .term, span.action) > a{
 	color: inherit;
 	text-decoration: none;
 }
-.cms table.discoverList :is(span.origin, span.term, span.action):has(> a):hover{
-	outline: 1px solid var(--cmsTextColor);
+.cms table.discoverList :is(span.origin, .term, span.action):has(> a):hover{
+	background: var(--cmsHover);
 }
-.cms table.discoverList :is(span.origin, span.term, span.action) > a.code{
+.cms table.discoverList :is(span.origin, .term, span.action) > a.code{
 	margin-left: 0.3rem;
 	font-size: 0.65rem;
 	color: var(--cmsMuted);
 }
-.cms table.discoverList :is(span.origin, span.term, span.action) > a.code:hover{
+.cms table.discoverList :is(span.origin, .term, span.action) > a.code:hover{
 	color: var(--cmsTextColor);
 }
 .cms table.discoverList .term.is-unknown{
-	outline: 1px dashed var(--cmsRedirect);
+	background: color-mix(in srgb, var(--cmsRedirect) 10%, var(--cmsCanvas));
 	color: var(--cmsRedirect);
 }
 /* what "Show all" is filtered by */
@@ -213,11 +163,37 @@
 .cms table.discoverList.configMap td.is-editable :is(.configSet, .configUnset):hover{
 	color: var(--cmsTextColor);
 }
-.cms table.discoverList.configMap span.term.roleToggle:not(.is-on){
+.cms table.discoverList.configMap .term.roleToggle:not(.is-on){
 	background: none;
-	outline: 1px dashed var(--cmsLine);
+	box-shadow: inset 0 0 0 1px var(--cmsLine);
 	color: var(--cmsMuted);
 }
-.cms table.discoverList.configMap span.term.roleToggle:hover{
-	outline: 1px solid var(--cmsTextColor);
+.cms table.discoverList.configMap .term.roleToggle:hover{
+	background: var(--cmsHover);
+}
+
+
+.cms .tableScroll.stacked table.discoverList td.panel {
+    overflow-wrap: anywhere;
+    padding-inline: 0;
+}
+.cms table.discoverList .roleToggle {
+    border: 0;
+    cursor: pointer;
+}
+.cmslightbox.controlmapConfig .configFile pre {
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+
+
+.cms .discoverChips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .25rem;
+    min-width: 0;
+}
+.cms table.discoverList .discoverChips > :is(.origin, .action) {
+    margin: 0;
+    white-space: nowrap;
 }

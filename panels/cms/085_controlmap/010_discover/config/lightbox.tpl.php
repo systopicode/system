@@ -31,16 +31,16 @@ $roles = static function (array $keys) use ($e, $known): string {
 // the project's cell: a pen to take the key over, or every role to switch, and a cross
 $editable = static function (string $key, ?array $list) use ($e, $known): string {
 	if ($list === NULL) {
-		return "<span class='configSet' data-on_click='overrideConfig' data-key='{$e($key)}' title='Decide it for this installation, starting from what it comes to now'><i class='cmsIcon cmsIcon-pen'></i></span>";
+		return "<button type='button' data-cms-action class='button icononly transparent configSet' aria-label='Set project override' data-on_click='overrideConfig' data-key='{$e($key)}' title='Decide it for this installation, starting from what it comes to now'><i class='cmsIcon cmsIcon-pen'></i></button>";
 	}
 	$html = '';
 	foreach (array_values(array_unique([...array_map('strval', array_keys($known)), ...$list])) as $role) {
 		$on = in_array($role, $list, TRUE);
-		$html .= "<span class='term roleToggle" . ($on ? ' is-on' : '') . (isset($known[$role]) ? '' : ' is-unknown') . "'"
-			. " data-on_click='toggleConfigRole' data-key='{$e($key)}' data-role='{$e($role)}'"
-			. " title='" . ($on ? 'Take it out' : 'Let it in') . "'>{$e($role)}</span>";
+		$html .= "<button type='button' data-cms-action class='term roleToggle" . ($on ? ' is-on' : '') . (isset($known[$role]) ? '' : ' is-unknown') . "'"
+			. " aria-pressed='" . ($on ? 'true' : 'false') . "' data-on_click='toggleConfigRole' data-key='{$e($key)}' data-role='{$e($role)}'"
+			. " title='" . ($on ? 'Take it out' : 'Let it in') . "'>{$e($role)}</button>";
 	}
-	return $html . "<span class='configUnset' data-on_click='unsetConfig' data-key='{$e($key)}' title='Inherit again: out of config/controlmap.json'><i class='cmsIcon cmsIcon-xmark'></i></span>";
+	return $html . "<button type='button' data-cms-action class='button icononly transparent configUnset' aria-label='Remove project override' data-on_click='unsetConfig' data-key='{$e($key)}' title='Inherit again: out of config/controlmap.json'><i class='cmsIcon cmsIcon-xmark'></i></button>";
 };
 $focus = $this->focus;
 ?>
@@ -49,7 +49,7 @@ $focus = $this->focus;
 		<header>
 			<h1><?= $e($panel === NULL ? 'Panel not found' : $panel->path . '/') ?></h1>
 			<ul class="barmenu">
-				<li><a class="ajax" href="../" title="Close"><i class="cmsIcon cmsIcon-xmark"></i></a></li>
+				<li><a class="ajax" href="../" aria-label="Close" title="Close"><i class="cmsIcon cmsIcon-xmark"></i></a></li>
 			</ul>
 		</header>
 		<main>
@@ -128,9 +128,9 @@ $focus = $this->focus;
 				<p class="tagsHint">
 					Who may see the panel and run its actions, as the configs say it — each layer replaces the one left of it, key by key.
 					Where no config says anything, the code decides (<em>In code</em>). The column <em>config</em> is this installation's
-					(config/controlmap.json) and is edited here; the packages' files are not. Nothing at runtime asks the configs yet.
+					(config/controlmap.json) and can be edited here. The effective rules apply at runtime.
 				</p>
-				<table class="discoverList configMap">
+				<div class="tableScroll" data-table-scroll><table class="discoverList configMap">
 					<thead>
 						<tr>
 							<th></th>
@@ -154,13 +154,14 @@ $focus = $this->focus;
 								echo $row($key, $label);
 							} ?>
 						</tbody>
+						</tbody>
 						<tbody>
 							<tr class="othersSwitch"><td colspan="<?= 3 + count($layers) ?>">
 								<label><input type="checkbox" class="showOthers"> <?= count($others) ?> more actions, as the actions' default says</label>
 							</td></tr>
 						</tbody>
 					<?php } ?>
-				</table>
+				</table></div>
 
 				<h2>Files</h2>
 				<?php foreach ($layers as $layer) {

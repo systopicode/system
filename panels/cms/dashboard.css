@@ -826,5 +826,18 @@ body.cms .dashboard .dashTabs button:where(:not([data-cms-action])):hover{
 /* Desktop keeps the actions inline; only the mobile presentation is a menu. */
 @media (min-width:1025px) and (orientation:landscape), (min-width:1401px) {
  body.cms .dashHead .splitApply { display:contents; }
- body.cms .dashHead .dashHeadMenu { display:contents !important; }
+ body.cms .dashHead .dashHeadMenu {
+    display: flex !important;
+    position: static;
+    width: auto;
+    min-width: 0;
+    flex-direction: row;
+    gap: .5rem;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    box-shadow: none;
+ }
+ body.cms .dashHead .dashHeadMenu > .button { width:auto; min-width:0; flex:0 0 auto; white-space:nowrap; background:var(--cmsButtonBg); }
+ body.cms .dashHead .dashHeadMenu > .button:is(:hover, :focus-visible) { background:var(--cmsHover); }
 }

@@ -120,6 +120,7 @@ class Panel extends CmsPanel {
 	}
 
 	function onLoad() {
+		$this->label = 'Control map';
 		// a node of the tree is a get to the open child (./?panel=cms.pages, see nodeHref())
 		$chosen = \http::get('panel', NULL);
 		if ($chosen !== NULL && \http::method() === 'GET') {

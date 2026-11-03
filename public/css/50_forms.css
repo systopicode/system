@@ -148,7 +148,7 @@
     height: 1.35rem;
     margin: -0.7rem 0 0 -0.7rem;
     border-radius: 50%;
-    border: 2px solid var(--cmsHighlightColor);
+    border: var(--cmsSpinnerStroke, 2px) solid var(--cmsHighlightColor);
     border-top-color: transparent;
     animation: spinner .6s linear infinite;
     pointer-events: none;

@@ -32,24 +32,20 @@ $filtering = $showAll && $discover->filter !== '';
 $selected = $showAll ? NULL : $this->selectedPath;
 $pylonWidth = (int) ($this->state->treeWidth ?? 0);
 $openFolds = array_flip($this->openFolds);
-$again = $showAll
-	? './?all=1&filter=' . rawurlencode($discover->filter)
-	: \Systopic\System\Panels\Root\Cms\Controlmap\Panel::nodeHref($this->selectedPath);
-
 $fold = static function (?string $path, bool $open) use ($e): string {
 	if ($path === NULL) {
-		return "<a class='fold leaf'></a>";
+		return "<span class='fold leaf'></span>";
 	}
 	$icon = $open ? 'cmsIcon-chevron-down' : 'cmsIcon-chevron-right';
-	return "<a data-on_click=fold data-path='{$e($path)}' class='fold" . ($open ? ' open' : '') . "'><i class='cmsIcon $icon'></i></a>";
+	return "<button type=button aria-label='Toggle children' aria-expanded='" . ($open ? "true" : "false") . "' data-on_click=fold data-path='{$e($path)}' class='fold" . ($open ? ' open' : '') . "'><i class='cmsIcon $icon'></i></button>";
 };
 $item = static function (string $path, string $label, string $icon, string $note, bool $plain, string $fold, string $below, bool $hit = false) use ($e, $selected): string {
 	$classes = trim(($path === $selected ? 'active' : '') . ($plain ? ' plain' : ''));
-	return "<li class='$classes'><label>$fold"
+	return "<li class='$classes'>$fold"
 		. "<a class='label ajax' href='{$e(\Systopic\System\Panels\Root\Cms\Controlmap\Panel::nodeHref($path))}' title='{$e($path === '' ? 'All panels' : $path . '/')}'>"
 		. "<i class='type cmsIcon $icon'></i><span class='name" . ($hit ? ' is-match' : '') . "'>{$e($label)}</span>"
 		. ($note !== '' ? "<span class='count'>{$e($note)}</span>" : '')
-		. "</a></label>$below</li>";
+		. "</a>$below</li>";
 };
 $branch = static function (array $panels) use (&$branch, $item, $fold, $openFolds, $filtering, $discover): string {
 	$html = '';
@@ -72,33 +68,25 @@ $branch = static function (array $panels) use (&$branch, $item, $fold, $openFold
 };
 ?>
 <div class="pylon cms controlmapTree"<?= $pylonWidth > 0 ? " style=\"--pylonWidth: {$pylonWidth}px;\"" : '' ?>>
-	<header>
-		<ul class="treeNavi">
-			<li><a class="ajax<?= $showAll ? ' active' : '' ?>" href="<?= $showAll ? './?all=0' : './?all=1' ?>" title="<?= $showAll ? 'Back to the panel chosen in the tree' : 'Search every panel' ?>"><i class="cmsIcon cmsIcon-magnifying-glass"></i></a></li>
-		</ul>
-		<ul class="treeNavi">
-			<li><a class="ajax put" href="openAllFolds" title="Open all folders"><i class="cmsIcon cmsIcon-folder-open"></i></a></li>
-			<li><a class="ajax put" href="closeAllFolds" title="Close all folders"><i class="cmsIcon cmsIcon-folder-minus"></i></a></li>
-			<li><a class="ajax" href="<?= $e($again) ?>" title="Discover: read the folders and the code again"><i class="cmsIcon cmsIcon-arrows-rotate"></i></a></li>
-		</ul>
-	</header>
-	<?php if ($showAll) { ?>
-		<?php // not inside <nav>: after a render the renderer blurs whatever has the focus in `main nav`
-		// (domRenderer.js) — rebuildAround has kept the field, that would take its focus.
-		// Proposal: .cursor/team/2026-11-02-nav-blur.md ?>
-		<div class="pylonTitle">
-			<div class="searchInput">
-				<input class="autosend" id="controlmapFilter" data-on_input="filterPanels" name="filter" type="search" autocomplete="off"
-				       placeholder="Filter panels, roles, actions" aria-label="Filter panels" value="<?= $e($discover->filter) ?>">
-			</div>
+	<header></header>
+	<div class="pylonTitle pylonTreeToolbar">
+		<div class="searchInput">
+			<input class="autosend" id="controlmapFilter" data-focus-id="controlmap-filter" data-on_input="filterPanels"
+			       name="filter" type="search" autocomplete="off" placeholder="Search panels"
+			       aria-label="Filter panels, roles and actions" value="<?= $showAll ? $e($discover->filter) : '' ?>">
 		</div>
-	<?php } ?>
+		<ul class="treeNavi">
+			<li><a class="ajax put" href="openAllFolds" title="Open all folders" aria-label="Open all folders"><i class="cmsIcon cmsIcon-folder-open" aria-hidden="true"></i></a></li>
+			<li><a class="ajax put" href="closeAllFolds" title="Close all folders" aria-label="Close all folders"><i class="cmsIcon cmsIcon-folder-minus" aria-hidden="true"></i></a></li>
+			<li><a class="ajax" href="<?= $e($showAll
+				? './?all=1&filter=' . rawurlencode($discover->filter)
+				: $this::nodeHref($this->selectedPath)) ?>" title="Discover panels again" aria-label="Discover panels again"><i class="cmsIcon cmsIcon-arrows-rotate" aria-hidden="true"></i></a></li>
+		</ul>
+	</div>
 	<nav>
-		<div class="tree">
-			<ul class="tree">
+		<ul class="controlmapNav">
 				<?= $item('', $this->rootLabel, 'cmsIcon-sitemap', '', false, $fold(NULL, true), '<ul>' . $branch($this->panels) . '</ul>') ?>
-			</ul>
-		</div>
+		</ul>
 	</nav>
 	<div data-drag_type='none' data-on_draginit='draginitPylonwidth'></div>
 </div>

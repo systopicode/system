@@ -33,6 +33,7 @@ switch ($this->action) {
 
 	case 'filterPanels':       // the field above the tree, while showing all: the tree and the table
 		$this->state->filter = trim((string) http::values('filter'));
+		$this->state->showAll = $this->state->filter !== '';
 		$this->updateView('main');
 		$this->parent->updateView('pylon');
 		break;

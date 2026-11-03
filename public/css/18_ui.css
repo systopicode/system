@@ -387,7 +387,7 @@ footer.cmsStatusbar .cmsSaveState { margin-inline: 0; background: rgb(255 255 25
 footer.cmsStatusbar .cmsSaveState[data-state="saved"] { color: var(--cmsStatusSuccess); }
 footer.cmsStatusbar .cmsSaveState[data-state="error"] { color: var(--cmsStatusError); }
 footer.cmsStatusbar .cmsSaveState:is([data-state="changed"],[data-state="saving"]) { color: var(--cmsStatusWarning); }
-.cmsSaveState .spin { display: inline-block; width: .7rem; height: .7rem; border: 1.5px solid currentColor; border-top-color: transparent; border-radius: 50%; animation: spinner .6s linear infinite; }
+.cmsSaveState .spin { display: inline-block; width: .7rem; height: .7rem; border: var(--cmsSpinnerStroke, 2px) solid currentColor; border-top-color: transparent; border-radius: 50%; animation: spinner .6s linear infinite; }
 .cmsSaveState i { flex: 0 0 auto; }
 .cmsSaveState.is-mobile { position: fixed; z-index: 10020; right: max(.75rem, env(safe-area-inset-right)); bottom: max(.75rem, env(safe-area-inset-bottom)); max-width: calc(100vw - 1.5rem); margin: 0; padding: .55rem .75rem; border: 1px solid currentColor; box-shadow: var(--cmsShadowLg); font-size: .85rem; pointer-events: none; }
 .cms [data-save-state="changed"], .cms [data-save-state="saving"] { --cmsFieldFeedback: var(--cmsStatusWarning); }

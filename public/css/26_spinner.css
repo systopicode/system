@@ -1,5 +1,7 @@
 /****************************** LOADING SPINNER ***************************/
 
+:root { --cmsSpinnerStroke: 2.5px; }
+
 .cms button:where(:not([data-cms-action])).loading:before,
 .cms .button.loading:before{
     right:10px;
@@ -32,7 +34,7 @@ form.loading button:where(:not([data-cms-action])):not(.authReveal):before,
 .cms .button.loading:before{
     content: '';
     border-radius: 50%;
-    border: 2px solid var(--cmsHighlightColor);
+    border: var(--cmsSpinnerStroke, 2px) solid var(--cmsHighlightColor);
     border-top-color: var(--cmsOnHighlight);
     animation: spinner .6s linear infinite;
 }
@@ -55,18 +57,29 @@ form.loading button:where(:not([data-cms-action])):not(.authReveal):before,
 	pointer-events: none;
 }
 
-/* Keep labels and geometry; the existing icon slot carries the spinner. */
-.cms :is(button, .button).loading,
-.cms form.loading :is(button, .button):not(.authReveal) { position: relative; pointer-events: none; }
-.cms :is(button, .button).loading > i,
-.cms form.loading :is(button, .button):not(.authReveal) > i { visibility: hidden; }
-.cms :is(button, .button).loading:before,
-.cms form.loading :is(button, .button):not(.authReveal):before {
-    left: 1.25rem; right: auto; top: 50%; margin: -.5rem 0 0 0;
-    border-color: currentColor; border-top-color: transparent;
+/* Hide the label without changing the button's size or accessible name. */
+.cms :is(button, .button).loading:not([role=tab]),
+.cms form.loading :is(button, .button):not(.authReveal) {
+    position: relative;
+    pointer-events: none;
+    --cmsLoadingInk: var(--cmsTextColor);
+    color: transparent;
 }
-.cms :is(button, .button).submit.loading:before,
-.cms form.loading :is(button, .button).submit:before { border-color: var(--cmsOnHighlight); border-top-color: transparent; }
+.cms :is(button, .button).submit.loading,
+.cms form.loading :is(button, .button).submit {
+    --cmsLoadingInk: var(--cmsOnHighlight);
+}
+.cms :is(button, .button).loading:not([role=tab]) > *,
+.cms form.loading :is(button, .button):not(.authReveal) > * {
+    opacity: 0;
+}
+.cms :is(button, .button).loading:not([role=tab])::before,
+.cms form.loading :is(button, .button):not(.authReveal)::before {
+    inset: 0;
+    margin: auto;
+    border-color: var(--cmsLoadingInk);
+    border-top-color: transparent;
+}
 .cms [role=tab].loading:before { content: none; }
 
 form.loading button:where(:not([data-cms-action])).authReveal{
@@ -90,7 +103,7 @@ form.loading button:where(:not([data-cms-action])).authReveal:before{
 }
 
 :is(a, button:where([data-cms-action])).ajax.loading > i{
-    visibility: hidden;
+    opacity: 0;
 }
 
 :is(a, button:where([data-cms-action])).ajax.loading:before{
@@ -102,8 +115,46 @@ form.loading button:where(:not([data-cms-action])).authReveal:before{
     height: 14px;
     margin: -8px 0 0 -8px;
     border-radius: 50%;
-    border: 2px solid currentColor;
+    border: var(--cmsSpinnerStroke, 2px) solid currentColor;
     border-top-color: var(--cmsOnHighlight);
     animation: spinner .6s linear infinite;
 }
 
+
+.cms :is(button, .button).ajax.loading:not([role=tab])::before {
+    inset: 0;
+    margin: auto;
+    border-color: var(--cmsLoadingInk);
+    border-top-color: transparent;
+}
+
+/* Loading arcs carry no button surface or decorative frame. */
+.cms :is(button, .button, a.ajax).loading::before,
+.cms form.loading :is(button, .button):not(.authReveal)::before,
+.spinner::before {
+    box-sizing: border-box;
+    background: transparent;
+    outline: 0;
+    box-shadow: none;
+    border-radius: 50%;
+    backface-visibility: hidden;
+}
+
+/* The icon spinner used by saving overlays paints only the arc. */
+@property --cmsSpinnerAngle {
+    syntax: "<angle>";
+    inherits: false;
+    initial-value: 0deg;
+}
+@keyframes cmsSpinnerArc {
+    to { --cmsSpinnerAngle: 360deg; }
+}
+.cmsIcon.cmsIcon-spinner.cmsIcon-spin {
+    animation: none;
+}
+.cmsIcon.cmsIcon-spinner.cmsIcon-spin::before {
+    background: conic-gradient(from var(--cmsSpinnerAngle), transparent 25%, currentColor 25%);
+    -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - var(--cmsSpinnerStroke, 2px) - .5px), black calc(100% - var(--cmsSpinnerStroke, 2px)), black calc(100% - .5px), transparent 100%);
+    mask: radial-gradient(farthest-side, transparent calc(100% - var(--cmsSpinnerStroke, 2px) - .5px), black calc(100% - var(--cmsSpinnerStroke, 2px)), black calc(100% - .5px), transparent 100%);
+    animation: cmsSpinnerArc .7s linear infinite;
+}

@@ -296,6 +296,7 @@ body .cmslightbox section > div.layout > aside.cms{
     padding: 0;
     background: var(--cmsCanvas);
     border-left: 1px solid var(--cmsLineStrong);
+    border-top: 1px solid var(--cmsLineStrong);
 }
 
 /* Tablet: the image gets the room */
@@ -1023,7 +1024,7 @@ div.imageEditor .editorAspect > button{
 .cmslightbox .frameView[hidden] { display:none; }
 
 /* Each dialog owns its context status; the page footer remains on the page. */
-.cmslightbox footer.cmsDialogStatus { display:flex; position:absolute; inset:auto 0 0; pointer-events:none; width:auto; margin:0; min-height:2rem; height:auto; flex:0 0 auto; padding:.25rem calc(var(--cmsCardPadding) + .5rem); border:0; border-top:1px solid var(--cmsLineStrong); border-radius:0; background:var(--cmsCanvas); }
+.cmslightbox footer.cmsDialogStatus { display:flex; position:absolute; inset:auto 0 0; pointer-events:none; width:auto; margin:0; min-height:1.5rem; height:auto; flex:0 0 auto; padding:.125rem calc(var(--cmsCardPadding) + .5rem); border:0; border-top:1px solid var(--cmsLineStrong); border-radius:0; background:var(--cmsCanvas); }
 .cmslightbox footer.cmsDialogStatus:has(.cmsSaveState[hidden]) { display:none; }
 body.cms-dialog-open > footer.cmsStatusbar { visibility:hidden; }
 
