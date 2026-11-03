@@ -4,8 +4,8 @@ $keyValid = $keyUser !== null && \Systopic\System\Tables\Users\Operator::keyVali
 if (!$keyValid) {
     $authTitle = 'Request a new key';
     $authLead = 'Your activation key was not found or is expired, please get a new one';
-    $authForm = '<a class="button submit ajax" href="' . htmlspecialchars(\http::$root . 'admin/auth/?view=resetPassword', ENT_QUOTES) . '"><i class="cmsIcon cmsIcon-paper-plane"></i> Resend key</a>';
-    include dirname(__DIR__, 3) . '/src/Auth/form.card.tpl.php';
+    $authForm = '<a class="button submit ajax" href="' . htmlspecialchars(\http::$root . 'auth/?view=resetPassword', ENT_QUOTES) . '"><i class="cmsIcon cmsIcon-paper-plane"></i> Resend key</a>';
+    include dirname(__DIR__, 2) . '/src/Auth/form.card.tpl.php';
     return;
 }
 $authTitle = 'Choose a password';
@@ -38,4 +38,4 @@ ob_start();
 		</form>
 <?php
 $authForm = ob_get_clean();
-include dirname(__DIR__, 3) . '/src/Auth/form.card.tpl.php';
+include dirname(__DIR__, 2) . '/src/Auth/form.card.tpl.php';

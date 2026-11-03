@@ -4,7 +4,7 @@
  * "Show all", every panel depth first (`Controlmap\Discover`).
  *
  * A chip per action; its title says where it was found. An entry action
- * (the panel's `$entryActions`) may be opened from outside by GET and is
+ * (`linkable` in the panel's configs) may be opened from outside by GET and is
  * marked; every other one runs only from this site's own pages
  * (ActionGuard).
  *

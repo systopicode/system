@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace Systopic\System\Panels\Root\Admin\Auth;
+namespace Systopic\System\Panels\Root\Auth;
 
 use Systopic\Db\Scope;
 use Systopic\System\Panels\PanelNode;
@@ -9,20 +9,13 @@ use Systopic\System\Queries\UserLookup\UserLookup;
 use Systopic\System\Tables\Users\Model as User;
 
 /**
- * admin/auth — login, registration, password reset.
+ * auth — login, registration, password reset.
  *
  * The rows are read and written through the ORM; the session itself — who is
  * logged in, their roles, their panel state — is still the `\user` service,
  * and `signIn()` is the one place that hands a user over to it.
  */
 class Panel extends PanelNode {
-
-	/**
-	 * Opened from outside (ActionGuard): the link of an activation or reset
-	 * mail (the key authorises it), and the forms and legal pages a site
-	 * links to. None of them changes anything by itself.
-	 */
-	public array $entryActions = ['activate', 'reset', 'login', 'register', 'resetPassword', 'license', 'imprint', 'privacy', 'releases'];
 
 	/**
 	 * Which form `main.tpl.php` shows: login, register, resetPassword,
@@ -91,7 +84,7 @@ class Panel extends PanelNode {
 		// selected() is still false while these hooks run: the tree reference
 		// they read is installed afterwards. The path is already known.
 		$path = \app::request()->modulePath;
-		$atLogin = array_slice($path, -2) === ['admin', 'auth'];
+		$atLogin = $path === ['auth'];
 		if (!$atLogin || $this->form !== 'login' || \Systopic\System\Auth\Session::active()) {
 			return;
 		}
@@ -139,32 +132,30 @@ class Panel extends PanelNode {
 		get => UserLookup::byActivationKey($this->scope, (string) (\http::posted('key') ?: \http::get('key')));
 	}
 
-	function buildGranted() {
-        // QR validity is checked before either anonymous sign-in or an authenticated pairing.
-        if ((string) \app::request()->action === 'validateQr' && \http::$method === 'PUT') return TRUE;
-        if ((string) \app::request()->action === 'continueWithoutPasskey') return TRUE;
+	/**
+	 * Everybody may open the sign-in (panel.config.json: `everyone`, and
+	 * which actions a mail or another site may link to). What happens to
+	 * whoever is signed in already is this panel's business, not access:
+	 * sent on to where they came from, or to admin/ - unless a passkey is
+	 * to be set up, or the request pairs a device (validateQr) or skips
+	 * the passkey.
+	 */
+	function onBuild() {
+		if ((\app::request()->modulePath[0] ?? '') !== 'auth') {
+			return;
+		}
+		$action = (string) \app::request()->action;
+		if (($action === 'validateQr' && \http::$method === 'PUT') || $action === 'continueWithoutPasskey') {
+			return;
+		}
 		if (\Systopic\System\Auth\Passkeys::setupPending()) {
 			$this->form = 'passkeySetup';
-			return TRUE;
+			return;
 		}
-		if (count(\app::request()->modulePath) > 1 && \app::request()->modulePath[1] === 'auth') {
-			if (\Systopic\System\Auth\Session::active()) {
-				$back = \Systopic\System\Auth\Session::takeReturn();
-				if (is_string($back) && $back !== '') {
-					\http::redirect($back);
-				}
-				if (\Systopic\System\Panels\Tree\PanelTree::getInstance()?->getRoot() && \Systopic\System\Panels\Tree\PanelTree::getInstance()?->getRoot()->hasChild('pages')) {
-					\http::redirect('../pages/');
-				} else {
-					\http::redirect('../');
-				}
-			}
+		if (\Systopic\System\Auth\Session::active()) {
+			$back = \Systopic\System\Auth\Session::takeReturn();
+			\http::redirect(is_string($back) && $back !== '' ? $back : \http::$root . 'admin/');
 		}
-		return !\Systopic\System\Auth\Session::active();
-	}
-
-	function actionGranted($action = NULL) {
-		return TRUE;
 	}
 
 	function toNavi() {

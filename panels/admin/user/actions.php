@@ -25,9 +25,9 @@ switch ($this->action) {
 		\Systopic\System\Auth\Session::logout();
 		// A full document, so the sign-in page brings its own styles.
 		// An ajax answer only swaps the markup and leaves the auth sheet out.
-        if (!\http::ajax()) \http::redirect(\http::$root . 'admin/auth/logout');
+        if (!\http::ajax()) \http::redirect(\http::$root . 'auth/logout');
         // Legacy AJAX callers retain the full-document transition.
-        \http::refresh(\http::$root . 'admin/auth/logout', '', [], 0, 'native');
+        \http::refresh(\http::$root . 'auth/logout', '', [], 0, 'native');
 		break;
 
 	case 'updateAppearance':

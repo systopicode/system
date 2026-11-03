@@ -1,5 +1,5 @@
 <?php
-/** @var \Systopic\System\Panels\Root\Admin\Auth\Panel $this */
+/** @var \Systopic\System\Panels\Root\Auth\Panel $this */
 $imprint = \Systopic\System\Settings\LegalLinks::url('imprint');
 ?>
 <h1>Imprint</h1>

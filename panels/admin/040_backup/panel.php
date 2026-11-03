@@ -30,25 +30,7 @@ class Panel extends CmsPanel
 	 */
 	public array $backupfilestable = [];
 
-	/**
-	 * Who may is in panel.config.json (the controlmap): editors see the
-	 * panel, admins delete, upload, download, clear. What stays here is for
-	 * the recovery user, who has no database to ask the configs — and,
-	 * without a config, for the superuser.
-	 */
-	public function buildGranted(): bool
-	{
-		return \Systopic\System\Auth\Session::isRecovery() || \Systopic\System\Auth\Session::isSuperuser();
-	}
-
 	/** As buildGranted(); creating the database only when it is not reachable. */
-	public function actionGranted($action = null)
-	{
-		if ($action === 'createDatabase') {
-			return \Systopic\System\Auth\Session::isRecovery() && \Systopic\System\Auth\Session::hasRole('recovery');
-		}
-		return \Systopic\System\Auth\Session::isRecovery() || \Systopic\System\Auth\Session::isSuperuser();
-	}
 
 	/**
 	 * A backup's name as the table links it — a file name in var/backups/,

@@ -21,4 +21,4 @@ ob_start();
 		</form>
 <?php
 $authForm = ob_get_clean();
-include dirname(__DIR__, 3) . '/src/Auth/form.card.tpl.php';
+include dirname(__DIR__, 2) . '/src/Auth/form.card.tpl.php';

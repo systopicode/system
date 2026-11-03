@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace Systopic\System\Panels\Root\Admin\Access\Panelmap\Discover;
 
 use Systopic\System\Controlmap\DiscoveredPanel;
+use Systopic\System\Controlmap\Map;
 use Systopic\System\Panels\Root\Admin\Panel as CmsPanel;
 
 /**
@@ -53,7 +54,8 @@ class Panel extends CmsPanel {
 
 	/**
 	 * Does the panel have what "Show all" is filtered by — in its name,
-	 * access in code or actions? Not in its path nor its origins: every
+	 * access in code, the role keys of its configs or actions? Not in its
+	 * path nor its origins: every
 	 * panel below cms, or from the cms package, would match "cms". Without
 	 * a filter, or not showing all, every one does.
 	 */
@@ -68,6 +70,9 @@ class Panel extends CmsPanel {
 		}
 		foreach ($panel->actions as $action) {
 			$text[] = $action->name;
+		}
+		foreach ($this->parent->map->own($panel) as $grant) {
+			array_push($text, ...$grant->roles);
 		}
 		return str_contains(mb_strtolower(implode(' ', $text)), $q);
 	}
@@ -88,7 +93,7 @@ class Panel extends CmsPanel {
 	/**
 	 * One panel as a row of the table: name and path (indented by `$indent`
 	 * levels), where it comes from, what its code asks for access, its
-	 * actions as chips — an entry action (`$entryActions`) marked. A click
+	 * actions as chips — a linkable action (`linkable` in its configs) marked. A click
 	 * on a chip opens the panel in the configs (the lightbox `config/`), its
 	 * </> the line in syscoder; what "Show all" is filtered by is marked
 	 * (`is-match`).
@@ -100,10 +105,15 @@ class Panel extends CmsPanel {
 			? 'No class file: the parent bequeaths its class, or PanelNode'
 			: $panel->className . ($panel->extends !== NULL ? ' extends ' . $panel->extends : '') . ' (' . $panel->classFile . ')';
 
+		// an origin's chip is marked where its panel.config.json names what is filtered by
+		$says = [];
+		foreach ($this->parent->map->layers($panel) as $layer) {
+			$says[$layer['layer']] = implode(' ', array_merge([], ...array_values(Map::flatten($layer['data'] ?? []))));
+		}
 		$origins = '';
 		foreach ($panel->origins as $origin) {
 			$winning = $origin === $panel->origin;
-			$origins .= $this->chip('origin' . ($winning ? ' is-winning' : ''), $e($origin), $panel->path, 'layer.' . $origin, NULL,
+			$origins .= $this->chip('origin' . ($winning ? ' is-winning' : '') . $match($says[$origin] ?? ''), $e($origin), $panel->path, 'layer.' . $origin, NULL,
 				($winning ? 'Class and templates come from here' : 'Contributes folders') . ' — its panel.config.json');
 		}
 

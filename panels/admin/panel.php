@@ -18,33 +18,16 @@ class Panel extends PanelNode {
 	public $loadChildModules = TRUE;
 	public $showSubnavi = TRUE;
 
-	function buildGranted() {
-		if ($this->path === ['admin']) {
-			if (!\Systopic\System\Auth\Session::known()) {
-				// Only redirect when the user is actually requesting a CMS path.
-				// buildGranted() fires for ALL panels, so a request to e.g. /auth/
-				// would otherwise trigger this redirect for every cms sibling panel.
-				$reqPath = \app::request()->modulePath;
-				if ($reqPath === ['admin', 'auth']) {
-					// The login form lives below this panel: denying cms here
-					// would prune the branch the anonymous user is being sent
-					// to, and /admin/auth/ would render an empty document.
-					return TRUE;
-				}
-				if (!empty($reqPath) && $reqPath[0] === 'admin') {
-					\Systopic\System\Auth\Session::rememberReturn((string) ($_SERVER['REQUEST_URI'] ?? ''));
-					\http::redirect(\http::$root . 'admin/auth/');
-				}
-				return FALSE;
-			} else {
-				return TRUE;
-			}
+	/**
+	 * Who may is said in panel.config.json (the root's default: signed in).
+	 * Asked for an address below admin/ without signing in: sign in first,
+	 * and come back here afterwards.
+	 */
+	public function onAccessDenied(): void {
+		if (!\Systopic\System\Auth\Session::known()) {
+			\Systopic\System\Auth\Session::rememberReturn((string) ($_SERVER['REQUEST_URI'] ?? ''));
+			\http::redirect(\http::$root . 'auth/');
 		}
-
-		return \Systopic\System\Auth\Session::hasOneRole('cmsAdmin', 'cmsEditor', 'cmsPageEditor') ||
-				STAGE === 'x_DEV' ||
-				\app::request()->modulePath === ['admin', 'auth']
-		;
 	}
 
 	function onLoad() {
@@ -84,9 +67,7 @@ class Panel extends PanelNode {
 		}
 		$lastLogin = LastLogin::of($this->scope, (int) \Systopic\System\Auth\Session::id());
 		if (($lastLogin?->getTimestamp() ?? 0) < strtotime(RELEASE_NOTE_DATE)) {
-			if (!(\app::request()->modulePath === ['admin', 'auth'] && \app::request()->action === 'releases')) {
-				\http::redirect(\http::$root . 'admin/auth/releases');
-			}
+			\http::redirect(\http::$root . 'auth/releases');   // auth/ is no panel below this one
 		}
 	}
 
@@ -192,10 +173,6 @@ class Panel extends PanelNode {
             : array_replace($layout, ['hidden' => array_values(array_unique($hidden))]);
 		$user->sessiondata = new \Systopic\Db\Type\Text((string) json_encode($data));
 		$this->scope->save($user);
-	}
-
-	function actionGranted($action = NULL) {
-		return parent::actionGranted($action) || STAGE === 'DEV';
 	}
 
 	function getDefaultState() {

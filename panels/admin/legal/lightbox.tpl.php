@@ -15,7 +15,7 @@ if (!isset($pages[$page])) {
 			</ul>
 		</header>
 		<main>
-			<?php $this->render(dirname(__DIR__) . "/auth/$page.tpl.php"); ?>
+			<?php $this->render(dirname(__DIR__, 2) . "/auth/$page.tpl.php"); ?>
 		</main>
 	</section>
 </div>

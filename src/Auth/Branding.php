@@ -11,7 +11,7 @@ final class Branding
         if ($target === null) return false;
         $path = (string) parse_url($target, PHP_URL_PATH);
         $root = rtrim((string) \http::$root, '/') . '/';
-        return str_starts_with($path, $root) && !preg_match('~^cms(?:/|$)~', substr($path, strlen($root)));
+        return str_starts_with($path, $root) && !preg_match('~^(?:admin|cms)(?:/|$)~', substr($path, strlen($root)));
     }
 
     public static function href(string $file): ?string

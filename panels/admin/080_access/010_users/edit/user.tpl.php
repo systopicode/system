@@ -296,7 +296,7 @@ if ($heading === '') {
 					<header><div class="cmsBoxTitles"><h2>Password link</h2><p class="cmsBoxLead"><?php if ((string) $user->activationKey !== '') { ?>An activation link is out, valid until <?= $e($when($user->activationKeyExpire)) ?>.<?php } else { ?>Sends a link to set a password.<?php } ?></p></div></header>
 					<div class="cmsBoxActions">
 						<?php if ((string) $user->activationKey !== '') {
-							$activationLink = \http::$siteUrl . 'admin/auth/reset?key=' . rawurlencode((string) $user->activationKey);
+							$activationLink = \http::$siteUrl . 'auth/reset?key=' . rawurlencode((string) $user->activationKey);
 						?>
 							<button type="button" class="button" data-copy="<?= $e($activationLink) ?>"><i class="cmsIcon cmsIcon-copy"></i> Copy activation link</button>
 						<?php } ?>

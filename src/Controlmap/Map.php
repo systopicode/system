@@ -7,7 +7,7 @@ namespace Systopic\System\Controlmap;
 /**
  * The controlmap as the configs say it: who may build a panel, run its
  * actions, use a named right — read, merged and inherited, nothing stored.
- * Nobody at runtime asks it yet; admin/access/panelmap shows it.
+ * Access asks it at runtime, admin/access/panelmap shows and edits it.
  *
  * **Layers**, per panel, the later replacing the earlier key by key:
  *
@@ -21,14 +21,18 @@ namespace Systopic\System\Controlmap;
  * { "build":   ["cmsAdmin", "cmsEditor"],
  *   "actions": ["cmsEditor"],
  *   "action":  { "deletePage": ["cmsAdmin"] },
- *   "rights":  { "move": ["cmsAdmin", "cmsEditor"] } }
+ *   "rights":  { "move": ["cmsAdmin", "cmsEditor"] },
+ *   "linkable": ["activate", "reset"] }
  *
  * // config/controlmap.json
  * { "admin/pages": { "action": { "publish": ["cmsAdmin"] } } }
  * ```
  *
  * A list replaces the one below, it does not add to it: so a project can
- * narrow too, though there is only allowing. The values are role keys.
+ * narrow too, though there is only allowing. The values are role keys,
+ * pseudo roles among them (`everyone`, `authenticated`, `anonymous`, see
+ * Access) — except `linkable`: the actions that may be opened by a link
+ * from anywhere, the panel's own, not inherited (`linkable()`).
  *
  * **Inheritance**, when the panel's layers say nothing:
  *
@@ -39,8 +43,10 @@ namespace Systopic\System\Controlmap;
  *   right.x       its own, else the parent's right.x … up to the root;
  *                 none at all: whoever may run the panel's actions
  *
- * Nothing anywhere: null — the code decides (`buildGranted()`,
- * `actionGranted()`), as today.
+ * The root (path '', `panels/panel.config.json`) is the parent of the
+ * top-level panels and holds the default (`build: authenticated`). Access
+ * registers it; a map from Discover alone has no root. Nothing anywhere:
+ * null.
  */
 final class Map
 {
@@ -84,6 +90,8 @@ final class Map
             'admin/users' => 'admin/access',
             'cms/controlmap' => 'admin/access/panelmap',
             'admin/controlmap' => 'admin/access/panelmap',
+            'cms/auth' => 'auth',
+            'admin/auth' => 'auth',
             'cms' => 'admin',
         ];
         foreach ($renames as $old => $new) {
@@ -107,6 +115,18 @@ final class Map
             unset($project[$path]);
         }
         return $project;
+    }
+
+    /** Every panel of the installation (Discover) under the project's configs. */
+    public static function ofRequest(): self
+    {
+        return new self(Discover::ofRequest()->panels(), self::projectFile());
+    }
+
+    /** config/controlmap.json of the running project. */
+    public static function projectFile(): string
+    {
+        return rtrim(str_replace('\\', '/', (string) \fs::$projectRoot), '/') . '/config/controlmap.json';
     }
 
     /** Add a panel the constructor did not get — Access adds the ones a request builds, one by one. */
@@ -204,10 +224,57 @@ final class Map
         return array_keys($rights);
     }
 
+    /**
+     * Every role key the controlmap names: in a layer of any panel, or in
+     * a panel's own code (`hasRole('x')`, see ClassScanner).
+     *
+     * @return array<string, true>
+     */
+    public function roleKeys(): array
+    {
+        $keys = [];
+        foreach ($this->byPath as $panel) {
+            foreach ($this->own($panel) as $grant) {
+                foreach ($grant->roles as $role) {
+                    $keys[$role] = true;
+                }
+            }
+            foreach ($panel->grants as $terms) {
+                foreach (array_keys($terms) as $term) {
+                    $keys[(string) $term] = true;
+                }
+            }
+        }
+        return $keys;
+    }
+
+    /** The panel above; a top-level panel's is the root (path ''), where it is registered. */
     private function parent(DiscoveredPanel $panel): ?DiscoveredPanel
     {
+        if ($panel->path === '') {
+            return null;
+        }
         $slash = strrpos($panel->path, '/');
-        return $slash === false ? null : ($this->byPath[substr($panel->path, 0, $slash)] ?? null);
+        return $this->byPath[$slash === false ? '' : substr($panel->path, 0, $slash)] ?? null;
+    }
+
+    /**
+     * The actions of the panel that may be opened by a link from anywhere
+     * (`linkable`, see ActionGuard): its own layers, the later replacing the
+     * earlier. Not inherited, not role keys — action names.
+     *
+     * @return list<string>
+     */
+    public function linkable(DiscoveredPanel $panel): array
+    {
+        $names = [];
+        foreach ($this->layers($panel) as $layer) {
+            $list = $layer['data']['linkable'] ?? null;
+            if (is_array($list) && array_is_list($list)) {
+                $names = array_values(array_filter($list, 'is_string'));
+            }
+        }
+        return $names;
     }
 
     /**

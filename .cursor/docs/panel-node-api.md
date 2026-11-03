@@ -150,26 +150,30 @@ In `panel.php` überschreiben. Reihenfolge: Build → Load → Render.
 
 ## 7. Access Control
 
-```php
-// Zugriff auf das Panel (Build-Phase)
-function buildGranted(): bool {
-    return user::known();            // Standard
-    // return user::hasRole('admin');
-    // return user::hasOneRole('editor', 'admin');
-}
+Seit 2026-11-03 steht, wer darf, in der `panel.config.json` des Panels
+(siehe [controlmap.md](controlmap.md), „Laufzeit“):
 
-// Zugriff auf eine Aktion (AJAX-Phase)
-function actionGranted($action = null): bool {
-    return match ($action) {
-        'delete'   => user::hasRole('admin'),
-        'setOwner' => user::hasRole('admin'),
-        default    => user::known(),
-    };
+```json
+{ "build":   ["cmsAdmin", "cmsEditor"],
+  "action":  { "delete": ["cmsAdmin"] },
+  "linkable": ["activate"] }
+```
+
+Pseudo-Rollen: `everyone`, `authenticated`, `anonymous`. Ohne Config
+gilt die Wurzel: `authenticated`. Was bei Ablehnung passiert, sagt der
+Code:
+
+```php
+public function onAccessDenied(): void {   // nur für das gewählte Panel
+    if (!Session::known()) {
+        \http::redirect(\http::$root . 'auth/');
+    }
 }
 ```
 
-`buildGranted()` → `false` leitet auf den Auth-Panel um (`admin/auth/`).
-`actionGranted()` → `false` bricht mit HTTP 403 ab.
+Eine abgelehnte Action bricht mit HTTP 403 ab (`ActionGuard`).
+`buildGranted()`/`actionGranted()` gelten nur noch für Altbestand, der sie
+selbst deklariert (pwk).
 
 ---
 

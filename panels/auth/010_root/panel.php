@@ -1,14 +1,14 @@
 <?php
 declare(strict_types=1);
 
-namespace Systopic\System\Panels\Root\Admin\Auth\Root;
+namespace Systopic\System\Panels\Root\Auth\Root;
 
 use Systopic\Db\Scope;
 use Systopic\System\Panels\PanelNode;
 use Systopic\System\Queries\UserAdmin\UserAdmin;
 
 /**
- * admin/auth/root — the first account of a new installation. Refuses once any
+ * auth/root — the first account of a new installation. Refuses once any
  * user exists.
  */
 class Panel extends PanelNode {

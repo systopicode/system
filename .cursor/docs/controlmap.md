@@ -41,7 +41,8 @@ Als Action zählt:
 - **Methoden:** öffentlich und mit `#[Action]` (seit 2026-10-30, siehe
   unten). Andere öffentliche Methoden sind Helfer der Templates und keine
   Actions.
-- **Einstiege:** `$entryActions` der Klasse, im Chip markiert.
+- **Einstiege:** `linkable` in den Configs des Panels, im Chip markiert
+  (admin/access/panelmap liest es aus der Map, nicht Discover).
 
 Zugriff im Code (`buildGranted` / `actionGranted`): Rollen aus
 `hasRole()`/`hasOneRole()`, `superuser`, `signed in` (`known()`/`active()`),
@@ -65,10 +66,11 @@ ohne die Action.
    - Ohne diesen Header muss `Origin`, wenn er da ist, unseren Host nennen.
      Ohne beide ist es kein Browser, also auch kein CSRF. Das gilt für CLI,
      curl und Webhooks.
-   - **Ausnahme:** `PanelNode::$entryActions`, nur per GET/HEAD, von überall.
-     Bisher nur `admin/auth`: `activate`, `reset` (der Schlüssel im Mail-Link
-     autorisiert), die Formulare `login`, `register`, `resetPassword` und die
-     Rechtstexte.
+   - **Ausnahme:** `linkable` in der Config des Panels
+     (`Access::linkable()`), nur per GET/HEAD, von überall. Bisher nur
+     `auth`: `activate`, `reset` (der Schlüssel im Mail-Link autorisiert),
+     die Formulare `login`, `register`, `resetPassword` und die
+     Rechtstexte. Bis 2026-11-03 hieß das `PanelNode::$entryActions`.
 2. **`actionGranted()`.** Früher hat es mit `die('no access …')`
    abgebrochen, jetzt wirft es dieselbe Exception.
 3. **Methode ohne `#[Action]`.** Nennt ein Request eine öffentliche Methode
@@ -77,7 +79,7 @@ ohne die Action.
    Discover), wirft `ActionGuard::method()` mit dem Hinweis „has no
    #[Action] attribute … Add #[Action] to the method“. Bei einer Methode des
    Frameworks (`updateView` …) lautet er stattdessen „belongs to the panel
-   framework“. Kennt `actions.php` die Action (`admin/auth` → `loginMethod`),
+   framework“. Kennt `actions.php` die Action (`auth` → `loginMethod`),
    wird die Methode still übergangen. Das ist der Hinweis für migrierte
    Panels, deren Methoden früher Actions waren.
 
@@ -85,7 +87,7 @@ Methoden: `app.php` ruft eine Panel-Methode mit dem Namen der Action nur
 noch auf, wenn sie `#[Action]` trägt (`Systopic\System\Panels\Action`).
 Vorher war jede öffentliche Methode der Klasse aufrufbar. In smp waren das
 28 Stück, keine davon als Action gemeint, z. B. `admin/backup/removeOldMediaDir`
-für jeden Editor. `loginMethod` (`admin/auth`) lief dadurch doppelt. pwk habe
+für jeden Editor. `loginMethod` (`auth`) lief dadurch doppelt. pwk habe
 ich nur statisch geprüft: Die Upload-Methoden werden intern aufgerufen,
 `cancel` ist ein `case`. Closure-Properties (`$this->sendData = function …`
 in pwk) laufen weiter wie bisher.
@@ -93,12 +95,12 @@ in pwk) laufen weiter wie bisher.
 **Testen:** `php tests/actionguard.php` (ohne DB). Per CLI-Payload lassen
 sich die Header setzen:
 `"server": {"HTTP_SEC_FETCH_SITE": "cross-site"}`. Über Apache:
-`curl -sk -X PUT -H 'Sec-Fetch-Site: cross-site' …/admin/auth/loginMethod`
+`curl -sk -X PUT -H 'Sec-Fetch-Site: cross-site' …/auth/loginMethod`
 liefert 403.
 
 **Falle:** Eine neue Action, die von außen erreichbar sein muss (ein
 Mail-Link, ein QR-Code direkt auf eine Action), läuft in 403 „did not come
-from this site“. Die Lösung ist, sie in `$entryActions` aufzunehmen, aber nur
+from this site“. Die Lösung ist, sie in `linkable` aufzunehmen, aber nur
 wenn sie nichts allein aufgrund der Session ändert. QR-Codes und Mails
 sollten besser auf eine Seite zeigen (`…/?id=`), deren Button dann
 same-origin ist.
@@ -140,8 +142,10 @@ heißt: niemand außer dem Superuser.
 | `action.x` | `actions` des Panels (wie oben weiter) |
 | `right.x` | `right.x` der Vorfahren bis zur Wurzel, sonst `actions` des Panels |
 
-Sagt keine Ebene irgendwo etwas: `null`, dann entscheidet der Code
-(`buildGranted()`, `actionGranted()`) wie bisher.
+Über den Panels der obersten Ebene steht die Wurzel (Pfad `''`,
+`panels/panel.config.json`): der Default, `build: ["authenticated"]`. Ein
+Projekt ergänzt ihn in seinem `panels/panel.config.json` (spaceticker:
+`actions: ["everyone"]`).
 
 **Anzeige:** In Discover öffnet ein Klick auf einen Chip (Herkunft, Access
 in code, Action) die Lightbox `discover/config/?path=cms.pages&focus=…`.
@@ -170,25 +174,36 @@ sie sind):
 Ordner des Panels und seiner Vorfahren (`PanelNode::$altPaths`) und
 `config/controlmap.json`, ohne Discover.
 
-Was entscheidet, in dieser Reihenfolge:
+**Seit 2026-11-03 sagt die Config, wer darf; der Code nur, was bei
+Ablehnung passiert** (`PanelNode::onAccessDenied()`, nur für das gewählte
+Panel; admin schickt Nicht-Eingeloggte nach `auth/`). In system, cms,
+relay und spaceticker gibt es kein `buildGranted()`/`actionGranted()` mehr.
+Panels, die es noch selbst deklarieren (Altbestand, pwk), entscheiden
+weiter im Code. Die Reihenfolge:
 
 1. die eigene Config des Panels (irgendeine seiner Ebenen) für den Schlüssel
-2. der eigene Code: Der Ordner des Panels hat seine Klasse, und die Klasse
-   deklariert `buildGranted()` bzw. `actionGranted()` selbst. Eine Klasse,
-   die das Eltern-Panel vererbt (`$bequests`), zählt als Code des
-   Eltern-Panels, so wie dessen Config.
-3. die geerbte Config (vom Eltern-Panel, wie `Map::effective()`)
-4. der geerbte Code (`PanelNode`: jeder Eingeloggte)
-
-Eine geerbte Config lockert also nie, was ein Panel in seinem Code selbst
-entscheidet. Die Lightbox in admin/controlmap zeigt „Effective“ nach derselben
-Regel.
+2. eigener Code (Altbestand): Der Ordner hat seine Klasse, und die Klasse
+   deklariert die Methode selbst
+3. die geerbte Config eines Panels darüber (`Map::effective()`)
+4. geerbter Code (Altbestand): eine Klasse außer `PanelNode` deklariert
+   die Methode
+5. die Wurzel-Config, der Default
+6. nichts: `authenticated`
 
 Eine Rollenliste lässt den Superuser immer durch, außer wenn er als Rolle
-schaut (Fake-Rollen). `everyone` lässt jeden Aufruf durch, `authenticated`
-jeden Eingeloggten. Alle anderen Rollen prüft `Session::hasOneRole()`. Ein
+schaut (Fake-Rollen). Pseudo-Rollen (`Access::PSEUDO_ROLES`): `everyone`
+jeden Aufruf, `authenticated` jeden Eingeloggten, `anonymous` jeden nicht
+Eingeloggten. Alle anderen Rollen prüft `Session::hasOneRole()`. Ein
 Schlüssel, den keine Rolle hat, wird übersprungen, es wird nicht geworfen.
-Der Recovery-User hat keine Datenbank, bei ihm entscheidet der Code.
+Der Recovery-User hat keine Datenbank: Er kommt durch `everyone`,
+`authenticated` und die Recovery-Rollen, die er hält (`recovery`,
+`restore`), sonst durch nichts — auch nicht durch `[]`.
+
+`auth` steht auf `everyone`. Wer schon eingeloggt ist, wird in
+`auth::onBuild()` weitergeschickt (zurück oder nach `admin/`), außer beim
+Passkey-Setup, `validateQr` (PUT) und `continueWithoutPasskey`. Das ist
+Verhalten, kein Zugriff — so ist auch das Passkey-Setup gelöst, für das
+`anonymous` nicht gereicht hätte.
 
 Geprüft 2026-11-02 in smp.de per CLI, als Benutzer nur mit
 `cmsPageEditor`: Umhängen wird abgelehnt (Meldung, DB unverändert),
@@ -233,8 +248,10 @@ Umsortieren unter demselben Elternknoten geht.
    - Erledigt 2026-11-02 (system): `admin/settings` und `admin/users`
      (`cmsAdmin`), `admin/settings/theme` (`[]`, nur Superuser),
      `admin/backup` (Editoren sehen es; löschen, hochladen, herunterladen und
-     aufräumen dürfen Admins; `createDatabase` nur der Recovery-User im
-     Code), `backup/create` (Editoren), `backup/restore` (Admins, im Code
+     aufräumen dürfen Admins; `createDatabase`: `["recovery"]`, der
+     Recovery-User über den Code, durch die Liste kommt sonst nur der
+     Superuser, bei ihm scheitert `CREATE DATABASE` an der vorhandenen DB),
+     `backup/create` (Editoren), `backup/restore` (Admins, im Code
      der Recovery-User mit `restore`), `backup/log` (`clear` für Admins).
      Die Knöpfe in Backup fragen `Access::action()`.
    - Erledigt 2026-11-02 (spaceticker): `admin/events`, `admin/contacts`
@@ -242,7 +259,41 @@ Umsortieren unter demselben Elternknoten geht.
      braucht man jetzt auch die Rolle), `devices` mit dem Recht
      `pairScreens` (Admin). Der Link „Screen koppeln“ im Header prüft noch
      `hasRole('cmsAdmin')`, weil das devices-Panel dort nicht gebaut ist.
-   - Bleibt im Code: `cms` selbst, wegen der Weiterleitung zum Login in
-     `buildGranted()`, und das Root-Panel von spaceticker.
+   - Bleibt im Code: nichts mehr, siehe Schritt 6.
    - Offen: cms-Paket, EditBar und Vorschau (`appRequest`) fragen noch
      `hasOneRole()`.
+6. **Alles in die Config** — umgesetzt 2026-11-03 (siehe „Laufzeit“).
+   Eine Regel: wer darf, steht in der Config; was bei Ablehnung passiert,
+   im Code. Umgestellt: Wurzel (`authenticated`), `auth` (`everyone`,
+   `linkable`), `auth/root` (`authenticated`, wie vorher), `admin`
+   (`onAccessDenied()`), `admin/tools` und `admin/access/panelmap` (`[]`),
+   `admin/backup` (+ `recovery`), `admin/backup/restore` (+ `restore`),
+   `admin/user`, `admin/pages`, relay `debug`, spaceticker-Wurzel
+   (`actions: everyone`). Offen: pwk (viele Panels mit eigenem Code).
+   - **Config:** `build`, `actions`, `action.x`, `rights.x` und neu
+     `linkable` (statt `$entryActions`: per Link von überall erreichbar,
+     also GET). Auch die Projekt-Ebene darf `linkable` setzen oder
+     überschreiben: Die Configs bearbeiten nur Superuser, die wissen, was
+     sie tun.
+   - **Pseudo-Rollen** für das, was keine Rolle ist: `everyone`,
+     `authenticated`, neu `anonymous` (nur nicht eingeloggt, das Gegenstück
+     zu `authenticated` wie in Drupal; `guest` wie in Laravel/Joomla wäre
+     auch gegangen, `unknown` verwechselt man mit einem unbekannten
+     Schlüssel), `recovery`/`restore` (der Recovery-User, ohne Datenbank —
+     Lösung später, darf vorerst fehlen).
+   - **Code:** nur noch `onAccessDenied()` (admin: Weiterleitung zum
+     Login) und `#[Action]` (was eine Action ist). `available()` war für
+     relay/debug gedacht; Lars hat dort `RemoteDebug::available()` schon
+     entfernt, deshalb nicht gebaut. Der Default kommt aus der
+     Wurzel-Config statt aus `PanelNode`.
+   - **Weg:** `STAGE === 'DEV'` in `admin::actionGranted()` und
+     `STAGE === 'x_DEV'` in `admin::buildGranted()`.
+   - **Vorher: `auth` aus `admin` heraus nach oben** — erledigt
+     2026-11-03: `panels/auth`, Adresse `auth/`. Ein abgelehntes `admin`
+     nimmt den Login nicht mehr mit, die Sonderregel in
+     `admin::buildGranted()` ist weg. `Map::canonicalPanelPath()` liest
+     alte Einträge `cms/auth` und `admin/auth` als `auth`. Der Kopf kommt
+     weiter von admin (`auth/head.tpl.php` bindet `admin/head.tpl.php`
+     ein), `PanelTree::getBodyClasses()` gibt auth die Klasse `cms`.
+   - Passkey-Setup: gelöst, `auth` steht auf `everyone`, das
+     Weiterschicken Eingeloggter ist Verhalten in `auth::onBuild()`.

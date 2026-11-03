@@ -7,7 +7,7 @@ use Systopic\System\Panels\PanelNode;
 
 /**
  * admin/legal/?page=… - the texts of the login footer as a lightbox over the
- * dashboard: signed in, admin/auth/ sends back to admin/.
+ * dashboard: signed in, auth/ sends back to admin/.
  */
 class Panel extends PanelNode {
 

@@ -23,7 +23,7 @@ class Panel extends CmsPanel {
 	public function __construct($name, $parent = null) {
 		parent::__construct($name, $parent);
 		if ($this->accountKind !== User::SCREEN) {
-			$this->label = 'Persons';
+			$this->label = 'Users';
 		}
 	}
 
@@ -89,7 +89,7 @@ class Panel extends CmsPanel {
 		);
 		foreach ($rows as $row) {
 			$name = trim((string) $row['user_fullname']) !== '' ? (string) $row['user_fullname'] : (string) $row['user_name'];
-			$search->add('Persons', 'cmsIcon-user', $name, (string) $row['user_email'], $this->getHref(\http::$root) . 'edit/?user_id=' . (int) $row['user_id']);
+			$search->add('Users', 'cmsIcon-user', $name, (string) $row['user_email'], $this->getHref(\http::$root) . 'edit/?user_id=' . (int) $row['user_id']);
 		}
 	}
 }

@@ -56,7 +56,7 @@ final class CodeMail
     /** The address that opens the invitation view and fills the code. */
     public static function link(string $code): string
     {
-        return \http::$siteUrl . 'admin/auth/?code=' . rawurlencode($code);
+        return \http::$siteUrl . 'auth/?code=' . rawurlencode($code);
     }
 
     /** "10 minutes", "24 hours". */

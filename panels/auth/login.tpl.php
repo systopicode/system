@@ -1,5 +1,5 @@
 <?php
-/** @var \Systopic\System\Panels\Root\Admin\Auth\Panel $this */
+/** @var \Systopic\System\Panels\Root\Auth\Panel $this */
 $authMethod = $this->loginMethod();
 $authPasskey = \Systopic\System\Auth\Passkeys::available();
 $authCodes = \Systopic\System\Auth\LoginCodes::available();
@@ -31,5 +31,5 @@ $authPassword = (string) \http::posted('password', '');
 $authForgot = '?view=resetPassword';
 $authRegister = null;
 $authForgotClass = 'ajax';
-$authEndpoint = \http::$root . 'admin/auth/';
+$authEndpoint = \http::$root . 'auth/';
 include \fs::toNative((string) \fs::$sysRoot . 'src/Auth/login.card.tpl.php');

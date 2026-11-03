@@ -65,7 +65,7 @@ diesen Stellen und schlug unter Windows fehl:
 
 - `panels/admin/head.tpl.php`: `x_responsive.css` fehlte in der CMS-Vorschau.
 - `panels/admin/090_tools/logs/php/`: das PHP-Log blieb leer, Download und Leeren gingen nicht.
-- `panels/admin/auth/license.tpl.php`: die Lizenz fehlte.
+- `panels/auth/license.tpl.php`: die Lizenz fehlte.
 - `src/Sys/Theme.php`: Theme-Farben aus `cms_overrides.css` und `overrides/css/` wurden nie gelesen.
 - `src/Settings/ProjectFile.php`: `page.settings.php` und `media.settings.php` wurden nicht gefunden.
 - `lib/class/template/template.php`: der Template-Ordner des Projekts wurde übersehen.

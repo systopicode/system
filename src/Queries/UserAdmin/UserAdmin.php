@@ -132,6 +132,23 @@ final class UserAdmin
     }
 
     /**
+     * The content groups a role may read or write, with what it may.
+     *
+     * @return list<array{group: Group, read: bool, write: bool}> in id order
+     */
+    public function groupsOf(Role $role): array
+    {
+        $out = [];
+        foreach ($this->groups as $group) {
+            $row = $this->permission($group, $role);
+            if ($row !== null && ($row->read || $row->write)) {
+                $out[] = ['group' => $group, 'read' => (bool) $row->read, 'write' => (bool) $row->write];
+            }
+        }
+        return $out;
+    }
+
+    /**
      * The roles that may read, or write, a group.
      *
      * @param 'read'|'write' $right

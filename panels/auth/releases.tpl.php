@@ -1,5 +1,5 @@
 <?php
-/** @var \Systopic\System\Panels\Root\Admin\Auth\Panel $this */
+/** @var \Systopic\System\Panels\Root\Auth\Panel $this */
 $e = static fn(string $v): string => htmlspecialchars($v, ENT_QUOTES);
 ?>
 <h1>Release notes</h1>

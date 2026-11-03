@@ -10,5 +10,4 @@ class Panel extends \Systopic\System\Panels\PanelNode
     public ?string $webcronKey = null;
 
     public function __construct($name, $parent = null) { parent::__construct($name, $parent); $this->label = 'Cleanup'; }
-    public function buildGranted() { return \Systopic\System\Auth\Session::isSuperuser(); }
 }

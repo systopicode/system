@@ -1,5 +1,5 @@
 <?php
-/** @var \Systopic\System\Panels\Root\Admin\Auth\Panel $this */
+/** @var \Systopic\System\Panels\Root\Auth\Panel $this */
 $logoPath = \Systopic\System\Settings\ThemeAssets::path('logo');
 $logoOwn = $logoPath !== null && str_starts_with(\fs::toNative($logoPath), \fs::toNative(rtrim((string) \fs::$siteRoot, '/\\') . '/overrides/'));
 $logoSvg = $logoOwn && str_ends_with(strtolower($logoPath), '.svg') ? (string) fs::file_get_contents($logoPath) : '';
