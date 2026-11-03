@@ -733,8 +733,8 @@ details[open] > summary > .summaryToggle i { transform:rotate(180deg); }
 .summaryToggle { width: var(--cmsControl); height: var(--cmsControl); min-height: var(--cmsControl); padding: .4rem; display: inline-flex; align-items: center; justify-content: center; flex: 0 0 var(--cmsControl); }
 
 /* Accordion actions share the same control geometry as widget header actions. */
-:is(.widget,.cmsBox) > summary:hover > .summaryToggle,
-:is(.widget,.cmsBox) > summary:focus-visible > .summaryToggle {
+:is(.widget,.cmsBox,.dashTasks details) > summary:hover > .summaryToggle,
+:is(.widget,.cmsBox,.dashTasks details) > summary:focus-visible > .summaryToggle {
     background: color-mix(in srgb, var(--cmsMainColor) 12%, transparent);
 }
 :is(.widget,.cmsBox) > summary > .summaryToggle i { margin: 0; }

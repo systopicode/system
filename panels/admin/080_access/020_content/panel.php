@@ -15,7 +15,7 @@ use Systopic\System\Tables\Roles\Model as Role;
  */
 class Panel extends CmsPanel {
 
-	public $icon = 'cmsIcon cmsIcon-folder';
+	public $icon = 'cmsIcon cmsIcon-file-lock';
 
 	public bool $bequests = true;
 

@@ -7,12 +7,25 @@ use Systopic\System\Config\Config;
 /** One envelope policy for the standard wrapper and direct SMTPMailer callers. */
 final class Delivery
 {
-    public const DEFAULT_RECIPIENT = 'testmail@systopic.media';
+    public const DEFAULT_HOST = 'mail.fluxo.systems';
+    public const DEFAULT_SENDER = 'noreply@fluxo.systems';
+    public const DEFAULT_RECIPIENT = 'testmail@fluxo.systems';
 
     public static function settings(): array
     {
         $mail = class_exists(Config::class) ? Config::current()?->instance->get('mail') : null;
         return is_array($mail) ? $mail : [];
+    }
+
+    public static function defaultPassword(): string
+    {
+        $password = (string) getenv('FLUXO_SMTP_PASSWORD');
+        if ($password !== '' || !class_exists(\fs::class) || empty(\fs::$projectRoot)) {
+            return $password;
+        }
+
+        $path = \fs::toNative(\fs::$projectRoot . 'config/.fluxo-smtp-password');
+        return is_readable($path) ? rtrim((string) file_get_contents($path), "\r\n") : '';
     }
 
     public static function testMode(): bool

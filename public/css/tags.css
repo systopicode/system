@@ -248,7 +248,7 @@ body.tagDragging:has(.layout.tags .tag.dropTarget) .draghelper{
 
 .cms .layout.tags .widget > header h1:is([contenteditable="true"], [contenteditable="plaintext-only"]),
 .cmslightbox .tagEditTitle h1:is([contenteditable="true"], [contenteditable="plaintext-only"]){
-    outline: 1px dashed var(--cmsTextColor);
+    outline: 2px dashed var(--cmsMuted);
     outline-offset: 3px;
     background: transparent;
     cursor: text;

@@ -150,6 +150,7 @@
     "file-pdf": "file-type-pdf",
     "file-text": "file-text",
     "film": "movie",
+    "file-lock": "file-lock",
     "folder": "folder",
     "folder-open": "folder-open",
     "globe": "globe",

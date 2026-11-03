@@ -864,6 +864,14 @@
       "changes": "regular stroke 2 retained, removed provider classes"
     },
     {
+      "path": "public/icons/tabler/file-lock.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "6930437e741778a9c4dd57f1b6e1dd66149fbc6a3f5b83adf0215365562c996d",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
       "path": "public/icons/tabler/file-off.svg",
       "provider": "tabler",
       "version": "3.50.0",

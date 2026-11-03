@@ -545,7 +545,7 @@ function renameUserAdminTitle(button) {
                 (box.querySelector(':scope > section') || box).append(footer);
             }
         });
-        document.querySelectorAll(':is(.widget,.cmsBox) > summary').forEach(summary => {
+        document.querySelectorAll(':is(.widget,.cmsBox) > summary, .dashTasks details > summary').forEach(summary => {
             if (summary.querySelector(':scope > .summaryToggle')) return;
             const toggle = document.createElement('button');
             toggle.type = 'button';

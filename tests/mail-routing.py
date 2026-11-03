@@ -38,7 +38,7 @@ def run(stage, mode=False, debug=False, recipient='sink@example.test', direct=Fa
         else:
             assert outcome.get('ok') is True, outcome
             routed = stage.startswith('DEV') or mode
-            expected = [f"RCPT TO: <{recipient or 'testmail@systopic.media'}>"] if routed else [f'RCPT TO: <real-{kind}@example.test>' for kind in ('to','cc','bcc')]
+            expected = [f"RCPT TO: <{recipient or 'testmail@fluxo.systems'}>"] if routed else [f'RCPT TO: <real-{kind}@example.test>' for kind in ('to','cc','bcc')]
             assert captured['rcpt'] == expected, captured
             if routed:
                 assert 'real-' not in captured['data'], captured

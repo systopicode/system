@@ -77,6 +77,7 @@
   --icon-file-description: url("../icons/tabler/file-description.svg");
   --icon-file-download: url("../icons/tabler/file-download.svg");
   --icon-file-import: url("../icons/tabler/file-import.svg");
+  --icon-file-lock: url("../icons/tabler/file-lock.svg");
   --icon-file-off: url("../icons/tabler/file-off.svg");
   --icon-file-plus: url("../icons/tabler/file-plus.svg");
   --icon-file-text: url("../icons/tabler/file-text.svg");
@@ -290,6 +291,7 @@
 .cmsIcon-file-image { --icon-mask: var(--icon-photo); }
 .cmsIcon-file-import { --icon-mask: var(--icon-file-import); }
 .cmsIcon-file-lines { --icon-mask: var(--icon-file-text); }
+.cmsIcon-file-lock { --icon-mask: var(--icon-file-lock); }
 .cmsIcon-file-pdf { --icon-mask: var(--icon-file-type-pdf); }
 .cmsIcon-file-powerpoint { --icon-mask: var(--icon-file-type-ppt); }
 .cmsIcon-file-slash { --icon-mask: var(--icon-file-off); }

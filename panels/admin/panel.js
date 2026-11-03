@@ -480,3 +480,17 @@ sys.fitDashboards.init = function (event) {
 
 // Also initialise the first full document; later AJAX fragments use initEvents.
 sys.onload(function () { sys.fitDashboards($(document.body)); });
+
+
+// Switch the sign-in lists without requesting a dashboard render.
+document.addEventListener('click', event => {
+	const tab = event.target.closest('[data-dashboard-signins-tabs] [role="tab"]');
+	if (!tab) return;
+	const tabs = tab.parentElement;
+	for (const button of tabs.querySelectorAll('[role="tab"]')) {
+		button.setAttribute('aria-selected', String(button === tab));
+	}
+	for (const panel of tabs.parentElement.querySelectorAll('[data-signins-tab]')) {
+		panel.hidden = panel.dataset.signinsTab !== tab.dataset.tab;
+	}
+}, true);

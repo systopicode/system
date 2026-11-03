@@ -26,13 +26,15 @@ $tab = Cms::widgetTab($this, 'users', $tabs);
 ?>
 <header><h2><i class="cmsIcon cmsIcon-right-to-bracket"></i>Sign-ins</h2></header>
 <?php if (count($tabs) > 1) { ?>
-<nav class="dashTabs" role="tablist">
+<nav class="dashTabs" role="tablist" data-dashboard-signins-tabs>
 	<?php foreach ($tabs as $key => $label) { ?>
-		<button type="button" role="tab" data-on_click="dashTab" data-tab="<?= $key ?>" aria-selected="<?= $key === $tab ? 'true' : 'false' ?>"><?= $label ?></button>
+		<button type="button" role="tab" data-tab="<?= $key ?>" aria-selected="<?= $key === $tab ? 'true' : 'false' ?>"><?= $label ?></button>
 	<?php } ?>
 </nav>
 <?php } ?>
-<?php if ($tab === 'online' && $onlineDevices !== null) {
+<?php if ($onlineDevices !== null) { ?>
+<div role="tabpanel" data-signins-tab="online"<?= $tab !== 'online' ? ' hidden' : '' ?>>
+<?php
 	$usersById = [];
 	foreach (UserAdmin::of(Scope::default())->users as $user) {
 		$usersById[(int) $user->id] = $user;
@@ -59,8 +61,12 @@ $tab = Cms::widgetTab($this, 'users', $tabs);
 		<?php } ?>
 	</ul>
 	<?php }
-	return;
-}
+	?>
+</div>
+<?php }
+?>
+<div role="tabpanel" data-signins-tab="recent"<?= $tab !== 'recent' ? ' hidden' : '' ?>>
+<?php
 $users = [];
 foreach (UserAdmin::of(\Systopic\Db\Scope::default())->users as $user) {
 	$users[mb_strtolower((string) $user->name)] = $user;
@@ -99,4 +105,7 @@ $signIns = array_slice(array_values(array_filter(LoginLog::entries(), static fn(
 		<?php } ?>
 	</ul>
 <?php } ?>
-<footer><a class="ajax button" href="<?= $e(\http::$root . 'admin/tools/logs/login/') ?>"><i class="cmsIcon cmsIcon-list"></i><span>Login log</span></a></footer>
+
+
+</div>
+<footer data-signins-tab="recent"<?= $tab !== 'recent' ? ' hidden' : '' ?>><a class="ajax button" href="<?= $e(\http::$root . 'admin/tools/logs/login/') ?>"><i class="cmsIcon cmsIcon-list"></i><span>Login log</span></a></footer>

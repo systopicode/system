@@ -145,6 +145,22 @@ final class EnvironmentFile
         });
     }
 
+    public static function resetMail(string $file): bool
+    {
+        return self::update($file, static function (array $data): array {
+            $mail = is_array($data['mail'] ?? null) ? $data['mail'] : [];
+            $data['mail'] = array_diff_key($mail, self::GROUPS['mail']) + [
+                'host' => \Systopic\System\Mail\Delivery::DEFAULT_HOST,
+                'port' => 587,
+                'secure' => 'tls',
+                'user' => \Systopic\System\Mail\Delivery::DEFAULT_SENDER,
+                'from' => \Systopic\System\Mail\Delivery::DEFAULT_SENDER,
+                'fromName' => 'fluxo',
+            ];
+            return $data;
+        });
+    }
+
     public static function setMatch(string $file, int $index, string $field, string $raw): bool
     {
         if (!in_array($field, self::MATCH, true)) {

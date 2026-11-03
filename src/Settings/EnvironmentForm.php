@@ -92,6 +92,7 @@ final class EnvironmentForm
         }
         $result = match ($panel->action) {
             'save' => EnvironmentFile::set($file, (string) \http::dataset('group'), (string) \http::dataset('key'), self::posted()),
+            'resetMail' => Session::isSuperuser() && EnvironmentFile::resetMail($file),
             'saveMatch' => EnvironmentFile::setMatch($file, (int) \http::dataset('index'), (string) \http::dataset('field'), self::posted()),
             'addMatch' => EnvironmentFile::addMatch($file),
             'removeMatch' => EnvironmentFile::removeMatch($file, (int) \http::dataset('index')),
@@ -117,6 +118,7 @@ final class EnvironmentForm
             AuthConfig::rememberSecret((string) ($auth['secret'] ?? ''));
         }
         \message::confirm(match ($panel->action) {
+            'resetMail' => 'Mail settings reset to defaults.',
             'createAuth' => 'Sign-in key created.',
             'replaceAuth' => 'Sign-in key replaced. Codes already sent stop working.',
             'removeAuth' => 'Sign-in key deleted. Codes already sent stop working.',
@@ -282,7 +284,7 @@ final class EnvironmentForm
         $e = static fn($value): string => htmlspecialchars((string) $value, ENT_QUOTES);
         echo '<section class="widget"><header><h2>' . $e($title) . '</h2></header>';
         if ($group === 'mail') {
-            echo '<main><p class="tagsHint">Test mode redirects all To, CC and BCC recipients to the test recipient. DEV always uses test routing, even when this switch is off. Enable the switch to use test routing in LIVE or STAGING. Leave the recipient empty to use testmail@systopic.media. Invalid test recipients block delivery.</p></main>';
+            echo '<main><p class="tagsHint">Test mode redirects all To, CC and BCC recipients to the test recipient. DEV always uses test routing, even when this switch is off. Enable the switch to use test routing in LIVE or STAGING. Leave the recipient empty to use testmail@fluxo.systems. Invalid test recipients block delivery.</p></main>';
         }
         echo '<div class="tableScroll"><table class="scalars"><tbody>';
         foreach ($schema as $key => $kind) {
@@ -293,14 +295,16 @@ final class EnvironmentForm
         }
         echo '</tbody></table></div>';
         if ($group === 'mail' && Session::isSuperuser()) {
+            $testActions = '';
             foreach (EnvironmentFile::files() as $info) if ($info['file'] === $file && $info['current'] && $file !== 'config.local.json') {
                 $effective = \Systopic\System\Mail\Delivery::settings();
                 $transport = trim((string) ($effective['host'] ?? '')) ?: 'Local mail catcher (127.0.0.1:1025)';
                 try { $recipient = \Systopic\System\Mail\Delivery::testRecipient(); }
                 catch (\RuntimeException) { $recipient = 'Invalid recipient — delivery blocked'; }
                 echo '<main><p class="tagsHint">Effective delivery: <strong>' . $e($transport) . '</strong> → <strong>' . $e($recipient) . '</strong>. Local overrides apply. SMTP acceptance confirms handover to this server, not delivery to the inbox.</p></main>';
-                echo '<footer><button type="button" class="button" data-action-feedback data-loading data-on_click="testMail" data-file="' . $e($file) . '"><i class="cmsIcon cmsIcon-paper-plane"></i>Send test email</button><a class="button outline" href="' . $e(\http::$root . 'admin/tools/logs/email/') . '"><i class="cmsIcon cmsIcon-envelope"></i>Email log</a></footer>';
+                $testActions = '<button type="button" class="button" data-action-feedback data-loading data-on_click="testMail" data-file="' . $e($file) . '"><i class="cmsIcon cmsIcon-paper-plane"></i>Send test email</button><a class="button outline" href="' . $e(\http::$root . 'admin/tools/logs/email/') . '"><i class="cmsIcon cmsIcon-envelope"></i>Email log</a>';
             }
+            echo '<footer><button type="button" class="button outline" data-on_click="userConfirm" data-action="resetMail" data-confirm="Reset mail settings for this file? This clears SMTP credentials and test routing overrides." data-file="' . $e($file) . '"><i class="cmsIcon cmsIcon-arrow-rotate-left"></i>Reset to defaults</button>' . $testActions . '</footer>';
         }
         echo '</section>';
     }
@@ -368,7 +372,7 @@ final class EnvironmentForm
             echo '</select>';
             return;
         }
-        if ($group === 'mail' && $key === 'testRecipient') $attrs .= ' type="email" placeholder="testmail@systopic.media"';
+        if ($group === 'mail' && $key === 'testRecipient') $attrs .= ' type="email" placeholder="testmail@fluxo.systems"';
         echo '<input data-on_blur="save"' . $attrs . ' value="' . $e(is_scalar($value) ? (string) $value : '') . '">';
     }
 

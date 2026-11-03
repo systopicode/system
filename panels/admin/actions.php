@@ -87,7 +87,6 @@ switch ($this->action) {
 		$widget = (string) \http::dataset('widget');
 		$tabs = array_filter((array) ($this->state->dashTabs ?? []), static fn($entry): bool => !str_starts_with((string) $entry, $widget . '='));
 		$this->state->dashTabs = [...array_values($tabs), $widget . '=' . (string) \http::dataset('tab')];
-		$this->updateView('home');
 		break;
 
 	case 'notificationPushed':

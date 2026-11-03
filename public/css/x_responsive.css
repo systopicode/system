@@ -941,9 +941,7 @@ body.cms .cmslightbox > section > :is(header,header.cmsMobileEditHeader,footer) 
  body.cms .cmsSaveState.is-mobile { padding:.25rem .65rem; border-radius:999px; z-index:11000; }
  body.cms.cmsMobile > main > div.main .bottomMenu .cmsStage { margin-top:.5rem; }
  body.cms .bottomMenu .cmsAccount .signet .cmsAccountGear { background:transparent; }
- body.cms .dashboard .dashPhoneDone { display:inline-flex; }
 }
-.dashPhoneDone { display:none; }
 
 /* Asset previews retain the surface for which their artwork was supplied. */
 .cms .themePreview[data-slot="logo"],

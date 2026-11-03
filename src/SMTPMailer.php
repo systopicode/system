@@ -12,7 +12,7 @@ if (!class_exists(\Systopic\System\Mail\Delivery::class)) require_once __DIR__ .
 
 Class SMTPMailer {
 
-	private $server = 'smtp.gmail.com';
+	private $server = \Systopic\System\Mail\Delivery::DEFAULT_HOST;
 	private $port = 587;
 	private $secure = 'tls';
 	private $username = '';

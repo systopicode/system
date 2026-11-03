@@ -18,6 +18,7 @@ class emailSmtp extends SMTPMailer {
 
     /** set when this instance has no "mail" block and is not DEV: Send() refuses */
     private bool $unconfigured = false;
+    private bool $missingDefaultPassword = false;
 
     /** set by sensitive(): the log gets the envelope, not the content */
     private bool $sensitive = false;
@@ -45,8 +46,17 @@ class emailSmtp extends SMTPMailer {
             parent::__construct($server, $port, $secure);
         } elseif ($mail !== null) {
             parent::__construct((string) $mail['host'], (int) ($mail['port'] ?? 587), (string) ($mail['secure'] ?? 'tls'));
-            if ((string) ($mail['user'] ?? '') !== '') {
-                $this->Auth((string) $mail['user'], (string) ($mail['password'] ?? ''));
+            $user = (string) ($mail['user'] ?? '');
+            $password = (string) ($mail['password'] ?? '');
+            if ($mail['host'] === \Systopic\System\Mail\Delivery::DEFAULT_HOST) {
+                $user = $user ?: \Systopic\System\Mail\Delivery::DEFAULT_SENDER;
+                if ($user === \Systopic\System\Mail\Delivery::DEFAULT_SENDER && $password === '') {
+                    $password = \Systopic\System\Mail\Delivery::defaultPassword();
+                    $this->missingDefaultPassword = $password === '';
+                }
+            }
+            if ($user !== '') {
+                $this->Auth($user, $password);
             }
         } elseif (defined('STAGE') && str_starts_with((string) STAGE, 'DEV')) {
             parent::__construct('127.0.0.1', 1025, 'none');
@@ -55,7 +65,7 @@ class emailSmtp extends SMTPMailer {
             $this->unconfigured = true;
         }
         unset($this->subject);
-        $address = (string) ($mail['from'] ?? '') ?: (defined('MAIL_SENDER_ADDRESS') ? (string) MAIL_SENDER_ADDRESS : '') ?: (string) ($mail['user'] ?? '') ?: 'noreply@systopic.media';
+        $address = (string) ($mail['from'] ?? '') ?: (defined('MAIL_SENDER_ADDRESS') ? (string) MAIL_SENDER_ADDRESS : '') ?: (string) ($mail['user'] ?? '') ?: \Systopic\System\Mail\Delivery::DEFAULT_SENDER;
         $name = (string) ($mail['fromName'] ?? '') ?: (defined('MAIL_SENDER_NAME') ? (string) MAIL_SENDER_NAME : '') ?: 'fluxo';
         $this->From($address, $name);
     }
@@ -201,6 +211,9 @@ class emailSmtp extends SMTPMailer {
             if ($this->unconfigured) {
                 error_log('[mail] not sent: no "mail" block in the config of stage ' . (defined('STAGE') ? STAGE : '?'));
                 throw new \RuntimeException('mail: no "mail" block in the config of this instance');
+            }
+            if ($this->missingDefaultPassword) {
+                throw new \RuntimeException('The default SMTP account requires a password in the private project configuration.');
             }
             $result = parent::Send();
             $status = $result ? 'success' : 'failed';

@@ -39,10 +39,10 @@ $revision = \Systopic\System\Sys\Release::revision();
 			<p><?= $e($now->format(\Systopic\System\Sys\LocalTime::DATE)) ?></p>
 		</div>
 		<nav>
-            <?php if ($editing) { ?><button type="button" class="button dashPhoneDone" data-on_click="dashEdit"><i class="cmsIcon cmsIcon-check"></i>Done</button><?php } ?>
+            <?php if ($editing) { ?><button type="button" class="button" data-on_click="dashEdit"><i class="cmsIcon cmsIcon-check"></i>Done</button><?php } ?>
 			<div class="splitApply"><button type="button" class="button dashHeadMore splitApplyMenu" data-menu-selected data-cms-more aria-label="More" aria-expanded="false"><i class="cmsIcon cmsIcon-ellipsis"></i></button>
 			<div hidden class="splitApplyList dashHeadMenu">
-				<button type="button" class="button" data-on_click="dashEdit"><i class="cmsIcon <?= $editing ? 'cmsIcon-check' : 'cmsIcon-grid-2' ?>"></i><span><?= $editing ? 'Done' : 'Customize' ?></span></button>
+				<?php if (!$editing) { ?><button type="button" class="button" data-on_click="dashEdit"><i class="cmsIcon cmsIcon-grid-2"></i><span>Customize</span></button><?php } ?>
 				<a class="button cmsExternalLink" href="<?= $e($site) ?>" target="_blank" rel="noopener"><span>View website</span><i class="cmsIcon cmsIcon-up-right-from-square" aria-hidden="true"></i></a>
 			</div>
             </div>
