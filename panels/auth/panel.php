@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace Systopic\System\Panels\Root\Admin\Auth;
+namespace Systopic\System\Panels\Root\Auth;
 
 use Systopic\Db\Scope;
 use Systopic\System\Panels\PanelNode;
@@ -9,7 +9,7 @@ use Systopic\System\Queries\UserLookup\UserLookup;
 use Systopic\System\Tables\Users\Model as User;
 
 /**
- * admin/auth — login, registration, password reset.
+ * auth — login, registration, password reset.
  *
  * The rows are read and written through the ORM; the session itself — who is
  * logged in, their roles, their panel state — is still the `\user` service,
@@ -91,7 +91,7 @@ class Panel extends PanelNode {
 		// selected() is still false while these hooks run: the tree reference
 		// they read is installed afterwards. The path is already known.
 		$path = \app::request()->modulePath;
-		$atLogin = array_slice($path, -2) === ['admin', 'auth'];
+		$atLogin = $path === ['auth'];
 		if (!$atLogin || $this->form !== 'login' || \Systopic\System\Auth\Session::active()) {
 			return;
 		}
@@ -147,18 +147,9 @@ class Panel extends PanelNode {
 			$this->form = 'passkeySetup';
 			return TRUE;
 		}
-		if (count(\app::request()->modulePath) > 1 && \app::request()->modulePath[1] === 'auth') {
-			if (\Systopic\System\Auth\Session::active()) {
-				$back = \Systopic\System\Auth\Session::takeReturn();
-				if (is_string($back) && $back !== '') {
-					\http::redirect($back);
-				}
-				if (\Systopic\System\Panels\Tree\PanelTree::getInstance()?->getRoot() && \Systopic\System\Panels\Tree\PanelTree::getInstance()?->getRoot()->hasChild('pages')) {
-					\http::redirect('../pages/');
-				} else {
-					\http::redirect('../');
-				}
-			}
+		if ((\app::request()->modulePath[0] ?? '') === 'auth' && \Systopic\System\Auth\Session::active()) {
+			$back = \Systopic\System\Auth\Session::takeReturn();
+			\http::redirect(is_string($back) && $back !== '' ? $back : \http::$root . 'admin/');
 		}
 		return !\Systopic\System\Auth\Session::active();
 	}

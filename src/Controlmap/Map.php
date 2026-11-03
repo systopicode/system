@@ -84,6 +84,8 @@ final class Map
             'admin/users' => 'admin/access',
             'cms/controlmap' => 'admin/access/panelmap',
             'admin/controlmap' => 'admin/access/panelmap',
+            'cms/auth' => 'auth',
+            'admin/auth' => 'auth',
             'cms' => 'admin',
         ];
         foreach ($renames as $old => $new) {

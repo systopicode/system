@@ -1,6 +1,6 @@
 <?php
 
-/** @var \Systopic\System\Panels\Root\Admin\Auth\Panel $this */
+/** @var \Systopic\System\Panels\Root\Auth\Panel $this */
 
 use Systopic\System\Auth\LoginCodes;
 use Systopic\System\Auth\ScreenPair;

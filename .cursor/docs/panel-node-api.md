@@ -168,7 +168,7 @@ function actionGranted($action = null): bool {
 }
 ```
 
-`buildGranted()` → `false` leitet auf den Auth-Panel um (`admin/auth/`).
+`buildGranted()` → `false` leitet auf den Auth-Panel um (`auth/`).
 `actionGranted()` → `false` bricht mit HTTP 403 ab.
 
 ---

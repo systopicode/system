@@ -248,7 +248,7 @@ sys.core.server = new function () {
         }
         document.documentElement.classList.remove('nprogress-busy');
     };
-    server.loginUrl = () => (sys.http && sys.http.root ? sys.http.root : '/') + 'admin/auth/';
+    server.loginUrl = () => (sys.http && sys.http.root ? sys.http.root : '/') + 'auth/';
     server.settled = () => {
         server.inFlight = Math.max(0, server.inFlight - 1);
         if (server.inFlight === 0) {

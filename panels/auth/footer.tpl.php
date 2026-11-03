@@ -1,5 +1,5 @@
 <?php
-/** @var \Systopic\System\Panels\Root\Admin\Auth\Panel $this */
+/** @var \Systopic\System\Panels\Root\Auth\Panel $this */
 $revision = $this->revision();
 $gui = (string) array_key_first($this->releases);
 $site = rtrim((string) http::$root, '/') . '/';

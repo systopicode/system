@@ -1,5 +1,5 @@
 <?php
-/** @var \Systopic\System\Panels\Root\Admin\Auth\Panel $this */
+/** @var \Systopic\System\Panels\Root\Auth\Panel $this */
 use Systopic\System\Auth\AuthConfig;
 use Systopic\System\Auth\Devices;
 use Systopic\System\Auth\LoginLog;

@@ -21,19 +21,13 @@ class Panel extends PanelNode {
 	function buildGranted() {
 		if ($this->path === ['admin']) {
 			if (!\Systopic\System\Auth\Session::known()) {
-				// Only redirect when the user is actually requesting a CMS path.
+				// Only redirect when the user is actually requesting an admin path.
 				// buildGranted() fires for ALL panels, so a request to e.g. /auth/
-				// would otherwise trigger this redirect for every cms sibling panel.
+				// would otherwise trigger this redirect for every admin sibling panel.
 				$reqPath = \app::request()->modulePath;
-				if ($reqPath === ['admin', 'auth']) {
-					// The login form lives below this panel: denying cms here
-					// would prune the branch the anonymous user is being sent
-					// to, and /admin/auth/ would render an empty document.
-					return TRUE;
-				}
 				if (!empty($reqPath) && $reqPath[0] === 'admin') {
 					\Systopic\System\Auth\Session::rememberReturn((string) ($_SERVER['REQUEST_URI'] ?? ''));
-					\http::redirect(\http::$root . 'admin/auth/');
+					\http::redirect(\http::$root . 'auth/');
 				}
 				return FALSE;
 			} else {
@@ -42,8 +36,7 @@ class Panel extends PanelNode {
 		}
 
 		return \Systopic\System\Auth\Session::hasOneRole('cmsAdmin', 'cmsEditor', 'cmsPageEditor') ||
-				STAGE === 'x_DEV' ||
-				\app::request()->modulePath === ['admin', 'auth']
+				STAGE === 'x_DEV'
 		;
 	}
 
@@ -84,9 +77,7 @@ class Panel extends PanelNode {
 		}
 		$lastLogin = LastLogin::of($this->scope, (int) \Systopic\System\Auth\Session::id());
 		if (($lastLogin?->getTimestamp() ?? 0) < strtotime(RELEASE_NOTE_DATE)) {
-			if (!(\app::request()->modulePath === ['admin', 'auth'] && \app::request()->action === 'releases')) {
-				\http::redirect(\http::$root . 'admin/auth/releases');
-			}
+			\http::redirect(\http::$root . 'auth/releases');   // auth/ is no panel below this one
 		}
 	}
 

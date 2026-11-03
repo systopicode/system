@@ -1,6 +1,6 @@
 <?php
 
-/** @var \Systopic\System\Panels\Root\Admin\Auth\Root\Panel $this */
+/** @var \Systopic\System\Panels\Root\Auth\Root\Panel $this */
 
 use Systopic\System\Tables\Users\Operator as UserOperator;
 
@@ -13,6 +13,6 @@ switch ($this->action) {
 			break;
 		}
 		$this->scope->save($user = UserOperator::firstSuperuser((string) \http::posted('name'), (string) \http::posted('password')));
-		\http::redirect(\http::$root . "admin/auth/?user=" . urlencode((string) $user->name));
+		\http::redirect(\http::$root . "auth/?user=" . urlencode((string) $user->name));
 		break;
 }

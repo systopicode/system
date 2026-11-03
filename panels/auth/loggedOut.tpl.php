@@ -1,5 +1,5 @@
 <?php
-$again = \http::$root . 'admin/auth/?choose=1';
+$again = \http::$root . 'auth/?choose=1';
 ?>
 <main class="authSignin">
     <div class="authPane">

@@ -387,7 +387,8 @@ class PanelTree implements RenderTree
             return ['admin', 'cms', 'home'];
         }
 
-        $classes = ($selected->path[0] ?? '') === 'admin' ? ['cms'] : [];
+        // the sign-in (auth/) is no panel below admin/, but looks like it
+        $classes = in_array($selected->path[0] ?? '', ['admin', 'auth'], true) ? ['cms'] : [];
         foreach ($selected->path as $segment) {
             $segment = (string) $segment;
             if ($segment !== '') {

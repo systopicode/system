@@ -550,7 +550,7 @@ final class Setup
     // -------------------------------------------------------------------------------------
 
     /**
-     * The first account of the installation, a superuser — what admin/auth/root
+     * The first account of the installation, a superuser — what auth/root
      * does, but that panel cannot be reached here: without a users table the
      * cms runs in recovery mode and offers only to restore a backup. Which is
      * the other way out, hence "skip". The token stays for it: the recovery

@@ -66,7 +66,7 @@ ohne die Action.
      Ohne beide ist es kein Browser, also auch kein CSRF. Das gilt für CLI,
      curl und Webhooks.
    - **Ausnahme:** `PanelNode::$entryActions`, nur per GET/HEAD, von überall.
-     Bisher nur `admin/auth`: `activate`, `reset` (der Schlüssel im Mail-Link
+     Bisher nur `auth`: `activate`, `reset` (der Schlüssel im Mail-Link
      autorisiert), die Formulare `login`, `register`, `resetPassword` und die
      Rechtstexte.
 2. **`actionGranted()`.** Früher hat es mit `die('no access …')`
@@ -77,7 +77,7 @@ ohne die Action.
    Discover), wirft `ActionGuard::method()` mit dem Hinweis „has no
    #[Action] attribute … Add #[Action] to the method“. Bei einer Methode des
    Frameworks (`updateView` …) lautet er stattdessen „belongs to the panel
-   framework“. Kennt `actions.php` die Action (`admin/auth` → `loginMethod`),
+   framework“. Kennt `actions.php` die Action (`auth` → `loginMethod`),
    wird die Methode still übergangen. Das ist der Hinweis für migrierte
    Panels, deren Methoden früher Actions waren.
 
@@ -85,7 +85,7 @@ Methoden: `app.php` ruft eine Panel-Methode mit dem Namen der Action nur
 noch auf, wenn sie `#[Action]` trägt (`Systopic\System\Panels\Action`).
 Vorher war jede öffentliche Methode der Klasse aufrufbar. In smp waren das
 28 Stück, keine davon als Action gemeint, z. B. `admin/backup/removeOldMediaDir`
-für jeden Editor. `loginMethod` (`admin/auth`) lief dadurch doppelt. pwk habe
+für jeden Editor. `loginMethod` (`auth`) lief dadurch doppelt. pwk habe
 ich nur statisch geprüft: Die Upload-Methoden werden intern aufgerufen,
 `cancel` ist ein `case`. Closure-Properties (`$this->sendData = function …`
 in pwk) laufen weiter wie bisher.
@@ -93,7 +93,7 @@ in pwk) laufen weiter wie bisher.
 **Testen:** `php tests/actionguard.php` (ohne DB). Per CLI-Payload lassen
 sich die Header setzen:
 `"server": {"HTTP_SEC_FETCH_SITE": "cross-site"}`. Über Apache:
-`curl -sk -X PUT -H 'Sec-Fetch-Site: cross-site' …/admin/auth/loginMethod`
+`curl -sk -X PUT -H 'Sec-Fetch-Site: cross-site' …/auth/loginMethod`
 liefert 403.
 
 **Falle:** Eine neue Action, die von außen erreichbar sein muss (ein
@@ -269,9 +269,12 @@ Umsortieren unter demselben Elternknoten geht.
      Action ist). `buildGranted()`/`actionGranted()` entfallen. Der Default,
      wo nichts steht, kommt aus einer Wurzel-Config statt aus `PanelNode`.
    - **Weg:** `STAGE === 'DEV'` in `cms::actionGranted()`.
-   - **Vorher: `auth` aus `cms` heraus nach oben.** Solange auth unter cms
-     liegt, nimmt ein abgelehntes cms den Login-Ast mit, deshalb heute die
-     Sonderregel in `cms::buildGranted()`. Verschieben erst nach dem Pull
-     von Lars' Umbau (Panels werden verschoben und umbenannt).
+   - **Vorher: `auth` aus `admin` heraus nach oben** — erledigt
+     2026-11-03: `panels/auth`, Adresse `auth/`. Ein abgelehntes `admin`
+     nimmt den Login nicht mehr mit, die Sonderregel in
+     `admin::buildGranted()` ist weg. `Map::canonicalPanelPath()` liest
+     alte Einträge `cms/auth` und `admin/auth` als `auth`. Der Kopf kommt
+     weiter von admin (`auth/head.tpl.php` bindet `admin/head.tpl.php`
+     ein), `PanelTree::getBodyClasses()` gibt auth die Klasse `cms`.
    - Offen: Passkey-Setup — eingeloggt, muss aber auth sehen (`anonymous`
      reicht nicht).

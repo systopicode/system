@@ -123,7 +123,7 @@ User *N*, und `UserLookup::byId()` legte in einem frischen Projekt die
 
 | Symptom | Ursache | Lösung |
 |---|---|---|
-| Login „We don't know this combination" mit dem ersten Konto | `UserLookup.sql` überspringt `user_id 1`; in einer leeren Tabelle bekommt das erste Konto die 1 | Setup legt vorher die Zeile 1 an. `admin/auth/root` (Link im Login auskommentiert) hat dieselbe Lücke |
+| Login „We don't know this combination" mit dem ersten Konto | `UserLookup.sql` überspringt `user_id 1`; in einer leeren Tabelle bekommt das erste Konto die 1 | Setup legt vorher die Zeile 1 an. `auth/root` (Link im Login auskommentiert) hat dieselbe Lücke |
 | `admin/pages` nach dem ersten Login: `Table 'usm_roles' doesn't exist` | der Provisioner legt nur an, was eine Abfrage mit Provisioner berührt | Setup legt alle Tabellen über `Audit` an |
 | frisches Projekt zeigt im cms nur „BACKUP" | ohne Konto läuft ein lokaler Request (oder einer mit Token) als Recovery-User (Rolle `restore`) | Konto-Schritt der Einrichtung, oder Backup einspielen |
 | frisches Projekt: Login statt Recovery | Zugriff weder lokal noch mit Token — oder (vor 2026-10-22) geteilte Session, `usm_users` leer angelegt | `admin/?setup=<token>` aus `var/setup.token` |
