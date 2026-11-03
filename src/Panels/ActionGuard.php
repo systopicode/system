@@ -21,9 +21,9 @@ use Systopic\System\Controlmap\ActionScanner;
  *    curl, a webhook) an `Origin` header has to name this host; with
  *    neither the request is no browser's and no CSRF — so the CLI agent's
  *    requests pass, unless a payload sets the headers to test the rule.
- *    The panel's `$entryActions` pass by GET from anywhere.
- * 2. **The panel grants it** — the controlmap where a config says it,
- *    else `actionGranted()` (`Controlmap\Access::action()`).
+ *    The panel's `linkable` actions (its panel.config.json) pass by GET
+ *    from anywhere.
+ * 2. **The panel grants it** — the controlmap (`Controlmap\Access::action()`).
  * 3. **A method is marked** — `method()`: a request calls a method of the
  *    panel by the action's name only when it carries `#[Action]`. A public
  *    method without it is a helper of the templates. When nothing else
@@ -87,7 +87,7 @@ final class ActionGuard
     private static function origin(PanelNode $panel, string $action): void
     {
         $method = strtoupper((string) ($_SERVER['REQUEST_METHOD'] ?? 'GET'));
-        if (in_array($method, ['GET', 'HEAD'], true) && in_array($action, $panel->entryActions, true)) {
+        if (in_array($method, ['GET', 'HEAD'], true) && Access::linkable($panel, $action)) {
             return;
         }
         $site = strtolower(trim((string) ($_SERVER['HTTP_SEC_FETCH_SITE'] ?? '')));

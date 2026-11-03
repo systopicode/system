@@ -58,10 +58,6 @@ class Panel extends CmsPanel {
 		get => (array) (\Systopic\System\Auth\Session::current()->state->fakeRoles ?? []);
 	}
 
-	function buildGranted() {
-		return TRUE;
-	}
-
 	function getDefaultState() {
 		$state = parent::getDefaultState();
 		$state->hijackerId = NULL;   // set by admin/access' hijackUser, for "Back to my account"

@@ -18,13 +18,6 @@ use Systopic\System\Tables\Users\Model as User;
 class Panel extends PanelNode {
 
 	/**
-	 * Opened from outside (ActionGuard): the link of an activation or reset
-	 * mail (the key authorises it), and the forms and legal pages a site
-	 * links to. None of them changes anything by itself.
-	 */
-	public array $entryActions = ['activate', 'reset', 'login', 'register', 'resetPassword', 'license', 'imprint', 'privacy', 'releases'];
-
-	/**
 	 * Which form `main.tpl.php` shows: login, register, resetPassword,
 	 * resetCode, activationCode, setPassword. Actions set it.
 	 */
@@ -139,23 +132,30 @@ class Panel extends PanelNode {
 		get => UserLookup::byActivationKey($this->scope, (string) (\http::posted('key') ?: \http::get('key')));
 	}
 
-	function buildGranted() {
-        // QR validity is checked before either anonymous sign-in or an authenticated pairing.
-        if ((string) \app::request()->action === 'validateQr' && \http::$method === 'PUT') return TRUE;
-        if ((string) \app::request()->action === 'continueWithoutPasskey') return TRUE;
+	/**
+	 * Everybody may open the sign-in (panel.config.json: `everyone`, and
+	 * which actions a mail or another site may link to). What happens to
+	 * whoever is signed in already is this panel's business, not access:
+	 * sent on to where they came from, or to admin/ - unless a passkey is
+	 * to be set up, or the request pairs a device (validateQr) or skips
+	 * the passkey.
+	 */
+	function onBuild() {
+		if ((\app::request()->modulePath[0] ?? '') !== 'auth') {
+			return;
+		}
+		$action = (string) \app::request()->action;
+		if (($action === 'validateQr' && \http::$method === 'PUT') || $action === 'continueWithoutPasskey') {
+			return;
+		}
 		if (\Systopic\System\Auth\Passkeys::setupPending()) {
 			$this->form = 'passkeySetup';
-			return TRUE;
+			return;
 		}
-		if ((\app::request()->modulePath[0] ?? '') === 'auth' && \Systopic\System\Auth\Session::active()) {
+		if (\Systopic\System\Auth\Session::active()) {
 			$back = \Systopic\System\Auth\Session::takeReturn();
 			\http::redirect(is_string($back) && $back !== '' ? $back : \http::$root . 'admin/');
 		}
-		return !\Systopic\System\Auth\Session::active();
-	}
-
-	function actionGranted($action = NULL) {
-		return TRUE;
 	}
 
 	function toNavi() {

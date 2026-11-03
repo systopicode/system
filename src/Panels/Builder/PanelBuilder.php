@@ -104,8 +104,11 @@ class PanelBuilder
 
             $isSelected = ($hit->name === $parent->childSelectedName);
 
-            // the controlmap where a config says it, else buildGranted()
+            // the controlmap (Controlmap\Access)
             if ($this->accessControlEnabled && !Access::build($child)) {
+                if ($isSelected) {
+                    $child->onAccessDenied();   // admin: who is not signed in goes to auth/
+                }
                 if (defined('DEBUG') && DEBUG()) {
                     $this->buildLog[] = [
                         'event'  => 'accessDenied',

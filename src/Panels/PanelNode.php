@@ -165,18 +165,6 @@ class PanelNode implements ClientExportable, RenderNode
     public ?int $naviOrder = null;
     public bool $pylonBranch = false;
 
-    /**
-     * Actions that may be opened from outside — the link of a mail, a
-     * bookmark, another site: by GET only, from any origin. Every other
-     * action runs only when the request comes from this site's own pages
-     * (`ActionGuard`). An entry action must not change anything on the
-     * strength of the session alone: what it does, the link itself has to
-     * authorise (a reset key), or it only shows something.
-     *
-     * @var list<string>
-     */
-    public array $entryActions = [];
-
     // -------------------------------------------------------------------------
     // View / render state
     // -------------------------------------------------------------------------
@@ -562,14 +550,27 @@ class PanelNode implements ClientExportable, RenderNode
     public function onAfterRenderSelected() {}
 
     // =========================================================================
-    // Access control — override to restrict
+    // Access control — said in the panel's panel.config.json (Controlmap\Access)
     // =========================================================================
 
+    /**
+     * The selected panel may not be built (the controlmap said no): what
+     * happens then — admin sends who is not signed in to auth/. Nothing by
+     * default: the request renders without the panel.
+     */
+    public function onAccessDenied(): void {}
+
+    /**
+     * Legacy: who may build the panel, decided in code. A class that still
+     * declares it decides where no config of its own says (Controlmap\Access,
+     * pwk); new panels say it in panel.config.json. Not asked as declared here.
+     */
     public function buildGranted()
     {
         return \Systopic\System\Auth\Session::known();
     }
 
+    /** Legacy, as buildGranted(): who may run an action, decided in code. */
     public function actionGranted($action = null)
     {
         return \Systopic\System\Auth\Session::known();

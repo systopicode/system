@@ -15,8 +15,9 @@ namespace Systopic\System\Controlmap;
  *   method   a public method of the panel class with `#[Action]`: app.php
  *            calls it before actions.php
  *
- * `$entry`: listed in the panel's `$entryActions` — may be opened from
- * outside, by GET (ActionGuard).
+ * `$entry`: listed in the panel's configs as `linkable` — may be opened
+ * by a link from anywhere, by GET (ActionGuard). Discover leaves it false;
+ * admin/access/panelmap marks it from the map.
  */
 final class DiscoveredAction
 {

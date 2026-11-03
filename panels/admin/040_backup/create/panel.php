@@ -16,8 +16,4 @@ use Systopic\System\Panels\Root\Admin\Backup\Panel as BackupPanel;
 class Panel extends BackupPanel
 {
 	/** Who may: panel.config.json. Not the recovery user: without a database there is nothing to back up. */
-	public function buildGranted(): bool
-	{
-		return \Systopic\System\Auth\Session::isSuperuser();
-	}
 }

@@ -25,9 +25,29 @@ class Panel extends CmsPanel {
 	public bool $buildChildPanels = true;
 	public bool $pylonBranch = true;
 
-	/** @var list<DiscoveredPanel> the top-level panels, read once per request */
+	/**
+	 * The top-level panels, read once per request — their actions marked
+	 * `entry` where the panel's configs list them as `linkable`.
+	 *
+	 * @var list<DiscoveredPanel>
+	 */
 	public array $panels {
-		get => $this->found ??= Discover::ofRequest()->panels();
+		get {
+			if ($this->found === NULL) {
+				$this->found = Discover::ofRequest()->panels();
+				foreach ($this->found as $top) {
+					foreach ($top->all() as $panel) {
+						foreach ($this->map->linkable($panel) as $name) {
+							$action = $panel->actions[$name] ?? NULL;   // the list is readonly, the action not
+							if ($action !== NULL) {
+								$action->entry = TRUE;
+							}
+						}
+					}
+				}
+			}
+			return $this->found;
+		}
 	}
 
 	/** @var list<DiscoveredPanel>|null */
@@ -114,10 +134,6 @@ class Panel extends CmsPanel {
 	/** What the root is called: the project folder. */
 	public string $rootLabel {
 		get => basename(rtrim(str_replace('\\', '/', (string) \fs::$projectRoot), '/')) ?: 'panels';
-	}
-
-	function buildGranted() {
-		return \Systopic\System\Auth\Session::isSuperuser();
 	}
 
 	function onLoad() {

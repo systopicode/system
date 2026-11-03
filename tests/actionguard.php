@@ -11,7 +11,7 @@ use Systopic\System\Panels\PanelNode;
 // The file helpers ActionScanner reads actions.php with, without the legacy lib.
 final class fs
 {
-    public static $projectRoot = null;   // no config/controlmap.json: the controlmap leaves it to the code
+    public static $projectRoot = null;   // set below: config/controlmap.json makes `open` linkable
     public static function isFile(string $path): bool { return is_file($path); }
     public static function toNative(string $path): string { return $path; }
     public static function cwd(): string { return (string) getcwd(); }
@@ -20,7 +20,6 @@ final class fs
 // A panel without the tree: only what the guard asks of it.
 final class GuardTestPanel extends PanelNode
 {
-    public array $entryActions = ['open'];
     public bool $granted = true;
 
     public function actionGranted($action = null)
@@ -34,8 +33,19 @@ final class GuardTestPanel extends PanelNode
     public function helper(): void {}
 }
 
+// The project's layer of the controlmap: `open` may be opened by a link from anywhere.
+$project = sys_get_temp_dir() . '/actionguard-' . getmypid() . '/';
+@mkdir($project . 'config', 0777, true);
+file_put_contents($project . 'config/controlmap.json', json_encode(['admin/test' => ['linkable' => ['open']]]));
+fs::$projectRoot = $project;
+register_shutdown_function(static function () use ($project): void {
+    @unlink($project . 'config/controlmap.json');
+    @rmdir($project . 'config');
+    @rmdir($project);
+});
+
 $panel = (new ReflectionClass(GuardTestPanel::class))->newInstanceWithoutConstructor();
-$panel->path = ['cms', 'test'];
+$panel->path = ['admin', 'test'];
 
 $request = static function (string $method, array $headers = []): void {
     foreach (['HTTP_SEC_FETCH_SITE', 'HTTP_ORIGIN'] as $key) {
@@ -64,9 +74,9 @@ $request('GET', ['HTTP_SEC_FETCH_SITE' => 'none']);
 check('typed or bookmarked: refused', $refused('save') === 'origin');
 $request('GET', ['HTTP_SEC_FETCH_SITE' => 'cross-site']);
 check('a link from another site: refused (admin/pages/publish?id=5)', $refused('save') === 'origin');
-check('… unless it is an entry action', $refused('open') === null);
+check('… unless it is linkable', $refused('open') === null);
 $request('PUT', ['HTTP_SEC_FETCH_SITE' => 'cross-site']);
-check('an entry action by PUT from outside: refused', $refused('open') === 'origin');
+check('a linkable action by PUT from outside: refused', $refused('open') === 'origin');
 
 $request('PUT');
 check('no browser (no header, no Origin): runs', $refused('save') === null);

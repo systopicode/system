@@ -66,11 +66,6 @@ final class Discover
                 $actions[$method] ??= new DiscoveredAction($method);
                 $actions[$method]->add('method', (string) $classFile, $line);
             }
-            foreach ($class['entry'] ?? [] as $entry) {
-                if (isset($actions[$entry])) {
-                    $actions[$entry]->entry = true;
-                }
-            }
 
             $out[] = new DiscoveredPanel(
                 path: implode('/', $logical),

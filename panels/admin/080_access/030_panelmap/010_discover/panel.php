@@ -93,7 +93,7 @@ class Panel extends CmsPanel {
 	/**
 	 * One panel as a row of the table: name and path (indented by `$indent`
 	 * levels), where it comes from, what its code asks for access, its
-	 * actions as chips — an entry action (`$entryActions`) marked. A click
+	 * actions as chips — a linkable action (`linkable` in its configs) marked. A click
 	 * on a chip opens the panel in the configs (the lightbox `config/`), its
 	 * </> the line in syscoder; what "Show all" is filtered by is marked
 	 * (`is-match`).

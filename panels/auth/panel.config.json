@@ -1,0 +1,4 @@
+{
+	"build": ["everyone"],
+	"linkable": ["activate", "reset", "login", "register", "resetPassword", "license", "imprint", "privacy", "releases"]
+}

@@ -23,10 +23,6 @@ class Panel extends PanelNode {
 		];
 	}
 
-	public function buildGranted() {
-		return \Systopic\System\Auth\Session::isSuperuser();
-	}
-
 	function onLoad() {
 		// Only while this panel is the one on screen. Unconditionally it marked
 		// a view on EVERY request - including every keystroke of an ajax input

@@ -15,8 +15,6 @@ namespace Systopic\System\Controlmap;
  *     `isSuperuser()`, `signed in` for `known()` / `active()`, `custom`
  *     for anything else
  *   - the methods app.php calls as an action: public, with `#[Action]`
- *   - `$entryActions`: the actions that may be opened from outside
- *     (ActionGuard)
  */
 final class ClassScanner
 {
@@ -24,12 +22,12 @@ final class ClassScanner
      * @return array{
      *     class: ?string, extends: ?string,
      *     grants: array{build?: array<string, int>, action?: array<string, int>},
-     *     methods: array<string, int>, entry: list<string>,
+     *     methods: array<string, int>,
      * } grants: term => line where it is asked; methods: name => line
      */
     public static function scan(string $file): array
     {
-        $result = ['class' => null, 'extends' => null, 'grants' => [], 'methods' => [], 'entry' => []];
+        $result = ['class' => null, 'extends' => null, 'grants' => [], 'methods' => []];
         if (!\fs::isFile($file)) {
             return $result;
         }
@@ -85,17 +83,6 @@ final class ClassScanner
             }
             if ($tokens->text($i) === '}') {
                 $depth--;
-                continue;
-            }
-            if ($depth === 1 && $tokens->text($i) === '$entryActions' && $tokens->text($i + 1) === '=' && $tokens->text($i + 2) === '[') {
-                $close = $tokens->after($i + 2) - 1;
-                for ($k = $i + 3; $k < $close; $k++) {
-                    $name = $tokens->literal($k);
-                    if ($name !== null) {
-                        $result['entry'][] = $name;
-                    }
-                }
-                $i = $close;
                 continue;
             }
             if ($depth !== 1 || !$tokens->at($i)?->is(T_FUNCTION)) {
