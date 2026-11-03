@@ -64,7 +64,7 @@ class Panel extends CmsPanel {
 
 	function getDefaultState() {
 		$state = parent::getDefaultState();
-		$state->hijackerId = NULL;   // set by cms/users' hijackUser, for "Back to my account"
+		$state->hijackerId = NULL;   // set by cms/access' hijackUser, for "Back to my account"
 		$state->hijackedId = NULL;
 		return $state;
 	}

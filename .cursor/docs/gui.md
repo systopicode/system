@@ -66,7 +66,7 @@ Hooks::on('afterConnect', static fn() => ...);
 ## 3. Panels
 
 A panel is a folder. Folder names map to URLs after the sort prefix is
-stripped: `080_users/010_users/` → `/cms/users/users/`.
+stripped: `080_access/010_users/` → `/cms/access/users/`.
 
 | File | Purpose |
 |---|---|
@@ -107,7 +107,7 @@ should show them.
 ```
 
 Open it with a plain link `<a class="ajax" href="edit/?user_id=3">`, close it
-with `href="../"`. Example: `system/panels/cms/080_users/010_users/edit/`.
+with `href="../"`. Example: `system/panels/cms/080_access/010_users/edit/`.
 Only a change of panel redraws a lightbox: `?x=` on the same panel does not.
 
 **Dashboard** (`/cms/`, the logo): `system/panels/cms/home.tpl.php`, shown

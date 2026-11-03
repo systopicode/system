@@ -7,7 +7,7 @@ namespace Systopic\System\Controlmap;
 /**
  * The controlmap as the configs say it: who may build a panel, run its
  * actions, use a named right — read, merged and inherited, nothing stored.
- * Nobody at runtime asks it yet; cms/controlmap shows it.
+ * Nobody at runtime asks it yet; cms/access/panelmap shows it.
  *
  * **Layers**, per panel, the later replacing the earlier key by key:
  *
@@ -69,6 +69,33 @@ final class Map
             }
         }
         [$this->project, $this->projectError] = self::read($projectFile);
+        if ($this->project !== null) {
+            $this->project = self::renamedPanelPaths($this->project);
+        }
+    }
+
+    /** Preserve project overrides written before the Access navigation rename. */
+    private static function renamedPanelPaths(array $project): array
+    {
+        $renames = [
+            'cms/users/permissions' => 'cms/access/content',
+            'cms/users' => 'cms/access',
+            'cms/controlmap' => 'cms/access/panelmap',
+        ];
+        foreach ($project as $path => $entry) {
+            foreach ($renames as $old => $new) {
+                if ($path !== $old && !str_starts_with((string) $path, $old . '/')) {
+                    continue;
+                }
+                $target = $new . substr($path, strlen($old));
+                if (!array_key_exists($target, $project)) {
+                    $project[$target] = $entry;
+                }
+                unset($project[$path]);
+                break;
+            }
+        }
+        return $project;
     }
 
     /** Add a panel the constructor did not get — Access adds the ones a request builds, one by one. */

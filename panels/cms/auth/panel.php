@@ -178,7 +178,7 @@ class Panel extends PanelNode {
 	/**
 	 * Hand a user to the session service: from here on they are logged in.
 	 * With a device, as a login in the app has one: without it the session
-	 * is in no list, and removing a device ("Meine Geräte", cms/users) never
+	 * is in no list, and removing a device ("Meine Geräte", cms/access) never
 	 * reaches it - the app shares this session.
 	 */
 	function signIn(User $user, string $method): void {

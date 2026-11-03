@@ -1,0 +1,34 @@
+/* cms/access/panelmap — the panel tree in the pylon */
+
+.cms .controlmapTree ul.controlmapNav li.plain > a{
+	opacity: 0.5;
+}
+.cms .controlmapTree ul.controlmapNav a.label .count{
+	margin-left: auto;
+	font-size: 0.75rem;
+	color: var(--cmsMuted);
+}
+
+/* what the filter above the tree matched (discover's "show all") */
+.cms .controlmapTree ul.controlmapNav .name.is-match{
+	background: var(--cmsHighlightColor);
+	border-radius: var(--cmsRadius);
+	color: var(--cmsTextColor);
+}
+
+body.cms.access:has(> main > .controlmapTree) > main > div.content > section.cms {
+    min-width: 0;
+}
+.cms .controlmapNav li { position: relative; }
+.cms .controlmapNav li > a.label { padding-inline-start: 2rem; }
+.cms .controlmapNav button.fold {
+    position: absolute;
+    z-index: 1;
+    inset: .25rem auto auto .25rem;
+    width: 1.5rem;
+    height: 1.5rem;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: var(--cmsTextColor);
+}

@@ -1,0 +1,68 @@
+<?php
+declare(strict_types=1);
+
+namespace Systopic\System\Panels\Root\Cms\Access\Users\Edit;
+
+use Systopic\Db\Scope;
+use Systopic\System\Panels\Root\Cms\Panel as CmsPanel;
+use Systopic\System\Queries\UserAdmin\UserAdmin;
+use Systopic\System\Tables\Roles\Model as Role;
+use Systopic\System\Tables\Users\Model as User;
+
+/**
+ * The lightbox editing one user (`?user_id=`) or one role (`?role_id=`).
+ *
+ * The inputs carry no id of their own; the id comes from the query string
+ * the lightbox was opened with, or from `data-role_id` on the role inputs.
+ */
+class Panel extends CmsPanel {
+
+	public bool $inNavi = false;
+
+	public UserAdmin $admin {
+		get => UserAdmin::of($this->scope);
+	}
+
+	public ?User $user {
+		get => $this->admin->user((int) (\http::get('user_id') ?: \http::dataset('user_id')));
+	}
+
+	public ?Role $role {
+		get => $this->admin->role((int) (\http::get('role_id') ?: \http::dataset('role_id')));
+	}
+
+	/** Who created the user being edited — may since have been deleted. */
+	public ?User $createdBy {
+		get => $this->admin->user($this->user?->createdBy);
+	}
+
+	/** @return list<\Systopic\System\Tables\Devices\Model> the user's devices, not revoked */
+	public array $devices {
+		get => $this->user !== NULL ? \Systopic\System\Queries\Devices\Devices::ofUser($this->scope, (int) $this->user->id, (bool) $this->user->isBlocked) : [];
+	}
+
+	/**
+	 * A code made in this request - shown once, right after the action that
+	 * made it: ['purpose' => …, 'code' => …, 'expires' => ts].
+	 */
+	public ?array $issuedCode = NULL;
+
+	/** What the last access action did (mail sent, screen paired) - shown in the lightbox. */
+	public ?string $accessNote = NULL;
+
+	function getDefaultState() {
+		return (object) [
+			'userTab' => 'general',
+			'signInLimit' => 10,
+			'signInsAll' => false,
+            'emailsAll' => false,
+			'devicesAll' => false,
+		];
+	}
+
+	/** Mail the user a fresh activation link; the key must be saved alongside. */
+	function mailActivation(User $user) {
+		$active = \Systopic\System\Auth\Session::current();
+		return $this->sendUserEmail('emailInvitation.tpl.php', 'Your invitation from ' . $active->name, $user);
+	}
+}

@@ -345,7 +345,7 @@ body > main > div.main + div.content{
 /* Settings, users, tools: the same inset window as backup, with the
    menu as its left side. The empty pylon header is the bright bar. */
 body.settings > main > div.pylon,
-body.users > main > div.pylon,
+body.access:not(:has(> main > .pylon > .pylonTreeToolbar)) > main > div.pylon,
 body.tools > main > div.pylon{
     flex: 0 0 13.5rem;
     width: 13.5rem;
@@ -363,19 +363,19 @@ body.tools > main > div.pylon{
 }
 
 body.settings > main > div.pylon:after,
-body.users > main > div.pylon:after,
+body.access:not(:has(> main > .pylon > .pylonTreeToolbar)) > main > div.pylon:after,
 body.tools > main > div.pylon:after{
     content: none;
 }
 
 body.settings > main > div.pylon > header,
-body.users > main > div.pylon > header,
+body.access:not(:has(> main > .pylon > .pylonTreeToolbar)) > main > div.pylon > header,
 body.tools > main > div.pylon > header{
     display: none;
 }
 
 body.settings > main > div.pylon nav,
-body.users > main > div.pylon nav,
+body.access:not(:has(> main > .pylon > .pylonTreeToolbar)) > main > div.pylon nav,
 body.tools > main > div.pylon nav{
     background: transparent;
     border-radius: var(--cmsRadiusLg) 0 0 0;
@@ -383,7 +383,7 @@ body.tools > main > div.pylon nav{
 }
 
 body.settings > main > div.content,
-body.users > main > div.content,
+body.access:not(:has(> main > .pylon > .pylonTreeToolbar)) > main > div.content,
 body.tools > main > div.content{
     flex: 1 1 auto;
     width: 0;
@@ -396,7 +396,7 @@ body.tools > main > div.content{
 }
 
 body.settings > main > div.content > header,
-body.users > main > div.content > header,
+body.access:not(:has(> main > .pylon > .pylonTreeToolbar)) > main > div.content > header,
 body.tools > main > div.content > header{
     border-radius: 0 var(--cmsRadiusLg) 0 0;
 }

@@ -71,7 +71,7 @@ switch ($this->action) {
 		break;
 
 	case 'ransomUser':
-		// Back from cms/users' hijackUser to the superuser who hijacked.
+		// Back from cms/access' hijackUser to the superuser who hijacked.
 		// A real form post, not an ajax click: the browser must store the
 		// new session cookie and only then follow the redirect. An ajax
 		// navigation kept the ghost session.
