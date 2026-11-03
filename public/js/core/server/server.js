@@ -79,7 +79,7 @@ sys.core.server = new function () {
         return hooks;
     };
 
-    server.sendCall = (data, xhrRootHref) => {
+    server.sendCall = (data, xhrRootHref, source) => {
         // sending calls with no dom object or event involved
         // 2d0 - does not forward url parameters
         var ondone, hooks = {
@@ -88,6 +88,7 @@ sys.core.server = new function () {
             }
         };
         var call = new sys.core.server.call(data);
+        if (source) call.event = {target: source, type: 'blur'};
         call.send(xhrRootHref).done(doneResponse => {
             if (ondone) {
                 ondone(doneResponse);
@@ -477,6 +478,12 @@ sys.core.server.call = function (data) {
             sys.core.server.pendingScroll = null;
             sys.core.server.pendingY = 0;
         }
+        const userTabChange = call.url?.action === 'userTab' || call.event?.element?.closest?.('.userTabs [data-on_click="userTab"]');
+        if (userTabChange) {
+            for (var i = liveScroll.length - 1; i >= 0; i--) {
+                if (document.querySelector(liveScroll[i].selector)?.closest('.cmslightbox.userEdit')) liveScroll.splice(i, 1);
+            }
+        }
         call.scrolled = liveScroll;
         var actionButton = call.event?.element?.closest?.('button[data-loading]');
         if (actionButton && !actionButton.disabled && !actionButton.matches('[role=tab],.cmsBoxMore,.summaryToggle')) actionButton.classList.add('loading');
@@ -511,6 +518,7 @@ sys.core.server.call = function (data) {
                         }
                     }
                     if (call.responses) {
+                        if (call.url?.pathChanged && !call.url.actionChanged) document.querySelectorAll('.cmsActionMessages').forEach(host => host.remove());
                         const previousErrors = new Map([...document.querySelectorAll('[data-system-messages] > .error')].map(el => [el, el.textContent]));
                         call.responses.sort(sys.core.server.sortCommands);
                         if (ondonefirstFunc) {
@@ -557,6 +565,16 @@ sys.core.server.call = function (data) {
                             doneFunc(call.dataPassedToCallbackFunction);
                         }
 
+                        if (userTabChange) {
+                            const dialog = document.querySelector('.cmslightbox.userEdit:not([hidden])');
+                            dialog?.querySelectorAll('main, main *').forEach(node => {
+                                if (node.scrollTop || node.scrollHeight > node.clientHeight) sys.core.server.revealScroll(node, 0);
+                            });
+                        }
+
+                        // In-place actions can rebuild descendants too (for example appearance).
+                        // They must preserve the same scroll position as other non-navigation updates.
+                        if (method === 'put' && !call.redirecting) sys.core.server.restoreScroll(call.scrolled);
                         if (method !== 'put' && !call.redirecting) {
                             // a post that rendered (a lightbox opened) is what the next diff starts from
                             if (method === 'post' && call.responses.some(response => response.command === 'updateDocument')) {

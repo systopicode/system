@@ -66,11 +66,11 @@ if ($heading === '') {
 		<button type="button" role="tab" data-on_click="userTab" data-tab="<?= $key ?>" aria-selected="<?= $key === $tab ? 'true' : 'false' ?>"><?= $label ?></button>
 	<?php } ?>
 </nav>
-<main class="userEdit">
+<main class="userEdit userTab-<?= $e($tab) ?>">
 	<?= \message::flush() ?>
 	<div class="userPane" data-user-pane="general"<?= $tab === 'general' ? '' : ' hidden' ?>>
 	<section class="cmsBox userAccount">
-		<header><div class="cmsBoxTitles"><h2>Account</h2><p class="cmsBoxLead"><?= $isScreen ? 'Name, description and the picture used for this screen.' : 'Name, email and the portrait used in the CMS.' ?></p></div></header>
+		<header><div class="cmsBoxTitles"><h2>Account</h2><p class="cmsBoxLead"><?= $isScreen ? 'Name, description and the picture used for this screen.' : 'Name, email and the portrait used in the System.' ?></p></div></header>
 		<div class="cmsBoxBody">
 			<?= \message::flush('account') ?>
 			<div class="accountPhoto">
@@ -122,16 +122,16 @@ if ($heading === '') {
 						<div class="userRow">
 							<p class="tagsHint">A screen cannot be a superuser.</p>
 							<?php if ($user->isSuperuser) { ?>
-								<button type="button" class="button" data-on_click="revokeSuperuser" data-user_id="<?= (int) $user->id ?>"><i class="cmsIcon cmsIcon-user-shield"></i>Revoke superuser</button>
+								<button type="button" class="button" data-on_click="userConfirm" data-action="revokeSuperuser" data-confirm="Revoke superuser access for this account?" data-user_id="<?= (int) $user->id ?>"><i class="cmsIcon cmsIcon-user-shield"></i>Revoke superuser</button>
 							<?php } ?>
 						</div>
 					<?php } elseif ($viewer && !$user->isBlocked) { ?>
 						<div class="userRow">
 							<p class="tagsHint"><?= $user->isSuperuser ? 'Superuser: manages every user.' : 'A normal user.' ?><?= $isMe ? ' Not to be changed on your own account.' : '' ?></p>
 							<?php if (!$isMe && $user->isSuperuser) { ?>
-								<button type="button" class="button" data-on_click="revokeSuperuser" data-user_id="<?= (int) $user->id ?>"><i class="cmsIcon cmsIcon-user-shield"></i>Revoke superuser</button>
+								<button type="button" class="button" data-on_click="userConfirm" data-action="revokeSuperuser" data-confirm="Revoke superuser access for this account?" data-user_id="<?= (int) $user->id ?>"><i class="cmsIcon cmsIcon-user-shield"></i>Revoke superuser</button>
 							<?php } elseif (!$isMe) { ?>
-								<button type="button" class="button" data-on_click="makeSuperuser" data-user_id="<?= (int) $user->id ?>"><i class="cmsIcon cmsIcon-user-shield"></i>Make superuser</button>
+								<button type="button" class="button" data-on_click="userConfirm" data-action="makeSuperuser" data-confirm="Give this account full superuser access?" data-user_id="<?= (int) $user->id ?>"><i class="cmsIcon cmsIcon-user-shield"></i>Make superuser</button>
 							<?php } ?>
 						</div>
 					<?php } ?>
@@ -181,11 +181,19 @@ if ($heading === '') {
             <div class="cmsBoxBody">
             <?php $emails = \Systopic\System\Maintenance\RetainedLogs::emailsFor((string) $user->email); ?>
             <?php if ($emails === []) { ?><p class="profileEmpty">No messages logged for this email address.</p><?php } ?>
-            <?php $emailTotal = count($emails); $emailsAll = !empty($this->state->emailsAll); foreach ($emailsAll ? $emails : array_slice($emails, 0, 3) as $mail) { ?>
-                <details class="userMailEntry">
-                    <summary><i class="cmsIcon cmsIcon-envelope"></i> <?= $e($mail['subject'] ?? '') ?> <small><?= $e($mail['timestamp'] ?? '') ?> · <?= $e($mail['status'] ?? '') ?></small></summary>
-                    <div class="userMailContent"><?= $e(trim((string) ($mail['textContent'] ?? '')) ?: strip_tags((string) ($mail['htmlContent'] ?? '')) ?: (string) ($mail['contentPreview'] ?? 'Message content not logged.')) ?></div>
-                </details>
+            <?php $emailTotal = count($emails); $emailsAll = !empty($this->state->emailsAll); foreach ($emailsAll ? $emails : array_slice($emails, 0, 3) as $mailIndex => $mail) { ?>
+                <div class="userMailEntry">
+                    <div><i class="cmsIcon cmsIcon-envelope"></i> <?= $e($mail['subject'] ?? '') ?> <small><?= $e($mail['timestamp'] ?? '') ?> · <?= $e($mail['status'] ?? '') ?></small></div>
+                    <div class="userMailContent"><button type="button" class="button transparent icononly" aria-label="Preview email" data-feedback="none" data-open-box="#userMailPreview<?= (int) $user->id ?>-<?= (int) $mailIndex ?>"><i class="cmsIcon cmsIcon-eye"></i></button></div>
+                    <div class="cms cmslightbox" id="userMailPreview<?= (int) $user->id ?>-<?= (int) $mailIndex ?>" data-size="2" data-feedback="none" hidden><section>
+                        <header><h1><?= $e($mail['subject'] ?? 'Email') ?></h1><ul class="barmenu"><li><button type="button" data-box-close aria-label="Close"><i class="cmsIcon cmsIcon-xmark"></i></button></li></ul></header>
+                        <main><?php
+                            $htmlContent = (string) ($mail['htmlContent'] ?? '');
+                            $textContent = (string) ($mail['textContent'] ?? $mail['contentPreview'] ?? '');
+                            include __DIR__ . '/../../../090_tools/logs/email/preview.tpl.php';
+                        ?></main>
+                    </section></div>
+                </div>
             <?php } ?>
             <?php if ($emailTotal > 0) { ?>
             <div class="signInTools">

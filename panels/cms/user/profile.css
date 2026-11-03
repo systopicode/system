@@ -268,7 +268,14 @@ header.cms .rightAlign form{
 }
 
 .cmslightbox.remoteLoginBox > section > main{
-    flex: 0 0 auto;
+    flex: 1 1 auto;
+    min-height: 0;
+}
+
+/* Keep the camera and its actions at their natural height inside the
+   shared, capped dialog scroll area. */
+.remoteLogin > *{
+    flex-shrink: 0;
 }
 
 .remoteLogin{
@@ -489,3 +496,14 @@ header.cms .rightAlign form{
 .profile .portraitDrop { border-radius: 50%; }
 .profile .widget > footer:has([data-action="resetState"]) { align-items:flex-end; }
 .profile .widget > footer [data-action="resetState"] { align-self:flex-end; margin-left:auto; }
+
+@media (max-width:1024px), (orientation:portrait) and (max-width:1400px){
+    /* This dialog is hosted in the profile's scrolling content. Keep its
+       actions above the viewport edge; the sheet padding supplies the inset. */
+    body.cms .cmslightbox.remoteLoginBox > section{
+        bottom: 0;
+    }
+}
+
+/* Camera retry is a separate action above the code entry. */
+.cms .remoteLogin .remoteAbort:not([hidden]){margin-bottom:1rem;}

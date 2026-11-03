@@ -370,6 +370,23 @@ body.tools > main > div.content > header{
     border-radius: 0 var(--cmsRadiusLg) 0 0;
 }
 
+/* Without a pylon the content owns the shoulder beside the main navigation.
+   An empty controls header leaves the content row as the top painted surface.
+   Propagate radii instead of clipping the window (which would cut popovers). */
+body.cms:not(.pages) > main:not(:has(> div.pylon:not(:empty))) > div.content,
+body.cms:not(.pages) > main:not(:has(> div.pylon:not(:empty))) > div.content > header {
+    border-top-left-radius: var(--cmsMobileRadius, var(--cmsRadiusLg));
+}
+body.cms:not(.pages) > main > div.content:not(:has(> header :is(a, button, input, select, textarea, nav, ul, form, label))) > .flexRow {
+    border-top-left-radius: inherit;
+    border-top-right-radius: inherit;
+}
+body.cms:not(.pages) > main > div.content > .flexRow > .flexColumn,
+body.cms:not(.pages) > main > div.content > .flexRow > .flexColumn > section.cms:first-child {
+    border-top-left-radius: inherit;
+    border-top-right-radius: inherit;
+}
+
 .flexRow{
     display: flex;
     flex-direction: row;

@@ -44,6 +44,19 @@ function sweepBrokenThumbs() {
 document.addEventListener('DOMContentLoaded', sweepBrokenThumbs);
 document.addEventListener('cms:rendered', sweepBrokenThumbs);
 
+// Transient information dialogs keep their content when dismissed. Reuse it
+// on repeat activation instead of navigating to the already-rendered route.
+document.addEventListener('click', function (event) {
+    const link = event.target.closest?.('a[href]');
+    if (!link) return;
+    const path = new URL(link.href, location.href).pathname;
+    const kind = path.endsWith('/defaultMeta/') ? 'metaDefaults' : path.endsWith('/relationsHelp/') ? 'relationsHelp' : '';
+    const box = kind && document.querySelector('.cmslightbox[data-transient-info].' + kind);
+    if (!box?.hidden) return;
+    event.preventDefault(); event.stopImmediatePropagation();
+    box.hidden = false;
+}, true);
+
 /****************************** KEEPRESS FUNCTIONSs ***************************/
 document.addEventListener('click', function (event) {
 	var open = event.target.closest ? event.target.closest('[data-open-box]') : null;
@@ -55,6 +68,7 @@ document.addEventListener('click', function (event) {
 			// stays on the QR. The click is the gesture the prompt needs.
 			var phone = window.matchMedia('(max-width: 720px), (hover: none) and (pointer: coarse)').matches;
 			if (phone && box.classList.contains('remoteLoginBox') && window.QrScan) {
+				box.classList.add('cmsOpening');
 				var scanHost = box.querySelector('[data-qr-host="profile"]');
 				if (scanHost) window.QrScan.start(scanHost);
 			}
@@ -137,7 +151,7 @@ $(document).keydown(function (event) {
 document.addEventListener('keydown', function (event) {
     if (event.key !== 'Escape' || event.defaultPrevented) return;
     var boxes = Array.from(document.querySelectorAll('.cmslightbox[data-transient-info]')).filter(box => box.getClientRects().length);
-    var close = boxes.at(-1)?.querySelector('header a[data-history="false"]');
+    var close = boxes.at(-1)?.querySelector('header [data-box-close],header a[data-history="false"]');
     if (!close) return;
     event.preventDefault();
     close.click();
@@ -149,18 +163,19 @@ function renameUserAdminTitle(button) {
     if (heading.isContentEditable) { heading.blur(); return; }
     var previous = heading.textContent;
     var cancelled = false;
+    heading.dataset.pencilField = '';
     heading.setAttribute('contenteditable', 'plaintext-only');
     var finish = function () {
         heading.removeEventListener('blur', finish);
         heading.removeEventListener('keydown', keydown);
         heading.removeAttribute('contenteditable');
         var value = heading.textContent.replace(/\s+/g, ' ').trim();
-        if (cancelled || !value) { heading.textContent = previous; return; }
+        if (cancelled || !value || value === previous) { window.cmsFeedback?.cancel(heading); heading.textContent = previous; return; }
         heading.textContent = value;
         if (value !== previous) {
             var values = {};
             values[button.dataset.renameField || 'value'] = value;
-            sys.core.server.sendCall({values: values}, button.dataset.renameUrl);
+            sys.core.server.sendCall({values: values}, button.dataset.renameUrl, heading);
         }
     };
     var keydown = function (event) {
@@ -207,10 +222,11 @@ function renameUserAdminTitle(button) {
             if (!next.failed && api.canLeave(next.scope)) next.run();
         }, 0);
     }
-    const editable = 'input:not([type="search"]):not([type="file"]):not([type="hidden"]),textarea,select,[contenteditable="true"],[contenteditable="plaintext-only"]';
-    const fieldValue = el => el.isContentEditable ? el.innerHTML : /^(checkbox|radio)$/.test(el.type) ? el.checked : el.value;
-    const eligible = el => el?.matches?.(editable) && !el.closest('[data-feedback=none],[data-feedback=parameters]') && !el.closest('.authCard') && (el.closest('form:not([method="get"]),.ajax,[data-on_input],[data-on_change],[data-on_blur],[data-on_focusout]'));
+    const editable = 'input:not([type="search"]):not([type="file"]):not([type="hidden"]),textarea,select,[contenteditable="true"],[contenteditable="plaintext-only"],[data-pencil-field]';
+    const fieldValue = el => (el.isContentEditable || el.hasAttribute('data-pencil-field')) ? el.innerHTML : /^(checkbox|radio)$/.test(el.type) ? el.checked : el.value;
+    const eligible = el => el?.matches?.(editable) && !el.closest('[data-feedback=none],[data-feedback=parameters]') && !el.closest('.authCard') && (el.hasAttribute('data-pencil-field') || el.closest('form:not([method="get"]),.ajax,[data-on_input],[data-on_change],[data-on_blur],[data-on_focusout]'));
     const feedbackFields = new Map();
+    const fieldOwners = new WeakMap();
     let feedbackSequence = 0;
     const mobileFeedback = matchMedia('(max-width: 1024px), (orientation: portrait) and (max-width: 1400px)');
     const line = () => {
@@ -226,11 +242,18 @@ function renameUserAdminTitle(button) {
     };
     function currentField(el) {
         if (el.isConnected) return el;
-        const attrs = ['name','type','data-focus-id','data-on_blur','data-on_change','data-on_input','data-key','data-setting-key','data-field','data-group','data-file','data-id','data-index','data-setting_node_id','data-on_click','data-action','data-user_id','href'];
+        const attrs = ['id','name','type','data-focus-id','data-on_blur','data-on_change','data-on_input','data-key','data-setting-key','data-field','data-group','data-file','data-id','data-index','data-setting_node_id','data-on_click','data-action','data-user_id','href'];
         const selector = el.tagName.toLowerCase() + attrs.filter(key => el.hasAttribute(key)).map(key => '[' + key + '="' + CSS.escape(el.getAttribute(key)) + '"]').join('');
         const scope = el.closest('.cmslightbox') ? [...document.querySelectorAll('.cmslightbox')].filter(box => !box.hidden).at(-1) : document;
-        const candidates = scope ? [...scope.querySelectorAll(selector)] : [];
-        return candidates.length === 1 ? candidates[0] : el;
+        let candidates = scope ? [...scope.querySelectorAll(selector)] : [];
+        const owner = fieldOwners.get(el);
+        if (owner) {
+            const parent = scope?.querySelector(owner);
+            if (parent) candidates = [...parent.querySelectorAll(selector)];
+        }
+        if (candidates.length !== 1) return el;
+        if (el.hasAttribute('data-pencil-field')) candidates[0].dataset.pencilField = '';
+        return candidates[0];
     }
     function markField(el, next) {
         const feedback=line();
@@ -296,9 +319,14 @@ function renameUserAdminTitle(button) {
             const source = call.event?.target || call.event?.element;
             const form = source?.closest?.('form');
             const fields = source ? scopeFields(call.event?.type === 'submit' ? (form || source) : source) : [];
+            fields.forEach(el => {
+                const parent = el.parentElement?.closest('[data-group_id],[data-setting_node_id],[data-user_id],[id]');
+                const key = parent && ['id','data-group_id','data-setting_node_id','data-user_id'].find(key => parent.hasAttribute(key));
+                if (key) fieldOwners.set(el, '[' + key + '="' + CSS.escape(parent.getAttribute(key)) + '"]');
+            });
             const token = {fields: fields.map(el => [el, dirty.get(el)]), write: method !== 'get', source, ok: false, url: location.href};
             // Programmatic background reads/writes and search do not claim to save edits.
-            token.visible = token.write && !!source && source.type !== 'search' && !source.closest?.('[data-feedback=none]') && !(source.closest?.('[data-feedback=parameters]') && call.event?.type !== 'submit' && !source.closest?.('[data-action],[data-action-feedback],button[type=submit],.button.submit')) && !source.closest?.('.userTabs,.dashTabs,.sidebarTabs,[role=tablist],[role=tab]');
+            token.visible = token.write && !!source && !!(fields.length || source.closest?.('[data-action-feedback],[data-action],button[type=submit],.button.submit')) && source.type !== 'search' && !source.closest?.('[data-feedback=none]') && !(source.closest?.('[data-feedback=parameters]') && call.event?.type !== 'submit' && !source.closest?.('[data-action],[data-action-feedback],button[type=submit],.button.submit')) && !source.closest?.('.userTabs,.dashTabs,.sidebarTabs,[role=tablist],[role=tab]');
             pending.add(token);
             token.fields.forEach(([field]) => { retryFields.delete(field); markField(field, 'saving'); });
             if (token.visible) {
@@ -308,9 +336,7 @@ function renameUserAdminTitle(button) {
                 if (token.actionButton) markField(token.actionButton, 'saving');
                 status('saving', token.fields.length ? 'Saving…' : 'Working…');
             }
-            else if (method === 'get') {
-                token.slow = setTimeout(() => status('loading', 'Loading…'), 600);
-            }
+
             return token;
         },
         finish(token, ok) {
@@ -376,7 +402,13 @@ function renameUserAdminTitle(button) {
             }
             if (!ok && token.visible && navigation) navigation.failed = true;
             if (!ok && token.visible) status('error', token.fields.length ? 'Not saved. Check the field or try again.' : 'Action failed. See the message for details.');
-            else if (!ok) status('error', navigator.onLine ? 'Could not load. Please try again.' : 'Offline. Check your connection.');
+            else if (!ok) {
+                status('error', navigator.onLine ? 'Could not load. Please try again.' : 'Offline. Check your connection.');
+                timer = setTimeout(() => {
+                    if (dirty.size) status('changed', 'Unsaved changes');
+                    else status('', '');
+                }, 6000);
+            }
             else if (![...pending].some(t => t.visible)) {
                 if (dirty.size) { statusBox = [...dirty.keys()].at(-1)?.closest('.cmslightbox') || null; status('changed', 'Unsaved changes'); }
                 else if (state !== 'error' || token.visible) {
@@ -409,7 +441,7 @@ function renameUserAdminTitle(button) {
         cancel(el) {
             if (originals.has(el)) {
                 const before = originals.get(el);
-                if (el.isContentEditable) el.innerHTML = before;
+                if (el.isContentEditable || el.hasAttribute('data-pencil-field')) el.innerHTML = before;
                 else if (/^(checkbox|radio)$/.test(el.type)) el.checked = before;
                 else el.value = before;
             }
@@ -515,7 +547,10 @@ function renameUserAdminTitle(button) {
             opened.set(box, previous);
             const title = box.querySelector('header h1,header h2');
             if (title && !box.hasAttribute('aria-label') && !box.hasAttribute('aria-labelledby')) box.setAttribute('aria-label', title.textContent.trim());
-            if (!box.contains(document.activeElement)) (box.querySelector('[autofocus]') || controls(box)[0] || box).focus({preventScroll:true});
+            if (!box.contains(document.activeElement)) {
+                box.tabIndex = -1;
+                (box.querySelector('[autofocus]') || box).focus({preventScroll:true});
+            }
             const query = box.matches('.cmsFind') && box.querySelector('input[name=query]');
             if (query) query.setSelectionRange(query.value.length, query.value.length);
         });
@@ -722,7 +757,8 @@ document.addEventListener('click',event=>{
         document.querySelectorAll('.authFooter nav,.cmsStatusbar nav').forEach(el=>set(el,'aria-label','Help and legal information'));
         const heading=[...(content?.querySelectorAll('h1')||[])].find(el=>!el.closest('article.cmsContent,.cmslightbox'));
         const label=content?.querySelector('.dashboard') ? 'Dashboard' : content?.querySelector('.profile') ? 'Account' : heading?.textContent.trim() || document.querySelector('.main nav li.active > a')?.textContent.trim() || 'Dashboard';
-        const title=label+' · '+titleBase;
+        const stage=titleBase.match(/^[🔨🧪]/u)?.[0] || '';
+        const title=stage+ (stage ? ' ' : '') +label+' · '+titleBase.replace(/^[🔨🧪]\s*/u,'');
         if(document.title!==title)document.title=title;
         document.querySelectorAll('.appearanceChoices [role="radio"]').forEach(el=>{el.tabIndex=el.getAttribute('aria-checked')==='true'?0:-1;});
         document.querySelectorAll('.treeMenu').forEach(el=>{

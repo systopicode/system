@@ -655,9 +655,11 @@ body.cms .cmslightbox .cmsBox > header{
 .cms .logFilters small { flex-basis:100%; color:var(--cmsMuted); }
 
 
-.cms .themeContrast { margin-top:1rem; padding-top:1rem; border-top:1px solid var(--cmsLine); }
-.cms .themeContrast > summary { display:flex; justify-content:space-between; cursor:pointer; font-weight:600; }
-.cms .themeContrast > .tagsHint { margin-block:1rem; }
+.cms .themeContrast { background:var(--cmsCanvas); margin:0; padding:0; border:0; border-top:1px solid var(--cmsLine); border-radius:0; box-shadow:none; }
+.cms .themeContrast > summary { display:flex; align-items:center; justify-content:space-between; cursor:pointer; font-weight:600; padding:0 var(--cmsCardPadding); min-height:3rem; }
+.cms .themeContrast > summary h3 { margin:0; font-size:1rem; }
+.cms .themeContrast > main { padding:var(--cmsCardPadding); }
+.cms .themeContrast > main > .tagsHint { margin-bottom:1rem; }
 
 .cms .mediaCheckInfo { margin-top:1rem; border-top:1px solid var(--cmsLine); padding-top:.8rem; }
 .cms .mediaCheckInfo > summary { display:flex; justify-content:space-between; align-items:center; cursor:pointer; font-weight:600; }
@@ -741,3 +743,24 @@ details[open] > summary > .summaryToggle i { transform:rotate(180deg); }
 /* Shared password guidance, including activation/reset forms. */
 .passwordRule { display: flex; align-items: center; gap: .5rem; margin-block: .35rem; }
 .passwordRule .cmsIcon { flex-shrink: 0; }
+
+/* Log parameters share one compact disclosure in the existing widget header. */
+.cms .logFilterMenu { position:relative; margin:0; padding:0; }
+.cms .logFilterMenu > .splitApplyMenu { list-style:none; margin:0; }
+.cms .logFilterMenu > .splitApplyMenu::-webkit-details-marker { display:none; }
+.cms .logFilters.splitApplyList { position:fixed; z-index:90000; width:min(36rem,calc(100vw - 2rem)); background:var(--cmsCanvas); border:1px solid var(--cmsLine); border-radius:var(--cmsRadius); box-shadow:var(--cmsShadow); padding:var(--cmsCardPadding); }
+
+/* Footer disclosures retain the parent card surface; the comparison stays a table. */
+.cms .widget .themeContrast { background:var(--cmsCanvas); }
+.cms .themeContrast .tableScroll { border-radius:var(--cmsRadius); overflow:hidden; }
+.cms .logFilterFooter { display:flex; align-items:center; justify-content:space-between; gap:.75rem; width:100%; }
+.cms .logFilterFooter small { flex-basis:auto; }
+.cms .logFilterFooter .button { margin:0; }
+@media (max-width:767px) {
+ .cms .logFilters.splitApplyList { width:min(30rem,calc(100vw - 3rem)); padding:1rem; }
+ .cms .logFilters.splitApplyList > .field { flex:1 1 calc(50% - .75rem); min-width:0; }
+}
+/* A contrast pair is readable together, including on a phone. */
+.cms .themeContrast .tableScroll > table { width:100%; min-width:0; table-layout:fixed; }
+.cms .themeContrast .tableScroll > table td { white-space:normal; overflow-wrap:anywhere; }
+.cms .themeContrast .tableScroll > table td:first-child { width:44%; }

@@ -496,6 +496,7 @@ function runImageEditor(params) {
         document.addEventListener('keydown',keys,true);
         document.addEventListener('pointermove',move,true);document.addEventListener('pointerup',up,true);document.addEventListener('pointercancel',cancelPointer,true);
         window.addEventListener('popstate',close,true);window.addEventListener('beforeunload',guard);window.addEventListener('resize',resize);
+        if(params.startCropping && unified)toggleCropping?.();
         render();fit(true);
         if(params.inline){sourceObserver=new ResizeObserver(followPage);sourceObserver.observe(params.domObj[0]);followPage();document.addEventListener('scroll',followPage,true);document.addEventListener('cms:rendered',checkPage);}
     });

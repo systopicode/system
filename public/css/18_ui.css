@@ -50,6 +50,8 @@
 	--cmsBar: 44px;
 	--cmsShadow: 0 1px 3px rgb(16 24 40 / .055);
 	--cmsShadowLg: 0 16px 40px rgb(16 24 40 / .22);
+	--cmsEdgeShadow: color-mix(in srgb, var(--cmsTextColor) 12%, transparent);
+	--cmsTabShadow: var(--cmsCanvas);
 }
 
 .flexRow,
@@ -394,21 +396,21 @@ footer.cmsStatusbar .cmsSaveState:is([data-state="changed"],[data-state="saving"
 
 body:has(footer.cmsStatusbar .cmsJobs.on) > .cmsSaveState.is-mobile { bottom: calc(max(.75rem, env(safe-area-inset-bottom)) + 28px); }
 
-.cms :is(input,textarea,select,[contenteditable])[data-save-state] {
+.cms :is(input,textarea,select,[contenteditable],[data-pencil-field])[data-save-state] {
     outline: none;
     border-color: var(--cmsFieldFeedback);
     box-shadow: 0 0 0 1.5px var(--cmsFieldFeedback);
 }
 
 /* Pencil edits reuse their existing outline instead of adding a second contour. */
-.cms :is([contenteditable="plaintext-only"],[data-on_blur="updateLabel"])[data-save-state]:not(:disabled) {
+.cms :is([contenteditable="plaintext-only"],[data-on_blur="updateLabel"],[data-pencil-field])[data-save-state]:not(:disabled) {
     outline: 1px dashed var(--cmsFieldFeedback);
     outline-offset: 3px;
     border-radius: 2px;
     border-color: transparent;
     box-shadow: none;
 }
-.cms :is([contenteditable="plaintext-only"],[data-on_blur="updateLabel"]):is([data-save-state="saved"],[data-save-state="error"]):not(:disabled) {
+.cms :is([contenteditable="plaintext-only"],[data-on_blur="updateLabel"],[data-pencil-field]):is([data-save-state="saved"],[data-save-state="error"]):not(:disabled) {
     outline-style: solid;
 }
 

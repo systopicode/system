@@ -360,20 +360,27 @@ body.dragging .dashWidgets .dashWidget > div.sort.v{
 }
 
 /* to do: one line per task, count first; a line opens to its pages */
-.dashTasks summary{
+.dashTasks summary.button{
 	display: flex;
 	align-items: center;
 	gap: 0.75rem;
 	padding: 0.6rem 1.25rem;
 	cursor: pointer;
 	list-style: none;
+	width: 100%;
+	text-align: start;
+	font: inherit;
+	border-radius: 0;
+	justify-content: flex-start;
+	white-space: normal;
 }
 
 .dashTasks summary::-webkit-details-marker{
 	display: none;
 }
 
-.dashTasks summary:hover{
+.dashTasks summary:is(:hover, :focus-visible),
+.dashTasks details[open] > summary{
 	background: var(--cmsPanelAlt);
 }
 
@@ -727,8 +734,8 @@ body.cms .dashboard .dashTabs button:where(:not([data-cms-action])):hover{
 	flex-wrap: wrap;
 	justify-content: space-between;
 	gap: 0.5rem 1rem;
-	margin-top: auto;
-	padding-top: 2rem;
+	margin-top: 2rem;
+	padding-top: var(--cmsCardPadding);
 	border-top: 1px solid var(--cmsLine);
 	color: var(--cmsSubText);
 	font-size: 0.75rem;
@@ -814,4 +821,10 @@ body.cms .dashboard .dashTabs button:where(:not([data-cms-action])):hover{
     animation:none;
     outline:2px solid var(--cmsHighlightColor);
     box-shadow:none;
+}
+
+/* Desktop keeps the actions inline; only the mobile presentation is a menu. */
+@media (min-width:1025px) and (orientation:landscape), (min-width:1401px) {
+ body.cms .dashHead .splitApply { display:contents; }
+ body.cms .dashHead .dashHeadMenu { display:contents !important; }
 }

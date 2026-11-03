@@ -53,7 +53,7 @@
 			};
 			sys.core.server.sendCall({
 				name: edit.doc.tagname.textContent
-			}, 'rename?id=' + edit.tagdata.id).done(response => {
+			}, 'rename?id=' + edit.tagdata.id, edit.doc.tagname).done(response => {
 				if (ondone) {
 					ondone(response);
 				}
@@ -74,6 +74,7 @@
 			}
 			h1.removeAttribute('contenteditable');
 			if (!save) {
+				window.cmsFeedback?.cancel(h1);
 				h1.textContent = edit.oldName;
 				return;
 			}
@@ -93,6 +94,7 @@
 				return;
 			}
 			edit.oldName = h1.textContent;
+			h1.dataset.pencilField = '';
 			h1.setAttribute('contenteditable', 'plaintext-only');
 			var stop = (e) => {
 				if (e.type === 'keydown') {

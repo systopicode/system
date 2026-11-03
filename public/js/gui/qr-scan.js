@@ -443,6 +443,9 @@
 			}
 			return;
 		}
+		if (event.target.closest?.('[data-qr-start], [data-remote-offer], [data-remote-code], [data-qr-close]')) {
+			event.target.closest('.cmslightbox')?.querySelector('[data-remote-feedback]')?.replaceChildren();
+		}
 		var openScan = event.target.closest && event.target.closest('[data-qr-start]');
 		if (openScan) {
 			var scope = openScan.closest('.authBody, .remoteLogin') || openScan.parentElement;

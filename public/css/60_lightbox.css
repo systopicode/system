@@ -103,15 +103,6 @@ body.cms .cmslightbox > section > header{
     border-bottom: 0;
 }
 
-@media (min-width: 1025px) and (orientation: landscape), (min-width: 1401px){
-    body.cms .cmslightbox > section > header{
-        border-bottom: 1px solid var(--cmsLineStrong);
-    }
-    /* Tabs already draw the line. A second one under the title would sit above them. */
-    body.cms .cmslightbox > section > header:has(+ .userTabs){
-        border-bottom: 0;
-    }
-}
 
 body.cms .cmslightbox > section > header h1{
     margin: 0;
@@ -1014,7 +1005,7 @@ div.imageEditor .editorAspect > button{
 
 .cmslightbox.fileEditor .fileFrame.imageCropAlignContainer { border:1px dashed color-mix(in srgb, var(--cmsMainColor) 34%, var(--cmsLine)); border-radius:var(--cmsRadius); }
 
-.cmslightbox [data-preview-loading] { position:absolute; top:calc(50% - 1.25rem);left:calc(50% - 1.25rem);font-size:2.5rem;pointer-events:none;color:var(--cmsHighlightColor); }
+.cmslightbox [data-preview-loading] { width:2.5rem;height:2.5rem;transform-origin:50% 50%;position:absolute; top:calc(50% - 1.25rem);left:calc(50% - 1.25rem);font-size:2.5rem;pointer-events:none;color:var(--cmsHighlightColor); }
 .cmslightbox [data-preview-loading][hidden] { display:none !important; }
 
 /* Focus follows the existing close control instead of an offset square. */
@@ -1032,7 +1023,7 @@ div.imageEditor .editorAspect > button{
 .cmslightbox .frameView[hidden] { display:none; }
 
 /* Each dialog owns its context status; the page footer remains on the page. */
-.cmslightbox footer.cmsDialogStatus { display:flex; position:static; width:auto; margin:0; min-height:2rem; height:auto; flex:0 0 auto; padding:.25rem calc(var(--cmsCardPadding) + .5rem); border:0; border-top:1px solid var(--cmsLineStrong); border-radius:0; background:var(--cmsCanvas); }
+.cmslightbox footer.cmsDialogStatus { display:flex; position:absolute; inset:auto 0 0; pointer-events:none; width:auto; margin:0; min-height:2rem; height:auto; flex:0 0 auto; padding:.25rem calc(var(--cmsCardPadding) + .5rem); border:0; border-top:1px solid var(--cmsLineStrong); border-radius:0; background:var(--cmsCanvas); }
 .cmslightbox footer.cmsDialogStatus:has(.cmsSaveState[hidden]) { display:none; }
 body.cms-dialog-open > footer.cmsStatusbar { visibility:hidden; }
 
@@ -1096,3 +1087,35 @@ body .cmslightbox.upload main.uploadStage > .uploadNotice > .info { margin:0; }
     body .cmslightbox.upload main.uploadStage:has(> .uploadNotice){display:flex;}
     body .cmslightbox.upload main.uploadStage > .uploadNotice{flex:0 0 auto;margin:0;}
 }
+
+/* Status belongs to the dialog, without changing its content height. */
+.cmslightbox > section:has(> .cmsDialogStatus) { position:relative; }
+.cmslightbox > section:has(> footer:not(.cmsDialogStatus)) > .cmsDialogStatus { right:auto; max-width:55%; border-top:0; background:transparent; }
+
+.cms .mailPreview{
+	display: block;
+	width: 100%;
+	height: min(36rem, 62vh);
+	overflow: auto;
+	border: 1px solid var(--cmsLine);
+	border-radius: var(--cmsRadius);
+	background: #fff;
+	color: #161c1f;
+}
+
+.cms pre.mailPreview{
+	margin: 0;
+	padding: 1rem;
+	white-space: pre-wrap;
+}
+
+/* Dialog actions share the content surface and retain a clear boundary. */
+.cmslightbox > section > footer:not(.cmsDialogStatus){background:inherit;border-top:1px solid var(--cmsLineStrong);}
+.cms .mailPreview{border-color:var(--cmsLineStrong);}
+
+.cms .mailLog dl{border-top:0;}
+.cms .mailLog dl > div:last-child{border-bottom:0;}
+
+/* Dialogs in ordinary content must also clear the mobile shell header. */
+body.cms:has(> .cmsMobileHeader) > main > div.content:has(.cmslightbox:not([hidden])) { z-index: 12000; clip-path: none; }
+body.cms:not(:has(> main > .content[data-cms-sheet="1"])):has(.cmslightbox:not([hidden]) > :is(.is-expanding, .is-expanded)) > .cmsMobileHeader { z-index: 0; pointer-events: none; }

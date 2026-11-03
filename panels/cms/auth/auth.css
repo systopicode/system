@@ -737,7 +737,7 @@ body.appBody:has(.authCard) .authCard main > p.authFoot {
 	flex: 0 0 auto;
 	width: auto;
 	margin: 0 calc(var(--authPadX) * -1) calc(var(--authPadB) * -1);
-	padding: 0.55rem var(--authPadX);
+	padding: 0.55rem calc(var(--authPadX) / 1.5);
 	border-top: 1px solid var(--cmsLine);
 	background: var(--cmsCanvas);
 	text-align: center;

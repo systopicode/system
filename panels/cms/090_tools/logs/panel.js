@@ -7,7 +7,7 @@ if (window.sys?.lib?.add) {
     if (window.cmsLogFiltersInstalled) return;
     window.cmsLogFiltersInstalled = true;
     function filter(card) {
-        const controls = card.querySelector('.logFilters');
+        const controls = card.querySelector('.logFilters') || card.querySelector('.logFilterMenu')?.splitList;
         if (!controls) return;
         const query = (card.querySelector('.listSearch')?.value || '').toLowerCase().trim();
         const user = controls.querySelector('[data-log-user]');
@@ -26,10 +26,10 @@ if (window.sys?.lib?.add) {
         }
         controls.querySelector('[data-log-count]').textContent = rows.filter(row=>!row.hidden).length + ' / ' + rows.length + ' entries';
     }
-    function update() {document.querySelectorAll('.logList').forEach(filter);}
-    document.addEventListener('input',e=>{const card=e.target.closest('.logList');if(card)filter(card);});
-    document.addEventListener('change',e=>{const card=e.target.closest('.logList');if(card)filter(card);});
-    document.addEventListener('click',e=>{const reset=e.target.closest('[data-log-reset]');if(!reset)return;const card=reset.closest('.logList');card.querySelectorAll('.logFilters input,.logFilters select,.listSearch').forEach(el=>el.value='');filter(card);});
+    function update() {document.querySelectorAll('.logList').forEach(card=>{const menu=card.querySelector('.logFilterMenu');const header=card.querySelector(':scope > header');if(menu&&header&&menu.parentElement!==header)header.append(menu);const controls=menu&&(menu.querySelector('.logFilters')||menu.splitList);if(controls)controls.logOwner=card;filter(card);});}
+    document.addEventListener('input',e=>{const card=e.target.closest('.logList') || e.target.closest('.logFilters')?.logOwner;if(card)filter(card);});
+    document.addEventListener('change',e=>{const card=e.target.closest('.logList') || e.target.closest('.logFilters')?.logOwner;if(card)filter(card);});
+    document.addEventListener('click',e=>{const reset=e.target.closest('[data-log-reset]');if(!reset)return;const controls=reset.closest('.logFilters');const card=controls?.logOwner||reset.closest('.logList');if(!card)return;controls.querySelectorAll('input,select').forEach(el=>el.value='');const search=card.querySelector('.listSearch');if(search)search.value='';filter(card);},true);
     document.addEventListener('cms:rendered',update);
     update();
 })();

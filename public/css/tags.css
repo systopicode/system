@@ -211,29 +211,34 @@ body.tagDragging:has(.layout.tags .tag.dropTarget) .draghelper{
 }
 
 .cms .layout.tags{
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 1rem;
-    align-items: start;
+    display: block;
+    columns: 1;
+    column-gap: 1rem;
+    font-size: 0;
+    line-height: 0;
 }
 
 @container cms-module (min-width: 44rem){
     .cms .layout.tags{
-        grid-template-columns: repeat(2, minmax(0, 1fr));
+        columns: 2;
     }
 }
 
 @container cms-module (min-width: 72rem){
     .cms .layout.tags{
-        grid-template-columns: repeat(3, minmax(0, 1fr));
+        columns: 3;
     }
 }
 
 .cms .layout.tags > .widget{
     width: 100%;
     max-width: 100%;
-    justify-self: stretch;
-    margin: 0;
+    break-inside: avoid;
+    display: inline-block;
+    vertical-align: top;
+    font-size: 1rem;
+    line-height: normal;
+    margin: 0 0 1rem;
 }
 
 .cms .layout.tags .widget > header h1{
@@ -618,9 +623,4 @@ body.tagDragging .cms .layout.tags .tag.dragged > .tagActions{
         left: 50%; top: 0; transform: translate(-50%, -50%);
         border-radius: 50%; background: var(--cmsHighlightColor);
     }
-}
-
-/* Tablet layouts keep groups in reading order in a single column. */
-@media (max-width: 1400px) {
-    .cms .layout.tags { grid-template-columns: minmax(0, 1fr); }
 }

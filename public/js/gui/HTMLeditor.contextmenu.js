@@ -217,17 +217,20 @@ function initContenteditableContextMenus() {
 			closeAllMenus();
 		}
 	});
-	// the bar stays where it was opened: scrolling the page ends it
+	// Caret focus and layout updates can emit scroll immediately after opening.
+	// Follow the anchor instead of dismissing the tools (including touch drag).
 	document.addEventListener('scroll', function (e) {
 		var bar = openBar();
-        // Keyboard focus/caret movement may scroll the editor after opening the bar.
-        // Keep keyboard actions reachable and follow their field instead of removing focus.
-		if (bar && bar.contains(document.activeElement) && (bar.dataset.keyboard === 'true' || document.activeElement.matches('input,textarea'))) {
-            const anchor=bar.cmsMenuOpener;
-            if(anchor?.isConnected)placeEditorMenu(bar,anchor.getBoundingClientRect(),anchor);
-            return;
-        }
-		bar && !bar.contains(e.target) && closeAllMenus();
+		if (!bar || bar.contains(e.target)) return;
+		var anchor = bar.anchorTarget;
+		if (!anchor?.isConnected) return closeAllMenus();
+		var next = anchor.getBoundingClientRect(), previous = bar.anchorTargetRect;
+		var rect = bar.anchorRect;
+		if (previous && rect) {
+			var dx = next.left - previous.left, dy = next.top - previous.top;
+			rect = {left: rect.left + dx, right: rect.right + dx, top: rect.top + dy, bottom: rect.bottom + dy};
+		}
+		placeEditorMenu(bar, rect, anchor);
 	}, true);
 
 	var openFixed = function (el, rect) {
@@ -365,6 +368,7 @@ var placeEditorMenu = function (menu, rect, target) {
 	target = target || menu.anchorTarget;
 	menu.anchorRect = rect;
 	menu.anchorTarget = target;
+	menu.anchorTargetRect = target?.getBoundingClientRect();
 	var gap = 10, edge = 8;
 	var width = menu.offsetWidth, height = menu.offsetHeight;
 	var area = visibleArea(target);
@@ -434,6 +438,9 @@ var contextMenuWW = function (params, event) {
 				e.preventDefault();
 				e.stopPropagation();
 				var media = target && target.closest && target.closest('img, video, iframe');
+				// Keep touch events on the live editor before removing the pressed menu.
+                var owner = media?.closest('.editor');
+                if (owner && e.originalEvent?.pointerId !== undefined) owner.setPointerCapture(e.originalEvent.pointerId);
 				closeAllMenus();
 				if (media && window.editorBeginMediaMove) {
 					editorBeginMediaMove(media, e.originalEvent || e);

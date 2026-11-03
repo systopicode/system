@@ -165,8 +165,8 @@ body.cms > .cmsMobileHeader > .cmsMobileMenuClose, body.cms > .cmsMobileHeader >
 		top: 0;
 		left: 0;
 		right: 0;
-		height: var(--cmsRadiusLg);
-		background: var(--cmsFrame);
+		height: var(--cmsMobileRadius, var(--cmsRadiusLg));
+		background: var(--cmsMainColor);
 		pointer-events: none;
 	}
 	body.cms[data-cms-window="menu"] > .cmsMobileHeader { color: #fff; }
@@ -312,7 +312,7 @@ body.cms > .cmsMobileHeader > .cmsMobileMenuClose, body.cms > .cmsMobileHeader >
 		clip-path: none;
 		outline: none;
 		background: var(--cmsBgColor);
-		box-shadow: 0 120px 0 0 var(--cmsBgColor);
+		box-shadow: 0 -10px 24px -8px rgb(0 0 0 / .32), 0 120px 0 0 var(--cmsBgColor);
 		transform: translateY(calc(100% + var(--mobileBottom)));
 		visibility: hidden;
 		transition: transform 300ms ease, visibility 300ms;
@@ -358,11 +358,12 @@ body.cms > .cmsMobileHeader > .cmsMobileMenuClose, body.cms > .cmsMobileHeader >
 	body.cms .cmsMobileDrawerHeader .cmsBrand { flex: 1; min-width: 0; width: auto; }
 	/* A branch only opens its children. The child that is open keeps the mark. */
 	body.cms.cmsMobile[data-cms-window="base"] > main > div.pylon nav > ul > li.active:has(> ul) > :is(a, button:where([data-cms-action])) {
-		background: transparent; color: inherit; font-weight: inherit;
+		background: transparent; color: inherit;
 	}
+	body.cms.cmsMobile[data-cms-window="base"] > main > div.pylon nav > ul > li.active:has(> ul) > :is(a, button:where([data-cms-action])) > span[data-nav-label] > span { font-weight:400; }
 	body.cms.cmsMobile[data-cms-window="base"] > main > div.pylon nav > ul > li.active:has(> ul) > :is(a, button:where([data-cms-action])) i { color: var(--cmsMuted); }
 	body.cms.cmsMobile[data-cms-window="base"] > main > div.pylon nav li li.active > :is(a, button:where([data-cms-action])) {
-		background: var(--cmsActive); color: var(--cmsMainColor); font-weight: 600;
+		background: var(--cmsActive); color: var(--cmsMainColor);
 	}
 	body.cms.cmsMobile[data-cms-window="base"] > main > div.pylon nav li li.active > :is(a, button:where([data-cms-action])) i { color: var(--cmsMainColor); }
 	body.cms > main > div.content > header.cmsMobileEditHeader,
@@ -437,7 +438,7 @@ body.cms > .cmsMobileHeader > .cmsMobileMenuClose, body.cms > .cmsMobileHeader >
 	body.cms header.cmsMobileEditHeader .cmsMobileMore {
 		flex: 0 0 var(--cmsControl); width: var(--cmsControl); height: var(--cmsControl);
 		min-height: var(--cmsControl); margin: 0; padding: 0;
-		background: var(--cmsCanvas); border: 1px solid var(--cmsLine); border-radius: 10px;
+		background: transparent; border: 0; border-radius: var(--cmsButtonRadius, 6px);
 	}
 	body.cms header.cmsMobileEditHeader .cmsPageToolsMenu,
 	body > .cmsPageToolsMenu.is-open {
@@ -590,7 +591,7 @@ body.cms > .cmsMobileHeader > .cmsMobileMenuClose, body.cms > .cmsMobileHeader >
 		background: var(--cmsOnDark);
 		border-radius: var(--cmsRadius);
 	}
-	body.cms.cmsMobile .bottomMenu :is(a, button:where([data-cms-action])).cmsAccount:is(:hover, :focus-within) .signet:after { content: none; }
+
 	body.cms.cmsMobile .bottomMenu :is(a, button:where([data-cms-action])).cmsAccount :is(a, button:where([data-cms-action])):is(:hover, :focus, :focus-visible) {
 		background: none;
 		outline: none;
@@ -635,7 +636,13 @@ body.cms > .cmsMobileHeader > .cmsMobileMenuClose, body.cms > .cmsMobileHeader >
 		box-shadow: 0 -16px 40px rgb(0 20 25 / 28%), 0 100vh 0 0 var(--cmsBgColor);
 		transition: max-height 480ms cubic-bezier(.22, .8, .3, 1), height 480ms cubic-bezier(.22, .8, .3, 1);
 	}
+	/* Anchor the sliding sheet to its fixed overlay. A second fixed layer
+	   inside the backdrop can be clipped independently during composition. */
+	body.cms:not(:has(> main > .content[data-cms-sheet="1"])) .cmslightbox:not(.cmsFind, .cmsNestedDialog) > section {
+		position: absolute;
+	}
 	body.cms .cmslightbox:not(.cmsFind) > section.is-expanded {
+		bottom: var(--cmsKeyboard, 0px);
 		height: calc(100dvh - max(6px, env(safe-area-inset-top)) - var(--cmsKeyboard, 0px));
 		max-height: none;
 	}
@@ -694,7 +701,7 @@ body.cms > .cmsMobileHeader > .cmsMobileMenuClose, body.cms > .cmsMobileHeader >
 	}
 	body.cms .cmslightbox.cmsFind > section {
 		top: max(10px, env(safe-area-inset-top));
-		bottom: -32px;
+		bottom: calc(var(--cmsKeyboard, 0px) - 32px);
 		border-radius: 24px 24px 0 0;
 		height: auto;
 		max-height: none;
@@ -711,8 +718,6 @@ body.cms > .cmsMobileHeader > .cmsMobileMenuClose, body.cms > .cmsMobileHeader >
 		content: ""; position: absolute; top: 6px; left: calc(50% - 18px);
 		width: 36px; height: 4px; border-radius: 4px; background: var(--cmsMuted);
 	}
-	body.cms .cmslightbox section > header :is(:is(a, button:where([data-cms-action])), li):has([class*="xmark"]) { display: none; }
-	body.cms .cmslightbox section > header .barmenu:not(:has(li:not(:has([class*="xmark"])))) { display: none; }
 	/* Tree actions are an in-viewport sheet, never a popover off the right edge. */
 	body.cms > ul.contextmenu {
 		position: fixed; z-index: 9000; left: var(--sheetSide) !important; right: var(--sheetSide);
@@ -821,15 +826,15 @@ body.cms > .cmsMobileHeader > .cmsMobileMenuClose, body.cms > .cmsMobileHeader >
 	body.cms > main > div.content .projectFiles h1 { margin: 0 0 0.2rem; }
 	body.cms > main > div.content .projectFiles .tagsHint { margin: 0 0 0.35rem; }
 	body.cms > main > div.content .projectFiles .widget {
-		margin: 0 0 0.75rem; background: none; border: 0; border-radius: 0; box-shadow: none;
+		margin: 0 0 0.75rem; background: var(--cmsCanvas); border: 1px solid var(--cmsLine); border-radius: var(--cmsRadiusLg); box-shadow: var(--cmsShadow); overflow:hidden;
 	}
 	body.cms > main > div.content .projectFiles .widget > .tableScroll {
 		min-height: 0; padding: 0; background: none; border: 0;
 	}
 	body.cms > main > div.content .projectFiles :is(.widget > header, .projectBar) {
-		min-height: 0; margin: 1.15rem 0 0.45rem; padding: 0; background: none; border: 0;
+		min-height: 0; margin: 0; padding: .65rem .75rem; background: var(--cmsCanvas); border: 0; border-bottom:1px solid var(--cmsLine);
 	}
-	body.cms > main > div.content .projectFiles .widget:first-of-type > header { margin-top: 0.2rem; }
+	body.cms > main > div.content .projectFiles .widget:first-of-type > header { margin-top: 0; }
 	body.cms > main > div.content .projectFiles :is(.widget > header h2, .projectBar h3) {
 		margin: 0; font-size: 1rem; font-weight: 600; line-height: 1.3;
 	}
@@ -867,3 +872,350 @@ body.cms > .cmsMobileHeader > .cmsMobileMenuClose, body.cms > .cmsMobileHeader >
 
 /* Dialog action edges share the header close-control inset at every size. */
 body.cms .cmslightbox > section > :is(header,header.cmsMobileEditHeader,footer) { padding-right:calc(var(--cmsCardPadding) / 2); }
+
+/* Smartphone sheets. Tablet and desktop retain their existing window layout. */
+@media (max-width: 767px) {
+    body.cms .cmslightbox { z-index: calc(10000 + var(--cmsDialogLevel, 0) * 2); }
+    body.cms .cmslightbox.cmsFind {
+        background: var(--cmsMainColor);
+        backdrop-filter: none;
+        -webkit-backdrop-filter: none;
+    }
+    body.cms .cmslightbox.cmsFind > section { top: env(safe-area-inset-top, 0px); }
+    body.cms .cmslightbox > section > header .barmenu,
+    body.cms .cmslightbox > section > header .barmenu li:has([class*="xmark"]),
+    body.cms .cmslightbox > section > header :is(a,button):has([class*="xmark"]) { display: inline-flex; }
+    body.cms .cmslightbox > section > header :is(a,button):has([class*="xmark"]) {
+        align-items: center; justify-content: center;
+        width: 2.5rem; height: 2.5rem; padding: 0; margin: 0;
+        border-radius: var(--cmsRadius); background: transparent;
+    }
+    body.cms .cmslightbox > section > header :is(a,button):has([class*="xmark"]):is(:hover,:focus-visible) { background: var(--cmsButtonBg); }
+    body.cms .cmslightbox > section { animation: cmsPhoneSheetIn 480ms cubic-bezier(.25,.65,.3,1); }
+    body.cms .remoteLoginBox:not(.cmsOpening) > section { animation: none; }
+    body.cms .cmslightbox.cmsNestedDialog {
+        align-items: center; padding: max(1rem, env(safe-area-inset-top)) 1rem max(1rem, env(safe-area-inset-bottom));
+    }
+    body.cms .cmslightbox.cmsNestedDialog > section {
+        position: relative; inset: auto; width: 100%; height: auto;
+        max-height: calc(100dvh - 3rem - var(--cmsKeyboard, 0px));
+        border-radius: var(--cmsRadiusLg); padding-bottom: 0;
+        box-shadow: var(--cmsShadow); animation: none;
+    }
+    body.cms .cmsNestedDialog .cmsMobileGrip { display: none; }
+    body.cms .qrCodeBar { display: flex; flex-wrap: wrap; gap: .75rem; align-items: center; }
+    body.cms .qrCodeBar > strong { min-width: 0; overflow-wrap: anywhere; }
+    body.cms .qrZoomStage, body.cms .qrZoomStage .fileFrame, body.cms .qrZoomStage .frameView {
+        position: relative; width: 100%; height: auto; min-height: 0; max-height: none; aspect-ratio: 1;
+    }
+    body.cms .qrZoomStage svg { display: block; width: 100%; height: 100%; max-width: 100%; }
+    body.cms > main > div.content .projectFiles.themeEditor .widget { border-radius: var(--cmsRadiusLg); overflow: hidden; }
+    body.cms .themeSwatches { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); }
+    body.cms .themeSwatches > label { min-width: 0; width: auto; }
+    body.cms .tagEditTitle button:has(.cmsIcon-trash) { color: var(--cmsTextColor); }
+    body.cms .layout.tags .tag { vertical-align: middle; }
+    body.cms .layout.tags .tag > .sort { position: absolute; }
+    body.cms .tableScroll.stacked.is-foldable > table > tbody > tr > [data-table-heading]:nth-child(n) {
+        display: flex !important; flex: 1 1 0; min-width: 0; padding-right: 0;
+        position:static; order:1; overflow-wrap: anywhere;
+    }
+    body.cms .tableScroll.stacked.is-foldable > table > tbody > tr > [data-table-selection]:nth-child(n) { display: block !important; flex: 0 0 auto; width: auto; order:0; }
+    body.cms .reportRows.stacked > table > tbody > tr { padding: .65rem .75rem; }
+    body.cms .bottomMenu .cmsAccount .signet:after { background: none; }
+    body.cms .bottomMenu .cmsAccount .signet { position: relative; }
+}
+@keyframes cmsPhoneSheetIn { from { transform: translateY(100%); } to { transform: translateY(0); } }
+@media (max-width:767px) and (prefers-reduced-motion:reduce) {
+    body.cms .cmslightbox > section { animation: none; }
+}
+@media (max-width:767px) {
+    body.cms .schemaScroll.stacked { overflow: visible; }
+    body.cms .schemaScroll.stacked :is(table,tbody,tr,th,td) { display: block; width: auto; min-width: 0; }
+    body.cms .schemaScroll.stacked colgroup, body.cms .schemaScroll.stacked .schemaCardCols { display:none; }
+    body.cms .schemaScroll.stacked tbody.schemaCard { margin-bottom: 1rem; border-radius: var(--cmsRadiusLg); overflow: hidden; background: var(--cmsCanvas); }
+    body.cms .schemaScroll.stacked tr:not(.schemaCardHead) { padding: .65rem .75rem; }
+    body.cms .schemaScroll.stacked td:first-child { position:relative; padding-right:2.5rem; overflow-wrap:anywhere; }
+    body.cms .schemaScroll.stacked tr:not(.is-open) > td:not(:first-child) { display:none; }
+    body.cms .schemaScroll.stacked td[data-label]::before { content:attr(data-label); display:block; font-weight:600; color:var(--cmsMuted); margin-top:.5rem; }
+    body.cms .schemaScroll.stacked .tableFoldToggle { display:inline-flex; position:absolute; right:0; top:0; width:2.5rem; height:2.5rem; padding:0; align-items:center; justify-content:center; background:transparent; }
+    body.cms .schemaScroll.stacked .schemaCardTitle { flex-wrap:wrap; gap:.5rem; padding:.75rem; }
+    body.cms .schemaScroll.stacked .schemaCardTitle h2 { overflow-wrap:anywhere; }
+}
+
+@media (max-width:767px) {
+    body.cms .tableScroll.stacked.is-foldable [data-table-heading]::before { display:none; }
+    body.cms .cmslightbox > section > header .cmsMobileMore { display:inline-flex; }
+    body.cms .cmslightbox > section > header .cmsPageToolsMenu { display:none; }
+    body.cms > .cmsPageToolsMenu.is-open { list-style:none; }
+    body.cms > .cmsPageToolsMenu.is-open > li { list-style:none; margin:0; padding:0; }
+    body.cms > .cmsPageToolsMenu.is-open > li > :is(a,button) { display:flex; width:100%; min-height:44px; padding:.5rem .75rem; }
+}
+
+.cmsAccountGear { display: none; }
+@media (max-width:767px) {
+    body.cms .bottomMenu .cmsAccount .signet .cmsAccountGear {
+        position:absolute; inset:0; margin:auto; width:1.5rem; height:1.5rem;
+        color:inherit; pointer-events:none; opacity:0;
+    }
+    body.cms .bottomMenu .cmsAccount:is(:hover,:focus-visible) .cmsAccountGear { display:block; opacity:1; }
+}
+
+@media (max-width:767px) {
+    body.cms .schemaScroll.stacked .schemaCard > tr.schemaCardHead > th { height:auto; padding:0; }
+    body.cms .schemaScroll.stacked .schemaGap { display:none; }
+    body.cms > main > div.content .projectFiles.themeEditor .widget { background:var(--cmsCanvas); border:1px solid var(--cmsLine); box-shadow:var(--cmsShadow); }
+    body.cms > main > div.content .projectFiles.themeEditor .widget > header { margin:0; padding:.65rem .75rem; border-bottom:1px solid var(--cmsLine); }
+}
+
+/* Phone surfaces share one shell; table rows remain accordions in that shell. */
+@media (max-width:767px) {
+ body.cms > main > div.pylon { border-right:0; }
+ body.cms > main > div.pylon > nav,
+ body.cms .cmslightbox > section,
+ body.cms > main > div.content[data-cms-sheet="1"] { border-top-left-radius:28px; border-top-right-radius:28px; }
+ body.cms > main > div.pylon nav > ul { padding-inline:.5rem; }
+ body.cms .tableScroll.stacked.is-foldable [data-table-heading] code { white-space:normal; overflow-wrap:anywhere; }
+ body.cms .tableScroll.stacked.is-foldable > table > tbody > tr.is-open > td[data-label] { padding-left:0; padding-right:0; }
+ body.cms .cmslightbox.userEdit .accessRow { display:flex; flex-direction:column; align-items:stretch; }
+ body.cms .cmslightbox.userEdit .accessRow > div { width:100%; }
+ body.cms .cmslightbox.userEdit .accessRow .button { width:100%; }
+ body.cms .cmsMobileEditHeader > [data-cms-close-content] { display:inline-flex; align-items:center; justify-content:center; margin-left:auto; flex:0 0 2.5rem; width:2.5rem; height:2.5rem; min-height:2.5rem; padding:0; }
+ body.cms .cmslightbox > section > header { padding-top:.75rem; }
+ body.cms > main > div.content { padding-bottom:calc(1rem + env(safe-area-inset-bottom)); }
+ body.cms .cmsSaveState.is-mobile { padding:.25rem .65rem; border-radius:999px; z-index:11000; }
+ body.cms.cmsMobile > main > div.main .bottomMenu .cmsStage { margin-top:.5rem; }
+ body.cms .bottomMenu .cmsAccount .signet .cmsAccountGear { background:transparent; }
+ body.cms .dashboard .dashPhoneDone { display:inline-flex; }
+}
+.dashPhoneDone { display:none; }
+
+/* Asset previews retain the surface for which their artwork was supplied. */
+.cms .themePreview[data-slot="logo"],
+.cms .themePreview[data-slot="wordLight"] { background:#fff; }
+@media (max-width:767px) {
+ body.cms .cmslightbox footer.cmsDialogStatus { pointer-events:none; border:0; background:transparent; overflow:visible; }
+ body.cms .cmslightbox footer.cmsDialogStatus .cmsSaveState {
+  position:fixed; right:.75rem; bottom:calc(.5rem + env(safe-area-inset-bottom));
+  width:auto; max-width:calc(100vw - 1.5rem); padding:.25rem .65rem;
+  border:1px solid var(--cmsLine); border-radius:999px; background:var(--cmsCanvas); pointer-events:auto;
+ }
+}
+
+@media (max-width:767px) {
+ body.cms header.cmsMobileEditHeader > h1,
+ body.cms .cmslightbox > section > header h1 { flex:0 1 auto; }
+ body.cms .cmsMobileEditHeader > [data-cms-close-content] { order:99; }
+ body.cms.cmsMobile > main > div.main .bottomMenu { padding-bottom:.75rem; gap:.65rem; }
+ body.cms .themeContrast > summary { min-height:2.75rem; align-items:center; }
+ body.cms .themeContrast > summary > .cmsIcon { width:2.5rem; height:2.5rem; display:inline-flex; align-items:center; justify-content:center; border-radius:var(--cmsRadius); }
+ body.cms .themeContrast > summary:hover > .cmsIcon { background:var(--cmsHover); }
+}
+
+/* Smartphone refinements: use the existing sheet, table and status components. */
+@media (max-width:767px) {
+ body.cms:has(> .cmsMobileHeader) { --cmsMobileRadius:24px; }
+ body.cms > main > div.pylon > nav { padding-top:.85rem; }
+ body.cms:has(> .cmsMobileHeader) > main { padding-bottom:0; }
+ body.cms:has(> .cmsMobileHeader) > main > div.content:not([data-cms-sheet="1"]) { border-top-left-radius:var(--cmsMobileRadius); border-top-right-radius:var(--cmsMobileRadius); }
+ body.cms > main > div.pylon.cms { border-right:0; }
+ body.cms > main > div.pylon > nav,
+ body.cms > main > div.content,
+ body.cms .cmslightbox > section { border-top-left-radius:var(--cmsMobileRadius, 24px); border-top-right-radius:var(--cmsMobileRadius, 24px); }
+ body.cms > main > div.pylon nav > ul li > :is(a,button[data-cms-action]) { margin-inline:.5rem; width:calc(100% - 1rem); }
+ body.cms > main > div.content[data-cms-sheet="1"] {
+  position:fixed; inset:max(6px, env(safe-area-inset-top)) 0 0; z-index:2100;
+  display:flex; flex-direction:column; width:100% !important; height:auto !important;
+  padding:0; overflow:hidden; background:var(--cmsBgColor);
+ }
+ body.cms[data-cms-window="edit"] > main > div.content[data-cms-sheet="1"] { visibility:visible; transform:translateY(0); }
+ body.cms[data-cms-window="menu"] > main > div.content[data-cms-sheet="1"] { visibility:hidden; }
+ body.cms > main > div.content[data-cms-sheet="1"] > header { padding-inline:var(--cmsInsetLeft); }
+ body.cms > main > div.content[data-cms-sheet="1"] > :last-child { padding-bottom:calc(1rem + env(safe-area-inset-bottom)); }
+ body.cms .cmslightbox.cmsFind { animation:none; background:var(--cmsMainColor); }
+ body.cms .cmslightbox.cmsFind > section { top:max(8px, env(safe-area-inset-top, 0px)); animation:cmsPhoneSheetIn 480ms cubic-bezier(.25,.65,.3,1); transition:none; }
+ body.cms .cmslightbox.cmsNestedDialog,
+ body.cms .cmslightbox.cmsNestedDialog > section { animation:none; transition:none; }
+ body.cms .cmsSaveState.is-mobile,
+ body.cms .cmslightbox footer.cmsDialogStatus .cmsSaveState { background:color-mix(in srgb,var(--cmsCanvas) 92%,transparent); backdrop-filter:blur(18px); -webkit-backdrop-filter:blur(18px); box-shadow:var(--cmsShadow); }
+ body.cms .tableScroll.stacked.is-foldable .tableFoldToggle:is(:hover,:focus-visible) { background:var(--cmsButtonBg); }
+ body.cms .themeAsset.signet .themePreview { background:var(--cmsMainColor); }
+ body.cms .themeAsset > .tagsHint { display:flex; align-items:center; min-height:2.5rem; padding-block:.5rem; }
+ body.cms .bottomMenu .cmsAccount .signet::after { background:transparent; }
+ body.cms .bottomMenu .cmsAccount .cmsAccountGear { background:transparent; }
+}
+
+/* Detail sheets and the pylon share the phone shell, not desktop geometry. */
+@media (max-width:767px) {
+ body.cms:has(> main > div.pylon) > main > div.pylon { width:100%; max-width:100%; border:0; border-radius:var(--cmsMobileRadius, 24px) var(--cmsMobileRadius, 24px) 0 0; overflow:hidden; }
+ body.cms:has(> main > div.pylon) > main > div.pylon > nav { width:100%; border:0; border-radius:var(--cmsMobileRadius, 24px) var(--cmsMobileRadius, 24px) 0 0; }
+ body.cms > main > div.content[data-cms-sheet="1"],
+ body.cms .cmslightbox > section { box-shadow:0 -10px 24px -8px rgb(0 0 0 / .32); }
+ body.cms > main > div.content[data-cms-sheet="1"] > header.cmsMobileEditHeader { padding-block:14px; align-items:center; }
+ body.cms .cmslightbox > section > header.cmsMobileEditHeader { padding-block:18px 6px; align-items:center; }
+ body.cms .tableScroll.stacked.is-foldable > table > tbody > tr { padding-left:.75rem; }
+ body.cms .tableScroll.stacked.is-foldable > table > tbody > tr.is-open > td[data-label]:not([data-table-heading]) { flex-direction:column; align-items:stretch; gap:.35rem; }
+ body.cms .tableScroll.stacked.is-foldable .tableFoldToggle { color:var(--cmsColor); align-self:center; }
+ body.cms.cmsMobile .bottomMenu .cmsAccount:is(:hover,:focus-within) { background:transparent; }
+ body.cms .bottomMenu .cmsAccount:is(:hover,:focus-within) .cmsAccountGear { display:block; opacity:1; background:transparent; }
+ body.cms > .cmsSaveState.is-mobile { position:fixed; z-index:12000; }
+}
+
+@media (max-width:767px) and (prefers-reduced-motion:reduce) {
+ body.cms .cmslightbox.cmsFind > section { animation:none; }
+}
+
+@media (max-width:767px) {
+ /* At the top edge there is no sheet behind the content to cast onto. */
+ body.cms:has(> main > div.pylon) > main > div.content[data-cms-sheet="1"] { box-shadow:0 120px 0 0 var(--cmsBgColor); }
+ body.cms .cmslightbox > section.is-expanded { box-shadow:none; }
+}
+
+/* Phone keyboard: size the sheet once against the visible viewport. Do not
+   animate its height while Safari is changing that viewport. */
+@media (max-width:767px) {
+ html.cms-keyboard body.cms .cmslightbox:not(.fileEditor):not(.cmsNestedDialog):not(.cmsFind) {
+  top:var(--cmsVvTop, 0px); height:var(--cmsVvHeight, 100%); bottom:auto;
+  padding:0; overflow:hidden;
+ }
+ html.cms-keyboard body.cms .cmslightbox:not(.fileEditor):not(.cmsNestedDialog):not(.cmsFind) > section {
+  position:absolute; top:0; bottom:0; height:100%; max-height:100%; padding-bottom:0;
+  transition:none;
+ }
+ html.cms-keyboard body.cms .cmslightbox:not(.fileEditor):not(.cmsNestedDialog):not(.cmsFind) > section > main {
+  min-height:0; overflow-y:auto;
+ }
+}
+
+/* Search results continue behind Safari's floating controls. Reserve the
+   keyboard occlusion inside the scroller, rather than shortening the sheet. */
+@media (max-width:767px) {
+ html.cms-keyboard body.cms .cmslightbox.cmsFind {
+  top:0; height:100lvh; bottom:auto; transition:none;
+ }
+ html.cms-keyboard body.cms .cmslightbox.cmsFind > section {
+  top:max(8px, env(safe-area-inset-top, 0px)); bottom:0;
+  height:auto; max-height:none; padding-bottom:0;
+ }
+ html.cms-keyboard body.cms .cmslightbox.cmsFind > section > main {
+  padding-bottom:calc(var(--cmsFindOcclusion, var(--cmsKeyboard, 0px)) + 1rem);
+  scroll-padding-bottom:calc(var(--cmsFindOcclusion, var(--cmsKeyboard, 0px)) + 1rem);
+ }
+}
+
+/* Shared glass header: retain the theme surface and let scrolled content
+   show very slightly through the header and its adjacent tabs. */
+body.cms .cmslightbox > section[style*="--cmsGlassHeader"]::after {
+ content:""; position:absolute; inset:0 0 auto; height:var(--cmsGlassHeader);
+ z-index:3; pointer-events:none;
+ background:color-mix(in srgb,var(--cmsBgColor) 70%,transparent);
+ backdrop-filter:blur(18px); -webkit-backdrop-filter:blur(18px);
+}
+body.cms .cmslightbox > section[style*="--cmsGlassHeader"] > header,
+body.cms .cmslightbox > section[style*="--cmsGlassHeader"] > .userTabs {
+ position:relative; z-index:5;
+ background:transparent; backdrop-filter:none; -webkit-backdrop-filter:none;
+}
+body.cms .cmslightbox > section[style*="--cmsGlassHeader"] > main {
+ margin-top:calc(-1 * var(--cmsGlassHeader));
+ padding-top:var(--cmsGlassHeader);
+}
+@media (max-width:1024px), (orientation:portrait) and (max-width:1400px) {
+ body.cms > main > .content[data-cms-sheet="1"] > header.cmsMobileEditHeader {
+  padding-right:calc(var(--cmsCardPadding) / 2);
+  background:color-mix(in srgb,var(--cmsBgColor) 70%,transparent);
+  backdrop-filter:blur(18px); -webkit-backdrop-filter:blur(18px);
+  border-bottom:1px solid transparent;
+ }
+ body.cms > main > .content[data-cms-sheet="1"].cmsHeaderScrolled > header.cmsMobileEditHeader {
+  border-bottom-color:var(--cmsLine);
+ }
+ body.cms > main > .content[data-cms-sheet="1"][style*="--cmsGlassHeader"] > .flexRow {
+  margin-top:calc(-1 * var(--cmsGlassHeader)); padding-top:var(--cmsGlassHeader);
+ }
+}
+@media (max-width:1024px), (orientation:portrait) and (max-width:1400px) {
+ body.cms > main > .content[data-cms-sheet="1"][style*="--cmsGlassHeader"] > .flexRow { padding-top:0; }
+ body.cms > main > .content[data-cms-sheet="1"][style*="--cmsGlassHeader"] > .flexRow > .flexColumn { padding-top:var(--cmsGlassHeader); }
+}
+
+/* Keep the complete dialog chrome above the scrolling body. */
+body.cms .cmslightbox > section[style*="--cmsGlassHeader"] > .userTabs {
+ position:relative; z-index:5; background-image:none;
+ box-shadow:inset 0 -1px var(--cmsLineStrong);
+}
+body.cms .cmslightbox > section[style*="--cmsGlassHeader"] > main {
+ position:relative; z-index:1;
+}
+body.cms .cmslightbox > section[style*="--cmsGlassHeader"].cmsHeaderScrolled > header:not(:has(+ .userTabs)) {
+ box-shadow:0 1px 0 var(--cmsLine);
+}
+
+/* Account overlay: the same masked portrait surface as desktop. */
+@media (max-width:767px) {
+ body.cms.cmsMobile .bottomMenu .cmsAccount:is(:hover,:focus-visible,:focus-within) .signet::after {
+  content:""; position:absolute; inset:0; z-index:3; border-radius:inherit;
+  background:var(--cmsMainColor); pointer-events:none;
+ }
+ body.cms .bottomMenu .cmsAccount .signet .cmsAccountGear {
+  z-index:4; display:flex; align-items:center; justify-content:center;
+  color:var(--cmsOnMain, #fff); line-height:1; background:transparent;
+ }
+ body.cms .cmsSaveState.is-mobile {
+  left:max(.5rem,env(safe-area-inset-left)); right:max(.5rem,env(safe-area-inset-right));
+  width:auto; max-width:none; justify-content:center; padding:.45rem .75rem;
+  background:color-mix(in srgb,var(--cmsCanvas) 96%,transparent);
+  backdrop-filter:blur(18px); -webkit-backdrop-filter:blur(18px);
+ }
+ body.cms .cmsSaveState.is-mobile[data-state="saved"] { border-color:var(--cmsFeedbackSuccess); }
+ body.cms .cmsSaveState.is-mobile[data-state="error"] { border-color:var(--cmsFeedbackError); }
+ body.cms .cmsSaveState.is-mobile:is([data-state="changed"],[data-state="saving"]) { border-color:var(--cmsFeedbackWarning); }
+}
+
+/* Shared account mask and feedback surface, including touch focus. */
+body.cms .bottomMenu .cmsAccount:is(:hover,:focus-within) .signet::after {
+ content:""; position:absolute; inset:0; z-index:3;
+ background:var(--cmsMainColor); border-radius:inherit; pointer-events:none;
+}
+body.cms .bottomMenu .cmsAccount:is(:hover,:focus-within) .signet::before { content:none; }
+body.cms .bottomMenu .cmsAccount .signet .cmsAccountGear {
+ position:absolute; inset:0; margin:auto; width:1.5rem; height:1.5rem;
+ z-index:4; color:var(--cmsOnMain,#fff); pointer-events:none;
+ align-items:center; justify-content:center; background:transparent;
+}
+body.cms .bottomMenu .cmsAccount:is(:hover,:focus-within) .cmsAccountGear { display:flex; opacity:1; }
+body.cms .logFilters.splitApplyList { background:var(--cmsButtonBg); }
+@media (max-width:1024px), (orientation:portrait) and (max-width:1400px) {
+ body.cms .cmsSaveState.is-mobile { left:max(.5rem,env(safe-area-inset-left)); right:max(.5rem,env(safe-area-inset-right)); width:auto; max-width:none; justify-content:center; padding:.55rem .75rem; background:var(--cmsMainColor); color:var(--cmsOnMain,#fff); }
+ body.cms .cmsSaveState.is-mobile[data-state="changed"], body.cms .cmsSaveState.is-mobile[data-state="saving"] { color:var(--cmsStatusWarning); }
+ body.cms .cmsSaveState.is-mobile[data-state="saved"] { color:var(--cmsStatusSuccess); }
+ body.cms .cmsSaveState.is-mobile[data-state="error"] { color:var(--cmsStatusError); }
+}
+
+@media (max-width:1024px), (orientation:portrait) and (max-width:1400px) {
+ body.cms .splitApplyList, body.cms .logFilters.splitApplyList { background:var(--cmsButtonBg); }
+ body.cms .cmsMobileActionMenu > .button { background:transparent; }
+}
+
+/* Shared action menus keep the same quiet treatment as close controls. */
+body.cms .cmsMobileMore { background:transparent; }
+body.cms .cmsMobileActionMenu > :is(a,button,.button) { width:100%; text-align:left; justify-content:flex-start; }
+body.cms .logFilterFooter { flex:0 0 100%; grid-column:1 / -1; }
+body.cms .logFilterFooter small { flex:1 0 auto; width:auto; white-space:nowrap; }
+body.cms .logFilterFooter [data-log-reset] { margin-left:auto; flex:0 0 auto; }
+body.cms .cmslightbox > section > main:last-child { padding-bottom:calc(var(--cmsCardPadding) + 1rem); }
+@media (max-width:767px) {
+ body.cms .cmslightbox.cmsFind > section > header { padding-top:1.25rem; }
+}
+
+body.cms .cmsMobileMore:hover { background:var(--cmsButtonBg); }
+body.cms .cmsMobileMore:focus-visible { outline:2px solid var(--cmsMainColor); outline-offset:2px; }
+body.cms .widget > header .cmsMobileMore,
+body.cms .widget > header .cmsMobileMore.selected { background:transparent; }
+body.cms .widget > header .cmsMobileMore:hover { background:var(--cmsButtonBg); }
+body.cms .cmslightbox > section > footer { padding-block:.75rem; }
+body.cms .logFilterFooter [data-log-reset] { width:auto; min-width:0; margin-left:auto; justify-content:flex-end; }
+
+/* One divider for the entire glass surface, only once content has scrolled. */
+body.cms .cmslightbox > section[style*="--cmsGlassHeader"].cmsHeaderScrolled:not(:has(> .userTabs))::after { border-bottom:1px solid var(--cmsLineStrong); }
+body.cms .cmslightbox > section[style*="--cmsGlassHeader"] > header { box-shadow:none; }
+body.cms .cmslightbox > section[style*="--cmsGlassHeader"] > header + main { padding-top:calc(var(--cmsGlassHeader) + 1.35rem); }

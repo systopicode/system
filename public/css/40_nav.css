@@ -428,4 +428,9 @@ body > main > div.main nav .cmsStage{
 .widget > header > .cmsPanelActions{width:auto;margin:0 0 0 auto;}
 .cmsPanelActions > .rightAlign{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:.4rem;}
 .cmsPanelActions > .rightAlign > .button{margin:0;}
-.profile > .cmsPanelActions,.tagsHint + .cmsPanelActions{padding-inline:var(--cmsCardPadding);}
+.tagsHint + .cmsPanelActions{padding-inline:var(--cmsCardPadding);}
+
+/* Mobile-only chrome must not keep an empty desktop controls bar alive. */
+@media (min-width:1025px) and (orientation:landscape), (min-width:1401px) {
+ body.cms:not(.pages) > main > div.content > header.cms:not(:has(:is(a, button, .button, input, select, textarea, nav, form, label):not(.cmsMobileOnly):not(.cmsMobileOnly *))) { display:none; }
+}

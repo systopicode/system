@@ -512,7 +512,7 @@ var wysiwyg = (function () {
 		clearTimeout(typingTimer);
 		record(editor);
 	};
-	var changed = function (editor) {
+	var changed = function (editor, commit) {
 		if (!editor) {
 			return;
 		}
@@ -520,7 +520,7 @@ var wysiwyg = (function () {
 		var input = new Event('input', {bubbles: true});
 		input.wysiwyg = true;
 		editor.dispatchEvent(input);
-        if (editor.hasAttribute('data-on_blur') && document.activeElement !== editor && !editor.contains(document.activeElement) && !document.activeElement?.closest('.cmslightbox')) {
+        if (editor.hasAttribute('data-on_blur') && (commit || (document.activeElement !== editor && !editor.contains(document.activeElement) && !document.activeElement?.closest('.cmslightbox')))) {
             editor.dispatchEvent(new FocusEvent('blur', {relatedTarget: document.activeElement}));
         }
 	};
@@ -537,7 +537,7 @@ var wysiwyg = (function () {
 		var input = new Event('input', {bubbles: true});
 		input.wysiwyg = true;
 		editor.dispatchEvent(input);
-        if (editor.hasAttribute('data-on_blur') && document.activeElement !== editor && !editor.contains(document.activeElement) && !document.activeElement?.closest('.cmslightbox')) {
+        if (editor.hasAttribute('data-on_blur') && (commit || (document.activeElement !== editor && !editor.contains(document.activeElement) && !document.activeElement?.closest('.cmslightbox')))) {
             editor.dispatchEvent(new FocusEvent('blur', {relatedTarget: document.activeElement}));
         }
 	};

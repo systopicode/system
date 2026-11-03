@@ -370,3 +370,11 @@
 
 /* Icon-only media menus size to the actions, with no empty text column. */
 .cms ul.contextmenu.mediaContextMenu { min-width: 0; width: max-content; max-width: calc(100vw - 16px); }
+
+/* Mobile actions and filters share the image/language button menu. */
+.cms .cmsMobileActions { display:inline-flex; }
+.cms .logFilters.splitApplyList { display:none; }
+.cms .logFilters.splitApplyList.is-open { display:flex; }
+@media (max-width:1024px), (orientation:portrait) and (max-width:1400px) {
+ .cms .splitApplyList { background:var(--cmsButtonBg); }
+}

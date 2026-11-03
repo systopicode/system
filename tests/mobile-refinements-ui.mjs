@@ -31,6 +31,24 @@ try {
  await page.waitForFunction(()=>document.body.dataset.cmsWindow==='base');
  await page.evaluate(controller);
  assert.equal(await page.locator('body').getAttribute('data-cms-window'),'base');
+ await page.locator('.content').evaluate(n=>n.innerHTML='<div class="cmslightbox"><div class="tabmenu" style="display:flex;width:250px;overflow:auto"><button style="flex:0 0 150px">General</button><button style="flex:0 0 150px">Roles</button><button class="active" style="flex:0 0 150px">Maintenance</button></div></div>');
+ await page.evaluate(()=>window.cmsMobile.sync());
+ await page.waitForTimeout(500);
+ let tabPosition=await page.locator('.tabmenu').evaluate(n=>({rail:n.getBoundingClientRect().toJSON(),tab:n.querySelector('.active').getBoundingClientRect().toJSON()}));
+ assert.ok(tabPosition.tab.right<=tabPosition.rail.right && tabPosition.tab.left>=tabPosition.rail.left, 'Selected tab is entirely visible');
+ // A narrower slide-in must remeasure the same selection, not retain a stale marker.
+ await page.locator('.tabmenu').evaluate(n=>{n.style.width='210px';n.scrollLeft=0;});
+ await page.evaluate(()=>window.cmsMobile.sync());
+ await page.waitForTimeout(500);
+ tabPosition=await page.locator('.tabmenu').evaluate(n=>({rail:n.getBoundingClientRect().toJSON(),tab:n.querySelector('.active').getBoundingClientRect().toJSON()}));
+ assert.ok(tabPosition.tab.right<=tabPosition.rail.right && tabPosition.tab.left>=tabPosition.rail.left);
+ // Content-only modules must not inherit a detail sheet from a previous module.
+ for (const module of ['backup','user']) {
+  await page.goto('https://cms.example.test/cms/'+module+'/');
+  await page.setContent(`<meta name="viewport" content="width=device-width, initial-scale=1"><style>${css}</style><body class="cms ${module}"><header class="cmsMobileHeader"><button data-cms-window="menu"></button><strong data-cms-module></strong></header><button class="cmsMobileBackdrop" hidden></button><main><div class="main"></div><div class="content" data-cms-sheet="1"><header></header><section>Content</section></div></main></body>`);
+  await page.evaluate(controller);
+  assert.equal(await page.locator('.content').getAttribute('data-cms-sheet'),null, module+' remains ordinary content');
+ }
  await page.setContent(`<meta name="viewport" content="width=device-width, initial-scale=1"><style>${css}</style><body class="cms"><div class="tableScroll"><table><thead><tr><th>Setting</th><th>Value</th></tr></thead><tbody><tr><td><span>Site name</span></td><td><input value="Original"></td></tr></tbody></table></div><ul class="dashList"><li><a><span><strong>A long dashboard title that should be readable on a small smartphone screen</strong></span><em>Hidden</em></a></li></ul><div class="cmsFind"><span class="cmsKeys">Enter Esc</span><span class="cmsFindTouchHint">Tap a result to open it.</span></div></body>`);
  await page.evaluate(()=>window.sys={});
  await page.evaluate(tables);

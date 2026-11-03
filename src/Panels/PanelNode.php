@@ -792,7 +792,7 @@ class PanelNode implements ClientExportable, RenderNode
         if ($icon !== null) {
             $a->append('i')->class(\Systopic\System\Ui\Icons::classes($icon))->attr('aria-hidden', 'true');
         }
-        $a->append('span')->attr('data-nav-label', $this->label)->text($this->label);
+        $a->append('span')->attr('data-nav-label', $this->label)->append('span')->text($this->label);
         for ($child = $this->firstChild; $child !== null; $child = $child->next) {
             if ($child->inNavi) {
                 $a->attr('data-cms-branch', '1');

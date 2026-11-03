@@ -107,6 +107,8 @@
 				var index = hits.indexOf(current);
 				e.preventDefault();
 				if (e.key === 'Escape') {
+					clearInterval(searchHand);
+					searchProxy?.remove(); searchProxy = null;
 					box.remove();
 				} else if (e.key === 'Enter') {
 					(current || hits[0])?.click();
@@ -154,10 +156,19 @@
 					cmsModule.openSearch();
 					return;
 				}
+				var result = e.target.closest && e.target.closest('.cmsFindResults a[href]');
+				if (result) {
+					clearInterval(searchHand);
+					searchProxy?.remove(); searchProxy = null;
+					queueMicrotask(function () { document.querySelector('.cmslightbox.cmsFind')?.remove(); });
+					return;
+				}
 				var closer = e.target.closest && e.target.closest('[data-close-find]');
 				if (!closer) return;
 				e.preventDefault();
 				e.stopPropagation();
+				clearInterval(searchHand);
+				searchProxy?.remove(); searchProxy = null;
 				closer.closest('.cmslightbox.cmsFind')?.remove();
 			}, true);
 			// The header link would take the focus the stand-in just opened.

@@ -13,7 +13,13 @@ $again = \http::$root . 'cms/auth/?choose=1';
     </div>
 </main>
 <script>
-	setTimeout(function () {
-		window.location.href = <?= json_encode($again) ?>;
-	}, 30000);
+(function () {
+    const screen = document.currentScript.previousElementSibling;
+    const again = screen.querySelector('a.button');
+    const timer = setTimeout(function () {
+        // An AJAX navigation may already have replaced the signed-out card.
+        if (screen.isConnected) window.location.href = <?= json_encode($again) ?>;
+    }, 30000);
+    again.addEventListener('click', function () { clearTimeout(timer); }, {once: true, capture: true});
+})();
 </script>

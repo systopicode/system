@@ -19,6 +19,26 @@ try {
  await page.evaluate(()=>{document.body.insertAdjacentHTML('beforeend','<button id="createCode" data-feedback="none">Create code</button>');const source=document.querySelector('#createCode'),token=cmsFeedback.begin({event:{target:source,element:source,type:'click'}},'put');window.codeVisible=token.visible;cmsFeedback.finish(token,true);});
  assert.equal(await page.evaluate(()=>codeVisible),false,'create code does not announce Saved');
  assert.equal(await page.locator('#createCode').getAttribute('data-save-state'),null);
+ await page.evaluate(()=>{
+  document.body.insertAdjacentHTML('beforeend','<section data-group_id="qa"><h1 data-pencil-field contenteditable="plaintext-only">Old label</h1></section>');
+ });
+ const pencil=page.locator('[data-group_id=qa] h1');
+ await pencil.fill('New label');
+ assert.equal(await pencil.getAttribute('data-save-state'),'changed','pencil field announces unsaved changes');
+ await page.evaluate(()=>{
+  const el=document.querySelector('[data-group_id=qa] h1');
+  window.pencilToken=cmsFeedback.begin({event:{target:el,type:'blur'}},'put');
+  el.outerHTML='<h1>New label</h1>';
+  cmsFeedback.finish(pencilToken,true);
+ });
+ assert.equal(await pencil.getAttribute('data-save-state'),'saved','replacement pencil heading retains successful feedback');
+ await pencil.evaluate(el=>{el.contentEditable='plaintext-only';});
+ await pencil.fill('Rejected label');
+ await page.evaluate(()=>{const el=document.querySelector('[data-group_id=qa] h1'),token=cmsFeedback.begin({event:{target:el,type:'blur'}},'put');cmsFeedback.finish(token,false);});
+ assert.equal(await pencil.getAttribute('data-save-state'),'error','pencil save failure is marked red');
+ await pencil.evaluate(el=>{cmsFeedback.cancel(el);el.closest('section').remove();});
+ await page.evaluate(()=>{const el=document.createElement('button');el.id='readOnlyAction';el.textContent='Show more';document.body.append(el);const token=cmsFeedback.begin({event:{target:el,type:'click'}},'put');window.readVisible=token.visible;cmsFeedback.finish(token,true);});
+ assert.equal(await page.evaluate(()=>readVisible),false,'read-only show-more does not announce a save');
  await page.locator('#a').fill('first');
  assert.equal(await page.locator('.cmsSaveState > span').textContent(),'Unsaved changes');
  assert.equal(await page.locator('.cmsSaveState i').getAttribute('aria-hidden'),'true');
@@ -107,7 +127,7 @@ try {
  await page.evaluate(()=>document.querySelector('.cmslightbox').hidden=false);
  await page.waitForTimeout(80);
  assert.equal(await page.locator('.cmslightbox').getAttribute('role'),'dialog');
- assert.equal(await page.evaluate(()=>document.activeElement.hasAttribute('data-box-close')),true);
+ assert.equal(await page.evaluate(()=>document.activeElement.classList.contains('cmslightbox')),true,'opening focuses the dialog container, not its close action');
  await page.locator('#last').focus();await page.keyboard.press('Tab');
  assert.equal(await page.evaluate(()=>document.activeElement.hasAttribute('data-box-close')),true,'tab stays in dialog');
  await page.keyboard.press('Escape');await page.waitForTimeout(80);

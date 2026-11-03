@@ -86,10 +86,6 @@ final class ProjectForm
             }
             echo '<section class="widget">';
             echo '<header><h2>' . $e($name) . '</h2>';
-            if ($which === 'media' && in_array($name, ['Image formats','Media groups'], true)) {
-                $help = $name === 'Media groups' ? 'Groups restrict uploads, replacements and moved files. File types are chosen in a dialog. This does not make files private.' : 'Choose either a megapixel budget or pixel dimensions. Megapixels may have a fixed aspect ratio (e.g. 16:9); leave it empty to crop freely. One pixel dimension may stay empty to keep the proportions. Show in editor controls the format selector, not public access.';
-                echo '<button type="button" class="button transparent icononly settingInfo" data-setting-help="' . $e($help) . '" title="' . $e($help) . '" aria-label="About ' . $e($name) . '"><i class="cmsIcon cmsIcon-circle-info"></i></button>';
-            }
             if ($headerButton !== null) {
                 self::addButton($which, $headerButton);
             }
@@ -430,7 +426,7 @@ final class ProjectForm
                     $kind = self::columnKind($group, $column);
                     $blank = new Leaf($group->id, '', $column, $kind, '', 0, 0);
                     $fieldData = $data . ' aria-label="' . $e(self::human($column) . ': ' . $item->key) . '"';
-                    if (self::isFlag($blank)) {
+                    if (self::isFlag($blank) && $group->id !== 'define:VIDEO_FORMATS') {
                         echo '<label class="projectSwitch"><input type="checkbox" class="switch" data-on_change="setField"' . $fieldData . ' data-field="' . $e($column) . '" name="value"><div><div></div></div></label>';
                     } else {
                         echo '<input data-on_blur="setField"' . $fieldData . ' data-field="' . $e($column) . '" name="value" value="" autocomplete="off">';
@@ -506,7 +502,7 @@ final class ProjectForm
             echo '<input class="systemLegalUrl" type="text" inputmode="url" spellcheck="false" pattern="' . $e($pattern) . '" title="Use an HTTP(S) URL, a path starting with /, or leave empty." data-on_blur="' . $e($action) . '"' . $attrs . ' value="' . $e($leaf->text) . '">';
             return;
         }
-        if (self::isFlag($leaf)) {
+        if (self::isFlag($leaf) && !str_starts_with($leaf->id, 'define:VIDEO_FORMATS')) {
             $checked = self::isOn($leaf) ? ' checked' : '';
             echo '<label class="projectSwitch"><input type="checkbox" class="switch" data-on_change="' . $e($action) . '"' . $attrs . $checked . '><div><div></div></div></label>';
             return;

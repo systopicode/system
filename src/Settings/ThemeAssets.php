@@ -71,18 +71,18 @@ final class ThemeAssets
         foreach (self::SLOTS as $slot => $spec) {
             $path = self::path($slot);
             $own = self::isOverride($path);
-            $note = $own ? 'This project' : 'System default';
+            $note = $own ? '' : 'System default';
             echo '<article class="widget themeAsset ' . $e($spec['kind']) . '">';
             echo '<header><h2>' . $e($spec['label']) . '</h2></header>';
             echo '<p class="tagsHint">' . $e($spec['hint']) . '</p>';
-            echo '<main><form method="post" enctype="multipart/form-data" action="' . $e($href . 'upload?slot=' . $slot) . '">';
-            echo '<label class="themePreview" data-drop-files>';
+            echo '<main><form class="ajax" data-upload="onsubmit" method="post" enctype="multipart/form-data" action="' . $e($href . 'upload?slot=' . $slot) . '">';
+            echo '<label class="themePreview" data-slot="' . $e($slot) . '" data-drop-files>';
             echo self::preview($slot, $path);
             echo '<input type="file" name="file" accept="' . $e($spec['accept']) . '" aria-label="Upload ' . $e($spec['label']) . '" onchange="this.form.requestSubmit()">';
             echo '</label></form></main>';
             echo '<footer><span class="left">' . $e($note) . '</span>';
             if ($own) {
-                echo '<button type="button" class="button" data-on_click="clear" data-slot="' . $e($slot) . '"><i class="cmsIcon cmsIcon-image"></i>Use the system image</button>';
+                echo '<button type="button" class="button" data-on_click="clear" data-slot="' . $e($slot) . '"><i class="cmsIcon cmsIcon-arrow-rotate-left"></i>Use the system image</button>';
             }
             echo '</footer></article>';
         }

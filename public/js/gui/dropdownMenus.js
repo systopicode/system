@@ -288,14 +288,14 @@ document.addEventListener('click', function (event) {
 			list.classList.add('is-open');
 			list.style.width = 'max-content';
 			var rect = split.getBoundingClientRect();
-			var width = list.classList.contains('unifiedAdjustSlider') ? Math.min(320,window.innerWidth-32) : Math.max(rect.width, list.scrollWidth);
+			var width = list.classList.contains('logFilters') ? Math.min(576,window.innerWidth-32) : list.classList.contains('unifiedAdjustSlider') ? Math.min(320,window.innerWidth-32) : Math.max(rect.width, list.scrollWidth);
 			list.style.width = width + 'px';
 			var bar=split.closest('.cropBar');
             var toolbarBottom = Math.max(rect.bottom,bar ? bar.getBoundingClientRect().bottom-parseFloat(getComputedStyle(bar).paddingBottom) : rect.bottom);
             list.style.top = (toolbarBottom + 4) + 'px';
             if(list.classList.contains('imageEditorMenu')){list.style.maxHeight=Math.max(48,window.innerHeight-toolbarBottom-12)+'px';list.style.overflowY='auto';}
 			list.style.maxWidth = 'calc(100vw - 16px)';
-			list.style.left = (rect.left + width <= window.innerWidth - 8 ? rect.left : rect.right - Math.min(width, window.innerWidth - 16)) + 'px';
+			list.style.left = Math.max(8,(rect.left + width <= window.innerWidth - 8 ? rect.left : rect.right - Math.min(width, window.innerWidth - 16))) + 'px';
 			split.classList.add('is-open');
             if(button.hasAttribute('data-menu-selected')){button.classList.add('selected');button.setAttribute('aria-pressed','true');}
             prepareMenuKeyboard(list, button, event.detail === 0);
@@ -313,7 +313,7 @@ document.addEventListener('cms:rendered', function () {
 
 // An entry closes its menu even when its own handler (ajax links) stops the click.
 document.addEventListener('click', function (event) {
-	if (event.target.closest && event.target.closest('.splitApplyList a, .splitApplyList button')) {
+	if (event.target.closest && event.target.closest('.splitApplyList a, .splitApplyList button') && !event.target.closest('[data-menu-stay]')) {
 		setTimeout(closeSplitMenus);
 	}
 }, true);
@@ -409,7 +409,7 @@ document.addEventListener('keydown', function (event) {
 // Retain normal pointer selection; close keyboard popovers after tabbing away.
 document.addEventListener('focusout', function(event) {
     const menu=event.target.closest?.('ul.contextmenu,.HTMLeditorMenu,.splitApplyList.is-open');
-    if (!menu) return;
+    if (!menu || menu.hasAttribute('data-menu-stay')) return;
     const opener=menu.cmsMenuOpener;
     setTimeout(()=>{
         if (menu.cmsMenuOpener!==opener || (menu.matches('.splitApplyList') && !menu.classList.contains('is-open'))) return;
@@ -425,3 +425,10 @@ document.addEventListener('click', function(event) {
         event.preventDefault();event.stopImmediatePropagation();
     }
 },true);
+
+// Scrolling the owning page dismisses popovers; scrolling inside a menu does not.
+document.addEventListener("scroll", function (event) {
+ if (event.target instanceof Element && event.target.closest(".splitApplyList, ul.contextmenu, .dropdown.contextMenu")) return;
+ closeSplitMenus();
+ closeAllMenus();
+}, true);

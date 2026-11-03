@@ -481,3 +481,6 @@ div.HTMLeditorMenu:has(form.HTMLeditorClass)::before { z-index:-1; }
 
 /* Crop has a smaller native glyph; match the neighbouring media actions. */
 .HTMLeditorMenu .cmsIcon-crop-simple { transform: scale(1.3); }
+
+/* Shared accepted target feedback for both library media and page links. */
+.editor:is(.mediaDroppable,.pageDroppable).dropTarget { outline: 2px solid var(--cmsHighlightColor) !important; outline-offset: 2px; }

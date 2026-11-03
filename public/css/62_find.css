@@ -117,5 +117,5 @@ html.cms-keyboard .cmslightbox.cmsFind > section { max-height:100%; min-height:0
 html.cms-keyboard .cmslightbox.cmsFind > footer.cmsStatusbar { position:absolute; inset:auto 0 0; }
 
 html.cms-keyboard:has(.cmsFind:not([hidden])) { overflow:hidden;overscroll-behavior:none; }
-html.cms-keyboard .cmsFind { touch-action:none;overscroll-behavior:none; }
+html.cms-keyboard .cmsFind { touch-action:pan-y;overscroll-behavior:none; }
 html.cms-keyboard .cmsFindResults { touch-action:pan-y;overscroll-behavior:contain; }

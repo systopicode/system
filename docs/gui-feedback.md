@@ -66,3 +66,29 @@ Checks: `php tests/display-dates.php` on PHP 8.4 and 8.5, plus
 - Upload/backup progress reuses the existing fill/counter state with one centered, contrast-backed counter.
 - Account, Tags and Backup actions share a single root toolbar, preserving view replacement and widget headers.
 - Dashboard edit-mode handoff does not infer a drop from layout moving under a stationary finger. A subsequent movement beyond 5 px restores normal hit-testing. Physical iPad verification remains outstanding.
+
+## Smartphone shared components (2 November 2026)
+
+- Main-menu visibility is UI state and does not push browser history. Actual leaf navigation still reaches the router on Back/Forward, then restores its sheet.
+- Backup and account pages are regular content at every width; only pylon detail pages use phone sheets.
+- Table folding uses the shared transparent button and shared row spacing, including schema tables.
+- Active dialog tabs remeasure their visible bounds after layout changes and scroll smoothly into view (respecting reduced motion).
+- Search retains the main theme colour; the bottom chrome edge no longer paints over content. Native iOS safe-area/keyboard behaviour still needs physical-device verification.
+- Phone nested dialogs have no entrance animation. Signet previews retain the main-colour surface.
+
+Verification: running Dev app at 390 px (menu history, Backup/Profile, Settings table folding, search open/close, Back/Forward), 1194/1440 px layout regression; shared mobile refinement and statusbar-return browser fixtures. No page errors in those runs; no new entries in the inspected project PHP log. Physical Safari gesture, keyboard and safe-area testing is not covered by desktop touch emulation.
+
+Follow-up: phone search uses the full available height and its existing sheet entrance. Search focus remains owned by the shared lightbox/openSearch lifecycle rather than mobile render synchronisation; keyboard-height changes do not animate the search surface. Closing a detail sheet routes its parent so the pylon selection clears. Shared phone shells use the same upper radius, shadow and centred header spacing. Theme asset overrides omit the redundant ownership label and reuse the colour-reset icon.
+
+Checked again in the running Dev application: Backup/Profile at 390, 1194 and 1440 px; Settings close/back/forward; Media/Global Settings and Database accordion open states; full-height search and close; unsaved indicator above an Environment sheet (input restored before blur). No JavaScript errors; physical iOS Safari address-bar transparency and keyboard reopening remain unverified.
+
+### Dark-mode shadows (2 November 2026)
+
+- Dark appearance uses black standard and popup shadows; existing shadow geometry is retained. Sticky-table fades and sidebar tab-edge shadows no longer use light text/surface colours. Focus and state outlines remain unchanged.
+- Light appearance and the light page-preview scope retain their existing shadow values. Browser comparison of shared components found identical light-mode computed values and screenshots before/after. Dev table/search-dialog checks passed in light/dark appearance without JavaScript errors.
+
+### Module stylesheet refresh (2 November 2026)
+
+AJAX navigation now updates an existing module stylesheet when its versioned URL changes, retaining its node and cascade position. Previously the path-only lookup discarded the new modification timestamp. Document responses already use no-store; CSS and JS URLs use individual file modification times. An open tab still needs a normal reload to load changed core JavaScript; runtime class replacement is intentionally avoided.
+
+Verified with the running Environment panel: changed version updates the existing stylesheet, repeated identical versions retain it, and no duplicate module links are created. Native iPhone cache behaviour remains to be verified on-device.

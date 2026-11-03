@@ -165,7 +165,11 @@ function formatImage(event) {
 	if (!id) {
 		return;
 	}
-	sys.core.server.sendCall({method: 'get'}, settings.siteRoot + 'cms/pages/editor/file/?target_id=' + id + '&format=' + encodeURIComponent(media ? media.format : mediaFormatOf(el)));
+	const editorUrl = settings.siteRoot + 'cms/pages/editor/file/?target_id=' + id + '&format=' + encodeURIComponent(media ? media.format : mediaFormatOf(el));
+	// The toolbar may already own focus. Keep the actual edited field in
+	// the blur-save flow before opening a dialog that can update the page.
+	(el.closest('.editor[contenteditable="true"]') || document.activeElement?.closest('.editor[contenteditable="true"]'))?.blur();
+	queueMicrotask(() => sys.core.server.onIdle(() => sys.core.server.sendCall({method: 'get'}, editorUrl)));
 }
 
 function HTMLeditorHTMLMode(event) {
@@ -267,10 +271,10 @@ function createHTMLeditorLink(event) {
 	}
 	// Leaving the field may have started its blur-save. Its response must
     // finish before the ephemeral dialog opens, or it replaces the dialog.
-    document.activeElement?.closest('.editor[contenteditable="true"]')?.blur();
+	document.activeElement?.closest('.editor[contenteditable="true"]')?.blur();
     // Blur handlers settle in a microtask to distinguish real blur from a
     // removed DOM node. Wait for that handler to enqueue its save as well.
-    queueMicrotask(() => sys.core.server.onIdle(() => sys.core.server.sendCall({
+	queueMicrotask(() => sys.core.server.onIdle(() => sys.core.server.sendCall({
 		method: 'post',
         history: false,
 		post: post

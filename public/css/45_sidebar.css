@@ -74,12 +74,12 @@ aside.cms nav.sidebarTabs button:where(:not([data-cms-action])).tabScroll:hover{
 
 aside.cms nav.sidebarTabs button:where(:not([data-cms-action])).prev{
     left: 0;
-    box-shadow: 8px 0 8px -4px var(--cmsCanvas);
+    box-shadow: 8px 0 8px -4px var(--cmsTabShadow);
 }
 
 aside.cms nav.sidebarTabs button:where(:not([data-cms-action])).next{
     right: 0;
-    box-shadow: -8px 0 8px -4px var(--cmsCanvas);
+    box-shadow: -8px 0 8px -4px var(--cmsTabShadow);
 }
 
 aside.cms nav.sidebarTabs li{
@@ -426,14 +426,14 @@ aside.cms ul li :is(a, button:where([data-cms-action])){
     cursor: pointer;
 }
 
-aside.cms ul li :is(a, button:where([data-cms-action])):not([role="tab"]):not(.icon):not(.sideAction):not(.cmsTextLink){
+aside.cms ul li :is(a, button:where([data-cms-action])):not([role="tab"]):not(.icon):not(.sideAction):not(.cmsTextLink):not(.dropActions *){
     margin-left: -0.5rem;
     padding: 0.3rem 0.5rem;
     border-radius: var(--cmsRadius);
     transition: background-color .15s;
 }
 
-aside.cms ul li :is(a, button:where([data-cms-action])):not([role="tab"]):not(.icon):not(.sideAction):not(.cmsTextLink):hover{
+aside.cms ul li :is(a, button:where([data-cms-action])):not([role="tab"]):not(.icon):not(.sideAction):not(.cmsTextLink):not(.dropActions *):hover{
     background: var(--cmsHover);
 }
 

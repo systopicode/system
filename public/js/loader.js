@@ -6,13 +6,14 @@ sys.core.loader.__class = function () { // class to control availability of scri
 	loader.scriptsLoading = new Map();
 	loader.scriptsLoaded = new Map();
     loader.scriptsFailed = new Map();
-    let loadingDeadline;
+    let loadingDeadline, loadingReveal;
+    let loadingVisible = false;
     loader.state = 'loading';
     loader.paintStatus = () => {
         const state = loader.state;
         const line = document.querySelector('.cmsLoadState');
         if (!line) return;
-        line.hidden = state === 'ready';
+        line.hidden = state === 'ready' || (state === 'loading' && !loadingVisible);
         line.classList.toggle('is-error', state === 'error');
         line.querySelector('i').className = state === 'error' ? 'cmsIcon cmsIcon-circle-exclamation' : 'cmsIcon cmsIcon-spinner cmsIcon-spin';
         line.querySelector('span').textContent = state === 'error' ? 'Some tools could not load. Reload to try again.' : 'Preparing your workspace…';
@@ -21,7 +22,12 @@ sys.core.loader.__class = function () { // class to control availability of scri
     document.addEventListener('cms:rendered', loader.paintStatus);
     loader.status = (state) => {
         clearTimeout(loadingDeadline);
-        if (state === 'loading') loadingDeadline = setTimeout(() => loader.status('error'), 30000);
+        clearTimeout(loadingReveal);
+        loadingVisible = false;
+        if (state === 'loading') {
+            loadingDeadline = setTimeout(() => loader.status('error'), 30000);
+            loadingReveal = setTimeout(() => { loadingVisible = true; loader.paintStatus(); }, 500);
+        }
         loader.state = state;
         loader.paintStatus();
         document.dispatchEvent(new CustomEvent('cms:loading', {detail: state}));

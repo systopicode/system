@@ -37,7 +37,7 @@ $php = [
 ];
 ?>
 <h1>System check</h1>
-<p class="tagsHint">What this server is running, and what the CMS still needs. The download is one PHP file: open it on a server before the CMS is installed, then delete it.</p>
+<p class="tagsHint">What this server is running, and what the System still needs. The download is one PHP file: open it on a server before the System is installed, then delete it.</p>
 <p><button type="button" class="button" data-action-feedback data-loading data-on_click="recheck"><i class="cmsIcon cmsIcon-arrows-rotate"></i>Recheck</button> <a class="button submit" target="_self" href="<?= htmlspecialchars($this->getHref(\http::$root) . 'download') ?>"><i class="cmsIcon cmsIcon-file-arrow-down"></i><span>Download</span></a></p>
 <div class="widgets">
 	<?php

@@ -49,9 +49,9 @@ $groupChildren = static function ($parent) {
     $active = count(array_filter($panels, static fn($panel) => $panel->inPath())) > 0;
     $first = $panels[0];
 ?>
-<li class="<?= $active ? 'active' : '' ?>"><a href="<?= $e($first->getHref(\http::$root)) ?>"<?= count($panels) > 1 || $first->firstChild ? ' data-cms-branch="1"' : '' ?>><i class="cmsIcon cmsIcon-<?= $e($icon) ?>"></i><span><?= $e($label) ?></span></a>
+<li class="<?= $active ? 'active' : '' ?>"><a href="<?= $e($first->getHref(\http::$root)) ?>"<?= count($panels) > 1 || $first->firstChild ? ' data-cms-branch="1"' : '' ?>><i class="cmsIcon cmsIcon-<?= $e($icon) ?>"></i><span data-nav-label="<?= $e($label) ?>"><span><?= $e($label) ?></span></span></a>
 <?php if ($active): ?>
-<?php if (count($panels) > 1): ?><ul><?php foreach ($panels as $panel): ?><li class="<?= $panel->inPath() ? 'active' : '' ?>"><a href="<?= $e($panel->getHref(\http::$root)) ?>"><span><?= $e($labels[$panel->name] ?? $panel->label) ?></span></a></li><?php endforeach; ?></ul>
+<?php if (count($panels) > 1): ?><ul><?php foreach ($panels as $panel): ?><li class="<?= $panel->inPath() ? 'active' : '' ?>"><a href="<?= $e($panel->getHref(\http::$root)) ?>"><span data-nav-label="<?= $e($labels[$panel->name] ?? $panel->label) ?>"><span><?= $e($labels[$panel->name] ?? $panel->label) ?></span></span></a></li><?php endforeach; ?></ul>
 <?php elseif ($first->firstChild): echo $groupChildren($first); endif; ?>
 <?php endif; ?></li>
 <?php endforeach; ?>

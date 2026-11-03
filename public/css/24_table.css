@@ -191,7 +191,7 @@ body.dragging section.cms{
     left: 0;
     width: 0.85rem;
     transform: translateX(-100%);
-    background: linear-gradient(to left, color-mix(in srgb, var(--cmsTextColor) 12%, transparent), transparent);
+    background: linear-gradient(to left, var(--cmsEdgeShadow), transparent);
     pointer-events: none;
     opacity: 1;
 }
@@ -255,7 +255,7 @@ body.dragging section.cms{
     display: flex;
     flex-direction: column;
     align-items: stretch;
-    gap: 0.65rem;
+    gap: 0;
 }
 
 .tableScroll.stacked > table > thead{
@@ -269,15 +269,16 @@ body.dragging section.cms{
     align-items: center;
     gap: 0.6rem 0.75rem;
     margin: 0;
-    padding: 0.75rem 1rem;
-    border: 1px solid var(--cmsLine);
-    border-radius: var(--cmsRadiusLg);
+    padding: 0.45rem 1rem;
+    border: 0;
+    border-bottom: 1px solid var(--cmsLine);
+    border-radius: 0;
     background: var(--cmsCanvas);
-    box-shadow: var(--cmsShadow);
+    box-shadow: none;
 }
 
 .tableScroll.stacked > table > tbody > tr:last-child{
-    border-bottom: 1px solid var(--cmsLine);
+    border-bottom: 0;
 }
 
 .tableScroll.stacked > table > tbody > tr::after{
@@ -343,7 +344,7 @@ body.dragging section.cms{
     display: none;
 }
 
-.tableScroll.stacked > table > tbody > tr > td[data-label]:not(:first-child, :has(> .userStatus, > i[data-drag_type]) + td, .icons, .projectRemove, .schemaApply)::before{
+.tableScroll.stacked > table > tbody > tr > td[data-label]:not([data-table-heading], :first-child, :has(> .userStatus, > i[data-drag_type]) + td, .icons, .projectRemove, .schemaApply)::before{
     content: attr(data-label);
     display: block;
     margin-bottom: 0.2rem;
@@ -360,16 +361,16 @@ body.dragging section.cms{
 }
 
 /* A drag-sorted table on a phone starts as that one line. Tap the row to open it. */
-    .cms .tableScroll.stacked.is-foldable > table > tbody > tr:not(.is-open) > td:not(:first-child, :has(> .userStatus, > i[data-drag_type]), :has(> .userStatus, > i[data-drag_type]) + td, .icons, .projectRemove, .schemaApply){
+    .cms .tableScroll.stacked.is-foldable > table > tbody > tr:not(.is-open) > td:not(:first-child, [data-table-inline], :has(> .userStatus, > i[data-drag_type]), :has(> .userStatus, > i[data-drag_type]) + td, .icons, .projectRemove, .schemaApply){
         display: none;
     }
-    .cms .tableScroll.stacked.is-foldable > table > tbody > tr:not(.is-open){
+    .cms .tableScroll.stacked.is-foldable > table > tbody > tr{
         align-items: center;
         width: 100%;
         min-width: 100%;
         min-height: 2.75rem;
-        padding-top: 0.45rem;
-        padding-bottom: 0.45rem;
+        padding-top: 0.4rem;
+        padding-bottom: 0.4rem;
     }
 
     body.cms > main > div.content .flexColumn:has(.tableScroll.stacked),
@@ -394,22 +395,21 @@ body.dragging section.cms{
         flex: 1 1 100%;
     }
     .cms .tableScroll.stacked.is-foldable > table > tbody > tr.is-open > td:has(> .userStatus, > i[data-drag_type]),
-    .cms .tableScroll.stacked.is-foldable > table > tbody > tr.is-open > :is(td:first-child:not(:has(> .userStatus, > i[data-drag_type])), td:has(> .userStatus, > i[data-drag_type]) + td),
     .cms .tableScroll.stacked.is-foldable > table > tbody > tr.is-open > :is(td.icons, td.projectRemove, td.schemaApply){
         flex: 0 0 auto;
     }
-    /* A stacked list is cards on the page. The widget behind them stays clear,
-       or the gaps between the rows are white. */
+    /* Accordion rows retain one shared widget surface and header. */
     .projectFiles .widget:has(> .tableScroll.stacked),
     .projectFiles .widget:has(> header + .tableScroll.stacked),
     .pageSettings.widget:has(> .tableScroll.stacked),
     .pageSettings.widget:has(> header + .tableScroll.stacked),
     .widget.is-list:has(> .tableScroll.stacked),
     .widget.is-list:has(> header + .tableScroll.stacked){
-        background: transparent;
-        border: 0;
-        box-shadow: none;
-        overflow: visible;
+        background: var(--cmsCanvas);
+        border: 1px solid var(--cmsLine);
+        border-radius: var(--cmsRadiusLg);
+        box-shadow: var(--cmsShadow);
+        overflow: hidden;
     }
     .projectFiles .widget:has(> .tableScroll.stacked) > header,
     .projectFiles .widget:has(> header + .tableScroll.stacked) > header,
@@ -417,12 +417,11 @@ body.dragging section.cms{
     .pageSettings.widget:has(> header + .tableScroll.stacked) > header,
     .widget.is-list:has(> .tableScroll.stacked) > header,
     .widget.is-list:has(> header + .tableScroll.stacked) > header{
-        margin-bottom: 0.35rem;
-        padding-left: 0;
-        padding-right: 0;
-        border: 0;
+        margin-bottom: 0;
+        padding: .65rem .75rem;
+        border-bottom: 1px solid var(--cmsLine);
         border-radius: 0;
-        background: transparent;
+        background: var(--cmsCanvas);
         box-shadow: none;
     }
     .cms .tableScroll.stacked div.sort.v{
@@ -442,49 +441,7 @@ body.dragging section.cms{
         background: transparent;
         animation: none;
     }
-    /* A report stays a table: each record is a labelled block, not one loose line. */
-    .widget.is-list > .tableScroll.reportRows.stacked > table > tbody{
-        gap: 0.65rem;
-        padding: 0 var(--cmsCardPadding) 0.85rem;
-    }
-    .widget.is-list > .tableScroll.reportRows.stacked > table > tbody > tr{
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 0.55rem 1rem;
-        align-items: start;
-        border: 1px solid var(--cmsLine);
-        border-radius: var(--cmsRadius);
-        box-shadow: none;
-        background: color-mix(in srgb, var(--cmsMainColor) 3.5%, var(--cmsCanvas));
-        padding: 0.8rem 0.9rem;
-    }
-    .widget.is-list > .tableScroll.reportRows.stacked > table > tbody > tr::after{
-        display: none;
-    }
-    .widget.is-list > .tableScroll.reportRows.stacked > table > tbody > tr > td{
-        display: block;
-        flex: none;
-        width: auto;
-        font-weight: 500;
-    }
-    .widget.is-list > .tableScroll.reportRows.stacked > table > tbody > tr > td::before{
-        content: attr(data-label);
-        display: block;
-        margin-bottom: 0.15rem;
-        font-size: 0.6875rem;
-        font-weight: 600;
-        letter-spacing: 0.04em;
-        text-transform: uppercase;
-        color: var(--cmsMuted);
-    }
-    .widget.is-list > .tableScroll.reportRows.stacked > table > tbody > tr > td:first-child{
-        grid-column: 1 / -1;
-        font-weight: 600;
-    }
-    .widget.is-list > .tableScroll.reportRows.stacked > table > tbody > tr > td:empty{
-        display: none;
-    }
-    .cms .tableScroll.stacked.is-foldable > table > tbody > tr.is-open > td[data-label]:not(:first-child, :has(> .userStatus, > i[data-drag_type]) + td, .icons, .projectRemove, .schemaApply){
+    .cms .tableScroll.stacked.is-foldable > table > tbody > tr.is-open > td[data-label]:not([data-table-heading], :first-child, :has(> .userStatus, > i[data-drag_type]) + td, .icons, .projectRemove, .schemaApply){
         display: flex;
         flex-direction: row;
         justify-content: space-between;
@@ -492,7 +449,7 @@ body.dragging section.cms{
         gap: 1rem;
         width: 100%;
     }
-    .cms .tableScroll.stacked.is-foldable > table > tbody > tr.is-open > td[data-label]:not(:first-child, :has(> .userStatus, > i[data-drag_type]) + td, .icons, .projectRemove, .schemaApply)::before{
+    .cms .tableScroll.stacked.is-foldable > table > tbody > tr.is-open > td[data-label]:not([data-table-heading], :first-child, :has(> .userStatus, > i[data-drag_type]) + td, .icons, .projectRemove, .schemaApply)::before{
         display: inline;
         margin: 0;
         flex: 0 0 auto;
@@ -520,22 +477,24 @@ div.table .tc{
 
 .tableFoldToggle { display: none; }
 
-    .cms .tableScroll.stacked.is-foldable td:has(> .tableFoldToggle) {
-        position: relative;
-        padding-right: 2.75rem;
-    }
     .cms .tableScroll.stacked.is-foldable .tableFoldToggle {
         display: inline-flex;
-        position: absolute;
-        right: 0;
-        top: 0;
+        flex: 0 0 auto;
         align-items: center;
         justify-content: center;
-        width: 2.5rem;
-        min-height: 2.75rem;
+        margin: 0 0 0 auto;
         padding: 0;
-        background: transparent;
-        color: var(--cmsMuted);
+    }
+    .cms .tableScroll.stacked.is-foldable > table > tbody > tr > :is(.icons, .projectRemove, .schemaApply) {
+        display: flex;
+        align-items: center;
+        gap: .25rem;
+    }
+    .cms .tableScroll.stacked.is-foldable > table > tbody > tr.is-open:not(.selected) {
+        background: color-mix(in srgb, var(--cmsMainColor) 6%, var(--cmsCanvas));
+    }
+    .cms .tableScroll.stacked.is-foldable > table > tbody > tr:not(:has([data-table-fold])) {
+        cursor: auto;
     }
     .cms .tableFoldToggle[aria-expanded="true"] i { transform: rotate(180deg); }
 
@@ -569,3 +528,47 @@ div.table .tc{
 .cms .tableScroll[data-table-scroll] > table { min-width:42rem; }
 
 .cms .projectFiles table.scalars thead th:not(:empty) { text-align: left; }
+
+/* The heading keeps the same flexible line before and after opening. */
+.cms .tableScroll.stacked.is-foldable > table > tbody > tr > td[data-table-heading] {
+    flex: 1 1 0;
+    align-self: center;
+    min-height: 2rem;
+    display: flex;
+    align-items: center;
+}
+.cms .tableScroll.stacked.is-foldable > table > tbody > tr.is-open > td:has(> i[data-drag_type]) {
+    display: none;
+    width: 0;
+    min-width: 0;
+    flex: 0 0 0;
+}
+.cms .tableScroll.stacked.is-foldable > table > tbody > tr > td[data-table-heading]::before { display: none; }
+.cms .tableScroll.stacked.is-foldable > table > tbody > tr.is-open > td[data-table-heading] { flex: 1 1 0; }
+
+.cms .tableScroll.stacked.is-foldable > table > tbody > tr.is-open > td[data-label]:not([data-table-heading]) { flex-wrap:wrap; }
+.cms .tableScroll.stacked.is-foldable td[data-label] > code { max-width:100%; overflow-wrap:anywhere; }
+
+[data-table-mobile-only] { display: none; }
+.cms .tableScroll.stacked [data-table-mobile-only] { display: inline-flex; margin-inline-start: .4rem; }
+.cms .tableScroll.stacked > table > tbody > tr > td[data-table-inline] {
+    order: 2;
+    flex: 0 0 auto;
+}
+.cms .tableScroll.stacked td[data-table-inline]::before { display: none; }
+
+.cms .tableScroll.stacked.is-foldable > table > tbody > tr > td[data-table-heading] { padding: 0; }
+.cms .tableScroll.stacked.is-foldable :is(.tableFoldToggle, td.icons .button.icononly, td.projectRemove > .button:has(> i:only-child)) {
+    width: 2.25rem;
+    min-width: 2.25rem;
+    height: 2.25rem;
+    min-height: 2.25rem;
+    padding: 0;
+}
+.cms .tableScroll.stacked.is-foldable > table > tbody > tr::after { display: none; }
+.cms .tableScroll.stacked.is-foldable > table > tbody > tr.is-open > td:not([data-table-heading], [data-table-inline], .icons, .projectRemove, .schemaApply, [data-table-selection], :has(> .userStatus, > i[data-drag_type])) {
+    flex: 0 0 100%;
+    min-width: 0;
+}
+.cms .tableScroll.stacked [data-table-desktop-only] { display: none; }
+.cms .tableScroll.stacked small[data-table-mobile-only] { display: block; margin-inline-start: 0; }

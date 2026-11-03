@@ -131,7 +131,7 @@ $preview = $this->fakeRoles;
 		</div>
 	</div>
 	<?php if ($preview !== []) { ?>
-		<p class="profilePreview"><i class="cmsIcon cmsIcon-eye"></i>Viewing the CMS as <?= $e(implode(', ', $preview)) ?>. <button type="button" data-cms-action data-on_click="unsetFakeRoles">Stop</button></p>
+		<p class="profilePreview"><i class="cmsIcon cmsIcon-eye"></i>Viewing the System as <?= $e(implode(', ', $preview)) ?>. <button type="button" data-cms-action data-on_click="unsetFakeRoles">Stop</button></p>
 	<?php } ?>
 	<div class="profileGrid widgets">
 		<?php if ($me) { ?>
@@ -223,7 +223,7 @@ $preview = $this->fakeRoles;
 </div>
 <?php } ?>
 <?php if ($codesOn) {
-	$remoteOpen = $screenCode !== '' && $pending === null;
+	$remoteOpen = ($screenCode !== '' && $pending === null) || $this->action === 'approveRemote';
 	$offer = $me ? LoginCodes::shown($me) : null;
 	$offerUrl = $offer ? \Systopic\System\Auth\CodeMail::link($offer['code']) : '';
 	$offerSvg = ($offerUrl !== '' && class_exists('qr')) ? \qr::svgMarkup(\qr::payload('url', ['url' => $offerUrl]), 4, 'M', 'qr-code') : '';
@@ -237,9 +237,10 @@ $preview = $this->fakeRoles;
 			</ul>
 		</header>
 		<main class="remoteLogin">
-			<?php if ($remoteOpen) { ?>
+			<div data-remote-feedback><?= \message::flush('remoteLogin') ?>
+			<?php if ($remoteOpen && $this->action !== 'approveRemote') { ?>
 				<div class="cms message"><div class="error"><p>That code is wrong or has expired.</p></div></div>
-			<?php } ?>
+			<?php } ?></div>
 			<?php if ($offerSvg !== '') { ?>
 				<div class="remoteOffer">
 					<div class="remoteQr"><?= $offerSvg ?></div>
@@ -271,7 +272,7 @@ $preview = $this->fakeRoles;
 					<button type="button" class="button submit" data-qr-again><i class="cmsIcon cmsIcon-arrows-rotate"></i> <span data-qr-label>Try again</span></button>
 				</div>
 			</div>
-			<form class="remoteCode" data-feedback="parameters" data-code-form method="post" action="<?= $e($this->href) ?>"<?= ($remoteOpen || $offerSvg === '') ? '' : ' hidden' ?>>
+			<form class="remoteCode" data-feedback="parameters" data-code-form method="post" action="<?= $e($this->href . 'checkRemote') ?>"<?= ($remoteOpen || $offerSvg === '') ? '' : ' hidden' ?>>
 				<div class="remoteCodeEntry">
 					<div class="authCodeSlots" data-code-slots>
 						<?php for ($slot = 0; $slot < 8; $slot++) {
@@ -279,7 +280,7 @@ $preview = $this->fakeRoles;
 								echo '<span class="authCodeDash" aria-hidden="true">-</span>';
 							}
 						?>
-						<input data-slot="<?= $slot ?>" inputmode="text" autocapitalize="characters" spellcheck="false" autocomplete="<?= $slot === 0 ? 'one-time-code' : 'off' ?>" aria-label="Character <?= $slot + 1 ?>">
+						<input required pattern="[A-Za-z0-9]" data-slot="<?= $slot ?>" inputmode="text" autocapitalize="characters" spellcheck="false" autocomplete="<?= $slot === 0 ? 'one-time-code' : 'off' ?>" aria-label="Character <?= $slot + 1 ?>">
 						<?php } ?>
 						<input type="hidden" name="screen" value="">
 					</div>

@@ -136,7 +136,7 @@
 			sys.core.server.sendCall({
 				group_id: widget.dataset.group_id,
 				name: h1.textContent
-			}, 'updateGroupLabel').done(response => {
+			}, 'updateGroupLabel', h1).done(response => {
 				p(response);
 				if (ondone) {
 					ondone(response);
@@ -157,6 +157,7 @@
 			}
 			h1.removeAttribute('contenteditable');
 			if (!save) {
+				window.cmsFeedback?.cancel(h1);
 				h1.textContent = tags.oldName;
 				return;
 			}
@@ -176,6 +177,7 @@
 				return;
 			}
 			tags.oldName = h1.textContent;
+			h1.dataset.pencilField = '';
 			h1.setAttribute('contenteditable', 'plaintext-only');
 			var stop = (e) => {
 				if (e.type === 'keydown') {

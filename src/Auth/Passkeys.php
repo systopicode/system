@@ -88,7 +88,7 @@ final class Passkeys
             $origin = (string) (\http::$hostUrl ?? '');
             $host = trim((string) parse_url($origin, PHP_URL_HOST), '[]');
             if (filter_var($host, FILTER_VALIDATE_IP) !== false) {
-                return 'Passkeys do not work with IP addresses, even over HTTPS. Open the CMS using a domain name with a trusted HTTPS certificate. You can still sign in with your password here.';
+                return 'Passkeys do not work with IP addresses, even over HTTPS. Open the system using a domain name with a trusted HTTPS certificate. You can still sign in with your password here.';
             }
             if (parse_url($origin, PHP_URL_SCHEME) !== 'https' && $host !== 'localhost') {
                 return 'Passkeys require a secure HTTPS connection. Open the CMS using HTTPS with a trusted certificate. You can still sign in with your password here.';

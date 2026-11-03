@@ -11,6 +11,7 @@ $name = trim((string) $identity->fullname) !== '' ? (string) $identity->fullname
 		<?php if ($id > 0) { ?>
 			<img referrerpolicy="no-referrer" src="<?= htmlspecialchars(Portrait::src($id, $this->email, ($identity->user->type ?? '') === \Systopic\System\Tables\Users\Model::SCREEN), ENT_QUOTES) ?>" alt="">
 		<?php } ?>
+		<i class="cmsIcon cmsIcon-gear cmsAccountGear" aria-hidden="true"></i>
 	</div>
 	<span class="cmsAccountName"><?= htmlspecialchars($name, ENT_QUOTES) ?></span>
 </a>

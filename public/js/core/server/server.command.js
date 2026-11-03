@@ -194,7 +194,9 @@ sys.core.server.command = function (call) {
 			break;
 
 		case 'replacePageTitle'://08112018 - LS
-			document.title = response.replacePageTitle;
+			var title = String(response.replacePageTitle || '');
+			var marker = title.match(/[🔨🧪]/u);
+			document.title = marker ? marker[0] + ' ' + title.replace(marker[0], '').trim() : title;
 			break;
 
 		case 'replaceMetaTags'://08112018 - LS
@@ -340,6 +342,11 @@ sys.core.server.command = function (call) {
 				}
 				if (existing) {
 					existing.setAttribute('data-cms-module', item.path);
+					// Keep the stylesheet node and its cascade position, but honour
+					// the server's new version after a deployment or a Dev edit.
+					if (existing.href !== new URL(item.href, document.baseURI).href) {
+						existing.href = item.href;
+					}
 					return;
 				}
 				var link = document.createElement('link');

@@ -33,8 +33,12 @@ switch ($this->action) {
 			$this->me->appearance = $value;
 			$this->scope->save($this->me);
 			client::addCommand('setAttribute')->selector('html')->attr('data-appearance')->value($value);
+			foreach (['light', 'dark', 'system'] as $mode) {
+				$selector = '.appearanceChoices [data-value="' . $mode . '"]';
+				client::addCommand('setAttribute')->selector($selector)->attr('aria-checked')->value($mode === $value ? 'true' : 'false');
+				client::addCommand('setAttribute')->selector($selector)->attr('tabindex')->value($mode === $value ? '0' : '-1');
+			}
 		}
-		$this->updateView('main');
 		break;
 
 	case 'changePassword':
@@ -68,30 +72,40 @@ switch ($this->action) {
 		\http::redirect('./');
 		break;
 
+	case 'checkRemote':
+		$input = (string) \http::post('screen', '');
+		if (!LoginCodes::available() || LoginCodes::peek($input, [Codes::PAIR_USER, Codes::PAIR_SCREEN]) === null) {
+			\message::error('That code is wrong or has expired.')->target('remoteLogin');
+			\clientDocument::replaceInner('.remoteLoginBox [data-remote-feedback]', \message::flush('remoteLogin'));
+		} else {
+			$this->updateView('main');
+		}
+		break;
+
 	case 'approveRemote':
 		$me = $this->me;
 		$input = (string) \http::post('code', '');
 		$ok = false;
 		$told = false;
 		if (!$me || !LoginCodes::available()) {
-			\message::error('Codes are not set up on this server.')->target('devices');
+			\message::error('Codes are not set up on this server.')->target('remoteLogin');
 			$told = true;
 		} else {
 			$code = LoginCodes::peek($input, [Codes::PAIR_USER, Codes::PAIR_SCREEN]);
 			if ($code === null) {
 				\message::error(LoginCodes::$error === LoginCodes::BLOCKED
 					? 'Too many attempts. Please try again in 15 minutes.'
-					: 'That code is wrong or has expired.')->target('devices');
+					: 'That code is wrong or has expired.')->target('remoteLogin');
 				$told = true;
 			} elseif ($code->purpose === Codes::PAIR_SCREEN) {
 				$allowed = \Systopic\System\Auth\SignInRights::allows($this->scope, $me, \Systopic\System\Auth\SignInRights::SCREENS);
 				$screen = $allowed ? UserLookup::byId($this->scope, (int) \http::post('screen', 0)) : null;
 				$screenOk = $screen !== null && $screen->type === User::SCREEN && $screen->isActive && (int) $screen->id > 1;
 				if (!$allowed) {
-					\message::error('Signing in a screen takes the authScreens permission.')->target('devices');
+					\message::error('Signing in a screen takes the authScreens permission.')->target('remoteLogin');
 					$told = true;
 				} elseif (!$screenOk) {
-					\message::error('That account cannot be signed in.')->target('devices');
+					\message::error('That account cannot be signed in.')->target('remoteLogin');
 					$told = true;
 				} else {
 					$ok = LoginCodes::approveScreen($input, $screen, (int) Session::id());
@@ -108,13 +122,13 @@ switch ($this->action) {
 						&& ($other->type === null || $other->type === '' || $other->type === User::PERSON)
 						&& (!$other->isSuperuser || $me->isSuperuser);
 					if (!$allowed) {
-						\message::error('You can only sign this device in as yourself.')->target('devices');
+						\message::error('You can only sign this device in as yourself.')->target('remoteLogin');
 						$told = true;
 					} elseif ($other !== null && $other->isSuperuser && !$me->isSuperuser) {
-						\message::error('Only a superuser can sign in as a superuser.')->target('devices');
+						\message::error('Only a superuser can sign in as a superuser.')->target('remoteLogin');
 						$told = true;
 					} elseif (!$personOk) {
-						\message::error('That account cannot be signed in.')->target('devices');
+						\message::error('That account cannot be signed in.')->target('remoteLogin');
 						$told = true;
 					} else {
 						$target = $other;
@@ -133,9 +147,9 @@ switch ($this->action) {
 		if (!$told) {
 			\message::error(LoginCodes::$error === LoginCodes::BLOCKED
 				? 'Too many attempts. Please try again in 15 minutes.'
-				: 'That code is wrong or has expired.')->target('devices');
+				: 'That code is wrong or has expired.')->target('remoteLogin');
 		}
-		$this->updateView('main');
+		\clientDocument::replaceInner('.remoteLoginBox [data-remote-feedback]', \message::flush('remoteLogin'));
 		break;
 
 	case 'revokeOwnDevice':

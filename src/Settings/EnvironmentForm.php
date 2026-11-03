@@ -251,7 +251,7 @@ final class EnvironmentForm
         $e = static fn($value): string => htmlspecialchars((string) $value, ENT_QUOTES);
         $auth = is_array($data['auth'] ?? null) ? $data['auth'] : [];
         $ready = strlen((string) ($auth['secret'] ?? '')) >= 32;
-        echo '<section class="cmsBox"><header><div class="cmsBoxTitles"><h2>Sign-in</h2>';
+        echo '<section class="cmsBox envSignIn"><header><div class="cmsBoxTitles"><h2>Sign-in</h2>';
         if (!$ready) {
             echo '<p class="cmsBoxLead">A sign-in key enables one-time codes for this environment. Device and screen lifetimes control how long that access remains valid.</p></div></header>';
             echo '<div class="cmsBoxActions is-start">';
@@ -287,7 +287,7 @@ final class EnvironmentForm
         echo '<div class="tableScroll"><table class="scalars"><tbody>';
         foreach ($schema as $key => $kind) {
             $value = $values[$key] ?? ($kind === 'bool' ? false : '');
-            echo '<tr' . ($group === 'debug' ? ' data-debug-option="' . $e($key) . '"' : '') . '><td><span>' . $e($group === 'debug' && $key === 'displayErrors' ? 'Display PHP errors' : self::label($key)) . '<small>' . $e($key) . '</small></span></td><td>';
+            echo '<tr' . ($group === 'debug' ? ' data-debug-option="' . $e($key) . '"' : '') . '><td><span>' . $e($group === 'debug' && $key === 'displayErrors' ? 'Display PHP errors' : self::label($key)) . '<small>' . $e($key) . '</small></span></td><td' . ($kind === 'bool' ? ' data-table-inline' : '') . '>';
             self::control($file, $group, $key, $kind, $value);
             echo '</td></tr>';
         }

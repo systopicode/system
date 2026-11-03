@@ -19,6 +19,9 @@ return [
             'Multi-upload results retain per-file progress and allow failed files to be retried without repeating completed uploads.',
         ],
         'fixed' => [
+            'Phone tables keep their accordion rows in a shared card. Search fits the keyboard, selected dialog tabs stay visible, and Back restores the pylon.',
+            'Smartphone search closes after selection; database details fold into rows, dialog actions remain accessible, and nested dialogs retain compact bounds.',
+            'Panels without a pylon retain the rounded content shoulder; empty action bars no longer cover the top corners outside Pages.',
             'Auth metadata keeps project favicons consistent, supports legacy favicon folders and exposes the theme colour. Code inputs fit narrow screens.',
             'Screen avatars combine the derived navigation colour, dark facial details and highlight-coloured antennas on the existing light backdrop. Generated person portraits are slightly larger with less space above the head; obsolete cached renders are renewed.',
             'Holding a dashboard title keeps the same widget under the pointer when customization opens.',

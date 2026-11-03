@@ -23,11 +23,11 @@ final class Contrast
     public static function render(): void
     {
         $color = static fn($name) => \Systopic\System\Sys\Theme::color($name);
-        echo '<details class="themeContrast"><summary>Colour contrast <i class="cmsIcon cmsIcon-chevron-down"></i></summary><p class="tagsHint">Checks the chosen base colours for normal text (4.5:1). Appearance modes and custom CSS can change the final colours; verify those in the interface too.</p><div class="tableScroll"><table class="scalars"><tbody>';
+        echo '<details class="cmsBox themeContrast"><summary><h3>Colour contrast</h3><span class="button transparent icononly summaryToggle" aria-hidden="true"><i class="cmsIcon cmsIcon-chevron-down"></i></span></summary><main><p class="tagsHint">Checks the chosen base colours for normal text (4.5:1). Appearance modes and custom CSS can change the final colours; verify those in the interface too.</p><div class="tableScroll" data-table-scroll><table class="scalars"><tbody>';
         foreach ([['Text / background','cmsTextColor','cmsBgColor'],['Main / highlight','cmsMainColor','cmsHighlightColor']] as [$label,$a,$b]) {
             $ratio = self::ratio($color($a),$color($b));
             echo '<tr><td>' . $label . '</td><td><i class="cmsIcon ' . ($ratio >= 4.5 ? 'is-success cmsIcon-circle-check' : 'is-warning cmsIcon-triangle-exclamation') . '"></i> ' . number_format($ratio,2) . ':1 — ' . ($ratio >= 4.5 ? 'Sufficient for normal text' : 'Low contrast: adjust these colours') . '</td></tr>';
         }
-        echo '<tr data-contrast-live><td>Current appearance: text / surface</td><td data-contrast-result></td></tr></tbody></table></div></details>';
+        echo '<tr data-contrast-live><td>Current appearance: text / surface</td><td data-contrast-result></td></tr></tbody></table></div></main></details>';
     }
 }

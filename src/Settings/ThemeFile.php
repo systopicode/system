@@ -226,7 +226,7 @@ final class ThemeFile
         echo 'document.querySelectorAll(".themeSwatches input").forEach(function(input){input.addEventListener("input",function(){var dot=input.parentElement.querySelector("i");if(dot)dot.style.backgroundColor=input.value;var hex=input.parentElement.querySelector("small");if(hex)hex.textContent=input.value;});});';
         echo '</script>';
         echo '<h1>Theme</h1>';
-        echo '<p class="tagsHint">These colours define the CMS appearance. The public website and stage marker keep their own colours.</p>';
+        echo '<p class="tagsHint">These colours define the System appearance. The public website and stage marker keep their own colours.</p>';
         echo '<div class="projectFiles themeEditor">';
         echo \message::flush();
         echo '<section class="widget"><header><h2>Colours</h2><button type="button" class="button" data-on_click="resetColors"><i class="cmsIcon cmsIcon-arrow-rotate-left"></i>Reset to default</button></header><main>';
@@ -236,9 +236,9 @@ final class ThemeFile
             echo '<label><input type="color" data-on_change="save" data-key="' . $e($name) . '" name="value" value="' . $e($hex) . '" aria-label="' . $e($label) . '">';
             echo '<i style="background-color:' . $e($hex) . '"></i><span>' . $e($label) . '<small>' . $e($hex) . '</small></span></label>';
         }
-        echo '</div>';
+        echo '</div></main>';
         Contrast::render();
-        echo '</main></section>';
+        echo '</section>';
         ThemeAssets::render($panel);
         echo '<section class="widget themeIcons"><header><h2>Icon sets</h2></header><main>';
         echo '<p>Tabler Outline is used for controls and content. Small information hints use the original Solar info-circle motif in one colour. Phosphor Duotone is used for main navigation, including Tools (Wrench), custom main-navigation panels and the passkey animation. Cleanup and log clearing use the Tabler eraser. All icons are served locally.</p>';
@@ -252,15 +252,15 @@ final class ThemeFile
         if ($pagesHere) {
             echo '<section class="widget"><header><h2>Page overrides</h2></header>';
             echo '<form method="post" action="saveCss">';
-            echo '<main><p class="tagsHint">Styles the website preview inside the CMS without changing the public website stylesheet.</p>';
+            echo '<main><p class="tagsHint">Styles the website preview inside the System without changing the public website stylesheet.</p>';
             echo '<textarea class="themeCss" name="css" aria-label="Public website CSS" spellcheck="false" autocomplete="off" autocapitalize="off">' . $e(self::readCss()) . '</textarea></main>';
             echo '<footer><button type="submit" class="button submit"><i class="cmsIcon cmsIcon-check"></i>Save CSS</button></footer>';
             echo '</form></section>';
         }
         echo '<section class="widget"><header><h2>System overrides</h2></header>';
         echo '<form method="post" action="saveSystemCss">';
-        echo '<main><p class="tagsHint">Custom styles for the CMS interface. The public website and page preview are unaffected.</p>';
-        echo '<textarea class="themeCss" name="css" aria-label="CMS system overrides CSS" spellcheck="false" autocomplete="off" autocapitalize="off">' . $e(self::readSystemCss()) . '</textarea></main>';
+        echo '<main><p class="tagsHint">Custom styles for the System interface. The public website and page preview are unaffected.</p>';
+        echo '<textarea class="themeCss" name="css" aria-label="System overrides CSS" spellcheck="false" autocomplete="off" autocapitalize="off">' . $e(self::readSystemCss()) . '</textarea></main>';
         echo '<footer><button type="submit" class="button submit"><i class="cmsIcon cmsIcon-check"></i>Save CSS</button></footer>';
         echo '</form></section></div>';
     }
