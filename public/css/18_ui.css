@@ -30,7 +30,7 @@
 
 	--cmsSuccess: #4fb95e;
 	--cmsError: #d6454c;
-	--cmsWarning: var(--cmsHighlightColor);
+	--cmsWarning: #ffc107;
 	--cmsAlias: #4384f1;
 	--cmsRedirect: #34b57a;
 	--cmsHover: color-mix(in srgb, var(--cmsMainColor) 6%, transparent);
@@ -50,10 +50,12 @@
 	--cmsBar: 44px;
 	--cmsShadow: 0 1px 3px rgb(16 24 40 / .055);
 	--cmsShadowLg: 0 16px 40px rgb(16 24 40 / .22);
+	--cmsEdgeShadow: color-mix(in srgb, var(--cmsTextColor) 12%, transparent);
+	--cmsTabShadow: var(--cmsCanvas);
 }
 
 .flexRow,
-.flexRow a{
+.flexRow :is(a, button:where([data-cms-action])){
 	/* color:rgb(52, 52, 52); */
 	text-decoration: none;
 }
@@ -68,8 +70,8 @@
 	position: fixed;
 	z-index: 100000;
 	top: 0;
-	left: 10px;
-	right: 10px;
+	left: 0;
+	right: 0;
 	height: 3px;
 	overflow: hidden;
 	border-radius: 999px;
@@ -320,6 +322,14 @@ body.dragging {
 	-webkit-user-select: none;
 	user-select: none;
 	overscroll-behavior: none;
+	cursor: grabbing;
+}
+
+/* Links and buttons under the pointer keep their own cursor. While a row
+   is held, the hand stays closed wherever it moves. */
+body.dragging,
+body.dragging * {
+	cursor: grabbing !important;
 }
 body.dragging .dragged div.sort,
 body.dragging .afterDragged div.sort.insertBefore,
@@ -345,3 +355,75 @@ body.dragging.debug .draghelper{
 @media (pointer: coarse) {
 	:root { --cmsCardPadding: 1rem; }
 }
+
+.cms ul.tree label[data-drag_type="page"],
+.cms ul.tree label[data-drag_type="page"] :is(:is(a, button:where([data-cms-action])),button:where(:not([data-cms-action]))).label {
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+}
+
+/* Quiet request feedback shares the existing footer, without message banners. */
+.cms .cmsSaveState, body > .cmsSaveState { position: relative; display: inline-flex; align-items: center; gap: .4rem; margin-inline: .6rem; font-size: .75rem; line-height: 1.35; }
+.cmsSaveState[hidden], .cmsLoadState[hidden] { display: none !important; }
+.cmsLoadState.cms { position: fixed; z-index: 100000; inset: .75rem .75rem auto auto; display: flex; align-items: center; gap: .65rem; padding: .65rem .9rem; max-width: calc(100vw - 1.5rem); background: var(--cmsCanvas); color: var(--cmsTextColor); border: 1px solid var(--cmsInteractive); border-radius: var(--cmsRadius); box-shadow: 0 .2rem 1rem #0003; font-size: .9rem; }
+.cmsLoadState.is-error { border-color: #d89716; }
+.cms .cmsEmptyState { padding: 1.25rem; text-align: center; color: var(--cmsMuted); white-space: normal; }
+
+/* Message accents for mobile text; lighter shared accents for footer text and field contours. */
+:root {
+    --cmsStatusSuccess: color-mix(in srgb, var(--cmsSuccess) 75%, white);
+    --cmsStatusError: color-mix(in srgb, var(--cmsError) 70%, white);
+    --cmsStatusWarning: color-mix(in srgb, var(--cmsWarning) 80%, white);
+    --cmsFeedbackSuccess: color-mix(in srgb, var(--cmsSuccess) 65%, var(--cmsTextColor));
+    --cmsFeedbackError: color-mix(in srgb, var(--cmsError) 65%, var(--cmsTextColor));
+    --cmsFeedbackWarning: color-mix(in srgb, var(--cmsWarning) 65%, var(--cmsTextColor));
+}
+.cms .cmsSaveState, body > .cmsSaveState { padding: .15rem .7rem; border-radius: var(--cmsRadius); background: color-mix(in srgb, var(--cmsCanvas) 90%, transparent); color: var(--cmsTextColor); }
+.cmsSaveState[data-state="saved"] { color: var(--cmsFeedbackSuccess); }
+.cmsSaveState[data-state="error"] { color: var(--cmsFeedbackError); }
+.cmsSaveState[data-state="changed"], .cmsSaveState[data-state="saving"] { color: var(--cmsFeedbackWarning); }
+footer.cmsStatusbar .cmsSaveState { margin-inline: 0; background: rgb(255 255 255 / .09); }
+footer.cmsStatusbar .cmsSaveState[data-state="saved"] { color: var(--cmsStatusSuccess); }
+footer.cmsStatusbar .cmsSaveState[data-state="error"] { color: var(--cmsStatusError); }
+footer.cmsStatusbar .cmsSaveState:is([data-state="changed"],[data-state="saving"]) { color: var(--cmsStatusWarning); }
+.cmsSaveState .spin { display: inline-block; width: .7rem; height: .7rem; border: var(--cmsSpinnerStroke, 2px) solid currentColor; border-top-color: transparent; border-radius: 50%; animation: spinner .6s linear infinite; }
+.cmsSaveState i { flex: 0 0 auto; }
+.cmsSaveState.is-mobile { position: fixed; z-index: 10020; right: max(.75rem, env(safe-area-inset-right)); bottom: max(.75rem, env(safe-area-inset-bottom)); max-width: calc(100vw - 1.5rem); margin: 0; padding: .55rem .75rem; border: 1px solid currentColor; box-shadow: var(--cmsShadowLg); font-size: .85rem; pointer-events: none; }
+.cms [data-save-state="changed"], .cms [data-save-state="saving"] { --cmsFieldFeedback: var(--cmsStatusWarning); }
+.cms [data-save-state="saved"] { --cmsFieldFeedback: var(--cmsStatusSuccess); }
+.cms [data-save-state="error"] { --cmsFieldFeedback: var(--cmsStatusError); }
+
+body:has(footer.cmsStatusbar .cmsJobs.on) > .cmsSaveState.is-mobile { bottom: calc(max(.75rem, env(safe-area-inset-bottom)) + 28px); }
+
+.cms :is(input,textarea,select,[contenteditable],[data-pencil-field])[data-save-state] {
+    outline: none;
+    border-color: var(--cmsFieldFeedback);
+    box-shadow: 0 0 0 1.5px var(--cmsFieldFeedback);
+}
+
+/* Pencil edits reuse their existing outline instead of adding a second contour. */
+.cms :is([contenteditable="plaintext-only"],[data-on_blur="updateLabel"],[data-pencil-field])[data-save-state]:not(:disabled) {
+    outline: 1px dashed var(--cmsFieldFeedback);
+    outline-offset: 3px;
+    border-radius: 2px;
+    border-color: transparent;
+    box-shadow: none;
+}
+.cms :is([contenteditable="plaintext-only"],[data-on_blur="updateLabel"],[data-pencil-field]):is([data-save-state="saved"],[data-save-state="error"]):not(:disabled) {
+    outline-style: solid;
+}
+
+.cms .cmsSaveState .cmsSaveRetry, body > .cmsSaveState .cmsSaveRetry { pointer-events: auto; padding: .1rem .4rem; font: inherit; color: inherit; }
+
+.cms :is(button:where(:not([data-cms-action])),.button)[data-save-state] { outline:1.5px solid var(--cmsFieldFeedback); outline-offset:2px; }
+
+/* Accessible entry points use the existing upload surface and native file picker. */
+.cmsSkipLink { position:fixed;top:8px;left:8px;z-index:10000;transform:translateY(-180%);padding:.65rem 1rem;background:var(--cmsCanvas,#fff);color:var(--cmsTextColor,#172024);border:2px solid currentColor; }
+.cmsSkipLink:focus { transform:none; }
+.cms .themePreview { position:relative; }
+.cms .themePreview input[type=file] { position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer; }
+.cms .themePreview:focus-within,.cms .portraitDrop:focus-within { outline:2px solid var(--cmsInteractive);outline-offset:3px; }
+.cms .mmlUploadButton { width:100%;height:100%;margin:0;padding:0;background:transparent;border:0;color:inherit;display:flex;align-items:center;justify-content:center;font-size:inherit; }
+.cms .mmlUploadButton:focus-visible { outline:2px solid var(--cmsInteractive);outline-offset:-4px; }
+.cmsA11yStatus { position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap; }

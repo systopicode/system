@@ -1,20 +1,21 @@
 /****************************** PYLON NAVI ***************************/
+div.pylon nav { padding-top:.5rem; }
 div.pylon nav > ul{
-    padding: 1rem 0.6rem;
+    padding: .5rem .6rem;
 }
 
-div.pylon nav > ul li a{
+div.pylon nav > ul li :is(a, button:where([data-cms-action])){
     display: flex;
     align-items: center;
     gap: 0.65rem;
-    padding: 0.45rem 0.7rem;
+    padding: .4rem .7rem;
     border-radius: var(--cmsRadius);
     color: var(--cmsTextColor);
     font-size: 0.9375rem;
     transition: background-color .15s;
 }
 
-div.pylon nav > ul li a i{
+div.pylon nav > ul li :is(a, button:where([data-cms-action])) i{
     flex: 0 0 1.15rem;
     width: 1.15rem;
     font-size: 1rem;
@@ -23,23 +24,22 @@ div.pylon nav > ul li a i{
     color: var(--cmsMuted);
 }
 
-div.pylon nav > ul li.active > a i{
+div.pylon nav > ul li.active > :is(a, button:where([data-cms-action])) i{
     color: var(--cmsMainColor);
 }
 
 @media (hover: hover) and (pointer: fine) {
-    div.pylon nav > ul li:hover > a{
+    div.pylon nav > ul li:hover > :is(a, button:where([data-cms-action])){
         background: var(--cmsHover);
     }
 }
 
-div.pylon nav > ul li.active > a{
+div.pylon nav > ul li.active > :is(a, button:where([data-cms-action])){
     background: var(--cmsActive);
     color: var(--cmsMainColor);
-    font-weight: 600;
 }
 
-div.pylon nav > ul li ul{
+div.pylon nav > ul li ul:not(:empty){
     margin: 0.15rem 0 0 0.9rem;
     padding-left: 0.5rem;
     border-left: 1px solid var(--cmsLineStrong);
@@ -49,7 +49,26 @@ div.pylon nav > ul li ul:not(:empty){
     margin-bottom: 0.75rem;
 }
 
-div.pylon nav > ul li ul li a{
+div.pylon nav > ul li ul li :is(a, button:where([data-cms-action])){
     padding: 0.35rem 0.6rem;
     font-size: 0.875rem;
 }
+
+.pylon nav > hr { margin:.5rem 0; border:0; border-top:1px solid var(--cmsLineStrong); }
+.pylon nav > .pylonGroupTitle { margin:.65rem 1.3rem .15rem; font-size:.6875rem; font-weight:600; text-transform:uppercase; letter-spacing:.05em; color:var(--cmsMuted); }
+
+/* Reserve the bold label's intrinsic size without fixing or truncating its width. */
+div.pylon nav :is(a, button:where([data-cms-action])) > span[data-nav-label] { display:grid; position:relative; min-width:0; }
+div.pylon nav :is(a, button:where([data-cms-action])) > span[data-nav-label]::after {
+    content:attr(data-nav-label); font-weight:600; visibility:hidden; grid-area:1 / 1;
+    overflow:hidden; pointer-events:none;
+}
+
+/* Only the permanently bold copy determines the label box. Keeping the
+   visible text out of intrinsic sizing avoids variable-font rounding shifts
+   in iOS Safari when selected changes; long labels still wrap in that box. */
+div.pylon nav span[data-nav-label] > span { position:absolute; inset:0; }
+
+/* Keep the link line box independent of the selected label weight. */
+div.pylon nav :is(a, button:where([data-cms-action])) { font-weight:400; }
+div.pylon nav li.active > :is(a, button:where([data-cms-action])) > span[data-nav-label] > span { font-weight:600; }

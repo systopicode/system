@@ -17,14 +17,16 @@ final class Files
 {
     /** Mime types the CMS takes, with the extension it knows them by — the legacy `mediaInfo::$mimetypes`. */
     public const MIMETYPES = [
+        'text/plain' => 'txt', 'text/csv' => 'csv',
         'image/webp' => 'webp', 'image/jpeg' => 'jpg', 'image/png' => 'png', 'image/gif' => 'gif',
-        'image/tiff' => 'tif', 'image/svg+xml' => 'svg', 'application/pdf' => 'pdf',
+        'image/svg+xml' => 'svg', 'application/pdf' => 'pdf',
         'application/vnd.sketchup.skp' => 'skp', 'application/x-sketchup' => 'skp',
         'application/msword' => 'doc', 'application/vnd.ms-excel' => 'xls',
         'application/vnd.openxmlformats-officedocument.wordprocessingml.document' => 'docx',
         'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' => 'xlsx',
         'application/vnd.openxmlformats-officedocument.presentationml.presentation' => 'pptx',
         'application/x-zip-compressed' => 'zip', 'audio/mpeg' => 'mp3', 'video/mpeg' => 'mpg',
+        'audio/mp4' => 'm4a', 'audio/x-m4a' => 'm4a', 'application/zip' => 'zip',
         'video/mp4' => 'mp4', 'video/quicktime' => 'mov', 'text/vcard' => 'vcf', 'text/x-vcard' => 'vcf',
     ];
 
@@ -166,6 +168,11 @@ final class Files
         $mime = (string) (new \finfo(FILEINFO_MIME_TYPE))->file($path);
         $type = (string) preg_replace('~/.*$~', '', $mime);
         $ext = strtolower(pathinfo($path, PATHINFO_EXTENSION));
+        $supported = \Systopic\System\Media\GroupPolicy::TYPES[\Systopic\System\Media\GroupPolicy::extension($path)] ?? null;
+        if ($supported !== null && in_array($mime, $supported[2], true)) {
+            $mime = $supported[2][0];
+            $type = explode('/', $mime)[0];
+        }
         if ($ext === 'svg') {
             [$mime, $type] = ['image/svg+xml', 'image'];
         } elseif ($ext === 'skp') {
@@ -181,6 +188,12 @@ final class Files
             $size = @getimagesize($path);
             if ($size !== false) {
                 [$media->width, $media->height] = [(int) $size[0], (int) $size[1]];
+                if ($mime === 'image/jpeg' && function_exists('exif_read_data')) {
+                    $exif = @exif_read_data($path);
+                    if (in_array((int) ($exif['Orientation'] ?? 1), [5,6,7,8], true)) {
+                        [$media->width, $media->height] = [$media->height, $media->width];
+                    }
+                }
             }
         }
     }
@@ -216,6 +229,18 @@ final class Files
         }
         $data = json_decode((string) file_get_contents($file), true);
         return is_array($data) ? $data : [];
+    }
+
+    /** Apply relative controls to an already rendered format without discarding its saved look. */
+    public static function composeTune(array $previous, array $change): array
+    {
+        $combined = $change;
+        foreach (['b','c','s'] as $channel) {
+            $combined[$channel] = max(0, min(200, (int) round(($previous[$channel] ?? 100) * ($change[$channel] ?? 100) / 100)));
+        }
+        $combined['r'] = (($change['r'] ?? 0) + (!empty($change['f']) ? -1 : 1) * ($previous['r'] ?? 0) + 360) % 360;
+        $combined['f'] = (int) ((bool) ($previous['f'] ?? 0) !== (bool) ($change['f'] ?? 0));
+        return $combined;
     }
 
     /** null removes the format. An empty list removes every format. */

@@ -1,0 +1,56 @@
+/* Scoped to this panel: body carries the panel path as classes (body.tpl.php),
+   and a module stylesheet is never unloaded once it was fetched. Unscoped,
+   this rule hid the pylon in every other panel for the rest of the session. */
+body.backup main > div.pylon {
+    display: none;
+}
+
+body.backup .cms table.hover ul li:last-child :is(a, button:where([data-cms-action])).button {
+    padding: 4px 6px;
+}
+
+body.backup label.backupUpload{
+    position: relative;
+}
+
+body.backup label.backupUpload input{
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    border: 0;
+}
+
+body.backup .backupConfirmName{
+    margin: 0;
+    font-weight: 700;
+    color: var(--cmsTextColor);
+}
+
+body.backup .backupProgress .bar{
+    margin: 0 0 1rem;
+    height: 2rem;
+}
+
+body.backup .cmslightbox:has(.backupLog) .barmenu > li > :is(a, button:where([data-cms-action])){
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    margin: 0;
+}
+
+
+body.backup .backupConfirm { display:block; }
+body.backup .backupConfirm > .restoreCheck { margin:0 0 1rem; }
+body.backup .backupConfirm .restoreArchive { margin:0 0 1.25rem; }
+body.backup .backupConfirm .restoreArchive summary { cursor:pointer; font-size:.875rem; color:var(--cmsSubText); }
+body.backup .backupConfirm .restoreArchive code { display:block; margin-top:.5rem; overflow-wrap:anywhere; font-size:.8rem; }
+body.backup .backupConfirm .restoreSelectionTitle { margin:0 0 .4rem; font-size:1.125rem; }
+body.backup .backupConfirm .restoreSelectionTitle + p { margin:0 0 1rem; }
+body.backup .backupConfirm .restoreReplaceWarning { margin:1.25rem 0 0; }
+body.backup .backupConfirm .checkBoxList { margin:0; }

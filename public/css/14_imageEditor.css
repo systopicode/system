@@ -4,44 +4,12 @@ div.dragimage{
 	z-index: 1001;
 }
 
-/* the corners scale the image: big and white, so nobody has to guess */
-div.dragimage > div{
-	border-width:5px 5px 0 0;
-	border-color: #fff;
-	border-style: solid;
-	background:transparent;
-	width:28px;
-	height:28px;
-	position:absolute;
-	z-index: 1001;
-	filter: drop-shadow(0 0 2px rgb(0 0 0 / 0.7));
-}
-
-@media (any-pointer: coarse) {
-	div.dragimage > div{
-		width:44px;
-		height:44px;
-	}
-}
-
-div.dragimage > div:nth-child(3){
-	border-width:4px 0 0 4px;
-}
-
-div.dragimage > div:nth-child(4){
-	border-width:0 0 4px 4px;
-}
-
-div.dragimage > div:nth-child(5){
-	border-width:0 4px 4px 0;
-}
-
 div.imageEditorScrim{
 	position: fixed;
 	inset: 0;
 	z-index: 89990;
 	/* while cropping only the image counts: the rest steps far back */
-	background: color-mix(in srgb, var(--cmsMainColor) 85%, transparent);
+	background: var(--cmsMainColor);
 }
 
 div.imageEditor{
@@ -56,15 +24,33 @@ div.imageEditor *{
 div.imageEditor .cropFrame{
 	outline: 2px solid #fff;
 	box-shadow: 0 0 0 3px var(--cmsHighlightColor);
+	z-index: 1002;
+}
+
+div.imageEditor .cropGrid{
+	position:absolute;inset:0;z-index:2;pointer-events:none;
+	background:
+		linear-gradient(90deg,var(--cmsHighlightColor) 0 1px,#fff 1px 2px,var(--cmsHighlightColor) 2px) 33.333% 0 / 3px 100% no-repeat,
+		linear-gradient(90deg,var(--cmsHighlightColor) 0 1px,#fff 1px 2px,var(--cmsHighlightColor) 2px) 66.667% 0 / 3px 100% no-repeat,
+		linear-gradient(var(--cmsHighlightColor) 0 1px,#fff 1px 2px,var(--cmsHighlightColor) 2px) 0 33.333% / 100% 3px no-repeat,
+		linear-gradient(var(--cmsHighlightColor) 0 1px,#fff 1px 2px,var(--cmsHighlightColor) 2px) 0 66.667% / 100% 3px no-repeat;
 }
 
 /* at the top of the frame: the bottom edge belongs to the height handle */
 div.imageEditor .cropBar{
-	position: absolute;
-	top: 0.75rem;
+	position: fixed;
+	top: 0;
+	padding: max(1rem, env(safe-area-inset-top)) max(1rem, env(safe-area-inset-right)) max(1rem, env(safe-area-inset-top)) max(1rem, env(safe-area-inset-left));
+    box-sizing: border-box;
+	backdrop-filter: blur(18px);
+	-webkit-backdrop-filter: blur(18px);
+	bottom: auto;
 	left: 0;
+    right: 0;
+	width: 100% !important;
 	z-index: 2001;
 	display: flex;
+	flex-wrap: wrap;
 	align-items: center;
 	justify-content: center;
 	gap: 0.5rem;
@@ -92,86 +78,147 @@ div.imageEditor .cropBar span{
 	font-size: 0.8125rem;
 }
 
-@container (max-width: 32rem){
-	div.imageEditor .cropBar span{
-		display: none;
-	}
+@media (max-width: 32rem){
+	div.imageEditor .cropBar span{ flex-basis:100%; min-width:0; white-space:normal; text-align:center; height:auto; padding:.35rem; }
 }
 
-div.imageEditorRaster{
-	position: absolute;
-	top:0;
-	right:1px;
-	bottom:0;
-	left:0;
-	display:flex;
-	flex-flow: row wrap;
-	z-index: 89999;
-	border-left:1px solid rgba(52,52,52,0.5);
-	border-top:1px solid rgba(52,52,52,0.5);
+/* Handles belong to the visible crop frame, never the oversize source image. */
+div.imageEditor .cropHandles{position:absolute;z-index:2000;pointer-events:none;}
+div.imageEditor .cropHandles button{
+ position:absolute;box-sizing:border-box;width:32px;height:32px;min-width:32px;min-height:32px;padding:0;margin:0;
+ border:0;border-radius:4px;background:none;pointer-events:auto;touch-action:none;overflow:visible;
+}
+div.imageEditor .cropHandles button::before{
+ content:'';position:absolute;inset:6px;border:4px solid white;border-radius:3px;
+ box-shadow:none;
+}
+div.imageEditor .cropHandles [data-crop-handle=nw]{left:-16px;top:-16px;cursor:nwse-resize;}
+div.imageEditor .cropHandles [data-crop-handle=ne]{right:-16px;top:-16px;cursor:nesw-resize;}
+div.imageEditor .cropHandles [data-crop-handle=sw]{left:-16px;bottom:-16px;cursor:nesw-resize;}
+div.imageEditor .cropHandles [data-crop-handle=se]{right:-16px;bottom:-16px;cursor:nwse-resize;}
+div.imageEditor .cropHandles [data-crop-handle=n]{left:calc(50% - 16px);top:-16px;cursor:ns-resize;}
+div.imageEditor .cropHandles [data-crop-handle=s]{left:calc(50% - 16px);bottom:-16px;cursor:ns-resize;}
+div.imageEditor .cropHandles [data-crop-handle=w]{left:-16px;top:calc(50% - 16px);cursor:ew-resize;}
+div.imageEditor .cropHandles [data-crop-handle=e]{right:-16px;top:calc(50% - 16px);cursor:ew-resize;}
+@media(any-pointer:coarse){div.imageEditor .cropHandles button::after{content:'';position:absolute;inset:-6px;}}
+div.imageEditor .dragimage{cursor:move;touch-action:none;}
+div.imageEditor{touch-action:none;}
+
+/* Reuse the global spinner while the saved crop is rendered. */
+div.imageEditor.is-saving > :not(.cropBar){ pointer-events:none; }
+div.imageEditor.is-saving > .cropBar{ pointer-events:none; }
+div.imageEditor .imageEditorSaving{
+    position:absolute; inset:0; width:100%; height:100%; box-sizing:border-box; display:flex; align-items:center; justify-content:center;
+    backdrop-filter:blur(5px); -webkit-backdrop-filter:blur(5px);
+    background:color-mix(in srgb, var(--cmsMainColor) 20%, transparent);
+    color:var(--cmsHighlightColor); font-size:2.5rem; z-index:3;
+}
+/* Corner brackets and edge grips share the frame's rounded geometry. */
+/* Grips touch the outside edge of the frame's 3px outline. */
+div.imageEditor .cropHandles [data-crop-handle=nw]::before{inset:9px -2px -2px 9px;border-right:0;border-bottom:0;}
+div.imageEditor .cropHandles [data-crop-handle=ne]::before{inset:9px 9px -2px -2px;border-left:0;border-bottom:0;}
+div.imageEditor .cropHandles [data-crop-handle=sw]::before{inset:-2px -2px 9px 9px;border-right:0;border-top:0;}
+div.imageEditor .cropHandles [data-crop-handle=se]::before{inset:-2px 9px 9px -2px;border-left:0;border-top:0;}
+div.imageEditor .cropHandles :is([data-crop-handle=n],[data-crop-handle=s],[data-crop-handle=w],[data-crop-handle=e])::before{background:white;border:0;}
+div.imageEditor .cropHandles [data-crop-handle=n]::before{inset:6px 4px 19px;border-radius:3px 3px 0 0;}
+div.imageEditor .cropHandles [data-crop-handle=s]::before{inset:19px 4px 6px;border-radius:0 0 3px 3px;}
+div.imageEditor .cropHandles [data-crop-handle=w]::before{inset:4px 19px 4px 6px;border-radius:3px 0 0 3px;}
+div.imageEditor .cropHandles [data-crop-handle=e]::before{inset:4px 6px 4px 19px;border-radius:0 3px 3px 0;}
+body:has(> .imageEditor){overflow:hidden;}
+
+/* The hit targets stay invisible, including pointer interaction states. */
+div.imageEditor .cropHandles button[data-crop-handle]:is(:hover,:active,:focus){background:transparent;}
+
+/* Same square control size as the image editor; names remain in aria-label/title. */
+div.imageEditor .cropBar > button{
+ width:var(--cmsControl);height:var(--cmsControl);min-width:var(--cmsControl);
+ padding:0;gap:0;justify-content:center;flex:0 0 var(--cmsControl);
+}
+div.imageEditor .cropBar [hidden]{display:none;}
+
+/* Keep the toolbar's layout footprint while a crop gesture is active. */
+div.imageEditor .cropBar{
+ opacity:1;transform:translateY(0);visibility:visible;
+ transition:opacity 160ms ease,transform 180ms ease,visibility 0s !important;
+}
+div.imageEditor.is-interacting .cropBar{
+ opacity:0;transform:translateY(-.75rem);visibility:hidden;pointer-events:none;
+ transition:opacity 160ms ease,transform 180ms ease,visibility 0s 180ms !important;
+}
+div.imageEditor,div.imageEditorScrim{touch-action:none;overscroll-behavior:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;}
+@media(prefers-reduced-motion:reduce){
+ div.imageEditor .cropBar,div.imageEditor.is-interacting .cropBar{transition:none !important;transform:none;}
 }
 
-div.imageEditorRaster div{
-	border:1px solid rgba(52,52,52,0.5);
-	flex: 0 0 calc(10% - 1px);
-	margin:-1px -1px 0 0;
-	position: relative;
+/* One image editor: crop is a tool, adjustments and Apply share this surface. */
+div.unifiedImageEditor:not(.is-cropping) > :is(.cropHandles,.dragimage){display:none;}
+div.unifiedImageEditor:not(.is-cropping) .cropGrid{display:none;}
+
+div.unifiedImageEditor:not(.is-cropping) [data-crop-original],
+div.unifiedImageEditor:not(.is-cropping) [data-crop-grid]{display:none;}
+div.unifiedImageEditor .imageEditorHint{
+ position:fixed;bottom:max(1rem,env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);
+ max-width:calc(100vw - 2rem);padding:.5rem .8rem;border-radius:var(--cmsRadius);
+ background:rgb(0 0 0 / .65);color:white;white-space:nowrap;font-size:.8125rem;pointer-events:none;z-index:2001;
+ transition:opacity 160ms ease,transform 180ms ease !important;
+}
+div.unifiedImageEditor.is-interacting .imageEditorHint{opacity:0;transform:translate(-50%,.75rem);}
+/* Adjustment popovers use the same anchored menu as Format and Apply. */
+body.cms > .unifiedAdjustSlider.is-open{
+ display:flex;align-items:center;gap:.65rem;box-sizing:border-box;padding:.65rem .8rem;
+ max-width:calc(100vw - 2rem);color:var(--cmsTextColor);
+}
+body.cms > .unifiedAdjustSlider output{flex:0 0 2rem;text-align:center;}
+body.cms > .unifiedAdjustSlider input{flex:1;min-width:0;width:0;margin:0;accent-color:var(--cmsHighlightColor);}
+div.unifiedImageEditor .cropBar .splitApply{height:var(--cmsControl);padding:0;align-self:center;align-items:center;margin-block:0;}
+div.unifiedImageEditor .splitApply > button{height:var(--cmsControl);min-width:var(--cmsControl);padding:0;justify-content:center;margin:0;align-self:center;}
+div.unifiedImageEditor .splitApplyList{bottom:auto;top:calc(100% + .4rem);right:0;}
+@media(prefers-reduced-motion:reduce){div.unifiedImageEditor .imageEditorHint{transition:none !important;}}
+body:has(> .unifiedImageEditor) > .splitApplyList.is-open{z-index:90002;}
+
+div.unifiedImageEditor .cropBar > [data-editor-group-start]{margin-inline-start:.65rem;}
+div.unifiedImageEditor .cropBar > [data-editor-group-end]{margin-inline-end:.65rem;}
+div.unifiedImageEditor .editorFormat > .button{width:auto;gap:.4rem;padding:0 .5rem;border-radius:var(--cmsRadius);}
+
+/* Ratio tools belong together; only unconstrained formats can be locked by hand. */
+div.imageEditor .cropBar .editorAspect{display:inline-flex;align-items:center;gap:.5rem;pointer-events:auto;margin-inline:.65rem;}
+div.imageEditor .cropBar .editorAspect:has(>button[hidden]):not(:has(>button:not([hidden]))),
+div.unifiedImageEditor:not(.is-cropping) .cropBar .editorAspect{display:none;}
+
+/* Selected crop uses the same filled state as the other tools. */
+body.cms div.imageEditor.unifiedImageEditor .cropBar > button.selected{border-color:transparent;box-shadow:none;}
+
+/* The labelled exit sits beside the primary Apply action. */
+body.cms div.imageEditor .cropBar button[data-crop_cancel]{width:auto;height:var(--cmsControl);min-height:var(--cmsControl);margin:0;flex:0 0 auto;padding-inline:.75rem;gap:.4rem;}
+
+div.imageEditor .cropBar .editorCommit{display:flex;align-items:center;gap:.5rem;flex:0 0 auto;}
+
+body.cms div.imageEditor .cropBar button[data-crop_cancel] { width:var(--cmsControl); padding:0; background:transparent; }
+div.imageEditor .cropBar .editorCommit { margin-left:auto; }
+div.unifiedImageEditor .imageEditorHint { display:flex; align-items:center; justify-content:center; gap:.65rem; }
+div.unifiedImageEditor .imageEditorHint .editorStatus { color:var(--cmsStatusWarning,var(--cmsWarning)); }
+
+body.cms div.imageEditor .cropBar button[data-crop_cancel] { color:var(--cmsFrameText); }
+
+/* Close is a shared transparent button on the dark editor surface. */
+body.cms div.imageEditor .cropBar button[data-crop_cancel]:enabled:not(.disabled):is(:hover,:focus,:active) {
+    color:var(--cmsFrameText);
+    background:color-mix(in srgb,var(--cmsFrameText) 25%,transparent);
+}
+body.cms div.imageEditor .cropBar button[data-crop_cancel]:focus-visible {
+    outline:2px solid var(--cmsFrameText);outline-offset:2px;border-radius:var(--cmsRadius);
 }
 
-div.imageEditorRaster div:before{
-	content:attr(data-index);
-	font-size: 12px;
-	position: absolute;
-	top:10px;
-	left:0;
-	right:0;
-	text-align: center;
-	font-family: Arial;
-}
-/* the bottom edge of the frame: a line to drag anywhere, a grip in the middle to find it */
-div.flexHandle {
-	position: absolute;
-	left: 0;
-	z-index: 2000;
-	height: 44px;
-	margin-top: -22px;
-	cursor: ns-resize;
-	touch-action: none;
-}
+/* The on-page entry shares the crop controller, with the surrounding page visible. */
+div.imageEditorScrim.inlineImageCropScrim{background:transparent;pointer-events:none;}
+div.imageEditor.inlineImageCrop .dragimage{visibility:hidden;}
+div.imageEditor.inlineImageCrop .cropBar{background:var(--cmsMainColor);width:max-content !important;max-width:calc(100vw - 32px);left:50%;right:auto;transform:translateX(-50%);border-radius:var(--cmsRadius);padding:.5rem;container-type:normal;}
+div.imageEditor.inlineImageCrop .cropBar{flex-wrap:nowrap;}
+div.imageEditor.inlineImageCrop .cropBar > span{flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;}
+div.imageEditor.inlineImageCrop .cropBar > button{flex-shrink:0;}
+body.cms div.imageEditor.inlineImageCrop .cropBar button[data-crop_cancel]{order:10;border-color:transparent;box-shadow:none;background:transparent;}
+body.cms div.imageEditor.inlineImageCrop .cropBar button[data-crop_cancel]:enabled:not(.disabled):is(:hover,:focus,:active){background:color-mix(in srgb,var(--cmsFrameText) 25%,transparent);}
 
-div.flexHandle::before{
-	content: "";
-	position: absolute;
-	inset: 50% 0 auto;
-	border-top: 3px solid var(--cmsHighlightColor);
-	transform: translateY(-50%);
-	pointer-events: none;
-}
-
-div.flexHandle::after{
-	content: "";
-	position: absolute;
-	top: 50%;
-	left: 50%;
-	width: 4rem;
-	height: 0.875rem;
-	transform: translate(-50%, -50%);
-	border-radius: 1rem;
-	background:
-		repeating-linear-gradient(90deg, transparent 0 0.4rem, rgb(0 0 0 / 0.35) 0.4rem 0.5rem) center / 1.5rem 0.4rem no-repeat,
-		#fff;
-	box-shadow: 0 0 0 3px var(--cmsHighlightColor), 0 1px 6px rgb(0 0 0 / 0.5);
-	pointer-events: none;
-}
-div.aspectRatioSelector{
-	position: absolute;
-	z-index:1002;
-	color:var(--cmsMuted);
-}
-div.aspectRatioSelector a{
-	background: rgb(52, 52, 52);
-	display: inline-block;
-	margin-right:6px;
-	padding:0 6px;
-	cursor:pointer;
-}
+/* Reserve the hint width so changing instructions cannot shift the actions. */
+div.imageEditor.inlineImageCrop .cropBar { padding:.5rem; gap:.4rem; box-shadow:0 .35rem 1.2rem rgb(0 0 0 / .18); }
+div.imageEditor.inlineImageCrop .cropBar > span { width:25rem; max-width:38vw; flex:0 1 25rem; }

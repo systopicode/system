@@ -17,7 +17,7 @@
         const request = async (box, action, data = {}, signal) => {
             const response = await fetch(box.dataset.passkeyEndpoint + action, {
                 method: 'POST', mode: 'cors', redirect: 'error', credentials: 'same-origin', cache: 'no-store', signal,
-                headers: {'Content-Type': 'application/json', 'X-Fluxo-Passkey': box.dataset.passkeyToken},
+                headers: {...(window.sys?.core?.server?.headersFor?.('post') || {}), 'Content-Type': 'application/json', 'X-Fluxo-Passkey': box.dataset.passkeyToken},
                 body: JSON.stringify(data)
             });
             const result = await response.json();
@@ -60,13 +60,33 @@
             const feedback = box.querySelector('.passkeyAuthFeedback');
             if (feedback) feedback.hidden = true;
         };
-        const revealSignedIn = box => {
-            const card = box.closest('.authSignin');
+        const revealSignedIn = (box, profile, redirect) => {
+            box.closest('main')?.classList.remove('is-passkey-signing-in');
+            const card = box.closest('.authSignin') || box.closest('main');
             const done = card?.querySelector('[data-auth-success]');
             if (!done) return;
-            [...card.children].forEach(child => { if (child !== done) child.hidden = true; });
+            card.classList.add('authSignin');
+            const footer = card.querySelector('[data-success-footer]');
+            [...card.children].forEach(child => { if (child !== done && child !== footer) child.hidden = true; });
+            if (footer) {
+                footer.hidden = false;
+                if (redirect) footer.querySelector('[data-success-continue]').href = redirect;
+            }
+            if (profile) {
+                const name = done.querySelector('[data-success-name]');
+                const portrait = done.querySelector('[data-success-portrait]');
+                if (name) name.textContent = profile.screen ? (profile.name || '') : profile.name ? `Welcome, ${profile.name}!` : 'Welcome!';
+                const title = done.querySelector('[data-success-title]');
+                if (title) title.textContent = profile.screen ? 'Screen successfully paired' : 'Successfully signed in';
+                if (portrait) {
+                    portrait.hidden = !profile.portrait;
+                    if (profile.portrait) portrait.src = profile.portrait;
+                }
+            }
             done.hidden = false;
+            if (box.classList.contains('passkeyOnboarding')) box.closest('.authCard')?.querySelectorAll(':scope > h1, :scope > .authLead').forEach(el => { el.hidden = true; });
         };
+        this.showSignedIn = revealSignedIn;
         const notifyRemoval = async signal => {
             if (!signal || !window.PublicKeyCredential?.signalUnknownCredential) return false;
             try { await PublicKeyCredential.signalUnknownCredential(signal); return true; }
@@ -115,7 +135,7 @@
                         loginFeedback(state.box, 'working', 'Checking your passkey …');
                         const result = await request(state.box, 'passkeyFinishLogin', {...credentialData(credential), ceremony: begin.ceremony});
                         loginFeedback(state.box, 'success', 'Signed in.');
-                        revealSignedIn(state.box);
+                        revealSignedIn(state.box, result.profile, result.redirect);
                         await new Promise(resolve => setTimeout(resolve, 2000));
                         if (state.box.isConnected && !controller.signal.aborted) window.location.assign(result.redirect);
                     } catch (error) {
@@ -130,6 +150,16 @@
                     }
                 })();
             }, delay);
+        };
+        this.checkSupport = () => {
+            const supported = !!(window.isSecureContext && window.PublicKeyCredential && typeof navigator.credentials?.get === 'function');
+            document.querySelectorAll('form.appLoginForm input[name="passkey_supported"]').forEach(input => { input.value = supported ? '1' : '0'; });
+            document.querySelectorAll('.authCard a.authMethod[href*="method=passkey"]').forEach(link => { link.hidden = !supported; });
+            if (!supported) document.querySelectorAll('.authCard [data-passkey-mode]').forEach(button => {
+                button.disabled = true;
+                button.title = 'Passkeys are not supported in this browser or connection. Use another sign-in method.';
+            });
+            return supported;
         };
         this.attachAutofill = () => {
             const box = document.querySelector('.passkeyLogin');
@@ -166,7 +196,7 @@
                 const count = Number(host?.dataset.passkeyCount || 0);
                 const lead = count > 0
                     ? 'A passkey already on this account confirms the new one.'
-                    : host?.dataset.passkeyGrant === '1' ? '' : 'Sign in again before adding a passkey.';
+                    : '';
                 if (lead) dialog.querySelector('.passkeySetupLead').textContent = lead;
             }
         };
@@ -240,9 +270,6 @@
                 try {
                     let result;
                     if (mode === 'login' || creating) {
-                        if (creating && !onboarding && Number(box.dataset.passkeyCount || 0) === 0 && box.dataset.passkeyGrant !== '1') {
-                            throw new Error('Sign in again before adding a passkey.');
-                        }
                         if (creating && !onboarding && Number(box.dataset.passkeyCount || 0) > 0) {
                             const proof = await confirmPasskey(box, data, controller, status);
                             ceremony = proof.confirm;
@@ -268,8 +295,8 @@
                     if (result.redirect) {
                         completed = true;
                         loginFeedback(box, 'success', onboarding ? 'Passkey added.' : 'Signed in.');
-                        if (mode === 'login' && !onboarding) revealSignedIn(box);
-                        await new Promise(resolve => setTimeout(resolve, mode === 'login' && !onboarding ? 2000 : 600));
+                        if (mode === 'login' || onboarding) revealSignedIn(box, result.profile, result.redirect);
+                        await new Promise(resolve => setTimeout(resolve, mode === 'login' || onboarding ? 2000 : 600));
                         if (box.isConnected && !controller.signal.aborted) window.location.assign(result.redirect);
                     } else if (result.html && box.isConnected) {
                         if (creating && dialog?.open) {
@@ -303,6 +330,7 @@
             } finally { starting = false; }
         };
         this.startIfAuto = () => {
+            if (!this.checkSupport()) return;
             const box = document.querySelector('.passkeyLogin[data-passkey-auto]');
             if (!box || box.dataset.passkeyStarted) return;
             const button = box.querySelector('[data-passkey-mode="login"]');

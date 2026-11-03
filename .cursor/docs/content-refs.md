@@ -60,7 +60,7 @@ mit Referenzen ausgibt, nimmt `<?= $page->html01 ?>` oder `->rendered`.
 * Medium in den Editor ziehen: `insertMediaInEditor` baut die gespeicherte Form
   (`media:…`) und lässt `renderForEditor()` daraus die Editor-Form machen —
   dasselbe Markup wie nach einem Neuladen.
-* JS (`system/public/js/cms/HTMLeditor.funcs.js`, `HTMLeditor.menus.js`) liest
+* JS (`system/public/js/admin/HTMLeditor.funcs.js`, `HTMLeditor.menus.js`) liest
   Medium und Format aus `data-ref-src` (`editorMediaRef()`); Formatwechsel
   setzt `data-ref-src` neu.
 * Interner Link: im Link-Dialog `page:43` als URL eintragen.
@@ -74,7 +74,7 @@ mit Referenzen ausgibt, nimmt `<?= $page->html01 ?>` oder `->rendered`.
 `EventRefs implements RefType`: `load()` gebündelt, `key()`, `url()`, `text()`
 (mit eigener Freigabeliste), `editorData()`.
 
-## Alte Inhalte — `cms/tools/migration`
+## Alte Inhalte — `admin/tools/migration`
 
 „convert html links and images“ (`Cms\Refs\HtmlMigration`) wandelt einmalig
 um, was vor den Referenzen geschrieben wurde: `<img data-node_id data-format>`,

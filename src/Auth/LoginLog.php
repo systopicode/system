@@ -30,10 +30,11 @@ final class LoginLog
     public const EXPIRED = 'access expired';
     public const REVOKED = 'device revoked';
     /**
-     * Session files that only name a timed-out session. The login log itself
-     * is not cut down: it stays as long as the file is on disk.
+     * Session files that only name a timed-out session. Login-log retention is handled separately by Maintenance\LogRetention.
      */
     public const KEEP_DAYS = 90;
+
+    public static function invalidateCache(): void { self::$lineCache = null; }
 
     public static function file(): string
     {
@@ -189,19 +190,22 @@ final class LoginLog
         return ['how' => $how, 'by' => $by];
     }
 
-    /** "Paired 28 Oct 2026, 00:34 · Remote login · by Lars", or '' when there is no time. */
+    /** "Paired 28 Oct 2026, 00:34 · Remote login · by Lars · as Anna", or '' when there is no time. "as" is left off when the approver is the account. */
     public static function paired(string $account, ?\DateTimeInterface $at): string
     {
         if ($at === null) {
             return '';
         }
         $origin = self::origin($account, $at);
-        $line = 'Paired ' . \Systopic\System\Sys\LocalTime::format($at, 'j M Y, H:i');
+        $line = 'Paired ' . \Systopic\System\Sys\LocalTime::format($at, \Systopic\System\Sys\LocalTime::DATETIME);
         if ($origin['how'] !== '') {
             $line .= ' · ' . $origin['how'];
         }
         if ($origin['by'] !== '') {
             $line .= ' · by ' . $origin['by'];
+        }
+        if ($origin['by'] !== '' && strcasecmp($origin['by'], $account) !== 0) {
+            $line .= ' · as ' . $account;
         }
         return $line;
     }
@@ -240,6 +244,45 @@ final class LoginLog
             . ($method !== '' ? ' ; ' . $clean($method) : '')
             . "\n";
         file_put_contents($file, $line, FILE_APPEND | LOCK_EX);
+        self::$lineCache = null;
+    }
+
+    /** The action prefix of an invitation email, including the trailing space. */
+    public const MAILED_INVITATION = 'emailed invitation to ';
+
+    /** The action prefix of a password-link email, including the trailing space. */
+    public const MAILED_PASSWORD = 'emailed password link to ';
+
+    /** Who sent this mail, and when. The login log is the record. Nothing is written when the mail did not go out. */
+    public static function mailed(string $kind, string $target): void
+    {
+        $target = trim($target);
+        if ($target === '' || ($kind !== self::MAILED_INVITATION && $kind !== self::MAILED_PASSWORD)) {
+            return;
+        }
+        $actor = Session::active() ? trim((string) Session::current()->name) : '';
+        self::write($actor !== '' ? $actor : '–', $kind . $target);
+    }
+
+    /**
+     * The newest send of this mail to this account, or null.
+     * `[date, actor]`, actor `''` when the line has no name.
+     *
+     * @return array{0: string, 1: string}|null
+     */
+    public static function lastMailed(string $kind, string $target): ?array
+    {
+        $target = trim($target);
+        if ($target === '') {
+            return null;
+        }
+        $action = $kind . $target;
+        foreach (self::entries() as $parts) {
+            if ($parts[2] === $action) {
+                return [$parts[0], $parts[1] === '–' ? '' : $parts[1]];
+            }
+        }
+        return null;
     }
 
     /**

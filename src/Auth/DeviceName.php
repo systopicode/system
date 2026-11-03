@@ -13,7 +13,7 @@ final class DeviceName
 {
     private const SYSTEMS = [
         '~iPhone~'          => 'iPhone',
-        '~iPad~'            => 'iPad',
+        '~iPad|Macintosh.*Mobile~'            => 'iPad',
         '~Android.+Mobile~' => 'Android-Handy',
         '~Android~'         => 'Android-Tablet',
         '~Windows~'         => 'Windows',
@@ -32,37 +32,47 @@ final class DeviceName
         '~Safari/~'         => 'Safari',
     ];
 
+    /** Desktop-mode iPad Safari needs the browser's touch hint. This affects display only. */
+    public static function requestAgent(): string
+    {
+        $agent = (string) ($_SERVER['HTTP_USER_AGENT'] ?? '');
+        if (($_SERVER['HTTP_X_FLUXO_DEVICE'] ?? '') === 'iPad' && str_contains($agent, 'Macintosh')) {
+            $agent .= ' Fluxo-iPad';
+        }
+        return $agent;
+    }
+
     public static function from(string $userAgent): string
     {
         $system = self::first(self::SYSTEMS, $userAgent);
         $browser = self::first(self::BROWSERS, $userAgent);
-        // an iPad asking for the desktop site says Macintosh, but has touch:
-        // that is not visible here, so it stays "Mac"
+        // Desktop-mode iPads are normalised by requestAgent() when touch is reported.
+        // A bare Macintosh user agent remains a Mac; no security decision uses this name.
         return implode(' · ', array_filter([$system, $browser])) ?: 'Unknown device';
     }
 
     /** Small mark for the device list: phone, tablet or computer. */
     public static function icon(string $userAgent): string
     {
-        if (preg_match('~iPad|Tablet|Android(?!.*Mobile)~', $userAgent)) {
-            return 'fa-regular fa-tablet-screen';
+        if (preg_match('~iPad|Macintosh.*Mobile|Tablet|Android(?!.*Mobile)~', $userAgent)) {
+            return 'cmsIcon cmsIcon-tablet-screen';
         }
         if (preg_match('~iPhone|iPod|Android.*Mobile|Mobile~', $userAgent)) {
-            return 'fa-regular fa-mobile-screen';
+            return 'cmsIcon cmsIcon-mobile-screen';
         }
-        return 'fa-regular fa-laptop';
+        return 'cmsIcon cmsIcon-laptop';
     }
 
     /** The same device, crossed out: the control that signs it out. */
     public static function slash(string $userAgent): string
     {
-        if (preg_match('~iPad|Tablet|Android(?!.*Mobile)~', $userAgent)) {
-            return 'fa-regular fa-display-slash';
+        if (preg_match('~iPad|Macintosh.*Mobile|Tablet|Android(?!.*Mobile)~', $userAgent)) {
+            return 'cmsIcon cmsIcon-display-slash';
         }
         if (preg_match('~iPhone|iPod|Android.*Mobile|Mobile~', $userAgent)) {
-            return 'fa-regular fa-mobile-slash';
+            return 'cmsIcon cmsIcon-mobile-slash';
         }
-        return 'fa-regular fa-laptop-slash';
+        return 'cmsIcon cmsIcon-laptop-slash';
     }
 
     /** @param array<string, string> $patterns */

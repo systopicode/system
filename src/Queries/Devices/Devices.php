@@ -32,9 +32,9 @@ final class Devices
     }
 
     /** @return list<Device> not revoked, newest use first */
-    public static function ofUser(Scope $scope, int $userId): array
+    public static function ofUser(Scope $scope, int $userId, bool $includeRevoked = false): array
     {
         Registry::register(Device::class);
-        return $scope->rows(__DIR__ . '/Devices.ofUser.sql', ['userId' => $userId], provisioner: new Provisioner($scope->connection))->all(Device::class);
+        return $scope->rows(__DIR__ . '/Devices.ofUser.sql', ['userId' => $userId, 'includeRevoked' => $includeRevoked ? 1 : 0], provisioner: new Provisioner($scope->connection))->all(Device::class);
     }
 }

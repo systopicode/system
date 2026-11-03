@@ -11,7 +11,7 @@ discover (Code lesen) → Baum → Maps (GUI) → Configs (JSON) → Laufzeit li
 
 - **Keine Datenbank.** Panels und Actions stehen im Code. Discover liest
   sie bei jedem Aufruf neu, IDs gibt es nicht. Die Configs verweisen auf
-  **logische Pfade** (`cms/pages/sidebar`, ohne `010_`-Präfix) und auf
+  **logische Pfade** (`admin/pages/sidebar`, ohne `010_`-Präfix) und auf
   **Rollen-Namen**.
 - **Vererbung im Panel-Baum.** Die Rechte einer Action ergeben sich so:
   eigene Liste, sonst Action-Default des Panels, sonst `build` des Panels,
@@ -20,7 +20,7 @@ discover (Code lesen) → Baum → Maps (GUI) → Configs (JSON) → Laufzeit li
 - **ACL bleibt im Code der Action** (`PageAccess::refuses($node)`). Die Map
   sagt nur, ob die Rolle die Action überhaupt darf.
 
-## Schritt 1: Discover (`cms/controlmap/discover/`)
+## Schritt 1: Discover (`admin/controlmap/discover/`)
 
 Nur für Superuser. Code: `src/Controlmap/` (system).
 
@@ -59,14 +59,14 @@ ohne die Action.
 1. **Herkunft (gegen CSRF).**
    - **Das Loch:** Die Action ist das letzte Pfadsegment, auch bei GET. Das
      Session-Cookie ist `SameSite=Lax` und wird bei einem Link-Klick von einer
-     fremden Seite mitgeschickt. `cms/pages/publish?id=5` in einer Mail
+     fremden Seite mitgeschickt. `admin/pages/publish?id=5` in einer Mail
      hätte also veröffentlicht.
    - **Die Regel:** Es läuft nur `Sec-Fetch-Site: same-origin`.
    - Ohne diesen Header muss `Origin`, wenn er da ist, unseren Host nennen.
      Ohne beide ist es kein Browser, also auch kein CSRF. Das gilt für CLI,
      curl und Webhooks.
    - **Ausnahme:** `PanelNode::$entryActions`, nur per GET/HEAD, von überall.
-     Bisher nur `cms/auth`: `activate`, `reset` (der Schlüssel im Mail-Link
+     Bisher nur `admin/auth`: `activate`, `reset` (der Schlüssel im Mail-Link
      autorisiert), die Formulare `login`, `register`, `resetPassword` und die
      Rechtstexte.
 2. **`actionGranted()`.** Früher hat es mit `die('no access …')`
@@ -77,15 +77,15 @@ ohne die Action.
    Discover), wirft `ActionGuard::method()` mit dem Hinweis „has no
    #[Action] attribute … Add #[Action] to the method“. Bei einer Methode des
    Frameworks (`updateView` …) lautet er stattdessen „belongs to the panel
-   framework“. Kennt `actions.php` die Action (`cms/auth` → `loginMethod`),
+   framework“. Kennt `actions.php` die Action (`admin/auth` → `loginMethod`),
    wird die Methode still übergangen. Das ist der Hinweis für migrierte
    Panels, deren Methoden früher Actions waren.
 
 Methoden: `app.php` ruft eine Panel-Methode mit dem Namen der Action nur
 noch auf, wenn sie `#[Action]` trägt (`Systopic\System\Panels\Action`).
 Vorher war jede öffentliche Methode der Klasse aufrufbar. In smp waren das
-28 Stück, keine davon als Action gemeint, z. B. `cms/backup/removeOldMediaDir`
-für jeden Editor. `loginMethod` (`cms/auth`) lief dadurch doppelt. pwk habe
+28 Stück, keine davon als Action gemeint, z. B. `admin/backup/removeOldMediaDir`
+für jeden Editor. `loginMethod` (`admin/auth`) lief dadurch doppelt. pwk habe
 ich nur statisch geprüft: Die Upload-Methoden werden intern aufgerufen,
 `cancel` ist ein `case`. Closure-Properties (`$this->sendData = function …`
 in pwk) laufen weiter wie bisher.
@@ -93,7 +93,7 @@ in pwk) laufen weiter wie bisher.
 **Testen:** `php tests/actionguard.php` (ohne DB). Per CLI-Payload lassen
 sich die Header setzen:
 `"server": {"HTTP_SEC_FETCH_SITE": "cross-site"}`. Über Apache:
-`curl -sk -X PUT -H 'Sec-Fetch-Site: cross-site' …/cms/auth/loginMethod`
+`curl -sk -X PUT -H 'Sec-Fetch-Site: cross-site' …/admin/auth/loginMethod`
 liefert 403.
 
 **Falle:** Eine neue Action, die von außen erreichbar sein muss (ein
@@ -105,7 +105,7 @@ same-origin ist.
 
 ## Configs (`Controlmap\Map`)
 
-Stand 2026-11-02: gelesen, in cms/controlmap angezeigt und bearbeitet, und
+Stand 2026-11-02: gelesen, in admin/controlmap angezeigt und bearbeitet, und
 die Laufzeit fragt danach (unten „Laufzeit“).
 
 **Ebenen** je Panel, die spätere ersetzt die frühere Schlüssel für
@@ -118,14 +118,14 @@ Schlüssel:
    entscheidet die Installation.
 
 ```json
-// cms: panels/cms/010_pages/panel.config.json
+// cms: panels/admin/010_pages/panel.config.json
 { "build":   ["cmsAdmin", "cmsEditor", "cmsPageEditor"],
   "actions": ["cmsEditor"],
   "action":  { "deletePage": ["cmsAdmin"] },
   "rights":  { "move": ["cmsAdmin", "cmsEditor"] } }
 
 // Projekt: config/controlmap.json
-{ "cms/pages": { "action": { "publish": ["cmsAdmin"] } } }
+{ "admin/pages": { "action": { "publish": ["cmsAdmin"] } } }
 ```
 
 Die Werte sind Rollen-Schlüssel. Eine Liste ersetzt die darunter, `[]`
@@ -181,7 +181,7 @@ Was entscheidet, in dieser Reihenfolge:
 4. der geerbte Code (`PanelNode`: jeder Eingeloggte)
 
 Eine geerbte Config lockert also nie, was ein Panel in seinem Code selbst
-entscheidet. Die Lightbox in cms/controlmap zeigt „Effective“ nach derselben
+entscheidet. Die Lightbox in admin/controlmap zeigt „Effective“ nach derselben
 Regel.
 
 Eine Rollenliste lässt den Superuser immer durch, außer wenn er als Rolle
@@ -197,7 +197,7 @@ Umsortieren unter demselben Elternknoten geht.
 ## Offen (nächste Schritte)
 
 1. **Baum + Map-GUI:** je Panel `build`, `actions` (Default) und je Action
-   eine Rollenliste. Die Vererbung wird angezeigt („geerbt von cms/pages“).
+   eine Rollenliste. Die Vererbung wird angezeigt („geerbt von admin/pages“).
 2. **Configs:** lesen, anzeigen und die Projekt-Ebene bearbeiten erledigt
    2026-11-02, siehe oben „Configs“. Offen: zur Laufzeit ein
    zusammengeführtes PHP-Array in `var/`; ein neues benanntes Recht in der
@@ -230,16 +230,16 @@ Umsortieren unter demselben Elternknoten geht.
    im Code bleibt, gilt nur noch, wo keine Config etwas sagt: für den
    Recovery-User, der keine Datenbank hat, und als Rückfall, wenn jemand
    die Config löscht (dann meist: nur der Superuser).
-   - Erledigt 2026-11-02 (system): `cms/settings` und `cms/users`
-     (`cmsAdmin`), `cms/settings/theme` (`[]`, nur Superuser),
-     `cms/backup` (Editoren sehen es; löschen, hochladen, herunterladen und
+   - Erledigt 2026-11-02 (system): `admin/settings` und `admin/users`
+     (`cmsAdmin`), `admin/settings/theme` (`[]`, nur Superuser),
+     `admin/backup` (Editoren sehen es; löschen, hochladen, herunterladen und
      aufräumen dürfen Admins; `createDatabase`: `["recovery"]`, der
      Recovery-User über den Code, durch die Liste kommt sonst nur der
      Superuser, bei ihm scheitert `CREATE DATABASE` an der vorhandenen DB),
      `backup/create` (Editoren), `backup/restore` (Admins, im Code
      der Recovery-User mit `restore`), `backup/log` (`clear` für Admins).
      Die Knöpfe in Backup fragen `Access::action()`.
-   - Erledigt 2026-11-02 (spaceticker): `cms/events`, `cms/contacts`
+   - Erledigt 2026-11-02 (spaceticker): `admin/events`, `admin/contacts`
      (Admin + Editor; die Ausnahme `|| STAGE === 'DEV'` ist weg, auf DEV
      braucht man jetzt auch die Rolle), `devices` mit dem Recht
      `pairScreens` (Admin). Der Link „Screen koppeln“ im Header prüft noch

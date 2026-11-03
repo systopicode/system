@@ -50,14 +50,13 @@ body > main > div.pylon:after{
 
 /********STATUSLEISTE***************/
 /* Debug: the CMS on a faint checkerboard, open at the bottom - the sides
-   hold the debug tool's tabs. Not while a debug window elsewhere shows them
-   (data-sysdebug-remote, tools/debug js/remote.js). */
-:root:not([data-sysdebug-remote]) body:has(> main[data-debug]){
+   hold the debug tool's tabs. */
+body:has(> main[data-debug]){
     padding: 22px 32px 0;
     background: repeating-conic-gradient(#e4e8ec 0 25%, #eef1f4 0 50%) 0 0 / 16px 16px;
 }
 
-:root:not([data-sysdebug-remote]) body > main[data-debug]{
+body > main[data-debug]{
     border-radius: var(--cmsRadiusLg) var(--cmsRadiusLg) 0 0;
     overflow: clip;
 }
@@ -65,7 +64,7 @@ body > main > div.pylon:after{
 footer.cmsStatusbar{
     flex: 0 0 var(--cmsStatusBar);
     position: relative;
-    z-index: 2;
+    z-index: 1;
     margin-top: calc(-1 * var(--cmsStatusBar));
     height: var(--cmsStatusBar);
     min-height: 0;
@@ -75,7 +74,7 @@ footer.cmsStatusbar{
     justify-content: flex-end;
     gap: 1rem;
     box-sizing: border-box;
-    padding: 0 0.75rem 0 calc(4.75rem + 0.75rem);
+    padding: 0 0.7rem 0 calc(4.75rem + 0.7rem);
     background: var(--cmsFrame);
     pointer-events: none;
     color: var(--cmsFrameText);
@@ -101,6 +100,11 @@ footer.cmsStatusbar .cmsJobs .job{
     min-width: 0;
 }
 
+footer.cmsStatusbar .cmsJobs .job > button:where(:not([data-cms-action])) {
+    pointer-events:auto; min-height:24px; height:24px; margin:0; padding:0 .35rem;
+    color:inherit; font-size:inherit; line-height:1;
+}
+
 footer.cmsStatusbar .cmsJobs .job b{
     font-weight: 600;
 }
@@ -108,16 +112,16 @@ footer.cmsStatusbar .cmsJobs .job b{
 footer.cmsStatusbar .cmsJobs .spin{
     width: 0.7rem;
     height: 0.7rem;
-    border: 1.5px solid currentColor;
+    border: var(--cmsSpinnerStroke, 2px) solid currentColor;
     border-top-color: transparent;
     border-radius: 50%;
     animation: spinner .6s linear infinite;
 }
 
 footer.cmsStatusbar .cmsJobs .bar{
-    width: 4.5rem;
-    height: 3px;
-    border-radius: 2px;
+    width: 6rem;
+    height: 6px;
+    border-radius: 999px;
     background: color-mix(in srgb, var(--cmsFrameText) 28%, transparent);
     overflow: hidden;
 }
@@ -126,6 +130,11 @@ footer.cmsStatusbar .cmsJobs .bar i{
     display: block;
     height: 100%;
     background: var(--cmsHighlightColor);
+    border-radius: inherit;
+    transition: width 160ms ease-out;
+}
+@media (prefers-reduced-motion: reduce) {
+    footer.cmsStatusbar .cmsJobs .bar i { transition: none; }
 }
 
 footer.cmsStatusbar .cmsStatusInfo{
@@ -265,11 +274,42 @@ body > main > div.pylon nav:has(+ footer){
     margin: 0 0 0 0.15rem;
 }
 
-.cms .pylonTitle .treeNavi a i,
+.cms .pylonTitle .treeNavi :is(a, button:where([data-cms-action])) i,
 .cms .pylonTitle .button.icononly i{
     font-size: 0.9rem;
     line-height: 1;
 }
+
+body > main > div.pylon:has(> .pylonTreeToolbar) > header:empty {
+    display: none;
+}
+@media (min-width: 1025px) and (orientation: landscape), (min-width: 1401px) {
+    body.cms > main > div.pylon:has(> .pylonTreeToolbar) {
+        margin-top: .5rem;
+        border-inline-end: 1px solid var(--cmsLineStrong);
+    }
+    body.cms > main > div.pylon:has(> .pylonTreeToolbar)::after {
+        content: none;
+    }
+    body.cms > main > div.pylon:has(> .pylonTreeToolbar) + div.content {
+        box-shadow: none;
+    }
+    body.cms > main > div.pylon:has(> .pylonTreeToolbar) + div.content,
+    body.cms > main > div.pylon:has(> .pylonTreeToolbar) + div.content > header {
+        border-top-left-radius: 0;
+    }
+}
+
+.cms .pylonTitle.pylonTreeToolbar {
+    min-height: 3.25rem;
+    margin: 0;
+    padding: .5rem .75rem;
+    background: var(--cmsPanelAlt);
+    border-radius: var(--cmsRadiusLg) 0 0 0;
+}
+.cms .pylonTreeToolbar .searchInput { flex: 1 1 auto; min-width: 0; }
+.cms .pylonTreeToolbar .treeNavi { flex: 0 0 auto; margin-inline-start: auto; }
+.cms .pylonTreeToolbar + nav { border-radius: 0; }
 
 body > main > div.pylon:empty{
     display: none;
@@ -305,7 +345,7 @@ body > main > div.main + div.content{
 /* Settings, users, tools: the same inset window as backup, with the
    menu as its left side. The empty pylon header is the bright bar. */
 body.settings > main > div.pylon,
-body.users > main > div.pylon,
+body.access:not(:has(> main > .pylonColumns)) > main > div.pylon,
 body.tools > main > div.pylon{
     flex: 0 0 13.5rem;
     width: 13.5rem;
@@ -323,19 +363,19 @@ body.tools > main > div.pylon{
 }
 
 body.settings > main > div.pylon:after,
-body.users > main > div.pylon:after,
+body.access:not(:has(> main > .pylonColumns)) > main > div.pylon:after,
 body.tools > main > div.pylon:after{
     content: none;
 }
 
 body.settings > main > div.pylon > header,
-body.users > main > div.pylon > header,
+body.access:not(:has(> main > .pylonColumns)) > main > div.pylon > header,
 body.tools > main > div.pylon > header{
     display: none;
 }
 
 body.settings > main > div.pylon nav,
-body.users > main > div.pylon nav,
+body.access:not(:has(> main > .pylonColumns)) > main > div.pylon nav,
 body.tools > main > div.pylon nav{
     background: transparent;
     border-radius: var(--cmsRadiusLg) 0 0 0;
@@ -343,7 +383,7 @@ body.tools > main > div.pylon nav{
 }
 
 body.settings > main > div.content,
-body.users > main > div.content,
+body.access:not(:has(> main > .pylonColumns)) > main > div.content,
 body.tools > main > div.content{
     flex: 1 1 auto;
     width: 0;
@@ -356,9 +396,26 @@ body.tools > main > div.content{
 }
 
 body.settings > main > div.content > header,
-body.users > main > div.content > header,
+body.access:not(:has(> main > .pylonColumns)) > main > div.content > header,
 body.tools > main > div.content > header{
     border-radius: 0 var(--cmsRadiusLg) 0 0;
+}
+
+/* Without a pylon the content owns the shoulder beside the main navigation.
+   An empty controls header leaves the content row as the top painted surface.
+   Propagate radii instead of clipping the window (which would cut popovers). */
+body.cms:not(.pages) > main:not(:has(> div.pylon:not(:empty))) > div.content,
+body.cms:not(.pages) > main:not(:has(> div.pylon:not(:empty))) > div.content > header {
+    border-top-left-radius: var(--cmsMobileRadius, var(--cmsRadiusLg));
+}
+body.cms:not(.pages) > main > div.content:not(:has(> header :is(a, button, input, select, textarea, nav, ul, form, label))) > .flexRow {
+    border-top-left-radius: inherit;
+    border-top-right-radius: inherit;
+}
+body.cms:not(.pages) > main > div.content > .flexRow > .flexColumn,
+body.cms:not(.pages) > main > div.content > .flexRow > .flexColumn > section.cms:first-child {
+    border-top-left-radius: inherit;
+    border-top-right-radius: inherit;
 }
 
 .flexRow{
@@ -470,4 +527,115 @@ body.tools > main > div.content > header{
     width: 0;
     height: 0;
     overflow: hidden;
+}
+
+/* Desktop owns one bounded content scroller; phone sheets scroll their outer row. */
+@media (min-width: 1025px) {
+    body.cms.settings > main > .content { min-height: 0; }
+    body.cms.settings > main > .content > .flexRow > .flexColumn { min-height: 0; }
+    body.cms.settings > main > .content > .flexRow > .flexColumn > section.cms {
+        min-height: 0;
+        height: auto;
+        align-self: stretch;
+        overflow-y: auto;
+    }
+}
+@media (max-width: 1024px) {
+    body.cms.settings > main > .content > .flexRow > .flexColumn { min-height: 0; height: auto; }
+    body.cms.settings > main > .content > .flexRow > .flexColumn > section.cms {
+        flex: 0 0 auto;
+        height: auto;
+        min-height: 0;
+        overflow: visible;
+    }
+}
+
+/* Resolve the shared SVG URL relative to the System stylesheet. */
+.mediaDrop:empty::after {
+	-webkit-mask: var(--icon-photo) center / contain no-repeat;
+	mask: var(--icon-photo) center / contain no-repeat;
+}
+
+/* A module can keep its navigation beside a child panel's own Pylon. */
+.cms .pylonSecondary {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    min-width: 0;
+    background: var(--cmsBgColor);
+}
+.cms .pylonSecondary > header:empty { display: none; }
+.cms .pylonSecondary .pylonTreeToolbar { border-radius: 0; }
+.cms .pylonResizeHandle {
+    position: absolute;
+    inset-block: 0;
+    inset-inline-end: -5px;
+    width: 10px;
+    touch-action: none;
+    z-index: 30;
+    cursor: col-resize;
+}
+.cms .pylonResizeHandle::after,
+.cms .pylonSecondary > .pylonResizeHandle::before {
+    content: "";
+    position: absolute;
+    inset-inline-start: 50%;
+    transform: translateX(-50%);
+    pointer-events: none;
+}
+.cms .pylonSecondary > .pylonResizeHandle::before {
+    inset-block: 0;
+    width: 1px;
+    background: var(--cmsLineStrong);
+}
+.cms .pylonResizeHandle::after {
+    inset-block-start: calc(50% - .75rem);
+    width: 4px;
+    height: 1.5rem;
+    border-radius: 999px;
+    background: var(--cmsMuted);
+}
+@media (min-width: 1025px) and (orientation: landscape), (min-width: 1401px) {
+    body.cms > main > .pylonColumns {
+        flex: 0 0 auto;
+        display: grid;
+        grid-template-columns: 13.5rem max-content;
+        width: max-content;
+        max-width: none;
+        margin: .5rem 0 var(--cmsStatusBar);
+        padding-bottom: 0;
+    }
+    body.cms > main > .pylonColumns::after { content: none; }
+    .cms .pylonColumns > .pylonPrimary {
+        flex: 0 0 13.5rem;
+        border-inline-end: 1px solid var(--cmsLineStrong);
+    }
+    .cms .pylonColumns > .pylonSecondary {
+        flex: 0 0 auto;
+        width: clamp(220px, var(--pylonWidth, 270px), 35vw);
+    }
+    body.cms > main > .pylonColumns + .content,
+    body.cms > main > .pylonColumns + .content > header {
+        border-top-left-radius: 0;
+        box-shadow: none;
+    }
+}
+.cms .pylonSheetTree, .cms .pylonSheetLayout .button.pylonSheetBack { display: none; }
+@media (max-width: 1024px), (orientation: portrait) and (max-width: 1400px) {
+    .cms .pylonColumns > .pylonSecondary { display: none; }
+    .cms .pylonSheetTree { display: flex; flex-direction: column; width: 100%; }
+    .cms .pylonSheetTree > header:empty { display: none; }
+    .cms .pylonSheetTree > .pylonTreeToolbar {
+        position: sticky;
+        top: var(--cmsGlassHeader, 0px);
+        z-index: 2;
+        border-top: 1px solid var(--cmsLineStrong);
+        border-radius: 0;
+    }
+    .cms .pylonSheetTree > nav { overflow: auto; }
+    .cms .pylonSheetTree > [data-on_draginit] { display: none; }
+    .cms .pylonSheetLayout[data-pylon-view="tree"] > .pylonSheetDetail,
+    .cms .pylonSheetLayout[data-pylon-view="detail"] > .pylonSheetTree { display: none; }
+    .cms .pylonSheetLayout .button.pylonSheetBack { display: inline-flex; }
 }

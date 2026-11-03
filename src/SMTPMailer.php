@@ -7,6 +7,9 @@
   License    : MIT License  https://opensource.org/licenses/MIT
  * *********************************************************** */
 
+if (!class_exists(\Systopic\System\Mail\Failure::class)) require_once __DIR__ . '/Mail/Failure.php';
+if (!class_exists(\Systopic\System\Mail\Delivery::class)) require_once __DIR__ . '/Mail/Delivery.php';
+
 Class SMTPMailer {
 
 	private $server = 'smtp.gmail.com';
@@ -24,7 +27,7 @@ Class SMTPMailer {
 	public $text = '';
 	public $file = array();
 	public $charset = 'UTF-8';
-	public $transferEncoding = '8bit';
+	public $transferEncoding = 'quoted-printable';
 	private $headers;
 	private $ahead;
 	private $sock;
@@ -65,6 +68,8 @@ Class SMTPMailer {
 			$this->local = $_SERVER['SERVER_NAME'];
 		else
 			$this->local = $_SERVER['SERVER_ADDR'] ?? 'localhost'; // CLI has none
+		$host = parse_url('http://' . $this->local, PHP_URL_HOST) ?: 'localhost';
+        $this->local = filter_var($host, FILTER_VALIDATE_IP) ? '[' . (str_contains($host, ':') ? 'IPv6:' : '') . $host . ']' : (preg_match('/^[a-zA-Z0-9.-]+$/', $host) ? $host : 'localhost');
 		if ($this->username)
 			$this->from = array($this->username, '');
 		if (!defined("NL")) {
@@ -128,7 +133,7 @@ Class SMTPMailer {
 		$this->charset = $charset;
 	}
 
-	// Set Content Transfer Encoding. Default '8bit'
+	// Set Content Transfer Encoding. Default 'quoted-printable'
 	public function TransferEncoding($encode) {
 		$this->transferEncoding = $encode;
 	}
@@ -149,13 +154,16 @@ Class SMTPMailer {
 
 	// Send the SMTP Mail
 	public function Send() {
+        \Systopic\System\Mail\Delivery::prepare($this);
 		// Prepare data for sending
 		$this->headers = $this->doHeaders();
 		$user64 = base64_encode($this->username);
 		$pass64 = base64_encode($this->password);
 		$mailfrom = '<' . $this->from[0] . '>';
-		foreach (array_merge($this->to, $this->cc, $this->bcc) as $address)
-			$mailto[] = '<' . $address[0] . '>';
+		foreach (array_merge($this->to, $this->cc, $this->bcc) as $address) {
+            if (!filter_var($address[0], FILTER_VALIDATE_EMAIL)) throw new \RuntimeException('SMTP: invalid recipient address');
+            $mailto[] = '<' . $address[0] . '>';
+        }
 
 		// Open server connection and run transfers
 		$this->sock = @fsockopen($this->hostname, $this->port, $enum, $estr, 30);
@@ -167,8 +175,10 @@ Class SMTPMailer {
 
 		if ($this->secure == 'tls') {
 			$this->logreq('STARTTLS', '220');
-			stream_socket_enable_crypto($this->sock, true,
-					STREAM_CRYPTO_METHOD_TLS_CLIENT);
+            if (@stream_socket_enable_crypto($this->sock, true, STREAM_CRYPTO_METHOD_TLS_CLIENT) !== true) {
+                fclose($this->sock);
+                throw new \RuntimeException('SMTP: TLS handshake failed; check encryption, port and certificate');
+            }
 			$this->logreq('EHLO ' . $this->local, '250');
 		}
 
@@ -185,7 +195,8 @@ Class SMTPMailer {
 
 		$this->logreq('DATA', '354');
 		$this->log[] = htmlspecialchars($this->doHeaders(false));
-		$this->request($this->headers, '250');
+		$wire = preg_replace('/(?m)^\./', '..', $this->headers);
+		$this->request(rtrim($wire, "\r\n") . NL . '.', '250');
 		$this->logreq('QUIT', '221');
 		fclose($this->sock);
 
@@ -221,7 +232,7 @@ Class SMTPMailer {
 		if (substr($result, 0, 3) == $code)
 			return;
 		fclose($this->sock);
-		throw new \RuntimeException("SMTP: expected $code from $this->hostname, got: " . trim((string) $result));
+		throw new \RuntimeException("SMTP: expected $code from $this->hostname, got: " . \Systopic\System\Mail\Failure::detail(trim((string) $result), ['user'=>$this->username,'password'=>$this->password]));
 	}
 
 	// Do create headers after precheck
@@ -246,138 +257,107 @@ Class SMTPMailer {
 		return rtrim($headerstring);
 	}
 
-	// Headers
 	private function createHeaders($filedata) {
-		$this->ahead = array();
-		$this->ahead[] = 'Date: ' . date('r');
-		$this->ahead[] = 'To: ' . $this->formatAddressList($this->to);
-		$this->ahead[] = 'From: ' . $this->formatAddress($this->from);
-		if (!empty($this->cc)) {
-			$this->ahead[] = 'Cc: ' . $this->formatAddressList($this->cc);
-		}
-		if (!empty($this->bcc)) {
-			$this->ahead[] = 'Bcc: ' . $this->formatAddressList($this->bcc);
-		}
-		if (!empty($this->reply_to)) {
-			$this->ahead[] = 'Reply-To: ' . $this->formatAddressList($this->reply_to);
-		}
-		$this->ahead[] = 'Subject: ' . '=?UTF-8?B?' . base64_encode($this->subject) . '?=';
-		$this->ahead[] = 'Message-ID: ' . $this->generateMessageID();
-		$this->ahead[] = 'X-Mailer: ' . 'PHP/' . phpversion();
-		$this->ahead[] = 'MIME-Version: ' . '1.0';
+        $this->ahead = [
+            'Date: ' . date('r'),
+            'To: ' . $this->formatAddressList($this->to),
+            'From: ' . $this->formatAddress($this->from),
+        ];
+        if ($this->cc) $this->ahead[] = 'Cc: ' . $this->formatAddressList($this->cc);
+        // Bcc recipients belong to the SMTP envelope, never the delivered header.
+        if ($this->reply_to) $this->ahead[] = 'Reply-To: ' . $this->formatAddressList($this->reply_to);
+        $this->ahead[] = 'Subject: ' . $this->encodeHeader((string) $this->subject);
+        $this->ahead[] = 'Message-ID: ' . $this->generateMessageID();
+        $this->ahead[] = 'MIME-Version: 1.0';
+        if ($this->body !== '' && $this->text === '') $this->text = $this->plainText((string) $this->body);
+        $content = $this->messageContent();
+        if (!$this->file) {
+            $this->ahead[] = $content;
+            return;
+        }
+        $boundary = 'fluxo-mixed-' . bin2hex(random_bytes(16));
+        $this->ahead[] = 'Content-Type: multipart/mixed; boundary="' . $boundary . '"';
+        $this->ahead[] = '';
+        $this->ahead[] = '--' . $boundary;
+        $this->ahead[] = $content;
+        foreach ($this->file as $attachment) {
+            $name = is_array($attachment) ? (string) $attachment[0] : basename($attachment);
+            if (!is_array($attachment) && !is_file($attachment)) throw new \RuntimeException('SMTP: attachment not found');
+            $this->safeHeader($name);
+            $fallback = preg_replace('/[^a-zA-Z0-9._-]/', '_', $name);
+            $this->ahead[] = '--' . $boundary;
+            $this->ahead[] = 'Content-Type: application/octet-stream';
+            $this->ahead[] = 'Content-Disposition: attachment;' . NL . (preg_match('/^[a-zA-Z0-9._-]+$/', $name) ? "\t" . 'filename="' . $fallback . '"' : "\tfilename*=UTF-8''" . rawurlencode($name));
+            $this->ahead[] = 'Content-Transfer-Encoding: base64';
+            $this->ahead[] = '';
+            $bytes = $filedata ? (is_array($attachment) ? $attachment[1] : file_get_contents($attachment)) : '';
+            if ($bytes === false) throw new \RuntimeException('SMTP: attachment could not be read');
+            $this->ahead[] = rtrim(chunk_split(base64_encode($bytes), 76, NL), "\r\n");
+        }
+        $this->ahead[] = '--' . $boundary . '--';
+    }
 
-		$boundary = md5(uniqid());
-		// Email contents
-		if (empty($this->file)) {
-			if ($this->text && $this->body) {
-				// add multipart
-				$this->ahead[] = 'Content-Type: multipart/alternative; boundary="'
-						. $boundary . '"';
-				$this->ahead[] = '';
-				$this->ahead[] = 'This is a multi-part message in MIME format.';
-				$this->ahead[] = '--' . $boundary;
-				// add text
-				$this->defContent('plain', 'text');
-				$this->ahead[] = '--' . $boundary;
-				// add html
-				$this->defContent('html', 'body');
-				$this->ahead[] = '--' . $boundary . '--';
-			} elseif ($this->text) {
-				// add text
-				$this->defContent('plain', 'text');
-			} else {
-				// add html
-				$this->defContent('html', 'body');
-			}
-		} else {
-			// add multipart with attachment
-			$this->ahead[] = 'Content-Type: multipart/mixed; boundary="'
-					. $boundary . '"';
-			$this->ahead[] = '';
-			$this->ahead[] = 'This is a multi-part message in MIME format.';
-			$this->ahead[] = '--' . $boundary;
-			if ($this->text) {
-				// add text
-				$this->defContent('plain', 'text');
-				$this->ahead[] = '--' . $boundary;
-			}
-			if ($this->body) {
-				// add html
-				$this->defContent('html', 'body');
-				$this->ahead[] = '--' . $boundary;
-			}
-			// spin thru attachments...
-			foreach ($this->file as $path) {
-				if (is_array($path)) {
-					$this->ahead[] = 'Content-Type: application/octet-stream; '
-							. 'name="' . $path[0] . '"';
-					$this->ahead[] = 'Content-Transfer-Encoding: base64';
-					$this->ahead[] = 'Content-Disposition: attachment';
-					$this->ahead[] = '';
-					if ($filedata) {
-						$contents = chunk_split(base64_encode($path[1]));
-						$this->ahead[] = $contents;
-					}
-					$this->ahead[] = '--' . $boundary;
-				} else {
-					if (fs::fileExists($path)) {
-						// add attachment
-						$this->ahead[] = 'Content-Type: application/octet-stream; '
-								. 'name="' . basename($path) . '"';
-						$this->ahead[] = 'Content-Transfer-Encoding: base64';
-						$this->ahead[] = 'Content-Disposition: attachment';
-						$this->ahead[] = '';
-						if ($filedata) {
-							$contents = chunk_split(base64_encode(file_get_contents($path)));
-							$this->ahead[] = $contents;
-						}
-						$this->ahead[] = '--' . $boundary;
-					}
-				}
-			}
-			// add last "--"
-			$this->ahead[count($this->ahead) - 1] .= '--';
-		}
-		// final period
-		$this->ahead[] = '.';
+    private function messageContent(): string {
+        if ($this->text !== '' && $this->body !== '') {
+            $boundary = 'fluxo-alt-' . bin2hex(random_bytes(16));
+            return 'Content-Type: multipart/alternative; boundary="' . $boundary . '"' . NL . NL
+                . '--' . $boundary . NL . $this->contentPart('plain', $this->text) . NL
+                . '--' . $boundary . NL . $this->contentPart('html', $this->body) . NL
+                . '--' . $boundary . '--';
+        }
+        return $this->text !== '' ? $this->contentPart('plain', $this->text) : $this->contentPart('html', $this->body);
+    }
 
-		return;
-	}
+    private function contentPart(string $type, string $content): string {
+        $this->safeHeader((string) $this->charset);
+        $content = preg_replace('/\r\n|\r|\n/', NL, $content);
+        $encoding = strtolower((string) $this->transferEncoding);
+        $encoded = match ($encoding) {
+            'quoted-printable' => quoted_printable_encode($content),
+            'base64' => rtrim(chunk_split(base64_encode($content), 76, NL), "\r\n"),
+            '7bit', '8bit' => $content,
+            default => throw new \RuntimeException('SMTP: unsupported transfer encoding'),
+        };
+        return 'Content-Type: text/' . $type . '; charset="' . $this->charset . '"' . NL
+            . 'Content-Transfer-Encoding: ' . $encoding . NL . NL . $encoded;
+    }
 
-	// Define and code the contents
-	private function defContent($type, $msg) {
-		$this->ahead[] = 'Content-Type: text/' . $type . '; charset="' . $this->charset . '"';
-		$this->ahead[] = 'Content-Transfer-Encoding: ' . $this->transferEncoding;
-		$this->ahead[] = '';
-		if ($this->transferEncoding == 'quoted-printable')
-			$this->ahead[] = quoted_printable_encode($this->$msg);
-		else
-			$this->ahead[] = $this->$msg;
-	}
+    private function plainText(string $html): string {
+        $html = preg_replace('~<(style|script)\b[^>]*>.*?</\1>~is', '', $html);
+        $html = preg_replace_callback('~<a\b[^>]*href=["\x27]([^"\x27]*)["\x27][^>]*>(.*?)</a>~is',
+            static fn($m) => strip_tags($m[2]) . ' (' . $m[1] . ')', $html);
+        $html = preg_replace('~<br\s*/?>|</(?:p|div|h[1-6]|tr|li)>~i', "\n", $html);
+        return trim(preg_replace('/\n[\t ]*\n(?:[\t ]*\n)+/', "\n\n", html_entity_decode(strip_tags($html), ENT_QUOTES | ENT_HTML5, 'UTF-8')));
+    }
 
-	// Format email address (with name)
-	private function formatAddress($address) {
-		return ($address[1] == '') ? $address[0] : '"' . $address[1] . '" <' . $address[0] . '>';
-	}
+    private function safeHeader(string $value): void {
+        if (preg_match('/[\r\n\x00]/', $value)) throw new \RuntimeException('SMTP: invalid header value');
+    }
 
-	// Format email address list
-	private function formatAddressList($addresses) {
-		$list = '';
-		foreach ($addresses as $address) {
-			if ($list) {
-				$list .= ', ' . NL . "\t";
-			}
-			$list .= $this->formatAddress($address);
-		}
-		return $list;
-	}
+    private function encodeHeader(string $value): string {
+        $this->safeHeader($value);
+        // RFC 2047 encoded words, kept below 75 characters without splitting UTF-8.
+        $words = []; $chunk = '';
+        foreach (preg_split('//u', $value, -1, PREG_SPLIT_NO_EMPTY) ?: [] as $char) {
+            if (strlen($chunk . $char) > 42) { $words[] = '=?UTF-8?B?' . base64_encode($chunk) . '?='; $chunk = ''; }
+            $chunk .= $char;
+        }
+        if ($chunk !== '') $words[] = '=?UTF-8?B?' . base64_encode($chunk) . '?=';
+        return implode(NL . "\t", $words);
+    }
 
-	protected function generateMessageID() {
-		return sprintf(
-				"<%s.%s@%s>",
-				base_convert(microtime(), 10, 36),
-				base_convert(bin2hex(openssl_random_pseudo_bytes(8)), 16, 36),
-				$this->local
-		);
-	}
+    private function formatAddress($address) {
+        if (!filter_var($address[0], FILTER_VALIDATE_EMAIL)) throw new \RuntimeException('SMTP: invalid email address');
+        $name = (string) ($address[1] ?? '');
+        return $name === '' ? $address[0] : $this->encodeHeader($name) . NL . "\t<" . $address[0] . '>';
+    }
+
+    private function formatAddressList($addresses) {
+        return implode(',' . NL . "\t", array_map(fn($address) => $this->formatAddress($address), $addresses));
+    }
+
+    protected function generateMessageID() {
+        $domain = substr((string) $this->from[0], strrpos((string) $this->from[0], '@') + 1);
+        return '<' . bin2hex(random_bytes(20)) . '@' . $domain . '>';
+    }
 }

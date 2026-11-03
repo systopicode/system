@@ -20,7 +20,7 @@ final class Grant
         public readonly string $key,
     ) {}
 
-    /** Where it comes from, for a title: `cms/pages · cms · actions`. */
+    /** Where it comes from, for a title: `admin/pages · cms · actions`. */
     public string $from {
         get => ($this->path === '' ? '/' : $this->path) . ' · ' . $this->layer . ' · ' . $this->key;
     }

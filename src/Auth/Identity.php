@@ -61,9 +61,9 @@ final class Identity
 
     public bool $known { get => $this->user !== null || $this->recovery; }
 
-    public bool $isActive { get => $this->recovery || (bool) $this->user?->isActive; }
+    public bool $isActive { get => $this->recovery || ((bool) $this->user?->isActive && !$this->user?->isBlocked); }
 
-    public bool $isSuperuser { get => (bool) $this->user?->isSuperuser; }
+    public bool $isSuperuser { get => !$this->user?->isBlocked && (bool) $this->user?->isSuperuser; }
 
     public string $name { get => $this->recovery ? 'systemRecovery' : (string) $this->user?->name; }
 

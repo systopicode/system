@@ -211,6 +211,11 @@ final class ProjectFile
      */
     public static function replace(string $path, string $id, string $text): ?string
     {
+        return \Systopic\System\Config\FileWriter::locked($path, static fn() => self::replaceLocked($path, $id, $text), null);
+    }
+
+    private static function replaceLocked(string $path, string $id, string $text): ?string
+    {
         if (self::asJson($path)) {
             return ProjectJson::replace($path, $id, $text);
         }
@@ -225,7 +230,7 @@ final class ProjectFile
                 return null;
             }
             $source = substr($parser->source, 0, $leaf->start) . $encoded . substr($parser->source, $leaf->end);
-            if (file_put_contents($path, $source) === false) {
+            if (!\Systopic\System\Config\FileWriter::write($path, $source)) {
                 return null;
             }
             return $encoded;
@@ -658,6 +663,11 @@ final class ProjectFile
      */
     public static function saveItem(string $path, string $id, string $key, string $text): ?bool
     {
+        return \Systopic\System\Config\FileWriter::locked($path, static fn() => self::saveItemLocked($path, $id, $key, $text), false);
+    }
+
+    private static function saveItemLocked(string $path, string $id, string $key, string $text): ?bool
+    {
         if (self::asJson($path)) {
             return ProjectJson::saveItem($path, $id, $key, $text);
         }
@@ -685,11 +695,16 @@ final class ProjectFile
     /** @return null unchanged, true written, false refused */
     public static function renameItem(string $path, string $id, string $key, string $text): ?bool
     {
+        return \Systopic\System\Config\FileWriter::locked($path, static fn() => self::renameItemLocked($path, $id, $key, $text), false);
+    }
+
+    private static function renameItemLocked(string $path, string $id, string $key, string $text): ?bool
+    {
         if (self::asJson($path)) {
             return ProjectJson::renameItem($path, $id, $key, $text);
         }
         $text = trim($text);
-        if ($text === '' || str_contains($text, "\n") || str_contains($text, '/')) {
+        if (!preg_match('/^[A-Za-z0-9_][A-Za-z0-9_-]*$/D', $text)) {
             return false;
         }
         $parser = self::open($path);
@@ -714,6 +729,11 @@ final class ProjectFile
 
     /** @return null unchanged, true written, false refused */
     public static function addItem(string $path, string $id): ?bool
+    {
+        return \Systopic\System\Config\FileWriter::locked($path, static fn() => self::addItemLocked($path, $id), false);
+    }
+
+    private static function addItemLocked(string $path, string $id): ?bool
     {
         if (self::asJson($path)) {
             return ProjectJson::addItem($path, $id);
@@ -755,6 +775,11 @@ final class ProjectFile
     /** @return null unchanged, true written, false refused */
     public static function removeItem(string $path, string $id, string $key): ?bool
     {
+        return \Systopic\System\Config\FileWriter::locked($path, static fn() => self::removeItemLocked($path, $id, $key), false);
+    }
+
+    private static function removeItemLocked(string $path, string $id, string $key): ?bool
+    {
         if (self::asJson($path)) {
             return ProjectJson::removeItem($path, $id, $key);
         }
@@ -787,6 +812,11 @@ final class ProjectFile
 
     /** @return null unchanged, true written, false refused */
     public static function moveItem(string $path, string $id, string $from, string $to, bool $after): ?bool
+    {
+        return \Systopic\System\Config\FileWriter::locked($path, static fn() => self::moveItemLocked($path, $id, $from, $to, $after), false);
+    }
+
+    private static function moveItemLocked(string $path, string $id, string $from, string $to, bool $after): ?bool
     {
         if (self::asJson($path)) {
             return ProjectJson::moveItem($path, $id, $from, $to, $after);
@@ -828,6 +858,11 @@ final class ProjectFile
      * @return null unchanged, true written, false refused
      */
     public static function setField(string $path, string $id, string $key, string $field, string $text): ?bool
+    {
+        return \Systopic\System\Config\FileWriter::locked($path, static fn() => self::setFieldLocked($path, $id, $key, $field, $text), false);
+    }
+
+    private static function setFieldLocked(string $path, string $id, string $key, string $field, string $text): ?bool
     {
         if (self::asJson($path)) {
             return ProjectJson::setField($path, $id, $key, $field, $text);
@@ -974,7 +1009,7 @@ final class ProjectFile
         } catch (\Throwable) {
             return false;
         }
-        return file_put_contents($path, $next) !== false ? true : false;
+        return \Systopic\System\Config\FileWriter::write($path, $next);
     }
 }
 

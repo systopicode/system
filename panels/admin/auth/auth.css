@@ -1,0 +1,991 @@
+/****************************** ANMELDUNG ***************************/
+html:has(.authCard) {
+	background: var(--cmsMainColor);
+	height: auto;
+	min-height: 100%;
+}
+
+body.cms:has(.authCard),
+body.appBody:has(.authCard) {
+	align-items: center;
+	justify-content: safe center;
+	gap: 1.5rem;
+	height: auto;
+	min-height: 100%;
+	min-height: 100dvh;
+	padding: 2rem 1rem;
+	overflow: visible;
+
+	div.authCard,
+	footer.authFooter {
+		flex: 0 0 auto;
+	}
+	/* Liquid Petrol follows the installation's theme, including custom accents. */
+	--authLiquidGold: color-mix(in srgb, var(--cmsHighlightColor) 84%, var(--cmsMainColor));
+	--authLiquidLight: color-mix(in srgb, var(--cmsHighlightColor) 58%, var(--cmsBgColor));
+	--authLiquidCool: color-mix(in srgb, var(--cmsMainColor) 54%, var(--cmsBgColor));
+	--authLiquidTop: max(5rem, calc(env(safe-area-inset-top, 0px) + 3rem));
+	--authLiquidBottom: max(5rem, calc(env(safe-area-inset-bottom, 0px) + 3rem));
+	isolation: isolate;
+	background: var(--cmsMainColor);
+
+	/* Only the side lights are viewport-bound. Their paint fades to zero well
+	   before both safe areas; forms and the document retain their own scrolling. */
+	&::before {
+		content: "";
+		position: fixed;
+		inset: var(--authLiquidTop) 0 var(--authLiquidBottom);
+		z-index: -1;
+		pointer-events: none;
+		background:
+			radial-gradient(ellipse 17rem 25rem at -5rem 31%, color-mix(in srgb, var(--authLiquidLight) 66%, transparent), color-mix(in srgb, var(--authLiquidGold) 44%, transparent) 30%, transparent 72%),
+			radial-gradient(ellipse 25rem 33rem at -10rem 46%, color-mix(in srgb, var(--authLiquidGold) 30%, transparent), transparent 73%),
+			radial-gradient(ellipse 25rem 27rem at calc(100% + 7rem) 64%, color-mix(in srgb, var(--authLiquidCool) 78%, transparent), transparent 73%);
+		mask-image: linear-gradient(transparent, #000 22%, #000 78%, transparent);
+	}
+
+
+	div.authCard {
+		--authPadX: 2rem;
+		--authPadB: 1.75rem;
+		display: flex;
+		flex-direction: column;
+		width: min(100%, 26rem);
+		height: auto;
+		min-height: min(40rem, calc(100dvh - 7rem));
+		max-height: calc(100dvh - 7rem);
+		padding: 2.25rem var(--authPadX) var(--authPadB);
+		background: var(--cmsCanvas);
+		border-radius: calc(var(--cmsRadius) + 10px);
+		box-shadow: var(--cmsShadowLg);
+		position: relative;
+		overflow: hidden;
+
+		&:before {
+			content: "";
+			position: absolute;
+			inset: 0 0 auto;
+			z-index: 1;
+			height: 3px;
+			background: var(--cmsHighlightColor);
+		}
+
+		:is(a, button:where([data-cms-action])).logo {
+			display: block;
+			flex: 0 0 auto;
+			margin-bottom: 1.75rem;
+
+			img {
+				display: block;
+				height: 2.25rem;
+				width: auto;
+			}
+
+			&.override svg {
+				display: block;
+				width: auto;
+				height: auto;
+				max-width: 100%;
+				max-height: 2.75rem;
+			}
+		}
+
+		h1 {
+			flex: 0 0 auto;
+			margin: 0;
+			font-size: 1.75rem;
+			letter-spacing: -0.03em;
+		}
+
+		h1 + main.authText {
+			margin-top: 1rem;
+		}
+
+		p.authLead {
+			flex: 0 0 auto;
+			margin: 0.35rem 0 1.25rem;
+			color: var(--cmsMuted);
+			font-size: 0.9375rem;
+			text-align: left;
+		}
+
+		.authQrWrap p.authLead {
+			margin: 0.85rem 0 0;
+			text-align: center;
+		}
+
+		main:not(.authText) {
+			flex: 1 1 auto;
+			min-height: 0;
+			overflow: auto;
+		}
+
+		/* License and the other texts scroll inside the fixed card.
+		   The foot stays under the text. */
+		main.authText {
+			display: flex;
+			flex-direction: column;
+			flex: 1 1 auto;
+			min-height: 0;
+			overflow: hidden;
+		}
+
+		main.authText > .authScroll {
+			flex: 1 1 auto;
+			min-height: 0;
+			overflow: auto;
+			scrollbar-width: none;
+		}
+
+		main.authText > .authScroll::-webkit-scrollbar {
+			display: none;
+			width: 0;
+			height: 0;
+		}
+
+		main.authText > .authLinks {
+			position: static;
+			flex: 0 0 auto;
+			margin: 0.85rem 0 0;
+			padding-top: 0.85rem;
+			border-top: 1px solid var(--cmsLine);
+		}
+
+		main > .row {
+			width: 100%;
+		}
+
+		div.cms.message {
+			margin: 0 0 0.85rem;
+		}
+
+		form {
+			width: 100%;
+		}
+
+		.inputGroup {
+			position: relative;
+			margin: 0 0 0.6rem;
+
+			> i {
+				position: absolute;
+				top: 50%;
+				left: 0.85rem;
+				z-index: 1;
+				width: 1rem;
+				transform: translateY(-50%);
+				color: var(--cmsMuted);
+				text-align: center;
+				pointer-events: none;
+			}
+
+			&:focus-within > i {
+				color: var(--cmsMainColor);
+			}
+		}
+
+		.inputGroup input,
+		.inputGroup select {
+			width: 100%;
+			min-height: 2.75rem;
+			margin: 0;
+			padding-left: 2.5rem;
+			border-radius: var(--cmsRadius);
+			font-size: 16px;
+		}
+
+		.inputGroup select {
+			padding-right: 2rem;
+			background: var(--cmsCanvas);
+			color: inherit;
+			border: 1px solid var(--cmsLine);
+		}
+
+		button:where(:not([data-cms-action])).submit,
+		:is(a, button:where([data-cms-action])).button.submit,
+		button:where(:not([data-cms-action])).passkeyLoginButton,
+		button:where(:not([data-cms-action])).authPasswordButton {
+			display: inline-flex;
+			align-items: center;
+			justify-content: center;
+			gap: 0.5rem;
+			width: 100%;
+			min-height: 2.75rem;
+			margin: 0.75rem 0 0;
+			border-radius: var(--cmsRadius);
+		}
+
+		main.is-passkey-signing-in button:where(:not([data-cms-action])).passkeyLoginButton {
+			display: none;
+		}
+
+		.authLinks {
+			margin: 1rem 0 0;
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			gap: 0.55rem;
+			text-align: center;
+
+			:is(a, button:where([data-cms-action])) {
+				display: inline-flex;
+				align-items: center;
+				gap: 0.45rem;
+			}
+		}
+
+		form br {
+			display: none;
+		}
+
+		p:where(:not(.message)) {
+			margin: 0;
+			font-size: 0.875rem;
+		}
+
+		main > .row:last-child {
+			br {
+				display: none;
+			}
+
+			:is(a, button:where([data-cms-action])) {
+				color: var(--cmsSubText);
+			}
+		}
+	}
+
+	footer.authFooter {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 0.45rem;
+		max-width: 26rem;
+		font-family: var(--cmsFont);
+		font-size: 0.75rem;
+		text-align: center;
+		color: color-mix(in srgb, white 55%, transparent);
+
+		nav {
+			display: flex;
+			flex-wrap: wrap;
+			justify-content: center;
+			gap: 0.35rem 0.9rem;
+
+			:is(a, button:where([data-cms-action])) {
+				display: inline-flex;
+				align-items: center;
+				gap: 0.35rem;
+			}
+		}
+
+		:is(a, button:where([data-cms-action])) {
+			color: inherit;
+			text-decoration: none;
+
+			&:hover {
+				color: white;
+			}
+		}
+
+		.authBack {
+			display: inline-flex;
+			align-items: center;
+			justify-content: center;
+			gap: 0.4rem;
+			width: 100%;
+			margin: 0 0 0.15rem;
+			font-size: 0.875rem;
+			color: white;
+		}
+	}
+
+	@media (max-width: 40rem) {
+		height: auto;
+		min-height: 100lvh;
+		overflow-x: hidden;
+		overflow-y: auto;
+		justify-content: safe center;
+		padding: max(1.25rem, env(safe-area-inset-top)) 1rem max(1.25rem, env(safe-area-inset-bottom));
+		gap: 1rem;
+
+		div.authCard {
+			--authPadX: 1.15rem;
+			--authPadB: 0.9rem;
+			height: auto;
+			min-height: min(40rem, calc(100dvh - 7rem));
+			max-height: calc(100dvh - 7rem);
+			overflow: hidden;
+			flex: 0 0 auto;
+			padding: 1.5rem var(--authPadX) var(--authPadB);
+
+			h1 {
+				font-size: 1.5rem;
+			}
+
+			main:not(.authText) {
+				overflow: auto;
+				min-height: 0;
+			}
+		}
+
+		footer.authFooter {
+			align-self: center;
+			width: auto;
+			max-width: min(26rem, 100%);
+			min-width: 0;
+			overflow-x: clip;
+			overflow-y: visible;
+
+			span {
+				overflow-wrap: anywhere;
+			}
+
+			nav {
+				display: flex;
+				flex-direction: row;
+				flex-wrap: wrap;
+				justify-content: center;
+				align-items: center;
+				width: 100%;
+				min-width: 0;
+				gap: 0.35rem 0.9rem;
+				overflow: visible;
+			}
+		}
+	}
+}
+
+.authCard .authPasswordAlternative { margin: 1rem 0 !important; color: var(--cmsMuted); text-align: center; }
+
+/* Mobile document layout: stable card minimum, growing forms and legal text scrolling. */
+@media (max-width: 1024px), (orientation: portrait) and (max-width: 1400px) {
+	html:has(.authCard) {
+		--authSafeTop: max(1.25rem, env(safe-area-inset-top, 0px));
+		--authSafeBottom: max(1.25rem, env(safe-area-inset-bottom, 0px));
+		--authScreen: calc(100svh - var(--authSafeTop) - var(--authSafeBottom));
+		overflow-x: clip;
+		overflow-y: auto;
+		background: var(--cmsMainColor);
+	}
+	body.cms:has(.authCard),
+	body.appBody:has(.authCard) {
+		height: auto;
+		min-height: 100svh;
+		margin-top: 0;
+		padding: var(--authSafeTop) max(1rem, env(safe-area-inset-right, 0px)) var(--authSafeBottom) max(1rem, env(safe-area-inset-left, 0px));
+		justify-content: flex-start;
+		overflow: visible;
+		background: var(--cmsMainColor);
+
+		div.authCard {
+			flex: 0 0 auto;
+			align-self: center;
+			height: auto;
+			min-height: var(--authScreen);
+			max-height: none;
+			width: min(100%, 26rem);
+		}
+
+		/* Legal documents keep their existing inner text scroller and foot. */
+		div.authCard:has(main.authText) {
+			max-height: var(--authScreen);
+		}
+	}
+}
+
+.authCard .authSignin,
+.authCard main.authText {
+	display: flex;
+	flex-direction: column;
+	flex: 1 1 auto;
+	min-height: 0;
+}
+
+body.cms:has(.authCard) div.authCard main.authSignin,
+body.appBody:has(.authCard) div.authCard main.authSignin {
+	overflow: visible;
+	gap: 0;
+}
+
+.authCard .authPane {
+	display: flex;
+	flex-direction: column;
+	flex: 1 1 auto;
+	gap: 0.85rem;
+	min-height: 0;
+	overflow: auto;
+	scrollbar-width: none;
+}
+
+.authCard .authPane::-webkit-scrollbar {
+	display: none;
+	width: 0;
+	height: 0;
+}
+
+.authCard .authSignin:not(:has(> .authFoot)) .authPane {
+	padding-bottom: 0.15rem;
+}
+
+.authCard .authMessages:not(:has(.cms.message > div)) {
+	display: none;
+}
+
+.authCard .authHero {
+	text-align: center;
+}
+
+.authCard .authHero p,
+.authCard .authNote,
+.authCard .authWait {
+	margin: 0.35rem 0 0;
+	color: var(--cmsMuted);
+	font-size: 0.9375rem;
+}
+
+.authCard .authMark {
+	display: grid;
+	place-items: center;
+	width: 4.5rem;
+	height: 4.5rem;
+	margin: 0 auto 0.75rem;
+	border-radius: 50%;
+	background: color-mix(in srgb, var(--cmsMainColor) 12%, var(--cmsCanvas));
+	color: var(--cmsMainColor);
+}
+
+.authCard .authMark svg {
+	width: 2rem;
+	height: 2rem;
+}
+
+.authCard .authNote {
+	display: flex;
+	gap: 0.45rem;
+	align-items: flex-start;
+	padding: 0.7rem 0.8rem;
+	border-radius: var(--cmsRadius);
+	background: color-mix(in srgb, var(--cmsMainColor) 6%, var(--cmsCanvas));
+}
+
+.authCard .authNote[hidden] {
+	display: none;
+}
+
+.authCard .passkeyLogin--quiet {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	overflow: hidden;
+	clip: rect(0 0 0 0);
+}
+
+main.is-passkey-signing-in .passkeyLogin--quiet {
+	position: static;
+	width: auto;
+	height: auto;
+	overflow: visible;
+	clip: auto;
+}
+
+.authCard .authQrWrap {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	width: 100%;
+	margin: 1.75rem 0 0.15rem;
+	text-align: center;
+}
+
+.authCard .authQr {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	width: 100%;
+	margin: 0;
+	padding: 0;
+	border: 0;
+	background: transparent;
+}
+
+.authCard .authQr svg.qr-code {
+	display: block;
+	width: 12.5rem !important;
+	max-width: 100%;
+	height: auto !important;
+	margin: 0 auto !important;
+	background: transparent;
+}
+
+.authCard .authCodeSlots {
+	display: grid;
+	grid-template-columns: repeat(4, minmax(0, 2.15rem)) 0.85rem repeat(4, minmax(0, 2.15rem));
+	justify-content: center;
+	align-items: center;
+	gap: 0.3rem;
+	width: 100%;
+	margin: 0.15rem 0 0;
+}
+
+.authCard .authCodeSlots input {
+	box-sizing: border-box;
+	width: 100%;
+	min-width: 0;
+	height: 2.6rem;
+	margin: 0;
+	padding: 0;
+	border-radius: var(--cmsRadius);
+	font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+	font-size: 1.05rem;
+	line-height: 2.6rem;
+	text-align: center;
+	text-transform: uppercase;
+}
+
+.authCard .authCodeDash {
+	color: var(--cmsMuted);
+	font-size: 1.15rem;
+	line-height: 1;
+	text-align: center;
+}
+
+.authCard .authCodeLine {
+	margin: 0.35rem 0 0;
+	font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+	letter-spacing: 0.14em;
+}
+
+.authCard .authBody > .qrScan,
+.authCard .authBody > .authCodeForm {
+	margin-top: .5rem;
+}
+
+.cms .authCard button:where(:not([data-cms-action])).authScan,
+.cms .authCard button:where(:not([data-cms-action])).authScan:enabled:hover {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 0.5rem;
+	width: 100%;
+	min-height: 2.75rem;
+	margin: 0.55rem 0 0;
+	border-radius: var(--cmsRadius);
+	box-shadow: none;
+}
+
+.cms .authCard .inputGroup:has(.authReveal) input {
+	padding-right: 2.35rem;
+}
+
+.cms .authCard button:where(:not([data-cms-action])).authReveal,
+.cms .authCard button:where(:not([data-cms-action])).authReveal:enabled:hover {
+	position: absolute;
+	top: 50%;
+	right: 0.2rem;
+	z-index: 1;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 1.75rem;
+	height: 1.75rem;
+	min-height: 0;
+	margin: 0;
+	padding: 0;
+	border: 0;
+	border-radius: var(--cmsRadius);
+	background: transparent;
+	color: var(--cmsMuted);
+	transform: translateY(-50%);
+	box-shadow: none;
+}
+
+.cms .authCard button:where(:not([data-cms-action])).authReveal:enabled:hover {
+	color: var(--cmsTextColor);
+}
+
+.authCard .authMethods {
+	display: flex;
+	flex-direction: column;
+	gap: 0.55rem;
+}
+
+.authCard .authMethods > form {
+	width: 100%;
+	margin: 0;
+}
+
+.authCard .authPicks {
+	display: flex;
+	flex-direction: column;
+	gap: 0.45rem;
+	width: 100%;
+	margin-top: 0.85rem;
+}
+
+.authCard .authPick {
+	display: flex;
+	align-items: center;
+	gap: 0.75rem;
+	width: 100%;
+	margin: 0;
+	padding: 0.55rem 0.65rem;
+	border: 1px solid var(--cmsLine);
+	border-radius: var(--cmsRadius);
+	background: transparent;
+}
+
+.authCard .authPick img {
+	width: 2.5rem;
+	height: 2.5rem;
+	border-radius: 50%;
+	object-fit: cover;
+	flex: 0 0 auto;
+	background: var(--cmsCanvas);
+}
+
+.authCard .authPick > span {
+	flex: 1 1 auto;
+	min-width: 0;
+	display: flex;
+	flex-direction: column;
+	gap: 0.1rem;
+}
+
+.authCard .authPick b {
+	font-weight: 600;
+}
+
+.authCard .authPick small {
+	color: var(--cmsMuted);
+	font-size: 0.8125rem;
+}
+
+body.cms:has(.authCard) div.authCard .authPick button:where(:not([data-cms-action])).submit,
+body.appBody:has(.authCard) div.authCard .authPick button:where(:not([data-cms-action])).submit {
+	flex: 0 0 2.75rem;
+	width: 2.75rem;
+	min-width: 2.75rem;
+	min-height: 2.75rem;
+	margin: 0;
+	padding: 0;
+}
+
+.cms .authCard :is(:is(a, button:where([data-cms-action])).authMethod, button:where(:not([data-cms-action])).authMethod),
+.cms .authCard :is(:is(a, button:where([data-cms-action])).authMethod, button:where(:not([data-cms-action])).authMethod):hover {
+	display: flex;
+	align-items: center;
+	gap: 0.75rem;
+	width: 100%;
+	min-height: 0;
+	margin: 0;
+	padding: 0.75rem 0.85rem;
+	border: 1px solid var(--cmsLine);
+	border-radius: var(--cmsRadius);
+	background: transparent;
+	color: var(--cmsTextColor);
+	font-weight: 400;
+	text-align: left;
+	text-decoration: none;
+	box-shadow: none;
+	white-space: normal;
+	overflow: visible;
+	cursor: pointer;
+}
+
+.cms .authCard :is(:is(a, button:where([data-cms-action])).authMethod, button:where(:not([data-cms-action])).authMethod):hover {
+	background: var(--cmsHover);
+	border-color: color-mix(in srgb, var(--cmsMainColor) 35%, var(--cmsLine));
+}
+
+.cms .authCard :is(:is(a, button:where([data-cms-action])).authMethod, button:where(:not([data-cms-action])).authMethod) > i:first-child {
+	flex: 0 0 1.25rem;
+	width: 1.25rem;
+	font-size: 0.95rem;
+	text-align: center;
+}
+
+.authCard .authMethod span {
+	display: flex;
+	flex: 1 1 auto;
+	flex-direction: column;
+	min-width: 0;
+}
+
+.authCard .authMethod b {
+	line-height: 1.3;
+}
+
+.authCard .authMethod small {
+	color: var(--cmsMuted);
+	white-space: normal;
+	overflow-wrap: anywhere;
+}
+
+.authCard .authMethod > i:last-child {
+	flex: 0 0 auto;
+	margin-left: auto;
+	color: var(--cmsMuted);
+}
+
+body.cms:has(.authCard) .authCard > p.authFoot,
+body.appBody:has(.authCard) .authCard > p.authFoot,
+body.cms:has(.authCard) .authCard main > p.authFoot,
+body.appBody:has(.authCard) .authCard main > p.authFoot {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	flex: 0 0 auto;
+	width: auto;
+	margin: 0 calc(var(--authPadX) * -1) calc(var(--authPadB) * -1);
+	padding: 0.55rem calc(var(--authPadX) / 1.5);
+	border-top: 1px solid var(--cmsLine);
+	background: var(--cmsCanvas);
+	text-align: center;
+}
+
+/* Forward actions sit opposite Back; do not change the footer's legal links. */
+body.cms:has(.authCard) .authCard p.authFoot:has(:is(a, button:where([data-cms-action])).authSkip),
+body.appBody:has(.authCard) .authCard p.authFoot:has(:is(a, button:where([data-cms-action])).authSkip) {
+    justify-content: flex-end;
+    text-align: right;
+}
+
+/* Back links sit on the left like a phone nav control. */
+body.cms:has(.authCard) .authCard p.authFoot:has(:is(:is(a, button:where([data-cms-action])).authBack, :is(a, button:where([data-cms-action])).authSwitch)),
+body.appBody:has(.authCard) .authCard p.authFoot:has(:is(:is(a, button:where([data-cms-action])).authBack, :is(a, button:where([data-cms-action])).authSwitch)) {
+	justify-content: flex-start;
+	text-align: left;
+}
+
+body.cms:has(.authCard) .authCard p.authFoot:has(:is(:is(a, button:where([data-cms-action])).authBack, :is(a, button:where([data-cms-action])).authSwitch)) :is(:is(a, button:where([data-cms-action])).authBack, :is(a, button:where([data-cms-action])).authSwitch),
+body.appBody:has(.authCard) .authCard p.authFoot:has(:is(:is(a, button:where([data-cms-action])).authBack, :is(a, button:where([data-cms-action])).authSwitch)) :is(:is(a, button:where([data-cms-action])).authBack, :is(a, button:where([data-cms-action])).authSwitch) {
+	margin-left: 0;
+}
+
+.cms .authCard .authFoot .button { width: auto; margin: 0; color: var(--cmsSubText); }
+
+/* Method switches slide like a phone stack. Transforms are set inline so both panes move together. */
+/* Stage reaches into the card padding so authFoot’s negative margins aren’t clipped mid-slide. */
+.authCard > .authSlideStage {
+	position: relative;
+	display: flex;
+	flex-direction: column;
+	flex: 1 1 auto;
+	min-height: 0;
+	margin: 0 calc(var(--authPadX) * -1) calc(var(--authPadB) * -1);
+	overflow: hidden;
+}
+
+.authCard > .authSlideStage > main {
+	position: absolute;
+	top: 0;
+	right: var(--authPadX);
+	bottom: var(--authPadB);
+	left: var(--authPadX);
+	z-index: 1;
+	display: flex;
+	flex-direction: column;
+	width: auto;
+	min-height: 0;
+	margin: 0;
+	overflow: hidden;
+	background: var(--cmsCanvas);
+}
+
+/* Keep the full-bleed foot inside the pane while sliding, otherwise panes glue together. */
+.authCard > .authSlideStage > main > p.authFoot {
+	margin-left: 0;
+	margin-right: 0;
+}
+
+.authCard > .authSlideStage > main.authSlideGhost {
+	pointer-events: none;
+}
+
+.authCard .passkeys.passkeyLogin {
+	display: flex;
+	flex-direction: column;
+	align-items: stretch;
+	flex: 1 1 auto;
+	gap: 0.75rem;
+	width: 100%;
+	min-width: 0;
+	min-height: 0;
+	margin: 0;
+	overflow: auto;
+	scrollbar-width: none;
+	text-align: left;
+}
+
+.authCard .passkeys.passkeyLogin::-webkit-scrollbar {
+	display: none;
+	width: 0;
+	height: 0;
+}
+
+.authCard main.is-passkey-signing-in .passkeyLogin {
+	text-align: left;
+}
+
+.authCard main.is-passkey-signing-in .passkeyAuthFeedback {
+	min-height: 0;
+	justify-content: center;
+}
+
+.authCard main.is-passkey-signing-in .passkeyLogin > .authMessages,
+.authCard main.is-passkey-signing-in .passkeyLogin .cms.message {
+	width: 100%;
+	text-align: left;
+}
+
+.authCard .passkeyLogin .passkeyAuthFeedback {
+	display: flex;
+	justify-content: center;
+	width: 100%;
+}
+
+.authCard .passkeyLogin .passkeyArtwork {
+	width: 6.5rem;
+	height: 6.5rem;
+	margin: 0.15rem auto 0;
+	overflow: hidden;
+}
+
+.authCard .passkeyLogin > h1,
+.authCard .passkeyLogin > .authLead {
+	width: 100%;
+	margin: 0;
+	text-align: left;
+}
+
+
+.authCard .authError:not([hidden]) {
+	margin: 0.35rem 0 0;
+	color: var(--cmsDanger, #9b2c2c);
+}
+
+.authCard [hidden] { display:none !important; }
+
+.authCard .authSuccess {
+	text-align: center;
+}
+
+.authCard .authTick {
+	display: grid;
+	place-items: center;
+	width: 3.25rem;
+	height: 3.25rem;
+	margin: 0 auto 0.75rem;
+	border-radius: 50%;
+	background: color-mix(in srgb, var(--cmsMainColor) 14%, var(--cmsCanvas));
+	color: var(--cmsMainColor);
+	font-size: 1.25rem;
+}
+
+.authCard .authProgress + .authWait {
+	display: block;
+	margin-top: 1.6rem;
+	text-align: center;
+}
+
+.authCard .authProgress {
+	height: 2px;
+	margin: 0.85rem 0 0;
+	overflow: hidden;
+	border-radius: 1px;
+	background: none;
+}
+
+.authCard .authProgress > span {
+	display: block;
+	width: 0;
+	height: 100%;
+	border-radius: 1px;
+	background: var(--cmsMainColor);
+	animation: authWait 2s linear forwards;
+}
+
+.authCard .authProgress.is-slow > span {
+	animation-duration: 30s;
+}
+
+@keyframes authWait {
+	to { width: 100%; }
+}
+
+body.appBody .authStage {
+	display: grid;
+	place-items: center;
+	min-height: 100dvh;
+	padding: 1.5rem 1rem;
+}
+
+body.appBody .authInstall {
+	width: min(100%, 26rem);
+	margin: 0 auto 0.75rem;
+}
+
+/* After a password sign-in the passkey offer scrolls inside the same card. */
+body.cms:has(.passkeyOnboarding) div.authCard main:not(.authText),
+body.appBody:has(.passkeyOnboarding) div.authCard main:not(.authText) {
+	display: flex;
+	flex-direction: column;
+	overflow: visible;
+}
+
+body.cms:has(.passkeyOnboarding) div.authCard main > .passkeyOnboarding,
+body.appBody:has(.passkeyOnboarding) div.authCard main > .passkeyOnboarding {
+	flex: 1 1 auto;
+	min-height: 0;
+	overflow: auto;
+	scrollbar-width: none;
+}
+
+body.cms:has(.passkeyOnboarding) div.authCard main::-webkit-scrollbar,
+body.appBody:has(.passkeyOnboarding) div.authCard main::-webkit-scrollbar,
+body.cms:has(.passkeyOnboarding) div.authCard main > .passkeyOnboarding::-webkit-scrollbar,
+body.appBody:has(.passkeyOnboarding) div.authCard main > .passkeyOnboarding::-webkit-scrollbar {
+	display: none;
+	width: 0;
+	height: 0;
+}
+
+
+/* Auth outcomes use one alignment, including the lead and queued messages. */
+body:is(.cms, .appBody):has(.authCard) .authCard .authSuccess :is(h1, p, .authLead, .authMessages) {
+    text-align: center;
+}
+
+/* Both inline-return links measure from the button, without a form margin. */
+body:is(.cms,.appBody):has(.authCard) .authCard form.appLoginForm { margin-bottom: 0; }
+body:is(.cms,.appBody):has(.authCard) .authCard .authLinks { margin-top: 1rem; }
+body:is(.cms,.appBody):has(.authCard) .authCard :is(button:where(:not([data-cms-action])).submit,.button.submit) { margin-bottom: 0; }
+
+.authCard .authMethod[hidden] { display: none !important; }
+
+/* Illustrated outcomes and passkey sign-in center their heading and copy. */
+body:is(.cms,.appBody):has(.authCard) .authCard .authHero :is(h1,p,.authLead) { text-align: center; }
+
+/* Wrapped code/remote/identity panes share the normal sign-in rhythm. */
+.authCard .authPane > .authBody {
+    display: flex; flex-direction: column; gap: .85rem; min-height: 0;
+}
+.authCard .passkeys.passkeyLogin:not(.passkeyLogin--quiet) { gap: .85rem; }
+
+.authCard .authSuccessPortrait {
+    width: 5rem;
+    height: 5rem;
+    object-fit: cover;
+    border-radius: 50%;
+    margin: 1.5rem auto 0.75rem;
+}
+
+.authCard [data-success-footer][hidden] { display: none !important; }
+
+/* The success content fills the same pane as forms, leaving the footer at the card edge. */
+.authCard main.authSignin > .authSuccess:not([hidden]) { flex: 1 1 auto; min-height: 0; }
+.authCard main > [data-success-footer] { margin-top: auto; }
+
+body:is(.cms,.appBody):has(.authCard) .authCard .authHero.authSignedOut > :is(h1,.authLead) { text-align:left; }
+
+body:is(.cms,.appBody):has(.authCard) .authCard .authSuccess p[data-success-name] { color:var(--cmsTextColor); }

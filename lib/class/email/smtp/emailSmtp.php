@@ -19,9 +19,6 @@ class emailSmtp extends SMTPMailer {
     /** set when this instance has no "mail" block and is not DEV: Send() refuses */
     private bool $unconfigured = false;
 
-    /** set when the mail goes to the local catcher (Mailpit): nothing leaves the machine */
-    private bool $catcher = false;
-
     /** set by sensitive(): the log gets the envelope, not the content */
     private bool $sensitive = false;
 
@@ -29,11 +26,6 @@ class emailSmtp extends SMTPMailer {
     public function sensitive(): static {
         $this->sensitive = true;
         return $this;
-    }
-
-    /** DEBUG sends real mail to systopic's test addresses - not needed when nothing leaves */
-    private function redirected(): bool {
-        return defined('DEBUG') && DEBUG && !$this->catcher;
     }
 
     /**
@@ -58,34 +50,22 @@ class emailSmtp extends SMTPMailer {
             }
         } elseif (defined('STAGE') && str_starts_with((string) STAGE, 'DEV')) {
             parent::__construct('127.0.0.1', 1025, 'none');
-            $this->catcher = true;
         } else {
             parent::__construct('localhost', 25, 'none');
             $this->unconfigured = true;
         }
         unset($this->subject);
         $address = (string) ($mail['from'] ?? '') ?: (defined('MAIL_SENDER_ADDRESS') ? (string) MAIL_SENDER_ADDRESS : '') ?: (string) ($mail['user'] ?? '') ?: 'noreply@systopic.media';
-        $name = (string) ($mail['fromName'] ?? '') ?: (defined('MAIL_SENDER_NAME') ? (string) MAIL_SENDER_NAME : '') ?: 'fluxo cms';
+        $name = (string) ($mail['fromName'] ?? '') ?: (defined('MAIL_SENDER_NAME') ? (string) MAIL_SENDER_NAME : '') ?: 'fluxo';
         $this->From($address, $name);
     }
 
     /** @return array<string, mixed>|null the "mail" block, when it names a host */
     public static function config(): ?array {
-        $mail = \Systopic\System\Config\Config::current()?->instance->get('mail');
-        return is_array($mail) && (string) ($mail['host'] ?? '') !== '' ? $mail : null;
+        $mail = \Systopic\System\Mail\Delivery::settings();
+        return (string) ($mail['host'] ?? '') !== '' ? $mail : null;
     }
 
-
-    protected function generateMessageID() {
-        $cleanNumber = preg_replace('/[^0-9]/', '', microtime(false));
-        $local = $_SERVER['HTTP_HOST'] ?? $_SERVER['SERVER_NAME'] ?? $_SERVER['SERVER_ADDR'] ?? '';
-        return sprintf(
-            "<%s.%s@%s>",
-            base_convert($cleanNumber, 10, 36),
-            base_convert(bin2hex(openssl_random_pseudo_bytes(8)), 16, 36),
-            $local
-        );
-    }
 
     // interface allows shorthands and chaining calls
 
@@ -111,45 +91,30 @@ class emailSmtp extends SMTPMailer {
 
     // Add email reply to address
     public function addReplyTo($address, $name = '') {
-        if ($this->redirected()) {
-            $address = 'replyto@systopic.media';
-        }
-        parent::addReplyTo($address, $name = '');
+        parent::addReplyTo($address, $name);
         return $this;
     }
 
     // Add recipient email address
     public function addTo($address, $name = '') {
-        if ($this->redirected()) {
-            $address = 'testmail@systopic.media';
-        }
         parent::addTo($address, $name);
         return $this;
     }
 
     // Add carbon copy email address
     public function addCc($address, $name = '') {
-        if ($this->redirected()) {
-            $address = 'cc@systopic.media';
-        }
-        parent::addCc($address, $name = '');
+        parent::addCc($address, $name);
         return $this;
     }
 
     // Add blind carbon copy email address
     public function addBcc($address, $name = '') {
-        if ($this->redirected()) {
-            $address = 'bcc@systopic.media';
-        }
-        parent::addBcc($address, $name = '');
+        parent::addBcc($address, $name);
         return $this;
     }
 
     // Set email subject
     public function Subject($subject) {
-        if ($this->redirected()) {
-            $subject = 'Test mail // ' . $subject;
-        }
         parent::Subject($subject);
         return $this;
     }
@@ -186,6 +151,7 @@ class emailSmtp extends SMTPMailer {
 
     // Override Send() to add logging
     public function Send() {
+        \Systopic\System\Mail\Delivery::prepare($this);
         // Collect email data before sending
         $recipients = [];
         foreach ($this->to as $address) {
@@ -221,8 +187,12 @@ class emailSmtp extends SMTPMailer {
             }
         }
         
-        // Get username if user is logged in
-        $username = \Systopic\System\Auth\Session::known() ? \Systopic\System\Auth\Session::current()->name : null;
+        // Who sent it, as it stood then. The id and the address stay in the log
+        // after the name or the address changes.
+        $actor = \Systopic\System\Auth\Session::known() ? \Systopic\System\Auth\Session::current() : null;
+        $username = $actor?->name;
+        $userId = $actor?->user?->id;
+        $userEmail = trim((string) ($actor?->user?->email ?? ''));
         
         // Try to send email
         $status = 'failed';
@@ -236,7 +206,7 @@ class emailSmtp extends SMTPMailer {
             $status = $result ? 'success' : 'failed';
         } catch (Exception $e) {
             $status = 'error';
-            $error = $e->getMessage();
+            $error = \Systopic\System\Mail\Failure::detail($e->getMessage(), \Systopic\System\Mail\Delivery::settings());
         }
         
         // Log email
@@ -251,6 +221,8 @@ class emailSmtp extends SMTPMailer {
             'status' => $status,
             'error' => $error,
             'username' => $username,
+            'userId' => $userId,
+            'userEmail' => $userEmail,
             'timestamp' => date('Y-m-d H:i:s')
         ]);
         
@@ -282,6 +254,8 @@ class emailSmtp extends SMTPMailer {
             'recipients' => $data['recipients'],
             'subject' => $data['subject'],
             'username' => $data['username'] ?? 'not logged in',
+            'userId' => $data['userId'] ?? null,
+            'userEmail' => $data['userEmail'] ?? '',
             'error' => $data['error'] ?? null,
             'attachments' => $data['attachments'] ?? [],
             'htmlContent' => $data['htmlContent'] ?? '',
@@ -290,14 +264,18 @@ class emailSmtp extends SMTPMailer {
         ];
         
         // Format log entry (human readable header + JSON data)
+        $loggedId = $data['userId'] ?? null;
+        $loggedMail = trim((string) ($data['userEmail'] ?? ''));
         $logEntry = sprintf(
-            "[%s] Status: %s | From: %s | To: %s | Subject: %s | User: %s",
+            "[%s] Status: %s | From: %s | To: %s | Subject: %s | User: %s | UserId: %s | UserEmail: %s",
             $data['timestamp'],
             $data['status'],
             $data['sender'],
             implode(', ', $data['recipients']),
             $data['subject'],
-            $data['username'] ?? 'not logged in'
+            $data['username'] ?? 'not logged in',
+            $loggedId === null || $loggedId === '' ? '-' : (string) $loggedId,
+            $loggedMail !== '' ? $loggedMail : '-'
         );
         
         if (!empty($data['attachments'])) {

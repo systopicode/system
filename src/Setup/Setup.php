@@ -204,8 +204,8 @@ final class Setup
             $more && $withToken                                 => $root . '?setup=' . rawurlencode($token),
             $more                                               => $root,
             // skipped: on to the recovery user, who needs the token as well
-            $step === 'account' && $withToken && !empty($_POST['skip']) => $root . 'cms/?setup=' . rawurlencode($token),
-            $step === 'account'                                 => $root . 'cms/',
+            $step === 'account' && $withToken && !empty($_POST['skip']) => $root . 'admin/?setup=' . rawurlencode($token),
+            $step === 'account'                                 => $root . 'admin/',
             default                                             => $root,
         };
         header('Location: ' . $url, true, 303);
@@ -550,7 +550,7 @@ final class Setup
     // -------------------------------------------------------------------------------------
 
     /**
-     * The first account of the installation, a superuser — what cms/auth/root
+     * The first account of the installation, a superuser — what admin/auth/root
      * does, but that panel cannot be reached here: without a users table the
      * cms runs in recovery mode and offers only to restore a backup. Which is
      * the other way out, hence "skip". The token stays for it: the recovery
@@ -605,7 +605,7 @@ final class Setup
     /**
      * Every table the packages and the project declare, created now. The
      * provisioner only creates a table when a query that brings it along
-     * fails on it — and many queries do not bring one (cms/pages fails on
+     * fails on it — and many queries do not bring one (admin/pages fails on
      * usm_roles). A fresh database gets the whole schema at once instead:
      * the lossless half of Audit (create, add, index), never a drop.
      */
@@ -625,7 +625,7 @@ final class Setup
         $name = (string) ($_POST['name'] ?? '');
         $this->page('First account for ' . $this->projectName(), <<<HTML
             <p>The database has no account yet. This one becomes the superuser — log in with it at
-                <code>cms/</code> and create the first page in <code>cms/pages</code>.</p>
+                <code>admin/</code> and create the first page in <code>admin/pages</code>.</p>
             {$this->errorList()}
             <form method="post">
                 {$this->tokenField()}
@@ -764,6 +764,6 @@ final class Setup
             return false;
         }
         $json = (string) preg_replace_callback('~^(?: {4})+~m', fn($m) => str_repeat("\t", intdiv(strlen($m[0]), 4)), $json);
-        return file_put_contents($file, $json . "\n") !== false;
+        return \Systopic\System\Config\FileWriter::write($file, $json . "\n", 0600);
     }
 }

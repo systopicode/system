@@ -30,7 +30,7 @@
 }
 
 .cms ul.contextmenu li,
-.cms ul.contextmenu li a{
+.cms ul.contextmenu li :is(a, button:where([data-cms-action])){
     white-space: nowrap;
 }
 
@@ -45,7 +45,7 @@
     height: 2rem;
 }
 
-.cms ul.contextmenu li a{
+.cms ul.contextmenu li :is(a, button:where([data-cms-action])){
     position: relative;
     display: flex;
     align-items: center;
@@ -55,20 +55,20 @@
     color: var(--cmsTextColor);
 }
 
-.cms ul.contextmenu li a:hover{
+.cms ul.contextmenu li :is(a, button:where([data-cms-action])):hover{
     background: var(--cmsHover);
 }
 
-.cms .contextmenu a i{
-    color: var(--cmsMainColor);
+.cms .contextmenu :is(a, button:where([data-cms-action])) i{
+    color: var(--cmsBrandInk);
     font-size: 1.05rem;
 }
 
-.cms .contextmenu li a i img{
+.cms .contextmenu li :is(a, button:where([data-cms-action])) i img{
     width: 20px;
 }
 
-.cms .contextmenu li a span{
+.cms .contextmenu li :is(a, button:where([data-cms-action])) span{
     position: relative;
     display: block;
     min-width: 0;
@@ -77,7 +77,7 @@
     color: var(--cmsTextColor);
 }
 
-.cms .contextmenu li a i{
+.cms .contextmenu li :is(a, button:where([data-cms-action])) i{
     flex: 0 0 auto;
 }
 
@@ -86,7 +86,7 @@
     gap: 2px;
 }
 
-.cms ul.contextmenu li.iconsonly ul li a{
+.cms ul.contextmenu li.iconsonly ul li :is(a, button:where([data-cms-action])){
     justify-content: center;
     width: 100%;
     height: 100%;
@@ -94,8 +94,8 @@
     gap: 0;
 }
 
-.cms ul.contextmenu li.iconsonly ul li a i{
-    font-size: 0.9rem;
+.cms ul.contextmenu li.iconsonly ul li :is(a, button:where([data-cms-action])) i{
+    font-size: 1rem;
     line-height: 1;
 }
 
@@ -105,13 +105,13 @@
     background: var(--cmsLine);
 }
 
-a.alias i,
-.cms .contextmenu a.alias i{
+:is(a, button:where([data-cms-action])).alias i,
+.cms .contextmenu :is(a, button:where([data-cms-action])).alias i{
     color: var(--cmsAlias);
 }
 
-a.redirect i,
-.cms .contextmenu a.redirect i{
+:is(a, button:where([data-cms-action])).redirect i,
+.cms .contextmenu :is(a, button:where([data-cms-action])).redirect i{
     color: var(--cmsRedirect);
 }
 
@@ -236,7 +236,7 @@ a.redirect i,
     white-space: normal;
 }
 
-.cms div.dropdownContent ul:not(.iconsonly) > li:not(.seperator) > a{
+.cms div.dropdownContent ul:not(.iconsonly) > li:not(.seperator) > :is(a, button:where([data-cms-action])){
     display: block;
     margin: -0.4rem -0.6rem;
     padding: 0.4rem 0.6rem;
@@ -248,7 +248,7 @@ a.redirect i,
     background: var(--cmsHover);
 }
 
-.cms div.dropdownContent a.selected{
+.cms div.dropdownContent :is(a, button:where([data-cms-action])).selected{
     background: var(--cmsSelected);
 }
 
@@ -256,7 +256,7 @@ a.redirect i,
     display: inline-block;
     margin: 2px 0.75rem 0 0;
     vertical-align: top;
-    color: var(--cmsMainColor);
+    color: var(--cmsBrandInk);
 }
 
 .cms div.dropdownContent ul:not(.iconsonly) > li i + span{
@@ -299,7 +299,7 @@ a.redirect i,
     border-radius: var(--cmsRadius);
 }
 
-.cms div.dropdownContent ul.iconsonly > li:not(.seperator) > a{
+.cms div.dropdownContent ul.iconsonly > li:not(.seperator) > :is(a, button:where([data-cms-action])){
     display: inline-block;
     width: 100%;
     padding: 0.4rem;
@@ -340,4 +340,41 @@ a.redirect i,
     position: relative;
     display: inline-block;
     margin: 0 10px 7px 15px;
+}
+
+/* Shared menu material and item geometry for split buttons and tree actions. */
+.cms :is(ul.contextmenu, .splitApplyList) {
+    border: 1px solid var(--cmsLine);
+    border-radius: var(--cmsRadiusLg);
+    padding: 0.35rem;
+    background: var(--cmsCanvas);
+    box-shadow: var(--cmsShadowLg);
+    box-sizing: border-box;
+}
+.cms :is(ul.contextmenu > li:not(.iconsonly) > :is(a, button:where([data-cms-action])), .splitApplyList > button:where(:not([data-cms-action])), .splitApplyList > :is(a, button:where([data-cms-action]))) {
+    display: flex; align-items: center; gap: 0.6rem; min-height: 2.25rem;
+    width: 100%; max-width: 100%; box-sizing: border-box; margin: 0; padding: 0.45rem 0.65rem;
+    border-radius: var(--cmsRadius); font-size: 0.8125rem; font-weight: 500;
+    color: var(--cmsTextColor); text-align: left;
+}
+.cms :is(ul.contextmenu, .splitApplyList) :is(:is(a, button:where([data-cms-action])), button:where(:not([data-cms-action]))):is(:hover, :focus-visible) { background: var(--cmsHover); }
+.cms :is(ul.contextmenu, .splitApplyList) :is(:is(a, button:where([data-cms-action])), button:where(:not([data-cms-action]))) > i { font-size: 1rem; flex: 0 0 1.25rem; text-align: center; }
+.cms ul.contextmenu li.seperator { margin: 0.35rem 0; }
+.cms ul.contextmenu li.iconsonly ul { margin: 0; }
+
+@media (pointer: coarse) {
+    .cms ul.contextmenu ul li.iconOnly {
+        flex-basis: 2.5rem; width: 2.5rem; height: 2.5rem;
+    }
+}
+
+/* Icon-only media menus size to the actions, with no empty text column. */
+.cms ul.contextmenu.mediaContextMenu { min-width: 0; width: max-content; max-width: calc(100vw - 16px); }
+
+/* Mobile actions and filters share the image/language button menu. */
+.cms .cmsMobileActions { display:inline-flex; }
+.cms .logFilters.splitApplyList { display:none; }
+.cms .logFilters.splitApplyList.is-open { display:flex; }
+@media (max-width:1024px), (orientation:portrait) and (max-width:1400px) {
+ .cms .splitApplyList { background:var(--cmsButtonBg); }
 }

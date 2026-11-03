@@ -82,7 +82,7 @@ Manche Sub-Panels bündeln ihre Actions, indem sie das `actions.php` eines
 Vorfahren einbinden, z. B.:
 
 ```php
-// panels/cms/010_pages/editor/editLink/actions.php
+// panels/admin/010_pages/editor/editLink/actions.php
 include '../../actions.php';
 
 switch ($this->action) {
@@ -132,4 +132,4 @@ die durch `app.php` dispatched werden.
    initialisiertes `$id` / `$selPage`), die nicht Teil dieser Migration
    sind.
 
-Referenz-Migration: `panels/cms/010_pages/actions.php`.
+Referenz-Migration: `panels/admin/010_pages/actions.php`.

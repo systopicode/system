@@ -1,0 +1,82 @@
+/* admin/access/panelmap — the panel tree in the pylon */
+
+.cms .controlmapTree ul.controlmapNav li.plain > a{
+	opacity: 0.5;
+}
+.cms .controlmapTree ul.controlmapNav a.label .count{
+	margin-left: auto;
+	font-size: 0.75rem;
+	color: var(--cmsMuted);
+}
+
+.cms .controlmapTree .controlmapNav li.active > a.label .count {
+	color: inherit;
+}
+
+/* what the filter above the tree matched (discover's "show all") */
+.cms .controlmapTree ul.controlmapNav .name.is-match{
+	background: var(--cmsHighlightColor);
+	border-radius: var(--cmsRadius);
+	color: var(--cmsTextColor);
+}
+
+body.cms.access:has(> main > .pylonColumns > .controlmapTree) > main > div.content > section.cms {
+    min-width: 0;
+}
+.cms .controlmapTree nav > ul.controlmapNav li > ul:not(:empty) {
+    margin: .15rem 0 0 .5rem;
+    padding: 0;
+    border: 0;
+}
+.cms .controlmapTree .controlmapNav li { position: relative; }
+.cms .controlmapTree nav .controlmapNav li > a.label {
+    align-items: center;
+    min-height: 1.875rem;
+    box-sizing: border-box;
+    padding: 0 0.65rem 0 1.75rem;
+}
+.cms .controlmapTree nav > .controlmapNav > li > a.label {
+    padding-inline-start: .65rem;
+}
+.cms .controlmapTree .controlmapNav a.label > .type {
+    flex: 0 0 1.125rem;
+    margin: 0;
+}
+.cms .controlmapTree .controlmapNav a.label > .name {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.cms .controlmapTree .controlmapNav button.fold {
+    position: absolute;
+    display: grid;
+    place-items: center;
+    z-index: 1;
+    inset: .1875rem auto auto .0625rem;
+    width: 1.75rem;
+    height: 1.5rem;
+    min-width: 0;
+    min-height: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: var(--cmsMuted);
+}
+.cms .controlmapTree .controlmapNav button.fold:is(:hover, :active) {
+    background: transparent;
+    color: var(--cmsTextColor);
+}
+.cms .controlmapTree .controlmapNav li.active > button.fold {
+    color: var(--cmsMainColor);
+}
+@media (hover: hover) and (pointer: fine) {
+    .cms .controlmapTree .controlmapNav li:not(.active):hover:not(:has(> a.label:hover, > button.fold:hover)) > a.label {
+        background: transparent;
+    }
+    .cms .controlmapTree .controlmapNav li:not(.active) > a.label:hover,
+    .cms .controlmapTree .controlmapNav li:not(.active) > button.fold:hover + a.label {
+        background: var(--cmsHover);
+    }
+}

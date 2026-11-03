@@ -26,8 +26,9 @@ class mediaImage {
 		$formatConfig = $image_formats[$format] ?? [];
 		if (isset($formatConfig['megapixels']) && (float) $formatConfig['megapixels'] > 0) {
 			$megapixels = 1E+6 * (float) $formatConfig['megapixels'];
-			$cnv_width = sqrt($src_width * $megapixels / $src_height);
-			$cnv_height = $cnv_width * $src_height / $src_width;
+			$ratio = mediaFormats::fixedRatio($formatConfig) ?? $src_width / $src_height;
+			$cnv_width = sqrt($ratio * $megapixels);
+			$cnv_height = $cnv_width / $ratio;
 		} else {
 			$targetWidth = isset($formatConfig['width']) ? (float) $formatConfig['width'] : 0;
 			$targetHeight = isset($formatConfig['height']) ? (float) $formatConfig['height'] : 0;

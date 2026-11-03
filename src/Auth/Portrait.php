@@ -6,7 +6,7 @@ namespace Systopic\System\Auth;
 
 /**
  * A user's picture: an uploaded file in `public/var/avatars/`,
- * or a generated portrait whose colours follow the CMS theme
+ * or a locally generated DiceBear SVG with a neutral icon fallback whose colours follow the CMS theme
  * (theme.css, then whatever the project overrides).
  */
 final class Portrait
@@ -26,12 +26,8 @@ final class Portrait
     /** @var array{ink: string, background: string, paper: string}|null */
     private static ?array $colors = null;
 
-    /**
-     * The generated portrait is seeded with the md5 of the email, trimmed
-     * and lowercased — the same address draws the same face on every
-     * system, and the address itself is not in the URL. No email: the user id.
-     */
-    public static function src(int $userId, ?string $email): string
+    /** Uploaded pictures take precedence; fallbacks never call an external service. */
+    public static function src(int $userId, ?string $email, bool $screen = false): string
     {
         $file = $userId > 0 ? self::file($userId) : null;
         if ($file !== null) {
@@ -39,13 +35,57 @@ final class Portrait
             return \http::$siteUrl . 'var/avatars/' . $userId . '.' . $ext . '?v=' . filemtime($file);
         }
         $colors = self::colors();
-        $email = strtolower(trim((string) $email));
-        return 'https://api.dicebear.com/10.x/notionists/svg?' . http_build_query([
-            'seed' => $email !== '' ? md5($email) : 'user-' . max($userId, 1),
-            'backgroundColor' => $colors['background'],
-            'inkColor' => $colors['ink'],
-            'paperColor' => $colors['paper'],
-        ]);
+        if ($userId > 0) {
+            $generated = self::generated($userId, $email, $screen, $colors);
+            if ($generated !== null) return $generated;
+        }
+        // The same centrally registered artwork as the interface, served inline.
+        $key = $screen ? 'display' : 'user';
+        $asset = \Systopic\System\Ui\Icons::registry()['duotone'][$key];
+        $parts = [];
+        foreach (['primary', 'secondary'] as $layer) {
+            $svg = (string) file_get_contents(__DIR__ . '/../../public/icons/phosphor/' . $asset . '-' . $layer . '.svg');
+            $parts[] = '<g fill="currentColor" transform="scale(.09375)"' . ($layer === 'secondary' ? ' opacity=".35"' : '') . '>' . preg_replace('~^.*?<svg[^>]*>|</svg>\s*$~s', '', $svg) . '</g>';
+        }
+        $svg = '<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="-5 -5 34 34" color="#' . $colors['ink'] . '"><circle cx="12" cy="12" r="17" fill="#' . $colors['background'] . '"/>' . implode('', $parts) . '</svg>';
+        return 'data:image/svg+xml,' . rawurlencode($svg);
+    }
+
+    /** Generated SVGs live beside uploads, but can never be mistaken for an uploaded photo. */
+    private static function generated(int $userId, ?string $email, bool $screen, array $colors): ?string
+    {
+        try {
+            $dir = self::dir();
+            if ($dir === null) return null;
+            $seed = LocalAvatar::seed($userId, $email, $screen);
+            $name = $userId . '.generated-' . LocalAvatar::fingerprint($seed, $screen, $colors) . '.svg';
+            $path = $dir . $name;
+            $cached = is_file($path) ? @file_get_contents($path) : false;
+            if (!is_string($cached) || !LocalAvatar::validSvg($cached)) {
+                $svg = LocalAvatar::render($seed, $screen, $colors);
+                $temp = @tempnam($dir, '.avatar-');
+                if ($temp === false) return null;
+                try {
+                    if (@file_put_contents($temp, $svg, LOCK_EX) !== strlen($svg)) return null;
+                    @chmod($temp, 0664);
+                    if (!@rename($temp, $path)) return null;
+                } finally { if (is_file($temp)) @unlink($temp); }
+                self::clearGenerated($userId, $path);
+            }
+            return \http::$siteUrl . 'var/avatars/' . $name;
+        } catch (\Throwable) {
+            // Missing zlib, invalid assets or unavailable storage retain the local Phosphor fallback.
+            return null;
+        }
+    }
+
+    private static function clearGenerated(int $userId, string $keep = ''): void
+    {
+        $dir = self::dir(false);
+        if ($dir === null) return;
+        foreach (glob($dir . $userId . '.generated-*.svg') ?: [] as $path) {
+            if ($path !== $keep) @unlink($path);
+        }
     }
 
     public static function hasFile(int $userId): bool
@@ -130,6 +170,7 @@ final class Portrait
 
     private static function clearExcept(int $userId, string $keep): void
     {
+        self::clearGenerated($userId);
         $dir = self::dir(false);
         if ($dir === null) {
             return;

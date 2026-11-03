@@ -19,6 +19,11 @@ final class Theme
         'cmsTextColor' => '161c1f',
     ];
 
+    public static function defaultColor(string $name): string
+    {
+        return self::DEFAULTS[$name] ?? '000000';
+    }
+
     /** @var array<string, string>|null */
     private static ?array $colors = null;
 

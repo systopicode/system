@@ -8,7 +8,7 @@ use Systopic\System\Tables\Tags\Model as Tag;
 use Systopic\System\Tables\TagGroups\Model as TagGroup;
 
 /**
- * The tag panel under cms/settings/tags/ — the view, not the data.
+ * The tag panel under admin/settings/tags/ — the view, not the data.
  *
  * The successor of `tagGroup::toSettingsPanel()` and `tag::toSettingsItem()`.
  * Why that does not stay on the row classes is in section 13 of the design:
@@ -51,7 +51,7 @@ final class TagGroupsPanel
             ->append('div.row div.tagsRow')->foreach($group->tags, static function ($div, Tag $tag) {
                 $div->append(self::item($tag));
             })->close()
-            ->append('div.row input')->placeholder('Add tag')->data([
+            ->append('div.row input')->placeholder('Add tag')->attr('aria-label', 'Add tag')->data([
                 'on_keyup' => 'enterNewTag',
             ]);
     }
@@ -83,18 +83,21 @@ final class TagGroupsPanel
 					'id'          => $tag->id,
 				])->close();
 
-        // A tag that hangs on no page may go; one with usages shows their
-        // count.
-        //
-        // Deliberately with if/else instead of the legacy ->if() chain: there
-        // the condition only applies to the next ->append(), and the following
-        // ->text() runs regardless — which put a bare "0" into the markup for
-        // the number zero.
+        // The count stays in the pill. Drag and edit sit on the hover
+        // layer, so a short name does not grow to fit them.
         if ($tag->nodeCount > 0) {
             $el->append('number')->text($tag->nodeCount);
-        } else {
-            $el->append('i.far.fa-trash')->click('delete')->data(['label' => $tag->name]);
         }
+        $actions = $el->append('span.tagActions');
+        $grip = $actions->append('span.tagGrip')->attr('title', 'Drag');
+        for ($dot = 0; $dot < 6; $dot++) {
+            $grip->append('span');
+        }
+        $actions->append('button.tagPen')->attr('type', 'button')->title('Edit')
+            ->attr('onmousedown', 'event.stopPropagation()')
+            ->attr('onpointerdown', 'event.stopPropagation()')
+            ->click('edit')
+            ->append('i.cmsIcon.cmsIcon-pen');
         return $el;
     }
 
@@ -125,7 +128,7 @@ final class TagGroupsPanel
                 })
                 ->close()
                 ->append('form.tagAdd')->attr('method', 'put')->attr('action', $action . 'addTag' . $query)
-                ->append('input[name=name]')->placeholder('Add tag')->attr('autocomplete', 'off')->close()
+                ->append('input[name=name]')->placeholder('Add tag')->attr('aria-label', 'Add tag')->attr('autocomplete', 'off')->close()
                 ->append('input[type=hidden][name=group_id]')->value((string) $group->id)->close()
                 ->append('input[type=hidden][name=node_id]')->value((string) $nodeId);
         });
@@ -149,7 +152,7 @@ final class TagGroupsPanel
         if ($relatedNodeId !== null) {
             $el->append('a.ajax')->href($pageBase . $relatedNodeId)
                 ->style('color', $tag->colorStyle)
-                ->append('i.fa-regular.fa-arrow-turn-down-right');
+                ->append('i.cmsIcon.cmsIcon-arrow-turn-down-right');
         }
         return $el;
     }
@@ -161,7 +164,7 @@ final class TagGroupsPanel
         $header->append('h1')->doc('groupName')->text($group->name);
         $header->append('button.tagGroupRename')->attr('type', 'button')->title('Rename')
             ->data(['on_click' => 'rename'])
-            ->append('i.fa-regular.fa-pen');
+            ->append('i.cmsIcon.cmsIcon-pen');
         $header->append('input.tagGroupColor[type=color][name=color]')
             ->value($group->colorStyle !== '' ? $group->colorStyle : '#888888')
             ->title('Colour')
@@ -169,7 +172,7 @@ final class TagGroupsPanel
         if ($group->tags === []) {
             $header->append('button.tagGroupDelete')->attr('type', 'button')->title('Delete group')
                 ->data(['on_click' => 'deleteGroup'])
-                ->append('i.fa-regular.fa-trash');
+                ->append('i.cmsIcon.cmsIcon-trash');
         }
         return $header;
     }

@@ -205,6 +205,7 @@ class client {
 			'command' => 'updateClientData',
 			'data' => clientInterfaces::clientData_export()
 		]];
+        $return[] = ['command' => 'requestResult', 'data' => ['ok' => !(class_exists('message') && method_exists('message', 'requestFailed') && message::requestFailed())]];
 		// Before the document swap, so a module sheet is in the cms layer
 		// when the new markup paints. A link inserted afterwards has no layer.
 		if (count(self::$cssAppFiles)) {

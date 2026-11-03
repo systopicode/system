@@ -374,7 +374,7 @@ class PanelTree implements RenderTree
         if ($selected->name === 'search' && $selected->parent !== null) {
             $remembered = $selected->parent->state->submodulePath ?? [];
             if (is_array($remembered) && count($remembered) > 1) {
-                $classes = [];
+                $classes = ['cms'];
                 foreach ($remembered as $segment) {
                     $segment = (string) $segment;
                     if ($segment !== '') {
@@ -384,10 +384,10 @@ class PanelTree implements RenderTree
                 $classes[] = 'main';
                 return array_values(array_unique($classes));
             }
-            return ['cms', 'home'];
+            return ['admin', 'cms', 'home'];
         }
 
-        $classes = [];
+        $classes = ($selected->path[0] ?? '') === 'admin' ? ['cms'] : [];
         foreach ($selected->path as $segment) {
             $segment = (string) $segment;
             if ($segment !== '') {
@@ -428,7 +428,7 @@ class PanelTree implements RenderTree
      *
      * Two cases qualify:
      *   1. A real panel below the synthetic root was selected by the URL
-     *      (e.g. /cms/pages/ → selectedPanel = pages ≠ rootPanel).
+     *      (e.g. /admin/pages/ → selectedPanel = pages ≠ rootPanel).
      *   2. The synthetic root itself is a "real" panel — it ships its own
      *      class file (panel.php / module.php with a matching class) or
      *      its own body.tpl.php in a registered panels/ root. In that
@@ -463,11 +463,11 @@ class PanelTree implements RenderTree
     }
 
     /**
-     * True when the selected panel's first path segment is 'cms'.
+     * True when the selected panel's first path segment is 'admin'.
      */
     public function inCms(): bool
     {
-        return !empty($this->path) && $this->path[0] === 'cms';
+        return !empty($this->path) && $this->path[0] === 'admin';
     }
 
     /**

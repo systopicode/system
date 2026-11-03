@@ -1,0 +1,32 @@
+import {readFile} from 'node:fs/promises';
+import {pathToFileURL} from 'node:url';
+import assert from 'node:assert/strict';
+const read=p=>readFile(new URL('../'+p,import.meta.url),'utf8');
+const {chromium}=await import(pathToFileURL(process.env.FLUXO_PLAYWRIGHT_MODULE).href);
+const browser=await chromium.launch({channel:'chrome',headless:true});
+try {
+ const page=await browser.newPage();
+ await page.setContent('<div id="tree" style="height:100px;overflow:auto"><div id="rows" style="height:2000px"></div></div>');
+ const source=await read('public/js/core/server/server.js');
+ const scrolling=source.slice(source.indexOf('    server.pinScroll ='),source.indexOf('    server.startCommands'));
+ await page.evaluate(code=>{window.sys={core:{server:{}}};new Function('server',code)(sys.core.server);},scrolling);
+ assert.equal(await page.evaluate(()=>{const el=document.querySelector('#tree'),server=sys.core.server;el.scrollTop=150;const release=server.pinScroll(el,150);server.revealScroll(el,600);release();return el.scrollTop;}),600,'new selection wins over older pin');
+ assert.equal(await page.evaluate(()=>{const el=document.querySelector('#tree');const release=sys.core.server.pinScroll(el,150);el.scrollTop=0;release();return el.scrollTop;}),150,'unchanged view retains ordinary pin restoration');
+ await page.evaluate(()=>{const el=document.querySelector('#tree'),server=sys.core.server;const positions=[{selector:'#tree',top:150}];positions.inputVersion=server.scrollInputVersion;positions.revealVersion=server.scrollRevealVersion;server.revealScroll(el,700);server.restoreScroll(positions);});
+ await page.waitForTimeout(900);
+ assert.equal(await page.locator('#tree').evaluate(e=>e.scrollTop),700,'all delayed restore passes yield to explicit navigation');
+ const dom=await read('public/js/core/domLayer.js');const start=dom.indexOf('layer.holdScroll =');const hold=dom.slice(start,dom.indexOf('\n\t\t};',start)+6);
+ await page.evaluate(code=>{window.layer={rootNodes:[document.querySelector('#rows')]};new Function('layer',code)(layer);},hold);
+ assert.equal(await page.evaluate(()=>{const el=document.querySelector('#tree'),server=sys.core.server;server.pendingScroll=[{selector:'#tree',top:700}];server.pendingScroll.revealVersion=server.scrollRevealVersion;const release=layer.holdScroll();server.revealScroll(el,0);release();return el.scrollTop;}),0,'DOM swap cannot restore old saved offset over selected row at the top');
+ await page.evaluate(()=>{const el=document.querySelector('#tree'),server=sys.core.server;const release=server.pinScroll(el,0);server.revealScroll(el,500,'smooth');release();});await page.waitForTimeout(750);
+ assert.equal(await page.locator('#tree').evaluate(e=>e.scrollTop),500,'smooth selection also owns its final scroll position');
+ await page.emulateMedia({reducedMotion:'reduce'});
+ assert.equal(await page.locator('#tree').evaluate(e=>{sys.core.server.revealScroll(e,100,'smooth');return e.scrollTop;}),100,'reduced motion remains immediate');
+ const positionsSource=source.slice(source.indexOf('    server.scrollPositions ='),source.indexOf('    /**',source.indexOf('    server.scrollPositions =')));
+ await page.evaluate(code=>new Function('server',code)(sys.core.server),positionsSource);
+ await page.addScriptTag({content:await read('public/js/core/server/server.command.js')});
+ await page.evaluate(()=>{window.settings={inApp:true};sys.renderer={updateDocument(){document.querySelector('#tree').scrollTop=0}};const el=document.querySelector('#tree');el.scrollTop=150;const old=sys.core.server.scrollPositions();el.scrollTop=650;new sys.core.server.command({background:true,scrolled:old,response:{command:'updateDocument'}});});
+ await page.waitForTimeout(900);
+ assert.equal(await page.locator('#tree').evaluate(e=>e.scrollTop),650,'background updates retain position at render time, not stale request-start position');
+ console.log('ok: selected-row reveals win over pins, saved DOM offsets and delayed restores; ordinary scroll restoration retained');
+} finally {await browser.close();}

@@ -17,7 +17,7 @@ namespace Systopic\System\Controlmap;
  *
  * Files the actions include from their own folder are read as well, with a
  * literal name (`include 'actions.tags.php'`, `__DIR__ . '/x.php'`) — the
- * sidebar of cms/pages keeps its actions in four of them. An include from
+ * sidebar of admin/pages keeps its actions in four of them. An include from
  * another panel's folder belongs to that panel and is not followed.
  */
 final class ActionScanner

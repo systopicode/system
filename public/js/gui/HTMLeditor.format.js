@@ -12,7 +12,7 @@ var wysiwyg = (function () {
 	var BLOCKS = TEXT_BLOCKS + ',li,td,th,div';
 	var FORMATS = {STRONG: 'strong,b', EM: 'em,i', U: 'u', S: 's,strike,del'};
 	var INLINE_STYLES = 'strong,b,em,i,u,s,strike,sub,sup,mark,small,big,code,span,font';
-	var MEDIA = 'img,video,iframe';
+	var MEDIA = 'img,video,audio,iframe';
 	var PASTE = {
 		P: [], H1: [], H2: [], H3: [], H4: [], H5: [], H6: [], UL: [], OL: [], LI: [], BR: [],
 		STRONG: [], EM: [], U: [], S: [], A: ['href', 'target'],
@@ -27,6 +27,10 @@ var wysiwyg = (function () {
 	/** A text field: the field is the block, only words inside it are formatted. */
 	var inline = function (editor) {
 		return !!editor && editor.classList.contains('plaintext');
+	};
+	/** The page title. It is typed, not formatted. */
+	var pageLabel = function (editor) {
+		return !!editor && editor.dataset.field === 'label';
 	};
 	var rename = function (el, tag) {
 		var to = document.createElement(tag);
@@ -508,7 +512,7 @@ var wysiwyg = (function () {
 		clearTimeout(typingTimer);
 		record(editor);
 	};
-	var changed = function (editor) {
+	var changed = function (editor, commit) {
 		if (!editor) {
 			return;
 		}
@@ -516,6 +520,9 @@ var wysiwyg = (function () {
 		var input = new Event('input', {bubbles: true});
 		input.wysiwyg = true;
 		editor.dispatchEvent(input);
+        if (editor.hasAttribute('data-on_blur') && (commit || (document.activeElement !== editor && !editor.contains(document.activeElement) && !document.activeElement?.closest('.cmslightbox')))) {
+            editor.dispatchEvent(new FocusEvent('blur', {relatedTarget: document.activeElement}));
+        }
 	};
 	var step = function (editor, by) {
 		begin(editor);
@@ -530,6 +537,9 @@ var wysiwyg = (function () {
 		var input = new Event('input', {bubbles: true});
 		input.wysiwyg = true;
 		editor.dispatchEvent(input);
+        if (editor.hasAttribute('data-on_blur') && (commit || (document.activeElement !== editor && !editor.contains(document.activeElement) && !document.activeElement?.closest('.cmslightbox')))) {
+            editor.dispatchEvent(new FocusEvent('blur', {relatedTarget: document.activeElement}));
+        }
 	};
 
 	/* ---------------------------------------------------------------- commands */
@@ -757,7 +767,7 @@ var wysiwyg = (function () {
 	var linkTarget = function (state) {
 		var editor = state.editor;
 		if (!editor.isConnected) {
-			editor = document.querySelector('.editor[contenteditable=true][data-field="' + state.data.field + '"][data-node_id="' + state.data.node_id + '"][data-language_iso="' + state.data.language_iso + '"]');
+			editor = Array.from(document.querySelectorAll('.editor[contenteditable=true]')).find(el => ['field','node_id','language_iso'].every(key => (el.dataset[key] || '') === (state.data[key] || '')));
 		}
 		if (!editor) {
 			return null;
@@ -777,7 +787,7 @@ var wysiwyg = (function () {
 			return false;
 		}
 		begin(state.editor);
-		var href = values.href.trim();
+		var href = values.href.trim().replace(/^(media|page)::(?=\d)/, '$1:');
 		var a = state.anchor;
 		if (!href || href === 'https://') {
 			if (!a) {
@@ -811,8 +821,10 @@ var wysiwyg = (function () {
 		} else if (!state.image && text && text !== a.textContent.trim()) {
 			a.textContent = text;
 		}
+        a.removeAttribute('data-ref-href');
+        a.removeAttribute('data-ref-missing');
 		attr(a, 'href', href);
-		attr(a, 'target', values.newTab ? '_blank' : false);
+		attr(a, 'target', values.newTab ? '_blank' : '_self');
 		attr(a, 'rel', values.newTab ? 'noopener' : false);
 		attr(a, 'download', values.download ? '' : false);
 		attr(a, 'class', (values.className || '').trim());
@@ -879,6 +891,9 @@ var wysiwyg = (function () {
 	};
 	var insert = function (editor, range, box) {
 		inline(editor) && flatten(box);
+		if (pageLabel(editor)) {
+			box.querySelectorAll('a,strong,b,em,i,u,s,strike,del,span,font,mark,code,sub,sup,small,big').forEach(unwrap);
+		}
 		range.deleteContents();
 		var nodes = Array.from(box.childNodes);
 		if (!nodes.length) {
@@ -1131,6 +1146,8 @@ var wysiwyg = (function () {
 		if (key === 'z' || key === 'y') {
 			e.preventDefault();
 			step(editor, key === 'y' || e.shiftKey ? 1 : -1);
+		} else if (pageLabel(editor) && ((KEYS[key] && !e.shiftKey) || (key === 'x' && e.shiftKey))) {
+			e.preventDefault();
 		} else if (KEYS[key] && !e.shiftKey) {
 			e.preventDefault();
 			toggle(KEYS[key]);
@@ -1154,7 +1171,7 @@ var wysiwyg = (function () {
 			document.execCommand('insertLineBreak');
 		} else if (INPUT_FORMATS[e.inputType]) {
 			e.preventDefault();
-			toggle(INPUT_FORMATS[e.inputType]);
+			pageLabel(editor) || toggle(INPUT_FORMATS[e.inputType]);
 		} else if (/^format/.test(e.inputType)) {
 			e.preventDefault();
 		} else if (e.inputType === 'historyUndo' || e.inputType === 'historyRedo') {

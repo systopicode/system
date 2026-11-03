@@ -123,6 +123,12 @@ final class Model extends TableRow
         set => $this->__set__(__PROPERTY__, $value);
     }
 
+    /** Administrative suspension; activation and password recovery never clear it. */
+    public ?bool $isBlocked = false {
+        get => $this->__get__(__PROPERTY__);
+        set => $this->__set__(__PROPERTY__, $value);
+    }
+
     public const PERSON = 'person';
     public const SCREEN = 'screen';
 
@@ -135,6 +141,17 @@ final class Model extends TableRow
      */
     #[Col(length: 10)]
     public ?string $type = self::PERSON {
+        get => $this->__get__(__PROPERTY__);
+        set => $this->__set__(__PROPERTY__, $value);
+    }
+
+    /**
+     * How this account shows the CMS: light, dark, or system.
+     * Follows the device until the account chooses otherwise. Existing
+     * explicit Light and Dark preferences are retained.
+     */
+    #[Col(length: 10)]
+    public ?string $appearance = 'system' {
         get => $this->__get__(__PROPERTY__);
         set => $this->__set__(__PROPERTY__, $value);
     }

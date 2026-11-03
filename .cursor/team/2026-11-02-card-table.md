@@ -1,5 +1,5 @@
 # Mehrere Karten, eine Tabelle: gleich breite Spalten über Karten hinweg
-Von: Oliver · Für: Lars · Status: offen, in cms/controlmap/discover eingebaut · 2026-11-02
+Von: Oliver · Für: Lars · Status: offen, in admin/controlmap/discover eingebaut · 2026-11-02
 
 ## Anlass
 
@@ -85,7 +85,7 @@ Offen ist noch der Telefon-Fall. `tableFit.js` (`.stacked`) hängt an
 
 ## Dateien
 
-- `panels/cms/085_controlmap/010_discover/main.tpl.php` (Markup)
-- `panels/cms/085_controlmap/010_discover/discover.css` (Block `cardTable`)
+- `panels/admin/085_controlmap/010_discover/main.tpl.php` (Markup)
+- `panels/admin/085_controlmap/010_discover/discover.css` (Block `cardTable`)
 - `public/css/24_table.css` (Ziel; Zeile 81)
 - `.cursor/docs/gui.md` §5

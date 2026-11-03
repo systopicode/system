@@ -6,9 +6,18 @@ function insertHtmlAtCursor(html) {
 		if (!range) {
 			return false;
 		}
-		if ($(range.startContainer.parentNode).closest('.editor').length > 0 || $(range.startContainer.parentNode).hasClass('editor')) {
+        var start = range.startContainer.nodeType === 1 ? range.startContainer : range.startContainer.parentNode;
+		if ($(start).closest('.editor').length > 0) {
 			node = range.createContextualFragment(html);
+            var last = node.lastChild;
 			range.insertNode(node);
+            if (last) {
+                range.setStartAfter(last);
+                range.collapse(true);
+                var selection = window.getSelection();
+                selection.removeAllRanges();
+                selection.addRange(range);
+            }
 		} else {
 			return 'nodeditor';
 		}
@@ -70,28 +79,32 @@ function editBlockClass(event) {
 	var same = /^(IMG|VIDEO|IFRAME|TABLE)$/.test(block.nodeName) ? block.nodeName : 'p,h1,h2,h3,h4,h5,h6,ul,ol';
 	document.querySelectorAll('.editor[contenteditable=true] :is(' + same + ')[class]').forEach(function (el) {
 		el.classList.forEach(function (name) {
-			used.indexOf(name) < 0 && used.push(name);
+			name !== 'cmsMediaOn' && used.indexOf(name) < 0 && used.push(name);
 		});
 	});
 	var form = document.createElement('form');
 	form.className = 'HTMLeditorClass';
-	var kind = {P: 'paragraph', UL: 'list', OL: 'list', TABLE: 'table', IMG: 'image', VIDEO: 'video', IFRAME: 'embed'}[block.nodeName] || 'headline';
-	form.innerHTML = '<input name="className" list="HTMLeditorClasses" placeholder="CSS classes of this ' + kind + '" autocapitalize="off" autocomplete="off" spellcheck="false">'
+	form.innerHTML = '<input name="className" list="HTMLeditorClasses" placeholder="CSS classes (space-separated)" autocapitalize="off" autocomplete="off" spellcheck="false">'
 		+ '<datalist id="HTMLeditorClasses"></datalist>'
-		+ '<button type="submit" title="Apply"><i class="fa-regular fa-check"></i></button>';
+		+ '<button type="submit" title="Apply"><i class="cmsIcon cmsIcon-check"></i></button>';
 	used.sort().forEach(function (name) {
 		form.querySelector('datalist').appendChild(new Option(name));
 	});
 	var input = form.querySelector('input');
-	input.value = block.getAttribute('class') || '';
+	input.value = [...block.classList].filter(name => name !== 'cmsMediaOn').join(' ');
 	form.addEventListener('submit', function (e) {
 		e.preventDefault();
 		wysiwyg.setBlockClass(block, input.value);
 		closeAllMenus();
 	});
 	input.addEventListener('keydown', function (e) {
-		e.key === 'Escape' && closeAllMenus();
+		if (e.key === 'Escape') closeAllMenus();
 	});
+    // Flush the deferred field blur only when its class tools really close.
+    var menuState = contextMenus.find(item => item.domObj?.[0] === menu);
+    if (menuState) menuState.onClose = function () {
+        block.closest('.editor')?.dispatchEvent(new FocusEvent('blur'));
+    };
 	menu.querySelector('ul').replaceWith(form);
 	placeEditorMenu(menu);
 	input.focus();
@@ -105,15 +118,58 @@ function editorMediaRef(element) {
 	return match ? {node_id: match[1], format: match[2] || 'original'} : null;
 }
 
+/**
+ * The media node of a picture that is fixed in the page, not stored in a
+ * text field. The address carries the media id (var/original/000/42/…), the
+ * library row next to the tree has the node the file editor wants.
+ */
+function fixedMediaNodeId(el) {
+	if (!el) {
+		return '';
+	}
+	var urls = [el.getAttribute('src'), el.getAttribute('data-src'), el.getAttribute('poster')];
+	for (var i = 0; i < urls.length; i++) {
+		var parts = mediaFormatFromUrl(urls[i] || '');
+		if (!parts) {
+			continue;
+		}
+		var id = parseInt(parts.folders.replace(/\//g, ''), 10);
+		if (!id) {
+			continue;
+		}
+		var row = document.querySelector('li[data-media_id="' + id + '"]');
+		if (row && row.dataset.node_id) {
+			return row.dataset.node_id;
+		}
+	}
+	return '';
+}
+
 /** The editor of the image or video, in the format it shows now. */
+/** Reuse the crop controller, keeping the page and neighbouring images visible. */
+function cropImageOnPage(event) {
+    const el=event.data.target, rect=el.getBoundingClientRect();
+    const src=el.currentSrc || el.src;
+    if(!url2mediaParams(src))return;
+    return runImageEditor({inline:true,src,domObj:$(el),display_width:rect.width,display_height:rect.height,
+        offset_left:rect.left+scrollX,offset_top:rect.top+scrollY});
+}
+
 function formatImage(event) {
 	var el = event.data.target;
 	var media = editorMediaRef(el);
 	var id = media ? media.node_id : el.dataset.node_id;
 	if (!id) {
+		id = fixedMediaNodeId(el);
+	}
+	if (!id) {
 		return;
 	}
-	sys.core.server.sendCall({method: 'get'}, settings.siteRoot + 'cms/pages/editor/file/?target_id=' + id + '&format=' + encodeURIComponent(media ? media.format : mediaFormatOf(el)));
+	const editorUrl = settings.siteRoot + 'admin/pages/editor/file/?target_id=' + id + '&format=' + encodeURIComponent(media ? media.format : mediaFormatOf(el));
+	// The toolbar may already own focus. Keep the actual edited field in
+	// the blur-save flow before opening a dialog that can update the page.
+	(el.closest('.editor[contenteditable="true"]') || document.activeElement?.closest('.editor[contenteditable="true"]'))?.blur();
+	queueMicrotask(() => sys.core.server.onIdle(() => sys.core.server.sendCall({method: 'get'}, editorUrl)));
 }
 
 function HTMLeditorHTMLMode(event) {
@@ -127,7 +183,7 @@ function HTMLeditorHTMLMode(event) {
 		}
 	}
 	data = $targetDomObj.data();
-	href = settings.siteRoot + "cms/pages/editor/htmlmode/?id=" + data.node_id + "&field=" + data.field;
+	href = settings.siteRoot + "admin/pages/editor/htmlmode/?id=" + data.node_id + "&field=" + data.field;
 
 	sys.core.server.sendCall({
 		method: 'post',
@@ -138,8 +194,26 @@ function HTMLeditorHTMLMode(event) {
 
 /** var/original/… or var/formats/<format>/… of an image or video of the media library. */
 function mediaFormatParts(el) {
-	var m = (el.getAttribute('src') || '').split('?')[0].match(/^(.*\/var\/)(original|formats\/([^\/]+))\/(\d{3}\/\d{2}\/)([^\/]+)$/);
+	var urls = [el.getAttribute('src'), el.getAttribute('data-src'), el.getAttribute('poster')];
+	for (var i = 0; i < urls.length; i++) {
+		var parts = mediaFormatFromUrl(urls[i] || '');
+		if (parts) return parts;
+	}
+	return null;
+}
+
+function mediaFormatFromUrl(src) {
+	var m = String(src).split('?')[0].match(/^(.*\/var\/)(original|formats\/([^\/]+))\/(\d{3}\/\d{2}\/)([^\/]+)$/);
 	return m && {base: m[1], format: m[3] || 'original', folders: m[4], file: m[5]};
+}
+
+/** The name the format menu shows, for the hover chip. */
+function mediaFormatLabel(el) {
+	var key = mediaFormatOf(el);
+	var kind = el.nodeName === 'VIDEO' ? 'video' : 'image';
+	var table = (window.editorFormats && editorFormats[kind]) || {};
+	if (table[key]) return table[key];
+	return key === 'original' ? 'Original' : key;
 }
 
 function mediaFormatOf(el) {
@@ -170,6 +244,7 @@ function changeMediaFormat(event) {
 	}
 	el.setAttribute('src', src);
 	el.dataset.format = format;
+	if (window.cmsMediaFormatShow) window.cmsMediaFormatShow(el);
 	var media = editorMediaRef(el);
 	if (media) {
 		// the url only shows it; what is saved is the reference
@@ -186,6 +261,7 @@ function createHTMLeditorLink(event) {
 	}
 	var imageRef = state.image && editorMediaRef(state.image);
 	var post = state.image ? {image_node_id: imageRef ? imageRef.node_id : state.image.dataset.node_id} : {text: state.text};
+    post.return_url = location.pathname + location.search;
 	var anchor = state.anchor;
 	if (anchor) {
 		post.href = anchor.getAttribute('data-ref-href') || anchor.getAttribute('href') || '';
@@ -193,10 +269,16 @@ function createHTMLeditorLink(event) {
 		post.download = anchor.hasAttribute('download') ? 1 : '';
 		post.target = anchor.getAttribute('target') || '';
 	}
-	sys.core.server.sendCall({
+	// Leaving the field may have started its blur-save. Its response must
+    // finish before the ephemeral dialog opens, or it replaces the dialog.
+	document.activeElement?.closest('.editor[contenteditable="true"]')?.blur();
+    // Blur handlers settle in a microtask to distinguish real blur from a
+    // removed DOM node. Wait for that handler to enqueue its save as well.
+	queueMicrotask(() => sys.core.server.onIdle(() => sys.core.server.sendCall({
 		method: 'post',
+        history: false,
 		post: post
-	}, settings.siteRoot + 'cms/pages/editor/editLink/');
+	}, settings.siteRoot + 'admin/pages/editor/editLink/')));
 }
 
 /** "Save" in the link dialog: closing renders the page anew, so the field is saved first. */
@@ -208,9 +290,10 @@ function applyHTMLeditorLink(button) {
 	var close = function () {
 		box.querySelector('header a').click();
 	};
+    var href = linkHref(field('linkType').value, field('linkUrl').value);
 	var editor = wysiwyg.applyLink({
 		text: field('linkTitle') ? field('linkTitle').value.replace(/\s+/g, ' ').trim() : '',
-		href: linkHref(field('linkType').value, field('linkUrl').value),
+		href: href,
 		className: field('linkClass').value,
 		newTab: field('target').value === '_blank',
 		download: field('download').checked
@@ -224,9 +307,12 @@ function applyHTMLeditorLink(button) {
 		editor.blur();
 	}
 	button.classList.add('loading');
-	var save = new sys.core.event({type: 'input', target: editor, currentTarget: editor});
+	var save = new sys.core.event({type: editor.hasAttribute('data-on_blur') ? 'blur' : 'input', target: editor, currentTarget: editor});
 	save.collectElementData();
-	save.dispatch().done(close);
+	save.dispatch().done(() => {
+        button.classList.remove('loading');
+        if (!save.requestFailed && !document.getElementById('pageEditConflict')) close();
+    });
 }
 
 function linkHref(type, address) {
@@ -248,18 +334,33 @@ function linkHref(type, address) {
 
 function linkTypeChanged(select) {
 	select.nextElementSibling.placeholder = select.selectedOptions[0].dataset.hint;
+	linkDefaults(select.closest('main'), 'address', false);
 	select.nextElementSibling.focus();
+}
+
+/** Defaults belong to a newly selected target; users can then override either control. */
+function linkDefaults(main, kind, inline) {
+    var target = main.querySelector('[name=target]');
+    var download = main.querySelector('[name=download]');
+    var nativeAddress = kind === 'address' && main.querySelector('[name=linkType]').value !== 'url';
+    if (main.closest('.cmslightbox').dataset.existingLink !== 'true' && target.dataset.userOverride !== 'true') target.value = (kind === 'address' && !nativeAddress) || (kind === 'file' && inline) ? '_blank' : '';
+    if (main.closest('.cmslightbox').dataset.existingLink !== 'true' && download.dataset.userOverride !== 'true') download.checked = kind === 'file' && !inline;
 }
 
 /** A tab of the link dialog: an address, a page or a file. */
 function linkTab(tab) {
 	var target = tab.closest('.linkTarget');
+    var changed = tab.getAttribute('aria-selected') !== 'true';
 	target.querySelectorAll('[role=tab]').forEach(function (other) {
 		other.setAttribute('aria-selected', other === tab ? 'true' : 'false');
 	});
 	target.querySelectorAll('.linkPane').forEach(function (pane) {
 		pane.hidden = pane.dataset.pane !== tab.dataset.tab;
 	});
+    if (changed) {
+        var selected = target.querySelector('.linkPane:not([hidden]) button.selected[data-file-inline]');
+        linkDefaults(tab.closest('main'), tab.dataset.tab, selected?.dataset.fileInline === '1');
+    }
 	var field = target.querySelector('.linkPane:not([hidden]) :is(textarea, input)');
 	field && field.focus();
 }
@@ -273,6 +374,7 @@ function linkPicked(button) {
 	button.classList.add('selected');
 	main.querySelector('[name=linkType]').value = 'url';
 	main.querySelector('[name=linkUrl]').value = button.dataset.href;
+    linkDefaults(main, /^page:/.test(button.dataset.href || '') ? 'page' : 'file', button.dataset.fileInline === '1');
 	var text = main.querySelector('[name=linkTitle]');
 	if (text && text.value.trim() === '') {
 		text.value = button.dataset.label;
@@ -283,15 +385,70 @@ function linkFormatChosen(select) {
 	var main = select.closest('main');
 	main.querySelector('[name=linkType]').value = 'url';
 	main.querySelector('[name=linkUrl]').value = select.value;
+    linkDefaults(main, select.value ? 'file' : 'address', true);
 }
 
 function removeAnchor(event) {
 	wysiwyg.unlink(event.data.target);
 }
 
+/** Follow references using their stored identity; never navigate to a media: scheme. */
 function openAnchor(event) {
-	var anchor = event.data.target.closest('a');
-	anchor && window.open(anchor.href, '_blank', 'noopener');
+    var node = event.data.target;
+    var anchor = (node.nodeType === 1 ? node : node.parentElement).closest('a');
+    if (!anchor) return;
+    var ref = (anchor.getAttribute('data-ref-href') || anchor.getAttribute('href') || '').trim().replace(/^(media|page)::(?=\d)/, '$1:');
+    if (!ref) return;
+    if (/^(mailto|tel|sms):/i.test(ref)) {
+        if (anchor.getAttribute('target') === '_blank') window.open(ref, '_blank', 'noopener');
+        else window.location.assign(ref);
+        return;
+    }
+    var pageRef = ref.match(/^page:(\d+)(?:\?([^#]*))?(?:#.*)?$/);
+    if (pageRef) {
+        var params = new URLSearchParams(pageRef[2] || '');
+        var url = settings.siteRoot + 'admin/pages/?id=' + pageRef[1];
+        if (params.get('lang')) url += '&lang=' + encodeURIComponent(params.get('lang'));
+        if (anchor.hasAttribute('download')) {
+            var pageDownload = document.createElement('a');
+            pageDownload.href = url;
+            pageDownload.download = '';
+            document.body.appendChild(pageDownload);
+            pageDownload.click();
+            pageDownload.remove();
+        } else if (anchor.getAttribute('target') === '_blank') window.open(url, '_blank', 'noopener');
+        else sys.core.server.sendGet(url);
+        return;
+    }
+    var follow = function (data, previewWindow) {
+        if (!data || data.error || !data.url) { if (previewWindow) previewWindow.close(); return; }
+        var download = anchor.hasAttribute('download') || (!anchor.hasAttribute('target') && data.inline === false);
+        if (download) {
+            if (previewWindow) previewWindow.close();
+            var link = document.createElement('a');
+            link.href = data.url;
+            link.download = data.filename || '';
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+        } else if (anchor.getAttribute('target') === '_self') {
+            window.location.assign(data.url);
+        } else if (previewWindow) {
+            previewWindow.location.href = data.url;
+        } else {
+            window.open(data.url, '_blank', 'noopener');
+        }
+    };
+    if (/^media:\d+(?:[?#]|$)/.test(ref)) {
+        var knownDownload = anchor.hasAttribute('download') || (!anchor.hasAttribute('target') && /^(application\/(?!pdf)|text\/)/.test(anchor.getAttribute('data-ref-mimetype') || ''));
+        var previewWindow = !knownDownload && anchor.getAttribute('target') !== '_self' ? window.open('about:blank', '_blank') : null;
+        if (previewWindow) previewWindow.opener = null;
+        var call = new sys.core.server.call({method: 'put', ref: ref});
+        call.send(settings.siteRoot + 'admin/pages/resolveEditorLink').done(data => follow(data, previewWindow)).fail(() => { if (previewWindow) previewWindow.close(); });
+        return;
+    }
+    if (!/^(?:https?:|mailto:|tel:|sms:|\/|#|\?|[^:]+$)/i.test(ref)) return;
+    follow({url: anchor.href, inline: !/\.(docx?|xlsx?|pptx?|zip|csv|txt|vcf|skp)(?:[?#]|$)/i.test(ref)});
 }
 
 function setAttribute(e) {

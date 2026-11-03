@@ -11,10 +11,10 @@
 .disabled{
 	color:lightgray;
 }
-button.disabled {
+button:where(:not([data-cms-action])).disabled {
 	color:gray;
 	border-color:gray;
-	background:white;
+	background: var(--cmsCanvas);
 }
 .nowrap {
 	white-space: nowrap;

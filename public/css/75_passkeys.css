@@ -1,5 +1,9 @@
 /* Layout and controls come from the existing widgets, forms and cmslightbox. */
 .passkeys { --passkeyInk: var(--cms-main, var(--cmsMainColor)); --passkeyTone: color-mix(in srgb, var(--passkeyInk) 34%, var(--cmsCanvas)); }
+html[data-mode="dark"] .passkeys {
+	--passkeyInk: var(--cmsBrandInk);
+	--passkeyTone: color-mix(in srgb, var(--cmsBrandInk) 42%, var(--cmsCanvas));
+}
 .passkeys .passkeyCount { color: var(--cmsMuted); font-size: .75rem; }
 .passkeys div.cms.passkeyStatus { margin: .75rem 0 0; overflow-wrap: anywhere; }
 .passkeys .passkeyStatus:empty { display: none; }
@@ -47,9 +51,10 @@ main.is-passkey-signing-in .passkeyAuthFeedback .passkeyArtwork { width: 112px; 
 main.is-passkey-signing-in .passkeyStatus { text-align: left; }
 main.is-passkey-signing-in .passkeyLoginCancel { display: none; }
 .passkeys .passkeyIcons { display: inline-grid; width: 100%; height: 100%; vertical-align: middle; }
-.passkeys .passkeyIcon { grid-area: 1 / 1; display: none; width: 100%; height: 100%; fill: var(--passkeyInk); }
+.passkeys .passkeyIcon { grid-area: 1 / 1; display: none; width: 100%; height: 100%; fill: none; stroke: var(--passkeyInk); }
 .passkeys .passkeyIcon-fingerprint { display: block; }
-.passkeys .passkeyIcon > path[opacity] { fill: var(--passkeyTone); opacity: 1; }
+.passkeys .passkeyIcon [data-ink="secondary"] { stroke: var(--passkeyTone); }
+.passkeys .passkeyIcon [data-tone-fill] { fill: var(--passkeyTone); }
 .passkeys .passkeyArtwork { position: relative; width: 88px; height: 88px; margin: 1rem auto; }
 .passkeys .passkeyAuthFeedback[hidden] { display: none; }
 /* One shared biometric sequence in auth and the account setup dialog. */
@@ -81,3 +86,7 @@ main.is-passkey-signing-in .passkeyLoginCancel { display: none; }
     .passkeys:is(.passkeyLogin, .passkeyOnboarding)[data-step="success"] .passkeyIcon-fingerprint { opacity: 0; }
 }
 
+
+/* Phosphor Duotone uses filled original paths, with independent tone colours. */
+.passkeys .passkeyIcon { fill: var(--passkeyInk); stroke: none; }
+.passkeys .passkeyIcon [data-ink="secondary"] { fill: var(--passkeyTone); stroke: none; }

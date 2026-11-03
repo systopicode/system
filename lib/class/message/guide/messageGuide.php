@@ -7,7 +7,7 @@ class messageGuide extends message {
 		return $this
 				->type('info')
 				->message('no pages have been created yet. you may change this by hitting: ')
-				->action('new page', 'cms/pages/new')
+				->action('new page', 'admin/pages/new')
 		;
 	}
 
@@ -15,7 +15,7 @@ class messageGuide extends message {
 		return $this
 				->type('info')
 				->message('No Templates found in your project. you may create a default template')
-				->action('Create Template', 'cms/pages/createDefaultTemplate')
+				->action('Create Template', 'admin/pages/createDefaultTemplate')
 				->help('Hilfe zu Vorlagen', 'https://fluxo-help.1f2c.de')
 		;
 	}

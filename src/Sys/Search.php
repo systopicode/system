@@ -8,13 +8,13 @@ use Systopic\Db\Scope;
 use Systopic\System\Panels\PanelNode;
 
 /**
- * The search of cms/search/ (Cmd+K). It walks every panel the user may open
+ * The search of admin/search/ (Cmd+K). It walks every panel the user may open
  * (only those are built), so a project's own panels take part without code:
  *
  * - a panel is found by its menu name and by the fixed texts of its views
  *   (headings, field labels, legends);
  * - a panel with `public function searchHits(Search $search): void` adds its
- *   own records: `$search->add('Contacts', 'fa-user', $name, $company, $href)`.
+ *   own records: `$search->add('Contacts', 'cmsIcon-user', $name, $company, $href)`.
  */
 final class Search
 {
@@ -22,7 +22,7 @@ final class Search
 
     private const ORDER = ['Pages' => 1, 'Media' => 2, 'Tags' => 3, 'Users' => 4, 'Settings' => 5, 'Sections' => 99];
 
-    /** @var array<string, array{icon: string, hits: list<array{title: string, context: string, href: string}>}> */
+    /** @var array<string, array{icon: string, hits: list<array{title: string, context: string, href: string, icon: string}>}> */
     public array $groups = [];
 
     /** @var array<string, true> */
@@ -58,9 +58,10 @@ final class Search
             return;
         }
         $this->seen[$key] = true;
+        $icon = \Systopic\System\Ui\Icons::classes($icon);
         $this->groups[$group] ??= ['icon' => $icon, 'hits' => []];
         if (count($this->groups[$group]['hits']) < self::PER_GROUP) {
-            $this->groups[$group]['hits'][] = ['title' => $title, 'context' => $context, 'href' => $href];
+            $this->groups[$group]['hits'][] = ['title' => $title, 'context' => $context, 'href' => $href, 'icon' => $icon];
         }
     }
 
@@ -87,11 +88,11 @@ final class Search
             $href = $child->getHref(\http::$root);
             $where = implode(' › ', $trail);
             if ($this->matches($label)) {
-                $this->add('Sections', 'fa-compass', $label, $where, $href);
+                $this->add('Sections', 'cmsIcon-compass', $label, $where, $href);
             }
             foreach (self::texts($child->absPath) as $text) {
                 if ($this->matches($text)) {
-                    $this->add('Sections', 'fa-compass', $text, implode(' › ', [...$trail, $label]), $href);
+                    $this->add('Sections', 'cmsIcon-compass', $text, implode(' › ', [...$trail, $label]), $href);
                 }
             }
             if (method_exists($child, 'searchHits')) {

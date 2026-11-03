@@ -7,6 +7,8 @@ namespace Systopic\System\Queries\NodeAcls;
 use Systopic\Db\Schema\Provisioner;
 use Systopic\Db\Schema\Registry;
 use Systopic\Db\Scope;
+use Systopic\System\Tables\Acls\Model as Acl;
+use Systopic\System\Tables\GroupsInAcls\Model as GroupInAcl;
 use Systopic\System\Tables\Nodes\Model as Node;
 
 /**
@@ -15,6 +17,16 @@ use Systopic\System\Tables\Nodes\Model as Node;
  */
 final class NodeAcls
 {
+    /** Prepare the node flag and the ACL tables before the first write on an older project. */
+    public static function prepareWrite(Scope $scope, int $nodeId): void
+    {
+        Registry::register(Node::class);
+        Registry::register(Acl::class);
+        Registry::register(GroupInAcl::class);
+        $scope->rows(__DIR__ . '/NodeAcls.inherit.sql', ['nodeId' => $nodeId],
+            provisioner: new Provisioner($scope->connection));
+    }
+
     /**
      * The nodes below one that take its ACL, down to the first node of each
      * branch with an ACL of its own (that one excluded).

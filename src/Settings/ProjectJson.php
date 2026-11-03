@@ -72,6 +72,11 @@ final class ProjectJson
     /** @param array<string, mixed> $data */
     public static function put(string $path, array $data): bool
     {
+        return \Systopic\System\Config\FileWriter::locked($path, static fn() => self::putLocked($path, $data), false);
+    }
+
+    private static function putLocked(string $path, array $data): bool
+    {
         $dir = dirname($path);
         if (!is_dir($dir) && !mkdir($dir, 0775, true) && !is_dir($dir)) {
             return false;
@@ -81,48 +86,108 @@ final class ProjectJson
         } catch (\Throwable) {
             return false;
         }
-        return file_put_contents($path, $json . "\n", LOCK_EX) !== false;
+        return \Systopic\System\Config\FileWriter::write($path, $json . "\n");
     }
 
     public static function replace(string $path, string $id, string $text): ?string
+    {
+        return \Systopic\System\Config\FileWriter::locked($path, static fn() => self::replaceLocked($path, $id, $text), null);
+    }
+
+    private static function replaceLocked(string $path, string $id, string $text): ?string
     {
         return self::open($path)?->replaceLeaf($id, $text);
     }
 
     public static function saveItem(string $path, string $id, string $key, string $text): ?bool
     {
+        return \Systopic\System\Config\FileWriter::locked($path, static fn() => self::saveItemLocked($path, $id, $key, $text), false);
+    }
+
+    private static function saveItemLocked(string $path, string $id, string $key, string $text): ?bool
+    {
         return self::open($path)?->writeItem($id, $key, $text);
     }
 
     public static function renameItem(string $path, string $id, string $key, string $text): ?bool
+    {
+        return \Systopic\System\Config\FileWriter::locked($path, static fn() => self::renameItemLocked($path, $id, $key, $text), false);
+    }
+
+    private static function renameItemLocked(string $path, string $id, string $key, string $text): ?bool
     {
         return self::open($path)?->rename($id, $key, $text);
     }
 
     public static function addItem(string $path, string $id): ?bool
     {
+        return \Systopic\System\Config\FileWriter::locked($path, static fn() => self::addItemLocked($path, $id), false);
+    }
+
+    private static function addItemLocked(string $path, string $id): ?bool
+    {
         return self::open($path)?->add($id);
     }
 
     public static function removeItem(string $path, string $id, string $key): ?bool
+    {
+        return \Systopic\System\Config\FileWriter::locked($path, static fn() => self::removeItemLocked($path, $id, $key), false);
+    }
+
+    private static function removeItemLocked(string $path, string $id, string $key): ?bool
     {
         return self::open($path)?->remove($id, $key);
     }
 
     public static function moveItem(string $path, string $id, string $from, string $to, bool $after): ?bool
     {
+        return \Systopic\System\Config\FileWriter::locked($path, static fn() => self::moveItemLocked($path, $id, $from, $to, $after), false);
+    }
+
+    private static function moveItemLocked(string $path, string $id, string $from, string $to, bool $after): ?bool
+    {
         return self::open($path)?->move($id, $from, $to, $after);
     }
 
     public static function setField(string $path, string $id, string $key, string $field, string $text): ?bool
     {
+        return \Systopic\System\Config\FileWriter::locked($path, static fn() => self::setFieldLocked($path, $id, $key, $field, $text), false);
+    }
+
+    private static function setFieldLocked(string $path, string $id, string $key, string $field, string $text): ?bool
+    {
         return self::open($path)?->putField($id, $key, $field, $text);
+    }
+
+    public static function setImageSizing(string $path, string $key, string $mode): bool
+    {
+        return \Systopic\System\Config\FileWriter::locked($path, static fn() => self::setImageSizingLocked($path, $key, $mode), false);
+    }
+
+    private static function setImageSizingLocked(string $path, string $key, string $mode): bool
+    {
+        $doc = self::open($path);
+        if ($doc === null || !in_array($mode, ['megapixels', 'pixels'], true) || !isset($doc->data['formats'][$key])) return false;
+        $row = $doc->data['formats'][$key];
+        if ($mode === 'megapixels') {
+            $row['megapixels'] = (float) ($row['megapixels'] ?? 0) > 0 ? $row['megapixels'] : 3;
+            unset($row['width'], $row['height']);
+        } else {
+            unset($row['megapixels'], $row['aspect_ratio']);
+            if ((int) ($row['width'] ?? 0) <= 0 && (int) ($row['height'] ?? 0) <= 0) $row['width'] = 1600;
+        }
+        unset($row['autocrop'], $row['autocrop_limit']);
+        $doc->data['formats'][$key] = $row;
+        return $doc->save();
     }
 
     /** @return list<Group> */
     private function build(): array
     {
         $layout = $this->which === 'page' ? self::pageLayout() : self::mediaLayout();
+        if ($this->which === 'page') {
+            $this->data['legal'] = array_replace(array_fill_keys(LegalLinks::FIELDS, ''), array_intersect_key(is_array($this->data['legal'] ?? null) ? $this->data['legal'] : [], array_fill_keys(LegalLinks::FIELDS, '')));
+        }
         $groups = [];
         foreach ($layout as $section => $spec) {
             if (!isset($this->data[$section]) || !is_array($this->data[$section])) {
@@ -185,6 +250,13 @@ final class ProjectJson
             return null;
         }
         $name = substr($id, strlen('define:'));
+        if (in_array($name, LegalLinks::FIELDS, true)) {
+            $text = trim($text);
+            if (strlen($text) > 5000 || (in_array($name, LegalLinks::KEYS, true) && !LegalLinks::valid($text))) return null;
+            if (!is_array($this->data['legal'] ?? null)) $this->data['legal'] = [];
+            $this->data['legal'][$name] = $text;
+            return $this->save() ? $text : null;
+        }
         if (!ProjectSettings::scalarAllowed($name)) {
             return null;
         }
@@ -225,7 +297,7 @@ final class ProjectJson
     private function rename(string $id, string $key, string $text): ?bool
     {
         $text = trim($text);
-        if ($text === '' || str_contains($text, "\n") || str_contains($text, '/') || !isset(self::GROUP[$id]) || $id === 'define:EXTERNAL_MEDIAS') {
+        if (!preg_match('/^[A-Za-z0-9_][A-Za-z0-9_-]*$/D', $text) || !isset(self::GROUP[$id]) || $id === 'define:EXTERNAL_MEDIAS') {
             return false;
         }
         $rows = $this->recordRows($id);
@@ -276,6 +348,8 @@ final class ProjectJson
                 $row[(string) $name] = self::blank(self::kindOf($value));
             }
         }
+        if ($id === 'call:mediaFormats::add') $row = ['width' => 1600, 'cms_display' => 'image'];
+        if ($id === 'var:media_groups') $row = ['label' => 'New group', 'file_extension' => '', 'templates' => ''];
         $rows[$newKey] = $row;
         $this->putRecords($id, $rows);
         return $this->save() ? true : false;
@@ -358,6 +432,30 @@ final class ProjectJson
         if ($current === null || !is_array($rows[$current])) {
             return false;
         }
+        if ($id === 'call:mediaFormats::add' && $field === 'aspect_ratio') {
+            $value = trim($text);
+            if ((float) ($rows[$current]['megapixels'] ?? 0) <= 0 || ($value !== '' && \mediaFormats::aspectRatio($value) === null)) return false;
+            if ($value === '') unset($rows[$current]['aspect_ratio']);
+            else $rows[$current]['aspect_ratio'] = str_replace('/', ':', $value);
+            $this->putRecords($id, $rows);
+            return $this->save();
+        }
+        if ($id === 'call:mediaFormats::add' && in_array($field, ['megapixels','width','height'], true)) {
+            $number = trim($text) === '' ? 0 : filter_var($text, FILTER_VALIDATE_FLOAT);
+            if ($number === false || !is_finite((float) $number) || $number < 0 || ($field === 'megapixels' && $number <= 0)
+                || ($field !== 'megapixels' && floor($number) !== (float) $number)) return false;
+            if ($field === 'megapixels') {
+                unset($rows[$current]['width'], $rows[$current]['height']);
+                $rows[$current][$field] = (float) $number;
+            } else {
+                unset($rows[$current]['megapixels'], $rows[$current]['aspect_ratio']);
+                if ($number > 0) $rows[$current][$field] = (int) $number;
+                else unset($rows[$current][$field]);
+            }
+            unset($rows[$current]['autocrop'], $rows[$current]['autocrop_limit']);
+            $this->putRecords($id, $rows);
+            return $this->save();
+        }
         $kind = 'string';
         foreach ($rows as $row) {
             if (is_array($row) && array_key_exists($field, $row) && !is_array($row[$field])) {
@@ -396,6 +494,7 @@ final class ProjectJson
             $section = match ($group->category) {
                 'Meta' => 'meta',
                 'Languages' => 'languages',
+                'CMS Legal Links' => 'legal',
                 default => 'general',
             };
             $data[$section][$name] = self::stored($group->kind, $group->text);
@@ -530,6 +629,7 @@ final class ProjectJson
         return [
             'general' => ['category' => 'General', 'mode' => 'scalars'],
             'meta' => ['category' => 'Meta', 'mode' => 'scalars'],
+            'legal' => ['category' => 'CMS Legal Links', 'mode' => 'scalars'],
             'languages' => ['category' => 'Languages', 'mode' => 'languages'],
         ];
     }
@@ -548,7 +648,7 @@ final class ProjectJson
 
     private function scalarSection(string $name): ?string
     {
-        foreach (['general', 'meta', 'languages', 'images'] as $section) {
+        foreach (['general', 'meta', 'languages', 'legal', 'images'] as $section) {
             if (!isset($this->data[$section]) || !is_array($this->data[$section])) {
                 continue;
             }

@@ -120,6 +120,7 @@ final class Devices
      */
     public static function issue(User $user, ?string $client = null): Device
     {
+        if ($user->isBlocked) throw new \DomainException('This account is blocked.');
         $client ??= self::displayed() ?? 'browser';
         $scope = Scope::default();
         $now = new DateTimeImmutable();
@@ -147,7 +148,7 @@ final class Devices
         // of an installation needs usm_devices to exist
         DeviceQuery::ofUser($scope, (int) $user->id);
         $secret = bin2hex(random_bytes(32));
-        $userAgent = (string) ($_SERVER['HTTP_USER_AGENT'] ?? '');
+        $userAgent = DeviceName::requestAgent();
         $device = Operator::issued(
             $user, $secret, DeviceName::from($userAgent), $client, $userAgent, self::ip(),
             self::expiresFor($user, $now), $now,
@@ -171,7 +172,7 @@ final class Devices
         DateTimeImmutable $now,
         Scope $scope,
     ): Device {
-        $userAgent = (string) ($_SERVER['HTTP_USER_AGENT'] ?? '');
+        $userAgent = DeviceName::requestAgent();
         $generated = DeviceName::from((string) $device->userAgent);
         $device->userAgent = mb_substr($userAgent, 0, 255);
         if ($device->name === null || trim($device->name) === '' || $device->name === $generated) {
@@ -294,6 +295,15 @@ final class Devices
     private static function touch(Device $device, DateTimeImmutable $now): Device
     {
         $user = Session::current()->user;
+        // Correct desktop-mode iPads on the next normal device touch, preserving custom names.
+        $agent = DeviceName::requestAgent();
+        if (str_contains($agent, 'Fluxo-iPad')) {
+            $generated = DeviceName::from((string) $device->userAgent);
+            if ($device->name === null || trim($device->name) === '' || $device->name === $generated) {
+                $device->name = mb_substr(DeviceName::from($agent), 0, 100);
+            }
+            $device->userAgent = mb_substr($agent, 0, 255);
+        }
         if (($displayed = self::displayed()) !== null && $displayed !== $device->client) {
             Operator::reported($device, $displayed === 'app');
         }

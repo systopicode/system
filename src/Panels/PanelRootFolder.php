@@ -10,8 +10,8 @@ namespace Systopic\System\Panels;
  * Each root contributes its top-level folders to the panel tree. There are no
  * URL-prefix mounts: a root is just a `panels/` directory and the panels it
  * exposes are exactly the folders inside it (and their descendants). The
- * actual mount point — for example /cms/ — emerges automatically from a
- * `cms/` folder existing in the root.
+ * actual mount point — for example /admin/ — emerges automatically from a
+ * `admin/` folder existing in the root.
  *
  * Multiple roots can be registered with PanelTree (see loader.php). The
  * FolderResolver merges them in registration order with a last-wins policy,
@@ -28,8 +28,8 @@ namespace Systopic\System\Panels;
  *   <namespaceRoot>\Root\<PathInPascalCase>\Panel
  *
  * Examples (namespaceRoot = 'Systopic\System\Panels'):
- *   panels/cms/panel.php              → Systopic\System\Panels\Root\Cms\Panel
- *   panels/cms/040_backup/panel.php   → Systopic\System\Panels\Root\Cms\Backup\Panel
+ *   panels/admin/panel.php              → Systopic\System\Panels\Root\Admin\Panel
+ *   panels/admin/040_backup/panel.php   → Systopic\System\Panels\Root\Admin\Backup\Panel
  *
  * Set namespaceRoot in loader.php via PROJECT_NAMESPACE . '\Panels'
  * (project root) or 'Systopic\System\Panels' (system root).

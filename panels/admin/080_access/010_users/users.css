@@ -1,0 +1,55 @@
+.userList .userStatusCell{
+    width: 2rem;
+    text-align: center;
+}
+
+.userList .userStatus{
+    display: inline-block;
+    width: 0.55rem;
+    height: 0.55rem;
+    border-radius: 50%;
+    background: var(--cmsMuted);
+}
+
+.userList .userStatus.is-online{
+    background: var(--cmsSuccess);
+    animation: presenceLive 1.6s ease-in-out infinite;
+}
+
+.userList .userStatus.is-offline{
+    background: var(--cmsError);
+}
+
+.userList .userStatus.is-idle{
+    background: color-mix(in srgb, var(--cmsSuccess) 42%, var(--cmsCanvas));
+    box-shadow: inset 0 0 0 1px var(--cmsSuccess);
+}
+
+.userList .userStatus.is-stale{
+    background: var(--cmsWarning);
+}
+
+@media (prefers-reduced-motion: reduce){
+    .userList .userStatus.is-online{ animation: none; }
+}
+
+@keyframes presenceLive{
+    0%, 100%{ opacity: 1; transform: scale(1); }
+    50%{ opacity: 0.4; transform: scale(0.82); }
+}
+
+.userList .roles{
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.35rem;
+    min-height: 1.75rem;
+}
+
+.userList .userSuper{
+    margin-left: 0.35rem;
+    color: var(--cmsHighlightColor);
+    font-size: 0.85rem;
+}
+
+.userList .userSuper.userBlocked { color:var(--cmsError); }

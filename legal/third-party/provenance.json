@@ -1,0 +1,97 @@
+{
+  "checked": "2026-10-30",
+  "files": {
+    "jquery-MIT.txt": {
+      "source": "https://raw.githubusercontent.com/jquery/jquery/3.7.1/LICENSE.txt",
+      "sha256": "d4db9ebe6f29f5168eac45ad713f055623ac5d0dcd5ba92da23d650ae012020d"
+    },
+    "jsqr-Apache-2.0.txt": {
+      "source": "https://raw.githubusercontent.com/cozmo/jsQR/master/LICENSE",
+      "sha256": "c6596eb7be8581c18be736c846fb9173b69eccf6ef94c5135893ec56bd92ba08"
+    },
+    "Three-MIT.txt": {
+      "source": "https://raw.githubusercontent.com/mrdoob/three.js/dev/LICENSE",
+      "sha256": "8b378ebe60e2fe500158cb0ac71cb5e8b7d92953c2abcc63a0eb90499653b5bc"
+    },
+    "Inter-OFL.txt": {
+      "source": "https://raw.githubusercontent.com/rsms/inter/master/LICENSE.txt",
+      "sha256": "262481e844521b326f5ecd053e59b98c8b2da78c8ee1bdbb6e8174305e54935a"
+    },
+    "GPL-3.0.txt": {
+      "source": "https://www.gnu.org/licenses/gpl-3.0.txt",
+      "sha256": "3972dc9744f6499f0f9b2dbf76696f2ae7ad8af9b23dde66d6af86c9dfb36986"
+    },
+    "webauthn-MIT.txt": {
+      "source": "system/lib/webauthn/LICENSE (vendored lbuchs/webauthn)",
+      "sha256": "2b0936c64a2f78bae10ac2f88361cd7e638fe5f3364ea5e9e633f6945bfd5ecc"
+    },
+    "centrifuge-MIT.txt": {
+      "source": "relay/public/js/centrifuge.LICENSE",
+      "sha256": "8212f3cd2bcd2cab7e66f5337926e11c3f99822d2016ae41fb1b4e084e5c5128"
+    },
+    "tcpdf-LGPL.txt": {
+      "source": "tecnickcom/tcpdf 6.11.4 LICENSE.TXT from installed package",
+      "sha256": "b487950190a6516795240c2b155649e0309c2cad8e5b161d5ce2e3e4b022763e"
+    },
+    "systopic-db-LICENSE.txt": {
+      "source": "systopic/db LICENSE",
+      "sha256": "5da039c41c31d695e6bb0d8b3f3397b6ab2549c280ba849768be6ed5aaf92449"
+    },
+    "systopic-relay-LICENSE.txt": {
+      "source": "systopic/relay LICENSE",
+      "sha256": "5da039c41c31d695e6bb0d8b3f3397b6ab2549c280ba849768be6ed5aaf92449"
+    },
+    "Tabler-MIT.txt": {
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz (package/LICENSE)",
+      "sha256": "b740a1d46122672da62833e97f7e7c8a13fa85cbc7445b584b297cc00dde93db"
+    },
+    "Solar-CC-BY-4.0.txt": {
+      "source": "https://registry.npmjs.org/@iconify-json/solar/-/solar-1.2.13.tgz (package/info.json); https://creativecommons.org/licenses/by/4.0/legalcode.txt; Fluxo modification notice",
+      "sha256": "269392f4a0b57c614b0ce39559dcf2f098c097fc5ca464aee61945ecab101a9b"
+    },
+    "OpenSKP-MIT.txt": {
+      "source": "https://raw.githubusercontent.com/iamahsanmehmood/openskp/318eb474096ea3dd02bb16cc6c2cb3f56e597fc0/LICENSE (npm openskp 1.0.0 gitHead)",
+      "sha256": "7c70ac0b7916390744a5f6361c59008cada08149a54348530b767953e050dbc6"
+    },
+    "earcut-ISC.txt": {
+      "source": "npm earcut 3.2.3, package/LICENSE",
+      "sha256": "0b348fff56384b43dbb37593906904e56d0f9deb51eae590d4dc6d427fbf1808"
+    },
+    "fflate-MIT.txt": {
+      "source": "npm fflate 0.8.3, package/LICENSE",
+      "sha256": "0a1df3a083d0c010560aa342e87959c8c1070e6fd54545741f083f22d0c8b551"
+    },
+    "FFmpeg-LGPL-2.1.txt": {
+      "source": "https://raw.githubusercontent.com/FFmpeg/FFmpeg/n6.1/COPYING.LGPLv2.1",
+      "sha256": "b634ab5640e258563c536e658cad87080553df6f34f62269a21d554844e58bfe"
+    },
+    "FFmpeg-GPL-2.0.txt": {
+      "source": "https://raw.githubusercontent.com/FFmpeg/FFmpeg/n6.1/COPYING.GPLv2",
+      "sha256": "8177f97513213526df2cf6184d8ff986c675afb514d4e68a404010521b880643"
+    },
+    "FFmpeg-NOTICE.txt": {
+      "source": "Fluxo project-local binary distribution notice; https://ffmpeg.org/legal.html",
+      "sha256": "8f86be0f319f7c092441a51852b4bdbbba7f8a76e6aa696c2fd85746ccb20b7a"
+    },
+    "flag-icons-MIT.txt": {
+      "source": "https://registry.npmjs.org/flag-icons/-/flag-icons-7.3.2.tgz (package/LICENSE)",
+      "sha256": "8f1195d55a2fd315a07d812328470ca9ba2abb78c8d317ff19619d5125e00cea"
+    },
+    "DiceBear-MIT.txt": {
+      "source": "https://github.com/dicebear/dicebear-php/blob/06e118c61373a62e7727ad45d44574c6a33a81cd/LICENSE",
+      "sha256": "e337900e7ad5e9d1dd79d57897fa5c21043c10d8c9cbfe40e652a3269740f5cf"
+    },
+    "CC0-1.0.txt": {
+      "source": "https://creativecommons.org/publicdomain/zero/1.0/legalcode.txt",
+      "sha256": "a2010f343487d3f7618affe54f789f5487602331c0a8d03f49e9a7c547cf0499"
+    },
+    "DiceBear-Styles-NOTICE.txt": {
+      "source": "https://github.com/dicebear/styles/blob/22a9abebc54ed68275da811573204ad83db646b8/LICENSE.md",
+      "sha256": "2587d09f51f514e7f967c25fbf46d9eb4d1ac8e039ee5e8380680b50a6cc7195"
+    },
+    "Phosphor-MIT.txt": {
+      "source": "https://registry.npmjs.org/@phosphor-icons/core/-/core-2.1.1.tgz (package/LICENSE)",
+      "sha256": "b5b1f1da112d18ea2147decfd48ddc1bf2b5aeb6c265381579340e95b15a2bb2"
+    }
+  }
+}

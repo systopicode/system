@@ -24,16 +24,13 @@ class mediaEditor {
 		$src_public_filename = http::$root . $src_filename;
 		$src_image = new Imagick();
 		$src_image->readImage(fs::toNative(fs::$siteRoot . $src_filename));
+        $src_image->autoOrient();
 		$src_width = $src_image->getImageWidth();
 		$src_height = $src_image->getImageHeight();
 		$crop_width = $mediacrop->media_crop_width;
 		$crop_height = $mediacrop->media_crop_height;
-		if (isset($image_format['megapixels'])) {
-			$format_width = sqrt($mediacrop->media_width * $image_format['megapixels'] * 1000000 / $mediacrop->media_height);
-			$display_scale = $display_width / $format_width;
-		} else {
-			$display_scale = $display_width / $image_format['width'];
-		}
+		[$format_width] = mediaImage::getCanvasSize($src_width * $crop_width, $src_height * $crop_height, $format_name, 1);
+        $display_scale = $display_width / max(1, $format_width);
 
 		list($cnv_width, $cnv_height) = mediaImage::getCanvasSize($src_width * $mediacrop->media_crop_width, $src_height * $mediacrop->media_crop_height, $format_name, $display_scale);
 		$scale_axis = (($src_width * $mediacrop->media_livearea_width) / ($src_height * $mediacrop->media_livearea_height) > $cnv_width / $cnv_height) ? 'y' : 'x';
@@ -51,8 +48,16 @@ class mediaEditor {
 		$margin_left = round($cnv_width / 2 - $alias_width * $mediacrop->media_crop_left, 1);
 		$margin_top = round($cnv_height / 2 - $alias_height * $mediacrop->media_crop_top, 1);
 
-		$flexHandle = isset($image_format['height']) ? '' : "<div class='flexHandle' title='Drag to set the height' style='top:{$cnv_height}px;width:{$cnv_width}px;'></div>";
-		$hint = $flexHandle === '' ? 'Drag the image to move it, a corner to scale it' : 'Drag the image to move it, a corner to scale it, the bottom handle to set the height';
+        $savedTune = \Systopic\System\Tables\Medias\Files::tunes((int) $media_id, (string) $mediacrop->media_filename)[$format_name] ?? [];
+        $tuneJson = htmlspecialchars(json_encode($savedTune), ENT_QUOTES, 'UTF-8');
+        $fixedRatio = mediaFormats::fixedRatio($image_format) ?? '';
+        $originalRatio = $src_width / max(1, $src_height);
+        $hint = 'Move image · Pinch or scroll to zoom';
+        $handles = "<div class='cropHandles'>";
+        foreach (['nw','n','ne','e','se','s','sw','w'] as $edge) {
+            $handles .= "<button type='button' data-crop-handle='$edge' aria-label='Resize crop $edge'></button>";
+        }
+        $handles .= '</div>';
 
 		$aspectRatiosSelector = "<div class='aspectRatioSelector'>";
 		foreach ($image_format['aspect_ratios'] AS $label => $ratio) {
@@ -60,25 +65,25 @@ class mediaEditor {
 		}
 		$aspectRatiosSelector .= '</div>';
 		$html = "
-		<div style='position:absolute;' class='imageEditor'>
+		<div style='position:absolute;' class='imageEditor' data-tune='$tuneJson' data-crop-ratio='$fixedRatio' data-original-ratio='{$originalRatio}'>
 			<div class='cropFrame' style='width:{$cnv_width}px;height:{$cnv_height}px;position:absolute;overflow:hidden;'>
 				$aspectRatiosSelector
 				<img class='cropimage' style='margin-left:{$margin_left}px;margin-top:{$margin_top}px;width:{$alias_width}px;height:{$alias_height}px;position:absolute;' src='$src_public_filename' />
+				<div class='cropGrid' hidden aria-hidden='true'></div>
 			</div>
 
 			<div class='dragimage' style='margin-left:{$margin_left}px;margin-top:{$margin_top}px;width:{$alias_width}px;height:{$alias_height}px;position:absolute'>
 				<img style='width:100%;height:100%' src='$src_public_filename' />
-				<div style='right:-5px;top:-5px;'></div>
-				<div style='left:-5px;top:-5px;'></div>
-				<div style='left:-5px;bottom:-5px;'></div>
-				<div style='right:-5px;bottom:-5px;'></div>
 			</div>
-			$flexHandle
+            $handles
 
 			<div class='cropBar' style='width:{$cnv_width}px;'>
 				<span>$hint</span>
-				<button type='button' class='button' data-crop_cancel>Cancel</button>
-				<button type='button' class='button submit'><i class='fa-regular fa-check'></i>Apply</button>
+				<button type='button' class='button' data-crop-grid aria-label='Grid' title='Grid' aria-pressed='false'><i class='cmsIcon cmsIcon-table' aria-hidden='true'></i></button>
+				<button type='button' class='button' data-crop-original aria-label='Original ratio' title='Original ratio'><i class='cmsIcon cmsIcon-aspect-ratio' aria-hidden='true'></i></button>
+				<button type='button' class='button' data-crop-reset aria-label='Reset crop' title='Reset crop' disabled><i class='cmsIcon cmsIcon-arrow-rotate-left' aria-hidden='true'></i></button>
+				<button type='button' class='button' data-crop_cancel aria-label='Cancel' title='Cancel'><i class='cmsIcon cmsIcon-xmark' aria-hidden='true'></i></button>
+				<button type='button' class='button submit' aria-label='Apply' title='Apply'><i class='cmsIcon cmsIcon-check' aria-hidden='true'></i></button>
 			</div>
 		</div>
 	";

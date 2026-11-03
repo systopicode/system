@@ -113,8 +113,8 @@
 	}
 
 	function go(base, code) {
-		var join = base.indexOf('?') === -1 ? '?' : '&';
-		location.href = base + join + 'screen=' + encodeURIComponent(code);
+		var form=document.createElement('form');form.method='post';form.action=base;
+        var input=document.createElement('input');input.type='hidden';input.name='screen';input.value=code;form.append(input);document.body.append(form);form.submit();
 	}
 
 	function fill(form, code) {
@@ -132,6 +132,12 @@
 		if (!keep) host.hidden = true;
 		var form = formOf(host);
 		if (form) form.hidden = false;
+        if (host.dataset.qrHost === 'login') {
+            var manual = host.querySelector('[data-qr-fields]');
+            var scan = form && form.querySelector('[data-qr-start]');
+            if (manual) manual.hidden = !!keep;
+            if (scan) scan.hidden = !!keep;
+        }
 	}
 
 	function showDim(host, mode) {
@@ -155,11 +161,15 @@
 			var words = denied
 				? (host.getAttribute('data-allow') || 'Allow access')
 				: (host.getAttribute('data-again') || 'Try again');
+            if (host.dataset.qrHost === 'login') {
+                again.classList.toggle('submit', !denied);
+                again.classList.add('authScan');
+            }
 			var label = again.querySelector('[data-qr-label]');
 			if (label) label.textContent = words;
 			else again.textContent = words;
 			var mark = again.querySelector('i');
-			if (mark) mark.className = 'fa-regular ' + (denied ? 'fa-camera' : 'fa-rotate-right');
+			if (mark) mark.className = 'cmsIcon ' + (denied ? 'cmsIcon-camera' : 'cmsIcon-arrows-rotate');
 		}
 		// The account lightbox already offers "Or use code" and keeps the QR.
 		// Opening the form there hides that QR.
@@ -191,6 +201,20 @@
 		look();
 	}
 
+	function waiting(host, on) {
+		var stage = host.querySelector('.qrScanStage');
+		if (!stage) return;
+		var wait = stage.querySelector('[data-qr-wait]');
+		if (!wait) {
+			wait = document.createElement('div');
+			wait.className = 'qrScanWait';
+			wait.setAttribute('data-qr-wait', '');
+			wait.setAttribute('aria-hidden', 'true');
+			stage.appendChild(wait);
+		}
+		wait.hidden = !on;
+	}
+
 	function stop(host) {
 		var live = host._qr;
 		if (!live) return;
@@ -203,12 +227,19 @@
 		if (video) video.srcObject = null;
 		host._qr = null;
 		host.classList.remove('is-on');
+		waiting(host, false);
 	}
 
-	function accept(host, run) {
+	function accept(host, token, run) {
 		stop(host);
-		flash(host, 'confirm', 'Code recognised.');
-		setTimeout(run, 700);
+		// Reading a QR is not authentication. Only the server can validate its key.
+		flash(host, 'info', 'Checking code…');
+		var call = new sys.core.server.call({method: 'put', code: token});
+        call.background = true;
+        var invalid = function () { flash(host, 'error', host.getAttribute('data-invalid') || 'That code is wrong or has expired.'); showFields(host, true); };
+        call.send(settings.siteRoot + 'admin/auth/validateQr').done(function (data) {
+            if (data && data.valid) run(); else invalid();
+        }).fail(invalid);
 		return true;
 	}
 
@@ -217,15 +248,15 @@
 		if (host.getAttribute('data-qr-host') === 'profile') {
 			var token = found.screen || found.bare;
 			if (!token) return false;
-			return accept(host, function () { go(host.getAttribute('data-base') || '', token); });
+			return accept(host, token, function () { go(host.getAttribute('data-base') || '', token); });
 		}
 		if (found.screen) {
-			return accept(host, function () { go(host.getAttribute('data-profile') || '', found.screen); });
+			return accept(host, found.screen, function () { go(host.getAttribute('data-profile') || '', found.screen); });
 		}
 		var typed = found.code || found.bare;
 		var form = formOf(host);
 		if (!typed || !form) return false;
-		return accept(host, function () {
+		return accept(host, typed, function () {
 			fill(form, typed);
 			var button = form.querySelector('button[type="submit"]');
 			if (button) button.click();
@@ -248,12 +279,19 @@
 		stop(host);
 		host.hidden = false;
 		host.classList.remove('is-dim');
+        if (host.dataset.qrHost === 'login') {
+            var manual = host.querySelector('[data-qr-fields]');
+            var scan = formOf(host)?.querySelector('[data-qr-start]');
+            if (manual) manual.hidden = false;
+            if (scan) scan.hidden = false;
+        }
 		var dim = host.querySelector('[data-qr-dim]');
 		if (dim) dim.hidden = true;
 		var form = formOf(host);
 		if (form) form.hidden = true;
 		clearFlash(host);
 		hint(host, steady(host));
+		waiting(host, true);
 		var live = { done: false, stream: null, timer: null, frame: null, mirror: true, darkAt: 0, bad: '' };
 		host._qr = live;
 		function onHide() {
@@ -282,6 +320,7 @@
 			if (video) video.srcObject = null;
 			if (host._qr === live) host._qr = null;
 			host.classList.remove('is-on');
+			waiting(host, false);
 		}
 
 		live.timer = setTimeout(function () {
@@ -302,6 +341,7 @@
 			}
 			live.frame = setTimeout(function () { tick(performance.now()); }, STEP);
 			if (!video || video.readyState < 2 || !video.videoWidth) return;
+			waiting(host, false);
 			var scale = Math.min(1, 640 / Math.max(video.videoWidth, video.videoHeight));
 			canvas.width = Math.round(video.videoWidth * scale);
 			canvas.height = Math.round(video.videoHeight * scale);
@@ -394,6 +434,18 @@
 		if (event.target.closest && event.target.closest('[data-on_click="loginMethod"], a.authSwitch, a.authMethod')) {
 			document.querySelectorAll('[data-qr-host]').forEach(stop);
 		}
+		var typeCode = event.target.closest && event.target.closest('[data-qr-fields]');
+		if (typeCode) {
+			var typeHost = typeCode.closest('[data-qr-host]');
+			if (typeHost) {
+				stop(typeHost);
+				showFields(typeHost, false);
+			}
+			return;
+		}
+		if (event.target.closest?.('[data-qr-start], [data-remote-offer], [data-remote-code], [data-qr-close]')) {
+			event.target.closest('.cmslightbox')?.querySelector('[data-remote-feedback]')?.replaceChildren();
+		}
 		var openScan = event.target.closest && event.target.closest('[data-qr-start]');
 		if (openScan) {
 			var scope = openScan.closest('.authBody, .remoteLogin') || openScan.parentElement;
@@ -410,6 +462,21 @@
 				return;
 			}
 			start(againHost, true);
+			return;
+		}
+		var showQr = event.target.closest && event.target.closest('[data-remote-offer]');
+		if (showQr) {
+			var offerScope = showQr.closest('.remoteLogin');
+			var offerHost = offerScope && offerScope.querySelector('[data-qr-host]');
+			if (offerHost) {
+				stop(offerHost);
+				offerHost.hidden = true;
+				offerHost.classList.remove('is-dim', 'is-on');
+				var offerDim = offerHost.querySelector('[data-qr-dim]');
+				if (offerDim) offerDim.hidden = true;
+			}
+			var offerForm = offerScope && offerScope.querySelector('[data-code-form]');
+			if (offerForm) offerForm.hidden = true;
 			return;
 		}
 		var useCode = event.target.closest && event.target.closest('[data-remote-code]');
@@ -453,7 +520,23 @@
 			}
 		}
 		scanBox.hidden = true;
+        const cleanUrl=new URL(location.href);
+        if(cleanUrl.searchParams.has('screen')) { cleanUrl.searchParams.delete('screen');history.replaceState(history.state,'',cleanUrl); }
 	}, true);
+
+	document.addEventListener('change', function (event) {
+		var select = event.target && event.target.closest ? event.target.closest('[data-identify-select]') : null;
+		if (!select || !select.form) return;
+		var option = select.options[select.selectedIndex];
+		var mine = !!(option && option.getAttribute('data-self') === '1');
+		var own = select.form.querySelector('[data-identify-self]');
+		var other = select.form.querySelector('[data-identify-other]');
+		if (own) own.hidden = !mine;
+		if (!other) return;
+		other.hidden = !!mine;
+		var name = other.querySelector('[data-identify-name]');
+		if (name && option) name.textContent = (option.textContent || '').trim();
+	});
 
 	window.QrScan = { start: start, stop: stop };
 })();

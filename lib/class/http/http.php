@@ -60,8 +60,8 @@ class http implements \Systopic\System\Client\Contracts\PreloadsClientScript
 	 * A diff request addresses two URLs at once: the state the client is
 	 * showing, and the state it wants. A tilde separates them.
 	 *
-	 *   /cms/settings/~/cms/pages/
-	 *   /cms/pages/?id=20~/cms/pages/?id=18
+	 *   /admin/settings/~/admin/pages/
+	 *   /admin/pages/?id=20~/admin/pages/?id=18
 	 *
 	 * splitDiffUrl() takes the request apart before anything else looks at
 	 * it, so the whole system only ever sees the TARGET half. This holds the
@@ -205,14 +205,14 @@ class http implements \Systopic\System\Client\Contracts\PreloadsClientScript
 	 * action by the trailing slash alone, so a reference that lost it would
 	 * make 'settings' look like an action.
 	 *
-	 *   /cms/settings/~/cms/pages/
-	 *      → '/cms/settings/'      + '/cms/pages/'
-	 *   /cms/pages/?id=20~/cms/pages/?id=18
-	 *      → '/cms/pages/?id=20'   + '/cms/pages/?id=18'
+	 *   /admin/settings/~/admin/pages/
+	 *      → '/admin/settings/'      + '/admin/pages/'
+	 *   /admin/pages/?id=20~/admin/pages/?id=18
+	 *      → '/admin/pages/?id=20'   + '/admin/pages/?id=18'
 	 *
 	 * $_GET is rebuilt here rather than in readGet(), because PHP filled it
 	 * from the WHOLE query string — on the second form it holds
-	 * id="20~/cms/pages/?id=18". Fixing it at the source also covers the two
+	 * id="20~/admin/pages/?id=18". Fixing it at the source also covers the two
 	 * places that read $_GET directly instead of going through http::get():
 	 * httpHelper's 'ajax' and mediaImage's 'rebuild'.
 	 *
@@ -238,7 +238,7 @@ class http implements \Systopic\System\Client\Contracts\PreloadsClientScript
 
 		// The client shortens the target against the project root, because
 		// repeating it makes the url twice as long for no information:
-		//   /projects/x/public/cms/pages/?id=19~/cms/pages/?id=20
+		//   /projects/x/public/admin/pages/?id=19~/admin/pages/?id=20
 		// Everything downstream expects a REQUEST_URI as the browser would
 		// send it, so put the root back. A target that already carries it is
 		// left alone — both spellings work.
@@ -276,7 +276,7 @@ class http implements \Systopic\System\Client\Contracts\PreloadsClientScript
 		// (readParams / readRequest), plus the handful of places that reach
 		// for $_REQUEST directly. Without this a target parameter is invisible
 		// to every params() caller while 'id' still holds the reference's
-		// mangled value - which is how cms/pages/editor/file/?target_id=58
+		// mangled value - which is how admin/pages/editor/file/?target_id=58
 		// found no media and redirected itself back to the page.
 		// A key the body also sent keeps its value: only the url's are stale.
 		$staleUrlKeys = array_diff_key($fromUrl, $_POST);

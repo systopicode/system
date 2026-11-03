@@ -54,6 +54,29 @@
 	display: none;
 }
 
+.qrScanWait{
+	position: absolute;
+	inset: 0;
+	z-index: 2;
+	display: grid;
+	place-items: center;
+	background: #1c2430;
+}
+
+.qrScanWait[hidden]{
+	display: none;
+}
+
+.qrScanWait::before{
+	content: "";
+	width: 1.75rem;
+	height: 1.75rem;
+	border-radius: 50%;
+	border: var(--cmsSpinnerStroke, 2px) solid var(--cmsHighlightColor, #fcb60c);
+	border-top-color: transparent;
+	animation: spinner .6s linear infinite;
+}
+
 .qrScanDim{
 	display: flex;
 	flex-direction: column;
@@ -130,6 +153,7 @@ svg.qr-code{
 .qrScanHint{
 	margin: 0;
 	width: 100%;
+	min-height: 2.8rem;
 	text-align: center;
 	font-size: 0.9375rem;
 	line-height: 1.4;
@@ -141,4 +165,22 @@ svg.qr-code{
 	margin: 0;
 }
 
+/* The generic button margin and the shrink-to-text width pull this one
+   out of the card column. It sits full width, like the button under it. */
+body.cms .qrScan button:where(:not([data-cms-action])).authSkip,
+body.appBody .qrScan button:where(:not([data-cms-action])).authSkip{
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 0.5rem;
+	width: 100%;
+	min-height: 2.75rem;
+	margin: 0;
+	padding: 0 0.9rem;
+}
 
+
+
+.cms .qrZoomStage :is(.fileFrame, .frameView), .cms .qrZoom svg.qr-code, .cms .fileFrame:has(svg.qr-code), .cms .fileFrame svg.qr-code { background: #fff; background-image: none; }
+
+.cms .qrZoom svg.qr-code, .cms .fileFrame svg.qr-code { color:#1e3b46;fill:#1e3b46; }

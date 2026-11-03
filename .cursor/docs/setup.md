@@ -23,7 +23,7 @@ Stand 2026-10-22. Plan und Begründungen:
 3. **`<projekt>/public/` im Browser** → Einrichtungs-Seite, drei Schritte:
    Projekt/Instanz → Datenbank → erstes Konto. Danach steht das Projekt:
    system zeigt „Hello World - System Root Panel", cms
-   `404 - this site has no pages yet` mit Link nach `cms/pages`.
+   `404 - this site has no pages yet` mit Link nach `admin/pages`.
 
 ## Scaffold — `bin/scaffold.php`
 
@@ -75,7 +75,7 @@ Auf der CLI: Meldung auf stderr, Exit 1.
 Der Konto-Schritt kommt nur, wenn die gewählte Datenbank noch kein Konto hat.
 Danach werden Token und `var/setup.account` gelöscht — bei „skip" nur
 `var/setup.account`: der Token bleibt für den Recovery-User und führt weiter
-nach `cms/?setup=<token>`; das fertige Restore verbraucht ihn
+nach `admin/?setup=<token>`; das fertige Restore verbraucht ihn
 (`Setup::spendToken()`).
 
 ## Recovery-Modus (seit 2026-10-22)
@@ -123,8 +123,8 @@ User *N*, und `UserLookup::byId()` legte in einem frischen Projekt die
 
 | Symptom | Ursache | Lösung |
 |---|---|---|
-| Login „We don't know this combination" mit dem ersten Konto | `UserLookup.sql` überspringt `user_id 1`; in einer leeren Tabelle bekommt das erste Konto die 1 | Setup legt vorher die Zeile 1 an. `cms/auth/root` (Link im Login auskommentiert) hat dieselbe Lücke |
-| `cms/pages` nach dem ersten Login: `Table 'usm_roles' doesn't exist` | der Provisioner legt nur an, was eine Abfrage mit Provisioner berührt | Setup legt alle Tabellen über `Audit` an |
+| Login „We don't know this combination" mit dem ersten Konto | `UserLookup.sql` überspringt `user_id 1`; in einer leeren Tabelle bekommt das erste Konto die 1 | Setup legt vorher die Zeile 1 an. `admin/auth/root` (Link im Login auskommentiert) hat dieselbe Lücke |
+| `admin/pages` nach dem ersten Login: `Table 'usm_roles' doesn't exist` | der Provisioner legt nur an, was eine Abfrage mit Provisioner berührt | Setup legt alle Tabellen über `Audit` an |
 | frisches Projekt zeigt im cms nur „BACKUP" | ohne Konto läuft ein lokaler Request (oder einer mit Token) als Recovery-User (Rolle `restore`) | Konto-Schritt der Einrichtung, oder Backup einspielen |
-| frisches Projekt: Login statt Recovery | Zugriff weder lokal noch mit Token — oder (vor 2026-10-22) geteilte Session, `usm_users` leer angelegt | `cms/?setup=<token>` aus `var/setup.token` |
+| frisches Projekt: Login statt Recovery | Zugriff weder lokal noch mit Token — oder (vor 2026-10-22) geteilte Session, `usm_users` leer angelegt | `admin/?setup=<token>` aus `var/setup.token` |
 | leere Seite statt Hello World | keine `head.tpl.php` → keine Skripte für die Slices | `panels/head.tpl.php` im system-Paket |

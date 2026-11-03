@@ -123,7 +123,7 @@ normal von Packagist.
 Datenbank, Global Settings (`config/global.settings.json`), Media Settings
 (`config/media.settings.json`) und die Environment-Dateien (`config/*.config.json`,
 `config.local.json`, nicht `config.json`) wandern über das Backup-Panel im CMS
-(`cms/backup`, `panels/cms/040_backup`). Mediendateien unter
+(`admin/backup`, `panels/admin/040_backup`). Mediendateien unter
 `public/var/original/` nur, wenn „Media files“ an ist. Die Liste zeigt unter
 Contents, was im Archiv liegt. Zurückspielen bietet dieselben Teile an, gelesen
 aus dem ZIP, und lässt sich einzeln abwählen. Die Datenbank bleibt beim

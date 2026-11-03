@@ -3,7 +3,7 @@
 How the public site's stylesheets reach the page preview inside the CMS —
 and only there — using `@scope` and cascade layers.
 
-The preview itself is `panels/cms/010_pages/main.tpl.php`: it renders the real
+The preview itself is `panels/admin/010_pages/main.tpl.php`: it renders the real
 page through the *page* navigator into `<article class="cmsContent">`, in the
 same document as the CMS chrome. See
 [panel-diff-rendering.md §6c](panel-diff-rendering.md) for what that does to
@@ -51,7 +51,7 @@ applying inside the preview.
 the specificity says** — so the site can style the preview without
 out-specifying `.cms .layout`, and without a single `!important`.
 
-Declared once in `panels/cms/head.tpl.php`, before anything that names a
+Declared once in `panels/admin/head.tpl.php`, before anything that names a
 layer:
 
 ```css
@@ -61,7 +61,7 @@ layer:
 | Layer | What goes in | Loaded by |
 |---|---|---|
 | `cms` | the system UI and panel CSS | `fsLoader::includeCSSFilesInLayer(…, 'cms')` |
-| `project` | `css/system_overrides.css` (`css/cms_overrides.css` until that file exists), `overrides/css/` | `includeCSSFilesScoped(…, ':root', 'project', limit: '.cmsOwn')` |
+| `project` | `css/system_overrides.css` (`css/cms_overrides.css` until that file exists), and `overrides/css/` except the files below | `includeCSSFilesScoped(…, ':root', 'project', limit: '.cmsOwn')`. The colour file `overrides/css/zz_system_theme.css` is a `<link layer="project">`, because a style tag that repeats `@layer project` does not join the layer on the cms links. |
 | `preview` | the site's own CSS, scoped | `fsLoader::includeCSSFilesScoped()` |
 
 Two traps worth knowing about layers: **unlayered CSS beats every layer**, so
@@ -124,7 +124,9 @@ Three at-rules are document-wide by nature and do not work inside `@scope`:
 The project names what the CMS needs at document level in
 **`public/css/system_overrides.css`** — fonts and project GUI CSS. `public/css/cms_overrides.css` is still read while the new file does not exist.
 That file is the hook; the import is lifted out of the scope and lands in the
-`project` layer, document-wide.
+`project` layer, document-wide. It is not the theme editor's
+`overrides/css/system_overrides.css`. That one is a plain stylesheet in the
+CMS only: not on the public site, and not parsed into the preview.
 
 `x_responsive.css` is deliberately excluded as well, for a different reason:
 its media queries would measure the **browser window**, not the preview pane.

@@ -116,8 +116,11 @@ final class Operator
         return $rows !== [];
     }
 
+    /** Days a password link stays valid. The Access tab states this as hours. */
+    public const ACTIVATION_DAYS = 1;
+
     /** A fresh activation key, valid for `$days` days. */
-    public static function newActivationKey(Model $user, int $days = 1): Model
+    public static function newActivationKey(Model $user, int $days = self::ACTIVATION_DAYS): Model
     {
         $user->activationKey = bin2hex(random_bytes(16));
         $user->activationKeyExpire = new DateTimeImmutable("+$days day");
@@ -148,8 +151,7 @@ final class Operator
     }
 
     /**
-     * What is wrong with a new password — empty if nothing. `$strict` adds
-     * the complexity rules (live stage).
+     * What is wrong with a new password — empty if nothing. `$strict` is retained for caller compatibility.
      *
      * @return list<string>
      */
@@ -161,16 +163,13 @@ final class Operator
         if ($password !== $repeat) {
             return ["Passwords don't match."];
         }
-        if (!$strict) {
-            return [];
+        // New passwords use the same minimum in every environment. Existing
+        // password hashes and sign-in verification are deliberately unchanged.
+        if (!preg_match('/^.{15,}$/us', $password)) return ['Use at least 15 characters.'];
+        if (\Systopic\System\Auth\PasswordBlocklist::contains($password)) {
+            return ['This password is too common or repetitive. Choose a different password or passphrase.'];
         }
-        $rules = [
-            '~.{5}~'          => 'too short (5 chars or more)',
-            '~[A-Z]~'         => 'no uppercase letter found',
-            '~[0-9]~'         => 'no number found',
-            '~[^A-Za-z0-9]~'  => 'no special char found',
-        ];
-        return array_values(array_filter($rules, static fn(string $rule): bool => !preg_match($rule, $password), ARRAY_FILTER_USE_KEY));
+        return [];
     }
 
     public static function setPassword(Model $user, string $password): Model

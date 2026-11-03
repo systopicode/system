@@ -1,0 +1,16 @@
+<?php
+// DiceBear PHP 10.6.0, MIT. Fluxo private namespace; see resources/avatars/dicebear/README.md.
+
+declare(strict_types=1);
+
+namespace Systopic\System\Vendor\DiceBear\Error;
+
+
+class StyleValidationError extends ValidationError
+{
+
+    public function __construct(array $details)
+    {
+        parent::__construct('Invalid style definition', $details);
+    }
+}

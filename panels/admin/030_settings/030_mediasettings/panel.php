@@ -1,0 +1,32 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Systopic\System\Panels\Root\Admin\Settings\Mediasettings;
+
+use Systopic\System\Panels\Root\Admin\Settings\Panel as SettingsPanel;
+
+/**
+ * Media settings — one table per group. The file is config/media.settings.json.
+ */
+class Panel extends SettingsPanel
+{
+    public $icon = 'cmsIcon cmsIcon-image';
+
+    public bool $buildChildPanels = true;
+
+    public function __construct($name, $parent = null)
+    {
+        parent::__construct($name, $parent);
+        $this->label = 'Media Settings';
+    }
+
+    function onLoad() {}
+
+    function onLoadThisClass() {}
+
+    public function searchHits(\Systopic\System\Sys\Search $search): void
+    {
+        \Systopic\System\Settings\ProjectForm::searchHits($search, 'media', $this->getHref(\http::$root));
+    }
+}

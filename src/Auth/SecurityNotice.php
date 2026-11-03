@@ -69,9 +69,9 @@ final class SecurityNotice implements Observer
         }
         if ($addresses === []) return;
         try {
-            $appName = defined('PROJECT_NAMESPACE') ? (string) PROJECT_NAMESPACE : 'fluxo cms';
+            $appName = defined('PROJECT_NAMESPACE') ? (string) PROJECT_NAMESPACE : 'fluxo';
             $title = self::EVENTS[$event];
-            $when = gmdate('j M Y, H:i') . ' UTC';
+            $when = gmdate(\Systopic\System\Sys\LocalTime::DATETIME) . ' UTC';
             $template = \fs::toNative((string) \fs::$projectRoot . 'panels/auth/emailSecurity.tpl.php');
             if (!is_file($template)) $template = __DIR__ . '/SecurityNotice.tpl.php';
             ob_start();

@@ -3,7 +3,8 @@
 
 SELECT usm_devices.*
 FROM usm_devices
-WHERE device_user_id = :userId AND device_revoked_at IS NULL
+WHERE device_user_id = :userId AND (device_revoked_at IS NULL OR :includeRevoked)
 ORDER BY device_last_seen DESC, device_id DESC
 
 -- :userId
+-- :includeRevoked

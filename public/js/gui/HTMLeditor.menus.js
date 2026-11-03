@@ -5,6 +5,10 @@
  */
 function HTMLeditorRightClick(clicktype, event, elements) {
 	var target = event.target;
+    if(clicktype === 'anchor' && target.querySelector?.('img,video,iframe')){
+        target=target.querySelector('img,video,iframe');
+        clicktype={IMG:'image',VIDEO:'video',IFRAME:'iframe'}[target.nodeName];
+    }
 	var editor = wysiwygOf(target);
 	var anchorNode = getSelection().anchorNode || target;
 	var at = anchorNode.nodeType === 1 ? anchorNode : anchorNode.parentElement;
@@ -13,17 +17,21 @@ function HTMLeditorRightClick(clicktype, event, elements) {
 	var listTag = (at.closest('ul,ol') || {}).nodeName;
 	var param = {target: target};
 	var cmd = function (title, icon, func, extra) {
-		return Object.assign({title: title, className: 'fa-regular fa-' + icon, func: func, param: param}, extra);
+		return Object.assign({title: title, className: 'cmsIcon cmsIcon-' + icon, func: func, param: param}, extra);
+	};
+	var cropCommand = function () {
+		var available = typeof url2mediaParams === 'function' && url2mediaParams(target.currentSrc || target.src || '');
+		return cmd(available ? 'Crop on page' : 'Crop on page — choose an image format first', 'crop-simple', 'cropImageOnPage', {disabled: !available});
 	};
 	var format = function (title, icon, data, extra) {
-		return Object.assign({title: title, className: 'fa-regular fa-' + icon, func: 'formatHTMLeditor', param: data, reopen: true}, extra);
+		return Object.assign({title: title, className: 'cmsIcon cmsIcon-' + icon, func: 'formatHTMLeditor', param: data, reopen: true}, extra);
 	};
 	var sub = function (title, func, data, selected) {
 		return {title: title, func: func, param: data, selected: selected, reopen: func !== 'createHTMLeditorLink'};
 	};
 
 	var history = editor ? {
-		undo: cmd('Undo', 'arrow-rotate-left', 'undoHTMLeditor', {disabled: !wysiwyg.canStep(editor, -1), reopen: true}),
+		undo: cmd('Undo', 'editor-undo', 'undoHTMLeditor', {disabled: !wysiwyg.canStep(editor, -1), reopen: true}),
 		redo: cmd('Redo', 'arrow-rotate-right', 'redoHTMLeditor', {disabled: !wysiwyg.canStep(editor, 1), reopen: true})
 	} : {};
 	var inline = {
@@ -37,9 +45,9 @@ function HTMLeditorRightClick(clicktype, event, elements) {
 		headings['h' + n] = sub('Headline ' + n, 'formatHTMLeditor', {element: 'formatBlock', tag: 'h' + n}, blockTag === 'H' + n);
 	});
 	var blocks = {
-		headlines: {title: 'Headline', className: 'fa-regular fa-heading', selected: /^H\d$/.test(blockTag), subs: headings, sep: true},
+		headlines: {title: 'Headline', className: 'cmsIcon cmsIcon-heading', selected: /^H\d$/.test(blockTag), subs: headings, sep: true},
 		paragraph: format('Paragraph', 'paragraph', {element: 'formatBlock', tag: 'p'}, {selected: blockTag === 'P'}),
-		list: {title: 'List', className: 'fa-regular fa-list-ul', selected: !!listTag, subs: {
+		list: {title: 'List', className: 'cmsIcon cmsIcon-list-ul', selected: !!listTag, subs: {
 			ul: sub('Bullet points', 'formatHTMLeditor', {element: 'insertUnorderedList'}, listTag === 'UL'),
 			ol: sub('Numbered', 'formatHTMLeditor', {element: 'insertorderedlist'}, listTag === 'OL')
 		}}
@@ -49,7 +57,8 @@ function HTMLeditorRightClick(clicktype, event, elements) {
 		removeAnchor: cmd('Remove link', 'link-slash', 'removeAnchor', {active: inLink})
 	};
 	var classItem = function (el, sep) {
-		var name = el && el.getAttribute('class');
+		el = wysiwyg.blockFor(el);
+		var name = el && [...el.classList].filter(name => name !== 'cmsMediaOn').join(' ');
 		return cmd(name ? 'CSS classes: ' + name : 'CSS classes', 'tag', 'editBlockClass', {selected: !!name, active: !!el, sep: sep, param: {target: el || target}});
 	};
 	var blockClass = {blockClass: classItem(wysiwyg.blockFor(at), true)};
@@ -62,7 +71,7 @@ function HTMLeditorRightClick(clicktype, event, elements) {
 		$.each(editorFormats[kind], function (name, label) {
 			subs[name] = sub(label, 'changeMediaFormat', {target: target, format: name}, current === name);
 		});
-		return {title: 'Format', className: 'fa-regular fa-' + (kind === 'video' ? 'film' : 'image'), active: usable && Object.keys(subs).length > 1, subs: subs};
+		return {title: 'Format', className: 'cmsIcon cmsIcon-' + (kind === 'video' ? 'film' : 'image'), active: usable && Object.keys(subs).length > 1, subs: subs};
 	};
 	var toggleAttr = function (attr, title, icon) {
 		var on = target.hasAttribute(attr);
@@ -73,6 +82,10 @@ function HTMLeditorRightClick(clicktype, event, elements) {
 	// a text field is one fixed tag: its words can be formatted, the tag stays
 	if (editor && wysiwyg.inline(editor) && (clicktype === 'selectedWord' || clicktype === 'selectedBlock')) {
 		clicktype = 'inline';
+	}
+	// The page title is the name of the page. Nothing in it is formatted.
+	if (editor && editor.dataset.field === 'label' && (clicktype === 'inline' || clicktype === 'selectedWord' || clicktype === 'selectedBlock')) {
+		return false;
 	}
 	switch (clicktype) {
 		case 'inline':
@@ -90,12 +103,12 @@ function HTMLeditorRightClick(clicktype, event, elements) {
 				return sub(title, 'tableHTMLeditor', {action: action, cell: cell});
 			};
 			items = Object.assign({}, history, {
-				row: {title: 'Row', className: 'fa-regular fa-table-rows', sep: true, subs: {
+				row: {title: 'Row', className: 'cmsIcon cmsIcon-table-rows', sep: true, subs: {
 					before: tableCmd('Insert row above', 'rowBefore'),
 					after: tableCmd('Insert row below', 'rowAfter'),
 					remove: tableCmd('Delete row', 'rowRemove')
 				}},
-				column: {title: 'Column', className: 'fa-regular fa-table-columns', subs: {
+				column: {title: 'Column', className: 'cmsIcon cmsIcon-table-columns', subs: {
 					before: tableCmd('Insert column left', 'colBefore'),
 					after: tableCmd('Insert column right', 'colAfter'),
 					remove: tableCmd('Delete column', 'colRemove')
@@ -111,6 +124,20 @@ function HTMLeditorRightClick(clicktype, event, elements) {
 				removeanchor: cmd('Remove link', 'link-slash', 'removeAnchor')
 			};
 			break;
+		case 'fixedImage':
+		case 'fixedVideo':
+			// A picture built into the template is not the text field: move,
+			// format, link and remove would change the preview and then be
+			// forgotten. Crop and adjust writes the file, so it stays.
+			if (elements && elements[0]) {
+				target = elements[0];
+				param.target = target;
+			}
+			items = {
+				edit: cmd(clicktype === 'fixedVideo' ? 'Edit' : 'Crop and adjust', 'pen', 'formatImage')
+			};
+			if (clicktype === 'fixedImage') items.crop = cropCommand();
+			break;
 		case 'image':
 			var linked = !!target.closest('a');
 			var imageFormats = formatMenu('image', /^image\/(jpe?g|png|webp)$/.test(target.getAttribute('data-ref-mimetype') || target.dataset.mimetype || ''));
@@ -118,7 +145,8 @@ function HTMLeditorRightClick(clicktype, event, elements) {
 			items = Object.assign({
 				move: cmd('Move', 'up-down-left-right', 'editorBeginMediaMove', {drag: true}),
 				formats: imageFormats,
-				edit: cmd('Crop and adjust', 'crop-simple', 'formatImage', {sep: imageFormats.active === false}),
+				edit: cmd('Crop and adjust', 'pen', 'formatImage', {sep: imageFormats.active === false}),
+				crop: cropCommand(),
 				anchor: cmd(linked ? 'Edit link' : 'Insert link', linked ? 'pen' : 'link', 'createHTMLeditorLink', {selected: linked, sep: true}),
 				unlink: cmd('Remove link', 'link-slash', 'removeAnchor', {active: linked}),
 				blockClass: classItem(target, true)

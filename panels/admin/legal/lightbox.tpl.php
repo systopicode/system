@@ -1,0 +1,21 @@
+<?php
+/** The auth panel's texts, in a lightbox. @var \Systopic\System\Panels\Root\Admin\Legal\Panel $this */
+$pages = ['releases' => 'Release notes', 'license' => 'License', 'imprint' => 'Imprint', 'privacy' => 'Privacy'];
+$page = (string) \http::get('page');
+if (!isset($pages[$page])) {
+	return;
+}
+?>
+<div class="cmslightbox cms legalText">
+	<section>
+		<header>
+			<h1><?= $pages[$page] ?></h1>
+			<ul class="barmenu">
+				<li><a class="ajax" href="../" aria-label="Close"><i class="cmsIcon cmsIcon-xmark"></i></a></li>
+			</ul>
+		</header>
+		<main>
+			<?php $this->render(dirname(__DIR__) . "/auth/$page.tpl.php"); ?>
+		</main>
+	</section>
+</div>

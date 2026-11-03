@@ -228,7 +228,7 @@ $connection->exec("DELETE FROM usm_roles WHERE role_key IN ('cmsAdmin', 'cmsEdit
 $connection->exec('ALTER TABLE usm_roles ADD COLUMN role_builtin varchar(32) NULL');
 $connection->exec("UPDATE usm_roles SET role_builtin = role_key WHERE role_key IN ('everyone', 'authenticated')");
 $connection->exec('ALTER TABLE usm_roles DROP COLUMN role_key');
-$connection->exec("INSERT INTO usm_roles (role_name) VALUES ('editor'), ('Lobby Screen')");
+$connection->exec("INSERT INTO usm_roles (role_name) VALUES ('editor'), ('textEditor'), ('Lobby Screen')");
 $everyoneId = (int) $builtin['everyone']->id;
 $_SESSION = [];
 $before = new Scope($connection);
@@ -237,6 +237,7 @@ Session::reset();
 $keyed = UserRights::keyedRoles($before);
 check('migration: the built-in roles keep their rows', (int) $keyed['everyone']->id === $everyoneId);
 check('… the old editor is cmsEditor, its name stays', (string) ($keyed['cmsEditor']->name ?? '') === 'editor');
+check('… the old text editor is cmsPageEditor, its name stays', (string) ($keyed['cmsPageEditor']->name ?? '') === 'textEditor');
 check('… the others get a key from their name', isset($keyed['lobbyScreen'], $keyed['hrEditor'], $keyed['boardReader'], $keyed['cmsAdmin'], $keyed['cmsPageEditor']));
 check('… every role has one', (int) $connection->value("SELECT COUNT(*) FROM usm_roles WHERE role_key IS NULL AND role_id != 1 AND role_name <> ''") === 0);
 check('… and role_builtin stays for db audit', (int) $connection->value("SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'usm_roles' AND COLUMN_NAME = 'role_builtin'") === 1);

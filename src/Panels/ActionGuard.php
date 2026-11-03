@@ -15,7 +15,7 @@ use Systopic\System\Controlmap\ActionScanner;
  * 1. **The request comes from this site** — against CSRF. The session
  *    cookie (SameSite=Lax) travels along with a link clicked on another
  *    site, and the action is the last segment of the address, for GET too:
- *    `cms/pages/publish?id=5` in a mail would publish. A current browser
+ *    `admin/pages/publish?id=5` in a mail would publish. A current browser
  *    says where a request comes from in `Sec-Fetch-Site`, which no page can
  *    forge: only `same-origin` passes. Without that header (an old browser,
  *    curl, a webhook) an `Origin` header has to name this host; with

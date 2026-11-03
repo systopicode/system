@@ -21,7 +21,7 @@ use Systopic\System\Panels\Tree\PanelTree;
  *
  * Nothing is stored: the code is the truth, and reading it takes a moment.
  * The configs that say who may do what refer to the logical paths found
- * here (cms/controlmap, see `.cursor/docs/controlmap.md`).
+ * here (admin/access/panelmap, see `.cursor/docs/controlmap.md`).
  */
 final class Discover
 {

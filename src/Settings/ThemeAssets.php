@@ -13,48 +13,52 @@ use Systopic\System\Sys\Packages;
  */
 final class ThemeAssets
 {
-    /** @var array<string, array{file: string, label: string, hint: string, accept: string, kind: string}> */
+    /** @var array<string, array{file: string, label: string, hint: string, accept: string, kind: string, png?: string, svg?: string}> */
     public const SLOTS = [
         'logo' => [
             'file' => 'img/logo.svg',
+            'png' => 'img/logo.png',
             'label' => 'Logo',
-            'hint' => 'SVG only. On the login card it is at most 2.75rem tall. A wide mark, about 4:1, fits the line.',
-            'accept' => '.svg,image/svg+xml',
+            'hint' => 'SVG or PNG.',
+            'accept' => '.svg,.png,image/svg+xml,image/png',
             'kind' => 'logo',
         ],
         'signet' => [
             'file' => 'img/signet.svg',
+            'png' => 'img/signet.png',
             'label' => 'Signet',
-            'hint' => 'SVG only. The square mark in the menu, shown at 2.5rem.',
-            'accept' => '.svg,image/svg+xml',
+            'hint' => 'SVG or PNG.',
+            'accept' => '.svg,.png,image/svg+xml,image/png',
             'kind' => 'signet',
         ],
         'wordDark' => [
             'file' => 'img/logo-horizontal-dark.png',
+            'svg' => 'img/logo-horizontal-dark.svg',
             'label' => 'Word mark, dark bar',
-            'hint' => 'PNG, on the dashboard menu. A wide mark, about 5:1.',
-            'accept' => '.png,.jpg,.jpeg,.webp,image/png,image/jpeg,image/webp',
+            'hint' => 'SVG or PNG.',
+            'accept' => '.svg,.png,image/svg+xml,image/png',
             'kind' => 'dark',
         ],
         'wordLight' => [
             'file' => 'img/logo-horizontal-light.png',
+            'svg' => 'img/logo-horizontal-light.svg',
             'label' => 'Word mark, light',
-            'hint' => 'PNG. The login card uses this when there is no logo SVG.',
-            'accept' => '.png,.jpg,.jpeg,.webp,image/png,image/jpeg,image/webp',
+            'hint' => 'SVG or PNG.',
+            'accept' => '.svg,.png,image/svg+xml,image/png',
             'kind' => 'light',
         ],
         'favicon' => [
             'file' => 'img/icon.svg',
             'label' => 'Favicon',
-            'hint' => 'SVG, or a PNG. A PNG is also used for the home-screen icon.',
+            'hint' => 'SVG or PNG.',
             'accept' => '.svg,.png,image/svg+xml,image/png',
             'kind' => 'icon',
         ],
         'share' => [
             'file' => 'img/share_default.jpg',
             'label' => 'Share image',
-            'hint' => 'JPG or PNG, about 1.9:1. Shown when a CMS page is shared.',
-            'accept' => '.jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp',
+            'hint' => 'JPG.',
+            'accept' => '.jpg,.jpeg,image/jpeg',
             'kind' => 'share',
         ],
     ];
@@ -65,32 +69,20 @@ final class ThemeAssets
         $href = (string) $panel->href;
         echo '<div class="widgets themeAssets">';
         foreach (self::SLOTS as $slot => $spec) {
-            $path = Packages::panelAsset($spec['file']);
+            $path = self::path($slot);
             $own = self::isOverride($path);
-            if ($slot === 'favicon' && !$own) {
-                $png = Packages::panelAsset('img/favicons/favicon-32x32.png');
-                $own = self::isOverride($png);
-                if ($own) {
-                    $path = $png;
-                }
-            }
-            $note = $own ? 'This project' : 'System default';
-            if ($spec['kind'] === 'logo' && $path !== null && self::isSvg($path)) {
-                $ratio = self::aspect((string) file_get_contents(\fs::toNative($path)));
-                if ($ratio !== null) {
-                    $note .= ' · ' . $ratio;
-                }
-            }
+            $note = $own ? '' : 'System default';
             echo '<article class="widget themeAsset ' . $e($spec['kind']) . '">';
             echo '<header><h2>' . $e($spec['label']) . '</h2></header>';
-            echo '<main><form method="post" enctype="multipart/form-data" action="' . $e($href . 'upload?slot=' . $slot) . '">';
-            echo '<label class="themePreview" data-drop-files>';
-            echo self::preview($spec, $path);
-            echo '<input type="file" name="file" accept="' . $e($spec['accept']) . '" hidden onchange="this.form.requestSubmit()">';
+            echo '<p class="tagsHint">' . $e($spec['hint']) . '</p>';
+            echo '<main><form class="ajax" data-upload="onsubmit" method="post" enctype="multipart/form-data" action="' . $e($href . 'upload?slot=' . $slot) . '">';
+            echo '<label class="themePreview" data-slot="' . $e($slot) . '" data-drop-files>';
+            echo self::preview($slot, $path);
+            echo '<input type="file" name="file" accept="' . $e($spec['accept']) . '" aria-label="Upload ' . $e($spec['label']) . '" onchange="this.form.requestSubmit()">';
             echo '</label></form></main>';
             echo '<footer><span class="left">' . $e($note) . '</span>';
             if ($own) {
-                echo '<button type="button" class="button" data-on_click="clear" data-slot="' . $e($slot) . '">Use the system image</button>';
+                echo '<button type="button" class="button" data-on_click="clear" data-slot="' . $e($slot) . '"><i class="cmsIcon cmsIcon-arrow-rotate-left"></i>Use the system image</button>';
             }
             echo '</footer></article>';
         }
@@ -112,19 +104,52 @@ final class ThemeAssets
         if (filesize($tmp) > 1500000) {
             return 'That file is too large.';
         }
-        if ($slot === 'favicon' && self::mime($tmp) === 'image/png') {
-            return self::storeFaviconPng($tmp) ? null : 'That image could not be saved.';
+        $mime = self::mime($tmp);
+        if ($slot === 'favicon') {
+            if ($mime === 'image/png') {
+                self::remove(self::overridePath('img/icon.svg'));
+                return self::storeFaviconPng($tmp) ? null : 'That image could not be saved.';
+            }
+            if ($mime === 'image/svg+xml') {
+                $svg = self::cleanSvg((string) file_get_contents($tmp));
+                if ($svg === null) {
+                    return 'Use an SVG without scripts.';
+                }
+                foreach (['img/favicons/favicon-32x32.png', 'img/favicons/favicon-16x16.png', 'img/favicons/apple-touch-icon.png'] as $name) {
+                    self::remove(self::overridePath($name));
+                }
+                return self::write(self::overridePath('img/icon.svg'), $svg) ? null : 'That file could not be saved.';
+            }
+            return 'Use an SVG or a PNG.';
         }
-        if ($spec['kind'] === 'logo' || $spec['kind'] === 'signet' || ($slot === 'favicon' && self::mime($tmp) === 'image/svg+xml')) {
+        if ($slot === 'share') {
+            $info = @getimagesize($tmp);
+            if (!is_array($info) || ($info[2] ?? 0) !== IMAGETYPE_JPEG) {
+                return 'Use a JPG.';
+            }
+            return self::writeRaster($tmp, self::overridePath($spec['file']), true) ? null : 'That image could not be saved.';
+        }
+        if ($mime === 'image/svg+xml') {
             $svg = self::cleanSvg((string) file_get_contents($tmp));
             if ($svg === null) {
                 return 'Use an SVG without scripts.';
             }
-            return self::write(self::overridePath($spec['file']), $svg) ? null : 'That file could not be saved.';
+            $png = $spec['png'] ?? (str_ends_with($spec['file'], '.png') ? $spec['file'] : null);
+            if ($png !== null) {
+                self::remove(self::overridePath($png));
+            }
+            $svgFile = $spec['svg'] ?? $spec['file'];
+            return self::write(self::overridePath($svgFile), $svg) ? null : 'That file could not be saved.';
         }
-        $dest = self::overridePath($spec['file']);
-        $jpg = str_ends_with($spec['file'], '.jpg');
-        return self::writeRaster($tmp, $dest, $jpg) ? null : 'That image could not be saved.';
+        if ($mime === 'image/png') {
+            $svgFile = str_ends_with($spec['file'], '.svg') ? $spec['file'] : ($spec['svg'] ?? null);
+            if ($svgFile !== null) {
+                self::remove(self::overridePath($svgFile));
+            }
+            $png = $spec['png'] ?? $spec['file'];
+            return self::writeRaster($tmp, self::overridePath($png), false) ? null : 'That image could not be saved.';
+        }
+        return 'Use an SVG or a PNG.';
     }
 
     public static function clear(string $slot): bool
@@ -134,7 +159,7 @@ final class ThemeAssets
             return false;
         }
         $gone = false;
-        foreach (self::ownedFiles($slot, $spec['file']) as $file) {
+        foreach (self::ownedFiles($slot) as $file) {
             if (is_file($file)) {
                 $gone = unlink($file) || $gone;
             }
@@ -142,16 +167,86 @@ final class ThemeAssets
         return $gone;
     }
 
-    /** @return list<string> */
-    private static function ownedFiles(string $slot, string $file): array
+    /** The file that is shown: a project file of either accepted type, otherwise the system file. */
+    public static function href(string $slot): string
     {
-        $files = [self::overridePath($file)];
+        $file = self::served($slot);
+        return $file === null ? '' : Packages::panelAssetHref($file);
+    }
+
+    public static function path(string $slot): ?string
+    {
+        $file = self::served($slot);
+        return $file === null ? null : Packages::panelAsset($file);
+    }
+
+    /** The project's replacement, or null while the slot still uses a shipped file. */
+    public static function projectHref(string $slot): ?string
+    {
+        $file = self::served($slot);
+        if ($file === null || !self::isOverride(Packages::panelAsset($file))) {
+            return null;
+        }
+        $href = Packages::panelAssetHref($file);
+        return $href === '' ? null : $href;
+    }
+
+    /** @return list<string> */
+    private static function ownedFiles(string $slot): array
+    {
+        $spec = self::SLOTS[$slot];
+        $files = [];
+        foreach (self::names($slot, $spec) as $name) {
+            $files[] = self::overridePath($name);
+        }
         if ($slot === 'favicon') {
-            foreach (['img/favicons/favicon-32x32.png', 'img/favicons/favicon-16x16.png', 'img/favicons/apple-touch-icon.png'] as $name) {
+            foreach (['img/favicons/favicon-16x16.png', 'img/favicons/apple-touch-icon.png'] as $name) {
                 $files[] = self::overridePath($name);
             }
         }
         return $files;
+    }
+
+    /** @param array{file: string, png?: string, svg?: string} $spec */
+    private static function names(string $slot, array $spec): array
+    {
+        $names = [$spec['file']];
+        foreach (['png', 'svg'] as $key) {
+            if (isset($spec[$key]) && !in_array($spec[$key], $names, true)) {
+                $names[] = $spec[$key];
+            }
+        }
+        if ($slot === 'favicon') {
+            $names[] = 'img/favicons/favicon-32x32.png';
+        }
+        return $names;
+    }
+
+    private static function served(string $slot): ?string
+    {
+        $spec = self::SLOTS[$slot] ?? null;
+        if ($spec === null) {
+            return null;
+        }
+        $fallback = null;
+        $override = null;
+        $overrideTime = -1;
+        foreach (self::names($slot, $spec) as $name) {
+            $path = Packages::panelAsset($name);
+            if ($path === null) {
+                continue;
+            }
+            if (!self::isOverride($path)) {
+                $fallback ??= $name;
+                continue;
+            }
+            $time = (int) filemtime(\fs::toNative($path));
+            if ($time >= $overrideTime) {
+                $overrideTime = $time;
+                $override = $name;
+            }
+        }
+        return $override ?? $fallback;
     }
 
     private static function storeFaviconPng(string $tmp): bool
@@ -168,7 +263,7 @@ final class ThemeAssets
         return $ok;
     }
 
-    private static function preview(array $spec, ?string $path): string
+    private static function preview(string $slot, ?string $path): string
     {
         if ($path === null) {
             return '<span class="themeEmpty">None</span>';
@@ -180,14 +275,14 @@ final class ThemeAssets
             }
             return '<span class="themeEmpty">None</span>';
         }
-        $href = Packages::panelAssetHref($spec['file']);
-        if ($spec['kind'] === 'icon') {
-            $png = Packages::panelAsset('img/favicons/favicon-32x32.png');
-            if ($png !== null && self::isOverride($png)) {
-                $href = Packages::panelAssetHref('img/favicons/favicon-32x32.png');
-            }
+        return '<img src="' . htmlspecialchars(self::href($slot), ENT_QUOTES) . '" alt="">';
+    }
+
+    private static function remove(string $file): void
+    {
+        if (is_file($file)) {
+            unlink($file);
         }
-        return '<img src="' . htmlspecialchars($href, ENT_QUOTES) . '" alt="">';
     }
 
     private static function isOverride(?string $path): bool
@@ -220,27 +315,13 @@ final class ThemeAssets
         return $raw;
     }
 
-    private static function aspect(string $svg): ?string
-    {
-        if (preg_match('/viewBox\s*=\s*"\s*[\d.+-]+\s+[\d.+-]+\s+([\d.]+)\s+([\d.]+)/i', $svg, $box) !== 1
-            && preg_match('/\bwidth\s*=\s*"([\d.]+)[a-z%]*".*?\bheight\s*=\s*"([\d.]+)[a-z%]*"/is', $svg, $box) !== 1) {
-            return null;
-        }
-        $w = (float) $box[1];
-        $h = (float) $box[2];
-        if ($w <= 0 || $h <= 0) {
-            return null;
-        }
-        return rtrim(rtrim(number_format($w / $h, 1, '.', ''), '0'), '.') . ':1';
-    }
-
     private static function write(string $dest, string $bytes): bool
     {
         $dir = dirname($dest);
         if (!is_dir($dir) && !mkdir($dir, 0775, true) && !is_dir($dir)) {
             return false;
         }
-        return file_put_contents($dest, $bytes) !== false;
+        return \Systopic\System\Config\FileWriter::write($dest, $bytes);
     }
 
     private static function writeRaster(string $tmp, string $dest, bool $jpg): bool
@@ -269,11 +350,17 @@ final class ThemeAssets
             $white = imagecolorallocate($flat, 255, 255, 255);
             imagefilledrectangle($flat, 0, 0, imagesx($img), imagesy($img), $white);
             imagecopy($flat, $img, 0, 0, 0, 0, imagesx($img), imagesy($img));
-            $ok = imagejpeg($flat, $dest, 90);
+            ob_start();
+            $ok = imagejpeg($flat, null, 90);
+            $bytes = (string) ob_get_clean();
+            $ok = $ok && self::write($dest, $bytes);
             imagedestroy($flat);
         } else {
             imagesavealpha($img, true);
-            $ok = imagepng($img, $dest);
+            ob_start();
+            $ok = imagepng($img);
+            $bytes = (string) ob_get_clean();
+            $ok = $ok && self::write($dest, $bytes);
         }
         imagedestroy($img);
         return $ok;
@@ -292,7 +379,10 @@ final class ThemeAssets
         imagefilledrectangle($out, 0, 0, $size, $size, $clear);
         imagealphablending($out, true);
         imagecopyresampled($out, $src, 0, 0, 0, 0, $size, $size, imagesx($src), imagesy($src));
-        $ok = imagepng($out, $dest);
+        ob_start();
+        $ok = imagepng($out);
+        $bytes = (string) ob_get_clean();
+        $ok = $ok && self::write($dest, $bytes);
         imagedestroy($out);
         return $ok;
     }

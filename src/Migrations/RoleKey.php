@@ -30,6 +30,7 @@ final class RoleKey extends Migration
     public const LEGACY = [
         'admin'  => 'cmsAdmin',
         'editor' => 'cmsEditor',
+        'texteditor' => 'cmsPageEditor',
     ];
 
     public function run(Connection $connection): void

@@ -31,7 +31,7 @@ class PanelNode implements ClientExportable, RenderNode
 
     public string $name = '';
 
-    /** Logical URL path segments from root to this panel. E.g. ['cms', 'pages']. */
+    /** Logical URL path segments from root to this panel. E.g. ['admin', 'pages']. */
     public array $path = [];
 
     /** Real (filesystem) folder names from root to this panel. */
@@ -46,7 +46,7 @@ class PanelNode implements ClientExportable, RenderNode
      * Set during build from the FolderHit so navigation can chdir to a panel
      * regardless of which root contributed it. Without this, eachChild() would
      * fail on multi-root setups: e.g. when iterating cms's children, the CWD
-     * is sys/modules/cms/, but `events` may live under projectRoot/modules/cms/
+     * is sys/modules/admin/, but `events` may live under projectRoot/modules/admin/
      * — opening it via the bare folder name silently fails (chdir error) and
      * desyncs the dir-stack.
      */
@@ -149,7 +149,7 @@ class PanelNode implements ClientExportable, RenderNode
     public ?string $jsClass = null;
 
     /**
-     * Optional icon class (e.g. Font-Awesome) used by getNaviItem().
+     * Optional icon class (e.g. cmsIcon cmsIcon-file) used by getNaviItem().
      * Untyped to stay compatible with legacy subclasses that declare
      * `public $icon = '...'` without a type.
      */
@@ -163,6 +163,7 @@ class PanelNode implements ClientExportable, RenderNode
      * Set on a panel when the menu order should not follow the folder name.
      */
     public ?int $naviOrder = null;
+    public bool $pylonBranch = false;
 
     /**
      * Actions that may be opened from outside — the link of a mail, a
@@ -591,7 +592,7 @@ class PanelNode implements ClientExportable, RenderNode
     // Path helpers
     // =========================================================================
 
-    /** Returns the logical path as a slash-separated string. E.g. 'cms/pages/'. */
+    /** Returns the logical path as a slash-separated string. E.g. 'admin/pages/'. */
     public function getPath(): string
     {
         $str = implode('/', $this->path);
@@ -809,12 +810,13 @@ class PanelNode implements ClientExportable, RenderNode
             ->attr('data-name', $this->name)
             ->class($this->inPath() || $kept ? 'active' : null);
 
-        $a = $li->append('a')->href($this->getHref(\http::$root));
+        $target = $this->pylonBranch ? ($this->firstChild ?? $this) : $this;
+        $a = $li->append('a')->href($target->getHref(\http::$root));
         if ($icon !== null) {
-            $a->append('i')->class($icon);
+            $a->append('i')->class(\Systopic\System\Ui\Icons::classes($icon))->attr('aria-hidden', 'true');
         }
-        $a->append('span')->text($this->label);
-        for ($child = $this->firstChild; $child !== null; $child = $child->next) {
+        $a->append('span')->attr('data-nav-label', $this->label)->append('span')->text($this->label);
+        for ($child = $this->pylonBranch ? null : $this->firstChild; $child !== null; $child = $child->next) {
             if ($child->inNavi) {
                 $a->attr('data-cms-branch', '1');
                 break;
@@ -838,12 +840,13 @@ class PanelNode implements ClientExportable, RenderNode
                 return null;
             }
             return match ($this->name) {
-                'system' => 'fa-regular fa-server',
-                'database' => 'fa-regular fa-database',
-                'maintenance' => 'fa-regular fa-wrench',
-                'debug' => 'fa-regular fa-bug',
-                'migration' => 'fa-regular fa-repeat',
-                'logs' => 'fa-regular fa-file-text',
+                'system' => 'cmsIcon cmsIcon-server',
+                'website' => 'cmsIcon cmsIcon-magnifying-glass',
+                'database' => 'cmsIcon cmsIcon-database',
+                'maintenance' => 'cmsIcon cmsIcon-wrench',
+                'debug' => 'cmsIcon cmsIcon-bug',
+                'migration' => 'cmsIcon cmsIcon-repeat',
+                'logs' => 'cmsIcon cmsIcon-file-text',
                 default => null,
             };
         }
@@ -1060,7 +1063,7 @@ class PanelNode implements ClientExportable, RenderNode
             } elseif (($package = \Systopic\System\Sys\Packages::rootOf($sourceDir)) !== null) {
                 $root = $package;   // a package's panels (systopic/cms), settings.packageRoots
             }
-        } elseif (isset($this->root) && $this->root?->name === 'cms') {
+        } elseif (isset($this->root) && $this->root?->name === 'admin') {
             $root = 'sys';
         }
 

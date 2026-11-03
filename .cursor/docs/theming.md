@@ -1,6 +1,6 @@
 # fluxo — a project's own look, and how a panel is built
 
-For people and agents. This is about fluxo cms (the GUI under `/cms/`, the
+For people and agents. This is about fluxo (the GUI under `/admin/`, the
 login, the system mails, the edit bar on the website), not the website's
 own frontend.
 
@@ -10,23 +10,25 @@ Everything lives in the project, never in the packages:
 
 | Project path | What it does |
 |---|---|
-| `overrides/css/*.css` | GUI overrides, loaded after the system CSS in the `project` layer. Theme colours go here. The theme editor writes `overrides/css/system_overrides.css` (it renames `cms_overrides.css` on save). |
-| `css/system_overrides.css` | Same layer, when a project keeps the file next to the site CSS. Also the place for `@font-face`/`@import` of fonts (they cannot be scoped, see `cms-preview-css.md`). `css/cms_overrides.css` is still read while the new file does not exist yet. |
-| `overrides/img/logo.svg` | Logo on the login card and at the top of every system mail. |
+| `overrides/css/zz_system_theme.css` | The four theme colours. A link in the `project` layer, so it beats the system tokens. |
+| `overrides/css/system_overrides.css` | Extra CMS CSS. A plain stylesheet, so it beats the layers. Loaded in the CMS only, not on the public site, and not parsed into the page preview. |
+| `overrides/css/pages_overrides.css` | Page CSS, parsed into the preview. |
+| `css/system_overrides.css` | Fonts and project GUI CSS next to the site CSS, still loaded on the public site. `css/cms_overrides.css` is read while the new file does not exist. |
+| `overrides/img/logo.svg` or `logo.png` | Logo on the login card and at the top of every system mail. SVG is inlined, PNG is an image. |
 | `overrides/img/<name>` | Replaces the system image of the same name, see the table below. |
 | `overrides/js/*.js` | Extra GUI scripts, loaded last. |
-| `PUBLIC_PAGE_NAME` (config) | Site name in the window title and the installed web app ("Site // fluxo cms"). |
+| `PUBLIC_PAGE_NAME` (config) | Site name in the window title and the installed web app ("Site // fluxo"). |
 
 Images a project may replace by name (`Packages::panelAsset()` looks in
 `overrides/` first for `img/…`):
 
 | File | Where it shows |
 |---|---|
-| `img/signet.svg` | The mark in the menu, the edit bar on the website. |
-| `img/logo-horizontal-dark.png` | Word mark in the wide menu on the dashboard; mail logo without `logo.svg`. |
-| `img/logo-horizontal-light.png` | Login card without `logo.svg`. |
-| `img/share_default.jpg` | Share image (`og:image`) of the CMS pages. |
-| `img/favicons/*` | Favicons, home screen and web app icons. |
+| `img/signet.svg` or `signet.png` | The mark in the menu, the edit bar on the website. |
+| `img/logo-horizontal-dark.svg` or `.png` | Word mark in the wide menu on the dashboard; mail logo without a logo file. |
+| `img/logo-horizontal-light.svg` or `.png` | Login card without a logo file. |
+| `img/share_default.jpg` | Share image (`og:image`). The theme editor stores a JPG. |
+| `img/favicons/*` | Favicons, home screen and web app icons. A PNG favicon is written here. |
 | `img/icon.svg` | SVG favicon. |
 
 ## 2. Theme colours
@@ -35,7 +37,7 @@ The tokens are in `system/public/css/00_theme.css`. A project overrides
 only these:
 
 ```css
-/* overrides/css/theme.css */
+/* overrides/css/zz_system_theme.css */
 :root {
 	--cmsMainColor: #1f3a45;       /* menu, headings, lines */
 	--cmsHighlightColor: #fcb60c;  /* submit buttons, active marks */
@@ -68,19 +70,19 @@ and the edit bar.
   a fix every project needs belongs in the package.
 - Override CSS sits in the `project` layer, so it beats the GUI without
   `!important` and without matching the GUI's specificity.
-- The GUI has two button styles (`.button`, `.button.submit`). A theme
-  recolours them through the tokens; it adds no third.
+- The GUI uses shared primary, secondary, outline and transparent button variants.
+  A theme recolours their tokens; it does not add a separate button system.
 - Check the result in four places: dashboard, login, a system mail (reset
   password), the edit bar on the website.
 
 ## 4. How a panel is built
 
-A panel is a folder below `panels/cms/` of a package (`system`, `cms`, …).
+A panel is a folder below `panels/admin/` of a package (`system`, `cms`, …).
 The trees of all packages are merged by folder name; the sort prefix
 (`080_`) orders the menu and is not part of the URL.
 
 ```
-cms/panels/cms/010_pages/       → /cms/pages/
+admin/panels/admin/010_pages/       → /admin/pages/
 	panel.php                    class Panel, state, getters
 	actions.php                  switch ($this->action) { case 'x': … }
 	main.tpl.php                 the content
@@ -109,3 +111,12 @@ cms/panels/cms/010_pages/       → /cms/pages/
 - Checks for the dashboard To do (broken links, images without label) are
   queries in `Dashboard.live.sql`; a panel shows the details, like
   Tools → Maintenance → Links (`gui.md`, Search and Link check).
+
+## Auth metadata
+
+Auth keeps system branding for system return destinations. For a validated public
+frontend return destination it can use that frontend's assets. Favicon discovery
+accepts both `img/favicons/` and legacy `img/favicon/`, including a 96px PNG
+fallback. When project icons exist, missing optional ICO, mask and browserconfig
+files must not silently reintroduce the framework branding. Auth also emits the
+configured main colour as `theme-color`.

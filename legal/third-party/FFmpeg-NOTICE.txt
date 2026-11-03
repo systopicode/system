@@ -1,0 +1,26 @@
+FFmpeg and FFprobe — optional project-local command-line programs
+
+Copyright: the FFmpeg developers and the authors identified by each build.
+Upstream: https://ffmpeg.org/
+Licence and distribution guidance: https://ffmpeg.org/legal.html
+
+Fluxo invokes these programs as separate processes for media processing. The
+systopic/system and systopic/cms source packages do not bundle the executables.
+A project may provide its own executables in var/bin/ or bin/ for shared hosting.
+
+The applicable licence depends on the actual build: LGPL 2.1-or-later or GPL
+2.0-or-later, with version 3 possible for builds that enable it. The included
+LGPL/GPL texts describe these alternatives; they do not grant permission to
+redistribute an unidentified build. Builds marked nonfree may not be
+redistributable. Third-party libraries retain their respective notices.
+
+When distributing a project with these executables, include the build's own
+licence/copyright notices, exact version, source/download provenance, binary
+hashes, configuration/build scripts, and the complete corresponding sources
+required by its licence, including enabled third-party components. A link to
+the latest FFmpeg source or this generic notice alone is not a substitute.
+
+The project-local licenses/ffmpeg/distribution.json records known provenance.
+A requires-build-review status means source/build obligations have not yet
+been verified; it must not be represented as a legal clearance for redistribution.
+See docs/media-tool-distribution.md in systopic/system for the release procedure.

@@ -78,7 +78,7 @@
 				if (sys.panels.__setup) {
 					libnode = sys.panels; // root panel in site
 				} else {
-					libnode = sys.panels.cms; // root panel in cms
+					libnode = sys.panels.admin; // root panel in cms
 				}
 			}
 			if (libnode.__object && libnode.__object.update) {

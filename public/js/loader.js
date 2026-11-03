@@ -5,6 +5,33 @@ sys.core.loader.__class = function () { // class to control availability of scri
 	loader.scripts = new Map(); // all scripts (loading and loaded) by id including prefix cms:class/module/module.js
 	loader.scriptsLoading = new Map();
 	loader.scriptsLoaded = new Map();
+    loader.scriptsFailed = new Map();
+    let loadingDeadline, loadingReveal;
+    let loadingVisible = false;
+    loader.state = 'loading';
+    loader.paintStatus = () => {
+        const state = loader.state;
+        const line = document.querySelector('.cmsLoadState');
+        if (!line) return;
+        line.hidden = state === 'ready' || (state === 'loading' && !loadingVisible);
+        line.classList.toggle('is-error', state === 'error');
+        line.querySelector('i').className = state === 'error' ? 'cmsIcon cmsIcon-circle-exclamation' : 'cmsIcon cmsIcon-spinner cmsIcon-spin';
+        line.querySelector('span').textContent = state === 'error' ? 'Some tools could not load. Reload to try again.' : 'Preparing your workspace…';
+        line.querySelector('button').hidden = state !== 'error';
+    };
+    document.addEventListener('cms:rendered', loader.paintStatus);
+    loader.status = (state) => {
+        clearTimeout(loadingDeadline);
+        clearTimeout(loadingReveal);
+        loadingVisible = false;
+        if (state === 'loading') {
+            loadingDeadline = setTimeout(() => loader.status('error'), 30000);
+            loadingReveal = setTimeout(() => { loadingVisible = true; loader.paintStatus(); }, 500);
+        }
+        loader.state = state;
+        loader.paintStatus();
+        document.dispatchEvent(new CustomEvent('cms:loading', {detail: state}));
+    };
 
 	loader.addScripts = (scripts, call) => { // given info from server, create and append dom element
 		scripts.forEach(info => {
@@ -12,6 +39,7 @@ sys.core.loader.__class = function () { // class to control availability of scri
 				lx('skipped: ', info.id);
 				return;
 			}
+            loader.status('loading');
 			info.domObj = document.createElement('script');
 			new sys.script(loader, info, call);
 			document.head.append(info.domObj);
@@ -24,16 +52,19 @@ sys.core.loader.__class = function () { // class to control availability of scri
 	};
 
 	loader.onScriptsReady = (call) => {
+        if (loader.scriptsLoading.size > 0) return;
+        if (loader.scriptsFailed.size > 0) { loader.status('error'); return; }
 		var documentReadyStateChange = () => {
 			document.removeEventListener('readystatechange', documentReadyStateChange);
 			loader.onScriptsReady(call);
 		};
-		if (document.readyState !== 'complete') {
+		if (document.readyState === 'loading') {
 			l('flush onJSReadyFuncs skipped >>> waiting for DOM ready >>> STATE::' + document.readyState);
 			document.addEventListener('readystatechange', documentReadyStateChange);
 			return;
 		}
 		l('flush onJSReadyFuncs:' + sys.onJSReadyFuncs.length + '(' + loader.scripts.size + ' sripts loaded) >>>>>>>> run build');
+        try {
 		sys.flushOnJSReady();
 		sys.buildSingletons(sys.singletons);
 		sys.buildObjects(sys.classes);
@@ -45,6 +76,9 @@ sys.core.loader.__class = function () { // class to control availability of scri
 		// update routeRendererData
 		// l('flush onLibReady');
 		sys.flushOnLibReady();
+        } catch (error) { loader.status('error'); throw error; }
+        loader.status('ready');
+        document.dispatchEvent(new CustomEvent('cms:rendered'));
 		// sys.flushOnDocumentReady(); // removed 2026-01 calld from routRenderer after update Document
 	};
 
@@ -62,7 +96,13 @@ sys.core.script.__class = function (loader, info, call) {
 	var script = this; // save instance;
 	loader.scripts.set(info.id, script);
 	loader.scriptsLoading.set(info.id, script);
+    info.domObj.addEventListener('error', () => {
+        loader.scriptsLoading.delete(info.id);
+        loader.scriptsFailed.set(info.id, script);
+        loader.status('error');
+    });
 	info.domObj.addEventListener('load', e => {
+        loader.scriptsFailed.delete(info.id);
 		// l(e.target.src);
 		lx('loading complete:', info.id);
 		loader.scriptsLoaded.set(info.id, script);
@@ -103,6 +143,7 @@ sys.onload(() => {
 		l('sys.onload => replaceBodyFromPhpClassesData');
 		sys.dom.body = new sys.core.dom.layer.__class();
 		sys.dom.body.createRootLayer(sys.singletons.dom.renderer.__data);
+        sys.loader.paintStatus();
 	} else {
 		if (document.getElementById('siteDomRendererPlaceholder')) {
 			// sys.onLibReady(() => sys.siteRenderer.updateDocument()); -> moved to php routeRenderer::clientData_export()

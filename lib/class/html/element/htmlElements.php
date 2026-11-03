@@ -331,7 +331,7 @@ class htmlElements { // nodelist & baseclass for node
                 return $this;
             // ************** DEPR ************
             case 'icon':
-                return $this->i()->class("fa-regular fa-$arg")->close();
+                return $this->i()->class(\Systopic\System\Ui\Icons::classes((string) $arg))->attr('aria-hidden', 'true')->close();
             case 'row':
                 return $this->append('tr');
             case 'cell':

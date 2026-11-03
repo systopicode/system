@@ -4,7 +4,7 @@
 // or embed its own commands. The keyboard stays down (inputmode none) until
 // "Type" in the bar asks for it - it would cover half the page.
 function initContenteditableContextMenus() {
-	var selectionTimer, downInEditor = false;
+	var selectionTimer, downInEditor = false, keyboardMenu = false;
 
 	// the bar opens where the pointer pressed, not at the top of a large element
 	var lastPoint = null;
@@ -13,7 +13,7 @@ function initContenteditableContextMenus() {
 	};
 	/** pointed: the bar of the link, image or video itself, whatever the selection holds. */
 	var openFor = function (target, rect, pointed) {
-		$(target).trigger($.Event('contextmenu', {target: target, anchorRect: rect, pointed: !!pointed}));
+		$(target).trigger($.Event('contextmenu', {target: target, anchorRect: rect, pointed: !!pointed, keyboard: keyboardMenu}));
 	};
 	/** The bar for the media it was opened for, or where the caret or the selection is. */
 	var show = function (media) {
@@ -40,9 +40,13 @@ function initContenteditableContextMenus() {
 	};
 
 	// In the editor a film stays on its still. Playback belongs on the website.
+	// The same for a film built into the page: a player would take the click.
 	var editorVideo = function (node) {
 		var video = node && node.closest && node.closest('video');
-		return video && wysiwygOf(video) ? video : null;
+		if (!video) {
+			return null;
+		}
+		return wysiwygOf(video) || video.closest('article.cmsContent') ? video : null;
 	};
 	var holdVideo = function (video) {
 		if (!video) {
@@ -66,13 +70,36 @@ function initContenteditableContextMenus() {
 		downInEditor = !!wysiwygOf(e.target);
 		lastPoint = downInEditor ? pointOf(e) : lastPoint;
 		var editor = e.pointerType === 'touch' && wysiwygOf(e.target);
-		if (editor && !editor.hasAttribute('data-typing')) {
-			editor.setAttribute('inputmode', 'none');
-		}
+        if (editor && !editor.hasAttribute('data-typing')) {
+            editor.setAttribute('inputmode', 'none');
+            if (!editor.hasAttribute('data-selecting')) {
+                // A tap opens tools. Only the explicit Type action focuses the editor.
+                e.preventDefault();
+                var currentSelection = getSelection();
+                if (!currentSelection.isCollapsed && editor.contains(currentSelection.anchorNode)) return;
+                var caret = document.caretRangeFromPoint?.(e.clientX, e.clientY);
+                if (!caret && document.caretPositionFromPoint) {
+                    var position = document.caretPositionFromPoint(e.clientX, e.clientY);
+                    if (position) { caret = document.createRange(); caret.setStart(position.offsetNode, position.offset); caret.collapse(true); }
+                }
+                if (caret && editor.contains(caret.startContainer)) {
+                    editorRange = caret.cloneRange();
+                    var selection = getSelection(); selection.removeAllRanges(); selection.addRange(caret);
+                }
+            }
+        }
 	}, true);
-	// a pressed image would be selected, tinted and offered as text
+	// a pressed image would be selected, tinted and offered as text.
+	// one built into the page would be dragged instead of opening the bar.
 	document.addEventListener('mousedown', function (e) {
-		e.button === 0 && e.target.closest && e.target.closest('img, video, iframe') && wysiwygOf(e.target) && e.preventDefault();
+		if (e.button !== 0 || editorPointer === 'touch' || !e.target.closest) {
+			return;
+		}
+		var media = e.target.closest('img, video, iframe');
+		var fixed = media && fixedMediaOf(media);
+		if (media && (wysiwygOf(media) || (fixed && fixedMediaNodeId(fixed)))) {
+			e.preventDefault();
+		}
 	}, true);
 	document.addEventListener('focusout', function (e) {
 		var editor = wysiwygOf(e.target);
@@ -105,7 +132,21 @@ function initContenteditableContextMenus() {
 			e.preventDefault();
 		}
 		// a link in a field is text to edit, never followed
-		wysiwygOf(e.target) && e.target.closest('a') && e.preventDefault();
+        var clickedLink = wysiwygOf(e.target) && e.target.closest('a');
+        if (clickedLink) {
+            e.preventDefault();
+            e.stopPropagation();
+            return openFor(clickedLink, pointOf(e), true);
+        }
+		var fixed = fixedMediaOf(e.target);
+		if (fixed && fixedMediaNodeId(fixed)) {
+			e.preventDefault();
+			e.stopPropagation();
+			if (editorPointer === 'touch') {
+				openFixed(fixed, pointOf(e));
+			}
+			return;
+		}
 		var editor = editorPointer === 'touch' && wysiwygOf(e.target);
 		if (!editor) {
 			return;
@@ -117,7 +158,13 @@ function initContenteditableContextMenus() {
 			e.preventDefault();
 			return openFor(media.matches('a') && media.querySelector('img') || media, pointOf(e), true);
 		}
-		if (editor.hasAttribute('data-typing') || !getSelection().isCollapsed) {
+		if (editor.hasAttribute('data-selecting') && !getSelection().isCollapsed) {
+            editor.removeAttribute('data-selecting');
+            e.preventDefault();
+            return show();
+        }
+        if (!getSelection().isCollapsed) { e.preventDefault(); return show(); }
+        if (editor.hasAttribute('data-typing')) {
 			return;
 		}
 		openFor(hit, pointOf(e));
@@ -129,13 +176,23 @@ function initContenteditableContextMenus() {
 		if (current.rangeCount && wysiwygOf(current.anchorNode)) {
 			editorRange = current.getRangeAt(0).cloneRange();
 			if (editorPointer === 'touch' && !current.isCollapsed) {
-				selectionTimer = setTimeout(show, 500);
+				selectionTimer = setTimeout(show, 350);
 			}
 		}
 	});
 	// mouse: a click places the caret, a drag or double click selects - both show the bar
 	document.addEventListener('mouseup', function (e) {
-		if (e.button !== 0 || editorPointer === 'touch' || !downInEditor) {
+		if (e.button !== 0 || editorPointer === 'touch') {
+			return;
+		}
+		var fixed = fixedMediaOf(e.target);
+		if (fixed) {
+			var fixedPoint = pointOf(e);
+			return setTimeout(function () {
+				openFixed(fixed, fixedPoint);
+			});
+		}
+		if (!downInEditor) {
 			return;
 		}
 		var media = e.target.closest('img, video, iframe');
@@ -153,18 +210,43 @@ function initContenteditableContextMenus() {
 		}
 	});
 	document.addEventListener('keydown', function (e) {
+        if (e.altKey && e.key === 'F10' && wysiwygOf(e.target)) {
+            e.preventDefault();keyboardMenu=true;show();keyboardMenu=false;return;
+        }
 		if (!/^(Shift|Meta|Control|Alt)$/.test(e.key) && wysiwygOf(e.target) && openBar()) {
 			closeAllMenus();
 		}
 	});
-	// the bar stays where it was opened: scrolling the page ends it
+	// Caret focus and layout updates can emit scroll immediately after opening.
+	// Follow the anchor instead of dismissing the tools (including touch drag).
 	document.addEventListener('scroll', function (e) {
 		var bar = openBar();
-		bar && !bar.contains(e.target) && closeAllMenus();
+		if (!bar || bar.contains(e.target)) return;
+		var anchor = bar.anchorTarget;
+		if (!anchor?.isConnected) return closeAllMenus();
+		var next = anchor.getBoundingClientRect(), previous = bar.anchorTargetRect;
+		var rect = bar.anchorRect;
+		if (previous && rect) {
+			var dx = next.left - previous.left, dy = next.top - previous.top;
+			rect = {left: rect.left + dx, right: rect.right + dx, top: rect.top + dy, bottom: rect.bottom + dy};
+		}
+		placeEditorMenu(bar, rect, anchor);
 	}, true);
 
+	var openFixed = function (el, rect) {
+		if (!fixedMediaNodeId(el)) {
+			return;
+		}
+		$(el).trigger($.Event('contextmenu', {target: el, anchorRect: rect, pointed: true}));
+	};
 	editorBubble = show;
 	$("body").on("contextmenu", function (e) {
+		var fixed = fixedMediaOf(e.target);
+		if (fixed) {
+			e.preventDefault();
+			fixedMediaNodeId(fixed) && HTMLeditorRightClick(fixed.nodeName === 'VIDEO' ? 'fixedVideo' : 'fixedImage', e, $(fixed));
+			return;
+		}
 		var editor = $(e.target).closest('[contenteditable=true]')[0];
 		if (!editor) {
 			return;
@@ -188,6 +270,20 @@ var editorPointer = 'mouse';
 var wysiwygOf = function (node) {
 	var el = node && (node.nodeType === 1 ? node : node.parentElement);
 	return el && el.closest('.editor[contenteditable=true]');
+};
+/**
+ * A picture or film drawn by the template, inside the page preview.
+ * An external film is a poster with a cover over it: the click lands on the
+ * cover, the picture underneath is the one to edit.
+ */
+var fixedMediaOf = function (node) {
+	var el = node && node.closest && node.closest('img, video');
+	if (el && !wysiwygOf(el) && el.closest('article.cmsContent')) {
+		return el;
+	}
+	var box = node && node.closest && node.closest('article.cmsContent .extVideo');
+	var poster = box && box.querySelector('img, video');
+	return poster && !wysiwygOf(poster) ? poster : null;
 };
 /** The image or video a range holds alone - a click on an image selects it. */
 var selectedMedia = function (range) {
@@ -223,7 +319,7 @@ var restoreEditorRange = function () {
 	if (!editor || !editor.isConnected) {
 		return;
 	}
-	editor.focus({preventScroll: true});
+	if (editorPointer !== 'touch') editor.focus({preventScroll: true});
 	selection.removeAllRanges();
 	selection.addRange(editorRange);
 };
@@ -235,6 +331,10 @@ var menuCommand = function (func, reopen) {
 		}
 		restoreEditorRange();
 		var result = func.apply(this, arguments);
+        if (result && typeof result.then === 'function') {
+            result.then(function () { closeAllMenus(); });
+            return;
+        }
 		if (result !== false) {
 			closeAllMenus();
 			reopen && editorBubble(arguments[0] && arguments[0].data && arguments[0].data.target);
@@ -261,20 +361,21 @@ var visibleArea = function (node) {
 /**
  * Puts the bar above its anchor (the point pressed, or the caret) in the
  * visible part of the page, below when there is no room. With selected text on
- * touch the system's own menu (copy, paste …) pops up at the text and can't be
- * turned off, so the bar docks at the edge of the screen away from the text.
+ * touch, prefer below the selection so the native menu can remain above it.
  */
 var placeEditorMenu = function (menu, rect, target) {
 	rect = rect || menu.anchorRect;
 	target = target || menu.anchorTarget;
 	menu.anchorRect = rect;
 	menu.anchorTarget = target;
+	menu.anchorTargetRect = target?.getBoundingClientRect();
 	var gap = 10, edge = 8;
 	var width = menu.offsetWidth, height = menu.offsetHeight;
 	var area = visibleArea(target);
-	var docked = editorPointer === 'touch' && !getSelection().isCollapsed && !(target && target.closest && target.closest('img, video, iframe, a'));
+	var docked = false; // Keep touch selections anchored to their text, like the caret.
 	var fits = {above: rect.top - gap - height >= area.top + edge, below: rect.bottom + gap + height <= area.bottom - edge};
-	var side = docked ? (rect.top > (area.top + area.bottom) / 2 ? 'top' : 'bottom') : fits.above ? 'above' : fits.below && 'below';
+	var touchSelection = editorPointer === 'touch' && !getSelection().isCollapsed;
+	var side = touchSelection && fits.below ? 'below' : docked ? (rect.top > (area.top + area.bottom) / 2 ? 'top' : 'bottom') : fits.above ? 'above' : fits.below && 'below';
 	var top = {above: rect.top - gap - height, below: rect.bottom + gap, top: area.top, bottom: area.bottom}[side];
 	top = side ? top : Math.max(rect.top, area.top) + gap;
 	top = Math.max(area.top + edge, Math.min(top, area.bottom - height - edge));
@@ -305,23 +406,41 @@ var contextMenuWW = function (params, event) {
 	this.domWrapper = $("<div class='cms'></div>");
 	this.domObj = $('<div class="HTMLeditorMenu" role="toolbar"></div>');
 	var ul = $('<ul></ul>');
-	var mediaBar = target && target.closest && target.closest('img, video, iframe');
+	var mediaBar = target && target.closest && (target.closest('img, video, iframe') || target.closest('a')?.querySelector('img, video, iframe'));
 	if (editorPointer === 'touch' && wysiwygOf(target) && !mediaBar) {
-		$('<li><a href="javascript:void(0)" title="Type"><i class="fa-regular fa-keyboard"></i></a></li>')
-			.appendTo(ul).children('a').on('click', startTyping);
+		$('<li><button type="button" data-cms-action title="Type"><i class="cmsIcon cmsIcon-keyboard"></i></button></li>')
+			.appendTo(ul).children('a,button[data-cms-action]').on('click', startTyping);
+        $('<li><button type="button" data-cms-action title="Select text"><i class="cmsIcon cmsIcon-text-select"></i></button></li>')
+            .appendTo(ul).children('button').on('click', function () {
+                var editor = wysiwygOf(target);
+                if (!editor || !editorRange) return;
+                closeAllMenus();
+                editor.setAttribute('data-selecting', '');
+                editor.setAttribute('inputmode', 'none');
+                var selection = getSelection();
+                selection.removeAllRanges();
+                selection.addRange(editorRange.cloneRange());
+                if (selection.isCollapsed && selection.modify) selection.modify('extend', 'forward', 'word');
+            });
+
 	}
 	$.each(params, function (key, item) {
 		if (item.active === false) {
 			return;
 		}
 		var li = $('<li></li>').toggleClass('selected', !!item.selected).toggleClass('disabled', !!item.disabled).toggleClass('is-drag', !!item.drag).toggleClass('sep', !!item.sep && ul.children().length > 0);
-		var a = $('<a href="javascript:void(0)"><i class="' + item.className + '"></i></a>').attr('title', item.title).attr('aria-label', item.title);
+		var a = $('<button type="button" data-cms-action><i class="' + item.className + '"></i></button>').attr('title', item.title).attr('aria-label', item.title);
+        a.prop('disabled', !!item.disabled);
+        if(item.selected !== undefined)a.attr('aria-pressed',String(!!item.selected));
 		li.append(a).appendTo(ul);
 		if (item.drag) {
 			a.on('pointerdown', function (e) {
 				e.preventDefault();
 				e.stopPropagation();
 				var media = target && target.closest && target.closest('img, video, iframe');
+				// Keep touch events on the live editor before removing the pressed menu.
+                var owner = media?.closest('.editor');
+                if (owner && e.originalEvent?.pointerId !== undefined) owner.setPointerCapture(e.originalEvent.pointerId);
 				closeAllMenus();
 				if (media && window.editorBeginMediaMove) {
 					editorBeginMediaMove(media, e.originalEvent || e);
@@ -334,10 +453,11 @@ var contextMenuWW = function (params, event) {
 			return;
 		}
 		li.addClass('hasChildren');
-		var subul = $('<ul></ul>').appendTo(li);
+		var subul = $('<ul></ul>').attr('id','cms-editor-sub-'+(++cmsMenuSequence)).appendTo(li);
+        a.attr('aria-expanded','false').attr('aria-controls',subul.attr('id'));
 		$.each(item.subs, function (subKey, subItem) {
 			$('<li></li>').toggleClass('selected', !!subItem.selected)
-				.append($('<a href="javascript:void(0)"></a>').text(subItem.title).on('click', subItem.param, menuCommand(window[subItem.func], subItem.reopen)))
+				.append($('<button type="button" data-cms-action></button>').text(subItem.title).on('click', subItem.param, menuCommand(window[subItem.func], subItem.reopen)))
 				.appendTo(subul);
 		});
 	});
@@ -350,22 +470,97 @@ var contextMenuWW = function (params, event) {
 		rect = {left: x, right: x, top: y, bottom: y};
 	}
 	placeEditorMenu(this.domObj[0], rect, target);
+    this.domObj[0].dataset.keyboard = event.keyboard ? 'true' : 'false';
+    prepareMenuKeyboard(this.domObj[0], target.closest?.('[contenteditable]') || target, !!event.keyboard);
 
 	// the press keeps the focus in the editor; a tap opens what hover opens
 	this.domObj.on('mousedown', function (e) {
-		$(e.target).is('input, button') || e.preventDefault();
+		$(e.target).is('input, button:not([data-cms-action])') || e.preventDefault();
 	});
 	this.domObj.find('li.hasChildren').on('mouseenter', function () {
+        this.querySelector(':scope > a,:scope > button[data-cms-action]')?.setAttribute('aria-expanded','true');
 		fitEditorSubmenu(this);
-	}).children('a').on('click', function () {
+	}).on('mouseleave',function(){this.querySelector(':scope > a,:scope > button[data-cms-action]')?.setAttribute('aria-expanded',String(this.classList.contains('open')));}).children('a,button[data-cms-action]').on('click', function () {
 		var li = $(this).parent().toggleClass('open');
-		li.siblings().removeClass('open');
+        this.setAttribute('aria-expanded',String(li.hasClass('open')));
+		li.siblings().removeClass('open').children('a[aria-expanded],button[data-cms-action][aria-expanded]').attr('aria-expanded','false');
 		fitEditorSubmenu(li[0]);
 	});
 };
 
+// The format of a picture or film in the page preview. One chip, no button.
+function initMediaFormatChip() {
+	var chip = document.createElement('div');
+	chip.className = 'cmsMediaFormat';
+	chip.hidden = true;
+	document.body.appendChild(chip);
+	var current = null;
+
+	var place = function (el) {
+		var rect = el.getBoundingClientRect();
+		if (rect.width < 2 || rect.height < 2) {
+			chip.hidden = true;
+			return;
+		}
+		var preview = el.closest('article.cmsContent');
+		if (preview) {
+			var bounds = preview.closest('.cmsPreview')?.getBoundingClientRect() || preview.getBoundingClientRect();
+			var headerBottom = document.querySelector('.pageHead')?.getBoundingClientRect().bottom || 0;
+			if (rect.top < Math.max(0, bounds.top, headerBottom) || rect.bottom <= bounds.top) { chip.hidden = true; return; }
+		}
+		chip.textContent = mediaFormatLabel(el);
+		chip.hidden = false;
+		chip.style.left = Math.max(4, rect.right - chip.offsetWidth - 4) + 'px';
+		chip.style.top = Math.max(4, rect.top + 4) + 'px';
+	};
+	var show = function (el) {
+		if (!el || !el.isConnected) return;
+		if (current && current !== el) current.classList.remove('cmsMediaOn');
+		current = el;
+		el.classList.add('cmsMediaOn');
+		place(el);
+	};
+	var hide = function () {
+		if (current) current.classList.remove('cmsMediaOn');
+		current = null;
+		chip.hidden = true;
+	};
+	window.cmsMediaFormatShow = function (el) {
+		show(el);
+	};
+	var mediaOf = function (node) {
+		var el = node && node.closest && node.closest('article.cmsContent img, article.cmsContent video');
+		return el || null;
+	};
+	document.addEventListener('pointerover', function (e) {
+		if (e.pointerType && e.pointerType !== 'mouse') return;
+		var el = mediaOf(e.target);
+		if (!el) return;
+		show(el);
+	}, true);
+	document.addEventListener('pointerout', function (e) {
+		if (e.pointerType && e.pointerType !== 'mouse') return;
+		var el = mediaOf(e.target);
+		if (!el || el !== current) return;
+		var to = e.relatedTarget;
+		if (to && el.contains(to)) return;
+		hide();
+	}, true);
+	// A finger has no hover. The frame stays until the next tap, so the format can be read.
+	document.addEventListener('pointerdown', function (e) {
+		if (!e.pointerType || e.pointerType === 'mouse') return;
+		var el = mediaOf(e.target);
+		el ? show(el) : hide();
+	}, true);
+	document.addEventListener('scroll', function () {
+		if (current && current.isConnected) place(current);
+		else chip.hidden = true;
+	}, true);
+}
+
 $(function () {
 	initContenteditableContextMenus();
+	initMediaFormatChip();
 	$('body').on('click', function (e) {
 		if (!$(e.target).closest('body.cms div.mmlContent ul li').length) {
 			$('body.cms div.mmlContent ul li').removeClass('selected');

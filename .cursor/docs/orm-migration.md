@@ -53,7 +53,7 @@ Query-Zahl, die steigt, ist ein Befund.
   `$name`, `$label`, `$root`, `$level`, `$parent`, `$children`, `$state`,
   `$action`, `$href` … (`$rewritepath`, nicht `$path` — sonst Fatal beim
   Laden der Klasse).
-- `$scope` erbt jedes Panel unter `cms/` von `Cms\Panel`. Panels, die direkt
+- `$scope` erbt jedes Panel unter `admin/` von `Cms\Panel`. Panels, die direkt
   von `PanelNode` erben (`auth`, `settings`, `tools/*`), deklarieren ihn
   selbst.
 - Ein Unterordner ohne `panel.php` bekommt eine generische Klasse ohne
@@ -129,7 +129,7 @@ Query-Zahl, die steigt, ist ein Befund.
 - `public/.htaccess` des Projekts prüfen (Projekte mit `public/`-Ordner):
   - `~` muss in der Zeichenliste der Catch-all-Regel **und** der
     `QUERY_STRING`-Bedingung stehen (`[a-z0-9/_\-\&=\.~]`), sonst antwortet
-    jeder Klick im CMS mit 403 (Diff-Adressen `…/cms/~/cms/events/`, siehe
+    jeder Klick im CMS mit 403 (Diff-Adressen `…/admin/~/admin/events/`, siehe
     diff-url-and-references.md).
   - `sync.php` liegt im neuen Build in `public/` und wird direkt
     durchgelassen: `RewriteRule ^sync.php$ - [L,QSA]`. Die alte Zeile
@@ -264,7 +264,7 @@ systopic.net und galerie-lattemann.de vorkommt.
 5. Actions mit Partials (Tag-Filter) per CLI fahren, zum Beispiel
    `agents/tmp/systopic.net/orm-filter.json`: Pfad `/projekte/filter`, `"ajax": true`,
    `put.dataset`.
-6. CMS-Vorschau mit Editoren prüfen (`cms/pages/?id=…`, `"user": 2`): Das
+6. CMS-Vorschau mit Editoren prüfen (`admin/pages/?id=…`, `"user": 2`): Das
    Editor-Markup muss gleich bleiben.
 
 ## 2 · Was auf dem ORM läuft (Stand 28.09.2026)
@@ -286,13 +286,13 @@ src/Queries/               PageTree (+Level, Node, FoldMode), PageDetail, Branch
                            Translations, NodeChildren, RewritepathLookup, RewritepathIndex,
                            SettingTree, SettingValues, TagGroups (+Panel), TagLinks,
                            UserAdmin, UserLookup, LastLogin, TrashedPages, Duplicates, Sites, SiteOfNode; Params
-panels/cms/                Wurzel (logout, Release-Note-Check), user/, auth/ (+ root/)
-panels/cms/010_pages/      ganz, außer mml/, upload/, editor/file/ und den Actions
+panels/admin/                Wurzel (logout, Release-Note-Check), user/, auth/ (+ root/)
+panels/admin/010_pages/      ganz, außer mml/, upload/, editor/file/ und den Actions
                            insertMediaInEditor, getImageEditor (Legacy media)
-panels/cms/030_settings/   010_page (+delete), 040_tags (+edit, join)
-panels/cms/040_backup/     kein ORM-Stoff außer dem Restore (Db\Schema\Restore)
-panels/cms/080_users/      users/ (+edit), permissions/ (+edit)
-panels/cms/090_tools/      020_database/{status,audit}, 030_maintenance/{trash,duplicates,rewrite},
+panels/admin/030_settings/   010_page (+delete), 040_tags (+edit, join)
+panels/admin/040_backup/     kein ORM-Stoff außer dem Restore (Db\Schema\Restore)
+panels/admin/080_users/      users/ (+edit), permissions/ (+edit)
+panels/admin/090_tools/      020_database/{status,audit}, 030_maintenance/{trash,duplicates,rewrite},
                            010_system, 060_polyfill, logs/php — ohne DB
 ```
 
@@ -336,7 +336,7 @@ lassen und ein Backup nach Abschnitt 1 anlegen.
 
 In der Reihenfolge, in der es sinnvoll ist:
 
-1. **Medien**: `panels/cms/010_pages/{mml,upload,editor/file}`, `lib/class/media`.
+1. **Medien**: `panels/admin/010_pages/{mml,upload,editor/file}`, `lib/class/media`.
    Es gibt `Tables/Medias/Model` und `Tables/MediaCrops/Model`, aber keine
    Query und keinen Operator. Der Medienbaum sortiert Knoten wie der
    Seitenbaum — `Nodes\Operator` ist fertig dafür.
@@ -409,7 +409,7 @@ Klein, gefunden und nicht angefasst:
   `/projekte/` 25 → 17, CMS `pages?id=173` 13 → 10. Prüfwerkzeug:
   `legacy-db-probe.php` (protokolliert auch die ORM-Abfragen).
   Wer an `RowReader`, `Resolver`, `LoadGroup` arbeitet: alles drei mitdenken.
-- `cms/users`: `UserAdmin.sql` sind fünf Anweisungen in einem Roundtrip —
+- `admin/users`: `UserAdmin.sql` sind fünf Anweisungen in einem Roundtrip —
   in der MySQL-Zählung (`Questions`) +4 gegenüber vorher, in Roundtrips
   gleich.
 - Die Panel-JS in `080_users/panel.js` (`onUpdateRoles`) ist Legacy und

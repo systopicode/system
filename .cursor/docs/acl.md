@@ -56,12 +56,13 @@ Session::hasOneRole('cmsAdmin', 'cmsEditor');
   werden zu `cmsAdmin`/`cmsEditor` (Name bleibt), alle anderen bekommen einen
   Schlüssel aus dem Namen. `role_builtin` bleibt liegen, bis `db audit` sie
   löscht.
-- **Rollenliste** (cms/users/roles, Spalte Key): vor dem Schlüssel so viele
-  Icons wie zutreffen. Schloss = Rolle des Systems (`isSystem`).
-  Controlmap = der Schlüssel steht in einer Config oder im Code eines
-  Panels (`Map::roleKeys()`), nur für Superuser, Link auf Discover mit
-  Filter. Seiten (`fa-files`) = die Rolle darf Content Groups lesen oder
-  schreiben (`UserAdmin::groupsOf()`), Link auf cms/users/permissions.
+- **Rollenliste** (admin/access/roles, Spalte Key): vor dem Schlüssel so
+  viele Icons wie zutreffen. Schloss = Rolle des Systems (`isSystem`).
+  Panel Map (`cmsIcon-sitemap`) = der Schlüssel steht in einer Config oder
+  im Code eines Panels (`Map::roleKeys()`), nur für Superuser, Link auf
+  Discover mit Filter. Content (`cmsIcon-folder`, wie das Panel) = die
+  Rolle darf Content Groups lesen oder schreiben
+  (`UserAdmin::groupsOf()`), Link auf admin/access/content.
 
 ## Seiten: Website und CMS
 
@@ -85,7 +86,7 @@ und den Seitenbaum im CMS. Gesetzt wird es von `PageAccess::readAcls()`
 
 `PageAccess::mayWrite($node)` / `mayEdit($page)` (Alias: auch das Original)
 gelten mit denselben Ausnahmen wie das Lesen (ohne `PAGE_ACL`, Superuser,
-Recovery: alles erlaubt). Geprüft wird in den Actions von `cms/pages`
+Recovery: alles erlaubt). Geprüft wird in den Actions von `admin/pages`
 (`refuses()` / `refusesEdit()` geben die Meldung aus):
 
 | Was | braucht Schreibrecht auf |
@@ -137,8 +138,8 @@ daher ist eine im selben Request angelegte ACL sofort dabei.
 Setzen über `Nodes\Operator::withAcl($node, $acl)` (eigene ACL) und
 `inheritingAcl($node)` (wieder erben), dann speichern.
 
-In der Oberfläche: Seitenleiste von `cms/pages/` → Content → Permissions
-(`packages/cms/panels/cms/010_pages/sidebar/045_permissions.tpl.php`,
+In der Oberfläche: Seitenleiste von `admin/pages/` → Content → Permissions
+(`packages/cms/panels/admin/010_pages/sidebar/045_permissions.tpl.php`,
 `actions.permissions.php`). Wer nicht Superuser ist, schaltet nur Gruppen
 um, auf die er Schreibrecht hat.
 

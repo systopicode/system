@@ -24,10 +24,13 @@ sys.initEvents = function ($set, oneventcomplete, exclude) {
 			return findAll.call(this, selector).not(exclude);
 		};
 	}
+    // Hints for password-manager extensions; browsers may still ignore them.
+    $set.findInSet('input, textarea, select').attr({'data-1p-ignore': '', 'data-bwignore': 'true'});
 	/**** AJAX ALL NON FORM ELEMENTS ****/
 	// Jedes <a> ohne target/download → XHR. Opt-out: target="_self" / _blank / download.
 	$set.findInSet('a').not('[target], [download]').bind('click', sys.processEvent);
 	$set.findInSet('[data-on_click]').not('a').bind('click', new eventCapsule);
+    $set.findInSet('button.ajax[data-href]').not('[data-on_click],[onclick]').bind('click', sys.processEvent);
 	$set.findInSet('.ajax,.put').not('a,input,select,textarea,form,button,[contenteditable]').bind('click', sys.processEvent);
 
 	$set.findInSet('[data-on_contextmenu]').bind('contextmenu', sys.processEvent);
@@ -60,7 +63,8 @@ sys.initEvents = function ($set, oneventcomplete, exclude) {
 
 	/**** AJAX FORM ELEMENTS - SUBMIT SINGLE ****/
 	$set.findInSet('input[type="checkbox"].ajax').bind('change', sys.processEvent);
-	$set.findInSet('input[type="radio"].ajax,input[type="submit"].ajax,input[type="button"].ajax,button.ajax').bind('click keypress', sys.processEvent);
+	$set.findInSet('input[type="radio"].ajax,input[type="submit"].ajax,input[type="button"].ajax,button.ajax').not('button[data-cms-action]').bind('click keypress', sys.processEvent);
+    $set.findInSet('button.ajax[data-cms-action]').not('[data-on_click],[onclick],[data-href]').bind('click', sys.processEvent);
 	$set.findInSet('select.ajax').not('[multiple]').bind('change', sys.processEvent);
 	$set.findInSet('select.ajax[multiple]').bind('click', sys.processEvent); // uncheck selected
 
@@ -79,6 +83,9 @@ sys.initEvents = function ($set, oneventcomplete, exclude) {
 	}
 	if (typeof sys.fitWidgets === 'function') {
 		sys.fitWidgets($set);
+	}
+	if (typeof sys.fitDashboards === 'function') {
+		sys.fitDashboards($set);
 	}
 	// other events - under construction
 	var $onLoadAjax = $set.findInSet('[data-on_load]'); // experimental

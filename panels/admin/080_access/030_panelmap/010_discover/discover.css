@@ -1,0 +1,199 @@
+.cms table.discoverList.discoverList :is(th, td){
+	vertical-align: top;
+}
+.cms table.discoverList.discoverList tr:not(.tableWidgetColumns) > :is(th, td){
+	text-transform: none;
+	letter-spacing: normal;
+}
+.cms .tableWidgets table.discoverList.tableWidgetGrid td.panel{
+	padding-inline-start: calc(var(--cmsCardPadding) + min(var(--depth, 0), 4) * .75rem);
+	white-space: normal;
+}
+.cms table.discoverList td.panel .name{
+	font-weight: 600;
+}
+.cms table.discoverList td.panel .path{
+	display: block;
+	font-size: 0.75rem;
+	color: var(--cmsMuted);
+}
+.cms table.discoverList tr.plain{
+	opacity: 0.5;
+}
+
+.cms table.discoverList :is(span.origin, .term, span.action){
+	display: inline-block;
+	margin: 0 0.25rem 0.25rem 0;
+	padding: 0 0.4rem;
+	border-radius: 999px;
+	background: var(--cmsButtonBg);
+	font-size: 0.75rem;
+	line-height: 1.4rem;
+	white-space: nowrap;
+}
+.cms table.discoverList span.origin:not(.is-winning){
+	background: none;
+	color: var(--cmsMuted);
+}
+.cms table.discoverList td.grants i{
+	width: 1.25rem;
+	color: var(--cmsMuted);
+}
+.cms table.discoverList .term.is-superuser{
+	font-weight: 700;
+}
+.cms table.discoverList .term:is(.is-custom, .is-parent){
+	font-style: italic;
+}
+.cms table.discoverList td.grants .none{
+	color: var(--cmsMuted);
+	font-size: 0.75rem;
+}
+.cms table.discoverList .action.is-entry{
+	background: none;
+	background: color-mix(in srgb, var(--cmsRedirect) 10%, var(--cmsCanvas));
+	color: var(--cmsRedirect);
+}
+.cms table.discoverList .action.is-entry i{
+	margin-right: 0.25rem;
+}
+/* a chip: the label opens the configs (lightbox), the </> behind it the code */
+.cms table.discoverList :is(span.origin, .term, span.action) > a{
+	color: inherit;
+	text-decoration: none;
+}
+.cms table.discoverList :is(span.origin, .term, span.action):has(> a):hover{
+	background: var(--cmsHover);
+}
+.cms table.discoverList :is(span.origin, .term, span.action) > a.code{
+	margin-left: 0.3rem;
+	font-size: 0.65rem;
+	color: var(--cmsMuted);
+}
+.cms table.discoverList :is(span.origin, .term, span.action) > a.code:hover{
+	color: var(--cmsTextColor);
+}
+.cms table.discoverList .term.is-unknown{
+	background: color-mix(in srgb, var(--cmsRedirect) 10%, var(--cmsCanvas));
+	color: var(--cmsRedirect);
+}
+/* what "Show all" is filtered by */
+.cms table.discoverList :is(span.origin, .term, .action, .name).is-match{
+	background: var(--cmsHighlightColor);
+	border-radius: var(--cmsRadius);
+}
+.cms table.discoverList td.panel a.code{
+	margin-left: 0.35rem;
+	font-size: 0.75rem;
+	color: var(--cmsMuted);
+}
+
+/* the lightbox of one panel in the configs (config/) */
+.cmslightbox.controlmapConfig main{
+	overflow: auto;
+}
+.cms table.discoverList.configMap{
+	width: 100%;
+	margin-bottom: 1.5rem;
+}
+.cms table.discoverList.configMap th{
+	white-space: nowrap;
+	text-align: left;
+}
+.cms table.discoverList.configMap tbody th i{
+	width: 1.25rem;
+	color: var(--cmsMuted);
+}
+.cms table.discoverList.configMap tr.is-action > th{
+	font-weight: 400;
+	padding-left: 1.75rem;
+}
+.cms table.discoverList.configMap :is(tr.is-focus > *, .is-focus){
+	background: color-mix(in srgb, var(--cmsHighlightColor) 22%, transparent);
+}
+.cms table.discoverList.configMap .from,
+.cms table.discoverList.configMap .none{
+	display: block;
+	font-size: 0.7rem;
+	color: var(--cmsMuted);
+}
+.cmslightbox.controlmapConfig .configFile{
+	margin-bottom: 1rem;
+	padding: 0.5rem 0.75rem;
+	border-radius: var(--cmsRadius);
+}
+.cmslightbox.controlmapConfig .configFile h3{
+	margin: 0 0 0.25rem;
+	font-size: 0.85rem;
+}
+.cmslightbox.controlmapConfig .configFile h3 span{
+	font-weight: 400;
+	color: var(--cmsMuted);
+}
+.cmslightbox.controlmapConfig .configFile pre{
+	margin: 0;
+	font-size: 0.75rem;
+}
+.cmslightbox.controlmapConfig .configFile .none{
+	margin: 0;
+	font-size: 0.75rem;
+	color: var(--cmsMuted);
+}
+.cmslightbox.controlmapConfig .configFile.is-focus{
+	background: color-mix(in srgb, var(--cmsHighlightColor) 22%, transparent);
+}
+/* the actions nobody configured, behind the switch at the end */
+.cms table.discoverList.configMap:has(input.showOthers:not(:checked)) tbody.others{
+	display: none;
+}
+.cms table.discoverList.configMap tr.othersSwitch label{
+	font-size: 0.75rem;
+	color: var(--cmsMuted);
+	cursor: pointer;
+}
+/* the project's column: a pen to take a key over, then each role on/off, a cross to inherit again */
+.cms table.discoverList.configMap td.is-editable :is(.configSet, .configUnset, .roleToggle){
+	cursor: pointer;
+}
+.cms table.discoverList.configMap td.is-editable :is(.configSet, .configUnset){
+	display: inline-block;
+	padding: 0 0.3rem;
+	color: var(--cmsMuted);
+}
+.cms table.discoverList.configMap td.is-editable :is(.configSet, .configUnset):hover{
+	color: var(--cmsTextColor);
+}
+.cms table.discoverList.configMap .term.roleToggle:not(.is-on){
+	background: none;
+	box-shadow: inset 0 0 0 1px var(--cmsLine);
+	color: var(--cmsMuted);
+}
+.cms table.discoverList.configMap .term.roleToggle:hover{
+	background: var(--cmsHover);
+}
+
+
+.cms .tableScroll.stacked table.discoverList td.panel {
+    overflow-wrap: anywhere;
+    padding-inline: 0;
+}
+.cms table.discoverList .roleToggle {
+    border: 0;
+    cursor: pointer;
+}
+.cmslightbox.controlmapConfig .configFile pre {
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+
+
+.cms .discoverChips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .25rem;
+    min-width: 0;
+}
+.cms table.discoverList .discoverChips > :is(.origin, .action) {
+    margin: 0;
+    white-space: nowrap;
+}

@@ -10,7 +10,7 @@ final class Release
     /** @return array<string, array{date: string, new?: list<string>, fixed?: list<string>}> newest first */
     public static function notes(): array
     {
-        return require dirname(__DIR__, 2) . '/panels/cms/auth/releases.php';
+        return require dirname(__DIR__, 2) . '/panels/admin/auth/releases.php';
     }
 
     /**

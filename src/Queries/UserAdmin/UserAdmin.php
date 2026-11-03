@@ -14,7 +14,7 @@ use Systopic\System\Tables\UsersAtRoles\Model as UserAtRole;
 /**
  * Users, roles, groups and how they connect — `UserAdmin.sql`.
  *
- * The tables are small and the panels of cms/users show all of them at once,
+ * The tables are small and the panels of admin/access show all of them at once,
  * so one query reads everything and this object answers the questions the
  * panels ask. It exists once per request (`objectFor`); a commit to any of the
  * five tables throws it away with its result.

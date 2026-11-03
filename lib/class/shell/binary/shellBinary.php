@@ -22,15 +22,18 @@ class shellBinary {
 	}
 
 	private static function resolve(string $name): ?string {
-		$constant = strtoupper($name) . '_BIN';
-		if (defined($constant) && trim((string) constant($constant)) !== '') {
-			return trim((string) constant($constant));
-		}
+        if (!preg_match('/^[A-Za-z0-9_.-]+$/D', $name)) return null;
+        foreach (['_BIN', '_BINARY'] as $suffix) {
+            $constant = strtoupper($name) . $suffix;
+            if (defined($constant) && trim((string) constant($constant)) !== '') return trim((string) constant($constant));
+            $override = getenv($constant);
+            if (is_string($override) && trim($override) !== '') return trim($override);
+        }
 		$isWindows = PHP_OS_FAMILY === 'Windows';
 		$lookup = ($isWindows ? 'where ' : 'command -v ') . escapeshellarg($name);
-		$output = shell_exec($lookup . ' 2>&1');
+		$output = function_exists('shell_exec') ? shell_exec($lookup . ' 2>&1') : null;
 		if (!is_string($output)) {
-			return NULL;
+			return self::searchPath($name, $isWindows) ?? self::projectBinary($name);
 		}
 		// Match a path, not the localised "not found" text `where` prints on stderr.
 		// Do not stat the result: open_basedir may hide tool folders from is_file().
@@ -54,13 +57,24 @@ class shellBinary {
 		}
 		$roots = [];
 		foreach (['siteRoot', 'projectRoot'] as $prop) {
-			$root = rtrim((string) (fs::$$prop ?? ''), '/\\');
+			$root = (string) (fs::$$prop ?? '');
+            if ($root !== '' && method_exists('fs', 'toNative')) $root = fs::toNative($root);
+            $root = rtrim($root, '/\\');
 			if ($root !== '') {
 				$roots[] = $root;
 			}
 		}
 		foreach (array_unique($roots) as $root) {
-			foreach ([$root . '/var/bin/' . $name, $root . '/bin/' . $name] as $candidate) {
+            $candidates = [$root . '/var/bin/' . $name, $root . '/bin/' . $name];
+            if (function_exists('cmsFfmpegPlatform')) {
+                $platform = cmsFfmpegPlatform();
+                $candidates[] = $root . '/var/bin/' . $platform . '/' . $name;
+                $candidates[] = $root . '/bin/' . $platform . '/' . $name;
+            }
+            foreach ([$root . '/var/bin/*/' . $name, $root . '/bin/*/' . $name] as $pattern) {
+                foreach (glob($pattern) ?: [] as $path) $candidates[] = $path;
+            }
+            foreach ($candidates as $candidate) {
 				if (@is_file($candidate) && @is_executable($candidate)) {
 					return $candidate;
 				}

@@ -136,7 +136,7 @@ final class FolderResolver
             }
             // No class file anywhere: the last source with templates of its
             // own wins, not a folder that only contributes sub-panels (the
-            // CMS package's cms/090_tools/030_maintenance/ next to the
+            // CMS package's admin/090_tools/030_maintenance/ next to the
             // system's, which carries main/controls/footer).
             if ($winning === null) {
                 foreach ($sources as $src) {

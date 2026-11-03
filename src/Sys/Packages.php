@@ -106,7 +106,7 @@ final class Packages
     /**
      * The package's `panels/` folder as a panel root — between the system's
      * and the project's, merged by name like those (a package can add
-     * `cms/…` panels). `$name` must have been announced with `addLib()`.
+     * `admin/…` panels). `$name` must have been announced with `addLib()`.
      */
     public static function addPanels(string $name, string $namespace): void
     {

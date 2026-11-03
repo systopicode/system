@@ -76,10 +76,10 @@ trait ConfirmsActions
 			// on the confirm button reaches the same panel — no URL arithmetic.
 			'href'    => (string) ($options['href'] ?? \http::dataset('on_click') ?? $action),
 			'token'   => \str::randomHex(16),
-			'title'   => (string) ($options['title'] ?? 'Bestätigung'),
+			'title'   => (string) ($options['title'] ?? 'Confirm action'),
 			'message' => $message,
-			'label'   => (string) ($options['label'] ?? 'Ja, ausführen'),
-			'dismiss' => (string) ($options['dismiss'] ?? 'Abbrechen'),
+			'label'   => (string) ($options['label'] ?? 'Confirm'),
+			'dismiss' => (string) ($options['dismiss'] ?? 'Cancel'),
 			'items'   => array_values($options['items'] ?? []),
 			'payload' => $options['payload'] ?? null,
 		]);
@@ -121,8 +121,8 @@ trait ConfirmsActions
 			. '<p>' . $esc($q->message) . '</p>' . $items
 			. '</div></div></main>'
 			. '<footer>'
-			. '<button data-on_click="' . self::CONFIRM_CANCEL_ACTION . '">' . $esc($q->dismiss) . '</button>'
-			. '<button class="submit" data-on_click="' . $esc($q->href) . '">' . $esc($q->label) . '</button>'
+			. '<button data-on_click="' . self::CONFIRM_CANCEL_ACTION . '"><i class="cmsIcon cmsIcon-xmark"></i>' . $esc($q->dismiss) . '</button>'
+			. '<button class="submit" data-on_click="' . $esc($q->href) . '"><i class="cmsIcon cmsIcon-check"></i>' . $esc($q->label) . '</button>'
 			. '</footer>'
 			. '</section></div>';
 	}

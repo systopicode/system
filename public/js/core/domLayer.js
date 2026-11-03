@@ -291,6 +291,8 @@
 			var pins = [];
 			var seen = new Set();
 			var saved = (window.sys && sys.core && sys.core.server && sys.core.server.pendingScroll) || [];
+            var revealVersion = saved.revealVersion ?? sys.core.server.scrollRevealVersion;
+            if (saved.inputVersion !== undefined && saved.inputVersion !== sys.core.server.scrollInputVersion) saved = [];
 			layer.rootNodes.forEach(node => {
 				var el = node && node.parentElement;
 				while (el && el !== document.body && el !== document.documentElement) {
@@ -303,29 +305,23 @@
 					if (oy === 'auto' || oy === 'scroll' || top > 0) {
 						saved.forEach(item => {
 							try {
-								if (el.matches(item.selector) && item.top > top) {
+								if (el.matches(item.selector) && item.top > top && (sys.core.server.scrollReveals?.get(el) || 0) <= revealVersion) {
 									top = item.top;
 								}
 							} catch (error) {}
 						});
-						pins.push({el: el, top: top, min: el.style.minHeight});
-						if (top > 0) {
-							el.style.minHeight = (top + el.clientHeight) + 'px';
-						}
+						// pinScroll holds the place without enlarging a window
+						// that already has its height. The page preview is one.
+						var pin = sys.core.server.pinScroll
+							? sys.core.server.pinScroll(el, top)
+							: () => { if (el.isConnected && top) el.scrollTop = top; };
+						pins.push(pin);
 					}
 					el = el.parentElement;
 				}
 			});
 			return () => {
-				pins.forEach(pin => {
-					if (!pin.el.isConnected) {
-						return;
-					}
-					pin.el.style.minHeight = pin.min;
-					if (pin.top) {
-						pin.el.scrollTop = pin.top;
-					}
-				});
+				pins.forEach(pin => pin());
 				saved.forEach(item => {
 					var el;
 					try {
@@ -333,13 +329,10 @@
 					} catch (error) {
 						return;
 					}
-					if (!el || !item.top) {
+					if (!el || !item.top || !sys.core.server.pinScroll || (sys.core.server.scrollReveals?.get(el) || 0) > revealVersion) {
 						return;
 					}
-					var min = el.style.minHeight;
-					el.style.minHeight = (item.top + el.clientHeight) + 'px';
-					el.scrollTop = item.top;
-					el.style.minHeight = min;
+					sys.core.server.pinScroll(el, item.top)();
 				});
 			};
 		};

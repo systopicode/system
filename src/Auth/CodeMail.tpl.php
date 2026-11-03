@@ -21,5 +21,6 @@ echo Letter::render($invite ? 'Your invitation' : 'Your sign-in code',
 	. '<p style="margin:20px 0;text-align:center;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:28px;letter-spacing:0.14em;font-weight:700;">' . $e($code) . '</p>'
 	. Letter::button($link, 'Open in the browser')
 	. Letter::note('Valid for ' . $e($expires) . ', once.')
+	. Letter::accessWarning()
 	. Letter::note('If you did not ask for this, you can ignore it.')
 );

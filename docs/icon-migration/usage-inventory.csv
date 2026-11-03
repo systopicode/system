@@ -1,0 +1,588 @@
+repository,path,original_line,old_tokens,migration
+system,src/Panels/ConfirmsActions.php,124,regular | xmark,converted to cmsIcon / local SVG masks
+system,src/Panels/ConfirmsActions.php,125,check | regular,converted to cmsIcon / local SVG masks
+system,src/Panels/PanelNode.php,820,regular | server,converted to cmsIcon / local SVG masks
+system,src/Panels/PanelNode.php,821,database | regular,converted to cmsIcon / local SVG masks
+system,src/Panels/PanelNode.php,822,regular | wrench,converted to cmsIcon / local SVG masks
+system,src/Panels/PanelNode.php,823,bug | regular,converted to cmsIcon / local SVG masks
+system,src/Panels/PanelNode.php,824,regular | repeat,converted to cmsIcon / local SVG masks
+system,src/Panels/PanelNode.php,825,file-text | regular,converted to cmsIcon / local SVG masks
+system,src/Auth/DeviceName.php,48,regular | tablet-screen,converted to cmsIcon / local SVG masks
+system,src/Auth/DeviceName.php,51,mobile-screen | regular,converted to cmsIcon / local SVG masks
+system,src/Auth/DeviceName.php,53,laptop | regular,converted to cmsIcon / local SVG masks
+system,src/Auth/DeviceName.php,60,display-slash | regular,converted to cmsIcon / local SVG masks
+system,src/Auth/DeviceName.php,63,mobile-slash | regular,converted to cmsIcon / local SVG masks
+system,src/Auth/DeviceName.php,65,laptop-slash | regular,converted to cmsIcon / local SVG masks
+system,src/Auth/form.card.tpl.php,12,arrow-left | regular,converted to cmsIcon / local SVG masks
+system,src/Auth/login.card.tpl.php,54,regular | user-viewfinder,converted to cmsIcon / local SVG masks
+system,src/Auth/login.card.tpl.php,64,arrow-left | regular,converted to cmsIcon / local SVG masks
+system,src/Auth/login.card.tpl.php,81,regular | user-viewfinder,converted to cmsIcon / local SVG masks
+system,src/Auth/login.card.tpl.php,110,bolt | regular,converted to cmsIcon / local SVG masks
+system,src/Auth/login.card.tpl.php,113,keyboard | regular,converted to cmsIcon / local SVG masks
+system,src/Auth/login.card.tpl.php,118,regular | rotate-right,converted to cmsIcon / local SVG masks
+system,src/Auth/login.card.tpl.php,134,regular | right-to-bracket,converted to cmsIcon / local SVG masks
+system,src/Auth/login.card.tpl.php,135,camera | regular,converted to cmsIcon / local SVG masks
+system,src/Auth/login.card.tpl.php,161,regular | user,converted to cmsIcon / local SVG masks
+system,src/Auth/login.card.tpl.php,165,lock | regular,converted to cmsIcon / local SVG masks
+system,src/Auth/login.card.tpl.php,167,eye | eye-slash | regular,converted to cmsIcon / local SVG masks
+system,src/Auth/login.card.tpl.php,171,regular | right-to-bracket,converted to cmsIcon / local SVG masks
+system,src/Auth/login.card.tpl.php,185,regular | user-viewfinder,converted to cmsIcon / local SVG masks
+system,src/Auth/login.card.tpl.php,187,chevron-right | regular,converted to cmsIcon / local SVG masks
+system,src/Auth/login.card.tpl.php,192,input-numeric | regular,converted to cmsIcon / local SVG masks
+system,src/Auth/login.card.tpl.php,194,chevron-right | regular,converted to cmsIcon / local SVG masks
+system,src/Auth/login.card.tpl.php,197,qrcode | regular,converted to cmsIcon / local SVG masks
+system,src/Auth/login.card.tpl.php,199,chevron-right | regular,converted to cmsIcon / local SVG masks
+system,src/Auth/login.card.tpl.php,203,input-password | regular,converted to cmsIcon / local SVG masks
+system,src/Auth/login.card.tpl.php,205,chevron-right | regular,converted to cmsIcon / local SVG masks
+system,src/Auth/signed-in.tpl.php,8,check | regular,converted to cmsIcon / local SVG masks
+system,src/Auth/signed-in.tpl.php,16,arrow-right | regular,converted to cmsIcon / local SVG masks
+system,src/Auth/passkeys.tpl.php,22,regular | user-viewfinder,converted to cmsIcon / local SVG masks
+system,src/Auth/passkeys.tpl.php,24,regular | trash,converted to cmsIcon / local SVG masks
+system,src/Auth/passkeys.tpl.php,25,chevron-down | regular,converted to cmsIcon / local SVG masks
+system,src/Auth/passkeys.tpl.php,30,check | regular,converted to cmsIcon / local SVG masks
+system,src/Auth/passkeys.tpl.php,37,regular | user-viewfinder,converted to cmsIcon / local SVG masks
+system,src/Auth/passkeys.tpl.php,39,regular | trash,converted to cmsIcon / local SVG masks
+system,src/Auth/passkeys.tpl.php,67,regular | user-viewfinder,converted to cmsIcon / local SVG masks
+system,src/Auth/passkeys.tpl.php,75,chevron-down | chevron-up | regular,converted to cmsIcon / local SVG masks
+system,src/Auth/passkeys.tpl.php,83,regular | xmark,converted to cmsIcon / local SVG masks
+system,src/Auth/passkeys.tpl.php,95,check | regular,converted to cmsIcon / local SVG masks
+system,src/Auth/passkeys.tpl.php,104,regular | user-key,converted to cmsIcon / local SVG masks
+system,src/Auth/passkeys.tpl.php,112,regular | xmark,converted to cmsIcon / local SVG masks
+system,src/Auth/passkeys.tpl.php,124,check | regular,converted to cmsIcon / local SVG masks
+system,src/Auth/passkeys.tpl.php,134,regular | xmark,converted to cmsIcon / local SVG masks
+system,src/Auth/passkeys.tpl.php,146,regular | user-key,converted to cmsIcon / local SVG masks
+system,src/Settings/EnvironmentForm.php,197,play | regular | stop,converted to cmsIcon / local SVG masks
+system,src/Settings/EnvironmentForm.php,199,key-skeleton | regular,converted to cmsIcon / local SVG masks
+system,src/Settings/EnvironmentForm.php,227,plus | regular,converted to cmsIcon / local SVG masks
+system,src/Settings/EnvironmentForm.php,237,plus | regular,converted to cmsIcon / local SVG masks
+system,src/Settings/EnvironmentForm.php,239,link-slash | regular,converted to cmsIcon / local SVG masks
+system,src/Settings/EnvironmentForm.php,245,circle-info | regular,converted to cmsIcon / local SVG masks
+system,src/Settings/EnvironmentForm.php,258,key-skeleton | regular,converted to cmsIcon / local SVG masks
+system,src/Settings/EnvironmentForm.php,272,regular | rotate-right,converted to cmsIcon / local SVG masks
+system,src/Settings/EnvironmentForm.php,274,regular | trash,converted to cmsIcon / local SVG masks
+system,src/Settings/EnvironmentForm.php,302,envelope | paper-plane | regular,converted to cmsIcon / local SVG masks
+system,src/Settings/EnvironmentForm.php,327,plus | regular,converted to cmsIcon / local SVG masks
+system,src/Settings/EnvironmentForm.php,347,regular | trash,converted to cmsIcon / local SVG masks
+system,src/Settings/ProjectForm.php,91,circle-info | regular,converted to cmsIcon / local SVG masks
+system,src/Settings/ProjectForm.php,209,pen | regular,converted to cmsIcon / local SVG masks
+system,src/Settings/ProjectForm.php,382,pen | regular,converted to cmsIcon / local SVG masks
+system,src/Settings/ProjectForm.php,389,pen | regular,converted to cmsIcon / local SVG masks
+system,src/Settings/ProjectForm.php,498,plus | regular,converted to cmsIcon / local SVG masks
+system,src/Settings/ProjectForm.php,503,regular | trash,converted to cmsIcon / local SVG masks
+system,src/Settings/ProjectForm.php,508,grip-dots-vertical | regular,converted to cmsIcon / local SVG masks
+system,src/Settings/ProjectForm.php,560,gear,converted to cmsIcon / local SVG masks
+system,src/Settings/ThemeAssets.php,85,image | regular,converted to cmsIcon / local SVG masks
+system,src/Settings/Contrast.php,26,chevron-down | regular,converted to cmsIcon / local SVG masks
+system,src/Settings/Contrast.php,29,regular,converted to cmsIcon / local SVG masks
+system,src/Settings/ThemeFile.php,246,arrow-rotate-left | regular,converted to cmsIcon / local SVG masks
+system,src/Settings/ThemeFile.php,263,check | regular,converted to cmsIcon / local SVG masks
+system,src/Settings/ThemeFile.php,270,check | regular,converted to cmsIcon / local SVG masks
+system,src/Queries/TagGroups/TagGroupsPanel.php,100,pen | regular,converted to cmsIcon / local SVG masks
+system,src/Queries/TagGroups/TagGroupsPanel.php,155,arrow-turn-down-right | regular,converted to cmsIcon / local SVG masks
+system,src/Queries/TagGroups/TagGroupsPanel.php,167,pen | regular,converted to cmsIcon / local SVG masks
+system,src/Queries/TagGroups/TagGroupsPanel.php,175,regular | trash,converted to cmsIcon / local SVG masks
+system,src/Logs/Filters.php,10,filter-circle-xmark | regular,converted to cmsIcon / local SVG masks
+system,src/Sys/Search.php,17,user,converted to cmsIcon / local SVG masks
+system,src/Sys/Search.php,90,compass,converted to cmsIcon / local SVG masks
+system,src/Sys/Search.php,94,compass,converted to cmsIcon / local SVG masks
+system,src/Sys/WebApp.php,88,hammer,converted to cmsIcon / local SVG masks
+system,src/Sys/WebApp.php,89,flask,converted to cmsIcon / local SVG masks
+system,src/Sys/WebApp.php,90,globe,converted to cmsIcon / local SVG masks
+system,src/Sys/WebApp.php,94,regular,converted to cmsIcon / local SVG masks
+system,tests/gui-feedback-ui.mjs,9,xmark,converted to cmsIcon / local SVG masks
+system,tests/pages-touch-ui.mjs,141,regular,converted to cmsIcon / local SVG masks
+system,tests/inline-edit-ui.mjs,13,pen,converted to cmsIcon / local SVG masks
+system,tests/inline-edit-ui.mjs,30,pen,converted to cmsIcon / local SVG masks
+system,tests/inline-edit-ui.mjs,32,pen,converted to cmsIcon / local SVG masks
+system,.cursor/docs/gui.md,102,regular | xmark,converted to cmsIcon / local SVG masks
+system,.cursor/docs/gui.md,144,address-book,converted to cmsIcon / local SVG masks
+system,.cursor/docs/gui.md,314,duotone | regular,converted to cmsIcon / local SVG masks
+system,.cursor/docs/gui.md,319,duotone-regular-400 | regular-400,converted to cmsIcon / local SVG masks
+system,.cursor/docs/gui.md,495,duotone | light | regular,converted to cmsIcon / local SVG masks
+system,.cursor/docs/gui.md,496,solid,converted to cmsIcon / local SVG masks
+system,.cursor/docs/gui.md,552,duotone,converted to cmsIcon / local SVG masks
+system,lib/class/media/editor/mediaEditor.php,77,check | regular,converted to cmsIcon / local SVG masks
+system,lib/class/html/element/htmlElements.php,334,regular,converted to cmsIcon / local SVG masks
+system,public/js/loader.js,14,circle-exclamation | regular | spin | spinner,converted to cmsIcon / local SVG masks
+system,public/js/gui/HTMLeditor.funcs.js,81,check | regular,converted to cmsIcon / local SVG masks
+system,public/js/gui/ui.js,12,regular,converted to cmsIcon / local SVG masks
+system,public/js/gui/ui.js,251,regular,converted to cmsIcon / local SVG masks
+system,public/js/gui/ui.js,258,arrows-rotate | regular,converted to cmsIcon / local SVG masks
+system,public/js/gui/ui.js,450,times | xmark,converted to cmsIcon / local SVG masks
+system,public/js/gui/ui.js,590,regular | spin | spinner,converted to cmsIcon / local SVG masks
+system,public/js/gui/ui.js,623,regular | xmark,converted to cmsIcon / local SVG masks
+system,public/js/gui/HTMLeditor.menus.js,16,regular,converted to cmsIcon / local SVG masks
+system,public/js/gui/HTMLeditor.menus.js,19,regular,converted to cmsIcon / local SVG masks
+system,public/js/gui/HTMLeditor.menus.js,40,heading | regular,converted to cmsIcon / local SVG masks
+system,public/js/gui/HTMLeditor.menus.js,42,list-ul | regular,converted to cmsIcon / local SVG masks
+system,public/js/gui/HTMLeditor.menus.js,65,regular,converted to cmsIcon / local SVG masks
+system,public/js/gui/HTMLeditor.menus.js,97,regular | table-rows,converted to cmsIcon / local SVG masks
+system,public/js/gui/HTMLeditor.menus.js,102,regular | table-columns,converted to cmsIcon / local SVG masks
+system,public/js/gui/tableFit.js,58,chevron-down | regular,converted to cmsIcon / local SVG masks
+system,public/js/gui/HTMLeditor.contextmenu.js,372,keyboard | regular,converted to cmsIcon / local SVG masks
+system,public/js/gui/qr-scan.js,169,camera | regular | rotate-right,converted to cmsIcon / local SVG masks
+system,panels/cms/body.tpl.php,65,regular | rotate-right | spin | spinner,converted to cmsIcon / local SVG masks
+system,panels/cms/body.tpl.php,67,bars | regular,converted to cmsIcon / local SVG masks
+system,panels/cms/body.tpl.php,71,magnifying-glass | regular,converted to cmsIcon / local SVG masks
+system,panels/cms/body.tpl.php,72,regular | xmark,converted to cmsIcon / local SVG masks
+system,panels/cms/body.tpl.php,106,duotone | magnifying-glass | regular,converted to cmsIcon / local SVG masks
+system,panels/cms/body.tpl.php,109,circle-question | duotone | regular,converted to cmsIcon / local SVG masks
+system,panels/cms/legal/lightbox.tpl.php,14,regular | xmark,converted to cmsIcon / local SVG masks
+system,_legacy/public/css/dead-rules.css,722,arrows-split-up-and-left,converted to cmsIcon / local SVG masks
+system,panels/cms/search/lightbox.tpl.php,9,regular | xmark,converted to cmsIcon / local SVG masks
+system,panels/cms/search/results.tpl.php,20,regular,converted to cmsIcon / local SVG masks
+system,panels/cms/home.notices.tpl.php,20,regular | triangle-exclamation,converted to cmsIcon / local SVG masks
+system,panels/cms/home.notices.tpl.php,22,regular,converted to cmsIcon / local SVG masks
+system,lib/class/dom/editable/domEditable.js,427,pen | regular,converted to cmsIcon / local SVG masks
+system,lib/class/dom/editable/domEditable.js,430,circle-check | regular,converted to cmsIcon / local SVG masks
+system,lib/class/dom/editable/domEditable.js,433,circle-xmark | regular,converted to cmsIcon / local SVG masks
+system,lib/class/dom/editable/domEditable.js,437,pen | regular,converted to cmsIcon / local SVG masks
+system,lib/class/dom/editable/domEditable.js,440,plus-circle,converted to cmsIcon / local SVG masks
+system,lib/class/dom/editable/domEditable.js,444,minus-circle,converted to cmsIcon / local SVG masks
+system,panels/cms/actions.php,31,duotone,converted to cmsIcon / local SVG masks
+system,panels/cms/mobile.js,522,ellipsis | regular,converted to cmsIcon / local SVG masks
+system,panels/cms/home.tpl.php,42,ellipsis | regular,converted to cmsIcon / local SVG masks
+system,panels/cms/home.tpl.php,44,check | grid-2 | regular,converted to cmsIcon / local SVG masks
+system,panels/cms/home.tpl.php,45,regular | up-right-from-square,converted to cmsIcon / local SVG masks
+system,panels/cms/home.tpl.php,76,regular | xmark,converted to cmsIcon / local SVG masks
+system,panels/cms/home.tpl.php,90,file-contract | regular,converted to cmsIcon / local SVG masks
+system,panels/cms/home.tpl.php,91,building | regular,converted to cmsIcon / local SVG masks
+system,panels/cms/home.tpl.php,92,regular | shield-halved,converted to cmsIcon / local SVG masks
+system,panels/cms/home.tpl.php,93,question-circle | regular,converted to cmsIcon / local SVG masks
+system,panels/cms/preview.tpl.php,20,eye | regular,converted to cmsIcon / local SVG masks
+system,panels/cms/090_tools/dashboard.tpl.php,20,regular | server,converted to cmsIcon / local SVG masks
+system,panels/cms/080_users/child.roles.tpl.php,10,plus | regular,converted to cmsIcon / local SVG masks
+system,panels/cms/080_users/child.roles.tpl.php,34,pen | regular,converted to cmsIcon / local SVG masks
+system,panels/cms/auth/resetPassword.tpl.php,8,envelope | regular,converted to cmsIcon / local SVG masks
+system,panels/cms/auth/resetPassword.tpl.php,17,paper-plane | regular,converted to cmsIcon / local SVG masks
+system,panels/cms/auth/register.tpl.php,8,envelope | regular,converted to cmsIcon / local SVG masks
+system,panels/cms/auth/register.tpl.php,18,regular | user-plus,converted to cmsIcon / local SVG masks
+system,panels/cms/auth/setPassword.tpl.php,7,paper-plane | regular,converted to cmsIcon / local SVG masks
+system,panels/cms/auth/setPassword.tpl.php,18,lock | regular,converted to cmsIcon / local SVG masks
+system,panels/cms/auth/setPassword.tpl.php,25,lock | regular,converted to cmsIcon / local SVG masks
+system,panels/cms/auth/setPassword.tpl.php,33,check | regular,converted to cmsIcon / local SVG masks
+system,panels/cms/auth/panel.php,164,user,converted to cmsIcon / local SVG masks
+system,panels/cms/auth/identify.tpl.php,56,regular | user,converted to cmsIcon / local SVG masks
+system,panels/cms/auth/identify.tpl.php,58,chevron-right | regular,converted to cmsIcon / local SVG masks
+system,panels/cms/auth/identify.tpl.php,63,regular | tv,converted to cmsIcon / local SVG masks
+system,panels/cms/auth/identify.tpl.php,65,chevron-right | regular,converted to cmsIcon / local SVG masks
+system,panels/cms/auth/identify.tpl.php,70,regular | users,converted to cmsIcon / local SVG masks
+system,panels/cms/auth/identify.tpl.php,72,chevron-right | regular,converted to cmsIcon / local SVG masks
+system,panels/cms/auth/identify.tpl.php,90,regular | right-to-bracket,converted to cmsIcon / local SVG masks
+system,panels/cms/auth/identify.tpl.php,98,arrow-left | regular,converted to cmsIcon / local SVG masks
+system,panels/cms/auth/identify.tpl.php,100,arrow-left | regular,converted to cmsIcon / local SVG masks
+system,panels/cms/auth/license.tpl.php,14,arrow-up-right-from-square | regular,converted to cmsIcon / local SVG masks
+system,panels/cms/auth/resetCode.tpl.php,8,hashtag | regular,converted to cmsIcon / local SVG masks
+system,panels/cms/auth/resetCode.tpl.php,15,check | regular,converted to cmsIcon / local SVG masks
+system,panels/cms/080_users/dashboard.tpl.php,27,regular | right-to-bracket,converted to cmsIcon / local SVG masks
+system,panels/cms/080_users/dashboard.tpl.php,102,list | regular,converted to cmsIcon / local SVG masks
+system,panels/cms/user/panel.php,73,regular | user,converted to cmsIcon / local SVG masks
+system,panels/cms/user/panel.php,76,regular | right-from-bracket,converted to cmsIcon / local SVG masks
+system,panels/cms/user/controls.tpl.php,3,regular | right-from-line,converted to cmsIcon / local SVG masks
+system,panels/cms/user/main.tpl.php,104,regular | trash,converted to cmsIcon / local SVG masks
+system,panels/cms/user/main.tpl.php,116,regular | user-clock,converted to cmsIcon / local SVG masks
+system,panels/cms/user/main.tpl.php,120,regular | user-shield,converted to cmsIcon / local SVG masks
+system,panels/cms/user/main.tpl.php,132,eye | regular,converted to cmsIcon / local SVG masks
+system,panels/cms/user/main.tpl.php,137,id-card | regular,converted to cmsIcon / local SVG masks
+system,panels/cms/user/main.tpl.php,146,lock | regular,converted to cmsIcon / local SVG masks
+system,panels/cms/user/main.tpl.php,153,check | regular,converted to cmsIcon / local SVG masks
+system,panels/cms/user/main.tpl.php,160,phone-laptop | regular,converted to cmsIcon / local SVG masks
+system,panels/cms/user/main.tpl.php,179,laptop-mobile | regular,converted to cmsIcon / local SVG masks
+system,panels/cms/user/main.tpl.php,190,regular | sun,converted to cmsIcon / local SVG masks
+system,panels/cms/user/main.tpl.php,194,circle-half-stroke | moon | regular | sun,converted to cmsIcon / local SVG masks
+system,panels/cms/user/main.tpl.php,202,arrow-rotate-left | regular,converted to cmsIcon / local SVG masks
+system,panels/cms/user/main.tpl.php,214,regular | xmark,converted to cmsIcon / local SVG masks
+system,panels/cms/user/main.tpl.php,234,regular | xmark,converted to cmsIcon / local SVG masks
+system,panels/cms/user/main.tpl.php,249,camera | regular,converted to cmsIcon / local SVG masks
+system,panels/cms/user/main.tpl.php,250,input-numeric | regular,converted to cmsIcon / local SVG masks
+system,panels/cms/user/main.tpl.php,258,bolt | regular,converted to cmsIcon / local SVG masks
+system,panels/cms/user/main.tpl.php,263,qrcode | regular,converted to cmsIcon / local SVG masks
+system,panels/cms/user/main.tpl.php,265,input-numeric | regular,converted to cmsIcon / local SVG masks
+system,panels/cms/user/main.tpl.php,269,regular | rotate-right,converted to cmsIcon / local SVG masks
+system,panels/cms/user/main.tpl.php,284,check | regular,converted to cmsIcon / local SVG masks
+system,panels/cms/user/main.tpl.php,288,qrcode | regular,converted to cmsIcon / local SVG masks
+system,panels/cms/user/main.tpl.php,290,camera | regular,converted to cmsIcon / local SVG masks
+system,panels/cms/user/main.tpl.php,314,regular | xmark,converted to cmsIcon / local SVG masks
+system,panels/cms/user/main.tpl.php,341,check | regular,converted to cmsIcon / local SVG masks
+system,panels/cms/user/main.tpl.php,363,check | regular,converted to cmsIcon / local SVG masks
+system,panels/cms/040_backup/backup.tpl.php,14,arrow-rotate-left | regular,converted to cmsIcon / local SVG masks
+system,panels/cms/040_backup/backup.tpl.php,17,regular | trash,converted to cmsIcon / local SVG masks
+system,panels/cms/040_backup/backup.tpl.php,33,arrow-down-to-line | regular,converted to cmsIcon / local SVG masks
+system,panels/cms/040_backup/dashboard.tpl.php,11,box-archive | regular,converted to cmsIcon / local SVG masks
+system,panels/cms/040_backup/dashboard.tpl.php,14,regular | triangle-exclamation,converted to cmsIcon / local SVG masks
+system,panels/cms/040_backup/dashboard.tpl.php,24,box-archive | regular,converted to cmsIcon / local SVG masks
+system,panels/cms/040_backup/dashboard.tpl.php,26,plus | regular,converted to cmsIcon / local SVG masks
+system,panels/cms/040_backup/panel.php,19,box-archive | duotone | regular,converted to cmsIcon / local SVG masks
+system,panels/cms/040_backup/controls.tpl.php,10,file-lines | regular,converted to cmsIcon / local SVG masks
+system,panels/cms/040_backup/controls.tpl.php,11,broom | regular,converted to cmsIcon / local SVG masks
+system,panels/cms/040_backup/controls.tpl.php,12,arrow-up-from-bracket | regular,converted to cmsIcon / local SVG masks
+system,panels/cms/040_backup/controls.tpl.php,17,plus | regular,converted to cmsIcon / local SVG masks
+system,panels/cms/030_settings/020_pagesettings/panel.php,14,globe | regular,converted to cmsIcon / local SVG masks
+system,panels/cms/040_backup/restore/lightbox.tpl.php,44,regular | xmark,converted to cmsIcon / local SVG masks
+system,panels/cms/040_backup/restore/confirm.tpl.php,88,arrow-rotate-left | regular,converted to cmsIcon / local SVG masks
+system,panels/cms/auth/main.tpl.php,17,arrow-left | regular,converted to cmsIcon / local SVG masks
+system,panels/cms/auth/activationCode.tpl.php,8,hashtag | regular,converted to cmsIcon / local SVG masks
+system,panels/cms/auth/activationCode.tpl.php,17,check | regular,converted to cmsIcon / local SVG masks
+system,panels/cms/auth/passkeySetup.tpl.php,13,regular | user-viewfinder,converted to cmsIcon / local SVG masks
+system,panels/cms/auth/passkeySetup.tpl.php,15,arrow-right | regular,converted to cmsIcon / local SVG masks
+system,panels/cms/auth/loggedOut.tpl.php,11,regular | right-to-bracket,converted to cmsIcon / local SVG masks
+system,panels/cms/auth/footer.tpl.php,10,file-contract | regular,converted to cmsIcon / local SVG masks
+system,panels/cms/auth/footer.tpl.php,11,building | regular,converted to cmsIcon / local SVG masks
+system,panels/cms/auth/footer.tpl.php,12,regular | shield-halved,converted to cmsIcon / local SVG masks
+system,panels/cms/auth/footer.tpl.php,13,regular | up-right-from-square,converted to cmsIcon / local SVG masks
+system,panels/cms/auth/footer.tpl.php,14,question-circle | regular,converted to cmsIcon / local SVG masks
+system,panels/cms/080_users/panel.php,17,duotone | regular | users,converted to cmsIcon / local SVG masks
+system,panels/cms/080_users/panel.php,51,minus-circle | regular,converted to cmsIcon / local SVG masks
+system,panels/cms/080_users/child.role.tpl.php,12,pen | regular,converted to cmsIcon / local SVG masks
+system,panels/cms/080_users/child.role.tpl.php,14,regular | trash,converted to cmsIcon / local SVG masks
+system,panels/cms/080_users/child.role.tpl.php,15,regular | xmark,converted to cmsIcon / local SVG masks
+system,panels/cms/080_users/010_users/panel.php,21,regular | users,converted to cmsIcon / local SVG masks
+system,panels/cms/080_users/010_users/panel.php,92,user,converted to cmsIcon / local SVG masks
+system,panels/cms/080_users/010_users/users.tpl.php,20,plus | regular,converted to cmsIcon / local SVG masks
+system,panels/cms/080_users/010_users/users.tpl.php,42,regular | user-lock,converted to cmsIcon / local SVG masks
+system,panels/cms/080_users/010_users/users.tpl.php,44,regular | user-shield,converted to cmsIcon / local SVG masks
+system,panels/cms/080_users/010_users/users.tpl.php,61,pen | regular,converted to cmsIcon / local SVG masks
+system,panels/cms/080_users/010_users/users.tpl.php,63,regular | trash,converted to cmsIcon / local SVG masks
+system,panels/cms/040_backup/log/lightbox.tpl.php,7,arrow-down-to-line | regular,converted to cmsIcon / local SVG masks
+system,panels/cms/040_backup/log/lightbox.tpl.php,11,regular | trash,converted to cmsIcon / local SVG masks
+system,panels/cms/040_backup/log/lightbox.tpl.php,15,regular | xmark,converted to cmsIcon / local SVG masks
+system,panels/cms/090_tools/panel.php,12,duotone | regular | wrench,converted to cmsIcon / local SVG masks
+system,panels/cms/030_settings/032_theme/panel.php,15,regular | swatchbook,converted to cmsIcon / local SVG masks
+system,panels/cms/030_settings/035_environment/panel.php,14,regular | server,converted to cmsIcon / local SVG masks
+system,panels/cms/030_settings/032_theme/panel.js,22,regular,converted to cmsIcon / local SVG masks
+system,panels/cms/030_settings/panel.php,16,duotone | gear | regular,converted to cmsIcon / local SVG masks
+system,panels/cms/040_backup/create/settings.tpl.php,57,box-archive | regular,converted to cmsIcon / local SVG masks
+system,panels/cms/040_backup/create/lightbox.tpl.php,31,regular | xmark,converted to cmsIcon / local SVG masks
+system,panels/cms/090_tools/pylon.tpl.php,53,regular,converted to cmsIcon / local SVG masks
+system,panels/cms/080_users/012_screens/panel.php,17,regular | tv,converted to cmsIcon / local SVG masks
+system,panels/cms/080_users/012_screens/panel.php,33,tv,converted to cmsIcon / local SVG masks
+system,panels/cms/080_users/010_users/edit/user.tpl.php,61,regular | xmark,converted to cmsIcon / local SVG masks
+system,panels/cms/080_users/010_users/edit/user.tpl.php,83,regular | trash,converted to cmsIcon / local SVG masks
+system,panels/cms/080_users/010_users/edit/user.tpl.php,125,regular | user-shield,converted to cmsIcon / local SVG masks
+system,panels/cms/080_users/010_users/edit/user.tpl.php,132,regular | user-shield,converted to cmsIcon / local SVG masks
+system,panels/cms/080_users/010_users/edit/user.tpl.php,134,regular | user-shield,converted to cmsIcon / local SVG masks
+system,panels/cms/080_users/010_users/edit/user.tpl.php,167,chevron- | regular,converted to cmsIcon / local SVG masks
+system,panels/cms/080_users/010_users/edit/user.tpl.php,170,broom | regular,converted to cmsIcon / local SVG masks
+system,panels/cms/080_users/010_users/edit/user.tpl.php,186,envelope | regular,converted to cmsIcon / local SVG masks
+system,panels/cms/080_users/010_users/edit/user.tpl.php,218,key-skeleton | regular,converted to cmsIcon / local SVG masks
+system,panels/cms/080_users/010_users/edit/user.tpl.php,228,qrcode | regular,converted to cmsIcon / local SVG masks
+system,panels/cms/080_users/010_users/edit/user.tpl.php,242,qrcode | regular,converted to cmsIcon / local SVG masks
+system,panels/cms/080_users/010_users/edit/user.tpl.php,246,paper-plane | regular,converted to cmsIcon / local SVG masks
+system,panels/cms/080_users/010_users/edit/user.tpl.php,251,paper-plane | regular,converted to cmsIcon / local SVG masks
+system,panels/cms/080_users/010_users/edit/user.tpl.php,264,copy | regular,converted to cmsIcon / local SVG masks
+system,panels/cms/080_users/010_users/edit/user.tpl.php,266,paper-plane | regular,converted to cmsIcon / local SVG masks
+system,panels/cms/080_users/010_users/edit/user.tpl.php,301,chevron- | regular,converted to cmsIcon / local SVG masks
+system,panels/cms/080_users/010_users/edit/user.tpl.php,308,regular,converted to cmsIcon / local SVG masks
+system,panels/cms/080_users/010_users/edit/user.tpl.php,321,arrow-rotate-left | regular,converted to cmsIcon / local SVG masks
+system,panels/cms/080_users/010_users/edit/user.tpl.php,333,regular | trash,converted to cmsIcon / local SVG masks
+system,panels/cms/080_users/010_users/edit/lightbox.tpl.php,32,regular | xmark,converted to cmsIcon / local SVG masks
+system,panels/cms/080_users/010_users/edit/lightbox.tpl.php,41,copy | regular,converted to cmsIcon / local SVG masks
+system,panels/cms/090_tools/070_media/main.tpl.php,12,eye | regular,converted to cmsIcon / local SVG masks
+system,panels/cms/090_tools/070_media/main.tpl.php,13,regular | wrench,converted to cmsIcon / local SVG masks
+system,panels/cms/090_tools/070_media/main.tpl.php,24,eye | regular,converted to cmsIcon / local SVG masks
+system,panels/cms/090_tools/070_media/main.tpl.php,25,arrows-rotate | regular,converted to cmsIcon / local SVG masks
+system,panels/cms/090_tools/070_media/main.tpl.php,36,eye | regular,converted to cmsIcon / local SVG masks
+system,panels/cms/090_tools/070_media/main.tpl.php,37,arrows-rotate | regular,converted to cmsIcon / local SVG masks
+system,panels/cms/090_tools/070_media/main.tpl.php,73,broom | regular,converted to cmsIcon / local SVG masks
+system,panels/cms/090_tools/070_media/main.tpl.php,74,frame | regular,converted to cmsIcon / local SVG masks
+system,panels/cms/080_users/015_roles/panel.php,16,regular | user-tag,converted to cmsIcon / local SVG masks
+system,panels/cms/030_settings/030_mediasettings/panel.php,14,image | regular,converted to cmsIcon / local SVG masks
+system,panels/cms/030_settings/040_tags/020_join/lightbox.tpl.php,20,regular | xmark,converted to cmsIcon / local SVG masks
+system,panels/cms/030_settings/040_tags/020_join/lightbox.tpl.php,29,arrow-right | regular,converted to cmsIcon / local SVG masks
+system,panels/cms/030_settings/040_tags/020_join/lightbox.tpl.php,38,code-merge | regular,converted to cmsIcon / local SVG masks
+system,panels/cms/030_settings/040_tags/panel.php,21,regular | tags,converted to cmsIcon / local SVG masks
+system,panels/cms/030_settings/040_tags/panel.php,71,tag,converted to cmsIcon / local SVG masks
+system,panels/cms/030_settings/040_tags/controls.tpl.php,2,plus | regular,converted to cmsIcon / local SVG masks
+system,panels/cms/090_tools/040_cleanup/040_automatic/main.tpl.php,24,circle-check | circle-exclamation | regular,converted to cmsIcon / local SVG masks
+system,panels/cms/090_tools/040_cleanup/040_automatic/main.tpl.php,34,broom | magnifying-glass | regular,converted to cmsIcon / local SVG masks
+system,panels/cms/090_tools/040_cleanup/040_automatic/main.tpl.php,41,broom | magnifying-glass | regular,converted to cmsIcon / local SVG masks
+system,panels/cms/090_tools/040_cleanup/040_automatic/main.tpl.php,45,chevron-down | regular,converted to cmsIcon / local SVG masks
+system,panels/cms/090_tools/040_cleanup/040_automatic/main.tpl.php,48,chevron-down | regular,converted to cmsIcon / local SVG masks
+system,panels/cms/090_tools/040_cleanup/040_automatic/main.tpl.php,50,chevron-down | regular,converted to cmsIcon / local SVG masks
+system,panels/cms/090_tools/040_cleanup/040_automatic/main.tpl.php,51,chevron-down | regular,converted to cmsIcon / local SVG masks
+system,panels/cms/090_tools/040_cleanup/040_automatic/main.tpl.php,52,key | regular,converted to cmsIcon / local SVG masks
+system,panels/cms/090_tools/040_cleanup/040_automatic/main.tpl.php,53,regular | stop,converted to cmsIcon / local SVG masks
+system,panels/cms/090_tools/040_cleanup/040_automatic/preview.tpl.php,6,regular | xmark,converted to cmsIcon / local SVG masks
+system,panels/cms/090_tools/010_system/systemcheck/media.tpl.php,2,flask | regular,converted to cmsIcon / local SVG masks
+system,panels/cms/090_tools/010_system/systemcheck/media.tpl.php,12,chevron-down | regular,converted to cmsIcon / local SVG masks
+system,panels/cms/090_tools/010_system/systemcheck/main.tpl.php,21,arrow-right | regular,converted to cmsIcon / local SVG masks
+system,panels/cms/090_tools/010_system/systemcheck/main.tpl.php,38,file-arrow-down | regular | rotate-right,converted to cmsIcon / local SVG masks
+system,panels/cms/030_settings/030_mediasettings/010_types/lightbox.tpl.php,12,regular | xmark,converted to cmsIcon / local SVG masks
+system,panels/cms/080_users/020_permissions/groups.tpl.php,17,plus | regular,converted to cmsIcon / local SVG masks
+system,panels/cms/080_users/020_permissions/groups.tpl.php,43,pen | regular,converted to cmsIcon / local SVG masks
+system,panels/cms/080_users/020_permissions/panel.php,18,regular | shield-halved,converted to cmsIcon / local SVG masks
+system,panels/cms/090_tools/dashboard.cleanup.tpl.php,7,regular | shield-check,converted to cmsIcon / local SVG masks
+system,panels/cms/090_tools/dashboard.cleanup.tpl.php,14,regular | triangle-exclamation,converted to cmsIcon / local SVG masks
+system,panels/cms/090_tools/dashboard.cleanup.tpl.php,18,arrow-up-right-from-square | regular,converted to cmsIcon / local SVG masks
+system,panels/cms/090_tools/dashboard.cleanup.tpl.php,23,broom | gear | regular,converted to cmsIcon / local SVG masks
+system,panels/cms/030_settings/040_tags/010_edit/lightbox.tpl.php,17,pen | regular,converted to cmsIcon / local SVG masks
+system,panels/cms/030_settings/040_tags/010_edit/lightbox.tpl.php,22,regular | trash,converted to cmsIcon / local SVG masks
+system,panels/cms/030_settings/040_tags/010_edit/lightbox.tpl.php,25,regular | xmark,converted to cmsIcon / local SVG masks
+system,panels/cms/030_settings/040_tags/010_edit/lightbox.tpl.php,39,arrow-up-right-from-square | eye | regular,converted to cmsIcon / local SVG masks
+system,panels/cms/030_settings/040_tags/010_edit/lightbox.tpl.php,45,link-slash | regular,converted to cmsIcon / local SVG masks
+system,panels/cms/090_tools/010_system/assets/main.tpl.php,24,cloud-arrow-up | regular,converted to cmsIcon / local SVG masks
+system,panels/cms/090_tools/010_system/assets/main.tpl.php,25,broom | regular,converted to cmsIcon / local SVG masks
+system,panels/cms/080_users/020_permissions/edit/group.tpl.php,13,pen | regular,converted to cmsIcon / local SVG masks
+system,panels/cms/080_users/020_permissions/edit/group.tpl.php,15,regular | trash,converted to cmsIcon / local SVG masks
+system,panels/cms/080_users/020_permissions/edit/group.tpl.php,16,regular | xmark,converted to cmsIcon / local SVG masks
+system,public/css/40_nav.css,340,duotone,converted to cmsIcon / local SVG masks
+system,public/css/40_nav.css,341,secondary-opacity,converted to cmsIcon / local SVG masks
+system,public/css/40_nav.css,350,primary-color,converted to cmsIcon / local SVG masks
+system,public/css/40_nav.css,351,secondary-color,converted to cmsIcon / local SVG masks
+system,public/css/40_nav.css,352,secondary-opacity,converted to cmsIcon / local SVG masks
+system,public/css/menu.css,104,ellipsis-v,converted to cmsIcon / local SVG masks
+system,public/css/menu.css,123,ellipsis-v,converted to cmsIcon / local SVG masks
+system,public/css/menu.css,160,ellipsis-v,converted to cmsIcon / local SVG masks
+system,public/css/menu.css,167,ellipsis-v,converted to cmsIcon / local SVG masks
+system,public/css/70_components.css,477,minus-circle,converted to cmsIcon / local SVG masks
+system,public/css/70_components.css,500,pen,converted to cmsIcon / local SVG masks
+system,public/css/70_components.css,501,edit,converted to cmsIcon / local SVG masks
+system,public/css/70_components.css,506,pen,converted to cmsIcon / local SVG masks
+system,public/css/70_components.css,507,edit,converted to cmsIcon / local SVG masks
+system,public/css/70_components.css,522,pen,converted to cmsIcon / local SVG masks
+system,public/css/70_components.css,523,edit,converted to cmsIcon / local SVG masks
+system,public/css/70_components.css,539,pen,converted to cmsIcon / local SVG masks
+system,public/css/70_components.css,540,edit,converted to cmsIcon / local SVG masks
+system,public/css/70_components.css,545,check-circle,converted to cmsIcon / local SVG masks
+system,public/css/70_components.css,546,times-circle,converted to cmsIcon / local SVG masks
+system,public/css/70_components.css,550,check-circle,converted to cmsIcon / local SVG masks
+system,public/css/70_components.css,556,check-circle,converted to cmsIcon / local SVG masks
+system,public/css/70_components.css,666,circle-check,converted to cmsIcon / local SVG masks
+system,public/css/70_components.css,667,circle-exclamation | triangle-exclamation,converted to cmsIcon / local SVG masks
+system,public/css/70_components.css,668,circle-xmark,converted to cmsIcon / local SVG masks
+system,panels/cms/090_tools/logs/php/main.tpl.php,38,file-arrow-down | regular,converted to cmsIcon / local SVG masks
+system,panels/cms/090_tools/logs/php/main.tpl.php,40,broom | regular,converted to cmsIcon / local SVG masks
+system,panels/cms/090_tools/logs/backup_log/main.tpl.php,10,file-arrow-down | regular,converted to cmsIcon / local SVG masks
+system,panels/cms/090_tools/logs/backup_log/main.tpl.php,12,broom | regular,converted to cmsIcon / local SVG masks
+system,panels/cms/090_tools/logs/email/main.tpl.php,8,file-arrow-down | regular,converted to cmsIcon / local SVG masks
+system,panels/cms/090_tools/logs/email/main.tpl.php,10,broom | regular,converted to cmsIcon / local SVG masks
+system,panels/cms/090_tools/logs/email/main.tpl.php,130,eye | regular,converted to cmsIcon / local SVG masks
+system,panels/cms/090_tools/logs/login/main.tpl.php,19,file-arrow-down | regular,converted to cmsIcon / local SVG masks
+system,panels/cms/090_tools/logs/login/main.tpl.php,21,broom | regular,converted to cmsIcon / local SVG masks
+system,panels/cms/090_tools/logs/email/view/lightbox.tpl.php,19,regular | xmark,converted to cmsIcon / local SVG masks
+system,panels/cms/090_tools/logs/email/view/lightbox.tpl.php,45,regular | xmark,converted to cmsIcon / local SVG masks
+system,panels/cms/090_tools/logs/email/view/lightbox.tpl.php,139,regular | xmark,converted to cmsIcon / local SVG masks
+system,panels/cms/090_tools/020_database/050_audit/main.tpl.php,55,arrows-rotate | regular,converted to cmsIcon / local SVG masks
+system,panels/cms/090_tools/020_database/050_audit/main.tpl.php,105,play | regular,converted to cmsIcon / local SVG masks
+system,panels/cms/090_tools/020_database/050_audit/main.tpl.php,107,play | regular,converted to cmsIcon / local SVG masks
+system,panels/cms/090_tools/020_database/050_audit/main.tpl.php,122,play | regular,converted to cmsIcon / local SVG masks
+system,panels/cms/090_tools/020_database/050_audit/main.tpl.php,125,link-slash | regular,converted to cmsIcon / local SVG masks
+system,panels/cms/090_tools/020_database/050_audit/main.tpl.php,126,regular | shield-check,converted to cmsIcon / local SVG masks
+system,panels/cms/090_tools/020_database/050_audit/main.tpl.php,128,forward | regular,converted to cmsIcon / local SVG masks
+system,panels/cms/090_tools/020_database/040_status/main.tpl.php,40,regular | trash,converted to cmsIcon / local SVG masks
+system,panels/cms/090_tools/020_database/040_status/main.tpl.php,63,arrows-rotate | regular,converted to cmsIcon / local SVG masks
+system,panels/cms/090_tools/logs/failed/panel.js,18,arrow-up-right-from-square | regular,converted to cmsIcon / local SVG masks
+cms,src/Media/EmbedConsent.php,123,play | regular,converted to cmsIcon / local SVG masks
+cms,src/Pages/EditBar.php,39,duotone-regular-400 | regular-400,converted to cmsIcon / local SVG masks
+cms,docs/qa-block-1-tools-logs-mail.md,12,laptop-code,converted to cmsIcon / local SVG masks
+cms,public/site/editBar.js,16,regular,converted to cmsIcon / local SVG masks
+cms,public/site/editBar.js,78,regular | square,converted to cmsIcon / local SVG masks
+cms,src/Queries/PageTree/PageTree.php,326,grip-dots-vertical | regular,converted to cmsIcon / local SVG masks
+cms,src/Queries/PageTree/PageTree.php,328,ellipsis | regular,converted to cmsIcon / local SVG masks
+cms,src/Queries/PageTree/PageTree.php,384,chevron-down | chevron-right,converted to cmsIcon / local SVG masks
+cms,src/Queries/PageTree/PageTree.php,386,regular,converted to cmsIcon / local SVG masks
+cms,src/Queries/PageTree/PageTree.php,389,file-import,converted to cmsIcon / local SVG masks
+cms,src/Queries/PageTree/PageTree.php,407,globe | regular,converted to cmsIcon / local SVG masks
+cms,src/Queries/PageTree/PageTree.php,409,file | folder,converted to cmsIcon / local SVG masks
+cms,src/Queries/PageTree/PageTree.php,410,regular,converted to cmsIcon / local SVG masks
+cms,src/Queries/PageTree/PageTree.php,431,regular | route,converted to cmsIcon / local SVG masks
+cms,src/Queries/PageTree/PageTree.php,438,eye-slash | regular,converted to cmsIcon / local SVG masks
+cms,src/Queries/PageTree/PageTree.php,444,arrow-rotate-left | regular,converted to cmsIcon / local SVG masks
+cms,panels/cms/010_pages/media-usage.tpl.php,3,chevron-down | regular,converted to cmsIcon / local SVG masks
+cms,panels/cms/010_pages/media-usage.tpl.php,8,file | regular,converted to cmsIcon / local SVG masks
+cms,panels/cms/010_pages/site.tpl.php,26,globe | regular,converted to cmsIcon / local SVG masks
+cms,panels/cms/010_pages/site.tpl.php,47,globe | regular,converted to cmsIcon / local SVG masks
+cms,panels/cms/010_pages/site.tpl.php,51,arrow-up-right-from-square | regular,converted to cmsIcon / local SVG masks
+cms,panels/cms/010_pages/site.tpl.php,75,folder-plus | regular,converted to cmsIcon / local SVG masks
+cms,panels/cms/010_pages/site.tpl.php,81,regular | route,converted to cmsIcon / local SVG masks
+cms,panels/cms/010_pages/site.tpl.php,88,regular | trash,converted to cmsIcon / local SVG masks
+cms,panels/cms/010_pages/mml.tpl.php,27,circle-info | regular,converted to cmsIcon / local SVG masks
+cms,panels/cms/010_pages/mml.tpl.php,30,plus | regular,converted to cmsIcon / local SVG masks
+cms,panels/cms/010_pages/mml.tpl.php,59,file-import | regular,converted to cmsIcon / local SVG masks
+cms,panels/cms/010_pages/mml.tpl.php,68,regular,converted to cmsIcon / local SVG masks
+cms,panels/cms/010_pages/mml.tpl.php,72,pen | regular,converted to cmsIcon / local SVG masks
+cms,panels/cms/010_pages/mml.tpl.php,74,arrows-rotate | regular,converted to cmsIcon / local SVG masks
+cms,panels/cms/010_pages/dashboard.todo.tpl.php,25,link-slash,converted to cmsIcon / local SVG masks
+cms,panels/cms/010_pages/dashboard.todo.tpl.php,26,globe,converted to cmsIcon / local SVG masks
+cms,panels/cms/010_pages/dashboard.todo.tpl.php,27,magnifying-glass,converted to cmsIcon / local SVG masks
+cms,panels/cms/010_pages/dashboard.todo.tpl.php,28,image,converted to cmsIcon / local SVG masks
+cms,panels/cms/010_pages/dashboard.todo.tpl.php,29,eye-slash,converted to cmsIcon / local SVG masks
+cms,panels/cms/010_pages/dashboard.todo.tpl.php,30,calendar,converted to cmsIcon / local SVG masks
+cms,panels/cms/010_pages/dashboard.todo.tpl.php,31,trash,converted to cmsIcon / local SVG masks
+cms,panels/cms/010_pages/dashboard.todo.tpl.php,32,photo-film,converted to cmsIcon / local SVG masks
+cms,panels/cms/010_pages/dashboard.todo.tpl.php,33,diamond-turn-right,converted to cmsIcon / local SVG masks
+cms,panels/cms/010_pages/dashboard.todo.tpl.php,42,list-check | regular,converted to cmsIcon / local SVG masks
+cms,panels/cms/010_pages/dashboard.todo.tpl.php,44,circle-check | regular,converted to cmsIcon / local SVG masks
+cms,panels/cms/010_pages/dashboard.todo.tpl.php,48,regular,converted to cmsIcon / local SVG masks
+cms,panels/cms/010_pages/dashboard.todo.tpl.php,59,chevron-right | regular,converted to cmsIcon / local SVG masks
+cms,panels/cms/010_pages/dashboard.todo.tpl.php,62,chevron-down | regular,converted to cmsIcon / local SVG masks
+cms,panels/cms/010_pages/dashboard.todo.tpl.php,70,chevron-right | regular,converted to cmsIcon / local SVG masks
+cms,panels/cms/010_pages/dashboard.tpl.php,10,clock-rotate-left | regular,converted to cmsIcon / local SVG masks
+cms,panels/cms/010_pages/dashboard.tpl.php,15,file | regular,converted to cmsIcon / local SVG masks
+cms,panels/cms/010_pages/actions.php,399,file | regular,converted to cmsIcon / local SVG masks
+cms,panels/cms/010_pages/upload/lightbox.tpl.php,26,regular | xmark,converted to cmsIcon / local SVG masks
+cms,panels/cms/010_pages/upload/lightbox.tpl.php,36,cloud-arrow-up | regular,converted to cmsIcon / local SVG masks
+cms,panels/cms/010_pages/upload/lightbox.tpl.php,44,file | regular,converted to cmsIcon / local SVG masks
+cms,panels/cms/010_pages/upload/lightbox.tpl.php,80,regular,converted to cmsIcon / local SVG masks
+cms,panels/cms/010_pages/upload/lightbox.tpl.php,97,chevron-down | regular,converted to cmsIcon / local SVG masks
+cms,panels/cms/010_pages/upload/lightbox.tpl.php,131,chevron-down | regular,converted to cmsIcon / local SVG masks
+cms,panels/cms/010_pages/upload/lightbox.tpl.php,139,chevron-down | regular,converted to cmsIcon / local SVG masks
+cms,panels/cms/010_pages/upload/lightbox.tpl.php,163,chevron-down | regular,converted to cmsIcon / local SVG masks
+cms,panels/cms/010_pages/upload/lightbox.tpl.php,174,arrow-up-from-bracket | arrows-rotate | regular,converted to cmsIcon / local SVG masks
+cms,panels/cms/010_pages/upload/panel.js,1116,regular,converted to cmsIcon / local SVG masks
+cms,panels/cms/010_pages/mml/groupInfo/lightbox.tpl.php,9,regular | xmark,converted to cmsIcon / local SVG masks
+cms,panels/cms/010_pages/mml/contextmenu.tpl.php,17,crop-simple | regular,converted to cmsIcon / local SVG masks
+cms,panels/cms/010_pages/mml/contextmenu.tpl.php,22,eye | regular,converted to cmsIcon / local SVG masks
+cms,panels/cms/010_pages/mml/contextmenu.tpl.php,27,arrow-down-to-line | regular,converted to cmsIcon / local SVG masks
+cms,panels/cms/010_pages/mml/contextmenu.tpl.php,32,regular | trash,converted to cmsIcon / local SVG masks
+cms,panels/cms/010_pages/dashboard.media.tpl.php,31,images | regular,converted to cmsIcon / local SVG masks
+cms,panels/cms/010_pages/dashboard.media.tpl.php,51,regular,converted to cmsIcon / local SVG masks
+cms,panels/cms/010_pages/panel.php,38,duotone | files | regular,converted to cmsIcon / local SVG masks
+cms,panels/cms/010_pages/panel.php,633,file-lines,converted to cmsIcon / local SVG masks
+cms,panels/cms/010_pages/panel.php,638,image,converted to cmsIcon / local SVG masks
+cms,panels/cms/010_pages/panel.php,639,film,converted to cmsIcon / local SVG masks
+cms,panels/cms/010_pages/panel.php,640,music,converted to cmsIcon / local SVG masks
+cms,panels/cms/010_pages/panel.php,641,file-pdf,converted to cmsIcon / local SVG masks
+cms,panels/cms/010_pages/panel.php,642,circle-play,converted to cmsIcon / local SVG masks
+cms,panels/cms/010_pages/panel.php,643,cube,converted to cmsIcon / local SVG masks
+cms,panels/cms/010_pages/panel.php,644,file,converted to cmsIcon / local SVG masks
+cms,panels/cms/010_pages/controls.tpl.php,31,chevron-right | regular,converted to cmsIcon / local SVG masks
+cms,panels/cms/010_pages/controls.tpl.php,36,pen | regular,converted to cmsIcon / local SVG masks
+cms,panels/cms/010_pages/controls.tpl.php,38,file-import | regular,converted to cmsIcon / local SVG masks
+cms,panels/cms/010_pages/controls.tpl.php,41,regular | route,converted to cmsIcon / local SVG masks
+cms,panels/cms/010_pages/controls.tpl.php,64,chevron-down | regular,converted to cmsIcon / local SVG masks
+cms,panels/cms/010_pages/controls.tpl.php,80,arrows-left-right-to-line | regular,converted to cmsIcon / local SVG masks
+cms,panels/cms/010_pages/controls.tpl.php,81,desktop | regular,converted to cmsIcon / local SVG masks
+cms,panels/cms/010_pages/controls.tpl.php,83,regular | tablet-screen-button,converted to cmsIcon / local SVG masks
+cms,panels/cms/010_pages/controls.tpl.php,86,mobile-screen-button | regular,converted to cmsIcon / local SVG masks
+cms,panels/cms/010_pages/controls.tpl.php,91,regular | sliders,converted to cmsIcon / local SVG masks
+cms,panels/cms/010_pages/controls.tpl.php,92,images | regular,converted to cmsIcon / local SVG masks
+cms,panels/cms/010_pages/contextmenu.tpl.php,36,arrow-rotate-left | regular,converted to cmsIcon / local SVG masks
+cms,panels/cms/010_pages/contextmenu.tpl.php,43,regular | user-hat-tie-magnifying-glass,converted to cmsIcon / local SVG masks
+cms,panels/cms/010_pages/contextmenu.tpl.php,52,pen | regular,converted to cmsIcon / local SVG masks
+cms,panels/cms/010_pages/contextmenu.tpl.php,57,copy | regular,converted to cmsIcon / local SVG masks
+cms,panels/cms/010_pages/contextmenu.tpl.php,63,eye-slash | regular,converted to cmsIcon / local SVG masks
+cms,panels/cms/010_pages/contextmenu.tpl.php,69,eye-slash | layer-group | regular,converted to cmsIcon / local SVG masks
+cms,panels/cms/010_pages/contextmenu.tpl.php,76,eye | regular,converted to cmsIcon / local SVG masks
+cms,panels/cms/010_pages/contextmenu.tpl.php,82,eye | layer-group | regular,converted to cmsIcon / local SVG masks
+cms,panels/cms/010_pages/contextmenu.tpl.php,89,layer-plus | regular,converted to cmsIcon / local SVG masks
+cms,panels/cms/010_pages/contextmenu.tpl.php,98,regular | trash,converted to cmsIcon / local SVG masks
+cms,panels/cms/010_pages/contextmenu.tpl.php,108,regular | trash,converted to cmsIcon / local SVG masks
+cms,panels/cms/010_pages/contextmenu.tpl.php,120,regular | route,converted to cmsIcon / local SVG masks
+cms,panels/cms/010_pages/contextmenu.tpl.php,128,regular | route,converted to cmsIcon / local SVG masks
+cms,panels/cms/010_pages/contextmenu.tpl.php,137,file-import | regular,converted to cmsIcon / local SVG masks
+cms,panels/cms/010_pages/contextmenu.tpl.php,145,file-import | regular,converted to cmsIcon / local SVG masks
+cms,panels/cms/010_pages/contextmenu.tpl.php,156,regular | user-hat-tie-magnifying-glass,converted to cmsIcon / local SVG masks
+cms,panels/cms/010_pages/contextmenu.tpl.php,161,arrow-up-right-from-square | regular,converted to cmsIcon / local SVG masks
+cms,panels/cms/010_pages/module.css,376,file-import,converted to cmsIcon / local SVG masks
+cms,panels/cms/010_pages/module.css,377,route,converted to cmsIcon / local SVG masks
+cms,panels/cms/010_pages/dashboard.figures.tpl.php,9,file-lines,converted to cmsIcon / local SVG masks
+cms,panels/cms/010_pages/dashboard.figures.tpl.php,10,image,converted to cmsIcon / local SVG masks
+cms,panels/cms/010_pages/dashboard.figures.tpl.php,11,tags,converted to cmsIcon / local SVG masks
+cms,panels/cms/010_pages/dashboard.figures.tpl.php,12,pen-to-square,converted to cmsIcon / local SVG masks
+cms,panels/cms/010_pages/dashboard.figures.tpl.php,15,chart-simple | regular,converted to cmsIcon / local SVG masks
+cms,panels/cms/010_pages/dashboard.figures.tpl.php,19,regular,converted to cmsIcon / local SVG masks
+cms,panels/cms/010_pages/pages.js,136,arrows-rotate | check | regular | xmark,converted to cmsIcon / local SVG masks
+cms,panels/cms/010_pages/pages.js,199,circle-info | regular,converted to cmsIcon / local SVG masks
+cms,panels/cms/010_pages/pylon.tpl.php,28,folder-minus | regular,converted to cmsIcon / local SVG masks
+cms,panels/cms/010_pages/pylon.tpl.php,29,regular | trash-slash,converted to cmsIcon / local SVG masks
+cms,panels/cms/010_pages/pylon.tpl.php,31,folder-minus | regular,converted to cmsIcon / local SVG masks
+cms,panels/cms/010_pages/pylon.tpl.php,32,crosshairs | regular,converted to cmsIcon / local SVG masks
+cms,panels/cms/010_pages/pylon.tpl.php,33,regular | trash,converted to cmsIcon / local SVG masks
+cms,panels/cms/010_pages/pylon.tpl.php,36,plus | regular,converted to cmsIcon / local SVG masks
+cms,panels/cms/010_pages/pylon.tpl.php,49,grip-lines | regular,converted to cmsIcon / local SVG masks
+cms,_legacy/panels/cms/010_pages/editor/insertLink/lightbox.tpl.php,13,regular | xmark,converted to cmsIcon / local SVG masks
+cms,panels/cms/030_settings/010_page/panel.php,19,regular | sliders,converted to cmsIcon / local SVG masks
+cms,panels/cms/010_pages/editor/editLink/lightbox.tpl.php,63,regular | xmark,converted to cmsIcon / local SVG masks
+cms,panels/cms/010_pages/editor/editLink/lightbox.tpl.php,129,regular,converted to cmsIcon / local SVG masks
+cms,panels/cms/010_pages/editor/editLink/lightbox.tpl.php,157,link | regular,converted to cmsIcon / local SVG masks
+cms,panels/cms/010_pages/editor/htmlmode/lightbox.tpl.php,31,regular | xmark,converted to cmsIcon / local SVG masks
+cms,panels/cms/010_pages/editor/htmlmode/lightbox.tpl.php,39,check | regular,converted to cmsIcon / local SVG masks
+cms,panels/cms/010_pages/sidebar/defaultMeta/lightbox.tpl.php,31,regular | xmark,converted to cmsIcon / local SVG masks
+cms,panels/cms/010_pages/sidebar/defaultMeta/lightbox.tpl.php,59,pen | regular,converted to cmsIcon / local SVG masks
+cms,panels/cms/010_pages/sidebar/010_urls.tpl.php,41,regular | trash,converted to cmsIcon / local SVG masks
+cms,panels/cms/010_pages/sidebar/010_urls.tpl.php,69,arrow-rotate-left | regular,converted to cmsIcon / local SVG masks
+cms,panels/cms/010_pages/sidebar/010_urls.tpl.php,95,plus | regular,converted to cmsIcon / local SVG masks
+cms,panels/cms/030_settings/010_page/edit/lightbox.tpl.php,69,pen | regular,converted to cmsIcon / local SVG masks
+cms,panels/cms/030_settings/010_page/edit/lightbox.tpl.php,78,regular | trash,converted to cmsIcon / local SVG masks
+cms,panels/cms/030_settings/010_page/edit/lightbox.tpl.php,79,regular | xmark-large,converted to cmsIcon / local SVG masks
+cms,panels/cms/030_settings/010_page/main.tpl.php,59,chevron-right | regular,converted to cmsIcon / local SVG masks
+cms,panels/cms/030_settings/010_page/main.tpl.php,62,chevron-right | regular,converted to cmsIcon / local SVG masks
+cms,panels/cms/030_settings/010_page/main.tpl.php,72,plus | regular,converted to cmsIcon / local SVG masks
+cms,panels/cms/030_settings/010_page/main.tpl.php,120,grip-dots-vertical | regular,converted to cmsIcon / local SVG masks
+cms,panels/cms/030_settings/010_page/main.tpl.php,150,folder-open | regular,converted to cmsIcon / local SVG masks
+cms,panels/cms/030_settings/010_page/main.tpl.php,152,pen | regular,converted to cmsIcon / local SVG masks
+cms,panels/cms/030_settings/010_page/main.tpl.php,154,regular | trash,converted to cmsIcon / local SVG masks
+cms,panels/cms/010_pages/sidebar/main.tpl.php,22,chevron- | regular,converted to cmsIcon / local SVG masks
+cms,panels/cms/010_pages/sidebar/main.tpl.php,26,chevron-left | regular,converted to cmsIcon / local SVG masks
+cms,panels/cms/010_pages/sidebar/main.tpl.php,27,chevron-right | regular,converted to cmsIcon / local SVG masks
+cms,panels/cms/010_pages/sidebar/main.tpl.php,51,circle-info | regular,converted to cmsIcon / local SVG masks
+cms,panels/cms/010_pages/sidebar/main.tpl.php,53,circle-info | regular,converted to cmsIcon / local SVG masks
+cms,panels/cms/010_pages/sidebar/main.tpl.php,55,pen | regular,converted to cmsIcon / local SVG masks
+cms,panels/cms/010_pages/sidebar/main.tpl.php,57,chevron-down | regular,converted to cmsIcon / local SVG masks
+cms,panels/cms/010_pages/sidebar/065_relations.tpl.php,8,file-import | route,converted to cmsIcon / local SVG masks
+cms,panels/cms/010_pages/sidebar/065_relations.tpl.php,9,regular,converted to cmsIcon / local SVG masks
+cms,panels/cms/010_pages/sidebar/065_relations.tpl.php,19,file-import | regular,converted to cmsIcon / local SVG masks
+cms,panels/cms/010_pages/sidebar/065_relations.tpl.php,23,regular | trash,converted to cmsIcon / local SVG masks
+cms,panels/cms/010_pages/sidebar/065_relations.tpl.php,29,file-import | regular,converted to cmsIcon / local SVG masks
+cms,panels/cms/010_pages/sidebar/065_relations.tpl.php,33,regular | trash,converted to cmsIcon / local SVG masks
+cms,panels/cms/010_pages/sidebar/065_relations.tpl.php,39,regular | route,converted to cmsIcon / local SVG masks
+cms,panels/cms/010_pages/sidebar/065_relations.tpl.php,43,link-slash | regular,converted to cmsIcon / local SVG masks
+cms,panels/cms/010_pages/sidebar/065_relations.tpl.php,48,regular | route,converted to cmsIcon / local SVG masks
+cms,panels/cms/010_pages/sidebar/065_relations.tpl.php,58,link-slash | regular,converted to cmsIcon / local SVG masks
+cms,panels/cms/010_pages/sidebar/panel.php,126,pen | regular,converted to cmsIcon / local SVG masks
+cms,panels/cms/010_pages/sidebar/panel.php,127,regular | trash,converted to cmsIcon / local SVG masks
+cms,panels/cms/010_pages/sidebar/060_publishing.tpl.php,14,regular | user-hat-tie-magnifying-glass,converted to cmsIcon / local SVG masks
+cms,panels/cms/010_pages/sidebar/060_publishing.tpl.php,32,eye | layer-group | regular,converted to cmsIcon / local SVG masks
+cms,panels/cms/010_pages/sidebar/060_publishing.tpl.php,33,eye-slash | layer-group | regular,converted to cmsIcon / local SVG masks
+cms,panels/cms/010_pages/sidebar/060_publishing.tpl.php,62,regular | trash,converted to cmsIcon / local SVG masks
+cms,panels/cms/010_pages/sidebar/060_publishing.tpl.php,73,arrow-rotate-left | regular,converted to cmsIcon / local SVG masks
+cms,panels/cms/010_pages/sidebar/actions.relations.php,30,link | regular,converted to cmsIcon / local SVG masks
+cms,panels/cms/030_settings/010_page/delete/lightbox.tpl.php,11,regular | xmark-large,converted to cmsIcon / local SVG masks
+cms,panels/cms/030_settings/010_page/delete/lightbox.tpl.php,22,check | regular,converted to cmsIcon / local SVG masks
+cms,panels/cms/030_settings/010_page/delete/lightbox.tpl.php,24,regular | trash,converted to cmsIcon / local SVG masks
+cms,panels/cms/010_pages/editor/file/meta.tpl.php,30,chevron-down | regular,converted to cmsIcon / local SVG masks
+cms,panels/cms/010_pages/editor/file/meta.tpl.php,65,chevron-down | regular,converted to cmsIcon / local SVG masks
+cms,panels/cms/010_pages/editor/file/meta.tpl.php,93,chevron-down | regular,converted to cmsIcon / local SVG masks
+cms,panels/cms/010_pages/editor/file/video.tpl.php,42,film | regular,converted to cmsIcon / local SVG masks
+cms,panels/cms/010_pages/editor/file/video.tpl.php,47,image | regular,converted to cmsIcon / local SVG masks
+cms,panels/cms/010_pages/editor/file/lightbox.tpl.php,24,arrow-down-to-line | regular,converted to cmsIcon / local SVG masks
+cms,panels/cms/010_pages/editor/file/lightbox.tpl.php,27,eye | regular,converted to cmsIcon / local SVG masks
+cms,panels/cms/010_pages/editor/file/lightbox.tpl.php,30,regular | trash,converted to cmsIcon / local SVG masks
+cms,panels/cms/010_pages/editor/file/lightbox.tpl.php,33,regular | xmark,converted to cmsIcon / local SVG masks
+cms,panels/cms/010_pages/editor/file/lightbox.tpl.php,80,regular,converted to cmsIcon / local SVG masks
+cms,panels/cms/010_pages/editor/file/image.tpl.php,37,regular | rotate-left,converted to cmsIcon / local SVG masks
+cms,panels/cms/010_pages/editor/file/image.tpl.php,38,regular | rotate-right,converted to cmsIcon / local SVG masks
+cms,panels/cms/010_pages/editor/file/image.tpl.php,39,reflect-horizontal | regular,converted to cmsIcon / local SVG masks
+cms,panels/cms/010_pages/editor/file/image.tpl.php,40,eraser | regular,converted to cmsIcon / local SVG masks
+cms,panels/cms/010_pages/editor/file/image.tpl.php,41,clock-rotate-left | regular,converted to cmsIcon / local SVG masks
+cms,panels/cms/010_pages/editor/file/image.tpl.php,42,crop-simple | regular,converted to cmsIcon / local SVG masks
+cms,panels/cms/010_pages/editor/file/image.tpl.php,44,check | regular,converted to cmsIcon / local SVG masks
+cms,panels/cms/010_pages/editor/file/image.tpl.php,45,chevron-down | regular,converted to cmsIcon / local SVG masks
+cms,panels/cms/010_pages/editor/file/image.tpl.php,47,layer-group | regular,converted to cmsIcon / local SVG masks
+cms,panels/cms/010_pages/editor/file/image.tpl.php,54,minus | regular,converted to cmsIcon / local SVG masks
+cms,panels/cms/010_pages/editor/file/image.tpl.php,55,expand | regular,converted to cmsIcon / local SVG masks
+cms,panels/cms/010_pages/editor/file/image.tpl.php,56,plus | regular,converted to cmsIcon / local SVG masks
+cms,panels/cms/010_pages/sidebar/relationsHelp/lightbox.tpl.php,4,regular | xmark,converted to cmsIcon / local SVG masks
+cms,panels/cms/010_pages/sidebar/relationsHelp/lightbox.tpl.php,6,file-import | regular,converted to cmsIcon / local SVG masks
+cms,panels/cms/010_pages/sidebar/relationsHelp/lightbox.tpl.php,10,regular | route,converted to cmsIcon / local SVG masks
+cms,panels/cms/090_tools/040_migration/main.tpl.php,39,arrows-rotate | regular,converted to cmsIcon / local SVG masks
+cms,panels/cms/090_tools/040_cleanup/020_unused/main.tpl.php,38,regular | trash-xmark,converted to cmsIcon / local SVG masks
+cms,panels/cms/090_tools/040_cleanup/020_unused/main.tpl.php,47,regular | trash-xmark,converted to cmsIcon / local SVG masks
+cms,panels/cms/090_tools/035_website/010_links/main.tpl.php,29,circle-check | regular,converted to cmsIcon / local SVG masks
+cms,panels/cms/090_tools/035_website/010_links/main.tpl.php,57,arrows-rotate | regular,converted to cmsIcon / local SVG masks
+cms,panels/cms/090_tools/035_website/010_links/main.tpl.php,70,circle-check | regular,converted to cmsIcon / local SVG masks
+cms,panels/cms/090_tools/040_cleanup/010_trash/main.tpl.php,69,eye | regular,converted to cmsIcon / local SVG masks
+cms,panels/cms/090_tools/040_cleanup/010_trash/main.tpl.php,73,arrow-rotate-left | regular,converted to cmsIcon / local SVG masks
+cms,panels/cms/090_tools/040_cleanup/010_trash/main.tpl.php,76,regular | trash-xmark,converted to cmsIcon / local SVG masks
+cms,panels/cms/090_tools/040_cleanup/010_trash/main.tpl.php,85,regular | trash-xmark,converted to cmsIcon / local SVG masks
+cms,panels/cms/090_tools/035_website/020_misses/main.tpl.php,51,diamond-turn-right | regular,converted to cmsIcon / local SVG masks
+cms,panels/cms/090_tools/035_website/020_misses/main.tpl.php,54,regular | xmark,converted to cmsIcon / local SVG masks
+cms,panels/cms/090_tools/040_cleanup/030_duplicates/main.tpl.php,66,regular | trash,converted to cmsIcon / local SVG masks
+cms,panels/cms/090_tools/040_cleanup/030_duplicates/main.tpl.php,108,regular | trash,converted to cmsIcon / local SVG masks
+cms,panels/cms/090_tools/035_website/030_paths/main.tpl.php,39,regular | sitemap,converted to cmsIcon / local SVG masks
+cms,panels/cms/090_tools/035_website/030_paths/main.tpl.php,40,regular | rotate,converted to cmsIcon / local SVG masks
+cms,panels/cms/090_tools/035_website/030_paths/main.tpl.php,80,eye | regular,converted to cmsIcon / local SVG masks
+cms,panels/cms/090_tools/035_website/030_paths/main.tpl.php,84,regular | trash,converted to cmsIcon / local SVG masks
+cms,panels/cms/090_tools/035_website/030_paths/main.tpl.php,95,regular | trash,converted to cmsIcon / local SVG masks
+cms,panels/cms/090_tools/035_website/030_paths/main.tpl.php,96,regular | trash,converted to cmsIcon / local SVG masks

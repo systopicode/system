@@ -22,6 +22,7 @@
 }
 
 .widget > header,
+.widget > summary,
 .widget > footer,
 .cmslightbox section > footer{
 	display: flex;
@@ -50,11 +51,19 @@
 	border-bottom: 0;
 }
 
-.cmslightbox section > footer{
-	background: var(--cmsBgColor);
+pre.backupLog{
+	margin: 0;
+	padding: 1rem 1.15rem 1.25rem;
+	font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+	font-size: 0.8125rem;
+	line-height: 1.55;
+	white-space: pre-wrap;
+	overflow-wrap: anywhere;
+	color: var(--cmsTextColor);
 }
 
-.widget > header{
+.widget > header,
+.widget > summary{
 	border-bottom: 1px solid var(--cmsLine);
 }
 
@@ -65,6 +74,7 @@
 }
 
 .cmslightbox section > footer{
+	padding-inline: calc(var(--cmsCardPadding) + .5rem);
 	border-top-color: var(--cmsLineStrong);
 }
 
@@ -76,7 +86,7 @@
 	margin-bottom: 0;
 }
 
-.widget footer button,
+.widget footer button:where(:not([data-cms-action])),
 .widget footer .button{
 	margin: 0 0 0 0.4rem;
 }
@@ -149,9 +159,11 @@
 }
 
 .widget > header h1,
-.widget > header h2{
+.widget > header h2,
+.widget > summary h2{
 	display: flex;
 	align-items: center;
+	gap: 0.5rem;
 	margin: 0;
 	padding: 0;
 	font-size: 1rem;
@@ -211,16 +223,14 @@
 	margin: 0;
 }
 
-.cms .widget > header + .tableScroll > table :is(th, td):first-child,
-.cms .widget > .tagsHint + .tableScroll > table :is(th, td):first-child,
-section.cms > .tableScroll > table :is(th, td):first-child{
-	padding-left: 1.25rem;
+.cms .widget > .tableScroll > table :is(th, td):first-child:not(.pageSettingDrag),
+section.cms > .tableScroll > table :is(th, td):first-child:not(.pageSettingDrag){
+	padding-left: var(--cmsCardPadding);
 }
 
-.cms .widget > header + .tableScroll > table :is(th, td):last-child,
-.cms .widget > .tagsHint + .tableScroll > table :is(th, td):last-child,
+.cms .widget > .tableScroll > table :is(th, td):last-child,
 section.cms > .tableScroll > table :is(th, td):last-child{
-	padding-right: 1.25rem;
+	padding-right: var(--cmsCardPadding);
 }
 
 /* A table that fills the content is the same card as a widget. */
@@ -252,7 +262,8 @@ section.cms:has(> .tableScroll){
 }
 
 .cmsBox > header,
-.cmsBox > summary{
+.cmsBox > summary,
+.widget > summary{
 	display: flex;
 	flex-wrap: wrap;
 	align-items: flex-start;
@@ -274,7 +285,8 @@ body.cms .cmslightbox .cmsBox > header{
 	z-index: auto;
 }
 
-.cmsBox > summary{
+.cmsBox > summary,
+.widget > summary{
 	cursor: pointer;
 	list-style: none;
 }
@@ -287,18 +299,20 @@ body.cms .cmslightbox .cmsBox > header{
 	content: "";
 }
 
-.cmsBox > summary::after{
-	content: "\f078";
+.cmsBox > summary::after,
+.widget > summary::after{
+	content: ""; width: 1em; height: 1em; background-color: currentColor; -webkit-mask: var(--icon-chevron-down) center / contain no-repeat; mask: var(--icon-chevron-down) center / contain no-repeat;
 	flex: 0 0 auto;
 	margin-left: auto;
-	font-family: "CMS Font Awesome 7 Pro";
-	font-size: 0.8rem;
+	font-family: inherit;
+	font-size: 1rem;
 	font-weight: 400;
 	line-height: 1.4;
 	color: var(--cmsMuted);
 }
 
-.cmsBox[open] > summary::after{
+.cmsBox[open] > summary::after,
+.widget[open] > summary::after{
 	transform: rotate(180deg);
 }
 
@@ -336,7 +350,7 @@ body.cms .cmslightbox .cmsBox > header{
 	padding: 0 0.35rem;
 	border-radius: 999px;
 	background: color-mix(in srgb, var(--cmsMainColor) 12%, var(--cmsCanvas));
-	color: var(--cmsMainColor);
+	color: var(--cmsBrandInk);
 	font-size: 0.75rem;
 	font-weight: 700;
 	vertical-align: 1px;
@@ -353,8 +367,8 @@ body.cms .cmslightbox .cmsBox > header{
 
 .cmsBox > header > .button,
 .cmsBox > summary > .button,
-.cmsBox > header > a.button,
-.cmsBox > summary > a.button{
+.cmsBox > header > :is(a, button:where([data-cms-action])).button,
+.cmsBox > summary > :is(a, button:where([data-cms-action])).button{
 	flex: 0 0 auto;
 	align-self: center;
 	margin: 0;
@@ -376,24 +390,29 @@ body.cms .cmslightbox .cmsBox > header{
 	margin: 0;
 }
 
-.cms button.cmsBoxMore,
-.cms button.cmsBoxMore:enabled:not(.disabled):hover{
-	display: flex;
+.cms button:where(:not([data-cms-action])).cmsBoxMore{
+	display: inline-flex;
 	justify-content: flex-start;
 	align-items: center;
-	gap: 0.35rem;
-	width: 100%;
+	gap: 0.4rem;
+	width: auto;
 	min-height: 0;
-	margin: 0.15rem 0 0;
-	padding: 0.75rem 0 0;
+	margin: 0;
+	padding: 0.15rem 0;
 	border: 0;
-	border-top: 1px solid var(--cmsLine);
-	border-radius: 0;
-	background: none;
+	border-radius: var(--cmsRadius);
+	background: transparent;
+	box-shadow: none;
 	color: var(--cmsHighlightColor);
 	font-size: 0.875rem;
 	font-weight: 600;
 	text-align: left;
+}
+
+.cms button:where(:not([data-cms-action])).cmsBoxMore:enabled:not(.disabled):hover,
+.cms button:where(:not([data-cms-action])).cmsBoxMore:focus-visible{
+	background: transparent;
+	color: var(--cmsHighlightColor);
 }
 
 .cmsBoxSplit{
@@ -462,7 +481,7 @@ body.cms .cmslightbox .cmsBox > header{
 	margin-left: 2px;
 }
 
-.domEditable.int i.fa-minus-circle {
+.domEditable.int i.cmsIcon-minus-circle {
 	left: 0;
 	right: auto;
 }
@@ -485,14 +504,14 @@ body.cms .cmslightbox .cmsBox > header{
 	right: 0;
 }
 
-.input i.editable.fa-pen,
-.input i.editable.fa-edit {
+.input i.editable.cmsIcon-pen,
+.input i.editable.cmsIcon-edit {
 	display: none;
 }
 
 
-.domEditable:not(.inline) .fa-pen.editable,
-.domEditable:not(.inline) .fa-edit.editable {
+.domEditable:not(.inline) .cmsIcon-pen.editable,
+.domEditable:not(.inline) .cmsIcon-edit.editable {
 	margin-right: 0;
 	margin-left: 5px;
 	position: static;
@@ -507,8 +526,8 @@ body.cms .cmslightbox .cmsBox > header{
 	min-height: 35px;
 }
 
-.domEditable .fa-pen.editable,
-.domEditable .fa-edit.editable {
+.domEditable .cmsIcon-pen.editable,
+.domEditable .cmsIcon-edit.editable {
 	right: 0px;
 }
 
@@ -524,24 +543,24 @@ body.cms .cmslightbox .cmsBox > header{
 	padding-right: 40px;
 }
 
-.domEditable.confirmcontrols .fa-pen,
-.domEditable.confirmcontrols .fa-edit {
+.domEditable.confirmcontrols .cmsIcon-pen,
+.domEditable.confirmcontrols .cmsIcon-edit {
 	right: 18px;
 }
 
 
-.domEditable.confirmcontrols.block i.fa-check-circle,
-.domEditable.confirmcontrols.block i.fa-times-circle {
+.domEditable.confirmcontrols.block i.cmsIcon-check-circle,
+.domEditable.confirmcontrols.block i.cmsIcon-times-circle {
 	margin-right: 0;
 }
 
-.domEditable.confirmcontrols.block i.fa-check-circle {
+.domEditable.confirmcontrols.block i.cmsIcon-check-circle {
 	margin-right: 18px;
 	z-index: 1;
 
 }
 
-.domEditable.confirmcontrols.inline i.fa-check-circle {
+.domEditable.confirmcontrols.inline i.cmsIcon-check-circle {
 	right: 18px;
 	margin-right: 0;
 }
@@ -630,4 +649,226 @@ body.cms .cmslightbox .cmsBox > header{
 
 @media (prefers-reduced-motion: reduce){
 	.userDevice > .presence.is-on{ animation: none; }
+}
+.cms .logFilters { display:flex; flex-wrap:wrap; gap:.75rem; align-items:end; padding:.75rem var(--cmsCardPadding); }
+.cms .logFilters .field { flex:1 1 7rem; min-width:0; margin:0; }
+.cms .logFilters small { flex-basis:100%; color:var(--cmsMuted); }
+
+
+.cms .themeContrast { background:var(--cmsCanvas); margin:0; padding:0; border:0; border-top:1px solid var(--cmsLine); border-radius:0; box-shadow:none; }
+.cms .themeContrast > summary { display:flex; align-items:center; justify-content:space-between; cursor:pointer; font-weight:600; padding:0 var(--cmsCardPadding); min-height:3rem; }
+.cms .themeContrast > summary h3 { margin:0; font-size:1rem; }
+.cms .themeContrast > main { padding:var(--cmsCardPadding); }
+.cms .themeContrast > main > .tagsHint { margin-bottom:1rem; }
+
+.cms .mediaCheckInfo { margin-top:1rem; border-top:1px solid var(--cmsLine); padding-top:.8rem; }
+.cms .mediaCheckInfo > summary { display:flex; justify-content:space-between; align-items:center; cursor:pointer; font-weight:600; }
+.cms .mediaCheckInfo > main { padding-top:.8rem; }
+
+.cms .logFilters .logReset { flex:0 0 auto; }
+.cms .logFilters .logReset .button { margin:0; min-height:2.25rem; }
+
+
+.cms .themeContrast .tableScroll { max-width:48rem; margin-top:.8rem; }
+.cms .themeContrast td { vertical-align:middle; }
+
+.cms :is(.themeContrast,.cleanupTasks,.cleanupStatus,.cleanupSummary) .cmsIcon-circle-check {color:var(--cmsSuccess);}
+.cms :is(.themeContrast,.cleanupTasks,.cleanupStatus,.cleanupSummary) :is(.cmsIcon-circle-exclamation,.cmsIcon-triangle-exclamation) {color:var(--cmsWarning);}
+.cms :is(.themeContrast,.cleanupTasks,.cleanupStatus,.cleanupSummary) .cmsIcon-circle-xmark {color:var(--cmsError);}
+
+/* Header actions and their titles share one centre line. */
+.cms .widget > header > :is(h1,h2,.button,button:where(:not([data-cms-action]))) { margin-block:0; }
+.cms .logFilters > .field { display:flex; flex-direction:column; gap:.25rem; flex-basis:9rem; width:0; min-width:min(9rem,100%); }
+.cms .logFilters > .field > span { position:static; transform:none; margin:0; }
+.cms .logFilters > .field > :is(input,select) { width:100%; min-width:0; max-width:100%; min-inline-size:0; max-inline-size:100%; height:var(--cmsControl); box-sizing:border-box; margin:0; }
+.cms .logFilters > .logReset { flex:0 0 auto; width:auto; min-width:0; align-self:end; }
+/* A headerless log uses the same clipping as the normal list widget. */
+.cmslightbox .widget.is-list > .tableScroll { border-radius:inherit; overflow:hidden auto; }
+
+/* Icon catalogue links reuse standard CMS buttons and the wrapping action row. */
+.cms .themeIcons .cmsBoxActions { justify-content: flex-start; }
+
+/* Local language flag previews and project SVG overrides. */
+.cms .languageFlagHelp { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:.75rem; padding:.75rem; }
+.cms .languageFlagHelp > .tagsHint { flex:1 1 24rem; margin:0; }
+.cms .languageFlagHelp > .button { flex:0 0 auto; margin:0; }
+.cms .languageFlagControl { display:flex; align-items:center; gap:.25rem; }
+.cms .languageRowActions { display:flex; align-items:center; justify-content:flex-end; gap:.25rem; }
+.cms .languageFlagCell > .languageFlag { width:2rem; height:1.5rem; object-fit:contain; flex:0 0 auto; border-radius:2px; box-shadow:0 0 0 1px var(--cmsLine); }
+.cms .languageFlagMissing { display:inline-flex; align-items:center; justify-content:center; width:2rem; height:1.5rem; color:var(--cmsMuted); }
+.cms .languageFlagControl form { display:inline-flex; margin:0; }
+.cms .languageFlagChoose { position:relative; margin:0; overflow:hidden; }
+.cms .languageFlagChoose input[type=file] { position:absolute; inset:0; width:100%; height:100%; opacity:0; cursor:pointer; margin:0; padding:0; }
+.cms .languageFlagChoose:focus-within { outline:2px solid var(--cmsInteractive); outline-offset:2px; }
+.cms .languageFlagReset .button { margin:0; }
+
+@media (pointer: coarse) { .cms .languageFlagChoose, .cms .languageFlagReset .button { min-height:44px; } }
+
+/* External-link markers consistently follow their visible label. */
+.cms :is(a, button:where([data-cms-action])).cmsExternalLink { display:inline-flex; align-items:center; gap:.4em; }
+.cms :is(a, button:where([data-cms-action])).cmsExternalLink > i:is(.cmsIcon-arrow-up-right-from-square,.cmsIcon-up-right-from-square) { order:-1; flex:0 0 auto; }
+.cms :is(a, button:where([data-cms-action])).cmsExternalLink:not(.button) { display:inline; overflow-wrap:anywhere; }
+.cms :is(a, button:where([data-cms-action])).cmsExternalLink:not(.button) > i:is(.cmsIcon-arrow-up-right-from-square,.cmsIcon-up-right-from-square) { margin-inline-end:.3em; }
+
+.widget > summary { align-items:center; }
+.widget > summary::-webkit-details-marker { display:none; }
+
+/* A summary can use the shared button-sized disclosure affordance. */
+:is(.cmsBox,.widget) > summary:has(> .summaryToggle)::after { display:none; }
+.cms :is(.widget,.cmsBox) > summary > .summaryToggle { margin:0 0 0 auto; }
+details[open] > summary > .summaryToggle i { transform:rotate(180deg); }
+/* Semantic check icons share the message palette, never the theme highlight. */
+.cmsIcon.is-success { color:var(--cmsSuccess); }
+.cmsIcon.is-warning { color:var(--cmsWarning); }
+.cmsIcon.is-error { color:var(--cmsError); }
+
+.userListIdentity { display:inline-flex;align-items:center;gap:.5rem;vertical-align:middle;max-width:100%; }
+.userListName { min-width:4ch;max-width:14rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis; }
+.userListIdentity > .userSuper { flex:none;margin:0; }
+.userListAvatar { width:1.75rem;height:1.75rem;object-fit:cover;border-radius:50%;flex:none; }
+
+/* Nested cards share the page surface rather than another white panel. */
+.widget .cmsBox { background: var(--cmsBgColor); }
+:is(.cmsBox,.widget) > summary { align-items: center; }
+.summaryToggle { width: var(--cmsControl); height: var(--cmsControl); min-height: var(--cmsControl); padding: .4rem; display: inline-flex; align-items: center; justify-content: center; flex: 0 0 var(--cmsControl); }
+
+/* Accordion actions share the same control geometry as widget header actions. */
+:is(.widget,.cmsBox) > summary:hover > .summaryToggle,
+:is(.widget,.cmsBox) > summary:focus-visible > .summaryToggle {
+    background: color-mix(in srgb, var(--cmsMainColor) 12%, transparent);
+}
+:is(.widget,.cmsBox) > summary > .summaryToggle i { margin: 0; }
+.widget > header .button:last-of-type { margin-right: 0; }
+
+/* Shared password guidance, including activation/reset forms. */
+.passwordRule { display: flex; align-items: center; gap: .5rem; margin-block: .35rem; }
+.passwordRule .cmsIcon { flex-shrink: 0; }
+
+/* Log parameters share one compact disclosure in the existing widget header. */
+.cms .logFilterMenu { position:relative; margin:0; padding:0; }
+.cms .logFilterMenu > .splitApplyMenu { list-style:none; margin:0; }
+.cms .logFilterMenu > .splitApplyMenu::-webkit-details-marker { display:none; }
+.cms .logFilters.splitApplyList { position:fixed; z-index:90000; width:min(36rem,calc(100vw - 2rem)); background:var(--cmsCanvas); border:1px solid var(--cmsLine); border-radius:var(--cmsRadius); box-shadow:var(--cmsShadow); padding:var(--cmsCardPadding); }
+
+/* Footer disclosures retain the parent card surface; the comparison stays a table. */
+.cms .widget .themeContrast { background:var(--cmsCanvas); }
+.cms .themeContrast .tableScroll { border-radius:var(--cmsRadius); overflow:hidden; }
+.cms .logFilterFooter { display:flex; align-items:center; justify-content:space-between; gap:.75rem; width:100%; }
+.cms .logFilterFooter small { flex-basis:auto; }
+.cms .logFilterFooter .button { margin:0; }
+@media (max-width:767px) {
+ .cms .logFilters.splitApplyList { width:min(30rem,calc(100vw - 3rem)); padding:1rem; }
+ .cms .logFilters.splitApplyList > .field { flex:1 1 calc(50% - .75rem); min-width:0; }
+}
+/* A contrast pair is readable together, including on a phone. */
+.cms .themeContrast .tableScroll > table { width:100%; min-width:0; table-layout:fixed; }
+.cms .themeContrast .tableScroll > table td { white-space:normal; overflow-wrap:anywhere; }
+.cms .themeContrast .tableScroll > table td:first-child { width:44%; }
+
+/* Widget groups share one table grid and keep their own card surface. */
+.cms .tableWidgets > table.tableWidgetGrid.tableWidgetGrid {
+    border-collapse: separate;
+    border-spacing: 0;
+    background: transparent;
+}
+.cms .tableWidgets table.tableWidgetGrid .tableWidgetTitle > th {
+    background: var(--cmsCanvas);
+    border-bottom: 1px solid var(--cmsLine);
+    padding-inline: var(--cmsCardPadding);
+    text-align: start;
+    border-radius: var(--cmsRadiusLg) var(--cmsRadiusLg) 0 0;
+}
+.cms .tableWidgetTitle h2 {
+    margin: 0;
+    font-size: 1rem;
+}
+.cms .tableWidgets table.tableWidgetGrid tr.tableWidgetGap > td {
+    background: transparent;
+    height: 1rem;
+    padding: 0;
+    border: 0;
+}
+.cms .tableWidgets table.tableWidgetGrid .tableWidget > tr:not(.tableWidgetGap) > :first-child {
+    border-inline-start: 1px solid var(--cmsLine);
+}
+.cms .tableWidgets table.tableWidgetGrid .tableWidget > tr:not(.tableWidgetGap) > :last-child {
+    border-inline-end: 1px solid var(--cmsLine);
+}
+.cms .tableWidgets table.tableWidgetGrid .tableWidgetTitle > th {
+    border-top: 1px solid var(--cmsLine);
+}
+.cms .tableWidgets table.tableWidgetGrid .tableWidget > tr:last-child > td {
+    border-bottom: 1px solid var(--cmsLine);
+}
+.cms .tableWidgets table.tableWidgetGrid .tableWidget > tr:not(.tableWidgetTitle, .tableWidgetGap) > * {
+    background: var(--cmsCanvas);
+}
+.cms .tableWidget > tr:last-child > :first-child { border-bottom-left-radius: var(--cmsRadiusLg); }
+.cms .tableWidget > tr:last-child > :last-child { border-bottom-right-radius: var(--cmsRadiusLg); }
+.cms .tableWidgets table.tableWidgetGrid :is(.tableWidgetColumns, .tableWidget > tr:not(.tableWidgetTitle, .tableWidgetGap)) > :first-child {
+    padding-inline-start: var(--cmsCardPadding);
+}
+.cms .tableWidgets table.tableWidgetGrid :is(.tableWidgetColumns, .tableWidget > tr:not(.tableWidgetTitle, .tableWidgetGap)) > :last-child {
+    padding-inline-end: var(--cmsCardPadding);
+}
+.cms .tableWidgets.stacked .tableWidgetColumns { display: none; }
+.cms .tableWidgets.stacked.is-foldable > table > tbody > tr.tableWidgetTitle {
+    display: block;
+    padding: 0;
+    min-height: 0;
+    cursor: default;
+}
+.cms .tableWidgets.stacked .tableWidgetTitle > th {
+    display: block;
+    width: 100%;
+    box-sizing: border-box;
+}
+.cms .tableWidgets.stacked .tableWidget > tr:last-child {
+    border-radius: 0 0 var(--cmsRadiusLg) var(--cmsRadiusLg);
+    overflow: hidden;
+}
+.cms .tableWidgets.stacked table.tableWidgetGrid .tableWidget > tr:not(.tableWidgetTitle) > td {
+    background: transparent;
+}
+
+.cms .tableWidgets.stacked.is-foldable > table > tbody > tr.tableWidgetGap {
+    display: block;
+    min-height: 1rem;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    cursor: default;
+}
+.cms .tableWidgets.stacked table.tableWidgetGrid .tableWidget > tr:not(.tableWidgetTitle, .tableWidgetGap) > td {
+    border-inline: 0;
+    border-bottom: 0;
+}
+
+/* In the stacked layout the whole row group is the card. */
+.cms .tableWidgets.stacked > table.tableWidgetGrid > tbody.tableWidget {
+    border: 1px solid var(--cmsLine);
+    border-radius: var(--cmsRadiusLg);
+    box-shadow: var(--cmsShadow);
+    overflow: hidden;
+    background: var(--cmsCanvas);
+}
+.cms .tableWidgets.stacked > table.tableWidgetGrid > tbody.tableWidget + tbody.tableWidget {
+    margin-block-start: 1rem;
+}
+.cms .tableWidgets.stacked.is-foldable > table.tableWidgetGrid > tbody > tr.tableWidgetGap {
+    display: none;
+}
+.cms .tableWidgets.stacked table.tableWidgetGrid .tableWidgetTitle > th {
+    border-inline: 0;
+    border-top: 0;
+    border-radius: 0;
+}
+body.cms .tableWidgets.stacked.is-foldable > table.tableWidgetGrid > tbody.tableWidget > tr:not(.tableWidgetTitle, .tableWidgetGap) {
+    padding-inline: var(--cmsCardPadding);
+}
+.cms .tableWidgets.stacked.is-foldable > table.tableWidgetGrid > tbody.tableWidget > tr > td[data-table-heading] {
+    padding-inline: 0;
+}
+.cms .tableWidgets.stacked.is-foldable > table.tableWidgetGrid > tbody.tableWidget > tr.tableWidgetTitle {
+    border-bottom: 0;
 }

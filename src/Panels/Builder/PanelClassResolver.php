@@ -17,7 +17,7 @@ use Systopic\System\Panels\Tree\PanelTree;
  *    sourceRoot has a namespaceRoot):
  *      <namespaceRoot>\Root\<PathInPascalCase>\Panel
  *    e.g. namespaceRoot='Systopic\System\Panels', name='backup', parent [app→cms]:
- *      → Systopic\System\Panels\Root\Cms\Backup\Panel
+ *      → Systopic\System\Panels\Root\Admin\Backup\Panel
  *
  * 2. Legacy underscore candidates (unchanged fallback):
  *    Given a panel named "pages" whose ancestors are ["app", "cms"], the
@@ -119,7 +119,7 @@ class PanelClassResolver
      * match PascalCase convention (e.g. 'cms' → 'Cms', 'backup' → 'Backup').
      *
      * Example: namespaceRoot='Systopic\System', name='backup', parent chain [app→cms]
-     *   → 'Systopic\System\Panels\Root\Cms\Backup\Panel'
+     *   → 'Systopic\System\Panels\Root\Admin\Backup\Panel'
      */
     private function buildFqcn(string $nsRoot, string $name, ?PanelNode $parent): string
     {

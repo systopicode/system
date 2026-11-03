@@ -1,0 +1,199 @@
+/*
+ * Dark CMS, from the four theme colours. The holds stay on the root, so they
+ * keep the project's light values. The swap lives on the body: a swap on the
+ * root would refer to itself, and a rule in this layer would lose to the
+ * project colour file on :root.
+ *
+ * Petrol stays the fill of the frame. Brand ink is that same hue, light
+ * enough to read on the dark ground. The page preview puts the light values
+ * back; marks drawn into the page (.cmsOwn) stay with the CMS.
+ */
+
+:root {
+	--cmsBgHold: var(--cmsBgColor);
+	--cmsTextHold: var(--cmsTextColor);
+	--cmsBrandInk: var(--cmsMainColor);
+}
+
+/* The sign-in screen keeps its own petrol scene. It does not follow the account. */
+html[data-mode="dark"]:not(:has(.authCard)) {
+	color-scheme: dark;
+	background-color: var(--cmsMainColor);
+}
+
+html[data-mode="dark"] body.cms:not(:has(.authCard)),
+html[data-mode="dark"] body.cms:not(:has(.authCard)) article.cmsContent .cmsOwn {
+	--cmsBgColor: var(--cmsTextHold);
+	--cmsTextColor: var(--cmsBgHold);
+	--cmsBackgroundColor: var(--cmsBgColor);
+	--cmsCanvas: color-mix(in srgb, var(--cmsBgColor) 86%, var(--cmsTextColor));
+	--cmsHeadBg: hsl(from var(--cmsBgColor) h s calc(l + 6));
+	--cmsFieldBg: var(--cmsCanvas);
+	--cmsButtonBg: color-mix(in srgb, var(--cmsBgColor) 78%, var(--cmsTextColor));
+	--cmsLine: color-mix(in srgb, var(--cmsTextColor) 22%, var(--cmsBgColor));
+	--cmsLineStrong: color-mix(in srgb, var(--cmsTextColor) 32%, var(--cmsBgColor));
+	--cmsPanelAlt: hsl(from var(--cmsBgColor) h s calc(l + 4));
+	--cmsSubText: color-mix(in srgb, var(--cmsTextColor) 72%, var(--cmsCanvas));
+	--cmsMuted: color-mix(in srgb, var(--cmsTextColor) 62%, var(--cmsCanvas));
+	--cmsBrandInk: hsl(from var(--cmsMainColor) h s 70);
+	--cmsSecondaryColor: var(--cmsBrandInk);
+	--cmsInteractive: hsl(from var(--cmsMainColor) h 55 66);
+	--cmsHover: color-mix(in srgb, var(--cmsTextColor) 8%, transparent);
+	--cmsShadow: 0 1px 3px rgb(0 0 0 / .30);
+	--cmsShadowLg: 0 16px 40px rgb(0 0 0 / .40);
+	--cmsEdgeShadow: rgb(0 0 0 / .30);
+	--cmsTabShadow: rgb(0 0 0 / .30);
+	color: var(--cmsTextColor);
+	color-scheme: dark;
+}
+
+html[data-mode="dark"] body.cms:not(:has(.authCard)) article.cmsContent {
+	--cmsBgColor: var(--cmsBgHold);
+	--cmsTextColor: var(--cmsTextHold);
+	--cmsBackgroundColor: var(--cmsBgColor);
+	--cmsCanvas: #fff;
+	--cmsHeadBg: hsl(from var(--cmsBgColor) h s calc(l + 2));
+	--cmsFieldBg: hsl(from var(--cmsBgColor) h s calc(l + 1));
+	--cmsButtonBg: hsl(from var(--cmsBgColor) h s calc(l - 8));
+	--cmsLine: hsl(from var(--cmsBgColor) h calc(s * .8) calc(l - 4));
+	--cmsLineStrong: hsl(from var(--cmsBgColor) h s calc(l - 11));
+	--cmsPanelAlt: hsl(from var(--cmsBgColor) h s calc(l - 3.5));
+	--cmsSubText: color-mix(in srgb, var(--cmsTextColor) 72%, var(--cmsCanvas));
+	--cmsMuted: color-mix(in srgb, var(--cmsTextColor) 62%, var(--cmsCanvas));
+	--cmsBrandInk: var(--cmsMainColor);
+	--cmsSecondaryColor: hsl(from var(--cmsMainColor) h s calc(l + 6));
+	--cmsInteractive: hsl(from var(--cmsMainColor) h 80 calc(l + 8));
+	--cmsHover: color-mix(in srgb, var(--cmsMainColor) 6%, transparent);
+	--cmsShadow: 0 1px 3px rgb(16 24 40 / .055);
+	--cmsShadowLg: 0 16px 40px rgb(16 24 40 / .22);
+	--cmsEdgeShadow: color-mix(in srgb, var(--cmsTextColor) 12%, transparent);
+	--cmsTabShadow: var(--cmsCanvas);
+	color: var(--cmsTextHold);
+	color-scheme: light;
+}
+
+/* The signet sits on the brand colour. Once secondary becomes the light ink,
+   the circle would turn pale. Keep it petrol, with light initials. */
+html[data-mode="dark"] body.cms:not(:has(.authCard)) div.signet {
+	background: var(--cmsMainColor);
+}
+
+html[data-mode="dark"] body.cms:not(:has(.authCard)) div.signet span {
+	color: var(--cmsFrameText);
+}
+
+/* The open tree row stays the light brand chip, so its type stays dark. */
+html[data-mode="dark"] body.cms:not(:has(.authCard)) ul.tree li.active > label :is(:is(a, button:where([data-cms-action])),button:where(:not([data-cms-action]))).label,
+html[data-mode="dark"] body.cms:not(:has(.authCard)) ul.tree li.active > label :is(a, button:where([data-cms-action])).fold,
+html[data-mode="dark"] body.cms:not(:has(.authCard)) ul.tree li.active > label .label i.type {
+	color: var(--cmsMainColor);
+}
+
+/* Status marks on a dark row need more ink. On the light open row they flip back. */
+html[data-mode="dark"] body.cms:not(:has(.authCard)) ul.tree label > :is(a, button:where([data-cms-action])):not(.label):not(.fold):not(.alias):not(.redirect),
+html[data-mode="dark"] body.cms:not(:has(.authCard)) ul.tree label > i:not(.treeGrip),
+html[data-mode="dark"] body.cms:not(:has(.authCard)) ul.tree i.treeGrip,
+html[data-mode="dark"] body.cms:not(:has(.authCard)) ul.tree button:where(:not([data-cms-action])).treeMenu {
+	color: color-mix(in srgb, var(--cmsTextColor) 82%, transparent);
+}
+
+html[data-mode="dark"] body.cms:not(:has(.authCard)) ul.tree li.active > label > :is(a, button:where([data-cms-action])):not(.label):not(.fold):not(.alias):not(.redirect),
+html[data-mode="dark"] body.cms:not(:has(.authCard)) ul.tree li.active > label > i:not(.treeGrip),
+html[data-mode="dark"] body.cms:not(:has(.authCard)) ul.tree li.active > label i.treeGrip,
+html[data-mode="dark"] body.cms:not(:has(.authCard)) ul.tree li.active > label button:where(:not([data-cms-action])).treeMenu {
+	color: var(--cmsMainColor);
+}
+
+html[data-mode="dark"] body.cms:not(:has(.authCard)) aside.cms :is(a, button:where([data-cms-action])).sideAction i {
+	color: var(--cmsTextColor);
+}
+
+html[data-mode="dark"] body.cms:not(:has(.authCard)) .dashMeter {
+	background: color-mix(in srgb, var(--cmsTextColor) 24%, var(--cmsBgColor));
+}
+
+html[data-mode="dark"] body.cms:not(:has(.authCard)) .dashMeter span {
+	background: var(--cmsBrandInk);
+}
+
+html[data-mode="dark"] .cmslightbox .fileFrame,
+html[data-mode="dark"] .cmslightbox.upload .uploader,
+html[data-mode="dark"] .cmslightbox.upload .currentFile {
+	background-color: #2a2e32;
+	background-image:
+		linear-gradient(45deg, #34393d 25%, transparent 25%, transparent 75%, #34393d 75%),
+		linear-gradient(45deg, #34393d 25%, transparent 25%, transparent 75%, #34393d 75%);
+}
+html[data-mode="dark"] body.cms:not(:has(.authCard)) svg.qr-code,
+html[data-mode="dark"] body.cms .qrZoom svg.qr-code,
+html[data-mode="dark"] body.cms .fileFrame svg.qr-code {
+	display: block;
+	box-sizing: border-box;
+	color: var(--cmsMainColor);
+	background: #fff;
+	padding: 0.65rem;
+	border-radius: var(--cmsRadius);
+}
+
+html[data-mode="dark"] body.cms:not(:has(.authCard)) .cmslightbox :is(:is(a, button:where([data-cms-action])), button:where(:not([data-cms-action]))):has([class*="xmark"]),
+html[data-mode="dark"] body.cms:not(:has(.authCard)) .cmslightbox :is(:is(a, button:where([data-cms-action])), button:where(:not([data-cms-action]))):has([class*="xmark"]) i,
+html[data-mode="dark"] body.cms:not(:has(.authCard)) [data-box-close],
+html[data-mode="dark"] body.cms:not(:has(.authCard)) [data-box-close] i {
+	color: var(--cmsBrandInk);
+}
+
+body.cms .appearanceChoices {
+	display: grid;
+	grid-template-columns: repeat(3, minmax(0, 1fr));
+	gap: 0.75rem;
+}
+
+body.cms .appearanceChoices button:where(:not([data-cms-action])) {
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+	gap: 0.15rem;
+	min-height: 0;
+	margin: 0;
+	padding: 0.85rem 0.9rem;
+	border: 1px solid var(--cmsLine);
+	border-radius: var(--cmsRadiusLg);
+	background: var(--cmsCanvas);
+	color: var(--cmsTextColor);
+	text-align: left;
+	white-space: normal;
+}
+
+body.cms .appearanceChoices button:where(:not([data-cms-action])) i {
+	font-size: 1rem;
+	color: var(--cmsBrandInk);
+}
+
+body.cms .appearanceChoices button:where(:not([data-cms-action])) span {
+	font-weight: 600;
+}
+
+body.cms .appearanceChoices button:where(:not([data-cms-action])) small {
+	color: var(--cmsMuted);
+	font-size: 0.75rem;
+	line-height: 1.3;
+}
+
+body.cms .appearanceChoices button:where(:not([data-cms-action])):hover {
+	background: var(--cmsHover);
+	color: var(--cmsTextColor);
+}
+
+body.cms .appearanceChoices button:where(:not([data-cms-action]))[aria-checked="true"] {
+	border-color: var(--cmsHighlightColor);
+	outline: 1px solid var(--cmsHighlightColor);
+	outline-offset: -2px;
+}
+
+@media (max-width: 720px) {
+	body.cms .appearanceChoices {
+		grid-template-columns: 1fr;
+	}
+}
+
+html[data-mode="dark"] .cms .settingGroup{background:var(--cmsPanelAlt);border-color:var(--cmsLineStrong);}

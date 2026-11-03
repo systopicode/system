@@ -5,14 +5,14 @@ import assert from 'node:assert/strict';
 const {chromium} = await import(process.env.FLUXO_PLAYWRIGHT_MODULE ? pathToFileURL(process.env.FLUXO_PLAYWRIGHT_MODULE).href : 'playwright');
 const root = new URL('../', import.meta.url);
 const read = path => readFile(new URL(path, root), 'utf8');
-const template = await read('panels/cms/body.tpl.php');
+const template = await read('panels/admin/body.tpl.php');
 const stripPHP = text => text.replace(/<\?(?:php|=)[\s\S]*?\?>/g, '');
 const chrome = stripPHP(template.match(/<header class="cmsMobileHeader[\s\S]*?<\/header>/)[0]);
 const backdrop = template.match(/<button type="button" class="cmsMobileBackdrop[^>]*><\/button>/)[0];
 const styles = (await Promise.all(['00_theme', '18_ui', '20_base', '23_pylon', '30_layout', '40_nav', '45_sidebar', '50_forms', '60_lightbox', '62_find', '10_dropdown', '70_components', 'x_responsive'].map(name => read('public/css/' + name + '.css')))).join('\n');
-const controller = await read('panels/cms/mobile.js');
-const pageStyles = await readFile(new URL('../cms/public/css/pages.css', root), 'utf8');
-const pagesCSS = pageStyles + (await Promise.all(['pages.mml.css', 'pages.tree.css'].map(file => readFile(new URL('../cms/panels/cms/010_pages/' + file, root), 'utf8')))).join('\n');
+const controller = await read('panels/admin/mobile.js');
+const pageStyles = await readFile(new URL('../admin/public/css/pages.css', root), 'utf8');
+const pagesCSS = pageStyles + (await Promise.all(['pages.mml.css', 'pages.tree.css'].map(file => readFile(new URL('../admin/panels/admin/010_pages/' + file, root), 'utf8')))).join('\n');
 const browser = await chromium.launch({headless: true, channel: process.env.FLUXO_BROWSER_CHANNEL || 'chrome'});
 try {
  const page = await browser.newPage({viewport: {width: 390, height: 844}, isMobile: true, hasTouch: true});
@@ -20,8 +20,8 @@ try {
  const errors = [];
  page.on('pageerror', error => errors.push(error.message));
  await page.route('https://cms.example.test/**', route => route.fulfill({body: '<html></html>', contentType: 'text/html'}));
- await page.goto('https://cms.example.test/cms/pages/');
- await page.setContent(`<meta name="viewport" content="width=device-width, initial-scale=1"><style>${styles + pagesCSS}</style><body class="cms pages">${chrome}<div class="sysdebug" style="position:fixed">Debug</div><main data-debug><div class="main cms"><header>FLUXO</header><nav><div class="bottomMenu"><span class="cmsMobileOnly cmsStage DEV">DEV</span></div><ul><li class="active"><a class="ajax" href="/cms/pages/">Pages</a></li></ul></nav></div><div class="pylon cms"><header></header><nav><div class="tree" style="overflow:auto;height:400px;flex:none"><a class="label ajax" href="?id=10">Home</a><div style="height:1500px"></div></div></nav><footer style="max-height:300px"><div class="mml"><div class="mmlContent">Media<input aria-label="Upload" type="file"></div></div></footer></div><div class="content"><header class="cms"><div class="pageHead"><nav class="crumbs">Home</nav><div class="pageTitleRow"><h1 class="pageTitle">Home page</h1><button class="pageTitleEdit">Edit title</button></div></div><div class="cmsPageTools"><button type="button" class="cmsMobileOnly cmsMobileMore" data-cms-more aria-label="Page tools" aria-expanded="false">…</button><div class="cmsPageToolsMenu"><div class="leftAlign"><div class="langSwitch"><button type="button" aria-label="Language">DE</button></div></div><div class="deviceSwitch"><button data-cms-device="fit">Fit</button><button data-cms-device="mobile">Mobile</button></div><button type="button" class="cmsMobileOnly" data-cms-properties>Properties</button><button type="button" class="cmsMobileOnly" data-cms-window="media">Media Library</button></div></div></header><div class="flexRow"><div class="flexColumn"><input aria-label="Title" value="Saved"><div style="height:1000px">Preview</div></div><aside class="cms"><div class="flexContainer">Properties<input aria-label="SEO"></div></aside></div></div></main>${backdrop}</body>`);
+ await page.goto('https://cms.example.test/admin/pages/');
+ await page.setContent(`<meta name="viewport" content="width=device-width, initial-scale=1"><style>${styles + pagesCSS}</style><body class="cms pages">${chrome}<div class="sysdebug" style="position:fixed">Debug</div><main data-debug><div class="main cms"><header>FLUXO</header><nav><div class="bottomMenu"><span class="cmsMobileOnly cmsStage DEV">DEV</span></div><ul><li class="active"><a class="ajax" href="/admin/pages/">Pages</a></li></ul></nav></div><div class="pylon cms"><header></header><nav><div class="tree" style="overflow:auto;height:400px;flex:none"><a class="label ajax" href="?id=10">Home</a><div style="height:1500px"></div></div></nav><footer style="max-height:300px"><div class="mml"><div class="mmlContent">Media<input aria-label="Upload" type="file"></div></div></footer></div><div class="content"><header class="cms"><div class="pageHead"><nav class="crumbs">Home</nav><div class="pageTitleRow"><h1 class="pageTitle">Home page</h1><button class="pageTitleEdit">Edit title</button></div></div><div class="cmsPageTools"><button type="button" class="cmsMobileOnly cmsMobileMore" data-cms-more aria-label="Page tools" aria-expanded="false">…</button><div class="cmsPageToolsMenu"><div class="leftAlign"><div class="langSwitch"><button type="button" aria-label="Language">DE</button></div></div><div class="deviceSwitch"><button data-cms-device="fit">Fit</button><button data-cms-device="mobile">Mobile</button></div><button type="button" class="cmsMobileOnly" data-cms-properties>Properties</button><button type="button" class="cmsMobileOnly" data-cms-window="media">Media Library</button></div></div></header><div class="flexRow"><div class="flexColumn"><input aria-label="Title" value="Saved"><div style="height:1000px">Preview</div></div><aside class="cms"><div class="flexContainer">Properties<input aria-label="SEO"></div></aside></div></div></main>${backdrop}</body>`);
  await page.evaluate(controller);
  await page.evaluate(() => document.addEventListener('click', event => { if (event.target.closest('a[href]')) event.preventDefault(); }));
  // Re-running body scripts after an AJAX response must replace, not duplicate, listeners.
@@ -132,7 +132,7 @@ try {
  }
  // Ordinary panel links (getNavi() has no .ajax class) open the same edit window.
  await page.locator('body').evaluate(node => { node.classList.remove('pages'); node.classList.add('settings'); });
- await page.locator('.tree a.label').evaluate(node => { node.className = 'label'; node.href = '/cms/settings/environment/'; });
+ await page.locator('.tree a.label').evaluate(node => { node.className = 'label'; node.href = '/admin/settings/environment/'; });
  await openEdit();
  assert.equal(await state(), 'edit');
  await swipeClose('.content > header');
@@ -155,6 +155,7 @@ try {
  await page.setViewportSize({width:1440,height:900});
  await page.waitForFunction(() => !document.querySelector('.content').inert);
  assert.equal(await page.locator('.cmsMobileHeader').isVisible(), false);
+ assert.equal(await page.locator('#cmsChromeEdge').count(), 0, 'mobile Safari edge must not cover desktop footer');
  assert.equal(await page.locator('.content').evaluate(node=>node.inert), false);
  assert.equal(await page.locator('[data-cms-more]').isVisible(), false);
  assert.equal(await page.locator('.main .cmsMobileOnly.cmsStage').isVisible(), false);

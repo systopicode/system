@@ -1,0 +1,27 @@
+<?php
+
+/** @var \Systopic\System\Panels\PanelNode $this */
+
+$path = rtrim((string) fs::$siteRoot, '/\\') . '/var/backups/backup.log';
+
+switch ($this->action) {
+	case 'downloadLog':
+		if ($path !== '' && fs::isFile($path)) {
+			header('Content-Type: text/plain; charset=utf-8');
+			header('Content-Disposition: attachment; filename="backup.log"');
+			header('Content-Length: ' . (string) fs::filesize($path));
+			fpassthru(fs::fopen($path, 'rb'));
+			exit;
+		}
+		break;
+	case 'clearLog':
+        if (!\Systopic\System\Auth\Session::isSuperuser()) {
+            \message::error('Only a superuser can clear logs.');
+            return;
+        }
+		if ($path !== '' && fs::isFile($path)) {
+			fs::unlinkFile($path);
+		}
+		$this->updateView('main');
+		break;
+}

@@ -75,10 +75,15 @@ function cmsFindBinary(string $name, ?string $root = null): string {
 		return $cache[$key];
 	}
 
-	$candidates = [];
+    $candidates = [];
+    // Share the legacy/runtime resolver, retaining this API's host-format checks.
+    if ($root === cmsSiteRootForBinaries() && class_exists('shellBinary')) {
+        $shared = \shellBinary::find($name);
+        if ($shared !== null) $candidates[] = $shared;
+    }
 	$const = strtoupper($name) . '_BINARY';
 	if (defined($const) && (string) constant($const) !== '') {
-		$candidates[] = (string) constant($const);
+		array_unshift($candidates, (string) constant($const));
 	}
 	$env = getenv($const);
 	if (is_string($env) && $env !== '') {
@@ -214,6 +219,42 @@ function cmsHttpSaveBinary(string $url, string $dest, ?callable $onTick = null):
 	return true;
 }
 
+/** Record known project-local provenance; general notices are not a build clearance. */
+function cmsFfmpegWriteDistribution(string $dir, string $version, string $platform, array $downloads): bool {
+    $noticeDir = $dir . '/licenses/ffmpeg';
+    if (!is_dir($noticeDir) && !@mkdir($noticeDir, 0755, true)) return false;
+    $legal = dirname(__DIR__) . '/legal/third-party/';
+    $notices = [];
+    foreach (['FFmpeg-NOTICE.txt', 'FFmpeg-LGPL-2.1.txt', 'FFmpeg-GPL-2.0.txt', 'GPL-3.0.txt'] as $file) {
+        if (!is_file($legal . $file) || !@copy($legal . $file, $noticeDir . '/' . $file)) return false;
+        $notices[$file] = hash_file('sha256', $noticeDir . '/' . $file);
+    }
+    $binaries = [];
+    foreach (['ffmpeg', 'ffprobe'] as $name) {
+        if (!is_file($dir . '/' . $name)) return false;
+        $binaries[$name] = [
+            'file' => $name,
+            'sha256' => hash_file('sha256', $dir . '/' . $name),
+            'downloadUrl' => $downloads[$name]['url'] ?? null,
+            'archiveSha256' => $downloads[$name]['archiveSha256'] ?? null,
+        ];
+    }
+    $manifest = [
+        'schema' => 1, 'suite' => 'FFmpeg', 'version' => $version, 'platform' => $platform,
+        'binaries' => $binaries, 'generalNotices' => $notices,
+        'buildConfiguration' => null, 'applicableLicense' => null,
+        'correspondingSources' => [], 'buildScripts' => [], 'thirdPartyNotices' => [],
+        'distributionStatus' => 'requires-build-review',
+    ];
+    $json = json_encode($manifest, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+    if ($json === false) return false;
+    $tmp = @tempnam($noticeDir, '.distribution-');
+    if ($tmp === false) return false;
+    $ok = @file_put_contents($tmp, $json . "\n") !== false && @rename($tmp, $noticeDir . '/distribution.json');
+    if (!$ok) @unlink($tmp);
+    return $ok;
+}
+
 /**
  * Statische Builds nach var/bin/ (Shared Hosting ohne System-ffmpeg).
  * @return array{ok:bool,detail:string}
@@ -245,6 +286,7 @@ function cmsInstallFfmpegBinaries(?string $root = null, ?callable $onProgress = 
 		return ['ok' => false, 'detail' => 'Keine Download-URL für Plattform ' . $platform];
 	}
 
+	$downloads = [];
 	foreach (['ffmpeg', 'ffprobe'] as $name) {
 		$tmp = $dir . '/' . $name . '.zip';
 		$say($name . ' wird geladen');
@@ -253,6 +295,7 @@ function cmsInstallFfmpegBinaries(?string $root = null, ?callable $onProgress = 
 		})) {
 			return ['ok' => false, 'detail' => 'Download fehlgeschlagen: ' . $name];
 		}
+		$downloads[$name] = ['url' => (string) $pack[$name], 'archiveSha256' => hash_file('sha256', $tmp)];
 		$zip = new ZipArchive();
 		if ($zip->open($tmp) !== true) {
 			@unlink($tmp);
@@ -291,5 +334,8 @@ function cmsInstallFfmpegBinaries(?string $root = null, ?callable $onProgress = 
 		$say($name . ' liegt in var/bin/');
 	}
 
+	if (!cmsFfmpegWriteDistribution($dir, (string) ($meta['version'] ?? 'unknown'), $platform, $downloads)) {
+		return ['ok' => false, 'detail' => 'Binaries installed, but licence/provenance records could not be written in ' . $dir];
+	}
 	return ['ok' => true, 'detail' => 'ffmpeg + ffprobe in ' . $dir];
 }

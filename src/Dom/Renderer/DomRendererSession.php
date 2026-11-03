@@ -19,7 +19,7 @@ use Systopic\System\Dom\Tree\DomLayerTree;
  *
  * A diff request therefore names the state it is showing, in its url:
  *
- *   /cms/pages/?id=20~/cms/pages/?id=18
+ *   /admin/pages/?id=20~/admin/pages/?id=18
  *   └ reference ────┘ └ target ───────┘
  *
  * http::splitDiffUrl() takes that apart; the left half arrives here as
@@ -185,7 +185,7 @@ class DomRendererSession
      * Both halves of a diff url and the request url itself have to reduce to
      * the same string, so the key is normalised: host dropped, project root
      * dropped, query kept. Keeps it readable in a session dump, too —
-     * '/cms/pages/?id=18' rather than a hash.
+     * '/admin/pages/?id=18' rather than a hash.
      */
     private function key(string $url): string
     {

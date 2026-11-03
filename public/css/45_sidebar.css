@@ -31,8 +31,12 @@ aside.cms nav.sidebarTabs ul{
     display: flex;
     flex-wrap: nowrap;
     column-gap: 0.85rem;
+    margin: 0 0 -1px;
     padding: 0 0.9rem;
     overflow-x: auto;
+    overflow-y: hidden;
+    overscroll-behavior-x: contain;
+    overscroll-behavior-y: auto;
     scrollbar-width: none;
 }
 
@@ -40,7 +44,7 @@ aside.cms nav.sidebarTabs ul::-webkit-scrollbar{
     display: none;
 }
 
-aside.cms nav.sidebarTabs button.tabScroll{
+aside.cms nav.sidebarTabs button:where(:not([data-cms-action])).tabScroll{
     position: absolute;
     top: 0.35rem;
     bottom: 1px;
@@ -60,33 +64,33 @@ aside.cms nav.sidebarTabs button.tabScroll{
     cursor: pointer;
 }
 
-aside.cms nav.sidebarTabs button.tabScroll[hidden]{
+aside.cms nav.sidebarTabs button:where(:not([data-cms-action])).tabScroll[hidden]{
     display: none;
 }
 
-aside.cms nav.sidebarTabs button.tabScroll:hover{
+aside.cms nav.sidebarTabs button:where(:not([data-cms-action])).tabScroll:hover{
     color: var(--cmsTextColor);
 }
 
-aside.cms nav.sidebarTabs button.prev{
+aside.cms nav.sidebarTabs button:where(:not([data-cms-action])).prev{
     left: 0;
-    box-shadow: 8px 0 8px -4px var(--cmsCanvas);
+    box-shadow: 8px 0 8px -4px var(--cmsTabShadow);
 }
 
-aside.cms nav.sidebarTabs button.next{
+aside.cms nav.sidebarTabs button:where(:not([data-cms-action])).next{
     right: 0;
-    box-shadow: -8px 0 8px -4px var(--cmsCanvas);
+    box-shadow: -8px 0 8px -4px var(--cmsTabShadow);
 }
 
 aside.cms nav.sidebarTabs li{
     margin: 0;
 }
 
-aside.cms nav.sidebarTabs ul li a{
+aside.cms nav.sidebarTabs ul li :is(a, button:where([data-cms-action])){
     display: flex;
     align-items: center;
     height: 2.5rem;
-    margin: 0 0 -1px;
+    margin: 0;
     padding: 0;
     border-radius: 0;
     background: none;
@@ -98,21 +102,21 @@ aside.cms nav.sidebarTabs ul li a{
     cursor: pointer;
 }
 
-aside.cms nav.sidebarTabs ul li a:hover{
+aside.cms nav.sidebarTabs ul li :is(a, button:where([data-cms-action])):hover{
     background: none;
     color: var(--cmsTextColor);
 }
 
-aside.cms nav.sidebarTabs ul li a.selected{
+aside.cms nav.sidebarTabs ul li :is(a, button:where([data-cms-action])).selected{
     background: none;
     border-bottom-color: var(--cmsHighlightColor);
     box-shadow: none;
     color: var(--cmsTextColor);
-    font-weight: 600;
+    font-weight: 500;
 }
 
 /****************************** EIN- UND AUSFAHREN ***************************/
-aside.cms a.sidebarFlag{
+aside.cms :is(a, button:where([data-cms-action])).sidebarFlag{
     position: absolute;
     top: 0.75rem;
     left: calc(-1.25rem - 1px);
@@ -128,7 +132,7 @@ aside.cms a.sidebarFlag{
     border-radius: var(--cmsRadius) 0 0 var(--cmsRadius);
     box-shadow: -2px 2px 6px rgba(0,0,0,.18);
     color: var(--cmsMuted);
-    font-size: 0.6875rem;
+    font-size: 0.875rem;
     cursor: pointer;
     touch-action: none;
     -webkit-user-drag: none;   /* a link: the browser would lift it as a drag ghost */
@@ -138,19 +142,20 @@ aside.cms a.sidebarFlag{
 
 /* a finger swipes the flag (pages panel.js): wide enough to catch */
 @media (any-pointer: coarse){
-    aside.cms a.sidebarFlag{
+    aside.cms :is(a, button:where([data-cms-action])).sidebarFlag{
         left: calc(-1.4rem - 1px);
         width: 1.4rem;
         height: 2.75rem;
     }
 }
 
-aside.cms a.sidebarFlag:hover{
+aside.cms :is(a, button:where([data-cms-action])).sidebarFlag:hover{
     color: var(--cmsTextColor);
 }
 
 aside.cms.collapsed{
     min-width: 0;
+    border-left: 0;
     overflow: visible;
 }
 
@@ -178,15 +183,19 @@ aside.cms .scrollContainerContent{
 
 /****************************** AKKORDEONS ***************************/
 aside.cms details.sidebarSection{
-    border-bottom: 1px solid var(--cmsLine);
+    border-bottom: 0;
+}
+
+aside.cms details.sidebarSection:not([open]){
+    border-bottom: 1px solid var(--cmsLineStrong);
 }
 
 aside.cms details.sidebarSection > summary{
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: 0.35rem;
     margin: 0;
-    padding: 0.75rem 1rem;
+    padding: calc(0.42rem + 2px) 0.55rem calc(0.42rem + 2px) 0.85rem;
     list-style: none;
     background: var(--cmsPanelAlt);
     font-size: 0.875rem;
@@ -200,31 +209,38 @@ aside.cms details.sidebarSection > summary::-webkit-details-marker{
     display: none;
 }
 
-aside.cms details.sidebarSection > summary .sidebarInfo{
+aside.cms details.sidebarSection > summary .sidebarLabel{
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+aside.cms details.sidebarSection > summary .sidebarTools{
+    display: flex;
+    align-items: center;
+    gap: 0.1rem;
     margin-left: auto;
-    color: var(--cmsMuted);
 }
 
-aside.cms details.sidebarSection > summary .sidebarInfo:hover{
-    color: var(--cmsTextColor);
+aside.cms details.sidebarSection > summary .sidebarFold{
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.5rem;
+    height: 1.5rem;
+    border-radius: var(--cmsRadius);
+    color: var(--cmsBrandInk);
+    font-size: 0.7rem;
+    transition: background-color .15s;
 }
 
-aside.cms details.sidebarSection > summary::after{
-    content: "\f078";
-    margin-left: auto;
-    font-family: "CMS Font Awesome 7 Pro";
-    font-weight: 400;
-    font-size: 0.6875rem;
-    color: var(--cmsMuted);
-    transition: transform .15s;
+aside.cms details.sidebarSection > summary:hover .sidebarFold{
+    background: var(--cmsHover);
 }
 
-aside.cms details.sidebarSection > summary:has(.sidebarInfo)::after{
-    margin-left: 0.65rem;
-}
-
-aside.cms details.sidebarSection:not([open]) > summary::after{
-    transform: rotate(-90deg);
+aside.cms details.sidebarSection:not([open]) > summary .sidebarFold{
+    --icon-mask: var(--icon-chevron-right);
 }
 
 aside.cms details.sidebarSection > summary:hover{
@@ -386,7 +402,7 @@ aside.cms .settingGroup div[data-on_input] > label:first-child{
     margin-top: 0.55rem;
 }
 
-aside.cms div.sidebarItem a{
+aside.cms div.sidebarItem :is(a, button:where([data-cms-action])){
     color: var(--cmsTextColor);
 }
 
@@ -406,22 +422,39 @@ aside.cms ul li > p{
     display: block;
 }
 
-aside.cms ul li a{
+aside.cms ul li :is(a, button:where([data-cms-action])){
     cursor: pointer;
 }
 
-aside.cms ul li a:not(.icon){
+aside.cms ul li :is(a, button:where([data-cms-action])):not([role="tab"]):not(.icon):not(.sideAction):not(.cmsTextLink):not(.dropActions *){
     margin-left: -0.5rem;
     padding: 0.3rem 0.5rem;
     border-radius: var(--cmsRadius);
     transition: background-color .15s;
 }
 
-aside.cms ul li a:not(.icon):hover{
+aside.cms ul li :is(a, button:where([data-cms-action])):not([role="tab"]):not(.icon):not(.sideAction):not(.cmsTextLink):not(.dropActions *):hover{
     background: var(--cmsHover);
 }
 
-aside.cms ul li a.selected{
+aside.cms ul li :is(a, button:where([data-cms-action])).cmsTextLink{
+    display: inline;
+    margin: 0;
+    padding: 0;
+    border-radius: 0;
+    background: none;
+    color: var(--cmsInteractive);
+    font-weight: 600;
+    text-decoration: underline;
+    text-underline-offset: 0.15em;
+}
+
+aside.cms ul li :is(a, button:where([data-cms-action])).cmsTextLink:hover{
+    background: none;
+    color: var(--cmsTextColor);
+}
+
+aside.cms ul li :is(a, button:where([data-cms-action])).selected:not([role="tab"]){
     background: var(--cmsSelected);
     color: var(--cmsHighlightText);
     font-weight: 600;
@@ -435,14 +468,14 @@ aside.cms ul.templates li.seperator:empty{
     border-bottom: 1px solid var(--cmsLineStrong);
 }
 
-aside.cms ul li a.icon{
+aside.cms ul li :is(a, button:where([data-cms-action])).icon{
     margin-left: 0.5rem;
     padding: 0;
 }
 
 aside.cms ul li i{
     font-size: 1rem;
-    color: var(--cmsMainColor);
+    color: var(--cmsBrandInk);
 }
 
 aside.cms ul li i:first-child{
@@ -450,7 +483,7 @@ aside.cms ul li i:first-child{
     padding: 0;
 }
 
-aside.cms ul li input + a.icon{
+aside.cms ul li input + :is(a, button:where([data-cms-action])).icon{
     float: none;
 }
 
@@ -480,6 +513,11 @@ aside.cms label.checkbox{
     margin-bottom: 0.35rem;
 }
 
+aside.cms label.checkbox:has(> input.switch) > span{
+    font-size: .875rem;
+    line-height: 1.4;
+}
+
 aside.cms .sidebarItem select,
 aside.cms .sidebarItem textarea,
 aside.cms .sidebarItem input[type="text"],
@@ -504,21 +542,34 @@ aside.cms .sideActions{
     margin-top: 0.35rem;
 }
 
-aside.cms a.sideAction{
+aside.cms :is(a, button:where([data-cms-action])).sideAction{
     display: flex;
     align-items: center;
+    justify-content: flex-start;
     gap: 0.5rem;
+    box-sizing: border-box;
     width: 100%;
-    min-height: 0;
+    min-height: var(--cmsControl);
     margin: 0;
-    padding: 0.35rem 0.45rem;
+    padding: 0 0.9rem;
+    border: 1px solid transparent;
     border-radius: var(--cmsRadius);
+    background: var(--cmsButtonBg);
+    color: var(--cmsTextColor);
     font-size: 0.8125rem;
     font-weight: 500;
-    line-height: 1.25;
+    line-height: 1.2;
+    text-decoration: none;
+    transition: background-color .15s, color .15s;
 }
 
-aside.cms a.sideAction i{
+aside.cms :is(a, button:where([data-cms-action])).sideAction:hover,
+aside.cms :is(a, button:where([data-cms-action])).sideAction:focus-visible{
+    background: var(--cmsHover);
+    outline: none;
+}
+
+aside.cms :is(a, button:where([data-cms-action])).sideAction i{
     width: 1rem;
     margin: 0;
     font-size: 0.85rem;
@@ -526,11 +577,11 @@ aside.cms a.sideAction i{
     text-align: center;
 }
 
-aside.cms a.sideAction:hover i{
+aside.cms :is(a, button:where([data-cms-action])).sideAction:hover i{
     color: inherit;
 }
 
-aside.cms a.sideAction.danger{
+aside.cms :is(a, button:where([data-cms-action])).sideAction.danger{
     margin-top: 1rem;
     color: var(--cmsError);
 }
@@ -566,14 +617,23 @@ aside.cms ul.rewrite .pathMeta{
     color: var(--cmsMuted);
 }
 
-aside.cms ul li.seperator i{
-    float: right;
-    cursor: pointer;
-    color: var(--cmsMuted);
+aside.cms ul li.seperator{
+    position: relative;
+    display: block;
+    overflow: visible;
+    padding-bottom: 0.15rem;
 }
 
-aside.cms ul li.seperator i:hover{
-    color: var(--cmsTextColor);
+aside.cms ul li.seperator > .button.icononly{
+    position: absolute;
+    right: 0.55rem;
+    bottom: 0;
+    display: inline-flex;
+    width: 1.15rem;
+    height: 1.15rem;
+    min-height: 0;
+    margin: 0;
+    padding: 0;
 }
 
 aside.cms label.checkbox{
@@ -653,7 +713,7 @@ aside.cms ul.templates li > *{
     padding: 0;
 }
 
-aside.cms ul.templates a{
+aside.cms ul.templates :is(a, button:where([data-cms-action])){
     display: block;
     margin: 0;
     padding: 0.32rem 0.5rem;
@@ -682,4 +742,25 @@ aside.cms dl.cmsFacts dt{
 aside.cms dl.cmsFacts dd{
     margin: 0.1rem 0 0;
     font-size: 0.8125rem;
+}
+/* Only the content below the tabs owns vertical scrolling. */
+aside.cms { min-height: 0; overflow: visible; }
+aside.cms > nav.sidebarTabs { flex-shrink: 0; z-index: 2; background: var(--cmsCanvas); touch-action: pan-x; }
+aside.cms > .flexContainer { display: flex; flex-direction: column; height: auto; overflow: hidden; }
+aside.cms > .flexContainer > .scrollContainer { flex: 1 1 0; min-height: 0; height: auto; overscroll-behavior-y: contain; touch-action: pan-y; }
+
+/* Page references share one hover surface in Pages and media dialogs. */
+aside.cms .relationIncoming li { display:flex;align-items:center;gap:.2rem;background:var(--cmsButtonBg);border:0;border-radius:var(--cmsRadius);margin-bottom:.35rem;padding:.2rem .25rem; }
+aside.cms .relationIncoming .relationLink.sideAction { display:flex;flex:1;min-width:0;align-items:center;justify-content:flex-start;text-align:left;gap:.5rem;margin:0;padding:.5rem;border:0;outline:0;box-shadow:none;background:transparent;text-decoration:none; }
+aside.cms .relationIncoming .relationLink.sideAction:is(:hover,:focus-visible) { background:transparent;box-shadow:none;text-decoration:none; }
+aside.cms .relationIncoming li:has(.relationLink:is(:hover,:focus-visible)) { background:var(--cmsHover); }
+aside.cms .relationIncoming .relationLink.sideAction:focus-visible { outline:2px solid var(--cmsInteractive);outline-offset:-2px; }
+aside.cms .relationIncoming .relationLink > i {flex:none;margin:0;}
+aside.cms .relationIncoming .relationLink > span {min-width:0;overflow-wrap:anywhere;}
+aside.cms .relationIncoming .relationLink small {display:block;color:var(--cmsMuted);font-size:.75rem;font-weight:normal;}
+
+/* Match standalone sidebar labels, including fields saved on blur. */
+aside.cms .settingGroup > div > label {
+    display:block; margin-top:.65rem; font-size:.75rem;
+    font-weight:500; color:var(--cmsMuted);
 }

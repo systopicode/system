@@ -5,14 +5,14 @@ declare(strict_types=1);
 namespace Systopic\System\Sys;
 
 /**
- * The CMS as an installable web app: `cms/app.webmanifest`, answered before
+ * The CMS as an installable web app: `admin/app.webmanifest`, answered before
  * the panel tree (a manifest is fetched without the session cookie, the
  * login redirect must not catch it). Colours follow the theme and its
  * overrides, icons the panel assets - a project replaces them in overrides/img/.
  */
 final class WebApp
 {
-    public const FILE = 'cms/app.webmanifest';
+    public const FILE = 'admin/app.webmanifest';
 
     /** afterConnect, every request - only the manifest's URL answers here. */
     public static function serve(): void
@@ -21,7 +21,7 @@ final class WebApp
             return;
         }
         $path = (string) parse_url((string) ($_SERVER['REQUEST_URI'] ?? ''), PHP_URL_PATH);
-        if (preg_match('#^' . preg_quote(\http::$root, '#') . 'cms/icon-(\d+)(-mask)?\.png$#', $path, $icon)) {
+        if (preg_match('#^' . preg_quote(\http::$root, '#') . 'admin/icon-(\d+)(-mask)?\.png$#', $path, $icon)) {
             self::serveIcon((int) $icon[1], isset($icon[2]));
         }
         if ($path !== \http::$root . self::FILE) {
@@ -45,7 +45,7 @@ final class WebApp
     public static function name(): string
     {
         $name = defined('CMS_PAGE_TITLE_OVERRIDE') ? trim(strip_tags((string) CMS_PAGE_TITLE_OVERRIDE)) : '';
-        return $name !== '' ? $name : 'fluxo cms';
+        return $name !== '' ? $name : 'fluxo';
     }
 
     /** The public site's name, so several CMS tabs can be told apart. */
@@ -85,13 +85,13 @@ final class WebApp
     {
         $stage = defined('STAGE') ? (string) STAGE : '';
         $icon = match ($stage) {
-            'DEV' => 'fa-hammer',
-            'STAGING' => 'fa-flask',
-            'LIVE' => 'fa-globe',
+            'DEV' => 'cmsIcon-hammer',
+            'STAGING' => 'cmsIcon-flask',
+            'LIVE' => 'cmsIcon-globe',
             default => '',
         };
         $safe = htmlspecialchars($stage, ENT_QUOTES, 'UTF-8');
-        $mark = $icon === '' ? '' : '<i class="fa-regular ' . $icon . '" aria-hidden="true"></i>';
+        $mark = $icon === '' ? '' : '<i class="cmsIcon ' . $icon . '" aria-hidden="true"></i>';
         return '<span class="cmsStage ' . $safe . '" title="' . $safe . '">' . $mark . '<span>' . $safe . '</span></span>';
     }
 
@@ -104,7 +104,7 @@ final class WebApp
     /** @return array<string, mixed> */
     private static function manifest(): array
     {
-        $start = \http::$root . 'cms/';
+        $start = \http::$root . 'admin/';
         // Inside the app scope and without a query: iOS drops an apple-touch
         // icon whose address has one, and Android ignores icons outside the scope.
         $icons = [];
@@ -120,7 +120,7 @@ final class WebApp
             'id' => $start,
             'name' => self::name(),
             'short_name' => self::shortName(),
-            'description' => 'fluxo cms',
+            'description' => 'fluxo',
             'start_url' => $start,
             'scope' => $start,
             'display' => 'standalone',

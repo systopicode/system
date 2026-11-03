@@ -1,0 +1,545 @@
+/* Only what the tools screens need and nothing else uses. */
+
+body.tools .toolCheck{
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	display: flex;
+	flex-direction: column;
+	gap: 0.4rem;
+}
+
+body.tools .toolCheck li{
+    display:flex;
+    align-items:center;
+    gap:.6rem;
+	margin: 0;
+	padding: 0.4rem 0.7rem;
+	border-radius: var(--cmsRadius);
+	font-size: 0.875rem;
+	line-height: 1.4;
+	color: var(--cmsTextColor);
+}
+
+body.tools .toolCheck li.confirm{
+	background: color-mix(in srgb, var(--cmsSuccess) 14%, var(--cmsCanvas));
+}
+
+body.tools .toolCheck li.warning{
+	background: color-mix(in srgb, var(--cmsWarning) 16%, var(--cmsCanvas));
+}
+
+body.tools .toolCheck li.error{
+	background: color-mix(in srgb, var(--cmsError) 14%, var(--cmsCanvas));
+}
+
+body.tools .toolCheck li.info{
+	background: var(--cmsHover);
+}
+
+body.tools .phpinfo{
+	overflow: auto;
+}
+
+body.tools .phpinfo table{
+	font-size: 0.8125rem;
+}
+
+body.tools .schemaBar{
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 0.75rem;
+	margin: 0 0 1.25rem;
+}
+
+body.tools .schemaBar .button{
+	margin: 0;
+}
+
+body.tools .schemaFilters{
+	display: flex;
+	align-items: center;
+	gap: 0.75rem;
+	margin: 0;
+}
+
+body.tools .schemaFilters select{
+	width: 14rem;
+	margin: 0;
+}
+
+body.tools .schemaFilters .checkbox{
+	margin: 0;
+	white-space: nowrap;
+}
+
+body.tools .schemaFilters .switch + div{
+	margin-left: 0.35rem;
+}
+
+body.tools tr.schemaDiff td{
+	background: color-mix(in srgb, var(--cmsHighlightColor) 12%, var(--cmsCanvas));
+	color: var(--cmsTextColor);
+}
+
+body.tools .schemaCompare{
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+	align-items: center;
+	gap: 0.65rem;
+	width: 100%;
+}
+
+body.tools .schemaFrom,
+body.tools .schemaTo{
+	display: block;
+	padding: 0.35rem 0.55rem;
+	border: 1px solid var(--cmsLine);
+	border-radius: var(--cmsRadius);
+	background: var(--cmsPageBg, var(--cmsCanvas));
+	font-family: ui-monospace, monospace;
+	font-size: 0.8125rem;
+	white-space: normal;
+	overflow-wrap: anywhere;
+}
+
+body.tools .schemaFrom{
+	color: var(--cmsMuted);
+}
+
+body.tools .schemaTo{
+	border-color: color-mix(in srgb, var(--cmsHighlightColor) 50%, var(--cmsLine));
+	background: color-mix(in srgb, var(--cmsHighlightColor) 16%, var(--cmsCanvas));
+	color: var(--cmsTextColor);
+	font-weight: 600;
+}
+
+body.tools .schemaCompare i{
+	color: var(--cmsMuted);
+	font-size: 0.75rem;
+}
+
+body.tools td.schemaApply{
+	width: 1%;
+	white-space: nowrap;
+	text-align: right;
+	vertical-align: middle;
+}
+
+body.tools td.schemaApply .button{
+	margin: 0;
+}
+
+body.tools tr.destructive td{
+	background: color-mix(in srgb, var(--cmsError) 10%, var(--cmsCanvas));
+	color: var(--cmsTextColor);
+}
+
+body.tools tr.blocked td{
+	background: color-mix(in srgb, var(--cmsHighlightColor) 16%, var(--cmsCanvas));
+	color: var(--cmsTextColor);
+}
+
+body.tools .auditKind{
+	display: block;
+	color: var(--cmsMuted);
+	font-size: 0.75rem;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.03em;
+}
+
+body.tools .auditSubject{
+	font-family: ui-monospace, monospace;
+	font-size: 0.8125rem;
+}
+
+body.tools .auditSql{
+	margin-top: 0.35rem;
+}
+
+body.tools .auditSql summary{
+	color: var(--cmsMuted);
+	font-size: 0.75rem;
+	cursor: pointer;
+}
+
+body.tools .auditSql pre{
+	margin: 0.35rem 0 0;
+	white-space: pre-wrap;
+	font-family: ui-monospace, monospace;
+	font-size: 0.75rem;
+	color: var(--cmsMuted);
+}
+
+/* Database status: every column, database beside model. The database value
+   of a differing column would change (highlight), the model value is the
+   reference it changes towards (green). */
+body.tools .schemaLegend{
+	display: inline-block;
+	margin-left: 0.5rem;
+	padding: 0.05rem 0.5rem;
+	border-radius: var(--cmsRadius);
+	font-family: ui-monospace, monospace;
+	font-size: 0.75rem;
+}
+
+body.tools .schemaLegend.schemaActual{
+	background: color-mix(in srgb, var(--cmsHighlightColor) 26%, var(--cmsCanvas));
+}
+
+body.tools .schemaLegend.schemaDeclared{
+	background: color-mix(in srgb, #7cb249 22%, var(--cmsCanvas));
+}
+
+/* One table for every database table, a tbody each: the columns line up from
+   card to card without a fixed width. The tbody is the card - its cells carry
+   the white, the line and, at the outer corners, the radii; an empty tbody
+   between two is the gap. Database and model share what the name leaves.
+   Every rule starts with "body.tools table.schemaAll": the general table
+   rules (24_table.css, .cms table:not(...) tbody td ...) weigh more otherwise. */
+/* scrolls sideways on a narrow screen - not .tableScroll, which makes the
+   section around it a white card (70_components.css) */
+body.tools .schemaScroll{
+	overflow-x: auto;
+}
+
+body.tools .schemaScroll > table.schemaAll{
+	background: none;
+}
+
+body.tools table.schemaAll col.schemaColSide{
+	width: 50%;
+}
+
+body.tools table.schemaAll col.schemaColAction{
+	width: 1%;
+}
+
+body.tools table.schemaAll .schemaCard > tr > *{
+	background: var(--cmsCanvas);
+}
+
+body.tools table.schemaAll .schemaCard td.schemaActual{
+	background: color-mix(in srgb, var(--cmsHighlightColor) 26%, var(--cmsCanvas));
+}
+
+body.tools table.schemaAll .schemaCard td.schemaDeclared{
+	background: color-mix(in srgb, #7cb249 22%, var(--cmsCanvas));
+}
+
+body.tools table.schemaAll .schemaCard > tr > :first-child{
+	padding-left: var(--cmsCardPadding);
+	border-left: 1px solid var(--cmsLine);
+}
+
+body.tools table.schemaAll .schemaCard > tr > :last-child{
+	padding-right: var(--cmsCardPadding);
+	border-right: 1px solid var(--cmsLine);
+}
+
+body.tools table.schemaAll .schemaCard > tr:first-child > th{
+	border-top: 1px solid var(--cmsLine);
+	border-radius: var(--cmsRadiusLg) var(--cmsRadiusLg) 0 0;
+}
+
+body.tools table.schemaAll .schemaCard > tr:last-child > td{
+	border-bottom: 1px solid var(--cmsLine);
+}
+
+body.tools table.schemaAll .schemaCard > tr:last-child > td:first-child{
+	border-bottom-left-radius: var(--cmsRadiusLg);
+}
+
+body.tools table.schemaAll .schemaCard > tr:last-child > td:last-child{
+	border-bottom-right-radius: var(--cmsRadiusLg);
+}
+
+/* the title row: a widget header, not a column heading */
+body.tools table.schemaAll .schemaCard > tr.schemaCardHead > th{
+	height: 3rem;
+	padding-top: 0;
+	padding-bottom: 0;
+	text-transform: none;
+	letter-spacing: 0;
+	font-size: inherit;
+	font-weight: inherit;
+	color: var(--cmsTextColor);
+}
+
+body.tools .schemaCardTitle{
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+}
+
+body.tools .schemaCardTitle h2{
+	margin: 0;
+	padding: 0;
+	font-size: 1rem;
+	font-weight: 600;
+	line-height: 1.3;
+	color: var(--cmsTextColor);
+}
+
+body.tools .schemaCardTitle .logPill:first-of-type{
+	margin-left: auto;
+}
+
+body.tools .schemaCardTitle .button{
+	margin: 0;
+}
+
+body.tools table.schemaAll .schemaCard > tr.schemaCardNote > td{
+	color: var(--cmsMuted);
+	font-size: 0.8125rem;
+}
+
+/* title and note rows do not light up like a data row */
+body.tools table.schemaAll .schemaCard > tr:is(.schemaCardHead, .schemaCardNote):hover > *{
+	background: var(--cmsCanvas);
+	box-shadow: none;
+}
+
+body.tools table.schemaAll .schemaGap > tr > td,
+body.tools table.schemaAll .schemaGap > tr:hover > td:first-child{
+	height: 1.25rem;
+	padding: 0;
+	border: none;
+	background: none;
+	box-shadow: none;
+}
+
+body.tools .schemaAll td.schemaName{
+	font-family: ui-monospace, monospace;
+	font-size: 0.8125rem;
+	white-space: nowrap;
+}
+
+body.tools .schemaAll tr.schemaDiffers td.schemaName{
+	font-weight: 600;
+}
+
+body.tools .schemaAll td.schemaValue{
+	font-family: ui-monospace, monospace;
+	font-size: 0.8125rem;
+	overflow-wrap: anywhere;
+}
+
+body.tools .schemaAll td.schemaNothing{
+	color: var(--cmsMuted);
+	opacity: 0.6;
+}
+
+/* Audit: checkbox per action, the SQL always in view, the run buttons below */
+body.tools .auditList th.auditCheck,
+body.tools .auditList td.auditCheck{
+	width: 1%;
+	padding-right: 0;
+}
+
+body.tools .auditList td.auditCheck input{
+	width: auto;
+	margin: 0;
+}
+
+body.tools .auditStatement{
+	display: block;
+	margin-top: 0.3rem;
+	white-space: pre-wrap;
+	overflow-wrap: anywhere;
+	font-family: ui-monospace, monospace;
+	font-size: 0.75rem;
+	color: var(--cmsMuted);
+}
+
+body.tools .auditButtons{
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.5rem;
+	padding: var(--cmsCardPadding) var(--cmsCardPadding) 0;
+}
+
+body.tools .auditButtons .button{
+	margin: 0;
+}
+
+body.tools .auditRun > .tagsHint{
+	margin: 0.75rem var(--cmsCardPadding);
+}
+
+body.tools .auditNote{
+	display: block;
+	margin-top: 0.2rem;
+	color: var(--cmsMuted);
+	font-size: 0.75rem;
+}
+
+body.tools .logError{
+	margin: 0 0 1rem;
+	color: var(--cmsError);
+}
+
+body.cms.tools .logList table tbody tr > td{
+	vertical-align: top;
+}
+
+body.tools .logList td:first-child{
+	white-space: nowrap;
+	vertical-align: top;
+}
+
+body.tools .logTrace{
+	margin: 0.4rem 0 0;
+	max-height: 8rem;
+	overflow: auto;
+	font-family: ui-monospace, monospace;
+	font-size: 0.75rem;
+	line-height: 1.4;
+	color: var(--cmsMuted);
+	white-space: pre-wrap;
+}
+
+body.tools .logPill{
+	display: inline-block;
+	padding: 0.1rem 0.5rem;
+	border-radius: 999px;
+	font-size: 0.75rem;
+	line-height: 1.4;
+	background: var(--cmsHover);
+}
+
+body.tools .logPill.is-ok{
+	background: color-mix(in srgb, #7cb249 22%, var(--cmsCanvas));
+}
+
+body.tools .logPill.is-bad{
+	background: color-mix(in srgb, var(--cmsError) 16%, var(--cmsCanvas));
+	color: var(--cmsError);
+}
+
+body.tools .logPill.is-warn{
+	background: color-mix(in srgb, var(--cmsWarning) 28%, var(--cmsCanvas));
+	color: var(--cmsTextColor);
+}
+
+body.tools .logPill.is-quiet{
+	color: var(--cmsMuted);
+}
+
+body.tools .mailLog dl{
+	display: grid;
+	grid-template-columns: 1fr;
+	gap: 0;
+	margin: 0 0 1.25rem;
+	border-top: 0;
+}
+
+body.tools .mailLog dl > div{
+	display: grid;
+	grid-template-columns: 7.5rem minmax(0, 1fr);
+	gap: 0.75rem;
+	align-items: baseline;
+	padding: 0.7rem 0;
+	border-bottom: 1px solid var(--cmsLineStrong);
+}
+
+body.tools .mailLog dt{
+	margin: 0;
+	font-size: 0.75rem;
+	color: var(--cmsMuted);
+}
+
+body.tools .mailLog dd{
+	margin: 0;
+}
+
+body.tools .logActorId{
+	margin-left: 0.35rem;
+	color: var(--cmsMuted);
+	font-variant-numeric: tabular-nums;
+}
+
+
+
+body.tools .mediaResult{
+	margin-top: 0.25rem;
+	overflow: auto;
+}
+
+body.tools .mediaResult:empty{
+	display: none;
+}
+
+/* Keep cleanup rules readable next to the task title. */
+body.tools .cleanupPolicy { display: block; max-width: 32rem; margin-top: .25rem; color: var(--cmsMuted); font-size: .75rem; line-height: 1.45; }
+
+/* Cleanup uses the same cards and controls as the rest of the system. */
+body.tools .cleanupTaskState { display: inline-flex; align-items: center; gap: .45rem; font-weight: 600; }
+body.tools .cleanupRowActions { display: flex; align-items: center; flex-wrap: wrap; gap: .35rem; }
+body.tools .cleanupActivity { display: grid; grid-template-columns: minmax(10rem, 1fr) minmax(0, 2fr); gap: .8rem 1.25rem; margin: 0; }
+body.tools .cleanupActivity dt { color: var(--cmsSubText); }
+body.tools .cleanupActivity dd { margin: 0; }
+body.tools .cleanupActivity small { display: block; color: var(--cmsMuted); margin-top: .2rem; }
+body.tools .cleanupDetails > summary { display: flex; align-items: center; gap: .6rem; min-height: 3rem; padding: 0 var(--cmsCardPadding); font-weight: 600; cursor: pointer; list-style: none; }
+body.tools .cleanupDetails > summary::-webkit-details-marker { display: none; }
+body.tools .cleanupDetails[open] > summary { border-bottom: 1px solid var(--cmsLine); }
+body.tools .cleanupDetails > main { padding: var(--cmsCardPadding); }
+body.tools .cleanupDetails code { overflow-wrap: anywhere; }
+@media (max-width: 600px) {
+    body.tools .cleanupActivity { grid-template-columns: minmax(0, 1fr); gap: .25rem; }
+    body.tools .cleanupActivity dd + dt { margin-top: .75rem; }
+}
+body.tools .cleanupPreviewResults { list-style: none; margin: 0; padding: 0; }
+body.tools .cleanupPreviewResults li { display: grid; gap: .25rem; padding: .65rem 0; }
+body.tools .cleanupPreviewResults li + li { border-top: 1px solid var(--cmsLine); }
+body.tools .cleanupPreviewResults span { color: var(--cmsSubText); }
+
+.cleanupMethod { border-top:1px solid var(--cmsBorderColor); padding:0; }
+.cleanupMethod > summary { display:flex;align-items:center;justify-content:space-between;gap:1rem;cursor:pointer;font-weight:600; min-height:3rem; padding:0 var(--cmsCardPadding); }
+.cleanupMethod > :not(summary) { margin-inline:var(--cmsCardPadding); }
+.cleanupMethod > :last-child:not(summary) { margin-bottom:var(--cmsCardPadding); }
+.cleanupMethod > p:first-of-type { margin-top:1rem; }
+
+
+.cleanupPanel .is-success > i {color:var(--cmsSuccess);}
+.cleanupPanel .is-warning > i {color:var(--cmsWarning);}
+.cleanupPanel .is-error > i {color:var(--cmsError);}
+
+body.tools .toolCheck li > .cmsIcon { flex:0 0 auto; }
+body.tools .toolCheck li > span { min-width:0; overflow-wrap:anywhere; }
+
+.remoteDebugClients th:first-child,.remoteDebugClients td:first-child { min-width:14rem; }
+
+body.tools .mailLog dl > div:last-child{border-bottom:0;}
+
+body.tools .schemaScroll.stacked table.schemaAll .schemaCard > tr:not(.schemaCardHead, .schemaCardCols) {
+    padding: .4rem .75rem;
+    border-bottom: 1px solid var(--cmsLine);
+}
+body.tools .schemaScroll.stacked table.schemaAll .schemaCard > tr:not(.schemaCardHead) > td {
+    border: 0;
+    border-radius: 0;
+}
+body.tools .schemaScroll.stacked table.schemaAll .schemaCard > tr.is-open {
+    background: color-mix(in srgb, var(--cmsMainColor) 6%, var(--cmsCanvas));
+}
+body.tools .schemaScroll.stacked table.schemaAll .schemaCard > tr > td:first-child {
+    min-height: 2.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0;
+    background: transparent;
+}
+body.tools .schemaScroll.stacked table.schemaAll .schemaCard .tableFoldToggle {
+    position: static;
+    flex: 0 0 auto;
+    width: 2.25rem;
+    height: 2.25rem;
+    min-width: 2.25rem;
+    min-height: 2.25rem;
+}
+
+body.tools .auditList .tableScroll.stacked td.auditCheck { padding-inline: 0; }

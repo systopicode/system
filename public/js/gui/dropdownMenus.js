@@ -9,14 +9,16 @@ function markContextTarget(src) {
 
 function openContextMenu(call) {
 	var $menu = $(call.html);
-	// p(call.response.html);
+	if (!$menu.length) return;
 	closeAllMenus();
 	var src = call.event && (call.event.sourceElement || call.event.element);
+	const triggerEvent = call.event?.e;
 	markContextTarget(src);
+	contextMenuSource = src;
 	menuOpener = src && src.closest ? src.closest('button, a') : null;
 	$menu.css({
-		left: call.event.e.clientX,
-		top: call.event.e.clientY + window.scrollY,
+		left: triggerEvent?.detail === 0 || !triggerEvent?.clientX ? (menuOpener?.getBoundingClientRect().left || 8) : triggerEvent.clientX,
+		top: (triggerEvent?.detail === 0 || !triggerEvent?.clientY ? (menuOpener?.getBoundingClientRect().bottom || 8) : triggerEvent.clientY) + window.scrollY,
 	});
 	$(document.body).append($menu);
 	var rect = $menu[0].getBoundingClientRect();
@@ -30,6 +32,7 @@ function openContextMenu(call) {
 		setTimeout(closeAllMenus, 200);
 	});
 	sys.initEvents($menu);
+    prepareMenuKeyboard($menu[0], menuOpener, triggerEvent?.detail === 0);
 }
 /****************************** CONTEXT MENUS ***************************/
 function initContextMenuEvents() {
@@ -53,12 +56,16 @@ function initContextMenuEvents() {
 
 var contextMenus = [];
 function closeAllMenus() {
+	contextMenuSource = null;
 	document.querySelectorAll('.menuTarget').forEach(function (row) {
 		row.classList.remove('menuTarget');
 	});
+	document.querySelectorAll('ul.contextmenu,.HTMLeditorMenu').forEach(menu=>setMenuExpanded(menu.cmsMenuOpener,false));
 	$('body > ul.contextmenu').off().remove();
+    document.querySelectorAll('div.dropdown.contextMenu').forEach(menu=>{setMenuExpanded(menu.cmsMenuOpener,false);(menu.parentElement.matches('div.cms')?menu.parentElement:menu).remove();});
 	for (var key in contextMenus) {
 		contextMenus[key].domWrapper.remove();
+		contextMenus[key].onClose?.();
 		delete(contextMenus[key].contextMenu);
 	}
 	contextMenus = [];
@@ -68,8 +75,9 @@ function closeAllMenus() {
 // reach the body handler that used to close the menu. Capture runs first.
 // A second press on the button that opened the menu only closes it.
 var menuOpener = null;
+var contextMenuSource = null;
 var swallowClick = null;
-document.addEventListener('mousedown', function (event) {
+document.addEventListener('pointerdown', function (event) {
 	if (!document.querySelector('ul.contextmenu, div.dropdown.contextMenu, .HTMLeditorMenu')) {
 		return;
 	}
@@ -109,6 +117,7 @@ function contextMenu2(config, e) {
 		width: "200px"
 	});
 	$('body').append($wrapper);
+    prepareMenuKeyboard($menu[0],e.target.closest?.('button,a,[contenteditable]') || e.target,e.detail===0);
 	$ul.bind('click', function (e) {
 		var key = $(e.target).data().option_key;
 		var data = collectTrunkData($contextTarget);
@@ -179,6 +188,7 @@ var contextMenu = function (config, event, parent) {
 	dropwdownUl.append(dropwdownLi);
 	$('body').append(this.domWrapper.append(this.domObj.append(dropwdownUl)));
 	ajax.initEvents(this.domWrapper);
+    prepareMenuKeyboard(this.domObj[0],targetOpener(event.target),event.detail===0);
 
 
 };
@@ -226,6 +236,7 @@ function initDropdownMenus($set) {
 				width: width
 			});
 			var children = $element.children(".dropdownContent");
+            children.removeClass("right").css({left:0,right:"auto"});
 			if ($(children).is(':off-right')) {
 				$(children).addClass('right');
 				$(this).find(".before").css({
@@ -263,6 +274,9 @@ function initDropdownMenus($set) {
 // The arrow on a split button (image editor, language switch).
 document.addEventListener('click', function (event) {
 	var button = event.target.closest && event.target.closest('.splitApplyMenu');
+	if (button && button.disabled) {
+		return;
+	}
 	if (button) {
 		event.preventDefault();
 		event.stopPropagation();
@@ -278,11 +292,17 @@ document.addEventListener('click', function (event) {
 			list.classList.add('is-open');
 			list.style.width = 'max-content';
 			var rect = split.getBoundingClientRect();
-			var width = Math.max(rect.width, list.scrollWidth);
+			var width = list.classList.contains('logFilters') ? Math.min(576,window.innerWidth-32) : list.classList.contains('unifiedAdjustSlider') ? Math.min(320,window.innerWidth-32) : Math.max(rect.width, list.scrollWidth);
 			list.style.width = width + 'px';
-			list.style.top = (rect.bottom + 4) + 'px';
-			list.style.left = Math.max(8, Math.min(rect.left, window.innerWidth - width - 8)) + 'px';
+			var bar=split.closest('.cropBar');
+            var toolbarBottom = Math.max(rect.bottom,bar ? bar.getBoundingClientRect().bottom-parseFloat(getComputedStyle(bar).paddingBottom) : rect.bottom);
+            list.style.top = (toolbarBottom + 4) + 'px';
+            if(list.classList.contains('imageEditorMenu')){list.style.maxHeight=Math.max(48,window.innerHeight-toolbarBottom-12)+'px';list.style.overflowY='auto';}
+			list.style.maxWidth = 'calc(100vw - 16px)';
+			list.style.left = Math.max(8,(rect.left + width <= window.innerWidth - 8 ? rect.left : rect.right - Math.min(width, window.innerWidth - 16))) + 'px';
 			split.classList.add('is-open');
+            if(button.hasAttribute('data-menu-selected')){button.classList.add('selected');button.setAttribute('aria-pressed','true');}
+            prepareMenuKeyboard(list, button, event.detail === 0);
 		}
 		return;
 	}
@@ -292,18 +312,24 @@ document.addEventListener('click', function (event) {
 });
 
 document.addEventListener('cms:rendered', function () {
-	closeSplitMenus();
+    closeSplitMenus(list => !list.splitHome?.isConnected);
+    if (contextMenuSource && !contextMenuSource.isConnected) closeAllMenus();
 });
 
 // An entry closes its menu even when its own handler (ajax links) stops the click.
 document.addEventListener('click', function (event) {
-	if (event.target.closest && event.target.closest('.splitApplyList a, .splitApplyList button')) {
+	if (event.target.closest && event.target.closest('.splitApplyList a, .splitApplyList button') && !event.target.closest('[data-menu-stay]')) {
 		setTimeout(closeSplitMenus);
 	}
 }, true);
 
-function closeSplitMenus() {
+function closeSplitMenus(shouldClose = () => true) {
 	document.querySelectorAll('.splitApplyList.is-open').forEach(function (list) {
+        if (!shouldClose(list)) return;
+        list.splitHome?.classList.remove('is-open');
+		const opener=list.splitHome?.querySelector('.splitApplyMenu');
+        opener?.setAttribute('aria-expanded','false');
+        if(opener?.hasAttribute('data-menu-selected')){opener.classList.remove('selected');opener.setAttribute('aria-pressed','false');}
 		list.hidden = true;
 		list.classList.remove('is-open');
 		// The list is parked on the body while it is open. Put it back,
@@ -314,7 +340,103 @@ function closeSplitMenus() {
 			list.remove();
 		}
 	});
-	document.querySelectorAll('.splitApply.is-open').forEach(function (split) {
-		split.classList.remove('is-open');
-	});
 }
+
+// Keyboard selection and history navigation do not necessarily emit pointerdown.
+document.addEventListener('click', function (event) {
+    if (event.target.closest?.('ul.tree .label,nav a[href]') && !event.target.closest('ul.contextmenu')) closeAllMenus();
+}, true);
+window.addEventListener('popstate', closeAllMenus);
+
+// Local popovers use native tab order; do not declare an ARIA menu without its behavior.
+var cmsMenuSequence = 0;
+function prepareMenuKeyboard(menu, opener, focusFirst) {
+    menu.cmsMenuOpener = opener;
+    if (!menu.id) menu.id = 'cms-actions-' + (++cmsMenuSequence);
+    if (!menu.hasAttribute('aria-label')) menu.setAttribute('aria-label', menu.classList.contains('HTMLeditorMenu') ? 'Text formatting' : 'Actions');
+    if (opener?.matches('button,a')) {
+        opener.setAttribute('aria-expanded', 'true');
+        opener.setAttribute('aria-controls', menu.id);
+    }
+    menu.querySelectorAll('a:not([href]),a[href=""],a[href="#"],a[href="javascript:void(0)"]').forEach(a => {
+        a.setAttribute('role', 'button'); a.tabIndex = 0;
+    });
+    menu.querySelectorAll('li').forEach(li=>{if($(li).data('option_key')!==undefined){li.setAttribute('role','button');li.tabIndex=0;}});
+    menu.querySelectorAll('li.disabled > a,li.disabled > button').forEach(el => { el.setAttribute('aria-disabled','true');el.tabIndex=-1; });
+    if (focusFirst) menuKeyboardItems(menu)[0]?.focus({preventScroll:true});
+}
+function setMenuExpanded(opener,expanded) { if(opener?.matches('button,a')){opener.setAttribute('aria-expanded',String(expanded));if(!expanded)opener.removeAttribute('aria-controls');} }
+function targetOpener(target) { return target?.closest?.('button,a,[contenteditable]') || target; }
+function menuKeyboardItems(menu) {
+    return [...menu.querySelectorAll('a[href],button,a[role="button"],[tabindex="0"]')].filter(el => !el.disabled && el.getAttribute('aria-disabled') !== 'true' && !el.closest('.disabled') && !!el.getClientRects().length && getComputedStyle(el).visibility !== 'hidden');
+}
+function restoreMenuOpener(menu) {
+    const opener = menu.cmsMenuOpener;
+    if (opener?.isConnected) { setMenuExpanded(opener,false);opener.focus({preventScroll:true}); }
+}
+document.addEventListener('keydown', function (event) {
+    if (event.key === 'ContextMenu' || (event.shiftKey && event.key === 'F10')) {
+        const row=event.target.closest?.('.cms ul.tree li');
+        const trigger=row?.querySelector(':scope > label > .treeMenu');
+        if(trigger){event.preventDefault();event.stopImmediatePropagation();trigger.click();return;}
+    }
+    const menu = event.target.closest?.('ul.contextmenu,.HTMLeditorMenu,.splitApplyList.is-open,div.dropdown.contextMenu');
+    if (!menu || event.target.matches('input,textarea,select,[contenteditable="true"]')) return;
+    const current = event.target.closest('a,button,[role="button"]'), branch = current?.parentElement;
+    const sub = branch?.classList.contains('hasChildren') && branch.querySelector(':scope > ul');
+    if ((event.key === 'Enter' || event.key === ' ' || event.key === 'ArrowRight') && sub) {
+        event.preventDefault();event.stopImmediatePropagation();branch.classList.add('open');
+        current.setAttribute('aria-expanded','true');
+        requestAnimationFrame(()=>{if(branch.classList.contains('open')&&document.activeElement===current)menuKeyboardItems(sub)[0]?.focus();});return;
+    }
+    if (event.key === 'ArrowLeft') {
+        const parent = current?.closest('ul')?.parentElement;
+        if (parent?.classList.contains('hasChildren')) {
+            event.preventDefault();event.stopImmediatePropagation();parent.classList.remove('open');
+            const trigger=parent.querySelector(':scope > a,:scope > button');trigger?.setAttribute('aria-expanded','false');trigger?.focus();return;
+        }
+    }
+    if (event.key === 'Escape') {
+        event.preventDefault();event.stopImmediatePropagation();restoreMenuOpener(menu);
+        if(menu.matches('.splitApplyList')) closeSplitMenus();else closeAllMenus();return;
+    }
+    if (['ArrowDown','ArrowUp','ArrowRight','ArrowLeft','Home','End'].includes(event.key)) {
+        const list=menuKeyboardItems(menu);if(!list.length)return;
+        event.preventDefault();event.stopImmediatePropagation();const i=list.indexOf(current);
+        const next=event.key==='Home'?0:event.key==='End'?list.length-1:(i+(['ArrowDown','ArrowRight'].includes(event.key)?1:list.length-1))%list.length;
+        list[next].focus();return;
+    }
+    if ((event.key==='Enter'||event.key===' ') && current?.matches('[role="button"]:not(button)')) {
+        event.preventDefault();event.stopImmediatePropagation();current.click();
+    }
+}, true);
+// Retain normal pointer selection; close keyboard popovers after tabbing away.
+document.addEventListener('focusout', function(event) {
+    const menu=event.target.closest?.('ul.contextmenu,.HTMLeditorMenu,.splitApplyList.is-open');
+    if (!menu || menu.hasAttribute('data-menu-stay')) return;
+    const opener=menu.cmsMenuOpener;
+    setTimeout(()=>{
+        if (menu.cmsMenuOpener!==opener || (menu.matches('.splitApplyList') && !menu.classList.contains('is-open'))) return;
+        if (!menu.isConnected || menu.contains(document.activeElement) || document.activeElement===menu.cmsMenuOpener) return;
+        setMenuExpanded(menu.cmsMenuOpener,false);
+        if(menu.matches('.splitApplyList'))closeSplitMenus();else closeAllMenus();
+    },0);
+});
+
+document.addEventListener('click', function(event) {
+    const disabled=event.target.closest?.('[aria-disabled="true"]');
+    if(disabled?.closest('ul.contextmenu,.HTMLeditorMenu,.splitApplyList,div.dropdown.contextMenu')){
+        event.preventDefault();event.stopImmediatePropagation();
+    }
+},true);
+
+// Scrolling the owning page dismisses popovers; scrolling inside a menu does not.
+document.addEventListener("scroll", function (event) {
+    const scroller = event.target;
+    if (scroller instanceof Element && scroller.closest(".splitApplyList, ul.contextmenu, .dropdown.contextMenu, .HTMLeditorMenu")) return;
+    const affects = opener => scroller === document || (opener && scroller instanceof Element && scroller.contains(opener));
+    closeSplitMenus(list => affects(list.splitHome));
+    const context = document.querySelector('ul.contextmenu, .dropdown.contextMenu');
+    const opener = contextMenuSource || context?.cmsMenuOpener;
+    if (context && (!opener || affects(opener))) closeAllMenus();
+}, true);

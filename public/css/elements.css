@@ -1,5 +1,5 @@
 /**************************TYPO***********************/
-.cms a{
+.cms :is(a, button:where([data-cms-action])){
     color: var(--cmsSecondaryColor);
     text-decoration: none;
 }
@@ -19,7 +19,7 @@
 }
 
 .cms h2,
-.cms h2 a{
+.cms h2 :is(a, button:where([data-cms-action])){
     margin-bottom: 1rem;
     font-size: 1.125rem;
     font-weight: 600;
@@ -28,7 +28,7 @@
 }
 
 .cms h3,
-.cms h3 a{
+.cms h3 :is(a, button:where([data-cms-action])){
     font-size: 1rem;
     font-weight: 600;
     color: var(--cmsTextColor);
@@ -48,6 +48,26 @@
     font-size: 0.75rem;
     line-height: 1.3;
     color: var(--cmsMuted);
+}
+
+/* After the type rules above, so it wins inside the page and nowhere else.
+   The floating editor bar and the widgets sit outside the article. */
+article.cmsContent :where(:not(.cmsOwn, .cmsOwn *)){
+    margin: revert-layer;
+    padding: revert-layer;
+    border-width: revert-layer;
+    border-style: revert-layer;
+    border-color: revert-layer;
+    outline: revert-layer;
+    font-style: revert-layer;
+    font-weight: revert-layer;
+    font-size: revert-layer;
+    line-height: revert-layer;
+    letter-spacing: revert-layer;
+    color: revert-layer;
+    text-decoration: revert-layer;
+    list-style-type: revert-layer;
+    text-transform: revert-layer;
 }
 
 .cms [class*='Column'] ol.list li{

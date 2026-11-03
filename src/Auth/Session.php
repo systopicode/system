@@ -185,7 +185,7 @@ final class Session
         $id = is_int($user) ? $user : (int) ($user->id ?? 0);
         $scope = Scope::default();
         $row = $user instanceof User ? $user : UserLookup::byId($scope, $id);
-        if ($row === null) {
+        if ($row === null || $row->isBlocked) {
             return;
         }
         \http::sessionStartOnce();
@@ -198,6 +198,7 @@ final class Session
             LoginLog::sessionOpened(session_id(), (string) $row->name);
         }
         $_SESSION[self::USER_KEY] = (int) $row->id;
+        $_SESSION['systopic_access_key'] = (string) $row->sessionKey;
         $_SESSION[self::PASSKEY_GRANT] = ['user' => (int) $row->id, 'expires' => time() + 600];
         $now = new \DateTimeImmutable();
         $row->firstLogin ??= $now;
@@ -213,8 +214,13 @@ final class Session
     public static function check(string $name, string $password): ?User
     {
         $scope = Scope::default();
+        $now = new \DateTimeImmutable();
+        $ip = (string) ($_SERVER['REMOTE_ADDR'] ?? 'cli');
+        $failures = \Systopic\System\Queries\AuthFailures\AuthFailures::of($scope, $ip);
+        if (\Systopic\System\Tables\AuthFailures\Operator::blocked($failures, $now)) return null;
         $user = UserLookup::byName($scope, $name);
-        if ($user === null || !Password::verify($user->passwordHash, $password)) {
+        if ($user === null || $user->isBlocked || !Password::verify($user->passwordHash, $password)) {
+            $scope->save(\Systopic\System\Tables\AuthFailures\Operator::failed($failures, $ip, $now));
             return null;
         }
         if (Password::needsRehash($user->passwordHash)) {
@@ -267,11 +273,19 @@ final class Session
         $path = (string) parse_url($url, PHP_URL_PATH);
         $query = (string) parse_url($url, PHP_URL_QUERY);
         $root = rtrim((string) \http::$root, '/') . '/';
-        if (!str_starts_with($path, $root) || preg_match('~^(cms/)?auth(/|$)~', substr($path, strlen($root)))) {
+        if (!str_starts_with($path, $root) || preg_match('~^(admin/)?auth(/|$)~', substr($path, strlen($root)))) {
             return;
         }
         \http::sessionStartOnce();
         $_SESSION[self::RETURN_KEY] = $path . ($query !== '' ? '?' . $query : '');
+    }
+
+    /** The remembered page, still there for a password or a passkey on the same card. */
+    public static function peekReturn(): ?string
+    {
+        \http::sessionStartOnce();
+        $url = $_SESSION[self::RETURN_KEY] ?? null;
+        return is_string($url) && $url !== '' ? $url : null;
     }
 
     /** Where the sign-in leads, once. */
@@ -405,6 +419,11 @@ final class Session
         }
         try {
             if ($id > 0 && ($user = UserLookup::byId($scope, $id)) !== null) {
+                if (!AccountAccess::sessionValid($user, (string) ($_SESSION['systopic_access_key'] ?? ''))) {
+                    unset($_SESSION[self::USER_KEY], $_SESSION[self::STATE_KEY], $_SESSION[self::PASSKEY_GRANT], $_SESSION['systopic_access_key']);
+                    self::$state = null;
+                    return Identity::anonymous($scope);
+                }
                 return new Identity($scope, $user);
             }
             self::noteLapsed();

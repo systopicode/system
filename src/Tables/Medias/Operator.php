@@ -69,6 +69,13 @@ final class Operator
         if ($node === null) {
             return [];
         }
+        // A medium is never the parent of another medium, and never of itself.
+        // Dropping an image onto a video used to write the video's node id
+        // into node_parent_node_id.
+        $ownId = (int) ($node->id ?? 0);
+        if ($parentNodeId === $ownId || isset(MediaNodes::byNodeIds($scope, [$parentNodeId])[$parentNodeId])) {
+            return [];
+        }
         $fromParent = $node->relationId('parentNode');
         $fromGroup = (string) $media->group;
 

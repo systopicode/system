@@ -135,7 +135,7 @@ sys.core.event.pathItem = function (element, event) {
 			// e.g. DIV behaving like Anchor ( exept onclick ist defined )
 			elementData.dataset.on_click = elementData.dataset.href;
 			elementData.get = pathItem.getQuery(elementData.dataset.href);
-			elementData.method = 'get';
+            if (event.type === 'click') elementData.method = 'get';
 		}
 		if (element.getAttribute('contenteditable')) {
 			elementData.html = typeof wysiwyg === 'object' && wysiwygOf(element) === element ? wysiwyg.html(element) : element.innerHTML;
@@ -165,6 +165,8 @@ sys.core.event.pathItem = function (element, event) {
 	};
 
 	pathItem.getInputData = function (element) {
+        // Action controls do not contribute an anonymous form value.
+        if(element.tagName === 'BUTTON' && element.hasAttribute('data-cms-action') && !element.name) return {};
 		switch (element.type) {
 			case 'checkbox':
 				return {

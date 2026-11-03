@@ -1,0 +1,61 @@
+{
+  "package": "flag-icons",
+  "version": "7.3.2",
+  "source": {
+    "shasum": "c5ffaf25fb2be97498703a068fa699416bca9629",
+    "tarball": "https://registry.npmjs.org/flag-icons/-/flag-icons-7.3.2.tgz",
+    "fileCount": 552,
+    "integrity": "sha512-QkaZ6Zvai8LIjx+UNAHUJ5Dhz9OLZpBDwCRWxF6YErxIcR16jTkIFm3bFu54EkvKQy4+wicW+Gm7/0631wVQyQ==",
+    "signatures": [
+      {
+        "sig": "MEUCIQDvGmdRS11FupJX2X6KydkO8ucKwcnzt+yfjY+PnsDYCQIgV9pyFJTS5/Q9rpfpFL3EBVAJzE6j5lB6R4XQN3AtYXo=",
+        "keyid": "SHA256:jl3bwswu80PjjokCgh0o2w5c2U4LhQAE57gj9cz1kzA"
+      }
+    ],
+    "unpackedSize": 4145301
+  },
+  "license": "MIT",
+  "changes": "Eight 4x3 SVGs only, optimized with SVGO 3.3.2 (precision 1); no CSS/JS dependency.",
+  "assets": [
+    {
+      "path": "public/img/flags/de.svg",
+      "sha256": "174b256dd99adc2c1718a7367cbd4f8da10ed33e2bfa724efd2ab41036cced7a",
+      "bytes": 192
+    },
+    {
+      "path": "public/img/flags/es.svg",
+      "sha256": "e5466ecac76ee574cf5413c70a0007a54019895bfec89fd530d755e19d1af988",
+      "bytes": 79312
+    },
+    {
+      "path": "public/img/flags/fr.svg",
+      "sha256": "553baae006605be70fc7606146033024115a3d442fe71ee475786d7bf82b97b2",
+      "bytes": 202
+    },
+    {
+      "path": "public/img/flags/gb.svg",
+      "sha256": "24bb7171731a181338c7e56315813d6230c9a14a89a88e5c2a9be7a3547f29c5",
+      "bytes": 469
+    },
+    {
+      "path": "public/img/flags/it.svg",
+      "sha256": "09468582a6813a8d29c31d4b65d31f4ef039893d45c886749c8fece5c7d6256c",
+      "bytes": 248
+    },
+    {
+      "path": "public/img/flags/jp.svg",
+      "sha256": "06954ebf6a5a11eaf1005005185cfea41cfad8b9b21b7ff1b9bbfddc6068fc30",
+      "bytes": 405
+    },
+    {
+      "path": "public/img/flags/se.svg",
+      "sha256": "23a4a09639e89933df016711c70d9260ed0d9350b261f8c9aa28f21590371f57",
+      "bytes": 183
+    },
+    {
+      "path": "public/img/flags/us.svg",
+      "sha256": "b88e4a1424167b38bdb48f16948ff578f62f7a20a6b68267df7b123f3a3656c6",
+      "bytes": 599
+    }
+  ]
+}

@@ -20,6 +20,13 @@ final class ScreenPair
 {
     public const COOKIE = 'sys_pair';
 
+    /** Same project boundary as the session and persistent device cookie. */
+    public static function cookieName(): string
+    {
+        $key = \http::projectCookieKey();
+        return self::COOKIE . ($key === null ? '' : '_' . $key);
+    }
+
     /** Kept stable so a screen that already has the cookie keeps polling. */
     public const SESSION = 'spaceticker_screen_pair';
 
@@ -49,27 +56,29 @@ final class ScreenPair
     /** The address the QR opens: the account page, which asks before it allows. */
     public static function url(string $code): string
     {
-        return \http::$siteUrl . 'cms/user/?screen=' . rawurlencode($code);
+        return \http::$siteUrl . 'admin/user/?screen=' . rawurlencode($code);
     }
 
     public static function begin(string $redirect, string $purpose = Codes::PAIR_SCREEN): ?array
     {
         \http::sessionStartOnce();
+        $kept = $_SESSION[self::SESSION]['redirect'] ?? '';
         unset($_SESSION[self::SESSION]);
         if (!LoginCodes::available()) {
             return null;
         }
-        $poll = (string) ($_COOKIE[self::COOKIE] ?? '');
+        $poll = (string) ($_COOKIE[self::cookieName()] ?? '');
+        $again = $purpose !== Codes::PAIR_SCREEN && is_string($kept) && $kept !== '' ? $kept : $redirect;
         if ($poll !== '') {
             if (self::paired($poll)) {
-                \http::redirect($redirect);
+                self::leave($again, $purpose);
                 return null;
             }
             // The poll next to this load already spent the code. A new one
             // here would throw away a sign-in that is landing right now.
             if (LoginCodes::$error === LoginCodes::SPENT) {
                 if (Session::known()) {
-                    \http::redirect($redirect);
+                    self::leave($again, $purpose);
                 }
                 return null;
             }
@@ -82,24 +91,39 @@ final class ScreenPair
             'code' => $start['code'],
             'expires' => $expires,
             'redirect' => $redirect,
+            'follow' => $purpose !== Codes::PAIR_SCREEN,
         ];
         return $_SESSION[self::SESSION];
     }
 
+    /** A person follows the remembered page. A screen stays on the address it was given. */
+    private static function leave(string $redirect, string $purpose): void
+    {
+        $go = $redirect;
+        if ($purpose !== Codes::PAIR_SCREEN) {
+            $back = Session::takeReturn();
+            if (is_string($back) && $back !== '') {
+                $go = $back;
+            }
+        }
+        \http::redirect($go);
+    }
+
     private static function answerPoll(string $redirect): never
     {
-        $poll = (string) ($_COOKIE[self::COOKIE] ?? '');
+        $poll = (string) ($_COOKIE[self::cookieName()] ?? '');
         $stored = self::current();
         $go = is_array($stored) && ($stored['redirect'] ?? '') !== '' ? (string) $stored['redirect'] : $redirect;
+        $follow = !is_array($stored) || ($stored['follow'] ?? true);
         $paired = self::paired($poll);
-        if ($paired) {
+        if ($paired && $follow) {
             $back = Session::takeReturn();
             if (is_string($back) && $back !== '') {
                 $go = $back;
             }
         }
         $answer = $paired
-            ? ['paired' => true, 'redirect' => $go]
+            ? ['paired' => true, 'redirect' => $go, 'profile' => SignInFeedback::profile()]
             : ['paired' => false, 'expired' => LoginCodes::$error !== ''];
         while (ob_get_level()) {
             ob_end_clean();
@@ -119,7 +143,7 @@ final class ScreenPair
             return LoginCodes::$error === LoginCodes::SPENT && Session::known();
         }
         $user = UserLookup::byId(\Systopic\Db\Scope::default(), (int) $code->relationId('user'));
-        if ($user === null) {
+        if ($user === null || (!$user->isActive || $user->isBlocked) || (int) $user->id <= 1) {
             return false;
         }
         $screen = $code->purpose === Codes::PAIR_SCREEN;
@@ -139,13 +163,13 @@ final class ScreenPair
 
     private static function cookie(string $value, int $expires): void
     {
-        setcookie(self::COOKIE, $value, [
+        setcookie(self::cookieName(), $value, [
             'expires' => $expires,
             'path' => '/',
             'secure' => !empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off',
             'httponly' => true,
             'samesite' => 'Lax',
         ]);
-        $_COOKIE[self::COOKIE] = $value;
+        $_COOKIE[self::cookieName()] = $value;
     }
 }

@@ -246,13 +246,13 @@ Diff comparison then handles the cases naturally:
 | opened (`X`)     | opened (`X`) | `X === X`        | `keep` |
 | opened (`X`)     | opened (`Y`) | `X !== Y`        | `new` (panel changed in same slot) |
 
-Concrete example — `/cms/` → `/cms/pages/`:
+Concrete example — `/admin/` → `/admin/pages/`:
 
-The `cms/body.tpl.php` body unconditionally calls
+The `admin/body.tpl.php` body unconditionally calls
 `withChildSelected('pylon')`, `withChildSelected('main')`,
-`withChildSelected('sidebar')`, … At `/cms/` (no child selected) all
+`withChildSelected('sidebar')`, … At `/admin/` (no child selected) all
 of these fail and emit `[]:pylon`, `[]:main`, `[]:sidebar`
-placeholders. At `/cms/pages/` they all succeed and emit
+placeholders. At `/admin/pages/` they all succeed and emit
 `pages:pylon`, `pages:main`, `pages:sidebar`. The diff sees the
 **same number of children in the same positions**; the parent
 `cms:body` stays `keep` (no DOM rewrite for the chrome) and only
@@ -294,7 +294,7 @@ JS client.
 
 ## 6c. Mixed trees: page layers inside the panel tree
 
-The two render models meet in one tree. `panels/cms/010_pages/main.tpl.php`
+The two render models meet in one tree. `panels/admin/010_pages/main.tpl.php`
 renders its page preview through the *page* navigator, so panel layers can
 have page layers below them — deliberately, because that gives the preview
 its own diff slot.
@@ -313,7 +313,7 @@ reads `panelPath` must check it first.
 
 **What went wrong without it:** `core/domLayer.js addToLibnode()` resolved
 every layer's path to a libnode under `sys.panels`. A page path did that too,
-so `/cms/pages/?id=18` built `sys.panels['1']['18']['112']…` — 145 nodes with
+so `/admin/pages/?id=18` built `sys.panels['1']['18']['112']…` — 145 nodes with
 neither a class nor data. `panelTree.build()` walks that tree and logged
 `panelTree: empty libnode — no class and no data` for each of them, and since
 libnodes are never removed they accumulated over every page switch. Page
@@ -330,10 +330,10 @@ Only the outermost one — everything inside it is a page as well, and 145
 dashed frames would say nothing. `source` is also a row in the hover table,
 on both sides.
 
-## 7. Worked example — `/cms/users/users/` → `/cms/users/permissions/`
+## 7. Worked example — `/admin/users/users/` → `/admin/users/permissions/`
 
 Selected leaf changes from `users` (inner) to `permissions`. The chrome
-stays the same; only the panel under `cms/users/main` changes.
+stays the same; only the panel under `admin/users/main` changes.
 
 ```
 Layer                            type        why
@@ -451,7 +451,7 @@ tree.
 ```jsonc
 // var/cursor/cli-test-step1.json — initial render, populates session
 {
-  "path": "/projects/<app>/public/cms/users/users/",
+  "path": "/projects/<app>/public/admin/users/users/",
   "user": 2,
   "sessionId": "diff-1",
   "sessionSavePath": "V:/www/projects/<app>/var/cursor/sess",
@@ -460,7 +460,7 @@ tree.
 
 // var/cursor/cli-test-step2.json — AJAX diff, same session
 {
-  "path": "/projects/<app>/public/cms/users/permissions/",
+  "path": "/projects/<app>/public/admin/users/permissions/",
   "user": 2,
   "sessionId": "diff-1",
   "sessionSavePath": "V:/www/projects/<app>/var/cursor/sess",

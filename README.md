@@ -10,4 +10,11 @@ composer require systopic/system
 Requires PHP 8.4 and [systopic/db](https://github.com/systopicode/db).
 Websites add [systopic/cms](https://github.com/systopicode/cms).
 
-MIT License, © systopic GmbH.
+## Documentation
+
+- [Editing feedback and display dates](docs/gui-feedback.md)
+- [Administration and restore safety](docs/admin-safety.md)
+
+© 2026 systopic GmbH. Publicly available source code under the
+[systopic Software License](LICENSE). Use, modification and redistribution
+are permitted only as set out in that license or a separate agreement.
