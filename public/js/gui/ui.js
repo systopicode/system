@@ -168,6 +168,7 @@ function renameUserAdminTitle(button) {
     var finish = function () {
         heading.removeEventListener('blur', finish);
         heading.removeEventListener('keydown', keydown);
+        clearInlineTitleSelection(heading);
         heading.removeAttribute('contenteditable');
         var value = heading.textContent.replace(/\s+/g, ' ').trim();
         if (cancelled || !value || value === previous) { window.cmsFeedback?.cancel(heading); heading.textContent = previous; return; }
@@ -213,6 +214,7 @@ function renameUserAdminTitle(button) {
     const retryFields = new Set();
     const failures = [];
     let message = '', state = '', timer, navigation, navigationTimer, statusBox = null;
+    let notice = '', noticeTimer;
     const writesPending = () => [...pending].some(token => token.visible);
     function resumeNavigation() {
         clearTimeout(navigationTimer);
@@ -234,7 +236,7 @@ function renameUserAdminTitle(button) {
             const title = statusBox.querySelector('header h1,header h2')?.textContent.trim();
             statusBox = [...document.querySelectorAll('.cmslightbox')].find(box => !box.hidden && box.className === statusBox.className && box.querySelector('header h1,header h2')?.textContent.trim() === title) || null;
         }
-        if (statusBox?.isConnected) return statusBox.querySelector('footer.cmsDialogStatus .cmsSaveState');
+        if (!mobileFeedback.matches && statusBox?.isConnected) return statusBox.querySelector('footer.cmsDialogStatus .cmsSaveState');
         const lines = [...document.querySelectorAll('body > footer.cmsStatusbar .cmsSaveState, body > .cmsSaveState.is-mobile')];
         const current = lines.find(el => !el.hidden) || lines[0];
         lines.forEach(el => { if (el !== current) el.remove(); });
@@ -271,15 +273,26 @@ function renameUserAdminTitle(button) {
         if (next === 'saved' || (next === 'error' && !eligible(el))) feedbackFields.set(el, setTimeout(() => markField(el, ''), next === 'error' ? 6000 : 2500));
     }
     function paint() {
+        if (!mobileFeedback.matches && statusBox?.isConnected) {
+            const mobileLine = document.querySelector('body > .cmsSaveState.is-mobile');
+            const footer = document.querySelector('body > footer.cmsStatusbar');
+            if (mobileLine && footer) {
+                mobileLine.hidden = true;
+                mobileLine.classList.remove('is-mobile');
+                footer.append(mobileLine);
+            }
+        }
         const el = line();
         if (!el) return;
-        el.dataset.state = state;
+        const visibleState = state || (notice ? 'saved' : '');
+        const visibleMessage = [message, notice].filter(Boolean).join(' · ');
+        el.dataset.state = visibleState;
         const topBox = [...document.querySelectorAll('.cmslightbox')].filter(box => !box.hidden && box.getClientRects().length).at(-1);
-        const hidden = !message || !!(topBox && topBox !== statusBox);
+        const hidden = !visibleMessage || !!(topBox && topBox !== statusBox);
         if (el.hidden !== hidden) el.hidden = hidden;
-        const host = statusBox?.isConnected ? statusBox.querySelector('footer.cmsDialogStatus') : (mobileFeedback.matches ? document.body : document.querySelector('body > footer.cmsStatusbar'));
+        const host = mobileFeedback.matches ? document.body : (statusBox?.isConnected ? statusBox.querySelector('footer.cmsDialogStatus') : document.querySelector('body > footer.cmsStatusbar'));
         if (host && el.parentElement !== host) host.append(el);
-        el.classList.toggle('is-mobile', mobileFeedback.matches && !statusBox?.isConnected);
+        el.classList.toggle('is-mobile', mobileFeedback.matches);
         const icons = {saved:'circle-check',error:'circle-xmark',changed:'circle-exclamation',saving:'spinner',loading:'spinner'};
         let icon = el.querySelector('i'), text = el.querySelector('span');
         if (!icon || !text) {
@@ -287,8 +300,8 @@ function renameUserAdminTitle(button) {
             icon = document.createElement('i'); icon.setAttribute('aria-hidden','true');
             text = document.createElement('span'); el.append(icon,text);
         }
-        icon.className = state === 'saving' || state === 'loading' ? 'spin' : 'cmsIcon cmsIcon-' + (icons[state] || 'circle-info');
-        if (text.textContent !== message) text.textContent = message;
+        icon.className = state === 'saving' || state === 'loading' ? 'spin' : 'cmsIcon cmsIcon-' + (icons[visibleState] || 'circle-info');
+        if (text.textContent !== visibleMessage) text.textContent = visibleMessage;
         let retry = el.querySelector('.cmsSaveRetry');
         const retryable = state === 'error' && [...retryFields].some(field => field.isConnected && dirty.has(field));
         if (retryable && !retry) {
@@ -435,6 +448,13 @@ function renameUserAdminTitle(button) {
             status('', '');
             return true;
         },
+        notice(text, box) {
+            clearTimeout(noticeTimer);
+            if (box && !message) statusBox = box;
+            notice = text;
+            paint();
+            noticeTimer = setTimeout(() => { notice = ''; paint(); }, 5000);
+        },
         refresh: paint,
         failures() { return failures.map(item => ({...item})); },
         hasChanges(scope) { return [...dirty.keys()].some(el => !scope || scope.contains(el)) || [...pending].some(t => t.visible && (!scope || t.fields.some(([el]) => scope.contains(el)))); },
@@ -492,6 +512,14 @@ function renameUserAdminTitle(button) {
         }
     }, true);
     document.addEventListener('cms:rendered', paint);
+    // The keyboard can pan iOS Safari's visual viewport within the layout viewport.
+    const viewport = window.visualViewport;
+    const pinStatus = () => {
+        document.documentElement.style.setProperty('--cmsStatusViewportTop', (viewport?.offsetTop ?? 0) + 'px');
+    };
+    viewport?.addEventListener('scroll', pinStatus);
+    viewport?.addEventListener('resize', pinStatus);
+    pinStatus();
     mobileFeedback.addEventListener('change', paint);
     paint();
     window.addEventListener('offline', () => status('error', 'Offline. Changes cannot be saved.'));

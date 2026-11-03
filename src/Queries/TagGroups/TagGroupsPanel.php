@@ -162,9 +162,10 @@ final class TagGroupsPanel
     {
         $header = \html::create('header');
         $header->append('h1')->doc('groupName')->text($group->name);
-        $header->append('button.tagGroupRename')->attr('type', 'button')->title('Rename')
-            ->data(['on_click' => 'rename'])
-            ->append('i.cmsIcon.cmsIcon-pen');
+        $rename = $header->append('button.tagGroupRename')->attr('type', 'button')->title('Rename or confirm')
+            ->data(['on_click' => 'rename']);
+        $rename->append('i.cmsIcon.cmsIcon-pen');
+        $rename->append('i.cmsIcon.cmsIcon-check.pencilConfirm');
         $header->append('input.tagGroupColor[type=color][name=color]')
             ->value($group->colorStyle !== '' ? $group->colorStyle : '#888888')
             ->title('Colour')

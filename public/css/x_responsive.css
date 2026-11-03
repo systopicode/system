@@ -1,5 +1,5 @@
 /* Mobile shell: the pylon stays in place; existing views become bottom windows. */
-body.cms > .cmsMobileHeader, .cmsMobileBackdrop, .cmsMobileWindowBar, body.cms .cmsMobileOnly { display: none; }
+body.cms > .cmsMobileHeader, .cmsMobileBackdrop, body.cms .cmsMobileOnly { display: none; }
 body.cms > .cmsMobileHeader > .cmsMobileMenuClose, body.cms > .cmsMobileHeader > .cmsMobileDashboardBrand { display: none; }
 .cmsPageTools, .cmsPageToolsMenu { display: contents; }
 
@@ -109,7 +109,7 @@ body.cms > .cmsMobileHeader > .cmsMobileMenuClose, body.cms > .cmsMobileHeader >
 		overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
 	}
 	.cmsMobileHeader .cmsStage > i { font-size: 0.95rem; }
-	.cmsMobileHeader button:where(:not([data-cms-action])), .cmsMobileHeader :is(a, button:where([data-cms-action])), .cmsMobileWindowBar button:where(:not([data-cms-action])) {
+	.cmsMobileHeader button:where(:not([data-cms-action])), .cmsMobileHeader :is(a, button:where([data-cms-action])) {
 		display: inline-flex;
 		align-items: center;
 		justify-content: center;
@@ -317,8 +317,6 @@ body.cms > .cmsMobileHeader > .cmsMobileMenuClose, body.cms > .cmsMobileHeader >
 		visibility: hidden;
 		transition: transform 300ms ease, visibility 300ms;
 	}
-	body[data-cms-window="media"] > main > div.pylon > footer { z-index: 2300; }
-	body[data-cms-window="media"] > main > div.pylon > footer { transform: translateY(0); visibility: visible; }
 	/* Open from the HTML, so a direct address does not wait for the script.
 	   Swiping it shut sets data-cms-window="base" and hides it again. */
 	body[data-cms-window="edit"]:has(> main > div.pylon) > main > div.content[data-cms-sheet="1"] { transform: translateY(0); visibility: visible; }
@@ -337,21 +335,7 @@ body.cms > .cmsMobileHeader > .cmsMobileMenuClose, body.cms > .cmsMobileHeader >
 	}
 	body.cms > main > div.content:focus,
 	body.cms > main > div.content:focus-visible { outline: none; }
-	.cmsMobileWindowBar {
-		position: relative;
-		display: flex;
-		align-items: center;
-		flex: 0 0 58px;
-		min-height: 58px;
-		padding: 8px 8px 0 16px;
-		border-radius: 18px 18px 0 0;
-		border-bottom: 1px solid var(--cmsLine);
-		touch-action: none;
-		user-select: none;
-	}
-	.cmsMobileWindowBar strong { flex: 1; font-size: 15px; }
-	.cmsMobileWindowBar button:where(:not([data-cms-action])) { font-size: 26px; }
-	.cmsMobileGrip, .cmsMobileWindowBar { cursor: grab; }
+	.cmsMobileGrip { cursor: grab; }
 	.cmsMobileGrip { position: absolute; top: 0; left: calc(50% - 60px); width: 120px; height: 44px; z-index: 2; }
 	.cmsMobileGrip:after { content: ""; position: absolute; top: 8px; left: calc(50% - 18px); width: 36px; height: 4px; background: var(--cmsMuted); border-radius: 4px; }
 	body[data-cms-window="menu"] .main > header { flex-shrink: 0; }
@@ -431,6 +415,7 @@ body.cms > .cmsMobileHeader > .cmsMobileMenuClose, body.cms > .cmsMobileHeader >
 	.cms .layout.tags .widget > header h1[contenteditable="true"] {
 		min-height: 0; padding: 0 0.2rem; line-height: 1.3; font-size: max(16px, 1rem);
 	}
+	body.cms .pylon .searchInput input[type="search"] { font-size: max(16px, 1rem); }
 	/* Under 16px iOS zooms the whole page when a field is focused. */
 	body.cms :is(input:not([type="checkbox"], [type="radio"], [type="range"], [type="button"], [type="submit"], [type="reset"], [type="color"], [type="file"], [type="hidden"], [type="image"]), select, textarea) {
 		font-size: max(16px, 1em);
@@ -439,33 +424,6 @@ body.cms > .cmsMobileHeader > .cmsMobileMenuClose, body.cms > .cmsMobileHeader >
 		flex: 0 0 var(--cmsControl); width: var(--cmsControl); height: var(--cmsControl);
 		min-height: var(--cmsControl); margin: 0; padding: 0;
 		background: transparent; border: 0; border-radius: var(--cmsButtonRadius, 6px);
-	}
-	body.cms header.cmsMobileEditHeader .cmsPageToolsMenu,
-	body > .cmsPageToolsMenu.is-open {
-		display: none;
-		flex-direction: column; align-items: stretch; gap: 4px;
-		min-width: 14rem; margin: 0; padding: 6px; background: var(--cmsCanvas);
-		border: 1px solid var(--cmsLine); border-radius: 14px; box-shadow: var(--cmsShadowLg);
-	}
-	body > .cmsPageToolsMenu.is-open { display: flex; }
-	body.cms header.cmsMobileEditHeader:has([data-cms-more][aria-expanded="true"]) .cmsPageToolsMenu {
-		display: flex; flex-direction: column; align-items: stretch; gap: 2px;
-	}
-	body.cms header.cmsMobileEditHeader .cmsPageToolsMenu > .button,
-	body.cms header.cmsMobileEditHeader .cmsPageToolsMenu > :is(a, button:where([data-cms-action])),
-	body.cms header.cmsMobileEditHeader .cmsPageToolsMenu > label,
-	body > .cmsPageToolsMenu.is-open > .button,
-	body > .cmsPageToolsMenu.is-open > :is(a, button:where([data-cms-action])),
-	body > .cmsPageToolsMenu.is-open > label {
-		display: flex; align-items: center; justify-content: flex-start; gap: 10px;
-		width: 100%; height: auto; min-height: 44px; margin: 0; padding: 8px 12px;
-		border: 0; border-radius: 10px; background: transparent; color: var(--cmsTextColor);
-		font-size: 15px; line-height: 1.2; text-align: left;
-	}
-	body.cms header.cmsMobileEditHeader .cmsPageToolsMenu > :is(.button, :is(a, button:where([data-cms-action])), label):hover,
-	body > .cmsPageToolsMenu.is-open > :is(.button, :is(a, button:where([data-cms-action])), label):hover,
-	body.cms .cmsPageToolsMenu > .cmsMobileOnly:hover {
-		background: var(--cmsHover);
 	}
 	body.cms header.cmsMobileEditHeader .pageHead { flex: 1; min-width: 0; }
 	body.cms header.cmsMobileEditHeader .crumbs { display: none; }
@@ -484,7 +442,9 @@ body.cms > .cmsMobileHeader > .cmsMobileMenuClose, body.cms > .cmsMobileHeader >
 		font-size: 1.1rem; border-radius: 10px;
 	}
 	body.cms header.cmsMobileEditHeader > .cmsMobileGrip { display: block; height: 44px; width: 120px; min-height: 0; }
-	body.cms .cmsPageTools { display: block; flex: 0 0 auto; }
+	body.cms.pages header.cmsMobileEditHeader > .cmsMobileGrip { height: 22px; }
+	body.cms .cmsPageTools { display: flex; flex: 0 0 auto; gap: 2px; }
+	body.cms .cmsPageTools > [hidden] { display: none; }
 	body.cms .cmsPageToolsMenu {
 		display: none; position: absolute; z-index: 1700;
 		top: calc(100% + 8px); right: 8px; width: min(300px, calc(100vw - 24px));
@@ -492,35 +452,27 @@ body.cms > .cmsMobileHeader > .cmsMobileMenuClose, body.cms > .cmsMobileHeader >
 		padding: 8px; border: 1px solid var(--cmsLine); border-radius: 14px;
 		background: var(--cmsCanvas); box-shadow: var(--cmsShadowLg);
 	}
-	body.cms .cmsPageTools:has(> [aria-expanded="true"]) > .cmsPageToolsMenu { display: flex; flex-direction: column; align-items: stretch; gap: 4px; }
+	body.cms .cmsPageTools:has(> [data-cms-page-more][aria-expanded="true"]) > .cmsPageToolsMenu { display: flex; flex-direction: column; align-items: stretch; gap: 4px; }
 	body.cms header.cms .cmsPageToolsMenu > .leftAlign { flex: 0 0 auto; width: 100%; margin: 0; }
 	body.cms header.cms .cmsPageToolsMenu .langSwitch { width: 100%; }
-	body.cms header.cms .cmsPageToolsMenu .langSwitch > button:where(:not([data-cms-action])) { width: 100%; justify-content: flex-start; min-height: 44px; }
-	body.cms header.cms .cmsPageToolsMenu .langSwitch > button:where(:not([data-cms-action])) span { display: inline; }
-	body.cms header.cms .cmsPageToolsMenu .langMenu { position: static; width: 100%; box-shadow: none; }
+	body.cms header.cms .cmsPageToolsMenu .langSwitch > button { display: none; }
+	body.cms header.cms .cmsPageToolsMenu .langMenu {
+		display: block; position: static; width: 100%; box-shadow: none;
+		border: 0; padding: 0;
+	}
 	body.cms header.cms .cmsPageToolsMenu .deviceSwitch { display: flex; margin: 0; padding: 4px 0; border: 0; justify-content: space-around; }
 	body.cms header.cms .cmsPageToolsMenu .deviceSwitch button:where(:not([data-cms-action])) { width: 44px; height: 44px; min-height: 44px; }
-	body.cms .cmsPageToolsMenu > .cmsMobileOnly { display: flex; align-items: center; justify-content: flex-start; gap: 12px; min-height: 44px; margin: 0; padding: 8px 12px; border: 0; border-radius: 8px; background: transparent; color: var(--cmsTextColor); text-align: left; font-size: 14px; }
-	body.cms .cmsPageToolsMenu > .cmsMobileOnly:hover { background: var(--cmsHover); }
-	body.cms .cmsPageToolsMenu > [hidden] { display: none; }
-	body.cms .content:not([data-cms-properties="true"]) aside.cms { display: none; }
-	body.cms .content[data-cms-properties="true"] .flexColumn { display: none; }
-	body.cms .content[data-cms-properties="true"] aside.cms { display: flex; }
+	body.cms.pages > main > .content aside.cms { display: none; }
 	body.cms header.cmsMobileEditHeader { touch-action: pan-y; }
 	body.cms header.cmsMobileEditHeader > .cmsMobileGrip { touch-action: none; }
 
 	body > main > div.content > .flexRow { overflow: auto; display: block; }
-	/* The address bar covers the end of a page that is not a sheet.
-	   The last collapsed backup row can scroll clear of it. */
-	body.cms.backup > main > div.content {
-		box-sizing: border-box;
-		padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 7.5rem);
-	}
-	body.cms.backup > main > div.content > .flexRow,
-	body.cms.backup > main > div.content .tableScroll.stacked > table > tbody {
-		padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 2rem);
+	/* Keep the last backup row scrollable past the Safari controls. */
+	body.cms.backup > main > div.content > .flexRow {
+		padding-bottom: max(2rem, env(safe-area-inset-bottom));
 		box-sizing: border-box;
 	}
+
 	body > main > div.content .flexColumn { min-height: 50%; height: auto; overflow: visible; }
 	body > main > div.content aside.cms { width: 100%; min-width: 0; max-width: none !important; min-width: 0 !important; flex: 1 1 auto !important; height: auto; border-left: 0; border-top: 1px solid var(--cmsLine); }
 	body > main > div.content aside.cms .flexContainer, body > main > div.content aside.cms .scrollContainer { height: auto; overflow: visible; }
@@ -543,7 +495,7 @@ body.cms > .cmsMobileHeader > .cmsMobileMenuClose, body.cms > .cmsMobileHeader >
 		background: rgb(0 20 25 / 35%);
 	}
 	.cmslightbox > section, .cmslightbox[data-size] > section { width: 100%; min-width: 0; max-width: 100%; max-height: calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom)); border-radius: 18px 18px 0 0; }
-	.cmsMobileHeader button:where(:not([data-cms-action])):focus-visible, .cmsMobileWindowBar button:where(:not([data-cms-action])):focus-visible { outline: 2px solid var(--cmsHighlightColor); outline-offset: -3px; }
+	.cmsMobileHeader button:where(:not([data-cms-action])):focus-visible { outline: 2px solid var(--cmsHighlightColor); outline-offset: -3px; }
 	/* The menu always uses the wide desktop arrangement, including on Dashboard. */
 	body.cms.cmsMobile:has(> .cmsMobileHeader) > main > div.main {
 		display: flex; flex-direction: column; width: 100%; min-width: 0; max-width: none;
@@ -614,6 +566,10 @@ body.cms > .cmsMobileHeader > .cmsMobileMenuClose, body.cms > .cmsMobileHeader >
 		bottom: calc(var(--cmsKeyboard, 0px) - 32px);
 		padding-bottom: 32px;
 		border-bottom: 0; border-radius: 24px 24px 0 0;
+	}
+	body.cms.backup:has(> main > .pylon) > main > div.content {
+		bottom: auto;
+		padding-bottom: 0;
 	}
 	/* Match desktop dialog radii, including the more specific global search rules. */
 	body.cms .cmslightbox, body.cms .cmslightbox.cmsFind {
@@ -726,6 +682,9 @@ body.cms > .cmsMobileHeader > .cmsMobileMenuClose, body.cms > .cmsMobileHeader >
 		border-radius: 24px 24px 0 0;
 		box-shadow: 0 0 0 100vmax rgb(0 20 25 / 35%);
 	}
+	body.cms > ul.contextmenu { padding-inline: 0; }
+	body.cms > ul.contextmenu > li:not(.seperator) { margin-inline: .35rem; }
+	body.cms > ul.contextmenu > li.seperator { margin-inline: 0; }
 	body.cms > ul.contextmenu ul { flex-wrap: wrap; }
 	body.cms > ul.contextmenu li :is(a, button:where([data-cms-action])), body.cms > .splitApplyList > :is(:is(a, button:where([data-cms-action])), button:where(:not([data-cms-action]))) { min-height: 44px; white-space: normal; }
 
@@ -946,9 +905,6 @@ body.cms .cmslightbox > section > :is(header,header.cmsMobileEditHeader,footer) 
     body.cms .tableScroll.stacked.is-foldable [data-table-heading]::before { display:none; }
     body.cms .cmslightbox > section > header .cmsMobileMore { display:inline-flex; }
     body.cms .cmslightbox > section > header .cmsPageToolsMenu { display:none; }
-    body.cms > .cmsPageToolsMenu.is-open { list-style:none; }
-    body.cms > .cmsPageToolsMenu.is-open > li { list-style:none; margin:0; padding:0; }
-    body.cms > .cmsPageToolsMenu.is-open > li > :is(a,button) { display:flex; width:100%; min-height:44px; padding:.5rem .75rem; }
 }
 
 .cmsAccountGear { display: none; }
@@ -997,7 +953,7 @@ body.cms .cmslightbox > section > :is(header,header.cmsMobileEditHeader,footer) 
  body.cms .cmslightbox footer.cmsDialogStatus .cmsSaveState {
   position:fixed; right:.75rem; bottom:calc(.5rem + env(safe-area-inset-bottom));
   width:auto; max-width:calc(100vw - 1.5rem); padding:.25rem .65rem;
-  border:1px solid var(--cmsLine); border-radius:999px; background:var(--cmsCanvas); pointer-events:auto;
+  border:1px solid var(--cmsLine); border-radius:999px; pointer-events:auto;
  }
 }
 
@@ -1035,8 +991,7 @@ body.cms .cmslightbox > section > :is(header,header.cmsMobileEditHeader,footer) 
  body.cms .cmslightbox.cmsFind > section { top:max(8px, env(safe-area-inset-top, 0px)); animation:cmsPhoneSheetIn 480ms cubic-bezier(.25,.65,.3,1); transition:none; }
  body.cms .cmslightbox.cmsNestedDialog,
  body.cms .cmslightbox.cmsNestedDialog > section { animation:none; transition:none; }
- body.cms .cmsSaveState.is-mobile,
- body.cms .cmslightbox footer.cmsDialogStatus .cmsSaveState { background:color-mix(in srgb,var(--cmsCanvas) 92%,transparent); backdrop-filter:blur(18px); -webkit-backdrop-filter:blur(18px); box-shadow:var(--cmsShadow); }
+ body.cms .cmslightbox footer.cmsDialogStatus .cmsSaveState { --cmsStatusGlassTint:var(--cmsCanvas); }
  body.cms .tableScroll.stacked.is-foldable .tableFoldToggle:is(:hover,:focus-visible) { background:var(--cmsButtonBg); }
  body.cms .themeAsset.signet .themePreview { background:var(--cmsMainColor); }
  body.cms .themeAsset > .tagsHint { display:flex; align-items:center; min-height:2.5rem; padding-block:.5rem; }
@@ -1126,6 +1081,10 @@ body.cms .cmslightbox > section[style*="--cmsGlassHeader"] > main {
   backdrop-filter:blur(18px); -webkit-backdrop-filter:blur(18px);
   border-bottom:1px solid transparent;
  }
+ body.cms > main > .content[data-cms-sheet="1"] > header.cmsMobileEditHeader::before {
+  content:""; position:absolute; inset:-2px 0 auto; height:2px;
+  background:var(--cmsBgColor); pointer-events:none;
+ }
  body.cms > main > .content[data-cms-sheet="1"].cmsHeaderScrolled > header.cmsMobileEditHeader {
   border-bottom-color:var(--cmsLine);
  }
@@ -1163,8 +1122,6 @@ body.cms .cmslightbox > section[style*="--cmsGlassHeader"].cmsHeaderScrolled > h
  body.cms .cmsSaveState.is-mobile {
   left:max(.5rem,env(safe-area-inset-left)); right:max(.5rem,env(safe-area-inset-right));
   width:auto; max-width:none; justify-content:center; padding:.45rem .75rem;
-  background:color-mix(in srgb,var(--cmsCanvas) 96%,transparent);
-  backdrop-filter:blur(18px); -webkit-backdrop-filter:blur(18px);
  }
  body.cms .cmsSaveState.is-mobile[data-state="saved"] { border-color:var(--cmsFeedbackSuccess); }
  body.cms .cmsSaveState.is-mobile[data-state="error"] { border-color:var(--cmsFeedbackError); }
@@ -1185,10 +1142,10 @@ body.cms .bottomMenu .cmsAccount .signet .cmsAccountGear {
 body.cms .bottomMenu .cmsAccount:is(:hover,:focus-within) .cmsAccountGear { display:flex; opacity:1; }
 body.cms .logFilters.splitApplyList { background:var(--cmsButtonBg); }
 @media (max-width:1024px), (orientation:portrait) and (max-width:1400px) {
- body.cms .cmsSaveState.is-mobile { left:max(.5rem,env(safe-area-inset-left)); right:max(.5rem,env(safe-area-inset-right)); width:auto; max-width:none; justify-content:center; padding:.55rem .75rem; background:var(--cmsMainColor); color:var(--cmsOnMain,#fff); }
- body.cms .cmsSaveState.is-mobile[data-state="changed"], body.cms .cmsSaveState.is-mobile[data-state="saving"] { color:var(--cmsStatusWarning); }
- body.cms .cmsSaveState.is-mobile[data-state="saved"] { color:var(--cmsStatusSuccess); }
- body.cms .cmsSaveState.is-mobile[data-state="error"] { color:var(--cmsStatusError); }
+ body.cms .cmsSaveState.is-mobile { left:max(.5rem,env(safe-area-inset-left)); right:max(.5rem,env(safe-area-inset-right)); width:auto; max-width:none; justify-content:center; padding:.55rem .75rem; --cmsStatusGlassTint:var(--cmsPanelAlt); color:var(--cmsTextColor); }
+ body.cms .cmsSaveState.is-mobile[data-state="changed"], body.cms .cmsSaveState.is-mobile[data-state="saving"] { color:var(--cmsFeedbackWarning); }
+ body.cms .cmsSaveState.is-mobile[data-state="saved"] { color:var(--cmsFeedbackSuccess); }
+ body.cms .cmsSaveState.is-mobile[data-state="error"] { color:var(--cmsFeedbackError); }
 }
 
 @media (max-width:1024px), (orientation:portrait) and (max-width:1400px) {
@@ -1219,3 +1176,15 @@ body.cms .logFilterFooter [data-log-reset] { width:auto; min-width:0; margin-lef
 body.cms .cmslightbox > section[style*="--cmsGlassHeader"].cmsHeaderScrolled:not(:has(> .userTabs))::after { border-bottom:1px solid var(--cmsLineStrong); }
 body.cms .cmslightbox > section[style*="--cmsGlassHeader"] > header { box-shadow:none; }
 body.cms .cmslightbox > section[style*="--cmsGlassHeader"] > header + main { padding-top:calc(var(--cmsGlassHeader) + 1.35rem); }
+
+
+@media (max-width:1024px), (orientation:portrait) and (max-width:1400px) {
+ body.cms > .cmsSaveState.is-mobile {
+  position:fixed; z-index:12000;
+  top:calc(var(--cmsStatusViewportTop, 0px) + max(.75rem, env(safe-area-inset-top))); bottom:auto;
+ }
+ body.cms .cmsDialogStatus { display:none; }
+ body.cms :is(.cmsSaveState.is-mobile, .cmsDialogStatus .cmsSaveState) > span {
+  white-space:pre-line; overflow-wrap:anywhere;
+ }
+}

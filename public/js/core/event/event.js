@@ -160,7 +160,7 @@ sys.processPointerDown = function (e) {
 	// no emulated mousedown afterwards - it would start a second, mouse drag
 	if (!element.closest('tr')) down.preventDefault();
 	sys.longPress(down, element, function () {
-		sys.processEvent($.Event(down, {currentTarget: element, cmsHeld: element.dataset.drag_type === 'page'}));
+		sys.processEvent($.Event(down, {currentTarget: element, cmsHeld: element.dataset.drag_type === 'page' || element.matches('.mmlContent [data-drag_type="media"]')}));
 	});
 };
 

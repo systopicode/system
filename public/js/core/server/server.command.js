@@ -139,7 +139,17 @@ sys.core.server.command = function (call) {
 			}
 			break;
 		case 'insertHtmlAtCursor':
+			if (call.event?.mediaInsertionRange) {
+				var range = call.event.mediaInsertionRange;
+				var editor = call.event.element;
+				if (!editor?.isConnected || !editor.matches(response.selector) || !editor.contains(range.commonAncestorContainer)) break;
+				editor.focus({preventScroll: true});
+				var selection = getSelection();
+				selection.removeAllRanges();
+				selection.addRange(range);
+			}
 			var result = insertHtmlAtCursor(response.html);
+			if (result === true) call.event?.onMediaInserted?.();
 			if (!result || result === 'nodeditor') {
 				var $appendObj = $($.parseHTML(response.html, '', true));
 				$(response.selector).append($appendObj);

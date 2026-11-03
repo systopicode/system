@@ -302,6 +302,13 @@ function printFileSize(fileSizeInBytes) {
 	return Math.max(fileSizeInBytes, 0.1).toFixed(1) + byteUnits[i];
 }
 
+function clearInlineTitleSelection(title) {
+	const selection = window.getSelection();
+	if (selection?.rangeCount && title.contains(selection.anchorNode) && title.contains(selection.focusNode)) {
+		selection.removeAllRanges();
+	}
+}
+
 function selectElementContents(el) {
 	var range = document.createRange();
 	range.selectNodeContents(el);

@@ -1032,6 +1032,14 @@
       "changes": "regular stroke 2 retained, removed provider classes"
     },
     {
+      "path": "public/icons/tabler/ghost-3.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "644bbc2c87ea3280f6521992b6314c06352755a928fac62efb86cba11262331a",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
       "path": "public/icons/tabler/gif.svg",
       "provider": "tabler",
       "version": "3.50.0",

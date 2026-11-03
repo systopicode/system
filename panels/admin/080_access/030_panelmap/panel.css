@@ -1,6 +1,6 @@
 /* admin/access/panelmap — the panel tree in the pylon */
 
-.cms .controlmapTree ul.controlmapNav li.plain > a{
+.cms .controlmapTree ul.controlmapNav li.plain > .treeRow > a{
 	opacity: 0.5;
 }
 .cms .controlmapTree ul.controlmapNav a.label .count{
@@ -9,7 +9,7 @@
 	color: var(--cmsMuted);
 }
 
-.cms .controlmapTree .controlmapNav li.active > a.label .count {
+.cms .controlmapTree .controlmapNav li.active > .treeRow > a.label .count {
 	color: inherit;
 }
 
@@ -28,19 +28,28 @@ body.cms.access:has(> main > .pylonColumns > .controlmapTree) > main > div.conte
     padding: 0;
     border: 0;
 }
-.cms .controlmapTree .controlmapNav li { position: relative; }
-.cms .controlmapTree nav .controlmapNav li > a.label {
-    align-items: center;
-    min-height: 1.875rem;
-    box-sizing: border-box;
-    padding: 0 0.65rem 0 1.75rem;
+.cms .controlmapTree nav > ul.controlmapNav {
+    padding: .25rem .5rem;
 }
-.cms .controlmapTree nav > .controlmapNav > li > a.label {
-    padding-inline-start: .65rem;
-}
-.cms .controlmapTree .controlmapNav a.label > .type {
-    flex: 0 0 1.125rem;
+.cms .controlmapTree .controlmapNav .treeRow > a.label {
+    flex: 1 1 auto;
+    width: auto;
+    min-width: 0;
     margin: 0;
+    padding: .3rem .25rem;
+    background: transparent;
+}
+.cms .controlmapTree .controlmapNav .treeRow > .fold.leaf {
+    flex: 0 0 1.25rem;
+}
+.cms .controlmapTree .controlmapNav .treeRow > button.fold {
+    padding: 0;
+    min-width: 0;
+    min-height: 0;
+    background: transparent;
+}
+.cms .controlmapTree .controlmapNav .treeRow > button.fold:hover {
+    background: var(--cmsHover);
 }
 .cms .controlmapTree .controlmapNav a.label > .name {
     min-width: 0;
@@ -48,35 +57,36 @@ body.cms.access:has(> main > .pylonColumns > .controlmapTree) > main > div.conte
     text-overflow: ellipsis;
     white-space: nowrap;
 }
-.cms .controlmapTree .controlmapNav button.fold {
-    position: absolute;
-    display: grid;
-    place-items: center;
-    z-index: 1;
-    inset: .1875rem auto auto .0625rem;
-    width: 1.75rem;
-    height: 1.5rem;
-    min-width: 0;
+
+body.cms.cmsMobile .controlmapTree .treeRow { min-height: 44px; }
+body.cms.cmsMobile .controlmapTree .treeRow > .fold {
+    flex-basis: 36px;
+    width: 36px;
+    height: 34px;
+    border-radius: var(--cmsRadius);
+}
+body.cmsMobile .controlmapTree .pylonTreeToolbar {
+    border-bottom-color: transparent;
+    background: color-mix(in srgb, var(--cmsBgColor) 70%, transparent);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+}
+body.cmsMobile .controlmapTree.cmsHeaderScrolled .pylonTreeToolbar {
+    border-bottom-color: var(--cmsLine);
+}
+
+.cms .controlmapTree > nav {
+    flex: 1 1 auto;
     min-height: 0;
-    margin: 0;
-    padding: 0;
-    border: 0;
-    background: transparent;
-    color: var(--cmsMuted);
+    overflow-y: auto;
+    overscroll-behavior-y: contain;
+    scrollbar-width: none;
 }
-.cms .controlmapTree .controlmapNav button.fold:is(:hover, :active) {
-    background: transparent;
-    color: var(--cmsTextColor);
+
+body.cmsMobile .controlmapTree.pylonSheetTree > nav {
+    max-height: calc(100dvh - var(--cmsGlassHeader, 3.5rem) - 3.25rem - max(1rem, env(safe-area-inset-bottom)));
 }
-.cms .controlmapTree .controlmapNav li.active > button.fold {
-    color: var(--cmsMainColor);
-}
-@media (hover: hover) and (pointer: fine) {
-    .cms .controlmapTree .controlmapNav li:not(.active):hover:not(:has(> a.label:hover, > button.fold:hover)) > a.label {
-        background: transparent;
-    }
-    .cms .controlmapTree .controlmapNav li:not(.active) > a.label:hover,
-    .cms .controlmapTree .controlmapNav li:not(.active) > button.fold:hover + a.label {
-        background: var(--cmsHover);
-    }
+
+body.cms.cmsMobile > main > .content[data-cms-sheet="1"].cmsHeaderScrolled:has(.pylonSheetLayout[data-pylon-view="tree"] > .controlmapTree) > header.cmsMobileEditHeader {
+    border-bottom-color: transparent;
 }

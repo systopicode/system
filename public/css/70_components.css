@@ -800,7 +800,7 @@ details[open] > summary > .summaryToggle i { transform:rotate(180deg); }
 .cms .tableWidgets table.tableWidgetGrid .tableWidget > tr:last-child > td {
     border-bottom: 1px solid var(--cmsLine);
 }
-.cms .tableWidgets table.tableWidgetGrid .tableWidget > tr:not(.tableWidgetTitle, .tableWidgetGap) > * {
+.cms .tableWidgets:not(.stacked) table.tableWidgetGrid .tableWidget > tr:not(.tableWidgetTitle, .tableWidgetGap):is(:not(:hover), .tableWidgetColumns) > * {
     background: var(--cmsCanvas);
 }
 .cms .tableWidget > tr:last-child > :first-child { border-bottom-left-radius: var(--cmsRadiusLg); }

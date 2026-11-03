@@ -29,17 +29,17 @@ $fold = static function (?string $path, bool $open) use ($e): string {
 		return "<span class='fold leaf'></span>";
 	}
 	$icon = $open ? 'cmsIcon-chevron-down' : 'cmsIcon-chevron-right';
-	return "<button type=button aria-label='Toggle children' aria-expanded='" . ($open ? "true" : "false") . "' data-on_click=fold data-path='{$e($path)}' class='fold" . ($open ? ' open' : '') . "'><i class='cmsIcon $icon'></i></button>";
+	return "<button type=button data-cms-action aria-label='Toggle children' aria-expanded='" . ($open ? "true" : "false") . "' data-on_click=fold data-path='{$e($path)}' class='fold" . ($open ? ' open' : '') . "'><i class='cmsIcon $icon'></i></button>";
 };
 $item = static function (string $path, string $label, string $icon, string $note, bool $plain, string $fold, string $below, bool $hit = false) use ($e, $selected, $pylonInSheet): string {
 	$href = \Systopic\System\Panels\Root\Admin\Access\Panelmap\Panel::nodeHref($path);
 	if ($pylonInSheet) $href .= '&detail=1';
 	$classes = trim(($path === $selected ? 'active' : '') . ($plain ? ' plain' : ''));
-	return "<li class='$classes'>$fold"
+	return "<li class='$classes'><div class='treeRow'>$fold"
 		. "<a class='label ajax' href='{$e($href)}' title='{$e($path === '' ? 'All panels' : $path . '/')}'>"
 		. "<i class='type cmsIcon $icon'></i><span class='name" . ($hit ? ' is-match' : '') . "'>{$e($label)}</span>"
 		. ($note !== '' ? "<span class='count'>{$e($note)}</span>" : '')
-		. "</a>$below</li>";
+		. "</a></div>$below</li>";
 };
 $branch = static function (array $panels) use (&$branch, $item, $fold, $openFolds, $filtering, $discover): string {
 	$html = '';

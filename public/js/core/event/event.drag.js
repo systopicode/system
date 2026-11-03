@@ -43,6 +43,10 @@ sys.core.event.drag = function (event, hooks) { // 2. param raus
 
 	// Holding is an alternative to moving the mouse, never a prerequisite.
 	var holdTimer, mouseHeld = false;
+	var mediaHold = pointer && e.cmsHeld && drag.type === 'media';
+	function mediaHoldEvent(phase) {
+		drag.dragObj.dispatchEvent(new CustomEvent('cms-media-hold', {bubbles: true, detail: phase}));
+	}
 	function beginDrag() {
 		clearTimeout(holdTimer);
 		if (drag.status !== 'down' || !drag.dragObj.isConnected) return;
@@ -70,7 +74,10 @@ sys.core.event.drag = function (event, hooks) { // 2. param raus
 
 		drag.moveX = e.clientX - drag.downX;
 		drag.moveY = e.clientY - drag.downY;
-		if (drag.moveX * drag.moveX + drag.moveY * drag.moveY > 25) mouseHeld = false;
+		if (drag.moveX * drag.moveX + drag.moveY * drag.moveY > 25) {
+			if (mediaHold && mouseHeld) mediaHoldEvent('cancel');
+			mouseHeld = false;
+		}
 		drag.hooks.move();
 		drag.keysheld = keysHoldable.filter(key => e[key + 'Key']);
 		if (drag.moveX * drag.moveX + drag.moveY * drag.moveY > 25 && drag.status === 'down') { // drag threshold 5px
@@ -198,20 +205,22 @@ sys.core.event.drag = function (event, hooks) { // 2. param raus
 		$(document).unbind(upType, mouseup);
 		document.removeEventListener('dragstart', noNativeDrag, true);
 		if (e.type === 'pointercancel') { // the browser took the gesture (scroll)
+			if (mediaHold && mouseHeld) mediaHoldEvent('cancel');
 			return;
 		}
 		drag.hooks.release();
+		if (mediaHold && mouseHeld) mediaHoldEvent('confirm');
 		// A finished drag must not become the click on the element it
 		// started on. The click is dispatched after mouseup.
-		if (drag.status !== 'down') {
+		if (drag.status !== 'down' || mediaHold) {
 			var swallowClick = function (ev) {
 				ev.preventDefault();
 				ev.stopPropagation();
-				document.removeEventListener('click', swallowClick, true);
+				window.removeEventListener('click', swallowClick, true);
 			};
-			document.addEventListener('click', swallowClick, true);
+			window.addEventListener('click', swallowClick, true);
 			setTimeout(function () {
-				document.removeEventListener('click', swallowClick, true);
+				window.removeEventListener('click', swallowClick, true);
 			}, 400);
 		}
 		if (drag.status === 'accept' && !mouseHeld) {
@@ -702,7 +711,15 @@ sys.core.event.drag = function (event, hooks) { // 2. param raus
 	}
 	$(document).bind(moveType, mousemove);
     // A dashboard hold already passed the shared recogniser before its edit render.
-    if (e.cmsHeld) { mouseHeld=true; beginDrag(); mousemove(e); }
+    if (e.cmsHeld) {
+		mouseHeld = true;
+		if (mediaHold) {
+			mediaHoldEvent('start');
+		} else {
+			beginDrag();
+			mousemove(e);
+		}
+	}
 	$(document).bind(upType, mouseup);
 	e.preventDefault();
 

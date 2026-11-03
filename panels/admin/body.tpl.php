@@ -258,15 +258,24 @@ if ($behind !== '') {
 
 			document.addEventListener('focusout', function (event) {
 				var title = event.target.closest && event.target.closest('.pageTitle');
-				if (title) title.setAttribute('contenteditable', 'false');
+				if (title) {
+					clearInlineTitleSelection(title);
+					title.setAttribute('contenteditable', 'false');
+				}
 				var back = event.relatedTarget && event.relatedTarget.closest && event.relatedTarget.closest('[data-page-title-edit]');
 				if (back) back.blur();
+			}, true);
+
+			document.addEventListener('pointerdown', function (event) {
+				var button = event.target.closest('[data-page-title-edit], .tagGroupRename[data-rename-url]');
+				if (button?.parentElement.querySelector('h1')?.isContentEditable) event.preventDefault();
 			}, true);
 
 			document.addEventListener('click', function (event) {
 				var titleEdit = event.target.closest('[data-page-title-edit]');
 				if (titleEdit) {
 					var title = titleEdit.parentNode.querySelector('.pageTitle');
+					if (title?.isContentEditable) { title.blur(); return; }
 					if (title) {
 						title.setAttribute('contenteditable', 'plaintext-only');
 						title.focus();

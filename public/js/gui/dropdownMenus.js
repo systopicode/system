@@ -437,6 +437,7 @@ document.addEventListener("scroll", function (event) {
     const affects = opener => scroller === document || (opener && scroller instanceof Element && scroller.contains(opener));
     closeSplitMenus(list => affects(list.splitHome));
     const context = document.querySelector('ul.contextmenu, .dropdown.contextMenu');
+    if (context?.matches('body.cmsMobile > ul.contextmenu')) return;
     const opener = contextMenuSource || context?.cmsMenuOpener;
     if (context && (!opener || affects(opener))) closeAllMenus();
 }, true);

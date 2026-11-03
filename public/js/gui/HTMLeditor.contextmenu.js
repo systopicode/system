@@ -369,6 +369,7 @@ var placeEditorMenu = function (menu, rect, target) {
 	menu.anchorRect = rect;
 	menu.anchorTarget = target;
 	menu.anchorTargetRect = target?.getBoundingClientRect();
+	if (menu.classList.contains('cmsPageDock')) return;
 	var gap = 10, edge = 8;
 	var width = menu.offsetWidth, height = menu.offsetHeight;
 	var area = visibleArea(target);
@@ -393,11 +394,36 @@ var fitEditorSubmenu = function (li) {
 	if (!list) {
 		return;
 	}
+	const dock = li.closest('.cmsPageDock');
+	if (dock) {
+		const button = li.getBoundingClientRect();
+		list.style.left = Math.max(8, Math.min(button.left, innerWidth - list.offsetWidth - 8)) + 'px';
+		list.style.bottom = (innerHeight - dock.getBoundingClientRect().top + 6) + 'px';
+		return;
+	}
 	list.classList.remove('toLeft', 'toTop');
 	var rect = list.getBoundingClientRect();
 	rect.right > document.documentElement.clientWidth - 8 && list.classList.add('toLeft');
 	rect.bottom > window.innerHeight - 8 && list.classList.add('toTop');
 };
+
+function enableEditorDockSwipe(scroller) {
+	let swipe;
+	scroller.addEventListener('pointerdown', event => {
+		if (event.pointerType !== 'touch' || !event.isPrimary || event.target.closest('.is-drag, li > ul')) return;
+		swipe = {id: event.pointerId, x: event.clientX, left: scroller.scrollLeft};
+	});
+	scroller.addEventListener('pointermove', event => {
+		if (swipe?.id !== event.pointerId) return;
+		const delta = swipe.x - event.clientX;
+		if (Math.abs(delta) < 6 && !scroller.hasPointerCapture(event.pointerId)) return;
+		if (!scroller.hasPointerCapture(event.pointerId)) scroller.setPointerCapture(event.pointerId);
+		scroller.scrollLeft = swipe.left + delta;
+	});
+	const end = () => { swipe = null; };
+	scroller.addEventListener('pointerup', end);
+	scroller.addEventListener('pointercancel', end);
+}
 
 var contextMenuWW = function (params, event) {
 	closeAllMenus();
@@ -408,6 +434,20 @@ var contextMenuWW = function (params, event) {
 	var ul = $('<ul></ul>');
 	var mediaBar = target && target.closest && (target.closest('img, video, iframe') || target.closest('a')?.querySelector('img, video, iframe'));
 	if (editorPointer === 'touch' && wysiwygOf(target) && !mediaBar) {
+		const editor = wysiwygOf(target);
+		if (sys.pagesMedia && editorRange && document.body.classList.contains('cmsMobile')) {
+			const range = editorRange.cloneRange();
+			const mediaButton = (label, icon, action, showLabel = false) => {
+				const button = $('<button type="button" data-cms-action></button>').attr({'aria-label': label, title: label});
+				button.append($('<i>').addClass('cmsIcon cmsIcon-' + icon));
+				if (showLabel) button.addClass('pageMediaPaste').append($('<span>').text(label));
+				button.on('pointerdown', event => event.preventDefault());
+				button.on('click', () => { closeAllMenus(); action(editor, range); });
+				$('<li>').append(button).appendTo(ul);
+			};
+			mediaButton('Choose media', 'photo-film', sys.pagesMedia.pick);
+			if (sys.pagesMedia.hasClipboard()) mediaButton('Paste media', 'copy', sys.pagesMedia.paste, true);
+		}
 		$('<li><button type="button" data-cms-action title="Type"><i class="cmsIcon cmsIcon-keyboard"></i></button></li>')
 			.appendTo(ul).children('a,button[data-cms-action]').on('click', startTyping);
         $('<li><button type="button" data-cms-action title="Select text"><i class="cmsIcon cmsIcon-text-select"></i></button></li>')
@@ -461,8 +501,11 @@ var contextMenuWW = function (params, event) {
 				.appendTo(subul);
 		});
 	});
-	this.domObj.toggleClass('is-touch', editorPointer === 'touch').append(ul);
+	this.domObj.toggleClass('is-touch', editorPointer === 'touch')
+		.toggleClass('cmsPageDock', document.body.matches('.pages.cmsMobile') && !!wysiwygOf(target))
+		.append(ul);
 	$('body').append(this.domWrapper.append(this.domObj));
+	if (this.domObj.hasClass('cmsPageDock')) enableEditorDockSwipe(ul[0]);
 
 	var rect = event.anchorRect;
 	if (!rect) {

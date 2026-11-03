@@ -155,6 +155,7 @@
 				document.removeEventListener('keydown', h1.renameStop, true);
 				h1.renameStop = null;
 			}
+			clearInlineTitleSelection(h1);
 			h1.removeAttribute('contenteditable');
 			if (!save) {
 				window.cmsFeedback?.cancel(h1);

@@ -26,7 +26,7 @@
     display: block;
 }
 
-.cms ul.tree li label{
+.cms ul:is(.tree, .controlmapNav) li > :is(label, .treeRow){
     position: relative;
     display: flex;
     align-items: center;
@@ -37,7 +37,7 @@
     transition: background-color .15s;
 }
 
-.cms ul.tree li > label:hover{
+.cms ul:is(.tree, .controlmapNav) li > :is(label, .treeRow):hover{
     background: var(--cmsHover);
 }
 
@@ -119,7 +119,7 @@ body.dragging:has(ul.tree .sort.insertInto.dropTarget) .draghelper{
     visibility: hidden;
 }
 
-.cms ul.tree li.active > label{
+.cms ul:is(.tree, .controlmapNav) li.active > :is(label, .treeRow){
     background: var(--cmsActive);
 }
 
@@ -127,7 +127,7 @@ body.dragging:has(ul.tree .sort.insertInto.dropTarget) .draghelper{
     color: var(--cmsSubText);
 }
 
-.cms ul.tree :is(:is(a, button:where([data-cms-action])), button:where(:not([data-cms-action]))).label{
+.cms ul:is(.tree, .controlmapNav) :is(:is(a, button:where([data-cms-action])), button:where(:not([data-cms-action]))).label{
     min-height: 0;
     margin: 0;
     border: 0;
@@ -149,23 +149,23 @@ body.dragging:has(ul.tree .sort.insertInto.dropTarget) .draghelper{
     text-overflow: ellipsis;
 }
 
-.cms ul.tree li.active > label :is(:is(a, button:where([data-cms-action])), button:where(:not([data-cms-action]))).label{
+.cms ul:is(.tree, .controlmapNav) li.active > :is(label, .treeRow) :is(:is(a, button:where([data-cms-action])), button:where(:not([data-cms-action]))).label{
     font-weight: 500;
     color: var(--cmsTextColor);
 }
 
-.cms ul.tree :is(:is(a, button:where([data-cms-action])), button:where(:not([data-cms-action]))).label i.type{
+.cms ul:is(.tree, .controlmapNav) :is(:is(a, button:where([data-cms-action])), button:where(:not([data-cms-action]))).label i.type{
     flex: 0 0 1rem;
     font-size: 0.875rem;
     color: var(--cmsMuted);
     text-align: center;
 }
 
-.cms ul.tree li.active > label :is(:is(a, button:where([data-cms-action])), button:where(:not([data-cms-action]))).label i.type{
+.cms ul:is(.tree, .controlmapNav) li.active > :is(label, .treeRow) :is(:is(a, button:where([data-cms-action])), button:where(:not([data-cms-action]))).label i.type{
     color: var(--cmsTextColor);
 }
 
-.cms ul.tree li.active > label :is(a, button:where([data-cms-action])).fold { color:var(--cmsTextColor); }
+.cms ul:is(.tree, .controlmapNav) li.active > :is(label, .treeRow) :is(a, button:where([data-cms-action])).fold { color:var(--cmsTextColor); }
 
 .cms ul.tree label > i.type{
     flex: 0 0 1rem;
@@ -197,7 +197,7 @@ body.dragging:has(ul.tree .sort.insertInto.dropTarget) .draghelper{
 }
 
 /* Auf-/Zuklappen; Blätter halten nur den Platz */
-.cms ul.tree :is(a, button:where([data-cms-action])).fold{
+.cms ul:is(.tree, .controlmapNav) :is(a, button:where([data-cms-action])).fold{
     display: flex;
     align-items: center;
     justify-content: center;
@@ -208,16 +208,16 @@ body.dragging:has(ul.tree .sort.insertInto.dropTarget) .draghelper{
     cursor: pointer;
 }
 
-.cms ul.tree :is(a, button:where([data-cms-action])).fold i{
+.cms ul:is(.tree, .controlmapNav) :is(a, button:where([data-cms-action])).fold i{
     font-size: 0.6875rem;
 }
 
-.cms ul.tree :is(a, button:where([data-cms-action])).fold:hover{
+.cms ul:is(.tree, .controlmapNav) :is(a, button:where([data-cms-action])).fold:hover{
     color: var(--cmsTextColor);
     background: var(--cmsHover);
 }
 
-.cms ul.tree :is(a, button:where([data-cms-action])).fold.leaf{
+.cms ul:is(.tree, .controlmapNav) :is(a, button:where([data-cms-action])).fold.leaf{
     cursor: default;
     background: none;
 }

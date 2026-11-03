@@ -322,6 +322,11 @@ body.dragging section.cms{
     flex: 0 0 auto;
 }
 
+.cms .userList .tableScroll.stacked > table > tbody > tr > td.userStatusCell:first-child {
+    width: auto;
+    padding-inline: 0;
+}
+
 .cms .tableScroll.stacked > table > tbody > tr > :is(td:first-child:not(:has(> .userStatus, > i[data-drag_type])), td:has(> .userStatus, > i[data-drag_type]) + td){
     order: 1;
     flex: 1 1 0;

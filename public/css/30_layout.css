@@ -630,7 +630,6 @@ body.cms:not(.pages) > main > div.content > .flexRow > .flexColumn > section.cms
         position: sticky;
         top: var(--cmsGlassHeader, 0px);
         z-index: 2;
-        border-top: 1px solid var(--cmsLineStrong);
         border-radius: 0;
     }
     .cms .pylonSheetTree > nav { overflow: auto; }

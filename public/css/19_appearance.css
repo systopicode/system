@@ -83,9 +83,10 @@ html[data-mode="dark"] body.cms:not(:has(.authCard)) div.signet span {
 }
 
 /* The open tree row stays the light brand chip, so its type stays dark. */
-html[data-mode="dark"] body.cms:not(:has(.authCard)) ul.tree li.active > label :is(:is(a, button:where([data-cms-action])),button:where(:not([data-cms-action]))).label,
-html[data-mode="dark"] body.cms:not(:has(.authCard)) ul.tree li.active > label :is(a, button:where([data-cms-action])).fold,
-html[data-mode="dark"] body.cms:not(:has(.authCard)) ul.tree li.active > label .label i.type {
+html[data-mode="dark"] body.cms:not(:has(.authCard)) ul:is(.tree, .controlmapNav) li.active > :is(label, .treeRow) :is(:is(a, button:where([data-cms-action])),button:where(:not([data-cms-action]))).label,
+html[data-mode="dark"] body.cms:not(:has(.authCard)) ul:is(.tree, .controlmapNav) li.active > :is(label, .treeRow) :is(a, button:where([data-cms-action])).fold,
+html[data-mode="dark"] body.cms:not(:has(.authCard)) ul:is(.tree, .controlmapNav) li.active > :is(label, .treeRow) :is(a, button:where([data-cms-action])).fold > .cmsIcon,
+html[data-mode="dark"] body.cms:not(:has(.authCard)) ul:is(.tree, .controlmapNav) li.active > :is(label, .treeRow) .label i.type {
 	color: var(--cmsMainColor);
 }
 

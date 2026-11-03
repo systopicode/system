@@ -60,12 +60,9 @@ $screens = ($this->accountKind ?? '') === \Systopic\System\Tables\Users\Model::S
 						<td class="icons">
 							<ul>
 								<?php if (\Systopic\System\Auth\Session::isSuperuser(true) && !$user->isSuperuser) { ?>
-									<li><button type="button" data-cms-action class="button icononly" title="Sign in as this user" data-on_click="../hijackUser"><i class="cmsIcon cmsIcon-user-shield"></i></button></li>
+									<li><button type="button" data-cms-action class="button icononly" title="Sign in as this user" data-on_click="../hijackUser"><i class="cmsIcon cmsIcon-ghost-3"></i></button></li>
 								<?php } ?>
 								<li><a class="ajax button icononly" title="Edit <?= $screens ? 'screen' : 'person' ?>: <?= $e($user->name) ?>" aria-label="Edit <?= $screens ? 'screen' : 'person' ?>: <?= $e($user->name) ?>" href="<?= $e($this->href . 'edit/?user_id=' . (int) $user->id) ?>"><i class="cmsIcon cmsIcon-pen"></i></a></li>
-								<?php if ((int) $user->id !== (int) \Systopic\System\Auth\Session::id()) { ?>
-									<li><button type="button" data-cms-action class="button icononly" title="Delete <?= $screens ? 'screen' : 'person' ?>: <?= $e($user->name) ?>" aria-label="Delete <?= $screens ? 'screen' : 'person' ?>: <?= $e($user->name) ?>" data-on_click="userConfirm" data-action="removeUser" data-confirm="<?= $screens ? 'Delete this screen? This cannot be undone.' : 'Delete this user? This cannot be undone.' ?>" data-user_id="<?= (int) $user->id ?>"><i class="cmsIcon cmsIcon-trash"></i></button></li>
-								<?php } ?>
 							</ul>
 						</td>
 					</tr>

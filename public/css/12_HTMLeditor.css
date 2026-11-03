@@ -484,3 +484,25 @@ div.HTMLeditorMenu:has(form.HTMLeditorClass)::before { z-index:-1; }
 
 /* Shared accepted target feedback for both library media and page links. */
 .editor:is(.mediaDroppable,.pageDroppable).dropTarget { outline: 2px solid var(--cmsHighlightColor) !important; outline-offset: 2px; }
+
+body.cms.pages .HTMLeditorMenu.cmsPageDock {
+    inset: auto 0 calc(max(0.65rem, env(safe-area-inset-bottom)) + var(--cmsKeyboard, 0px));
+    margin-inline: auto;
+    width: max-content;
+    max-width: calc(100% - 1rem);
+}
+.HTMLeditorMenu.cmsPageDock::before { display: none; }
+.HTMLeditorMenu.cmsPageDock > ul {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+    touch-action: none;
+}
+.HTMLeditorMenu.cmsPageDock > ul > li { flex: none; }
+.HTMLeditorMenu.cmsPageDock li > ul { position: fixed; top: auto; }
+
+div.HTMLeditorMenu.cmsPageDock button.pageMediaPaste {
+    width: auto;
+    padding-inline: .6rem;
+    gap: .35rem;
+}

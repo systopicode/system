@@ -11,6 +11,11 @@ return [
     '0.5.7' => [
         'date' => '2026-11-01',
         'new' => [
+            'Administration now opens under /admin/. Existing /cms/ links redirect automatically.',
+            'The main menu now lists Pages, Backup, Settings, Access and Tools. Access groups user management, Roles, Content permissions and Panel Map.',
+            'Panel Map keeps the Access menu visible beside its resizable tree on desktop. On phones, the tree and details slide within the same sheet.',
+            'On phones, Media Library and Properties open as lightboxes above the current page. Language and preview width are under More, and the text editor has a scrollable bottom toolbar.',
+            'Choose media directly from the editor or the share image field. Hold and release a media tile to copy it. A green outline and the status line show where it can be pasted.',
             'Empty dashboard columns show a drop area while moving widgets. Its border becomes solid when it accepts a widget.',
             'Dialogs show their own action and save status, including nested dialogs.',
             'Publishing explains whether a page is public, scheduled, expired or in the trash, using server time.',

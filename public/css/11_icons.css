@@ -97,6 +97,7 @@
   --icon-folder-minus: url("../icons/tabler/folder-minus.svg");
   --icon-folder-open: url("../icons/tabler/folder-open.svg");
   --icon-folder-plus: url("../icons/tabler/folder-plus.svg");
+  --icon-ghost-3: url("../icons/tabler/ghost-3.svg");
   --icon-gif: url("../icons/tabler/gif.svg");
   --icon-git-merge: url("../icons/tabler/git-merge.svg");
   --icon-globe: url("../icons/tabler/globe.svg");
@@ -307,6 +308,7 @@
 .cmsIcon-forward { --icon-mask: var(--icon-player-track-next); }
 .cmsIcon-frame { --icon-mask: var(--icon-crop); }
 .cmsIcon-gear { --icon-mask: var(--icon-settings); }
+.cmsIcon-ghost-3 { --icon-mask: var(--icon-ghost-3); }
 .cmsIcon-gif { --icon-mask: var(--icon-gif); }
 .cmsIcon-globe { --icon-mask: var(--icon-globe); }
 .cmsIcon-grid-2 { --icon-mask: var(--icon-layout-grid); }

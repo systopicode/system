@@ -13,8 +13,8 @@ $this->loadJS();
 		<?php if ($tag) { ?>
 			<header class="tagEditTitle">
 				<h1 data-doc=tagname><?= htmlspecialchars((string) $tag->name) ?></h1>
-				<button type="button" class="tagGroupRename" data-on_click="rename" title="Rename">
-					<i class="cmsIcon cmsIcon-pen"></i>
+				<button type="button" class="tagGroupRename" data-on_click="rename" title="Rename or confirm">
+					<i class="cmsIcon cmsIcon-pen"></i><i class="cmsIcon cmsIcon-check pencilConfirm"></i>
 				</button>
 				<ul class="barmenu">
 					<li>

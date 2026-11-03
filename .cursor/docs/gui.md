@@ -70,10 +70,10 @@ stripped: `080_access/010_users/` → `/admin/access/users/`.
 
 | File | Purpose |
 |---|---|
-| `panel.php` | Class `Panel` in the namespace of its path, e.g. `Systopic\System\Panels\Root\Admin\Users\Users`. Extends `Systopic\System\Panels\Root\Admin\Panel`. State, computed properties (`get =>` hooks), defaults (`getDefaultState()`). |
+| `panel.php` | Class `Panel` in the namespace of its path, e.g. `Systopic\System\Panels\Root\Admin\Access\Users`. Extends `Systopic\System\Panels\Root\Admin\Panel`. State, computed properties (`get =>` hooks), defaults (`getDefaultState()`). |
 | `actions.php` | `switch ($this->action)` — one `case` per action. Ends with `$this->updateView('main')` (or `updateViews([...])`) for what must be re-rendered. |
 | `*.tpl.php` | Views. `main.tpl.php` is the content, `controls.tpl.php` the header bar, `pylon.tpl.php` the left column, `sidebar.tpl.php` the right column, `lightbox.tpl.php` a dialog, `footer`/`status` the bottom. |
-| `panel.js` | Client code for the panel (`sys.lib.add(setup, fn)`, `route: 'panels.admin.users.users'`). |
+| `panel.js` | Client code for the panel (`sys.lib.add(setup, fn)`, `route: 'panels.admin.access.users'`). |
 | `*.css` | Styles only this panel needs (see section 5). |
 
 The administration routes and active panel folders are mounted at `admin/`.
@@ -81,6 +81,10 @@ Old `/cms/` requests redirect to `/admin/pages/` when Pages is installed
 and to `/admin/` otherwise. Deep links retain their path and query. The
 Composer package identifier, database prefixes and shared `.cms` CSS scope
 are independent of the mount path.
+
+The main navigation order is Pages, Backup, Settings, Access and Tools.
+Access contains Roles, Content and Panel Map. Content is the label for
+permissions on site content.
 
 Layout (`system/panels/admin/body.tpl.php`): menu → `pylon` → content
 (`controls` header, `main`, `footer`) → `sidebar` → status bar → `lightbox`.
@@ -472,7 +476,7 @@ rather than combining gaps with card margins.
   directly above the Pylon's `nav`. Keep the search field visible in
   `.searchInput` and put tree actions in `ul.treeNavi`. The shared layout
   aligns the top edge with the content and removes the shadow at their seam.
-  Panels such as Controlmap use the standard Pylon navigation. Pages has a
+  Panels such as Panel Map use the standard Pylon navigation. Pages has a
   module-specific layout for its page tree and Media Library, with its toolbar
   inside the navigation.
 - A panel with its own tree can set `pylonBranch` and contribute a
@@ -481,7 +485,9 @@ rather than combining gaps with card margins.
   detail sheet and render the tree and detail as `.pylonSheetTree` and
   `.pylonSheetDetail` inside `.pylonSheetLayout`. Set `data-pylon-view`
   to `tree` or `detail`. AJAX links within the open sheet use the existing
-  horizontal content transition. A back link returns to the tree.
+  horizontal content transition. Show the secondary view’s Back button on
+  mobile to return to the tree. Keep its toolbar fixed at the top of the
+  tree while the tree scrolls, with square outer corners and a top border.
   The standard `draginitPylonwidth` handle can provide `data-width-action`
   for the child action that persists its width. Register the width in the
   child panel's default state so it survives reload.

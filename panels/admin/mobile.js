@@ -12,7 +12,6 @@ var mobileState = window.cmsMobile = {active: previousMobile?.active || 'base', 
 var mobile = matchMedia('(max-width: 1024px), (orientation: portrait) and (max-width: 1400px)');
 var activeWindow = mobileState.active;
 var returnFocus = previousMobile?.returnFocus || null;
-var previousWindow = previousMobile?.previousWindow || 'base';
 var overlayURL = previousMobile?.overlayURL || null;
 var dismissedHref = previousMobile?.dismissedHref || null;
 var introducedHref = previousMobile?.introducedHref || null;
@@ -46,7 +45,7 @@ try {
 mobileState.openNow = false;
 document.cookie = 'cmsMobile=' + (mobile.matches ? '1' : '0') + ';path=/;max-age=31536000;SameSite=Lax';
 var closingHistory = previousMobile?.closingHistory || false;
-var windowSelectors = {menu: 'main > .main', edit: 'main > .content', media: 'main > .pylon > footer'};
+var windowSelectors = {menu: 'main > .main', edit: 'main > .content'};
 var mobileHeader = document.querySelector('.cmsMobileHeader');
 var backdrop = document.querySelector('.cmsMobileBackdrop');
 function windowNode(name) { return document.querySelector(windowSelectors[name] || 'main > .pylon'); }
@@ -158,7 +157,6 @@ function showWindow(name) {
 	}
 	if (name === 'base') overlayURL = null;
 	closeMore();
-	previousWindow = activeWindow;
 	activeWindow = name;
 	root.dataset.cmsWindow = name;
 	syncMobile();
@@ -197,7 +195,6 @@ window.addEventListener('popstate', function (event) {
 	}
 	var samePage = location.href === overlayURL;
 	overlayURL = null;
-	previousWindow = activeWindow;
 	activeWindow = 'base';
 	syncMobile();
 	if (samePage) {
@@ -217,11 +214,51 @@ function parentHref() {
 	if (rest.indexOf('/') < 0) return null;
 	return url.pathname.slice(0, cms + 5) + rest.slice(0, rest.lastIndexOf('/')) + '/' + url.search + url.hash;
 }
+// Move the live view into the standard lightbox and return it on close.
+var pageBoxes = new Map();
+function closePageBox(kind) {
+	var entry = pageBoxes.get(kind);
+	if (!entry) return;
+	pageBoxes.delete(kind);
+	entry.observer.disconnect();
+	if (entry.home.isConnected) entry.home.replaceWith(...entry.main.childNodes);
+	entry.box.remove();
+	if (kind === 'media') document.dispatchEvent(new Event('cms-media-closed'));
+}
+function openPageBox(kind) {
+	if (!mobile.matches || !root.classList.contains('pages') || pageBoxes.has(kind)) return;
+	var content = windowNode('edit');
+	var view = kind === 'media'
+		? document.querySelector('main > .pylon > footer .mmlContent')
+		: content?.querySelector('aside.cms');
+	if (!view) return;
+	var title = kind === 'media' ? 'Media Library' : 'Properties';
+	var home = document.createComment(title);
+	var box = document.createElement('div');
+	box.className = 'cmslightbox cms pageToolBox';
+	box.dataset.pageTool = kind;
+	box.innerHTML = '<section><header><h1></h1><button type="button" class="button transparent icononly" data-box-close><i class="cmsIcon cmsIcon-xmark"></i></button></header><main></main></section>';
+	box.querySelector('h1').textContent = title;
+	box.querySelector('button').setAttribute('aria-label', 'Close ' + title);
+	var main = box.querySelector('main');
+	view.before(home);
+	main.append(view);
+	var observer = new MutationObserver(function () {
+		if (box.hidden) closePageBox(kind);
+	});
+	observer.observe(box, {attributes: true, attributeFilter: ['hidden']});
+	pageBoxes.set(kind, {box, home, main, observer});
+	root.append(box);
+	if (kind === 'properties') view.querySelector('.collapsed .sidebarFlag')?.click();
+}
+document.addEventListener('cms-open-media-picker', function () { openPageBox('media'); }, {signal: mobileEvents.signal});
+document.addEventListener('cms-close-media-picker', function () {
+	pageBoxes.get('media')?.box.querySelector('[data-box-close]').click();
+}, {signal: mobileEvents.signal});
 function closeWindow() {
 	slidFor = null;
 	sheetMotion = null;
-	// Media opened from Edit returns to the same editor, with its inputs intact.
-	var next = activeWindow === 'menu' && showSheet ? 'edit' : activeWindow === 'media' && previousWindow === 'edit' ? 'edit' : !windowNode('base') && activeWindow === 'edit' ? 'menu' : 'base';
+	var next = activeWindow === 'menu' && showSheet ? 'edit' : !windowNode('base') && activeWindow === 'edit' ? 'menu' : 'base';
 	if (next === 'base') {
 		var content = windowNode('edit');
 		if (content) content.removeAttribute('data-cms-sheet');
@@ -284,7 +321,10 @@ function queueSlide() {
 function syncMobile() {
 	var pylon = windowNode('base');
 	var content = windowNode('edit');
-	var media = windowNode('media');
+	for (var [kind, entry] of pageBoxes) {
+		if (!entry.home.isConnected || !mobile.matches) closePageBox(kind);
+	}
+	var media = document.querySelector('main > .pylon > footer');
 	if (content && mobileState.innerHref === location.pathname + location.search && content.dataset.cmsSheet === '1') {
 		mobileState.innerHref = null;
 		var direction = mobileState.innerBack ? -16 : 16;
@@ -362,7 +402,7 @@ function syncMobile() {
 			autoOpen = false;
 			if (keep) {
 				showSheet = true;
-				if (activeWindow !== 'menu' && activeWindow !== 'media') activeWindow = 'edit';
+				if (activeWindow !== 'menu') activeWindow = 'edit';
 			} else {
 			showSheet = arrive;
 			if (!arrive) {
@@ -385,7 +425,7 @@ function syncMobile() {
 				}, 480);
 			}
 			}
-		} else if (showSheet && !arriveTimer && activeWindow !== 'menu' && activeWindow !== 'media') {
+		} else if (showSheet && !arriveTimer && activeWindow !== 'menu') {
 			activeWindow = 'edit';
 		}
 	} else if (activeWindow === 'edit' && !dismissing) {
@@ -426,7 +466,7 @@ function syncMobile() {
 	}
 	root.dataset.cmsWindow = activeWindow;
 	chromeColor();
-	Object.assign(mobileState, {active: activeWindow, returnFocus: returnFocus, previousWindow: previousWindow, overlayURL: overlayURL, closingHistory: closingHistory, showSheet: showSheet, introducedHref: introducedHref, dismissedHref: dismissedHref, openNow: openNow});
+	Object.assign(mobileState, {active: activeWindow, returnFocus: returnFocus, overlayURL: overlayURL, closingHistory: closingHistory, showSheet: showSheet, introducedHref: introducedHref, dismissedHref: dismissedHref, openNow: openNow});
 	mobileHeader = document.querySelector('.cmsMobileHeader');
 	root.classList.toggle('cmsMobile', mobile.matches);
 	root.classList.toggle('cmsDashboard', !!document.querySelector('main > .content .dashboard'));
@@ -457,29 +497,25 @@ function syncMobile() {
 					grip.className = 'cmsMobileGrip cmsMobileOnly'; grip.setAttribute('aria-hidden', 'true');
 					head.prepend(grip);
 				}
-				head.querySelector('[data-cms-properties]')?.toggleAttribute('hidden', !node.querySelector('aside.cms'));
+				head.querySelector('.cmsPageToolsMenu .langMenu')?.removeAttribute('hidden');
+				var properties = head.querySelector('[data-cms-properties]');
+				properties?.toggleAttribute('hidden', !node.querySelector('aside.cms') && !pageBoxes.has('properties'));
+				properties?.setAttribute('aria-pressed', String(pageBoxes.has('properties')));
 				head.querySelector('[data-cms-window="media"]')?.toggleAttribute('hidden', !media || !!media.querySelector('.mml-empty'));
 			}
-		} else if (overlay && !node.querySelector(':scope > .cmsMobileWindowBar')) {
-			var bar = document.createElement('div');
-			bar.className = 'cmsMobileWindowBar cms';
-			bar.innerHTML = '<span class="cmsMobileGrip" aria-hidden="true"></span><strong></strong>';
-			bar.querySelector('strong').textContent = 'Media Library';
-			node.prepend(bar);
 		}
 		var dialog = overlay && (name !== 'edit' || node.dataset.cmsSheet === '1');
 		node.inert = mobile.matches && dialog && activeWindow !== name;
 		if (mobile.matches && dialog) {
 			node.setAttribute('role', 'dialog');
 			node.setAttribute('aria-modal', String(activeWindow === name));
-			node.setAttribute('aria-label', {menu: 'Navigation', edit: 'Edit', media: 'Media Library'}[name]);
+			node.setAttribute('aria-label', {menu: 'Navigation', edit: 'Edit'}[name]);
 		} else {
 			if (name === 'edit') node.setAttribute('role','main'); else node.removeAttribute('role'); node.removeAttribute('aria-modal'); node.removeAttribute('aria-label');
 		}
 	});
-	// Do not make the pylon inert: it contains the media window. Isolate its base instead.
 	if (pylon) Array.from(pylon.children).forEach(function (node) {
-		if (node !== media) node.inert = mobile.matches && activeWindow !== 'base';
+		node.inert = mobile.matches && activeWindow !== 'base';
 	});
 	if (content && !pylon) content.inert = mobile.matches && activeWindow === 'menu';
 	if (content && content.dataset.cmsSheet !== '1') {
@@ -641,21 +677,26 @@ function fitHeader(head) {
 // Use capture so existing AJAX handlers still receive actual links and actions.
 document.addEventListener('click', function (event) {
 	if (!mobile.matches || !event.target.closest) return;
-	var properties = event.target.closest('button[data-cms-properties]');
-	if (properties) {
-		var content = windowNode('edit');
-		var open = content.dataset.cmsProperties !== 'true';
-		content.dataset.cmsProperties = String(open);
-		properties.setAttribute('aria-pressed', String(open));
-		if (open) content.querySelector('aside.collapsed .sidebarFlag')?.click();
-		content.querySelector('[data-cms-more]')?.setAttribute('aria-expanded', 'false');
+	var pageMore = document.querySelector('[data-cms-page-more]');
+	if (event.target.closest('[data-cms-page-more]')) {
+		pageMore.setAttribute('aria-expanded', String(pageMore.getAttribute('aria-expanded') !== 'true'));
 		return;
 	}
-		if (!event.target.closest('.cmsPageTools, .splitApply, .splitApplyList, ul.contextmenu')) closeMore();
+	if (!event.target.closest('.cmsPageToolsMenu, .langMenu') || event.target.closest('[data-cms-device], .langMenu a')) {
+		pageMore?.setAttribute('aria-expanded', 'false');
+	}
+	var properties = event.target.closest('button[data-cms-properties]');
+	if (properties) {
+		openPageBox('properties');
+		return;
+	}
+		if (!event.target.closest('.cmsPageTools, .cmsPageToolsMenu, .splitApply, .splitApplyList, ul.contextmenu, .HTMLeditorMenu')) closeMore();
 	var button = event.target.closest('button[data-cms-window], [data-cms-close]');
 	if (button) {
 		event.preventDefault();
-		button.hasAttribute('data-cms-close') ? closeWindow() : (button.dataset.cmsWindow === 'menu' && activeWindow === 'menu' ? closeWindow() : showWindow(button.dataset.cmsWindow));
+		if (button.dataset.cmsWindow === 'media') openPageBox('media');
+		else if (button.hasAttribute('data-cms-close') || (button.dataset.cmsWindow === 'menu' && activeWindow === 'menu')) closeWindow();
+		else showWindow(button.dataset.cmsWindow);
 		return;
 	}
 	if (event.target.closest('main > .main a[href]:not([target]):not([download])')) {
@@ -682,7 +723,7 @@ document.addEventListener('click', function (event) {
 			}
 			return;
 		}
-		var leaf = url.searchParams.has('id') || !root.classList.contains('pages');
+		var leaf = link.hasAttribute('data-cms-open-sheet') || url.searchParams.has('id') || !root.classList.contains('pages');
 		if (!leaf) return;
 		var here = url.pathname === location.pathname && url.search === location.search;
 		var withinContent = !!link.closest('main > .content[data-cms-sheet="1"]');
@@ -713,12 +754,12 @@ document.addEventListener('keydown', function (event) {
 	if (!mobile.matches || activeWindow === 'base' || document.querySelector('.cmslightbox')) return;
 	if (event.key === 'Escape') {
 		event.preventDefault();
-		var more = document.querySelector('[data-cms-more][aria-expanded="true"]');
+		var more = document.querySelector(':is([data-cms-more], [data-cms-page-more])[aria-expanded="true"]');
 		if (more) { more.setAttribute('aria-expanded', 'false'); more.focus(); }
 		else closeWindow();
 	}
 	if (event.key === 'Tab') {
-		var items = Array.from(windowNode(activeWindow).querySelectorAll('button, a[href], input, select, textarea, [tabindex="0"], [contenteditable="plaintext-only"]')).filter(function (node) { return !node.disabled && !node.closest('[inert]') && node.getClientRects().length; });
+		var items = [...windowNode(activeWindow).querySelectorAll('button, a[href], input, select, textarea, [tabindex="0"], [contenteditable="plaintext-only"]')].filter(function (node) { return !node.disabled && !node.closest('[inert]') && node.getClientRects().length; });
 		var first = items[0], last = items[items.length - 1];
 		if (event.shiftKey && (document.activeElement === first || document.activeElement === windowNode(activeWindow))) { event.preventDefault(); last?.focus(); }
 		else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first?.focus(); }
@@ -782,7 +823,7 @@ function shutSheet(sheet) {
 	setTimeout(function () { complete(); }, dur + 80);
 }
 document.addEventListener('pointerdown', function (event) {
-	var bar = event.target.closest?.('.cmsMobileWindowBar, .cmsMobileEditHeader');
+	var bar = event.target.closest?.('.cmsMobileEditHeader');
 	var sheet = null;
 	if (bar) {
 		if (event.target.closest('button, a, input, select, textarea, [contenteditable="plaintext-only"], .cmsPageTools') || activeWindow === 'menu' || root.classList.contains('dragging')) return;
@@ -870,11 +911,17 @@ document.addEventListener('pointerdown', function (event) {
 }, {signal: mobileEvents.signal});
 document.addEventListener('scroll', function (event) {
 	var scroll = event.target;
+	if (scroll.matches?.('.controlmapTree > nav')) {
+		scroll.parentElement.classList.toggle('cmsHeaderScrolled', scroll.scrollTop > 1);
+	}
 	var surface = scroll.closest?.('.cmslightbox > section, main > .content[data-cms-sheet="1"]');
 	if (!surface || scroll.closest('header, .userTabs, .tabmenu')) return;
 	surface.classList.toggle('cmsHeaderScrolled', scroll.scrollTop > 1);
 }, {capture:true, passive:true, signal:mobileEvents.signal});
-mobile.addEventListener('change', syncMobile, {signal: mobileEvents.signal});
+mobile.addEventListener('change', function () {
+	closeMore();
+	syncMobile();
+}, {signal: mobileEvents.signal});
 if (window.visualViewport) {
 	var pinning = false;
 	var keyboardOpen = false;
@@ -922,7 +969,7 @@ if (window.visualViewport) {
 // Panel updates replace nodes; refresh only chrome and availability, never the editor.
 var mobileObserver = new MutationObserver(syncMobile);
 mobileObserver.observe(root, {childList: true, subtree: true});
-mobileState.destroy = function () { mobileEvents.abort(); mobileObserver.disconnect(); clearTimeout(arriveTimer); };
+mobileState.destroy = function () { for (var kind of pageBoxes.keys()) closePageBox(kind); mobileEvents.abort(); mobileObserver.disconnect(); clearTimeout(arriveTimer); };
 mobileState.sync = syncMobile;
 syncMobile();
 
