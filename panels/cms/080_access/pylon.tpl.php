@@ -1,7 +1,12 @@
 <?php
 
-if ($this->childSelected instanceof \Systopic\System\Panels\Root\Cms\Access\Panelmap\Panel) {
-    $this->withChildSelected('pylon');
-} else {
+$nested = $this->childSelected?->pylonBranch ?? false;
+if (!$nested) {
     include '../child.pylon.tpl.php';
+    return;
 }
+?>
+<div class="pylon cms pylonColumns">
+    <nav class="pylonPrimary" aria-label="Access"><?= $this->getNavi(1) ?></nav>
+    <?php $this->withChildSelected('pylon'); ?>
+</div>

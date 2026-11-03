@@ -38,7 +38,7 @@
 				// what the css limit left of the pull
 				var width = Math.round($pylon.width());
 				$pylon[0].style.setProperty('--pylonWidth', width + 'px');
-				sys.core.server.sendCall({width: width}, 'updatePylonWidth');
+				sys.core.server.sendCall({width: width}, event.element.dataset.widthAction || 'updatePylonWidth');
 			};
 		};
 

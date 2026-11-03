@@ -7,7 +7,7 @@ if (!root || !root.querySelector(':scope > .cmsMobileHeader') || !root.querySele
 var previousMobile = window.cmsMobile;
 previousMobile?.destroy();
 var mobileEvents = new AbortController();
-var mobileState = window.cmsMobile = {active: previousMobile?.active || 'base', module: previousMobile?.module || null, innerHref:previousMobile?.innerHref || null};
+var mobileState = window.cmsMobile = {active: previousMobile?.active || 'base', module: previousMobile?.module || null, innerHref:previousMobile?.innerHref || null, innerBack:!!previousMobile?.innerBack};
 /* Phone, and a tablet held upright. A tablet on its side stays the desktop. */
 var mobile = matchMedia('(max-width: 1024px), (orientation: portrait) and (max-width: 1400px)');
 var activeWindow = mobileState.active;
@@ -287,8 +287,10 @@ function syncMobile() {
 	var media = windowNode('media');
 	if (content && mobileState.innerHref === location.pathname + location.search && content.dataset.cmsSheet === '1') {
 		mobileState.innerHref = null;
+		var direction = mobileState.innerBack ? -16 : 16;
+		mobileState.innerBack = false;
 		var inner = content.querySelector(':scope > .flexRow');
-		if (inner && !matchMedia('(prefers-reduced-motion:reduce)').matches) inner.animate([{opacity:.6,transform:'translateX(16px)'},{opacity:1,transform:'translateX(0)'}],{duration:260,easing:'ease-out'});
+		if (inner && !matchMedia('(prefers-reduced-motion:reduce)').matches) inner.animate([{opacity:.6,transform:'translateX(' + direction + 'px)'},{opacity:1,transform:'translateX(0)'}],{duration:260,easing:'ease-out'});
 	}
 	root.classList.toggle('cmsHasPylon', !!pylon);
 	var module = root.querySelector('main > .main nav li.active > a[href]')?.pathname;
@@ -683,11 +685,12 @@ document.addEventListener('click', function (event) {
 		var leaf = url.searchParams.has('id') || !root.classList.contains('pages');
 		if (!leaf) return;
 		var here = url.pathname === location.pathname && url.search === location.search;
-		var withinContent = !!link.closest('main > .content') && showSheet;
+		var withinContent = !!link.closest('main > .content[data-cms-sheet="1"]');
 		if (withinContent) {
 			introducedHref = url.href;
 			slidFor = url.href;
-			mobileState.innerHref = url.pathname + url.search;
+			mobileState.innerBack = link.hasAttribute('data-cms-inner-back');
+			mobileState.innerHref = link.hasAttribute('data-cms-refresh-view') ? null : url.pathname + url.search;
 		}
 		dismissedHref = null;
 		if (!withinContent) introducedHref = null;

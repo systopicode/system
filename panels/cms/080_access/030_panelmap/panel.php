@@ -20,9 +20,10 @@ use Systopic\System\Panels\Root\Cms\Panel as CmsPanel;
 class Panel extends CmsPanel {
 
 	public $showSubnavi = FALSE;
-	public $icon = 'cmsIcon cmsIcon-duotone cmsIcon-sitemap';
+	public $icon = 'cmsIcon cmsIcon-sitemap';
 	public ?int $naviOrder = 45;
 	public bool $buildChildPanels = true;
+	public bool $pylonBranch = true;
 
 	/** @var list<DiscoveredPanel> the top-level panels, read once per request */
 	public array $panels {
@@ -122,7 +123,7 @@ class Panel extends CmsPanel {
 	function onLoad() {
 		$this->label = 'Panel Map';
 		// a node of the tree is a get to the open child (./?panel=cms.pages, see nodeHref())
-		$chosen = \http::get('panel', NULL);
+		$chosen = \http::get('panel', \http::get('detail') === '1' ? '' : NULL);
 		if ($chosen !== NULL && \http::method() === 'GET') {
 			$this->state->selected = trim(str_replace('.', '/', (string) $chosen), '/');
 			// a link in the table may choose a node inside a closed fold
@@ -140,6 +141,7 @@ class Panel extends CmsPanel {
 		$defaultState->openChild = NULL;
 		$defaultState->selected = '';
 		$defaultState->openFolds = [];
+		$defaultState->treeWidth = 270;
 		return $defaultState;
 	}
 }

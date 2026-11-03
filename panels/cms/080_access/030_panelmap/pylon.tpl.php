@@ -8,17 +8,8 @@
  * all / close all sit in the header. The actions are discover's
  * (discover/actions.php), like the width.
  *
- * The header also has discover's two switches: the magnifier shows every
- * panel (`?all=1`, discover's "show all") — then no node is chosen, and a
- * field above the tree filters the tree and the table alike
- * (`filterPanels`, `Discover\Panel::matches()`): the tree shows what
- * matches and the way to it, unfolded. The sync icon reads the folders
- * and the code again.
- *
- * As wide as the tree, until the edge is pulled: then the pulled width
- * (`--pylonWidth`, kept as `treeWidth` by discover/actions.php: the
- * `pylonWidth` of the state has a default and would never let it fit).
- * A GUI proposal for every pylon: .cursor/team/2026-10-30-pylon-breite.md
+ * The search filters the tree and table. The rescan reads the folders
+ * and code again. The desktop resize handle persists treeWidth.
  *
  * @var \Systopic\System\Panels\Root\Cms\Access\Panelmap\Panel $this
  */
@@ -32,6 +23,7 @@ $filtering = $showAll && $discover->filter !== '';
 $selected = $showAll ? NULL : $this->selectedPath;
 $pylonWidth = (int) ($this->state->treeWidth ?? 0);
 $openFolds = array_flip($this->openFolds);
+$pylonInSheet ??= false;
 $fold = static function (?string $path, bool $open) use ($e): string {
 	if ($path === NULL) {
 		return "<span class='fold leaf'></span>";
@@ -39,10 +31,12 @@ $fold = static function (?string $path, bool $open) use ($e): string {
 	$icon = $open ? 'cmsIcon-chevron-down' : 'cmsIcon-chevron-right';
 	return "<button type=button aria-label='Toggle children' aria-expanded='" . ($open ? "true" : "false") . "' data-on_click=fold data-path='{$e($path)}' class='fold" . ($open ? ' open' : '') . "'><i class='cmsIcon $icon'></i></button>";
 };
-$item = static function (string $path, string $label, string $icon, string $note, bool $plain, string $fold, string $below, bool $hit = false) use ($e, $selected): string {
+$item = static function (string $path, string $label, string $icon, string $note, bool $plain, string $fold, string $below, bool $hit = false) use ($e, $selected, $pylonInSheet): string {
+	$href = \Systopic\System\Panels\Root\Cms\Access\Panelmap\Panel::nodeHref($path);
+	if ($pylonInSheet) $href .= '&detail=1';
 	$classes = trim(($path === $selected ? 'active' : '') . ($plain ? ' plain' : ''));
 	return "<li class='$classes'>$fold"
-		. "<a class='label ajax' href='{$e(\Systopic\System\Panels\Root\Cms\Access\Panelmap\Panel::nodeHref($path))}' title='{$e($path === '' ? 'All panels' : $path . '/')}'>"
+		. "<a class='label ajax' href='{$e($href)}' title='{$e($path === '' ? 'All panels' : $path . '/')}'>"
 		. "<i class='type cmsIcon $icon'></i><span class='name" . ($hit ? ' is-match' : '') . "'>{$e($label)}</span>"
 		. ($note !== '' ? "<span class='count'>{$e($note)}</span>" : '')
 		. "</a>$below</li>";
@@ -67,21 +61,20 @@ $branch = static function (array $panels) use (&$branch, $item, $fold, $openFold
 	return $html;
 };
 ?>
-<div class="pylon cms controlmapTree"<?= $pylonWidth > 0 ? " style=\"--pylonWidth: {$pylonWidth}px;\"" : '' ?>>
+<div class="pylon cms <?= empty($pylonInSheet) ? 'pylonSecondary' : 'pylonSheetTree' ?> controlmapTree"<?= $pylonWidth > 0 ? " style=\"--pylonWidth: {$pylonWidth}px;\"" : '' ?>>
 	<header></header>
 	<div class="pylonTitle pylonTreeToolbar">
 		<div class="searchInput">
-			<input class="autosend" id="controlmapFilter" data-focus-id="controlmap-filter" data-on_input="filterPanels"
+			<input class="autosend" id="<?= empty($pylonInSheet) ? 'controlmapFilter' : 'controlmapSheetFilter' ?>" data-focus-id="<?= empty($pylonInSheet) ? 'controlmap-filter' : 'controlmap-sheet-filter' ?>" data-on_input="filterPanels"
 			       name="filter" type="search" autocomplete="off" placeholder="Search panels"
 			       aria-label="Filter panels, roles and actions" value="<?= $showAll ? $e($discover->filter) : '' ?>">
 		</div>
 		<ul class="treeNavi">
-			<li><a class="ajax" href="<?= $e(\http::$root . 'cms/access/users/') ?>" title="Back to Access" aria-label="Back to Access"><i class="cmsIcon cmsIcon-arrow-left" aria-hidden="true"></i></a></li>
 			<li><a class="ajax put" href="openAllFolds" title="Open all folders" aria-label="Open all folders"><i class="cmsIcon cmsIcon-folder-open" aria-hidden="true"></i></a></li>
 			<li><a class="ajax put" href="closeAllFolds" title="Close all folders" aria-label="Close all folders"><i class="cmsIcon cmsIcon-folder-minus" aria-hidden="true"></i></a></li>
 			<li><a class="ajax" href="<?= $e($showAll
 				? './?all=1&filter=' . rawurlencode($discover->filter)
-				: $this::nodeHref($this->selectedPath)) ?>" title="Discover panels again" aria-label="Discover panels again"><i class="cmsIcon cmsIcon-arrows-rotate" aria-hidden="true"></i></a></li>
+				: ($pylonInSheet ? './?tree=1' : $this::nodeHref($this->selectedPath))) ?>" data-cms-refresh-view title="Discover panels again" aria-label="Discover panels again"><i class="cmsIcon cmsIcon-arrows-rotate" aria-hidden="true"></i></a></li>
 		</ul>
 	</div>
 	<nav>
@@ -89,5 +82,5 @@ $branch = static function (array $panels) use (&$branch, $item, $fold, $openFold
 				<?= $item('', $this->rootLabel, 'cmsIcon-sitemap', '', false, $fold(NULL, true), '<ul>' . $branch($this->panels) . '</ul>') ?>
 		</ul>
 	</nav>
-	<div data-drag_type='none' data-on_draginit='draginitPylonwidth'></div>
+	<div class='pylonResizeHandle' data-drag_type='none' data-on_draginit='draginitPylonwidth' data-width-action="<?= $e(\http::$root . 'cms/access/panelmap/discover/updatePylonWidth') ?>"></div>
 </div>

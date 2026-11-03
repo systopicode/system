@@ -136,6 +136,22 @@
       "changes": "original Phosphor Duotone geometry; separated primary/secondary masks"
     },
     {
+      "path": "public/icons/phosphor/lock-primary.svg",
+      "provider": "phosphor",
+      "version": "2.1.1",
+      "sha256": "b37c25220140829627c212fee6f8ad24b47df376d24cbe47a5b11a7d3b764191",
+      "source": "https://registry.npmjs.org/@phosphor-icons/core/-/core-2.1.1.tgz",
+      "changes": "original Phosphor Duotone geometry; separated primary/secondary masks"
+    },
+    {
+      "path": "public/icons/phosphor/lock-secondary.svg",
+      "provider": "phosphor",
+      "version": "2.1.1",
+      "sha256": "654d93bed15b11511d3da2b3eb0c0ccc4e5eca9bec87074e93c1074602227f81",
+      "source": "https://registry.npmjs.org/@phosphor-icons/core/-/core-2.1.1.tgz",
+      "changes": "original Phosphor Duotone geometry; separated primary/secondary masks"
+    },
+    {
       "path": "public/icons/phosphor/magnifying-glass-primary.svg",
       "provider": "phosphor",
       "version": "2.1.1",

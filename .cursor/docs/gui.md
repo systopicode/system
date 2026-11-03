@@ -469,6 +469,16 @@ rather than combining gaps with card margins.
   Panels such as Controlmap use the standard Pylon navigation. Pages has a
   module-specific layout for its page tree and Media Library, with its toolbar
   inside the navigation.
+- A panel with its own tree can set `pylonBranch` and contribute a
+  `.pylon.pylonSecondary` inside the module's `.pylonColumns`. The
+  `.pylonPrimary` remains beside it on desktop. On mobile open a single
+  detail sheet and render the tree and detail as `.pylonSheetTree` and
+  `.pylonSheetDetail` inside `.pylonSheetLayout`. Set `data-pylon-view`
+  to `tree` or `detail`. AJAX links within the open sheet use the existing
+  horizontal content transition. A back link returns to the tree.
+  The standard `draginitPylonwidth` handle can provide `data-width-action`
+  for the child action that persists its width. Register the width in the
+  child panel's default state so it survives reload.
 - When several widgets need the same column widths, use a shared
   `.tableWidgets.tableScroll` and `table.tableWidgetGrid`. Each
   `tbody.tableWidget` has its own `.tableWidgetTitle` and

@@ -423,6 +423,7 @@
 .cmsIcon-wrench { --icon-mask: var(--icon-tool); }
 .cmsIcon-xmark { --icon-mask: var(--icon-x); }
 .cmsIcon-xmark-large { --icon-mask: var(--icon-x); }
+.cmsIcon.cmsIcon-duotone.cmsIcon-lock { --icon-mask: url("../icons/phosphor/lock-primary.svg"); --icon-secondary-mask: url("../icons/phosphor/lock-secondary.svg"); }
 .cmsIcon.cmsIcon-duotone.cmsIcon-gear { --icon-mask: url("../icons/phosphor/gear-six-primary.svg"); --icon-secondary-mask: url("../icons/phosphor/gear-six-secondary.svg"); }
 .cmsIcon.cmsIcon-duotone.cmsIcon-users { --icon-mask: url("../icons/phosphor/users-primary.svg"); --icon-secondary-mask: url("../icons/phosphor/users-secondary.svg"); }
 .cmsIcon.cmsIcon-duotone.cmsIcon-sitemap { --icon-mask: url("../icons/phosphor/tree-structure-primary.svg"); --icon-secondary-mask: url("../icons/phosphor/tree-structure-secondary.svg"); }

@@ -14,7 +14,7 @@ use Systopic\System\Tables\Users\Model as User;
 class Panel extends CmsPanel {
 
 	public $showSubnavi = FALSE;
-	public $icon = 'cmsIcon cmsIcon-key';
+	public $icon = 'cmsIcon cmsIcon-duotone cmsIcon-lock';
 	public ?int $naviOrder = 45;
 	public bool $buildChildPanels = true;
 

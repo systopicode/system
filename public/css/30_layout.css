@@ -345,7 +345,7 @@ body > main > div.main + div.content{
 /* Settings, users, tools: the same inset window as backup, with the
    menu as its left side. The empty pylon header is the bright bar. */
 body.settings > main > div.pylon,
-body.access:not(:has(> main > .pylon > .pylonTreeToolbar)) > main > div.pylon,
+body.access:not(:has(> main > .pylonColumns)) > main > div.pylon,
 body.tools > main > div.pylon{
     flex: 0 0 13.5rem;
     width: 13.5rem;
@@ -363,19 +363,19 @@ body.tools > main > div.pylon{
 }
 
 body.settings > main > div.pylon:after,
-body.access:not(:has(> main > .pylon > .pylonTreeToolbar)) > main > div.pylon:after,
+body.access:not(:has(> main > .pylonColumns)) > main > div.pylon:after,
 body.tools > main > div.pylon:after{
     content: none;
 }
 
 body.settings > main > div.pylon > header,
-body.access:not(:has(> main > .pylon > .pylonTreeToolbar)) > main > div.pylon > header,
+body.access:not(:has(> main > .pylonColumns)) > main > div.pylon > header,
 body.tools > main > div.pylon > header{
     display: none;
 }
 
 body.settings > main > div.pylon nav,
-body.access:not(:has(> main > .pylon > .pylonTreeToolbar)) > main > div.pylon nav,
+body.access:not(:has(> main > .pylonColumns)) > main > div.pylon nav,
 body.tools > main > div.pylon nav{
     background: transparent;
     border-radius: var(--cmsRadiusLg) 0 0 0;
@@ -383,7 +383,7 @@ body.tools > main > div.pylon nav{
 }
 
 body.settings > main > div.content,
-body.access:not(:has(> main > .pylon > .pylonTreeToolbar)) > main > div.content,
+body.access:not(:has(> main > .pylonColumns)) > main > div.content,
 body.tools > main > div.content{
     flex: 1 1 auto;
     width: 0;
@@ -396,7 +396,7 @@ body.tools > main > div.content{
 }
 
 body.settings > main > div.content > header,
-body.access:not(:has(> main > .pylon > .pylonTreeToolbar)) > main > div.content > header,
+body.access:not(:has(> main > .pylonColumns)) > main > div.content > header,
 body.tools > main > div.content > header{
     border-radius: 0 var(--cmsRadiusLg) 0 0;
 }
@@ -554,4 +554,88 @@ body.cms:not(.pages) > main > div.content > .flexRow > .flexColumn > section.cms
 .mediaDrop:empty::after {
 	-webkit-mask: var(--icon-photo) center / contain no-repeat;
 	mask: var(--icon-photo) center / contain no-repeat;
+}
+
+/* A module can keep its navigation beside a child panel's own Pylon. */
+.cms .pylonSecondary {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    min-width: 0;
+    background: var(--cmsBgColor);
+}
+.cms .pylonSecondary > header:empty { display: none; }
+.cms .pylonSecondary .pylonTreeToolbar { border-radius: 0; }
+.cms .pylonResizeHandle {
+    position: absolute;
+    inset-block: 0;
+    inset-inline-end: -5px;
+    width: 10px;
+    touch-action: none;
+    z-index: 30;
+    cursor: col-resize;
+}
+.cms .pylonResizeHandle::after,
+.cms .pylonSecondary > .pylonResizeHandle::before {
+    content: "";
+    position: absolute;
+    inset-inline-start: 50%;
+    transform: translateX(-50%);
+    pointer-events: none;
+}
+.cms .pylonSecondary > .pylonResizeHandle::before {
+    inset-block: 0;
+    width: 1px;
+    background: var(--cmsLineStrong);
+}
+.cms .pylonResizeHandle::after {
+    inset-block-start: calc(50% - .75rem);
+    width: 4px;
+    height: 1.5rem;
+    border-radius: 999px;
+    background: var(--cmsMuted);
+}
+@media (min-width: 1025px) and (orientation: landscape), (min-width: 1401px) {
+    body.cms > main > .pylonColumns {
+        flex: 0 0 auto;
+        display: grid;
+        grid-template-columns: 13.5rem max-content;
+        width: max-content;
+        max-width: none;
+        margin: .5rem 0 var(--cmsStatusBar);
+        padding-bottom: 0;
+    }
+    body.cms > main > .pylonColumns::after { content: none; }
+    .cms .pylonColumns > .pylonPrimary {
+        flex: 0 0 13.5rem;
+        border-inline-end: 1px solid var(--cmsLineStrong);
+    }
+    .cms .pylonColumns > .pylonSecondary {
+        flex: 0 0 auto;
+        width: clamp(220px, var(--pylonWidth, 270px), 35vw);
+    }
+    body.cms > main > .pylonColumns + .content,
+    body.cms > main > .pylonColumns + .content > header {
+        border-top-left-radius: 0;
+        box-shadow: none;
+    }
+}
+.cms .pylonSheetTree, .cms .pylonSheetLayout .button.pylonSheetBack { display: none; }
+@media (max-width: 1024px), (orientation: portrait) and (max-width: 1400px) {
+    .cms .pylonColumns > .pylonSecondary { display: none; }
+    .cms .pylonSheetTree { display: flex; flex-direction: column; width: 100%; }
+    .cms .pylonSheetTree > header:empty { display: none; }
+    .cms .pylonSheetTree > .pylonTreeToolbar {
+        position: sticky;
+        top: var(--cmsGlassHeader, 0px);
+        z-index: 2;
+        border-top: 1px solid var(--cmsLineStrong);
+        border-radius: 0;
+    }
+    .cms .pylonSheetTree > nav { overflow: auto; }
+    .cms .pylonSheetTree > [data-on_draginit] { display: none; }
+    .cms .pylonSheetLayout[data-pylon-view="tree"] > .pylonSheetDetail,
+    .cms .pylonSheetLayout[data-pylon-view="detail"] > .pylonSheetTree { display: none; }
+    .cms .pylonSheetLayout .button.pylonSheetBack { display: inline-flex; }
 }

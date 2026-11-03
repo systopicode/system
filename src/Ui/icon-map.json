@@ -223,6 +223,7 @@
     "lock-open": "lock-open"
   },
   "duotone": {
+    "lock": "lock",
     "gear": "gear-six",
     "users": "users",
     "sitemap": "tree-structure",

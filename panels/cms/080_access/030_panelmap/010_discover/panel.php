@@ -48,7 +48,7 @@ class Panel extends CmsPanel {
 		} elseif (\http::get('panel', NULL) !== NULL) {
 			$this->state->showAll = FALSE;
 		}
-		$this->updateViews(['main']);   // the pylon the parent updates
+		$this->parent->updateView('main');
 	}
 
 	/**

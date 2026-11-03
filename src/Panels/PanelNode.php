@@ -163,6 +163,7 @@ class PanelNode implements ClientExportable, RenderNode
      * Set on a panel when the menu order should not follow the folder name.
      */
     public ?int $naviOrder = null;
+    public bool $pylonBranch = false;
 
     /**
      * Actions that may be opened from outside — the link of a mail, a
@@ -809,12 +810,13 @@ class PanelNode implements ClientExportable, RenderNode
             ->attr('data-name', $this->name)
             ->class($this->inPath() || $kept ? 'active' : null);
 
-        $a = $li->append('a')->href($this->getHref(\http::$root));
+        $target = $this->pylonBranch ? ($this->firstChild ?? $this) : $this;
+        $a = $li->append('a')->href($target->getHref(\http::$root));
         if ($icon !== null) {
             $a->append('i')->class(\Systopic\System\Ui\Icons::classes($icon))->attr('aria-hidden', 'true');
         }
         $a->append('span')->attr('data-nav-label', $this->label)->append('span')->text($this->label);
-        for ($child = $this->firstChild; $child !== null; $child = $child->next) {
+        for ($child = $this->pylonBranch ? null : $this->firstChild; $child !== null; $child = $child->next) {
             if ($child->inNavi) {
                 $a->attr('data-cms-branch', '1');
                 break;
