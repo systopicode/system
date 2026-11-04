@@ -1,31 +1,21 @@
 <?php
 /** @var \Systopic\System\Panels\Root\Auth\Panel $this */
-$authMethod = $this->loginMethod();
+$authMethod = $this->signInMethod();
 $authPasskey = \Systopic\System\Auth\Passkeys::available();
-$authCodes = \Systopic\System\Auth\LoginCodes::available();
-$authScreen = (string) \http::get('pair') === 'screen';
-if ($authMethod === 'device' && $authCodes && \Systopic\System\Auth\ScreenPair::current() === null) {
+$authCodes = \Systopic\System\Auth\SignInCodes::available();
+if ($authMethod === 'device_code' && $authCodes && \Systopic\System\Auth\DeviceCode::current() === null) {
 	try {
-		\Systopic\System\Auth\ScreenPair::begin(
-			$authScreen ? \http::$root : \http::$root . 'admin/',
-			$authScreen ? \Systopic\System\Tables\LoginCodes\Operator::PAIR_SCREEN : \Systopic\System\Tables\LoginCodes\Operator::PAIR_USER
-		);
+		\Systopic\System\Auth\DeviceCode::begin();
 	} catch (\Throwable $e) {
-		error_log('screen pairing: ' . $e->getMessage());
+		error_log('device code: ' . $e->getMessage());
 	}
 }
-$authPairTitle = $authScreen ? 'Screen' : 'Remote login';
-$authPairLead = $authScreen
-	? 'On a signed-in phone, scan this in the account or open the link, then choose the screen.'
-	: 'Scan this in the account on the phone that is already signed in, or open the link there.';
-$authPair = $authMethod === 'device' ? \Systopic\System\Auth\ScreenPair::current() : null;
-$authPairUrl = is_array($authPair) ? \Systopic\System\Auth\ScreenPair::url((string) $authPair['code']) : '';
+$authPair = $authMethod === 'device_code' ? \Systopic\System\Auth\DeviceCode::current() : null;
+$authPairUrl = is_array($authPair) ? \Systopic\System\Auth\DeviceCode::url((string) $authPair['code']) : '';
 $code = preg_replace('~[^0-9A-Za-z\-]~', '', (string) \http::get('code', ''));
-$pending = $code !== '' ? \Systopic\System\Auth\LoginCodes::peek($code, ['invite', 'recover', 'pair']) : null;
 // A failed submission must retain the manual input, including on touch devices.
 $authCode = (string) (\http::posted('code') ?: $code);
 $authCodeAttempted = $this->action === 'redeemCode';
-$authAuto = false;
 $authUsername = (string) \http::posted('username', '');
 $authPassword = (string) \http::posted('password', '');
 $authForgot = '?view=resetPassword';

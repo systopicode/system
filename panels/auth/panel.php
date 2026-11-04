@@ -26,45 +26,41 @@ class Panel extends PanelNode {
 
 	/** '' follows the config. choose is the method list. */
 	public function getDefaultState() {
-		return ['loginMethod' => ''];
+		return ['signInMethod' => ''];
 	}
 
 	/** '' follows the config. A code in the address opens the invitation view. */
-	public function loginMethod(): string {
-		$chosen = (string) ($this->state->loginMethod ?? '');
+	public function signInMethod(): string {
+		$chosen = (string) ($this->state->signInMethod ?? '');
 		$code = preg_replace('~[^0-9A-Za-z\-]~', '', (string) \http::get('code', ''));
-		$get = (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'GET') && !isset($_SERVER['HTTP_X_SCREEN_POLL']);
+		$get = (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'GET') && !isset($_SERVER['HTTP_X_DEVICE_CODE_POLL']);
 		$opening = $code !== '' && $get;
 		$action = (string) $this->action;
 		$fresh = $get && ($action === '' || $action === 'login');
-		if ((string) \http::get('pair') === 'screen' && $fresh) {
-			$this->state->loginMethod = 'device';
-			return 'device';
-		}
 		if ($opening) {
-			$this->state->loginMethod = 'code';
+			$this->state->signInMethod = 'code';
 			return 'code';
 		}
 		// The address is the history. Back returns to the previous method.
 		$asked = (string) \http::get('method', '');
-		if ($get && in_array($asked, ['choose', 'code', 'device', 'passkey', 'password'], true)) {
-			$this->state->loginMethod = $asked;
-			return \Systopic\System\Auth\AuthConfig::loginMethod($asked);
+		if ($get && in_array($asked, ['choose', 'code', 'device_code', 'passkey', 'password'], true)) {
+			$this->state->signInMethod = $asked;
+			return \Systopic\System\Auth\AuthConfig::signInMethod($asked);
 		}
 		if ($get && (string) \http::get('choose', '') !== '') {
-			$this->state->loginMethod = 'choose';
+			$this->state->signInMethod = 'choose';
 			return '';
 		}
 		$chosen = \Systopic\System\Auth\AuthConfig::openingChoice($chosen, $fresh, $opening);
-		$this->state->loginMethod = $chosen;
-		return \Systopic\System\Auth\AuthConfig::loginMethod($chosen === '' ? null : $chosen);
+		$this->state->signInMethod = $chosen;
+		return \Systopic\System\Auth\AuthConfig::signInMethod($chosen === '' ? null : $chosen);
 	}
 
 	function onLoadThisClass() {
 		// A query change stays on this panel. The diff keeps the card on
 		// screen unless the view is marked, and the browser's back button
 		// is one of those changes.
-		$get = (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'GET') && !isset($_SERVER['HTTP_X_SCREEN_POLL']);
+		$get = (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'GET') && !isset($_SERVER['HTTP_X_DEVICE_CODE_POLL']);
 		$view = (string) \http::get('view', '');
 		if ($get && in_array($view, ['login', 'resetPassword', 'resetCode', 'activationCode', 'setPassword', 'license', 'imprint', 'privacy', 'releases'], true)) {
 			$this->form = $view;
@@ -84,21 +80,16 @@ class Panel extends PanelNode {
 		if ($action !== '' && $action !== 'login') {
 			return;
 		}
-		if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'GET' && !isset($_SERVER['HTTP_X_SCREEN_POLL'])) {
+		if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'GET' && !isset($_SERVER['HTTP_X_DEVICE_CODE_POLL'])) {
 			return;
 		}
-		if ($this->loginMethod() !== 'device' && !isset($_SERVER['HTTP_X_SCREEN_POLL'])) {
+		if ($this->signInMethod() !== 'device_code' && !isset($_SERVER['HTTP_X_DEVICE_CODE_POLL'])) {
 			return;
 		}
-		$screen = (string) \http::get('pair') === 'screen';
-		$back = $screen ? null : \Systopic\System\Auth\Session::peekReturn();
 		try {
-			\Systopic\System\Auth\ScreenPair::handle(
-				$screen ? \http::$root : ($back ?? \http::$root . 'admin/'),
-				$screen ? \Systopic\System\Tables\LoginCodes\Operator::PAIR_SCREEN : \Systopic\System\Tables\LoginCodes\Operator::PAIR_USER
-			);
+			\Systopic\System\Auth\DeviceCode::handle();
 		} catch (\Throwable $e) {
-			error_log('screen pairing: ' . $e->getMessage());
+			error_log('device code: ' . $e->getMessage());
 		}
 	}
 
@@ -154,7 +145,7 @@ class Panel extends PanelNode {
 	function signIn(User $user, string $method): void {
 		\Systopic\System\Auth\Session::login($user);
 		\Systopic\System\Auth\Devices::issue($user);
-		\Systopic\System\Auth\LoginLog::write((string) $user->name, 'logged in', $method);
+		\Systopic\System\Auth\SignInLog::write((string) $user->name, 'signed in', $method);
 	}
 
 	/**

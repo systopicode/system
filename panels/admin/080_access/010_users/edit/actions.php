@@ -4,10 +4,10 @@
 
 use Systopic\System\Auth\CodeMail;
 use Systopic\System\Auth\Devices;
-use Systopic\System\Auth\LoginCodes;
+use Systopic\System\Auth\SignInCodes;
 use Systopic\System\Auth\Portrait;
 use Systopic\System\Queries\Devices\Devices as DeviceQuery;
-use Systopic\System\Tables\LoginCodes\Operator as Codes;
+use Systopic\System\Tables\SignInCodes\Operator as Codes;
 use Systopic\System\Tables\Users\Model as User;
 use Systopic\System\Tables\Users\Operator as UserOperator;
 
@@ -47,8 +47,8 @@ switch ($this->action) {
         $this->scope->save($user);
         if ($user->isBlocked) {
             Devices::revokeAllOf((int) $user->id, null, 'blocked');
-            \Systopic\System\Queries\LoginCodes\LoginCodes::byHash($this->scope, str_repeat('0', 64));
-            $this->scope->connection->run('UPDATE usm_logincodes SET logincode_used_at = CURRENT_TIMESTAMP WHERE logincode_user_id = ? AND logincode_used_at IS NULL', [(int) $user->id]);
+            \Systopic\System\Queries\SignInCodes\SignInCodes::byHash($this->scope, str_repeat('0', 64));
+            $this->scope->connection->run('UPDATE usm_signincodes SET signincode_used_at = CURRENT_TIMESTAMP WHERE signincode_user_id = ? AND signincode_used_at IS NULL', [(int) $user->id]);
         }
         \message::confirm($user->isBlocked ? 'Account blocked. Existing sessions and devices can no longer sign in.' : 'Account unblocked. Sign in again to reconnect devices.');
         $this->updateView('user');
@@ -191,62 +191,11 @@ switch ($this->action) {
 		\http::redirect('../');
 		break;
 
-	case 'resendActivationEmail':
-		if ($user->type === User::SCREEN) {
-			\message::error('A screen has no email address.')->target('account');
-			$this->updateView('lightbox');
-			break;
-		}
-		if ((string) $user->email === '') {
-			$this->accessNote = 'This account has no email address.';
-			\message::error($this->accessNote);
-			$this->updateView('lightbox');
-			break;
-		}
-		$this->scope->save(UserOperator::newActivationKey($user));
-		try {
-			$sent = (bool) $this->mailActivation($user);
-		} catch (\Throwable $e) {
-			$sent = false;
-			$this->accessNote = 'The email could not be sent. ' . $e->getMessage();
-		}
-		if ($sent) {
-			\Systopic\System\Auth\LoginLog::mailed(
-				\Systopic\System\Auth\LoginLog::MAILED_PASSWORD,
-				trim((string) ($user->name ?: $user->email)),
-			);
-			$this->accessNote = 'Activation email sent to ' . $user->email . '.';
-			\message::confirm($this->accessNote);
-		} elseif ($this->accessNote === null) {
-			$this->accessNote = 'The email could not be sent.';
-			\message::error($this->accessNote);
-		} else {
-			\message::error($this->accessNote);
-		}
-		$this->updateView('lightbox');
-		break;
-
-	// ---------------------------------------- codes and devices (Auth\LoginCodes, Auth\Devices)
+	// ---------------------------------------- codes and devices (Auth\SignInCodes, Auth\Devices)
 
 	case 'updateUserType':
 		$this->state->userTab = 'general';
 		\message::error('The account type cannot be changed.')->target('account');
-		$this->updateView('lightbox');
-		break;
-
-	case 'createAuth':
-		$this->state->userTab = 'access';
-		if (!\Systopic\System\Auth\Session::hasRole('cmsAdmin')) {
-			\message::error('Only an administrator can create the sign-in key.');
-		} elseif (!\Systopic\System\Settings\EnvironmentFile::createAuth((string) \http::dataset('file'))) {
-			\message::error('The sign-in key was not created.');
-		} else {
-			$file = (string) \http::dataset('file');
-			$written = \Systopic\System\Settings\EnvironmentFile::read($file);
-			$auth = is_array($written['auth'] ?? null) ? $written['auth'] : [];
-			\Systopic\System\Auth\AuthConfig::rememberSecret((string) ($auth['secret'] ?? ''));
-			\message::confirm('Sign-in key created.');
-		}
 		$this->updateView('lightbox');
 		break;
 
@@ -255,30 +204,29 @@ switch ($this->action) {
 		if (!\Systopic\System\Auth\Session::isSuperuser()) {
 			\message::error('Only a superuser can delete a sign-in log.');
 		} else {
-			\Systopic\System\Auth\LoginLog::forget([(string) $user->name, (string) $user->email]);
+			\Systopic\System\Auth\SignInLog::forget([(string) $user->name, (string) $user->email]);
 			\message::confirm('Sign-in log deleted.');
 		}
 		$this->updateView('lightbox');
 		break;
 
-	case 'inviteCode':
+	case 'createCode':
 	case 'inviteMail':
-	case 'recoverCode':
-		$purpose = $this->action === 'inviteMail' ? Codes::INVITE : Codes::RECOVER;
-		if (!LoginCodes::available()) {
+		if (!SignInCodes::available()) {
 			break;
 		}
 		$this->state->userTab = 'access';
-		if ($user->type !== User::SCREEN && (string) $user->email === '') {
+		if ((string) $user->email === '') {
 			\message::error('Add an email address before creating a sign-in code.');
 			$this->updateView('lightbox');
 			break;
 		}
-		$code = LoginCodes::create($purpose, $user, \Systopic\System\Auth\Session::id());
+		$by = \Systopic\System\Auth\Session::id();
 		if ($this->action === 'inviteMail') {
-			if (CodeMail::send($user, $purpose, $code)) {
-				\Systopic\System\Auth\LoginLog::mailed(
-					\Systopic\System\Auth\LoginLog::MAILED_INVITATION,
+			$code = SignInCodes::create($user, $by, SignInCodes::INVITATION, Codes::INVITATION_LIFETIME);
+			if (CodeMail::send($user, $code)) {
+				\Systopic\System\Auth\SignInLog::mailed(
+					\Systopic\System\Auth\SignInLog::MAILED_INVITATION,
 					trim((string) ($user->name ?: $user->email)),
 				);
 				\message::confirm('Invitation sent to ' . $user->email . '.');
@@ -286,21 +234,7 @@ switch ($this->action) {
 				\message::error('The email could not be sent. Create a code instead.');
 			}
 		} else {
-			$this->issuedCode = ['purpose' => $purpose, 'code' => $code, 'expires' => time() + Codes::LIFETIMES[$purpose]];
-		}
-		$this->updateView('lightbox');
-		break;
-
-	case 'approveScreen':
-		if ($user->type === User::SCREEN) {
-			$ok = LoginCodes::approveScreen((string) \http::values('value'), $user, (int) \Systopic\System\Auth\Session::id());
-			if ($ok) {
-				\message::confirm('Screen paired. It signs in within a few seconds.');
-			} else {
-				\message::error(LoginCodes::$error === LoginCodes::BLOCKED
-					? 'Too many wrong codes from here. Try again in 15 minutes.'
-					: 'That code is wrong or has expired.');
-			}
+			$this->issuedCode = ['code' => SignInCodes::create($user, $by), 'expires' => time() + Codes::LIFETIME];
 		}
 		$this->updateView('lightbox');
 		break;

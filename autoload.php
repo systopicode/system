@@ -34,7 +34,7 @@ require_once __DIR__ . '/lib/ffmpeg.bin.php';
 // sends an anonymous visitor to the login): a device cookie logs its user in
 // again, a live session's device is checked. Nothing happens without one.
 \Systopic\System\Sys\Hooks\Hooks::on('afterConnect', static fn() => \Systopic\System\Auth\Devices::restore());
-\Systopic\System\Sys\Hooks\Hooks::on('afterConnect', static fn() => \Systopic\System\Auth\LoginCodes::answerLive());
+\Systopic\System\Sys\Hooks\Hooks::on('afterConnect', static fn() => \Systopic\System\Auth\SignInCodes::answerLive());
 
 // The web app manifest, before the login redirect of the panel tree.
 \Systopic\System\Sys\Hooks\Hooks::on('afterConnect', static fn() => \Systopic\System\Sys\WebApp::serve());

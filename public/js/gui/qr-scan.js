@@ -37,17 +37,17 @@
 
 	function parse(text) {
 		var raw = String(text || '').trim();
-		var screen = '';
+		var deviceCode = '';
 		var code = '';
 		if (/^https?:/i.test(raw) || raw.indexOf('?') !== -1) {
 			try {
 				var url = new URL(raw, location.href);
-				screen = clean(url.searchParams.get('screen'));
+				deviceCode = clean(url.searchParams.get('deviceCode'));
 				code = clean(url.searchParams.get('code'));
 			} catch (e) {}
 		}
-		var bare = !screen && !code && /^[0-9A-Za-z]{4}-?[0-9A-Za-z]{4}$/.test(raw) ? raw : '';
-		return { screen: screen, code: code, bare: bare };
+		var bare = !deviceCode && !code && /^[0-9A-Za-z]{4}-?[0-9A-Za-z]{4}$/.test(raw) ? raw : '';
+		return { deviceCode: deviceCode, code: code, bare: bare };
 	}
 
 	function formOf(host) {
@@ -114,7 +114,7 @@
 
 	function go(base, code) {
 		var form=document.createElement('form');form.method='post';form.action=base;
-        var input=document.createElement('input');input.type='hidden';input.name='screen';input.value=code;form.append(input);document.body.append(form);form.submit();
+        var input=document.createElement('input');input.type='hidden';input.name='deviceCode';input.value=code;form.append(input);document.body.append(form);form.submit();
 	}
 
 	function fill(form, code) {
@@ -246,12 +246,12 @@
 	function take(host, text) {
 		var found = parse(text);
 		if (host.getAttribute('data-qr-host') === 'profile') {
-			var token = found.screen || found.bare;
+			var token = found.deviceCode || found.bare;
 			if (!token) return false;
 			return accept(host, token, function () { go(host.getAttribute('data-base') || '', token); });
 		}
-		if (found.screen) {
-			return accept(host, found.screen, function () { go(host.getAttribute('data-profile') || '', found.screen); });
+		if (found.deviceCode) {
+			return accept(host, found.deviceCode, function () { go(host.getAttribute('data-profile') || '', found.deviceCode); });
 		}
 		var typed = found.code || found.bare;
 		var form = formOf(host);
@@ -431,7 +431,7 @@
 	}
 
 	document.addEventListener('click', function (event) {
-		if (event.target.closest && event.target.closest('[data-on_click="loginMethod"], a.authSwitch, a.authMethod')) {
+		if (event.target.closest && event.target.closest('[data-on_click="signInMethod"], a.authSwitch, a.authMethod')) {
 			document.querySelectorAll('[data-qr-host]').forEach(stop);
 		}
 		var typeCode = event.target.closest && event.target.closest('[data-qr-fields]');
@@ -443,12 +443,12 @@
 			}
 			return;
 		}
-		if (event.target.closest?.('[data-qr-start], [data-remote-offer], [data-remote-code], [data-qr-close]')) {
+		if (event.target.closest?.('[data-qr-start], [data-remote-code], [data-qr-close]')) {
 			event.target.closest('.cmslightbox')?.querySelector('[data-remote-feedback]')?.replaceChildren();
 		}
 		var openScan = event.target.closest && event.target.closest('[data-qr-start]');
 		if (openScan) {
-			var scope = openScan.closest('.authBody, .remoteLogin') || openScan.parentElement;
+			var scope = openScan.closest('.authBody, .deviceBoxMain') || openScan.parentElement;
 			var scanHost = scope && scope.querySelector('[data-qr-host]');
 			if (scanHost) start(scanHost);
 			return;
@@ -464,24 +464,9 @@
 			start(againHost, true);
 			return;
 		}
-		var showQr = event.target.closest && event.target.closest('[data-remote-offer]');
-		if (showQr) {
-			var offerScope = showQr.closest('.remoteLogin');
-			var offerHost = offerScope && offerScope.querySelector('[data-qr-host]');
-			if (offerHost) {
-				stop(offerHost);
-				offerHost.hidden = true;
-				offerHost.classList.remove('is-dim', 'is-on');
-				var offerDim = offerHost.querySelector('[data-qr-dim]');
-				if (offerDim) offerDim.hidden = true;
-			}
-			var offerForm = offerScope && offerScope.querySelector('[data-code-form]');
-			if (offerForm) offerForm.hidden = true;
-			return;
-		}
 		var useCode = event.target.closest && event.target.closest('[data-remote-code]');
 		if (useCode) {
-			var scope = useCode.closest('.remoteLogin');
+			var scope = useCode.closest('.deviceBoxMain');
 			var codeHost = scope && scope.querySelector('[data-qr-host]');
 			if (codeHost) {
 				stop(codeHost);
@@ -511,30 +496,24 @@
 			closeHost.classList.remove('is-dim', 'is-on');
 			var closedDim = closeHost.querySelector('[data-qr-dim]');
 			if (closedDim) closedDim.hidden = true;
-			var home = closeHost.closest('.remoteLogin');
+			var home = closeHost.closest('.deviceBoxMain');
 			var homeForm = home && home.querySelector('[data-code-form]');
-			if (home && home.querySelector('.remoteOffer') && homeForm) {
-				homeForm.hidden = true;
+			if (home && homeForm) {
+				homeForm.hidden = false;
 			} else if (formOf(closeHost)) {
 				showFields(closeHost, false);
 			}
 		}
 		scanBox.hidden = true;
         const cleanUrl=new URL(location.href);
-        if(cleanUrl.searchParams.has('screen')) { cleanUrl.searchParams.delete('screen');history.replaceState(history.state,'',cleanUrl); }
+        if(cleanUrl.searchParams.has('deviceCode')) { cleanUrl.searchParams.delete('deviceCode');history.replaceState(history.state,'',cleanUrl); }
 	}, true);
 
 	document.addEventListener('change', function (event) {
 		var select = event.target && event.target.closest ? event.target.closest('[data-identify-select]') : null;
 		if (!select || !select.form) return;
 		var option = select.options[select.selectedIndex];
-		var mine = !!(option && option.getAttribute('data-self') === '1');
-		var own = select.form.querySelector('[data-identify-self]');
-		var other = select.form.querySelector('[data-identify-other]');
-		if (own) own.hidden = !mine;
-		if (!other) return;
-		other.hidden = !!mine;
-		var name = other.querySelector('[data-identify-name]');
+		var name = select.form.querySelector('[data-identify-name]');
 		if (name && option) name.textContent = (option.textContent || '').trim();
 	});
 

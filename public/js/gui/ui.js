@@ -64,10 +64,10 @@ document.addEventListener('click', function (event) {
 		var box = document.querySelector(open.getAttribute('data-open-box'));
 		if (box) {
 			box.hidden = false;
-			// Add device: a phone opens the camera from this click. A desktop
-			// stays on the QR. The click is the gesture the prompt needs.
+			// Scanning a code: a phone opens the camera from this click. A desktop
+			// stays on the code field. The click is the gesture the prompt needs.
 			var phone = window.matchMedia('(max-width: 720px), (hover: none) and (pointer: coarse)').matches;
-			if (phone && box.classList.contains('remoteLoginBox') && window.QrScan) {
+			if (phone && box.classList.contains('scanCodeBox') && window.QrScan) {
 				box.classList.add('cmsOpening');
 				var scanHost = box.querySelector('[data-qr-host="profile"]');
 				if (scanHost) window.QrScan.start(scanHost);

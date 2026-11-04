@@ -23,7 +23,7 @@ final class EnvironmentFile
         'auth' => [
             'deviceDays' => 'int',
             'screenDays' => 'nullint',
-            'default_login_method' => 'string',
+            'defaultSignInMethod' => 'string',
         ],
     ];
 
@@ -133,7 +133,7 @@ final class EnvironmentFile
             }
             if ($group === 'mail' && $key === 'secure' && !in_array($raw, ['tls', 'ssl', 'none'], true)) return null;
             if ($group === 'mail' && $key === 'from' && $raw !== '' && !filter_var($raw, FILTER_VALIDATE_EMAIL)) return null;
-            if ($group === 'auth' && $key === 'default_login_method' && !in_array($raw, ['', 'code', 'device', 'passkey', 'password'], true)) return null;
+            if ($group === 'auth' && $key === 'defaultSignInMethod' && !in_array($raw, ['', 'code', 'device_code', 'passkey', 'password'], true)) return null;
             if ($group === 'mail' && $key === 'testRecipient') {
                 $raw = trim($raw);
                 if ($raw !== '' && !filter_var($raw, FILTER_VALIDATE_EMAIL)) return null;

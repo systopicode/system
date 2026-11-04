@@ -851,7 +851,7 @@ body.cms .cmslightbox > section > :is(header,header.cmsMobileEditHeader,footer) 
     }
     body.cms .cmslightbox > section > header :is(a,button):has([class*="xmark"]):is(:hover,:focus-visible) { background: var(--cmsButtonBg); }
     body.cms .cmslightbox > section { animation: cmsPhoneSheetIn 480ms cubic-bezier(.25,.65,.3,1); }
-    body.cms .remoteLoginBox:not(.cmsOpening) > section { animation: none; }
+    body.cms .deviceBox:not(.cmsOpening) > section { animation: none; }
     body.cms .cmslightbox.cmsNestedDialog {
         align-items: center; padding: max(1rem, env(safe-area-inset-top)) 1rem max(1rem, env(safe-area-inset-bottom));
     }

@@ -310,17 +310,14 @@ final class ProjectForm
         if ($file === null && $legalSettings === []) return;
         $data = $file !== null ? EnvironmentFile::read($file) : [];
         $auth = is_array($data['auth'] ?? null) ? $data['auth'] : [];
-        $method = (string) ($auth['default_login_method'] ?? '');
-        if (!in_array($method, ['', 'code', 'device', 'passkey', 'password'], true)) {
-            $method = '';
-        }
+        $method = \Systopic\System\Auth\AuthConfig::defaultSignInMethod();
         echo '<section class="widget"><header><h2>System</h2></header>';
         echo '<div class="tableScroll">';
         echo '<table class="scalars"><thead><tr><th>Setting</th><th>Value</th></tr></thead><tbody>';
         if ($file !== null) {
-            echo '<tr class="securityRow"><td><span>Default sign-in<small>default_login_method</small><small class="settingNote">Which sign-in opens first. Ask each time shows the method list.</small></span></td><td>';
-            echo '<select data-on_change="saveAuthMethod" data-file="' . $e($file) . '" data-group="auth" data-key="default_login_method" name="value" aria-label="Default sign-in">';
-            foreach (['' => 'Ask each time', 'code' => 'Sign-in code', 'device' => 'Remote login', 'passkey' => 'Passkey', 'password' => 'Username & password'] as $option => $label) {
+            echo '<tr class="securityRow"><td><span>Default sign-in<small>defaultSignInMethod</small><small class="settingNote">Which sign-in opens first. Ask each time shows the method list.</small></span></td><td>';
+            echo '<select data-on_change="saveAuthMethod" data-file="' . $e($file) . '" data-group="auth" data-key="defaultSignInMethod" name="value" aria-label="Default sign-in">';
+            foreach (['' => 'Ask each time', 'code' => 'Sign-in code', 'device_code' => 'Sign in from another device', 'passkey' => 'Passkey', 'password' => 'Username & password'] as $option => $label) {
                 echo '<option value="' . $e($option) . '"' . ($method === $option ? ' selected' : '') . '>' . $e($label) . '</option>';
             }
             echo '</select></td></tr>';

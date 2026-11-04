@@ -77,7 +77,7 @@
 				busy = false;
 				if (!data || data.alive !== false || !document.contains(node)) return;
 				node.hidden = true;
-				if (node.classList.contains('remoteLoginBox') && window.sys && sys.core && sys.core.server) {
+				if (node.classList.contains('addDeviceBox') && window.sys && sys.core && sys.core.server) {
 					sys.core.server.sendGet(location.pathname + location.search);
 				}
 			}).catch(function () {

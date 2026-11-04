@@ -9,7 +9,7 @@ $rules = [
     'email-log' => ['After 90 days', 'Delivery troubleshooting. Logged message contents are deleted too. Keep required business correspondence in a separate archive.'],
     'php-log' => ['After 90 days', 'Finding software errors. Older diagnostic entries are no longer kept in this log.'],
     'backup-log' => ['After 90 days', 'Checking backup runs. This deletes the run history, never the backup files.'],
-    'login-log' => ['After 365 days', 'Investigating sign-in problems and security incidents. This does not delete user accounts.'],
+    'signin-log' => ['After 365 days', 'Investigating sign-in problems and security incidents. This does not delete user accounts.'],
     'login-codes' => ['Once used or expired', 'A used or expired sign-in code is no longer needed. Valid codes are kept.'],
     'session-markers' => ['After 90 days', 'Removing old temporary session-name records. Active sessions and devices are kept.'],
     'remote-debug' => ['After 24 hours without activity', 'Removing inactive diagnostic browser records and expired debug sessions.'],
@@ -31,7 +31,7 @@ if (Webcron::enabled() || isset($maintenanceState['runs']['webcron'])) $modes['w
 <section class="widget"><header><h2>New scheduler key</h2></header><main><label class="field"><span>Copy now — shown only once</span><input type="text" readonly autocomplete="off" spellcheck="false" value="<?= $e($this->webcronKey) ?>" onclick="this.select()"></label><p class="tagsHint">Use this key in the X-Maintenance-Key header over HTTPS. The previous key no longer works.</p></main></section>
 <?php } ?>
 <section class="widget is-list">
-<header><h2>What is deleted — and when?</h2><button type="button" class="button" data-on_click="previewCleanup"><i class="cmsIcon cmsIcon-magnifying-glass"></i>Preview</button><button type="button" class="button" data-on_click="userConfirm" data-action="run" data-confirm="Remove expired technical data and login-log entries older than <?= (int) \Systopic\System\Maintenance\LogRetention::LOGIN_DAYS ?> days?"><i class="cmsIcon cmsIcon-broom"></i>Clean up now</button></header>
+<header><h2>What is deleted — and when?</h2><button type="button" class="button" data-on_click="previewCleanup"><i class="cmsIcon cmsIcon-magnifying-glass"></i>Preview</button><button type="button" class="button" data-on_click="userConfirm" data-action="run" data-confirm="Remove expired technical data and signin-log entries older than <?= (int) \Systopic\System\Maintenance\LogRetention::SIGN_IN_DAYS ?> days?"><i class="cmsIcon cmsIcon-broom"></i>Clean up now</button></header>
 <div class="tableScroll"><table><thead><tr><th>Data / rule</th><th>Status</th><th></th></tr></thead><tbody>
 <?php foreach (Runner::jobs() as $id => $job) {
     $last = $maintenanceState['jobs'][$id] ?? [];

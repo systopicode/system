@@ -1,3 +1,7 @@
 {
-	"build": ["authenticated"]
+	"build": ["authenticated"],
+	"rights": {
+		"authPersons": ["cmsAdmin"],
+		"authScreens": ["cmsAdmin", "screenOperator"]
+	}
 }

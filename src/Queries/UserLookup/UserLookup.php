@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Systopic\System\Queries\UserLookup;
 
+use Systopic\Db\Schema\Migrations;
 use Systopic\Db\Schema\Provisioner;
 use Systopic\Db\Scope;
 use Systopic\System\Tables\Users\Model as User;
@@ -36,7 +37,7 @@ final class UserLookup
         // provisioning: the query names usm_users.user_type (see the .sql)
         $rows = $scope->rows(
             __DIR__ . '/UserLookup.sql', ['id' => $id, 'key' => $key, 'name' => $name],
-            provisioner: new Provisioner($scope->connection),
+            provisioner: new Provisioner($scope->connection, new Migrations(dirname(__DIR__, 2) . '/Migrations', 'Systopic\\System\\Migrations')),
         );
         /** @var User|null */
         return $rows->first(User::class);

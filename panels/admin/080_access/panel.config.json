@@ -1,3 +1,4 @@
 {
-	"build": ["cmsAdmin"]
+	"build": ["cmsAdmin", "screenOperator"],
+	"actions": ["cmsAdmin"]
 }

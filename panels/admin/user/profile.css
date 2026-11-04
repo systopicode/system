@@ -260,44 +260,44 @@ header.cms .rightAlign form{
     color: var(--cmsMuted);
 }
 
-.cmslightbox.remoteLoginBox > section{
+.cmslightbox.deviceBox > section{
     width: min(24rem, calc(100vw - 3rem));
     min-width: 0;
     max-width: 24rem;
     height: auto;
 }
 
-.cmslightbox.remoteLoginBox > section > main{
+.cmslightbox.deviceBox > section > main{
     flex: 1 1 auto;
     min-height: 0;
 }
 
 /* Keep the camera and its actions at their natural height inside the
    shared, capped dialog scroll area. */
-.remoteLogin > *{
+.deviceBoxMain > *{
     flex-shrink: 0;
 }
 
-.remoteLogin{
+.deviceBoxMain{
     display: flex;
     flex-direction: column;
     align-items: center;
 }
 
-.remoteLogin > .cmsBoxLead{
+.deviceBoxMain > .cmsBoxLead{
     width: 100%;
     margin: 0 0 1.25rem;
     text-align: center;
 }
 
-.remoteLogin .cms.message{
+.deviceBoxMain .cms.message{
     width: 100%;
     margin: 0 0 1rem;
 }
 
-.remoteLogin .qrScan,
-.remoteLogin .remoteCode,
-.remoteLogin .remoteOffer{
+.deviceBoxMain .qrScan,
+.deviceBoxMain .remoteCode,
+.deviceBoxMain .remoteOffer{
     width: min(100%, 22rem);
 }
 
@@ -360,16 +360,16 @@ header.cms .rightAlign form{
 
 /* While the camera runs, the code stays out of the way. When it stops,
    the code is the page again and the ten minutes go with the lead. */
-.remoteLogin:has(.qrScan:not([hidden]):not(.is-dim)) > .remoteOffer,
-.remoteLogin:has(.remoteCode:not([hidden])) > .remoteOffer{
+.deviceBoxMain:has(.qrScan:not([hidden]):not(.is-dim)) > .remoteOffer,
+.deviceBoxMain:has(.remoteCode:not([hidden])) > .remoteOffer{
     display: none;
 }
 
-.remoteLogin:has(.qrScan.is-dim) .remoteOfferCopy{
+.deviceBoxMain:has(.qrScan.is-dim) .remoteOfferCopy{
     display: none;
 }
 
-.remoteLogin .remoteMethods{
+.deviceBoxMain .remoteMethods{
     display: grid;
     grid-auto-flow: column;
     grid-auto-columns: minmax(0, 1fr);
@@ -382,18 +382,18 @@ header.cms .rightAlign form{
     display: none;
 }
 
-.remoteLogin .remoteAbort:not([hidden]){
+.deviceBoxMain .remoteAbort:not([hidden]){
     display: block;
     width: 100%;
     margin: 0.85rem 0 0;
 }
 
-.cms .remoteLogin .remoteAbort > .button{
+.cms .deviceBoxMain .remoteAbort > .button{
     width: 100%;
     margin: 0;
 }
 
-.remoteLogin .remoteSwitch{
+.deviceBoxMain .remoteSwitch{
     display: grid;
     grid-auto-flow: column;
     grid-auto-columns: minmax(0, 1fr);
@@ -401,9 +401,9 @@ header.cms .rightAlign form{
     width: 100%;
 }
 
-.cms .remoteLogin .remoteSwitch .button,
+.cms .deviceBoxMain .remoteSwitch .button,
 .cms .remoteOfferCopy .button,
-.cms .remoteLogin .remoteMethods .button{
+.cms .deviceBoxMain .remoteMethods .button{
     width: 100%;
     min-width: 0;
     margin: 0;
@@ -411,7 +411,7 @@ header.cms .rightAlign form{
     justify-content: center;
 }
 
-.remoteLogin .remoteCodeEntry{
+.deviceBoxMain .remoteCodeEntry{
     display: grid;
     grid-template-columns: minmax(0, 1fr) 2.6rem;
     align-items: stretch;
@@ -420,12 +420,12 @@ header.cms .rightAlign form{
     height: 2.6rem;
 }
 
-.remoteLogin .remoteCodeEntry .authCodeSlots{
+.deviceBoxMain .remoteCodeEntry .authCodeSlots{
     min-width: 0;
     height: 100%;
 }
 
-.cms .remoteLogin .remoteCodeEntry > .button{
+.cms .deviceBoxMain .remoteCodeEntry > .button{
     appearance: none;
     -webkit-appearance: none;
     align-self: stretch;
@@ -443,16 +443,16 @@ header.cms .rightAlign form{
     overflow: hidden;
 }
 
-.cms .remoteLogin .remoteCodeEntry > .button i{
+.cms .deviceBoxMain .remoteCodeEntry > .button i{
     font-size: 1rem;
     line-height: 1;
 }
 
-.remoteLogin form.remoteCode .remoteSwitch{
+.deviceBoxMain form.remoteCode .remoteSwitch{
     margin-top: 0.9rem;
 }
 
-.remoteLogin .authCodeSlots{
+.deviceBoxMain .authCodeSlots{
     display: grid;
     grid-template-columns: repeat(4, minmax(0, 1fr)) 0.85rem repeat(4, minmax(0, 1fr));
     align-items: center;
@@ -460,7 +460,7 @@ header.cms .rightAlign form{
     width: 100%;
 }
 
-.remoteLogin .authCodeSlots input{
+.deviceBoxMain .authCodeSlots input{
     width: 100%;
     height: 100%;
     min-height: 0;
@@ -480,7 +480,7 @@ header.cms .rightAlign form{
     -webkit-appearance: none;
 }
 
-.remoteLogin .authCodeDash{
+.deviceBoxMain .authCodeDash{
     color: var(--cmsMuted);
     font-size: 1.15rem;
     text-align: center;
@@ -500,10 +500,10 @@ header.cms .rightAlign form{
 @media (max-width:1024px), (orientation:portrait) and (max-width:1400px){
     /* This dialog is hosted in the profile's scrolling content. Keep its
        actions above the viewport edge; the sheet padding supplies the inset. */
-    body.cms .cmslightbox.remoteLoginBox > section{
+    body.cms .cmslightbox.deviceBox > section{
         bottom: 0;
     }
 }
 
 /* Camera retry is a separate action above the code entry. */
-.cms .remoteLogin .remoteAbort:not([hidden]){margin-bottom:1rem;}
+.cms .deviceBoxMain .remoteAbort:not([hidden]){margin-bottom:1rem;}

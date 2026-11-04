@@ -2,13 +2,13 @@
 /** @var \Systopic\System\Panels\Root\Admin\Access\Users\Edit\Panel $this */
 
 use Systopic\System\Auth\DeviceName;
-use Systopic\System\Auth\LoginLog;
+use Systopic\System\Auth\SignInLog;
 use Systopic\System\Auth\Portrait;
 use Systopic\System\Auth\Presence;
 use Systopic\System\Panels\Root\Admin\Access\Panel as Users;
 
 $user = $this->user;
-$codes = \Systopic\System\Auth\LoginCodes::available();
+$codes = \Systopic\System\Auth\SignInCodes::available();
 $isScreen = $user->type === \Systopic\System\Tables\Users\Model::SCREEN;
 $isMe = (int) $user->id === (int) \Systopic\System\Auth\Session::id();
 $devices = $this->devices;
@@ -23,9 +23,8 @@ $field = static function (string $label, string $value, ?string $action = null, 
 };
 $logged = static fn(string $date): string => ($d = DateTimeImmutable::createFromFormat('d.m.Y-H:i:s', $date)) ? \Systopic\System\Sys\LocalTime::format($d, \Systopic\System\Sys\LocalTime::DATETIME) : $date;
 $accountLabel = trim((string) ($user->name ?: $user->email));
-$activationHours = \Systopic\System\Tables\Users\Operator::ACTIVATION_DAYS * 24;
 $mailNote = static function (string $kind) use ($accountLabel, $logged): string {
-	$sent = $accountLabel === '' ? null : LoginLog::lastMailed($kind, $accountLabel);
+	$sent = $accountLabel === '' ? null : SignInLog::lastMailed($kind, $accountLabel);
 	if ($sent === null) {
 		return '';
 	}
@@ -41,7 +40,7 @@ $tab = (string) ($this->state->userTab ?? 'general');
 if (!isset($tabs[$tab])) {
 	$tab = 'general';
 }
-$signInAll = $tab === 'signins' ? LoginLog::entries([(string) $user->name, (string) $user->email]) : [];
+$signInAll = $tab === 'signins' ? SignInLog::entries([(string) $user->name, (string) $user->email]) : [];
 $signInTotal = count($signInAll);
 $signInsAll = !empty($this->state->signInsAll);
 $signIns = $signInsAll ? $signInAll : array_slice($signInAll, 0, 3);
@@ -100,7 +99,7 @@ if ($heading === '') {
 				</div>
 				<p class="accountLine">
 					<span>Created <?= $e($when($user->createDate) ?: 'unknown') ?><?= $this->createdBy ? ' by ' . $e(Users::userLabel($this->createdBy)) : '' ?></span>
-					<span>First sign-in <?= $e($when($user->firstLogin) ?: 'not yet') ?></span>
+					<span>First sign-in <?= $e($when($user->firstSignIn) ?: 'not yet') ?></span>
 				</p>
 			</div>
 		</div>
@@ -169,7 +168,7 @@ if ($heading === '') {
 					<div class="cmsBoxTitles"><h2>Sign-ins</h2><p class="cmsBoxLead">Sign-ins, failed attempts and sign-outs. Newest first.</p></div>
 				</header>
 				<div class="cmsBoxBody">
-					<p class="cmsBoxLead">Entries older than <?= (int) \Systopic\System\Maintenance\LogRetention::LOGIN_DAYS ?> days are eligible for automatic cleanup during site visits or scheduled runs. The retention period is a fixed system rule, not a project setting. Delete entries earlier when their security purpose ends. Review retention regularly and use Clean User Log when these entries are no longer required; include retained copies and backups in that process.</p>
+					<p class="cmsBoxLead">Entries older than <?= (int) \Systopic\System\Maintenance\LogRetention::SIGN_IN_DAYS ?> days are eligible for automatic cleanup during site visits or scheduled runs. The retention period is a fixed system rule, not a project setting. Delete entries earlier when their security purpose ends. Review retention regularly and use Clean User Log when these entries are no longer required; include retained copies and backups in that process.</p>
 					<?php if ($signIns === []) { ?>
 						<p class="profileEmpty">No sign-ins logged yet.</p>
 					<?php } else { ?>
@@ -177,7 +176,7 @@ if ($heading === '') {
 							<?php foreach ($signIns as $entry) { ?>
 								<li>
 									<span><?= $e($logged($entry[0])) ?></span>
-									<span><?= $e($entry[2]) ?><?= $entry[4] !== '' ? ' · ' . $e(LoginLog::methodLabel($entry[4])) : '' ?></span>
+									<span><?= $e($entry[2]) ?><?= $entry[4] !== '' ? ' · ' . $e(SignInLog::methodLabel($entry[4])) : '' ?></span>
 									<small><?= $e($entry[3]) ?></small>
 								</li>
 							<?php } ?>
@@ -233,16 +232,7 @@ if ($heading === '') {
 	<div class="userPane" data-user-pane="access"<?= $tab === 'access' ? '' : ' hidden' ?>>
 
 <?php if (!$user->isBlocked): ?>
-			<?php
-			$envFile = null;
-			foreach (\Systopic\System\Settings\EnvironmentFile::files() as $info) {
-				if ($info['current'] && $info['file'] !== 'config.local.json') {
-					$envFile = $info['file'];
-					break;
-				}
-			}
-			$canAuth = \Systopic\System\Auth\Session::hasRole('cmsAdmin');
-			if (!$codes) { ?>
+			<?php if (!$codes) { ?>
 				<section class="cmsBox">
 					<header>
 						<div class="cmsBoxTitles">
@@ -250,58 +240,31 @@ if ($heading === '') {
 						</div>
 					</header>
 					<div class="cmsBoxBody">
-						<p class="cmsBoxLead">The sign-in key is missing. One-time codes no longer work, including codes already sent. Passwords, passkeys and trusted devices still do. Lifetimes stay in Environment.</p>
+						<p class="cmsBoxLead">The sign-in key could not be written. One-time codes do not work until the config of this instance can be changed. Passwords, passkeys and trusted devices still do.</p>
 					</div>
-					<?php if ($canAuth && $envFile !== null) { ?>
-						<div class="cmsBoxActions">
-							<button type="button" class="button" data-on_click="createAuth" data-file="<?= $e($envFile) ?>"><i class="cmsIcon cmsIcon-key-skeleton"></i> Create sign-in key</button>
-						</div>
-					<?php } ?>
 				</section>
-			<?php } ?>
-			<?php if ($codes && $isScreen) { ?>
+			<?php } elseif ($isScreen) { ?>
 				<section class="cmsBox userAccess">
-					<header><div class="cmsBoxTitles"><h2>Pairing</h2><p class="cmsBoxLead">A code signs a device in as this screen. It is shown here and is not sent by email.</p></div></header>
-					<div class="accessRow">
-						<div>
-							<button type="button" class="button submit" data-feedback="none" data-on_click="inviteCode"><i class="cmsIcon cmsIcon-qrcode"></i> Create code</button>
-							<p class="cmsBoxLead">Valid for 10 minutes. Shown here.</p>
-						</div>
-					</div>
+					<header><div class="cmsBoxTitles"><h2>Pairing</h2><p class="cmsBoxLead">Pair this screen with the code button in the list of screens.</p></div></header>
 				</section>
-			<?php } elseif ($codes && (string) $user->email === '') { ?>
+			<?php } elseif ((string) $user->email === '') { ?>
 				<section class="cmsBox userAccess">
 					<header><div class="cmsBoxTitles"><h2>Sign-in code</h2><p class="cmsBoxLead">Add an email address before creating a sign-in code.</p></div></header>
 				</section>
-			<?php } elseif ($codes) { ?>
+			<?php } else {
+				$hint = 'You, ' . trim((string) \Systopic\System\Auth\Session::current()->name) . ', are signing a device in as ' . trim((string) ($user->fullname ?: $user->name)) . '. This choice is written to the sign-in log.';
+			?>
 				<section class="cmsBox userAccess">
-					<header><div class="cmsBoxTitles"><h2>Sign-in code</h2><p class="cmsBoxLead"><?php if (!$user->firstLogin) { ?>This person has not signed in yet. A code is the first way in and makes the account active.<?php } else { ?>A code signs this person in on another device. A signed-in account can confirm that device instead.<?php } ?></p></div></header>
+					<header><div class="cmsBoxTitles"><h2>Sign-in code</h2><p class="cmsBoxLead"><?php if (!$user->firstSignIn) { ?>This person has not signed in yet. A code is the first way in and makes the account active.<?php } else { ?>A code signs this person in on another device. A signed-in account can confirm that device instead.<?php } ?></p></div></header>
 					<div class="accessRow">
 						<div>
-							<button type="button" class="button submit" data-feedback="none" data-on_click="inviteCode"><i class="cmsIcon cmsIcon-qrcode"></i> Create code</button>
+							<button type="button" class="button submit" data-feedback="none" data-on_click="userConfirm" data-action="createCode" data-confirm="<?= $e($hint) ?>"><i class="cmsIcon cmsIcon-qrcode"></i> Create code</button>
 							<p class="cmsBoxLead">Valid for 10 minutes. Shown here.</p>
 						</div>
 						<div>
-							<button type="button" class="button" data-on_click="userConfirm" data-action="inviteMail" data-confirm="Send an invitation code to this user?"><i class="cmsIcon cmsIcon-paper-plane"></i> Send invitation code</button>
-							<p class="cmsBoxLead">Valid for 24 hours.<?= ($note = $mailNote(LoginLog::MAILED_INVITATION)) !== '' ? ' ' . $e($note) : '' ?></p>
+							<button type="button" class="button" data-on_click="userConfirm" data-action="inviteMail" data-confirm="<?= $e($hint) ?>"><i class="cmsIcon cmsIcon-paper-plane"></i> Send invitation code</button>
+							<p class="cmsBoxLead">Valid for 24 hours.<?= ($note = $mailNote(SignInLog::MAILED_INVITATION)) !== '' ? ' ' . $e($note) : '' ?></p>
 						</div>
-							<div>
-								<button type="button" class="button" data-on_click="userConfirm" data-action="resendActivationEmail" data-confirm="Send a password link to this user?"><i class="cmsIcon cmsIcon-paper-plane"></i> Email a password link</button>
-								<p class="cmsBoxLead">Valid for <?= (int) $activationHours ?> hours.<?= ($note = $mailNote(LoginLog::MAILED_PASSWORD)) !== '' ? ' ' . $e($note) : '' ?></p>
-							</div>
-					</div>
-				</section>
-			<?php } elseif (!$isScreen && (string) $user->email !== '') { ?>
-				<section class="cmsBox">
-					<header><div class="cmsBoxTitles"><h2>Password link</h2><p class="cmsBoxLead"><?php if ((string) $user->activationKey !== '') { ?>An activation link is out, valid until <?= $e($when($user->activationKeyExpire)) ?>.<?php } else { ?>Sends a link to set a password.<?php } ?></p></div></header>
-					<div class="cmsBoxActions">
-						<?php if ((string) $user->activationKey !== '') {
-							$activationLink = \http::$siteUrl . 'auth/reset?key=' . rawurlencode((string) $user->activationKey);
-						?>
-							<button type="button" class="button" data-copy="<?= $e($activationLink) ?>"><i class="cmsIcon cmsIcon-copy"></i> Copy activation link</button>
-						<?php } ?>
-						<button type="button" class="button" data-on_click="userConfirm" data-action="resendActivationEmail" data-confirm="Send a password link to this user?" data-user_id="<?= (int) $user->id ?>" <?= (string) $user->email === '' ? 'disabled' : '' ?>><i class="cmsIcon cmsIcon-paper-plane"></i> <?= $user->firstLogin ? 'Email a new password link' : 'Email a password link' ?></button>
-						<p class="cmsBoxLead">Valid for <?= (int) $activationHours ?> hours.<?= ($note = $mailNote(LoginLog::MAILED_PASSWORD)) !== '' ? ' ' . $e($note) : '' ?></p>
 					</div>
 				</section>
 			<?php } ?>
@@ -326,7 +289,7 @@ if ($heading === '') {
 								<?php $mine = \Systopic\System\Auth\Devices::current();
 							$isMine = $mine && (int) $mine->id === (int) $device->id; ?>
 							<small><?php if ($device->revokedAt) { ?>Access revoked · <?php } ?><?php if ($isMine) { ?>This device · <?php } ?>Last seen <?= $e($when($device->lastSeen)) ?><?php
-								$paired = LoginLog::paired(trim((string) ($user->name ?: $user->email)), $device->createdAt);
+								$paired = SignInLog::paired(trim((string) ($user->name ?: $user->email)), $device->createdAt);
 								if ($paired !== '') { ?><br><?= $e($paired) ?><?php } ?></small>
 							</span>
 							<?php if (!$isMine && !$user->isBlocked) { ?>

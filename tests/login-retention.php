@@ -3,9 +3,9 @@
 declare(strict_types=1);
 require __DIR__.'/bootstrap.php';
 use Systopic\System\Maintenance\LogRetention;
-class fs {public static string $root;}
+class fs {public static string $root;static function toNative(string $path):string{return $path;}}
 $dir=sys_get_temp_dir().'/fluxo-retention-'.bin2hex(random_bytes(5));mkdir($dir.'/var/log',0700,true);fs::$root=$dir;
-$file=$dir.'/var/log/login.log';
+$file=$dir.'/var/log/signin.log';
 $old=date('d.m.Y-H:i:s',time()-366*86400).' ; old ; sign-in ; 127.0.0.1 ; password' . "\n";
 $fresh=date('d.m.Y-H:i:s').' ; active ; sign-in ; 127.0.0.1 ; passkey' . "\n";
 try{

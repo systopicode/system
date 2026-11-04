@@ -72,6 +72,17 @@ final class Access
     }
 
     /**
+     * A right that has to be named: without an entry nobody holds it, where
+     * `right()` would fall back to who may run the panel's actions. For what
+     * must not open up by accident.
+     */
+    public static function rightNamed(PanelNode $node, string $right): bool
+    {
+        $grant = self::map()->effective(self::panel($node), 'right.' . $right);
+        return $grant !== null && str_starts_with($grant->key, 'right.') && self::holds($grant->roles);
+    }
+
+    /**
      * May the action be opened by a link from anywhere — a mail, a bookmark,
      * another site (GET only, ActionGuard)? The panel's `linkable` list.
      */
@@ -172,7 +183,7 @@ final class Access
             origin: Discover::origin((string) $node->absPath),
             dir: (string) $node->absPath,
             origins: [],
-            dirs: Discover::dirs($node->altPaths),
+            dirs: Discover::dirs($path === '' ? Discover::rootFolders() : $node->altPaths),
             classFile: null,
             className: $node::class,
             extends: null,

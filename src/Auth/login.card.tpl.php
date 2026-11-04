@@ -5,14 +5,13 @@
  * The caller sets the variables. Missing ones fall back to a quiet default
  * so a project can include this file without copying the markup.
  *
- * @var string $authMethod '' | code | device | passkey | password | signedIn
+ * @var string $authMethod '' | code | device_code | passkey | password | signedIn
  * @var bool $authPasskey
  * @var bool $authCodes
  * @var array{code: string, expires: int, redirect?: string}|null $authPair
  * @var string $authPairUrl
  * @var string $authUsername
  * @var string $authCode
- * @var bool $authAuto
  * @var string $authNext
  * @var string|null $authForgot
  * @var string|null $authRegister
@@ -27,7 +26,6 @@ $authPair = $authPair ?? null;
 $authPairUrl = $authPairUrl ?? '';
 $authUsername = $authUsername ?? '';
 $authCode = $authCode ?? '';
-$authAuto = $authAuto ?? false;
 $authNext = $authNext ?? '';
 $authForgot = $authForgot ?? null;
 $authRegister = $authRegister ?? null;
@@ -57,13 +55,13 @@ if ($authPasskey && $authEndpoint !== '') {
 }
 
 $qr = '';
-if ($authMethod === 'device' && is_array($authPair) && $authPairUrl !== '' && class_exists('qr')) {
+if ($authMethod === 'device_code' && is_array($authPair) && $authPairUrl !== '' && class_exists('qr')) {
     $qr = \qr::svgMarkup(\qr::payload('url', ['url' => $authPairUrl]), 4, 'M', 'qr-code');
 }
 
 $switch = '<p class="authFoot"><a class="button transparent authSwitch ajax" href="?method=choose"><i class="cmsIcon cmsIcon-arrow-left"></i><span>Use another method</span></a></p>';
 $showSwitch = ($authMethod === 'passkey' && $authPasskey)
-    || (in_array($authMethod, ['device', 'code'], true) && $authCodes)
+    || (in_array($authMethod, ['device_code', 'code'], true) && $authCodes)
     || $authMethod === 'password';
 $codeChars = str_split(substr(strtoupper((string) preg_replace('/[^0-9A-Z]/', '', $authCode)), 0, 8));
 ?>
@@ -80,16 +78,16 @@ $codeChars = str_split(substr(strtoupper((string) preg_replace('/[^0-9A-Z]/', ''
             <?= $authMessages ?>
             <button type="button" class="button submit passkeyLoginButton" data-on_click="passkeyAction" data-passkey-mode="login"><i class="cmsIcon cmsIcon-user-viewfinder"></i> Use your passkey</button>
         </div>
-    <?php } elseif ($authMethod === 'device' && $authCodes) { ?>
+    <?php } elseif ($authMethod === 'device_code' && $authCodes) { ?>
         <div class="authBody">
-            <h1><?= $e($authPairTitle ?? 'Remote login') ?></h1>
+            <h1>Sign in from another device</h1>
             <?= $authMessages ?>
             <?php if ($qr !== '') { ?>
-                <div class="authQrWrap" data-screen-pairing data-code-until="<?= (int) ($authPair['expires'] ?? 0) ?>">
+                <div class="authQrWrap" data-device-code data-code-until="<?= (int) ($authPair['expires'] ?? 0) ?>">
                     <div data-code-live>
                         <div class="authQr"><?= $qr ?></div>
                         <p class="authCodeLine"><?= $e($authPair['code'] ?? '') ?></p>
-                        <p class="authLead">Valid for 10 minutes. <?= $e($authPairLead ?? 'Scan this in the account on a device that is already signed in, or open the link there.') ?></p>
+                        <p class="authLead">Valid for 10 minutes. Scan this on a device that is already signed in, or open the link there. That device says who this one is.</p>
                     </div>
                     <div class="cms message" data-code-expired hidden><div class="warning"><p>The key has expired. Reload the page for a new one.</p></div></div>
                 </div>
@@ -116,7 +114,8 @@ $codeChars = str_split(substr(strtoupper((string) preg_replace('/[^0-9A-Z]/', ''
                     <button type="button" class="button submit" data-qr-again><i class="cmsIcon cmsIcon-arrows-rotate"></i> <span data-qr-label>Try again</span></button>
                 </div>
             </div>
-            <form class="authCodeForm appLoginForm" data-code-form method="post" action="redeemCode" <?= $authAuto ? 'data-auto-submit' : '' ?> onsubmit='this.classList.add("loading")'>
+            <form class="authCodeForm appLoginForm" data-code-form method="post" action="redeemCode" onsubmit='this.classList.add("loading")'>
+                <input type="hidden" name="passkey_supported" value="0">
                 <div class="authCodeSlots" data-code-slots>
                     <?php for ($slot = 0; $slot < 8; $slot++) {
                         if ($slot === 4) {
@@ -153,7 +152,7 @@ $codeChars = str_split(substr(strtoupper((string) preg_replace('/[^0-9A-Z]/', ''
         <p class="authLead">&nbsp;</p>
         <?= $authMessages ?>
         <?= $passkeyBox ?>
-        <form class="appLoginForm" method="post" action="doLogin" onsubmit='this.classList.add("loading")'>
+        <form class="appLoginForm" method="post" action="doSignIn" onsubmit='this.classList.add("loading")'>
             <input type="hidden" name="passkey_supported" value="0">
             <?php if ($authNext !== '') { ?>
                 <input type="hidden" name="next" value="<?= $e($authNext) ?>">
@@ -193,9 +192,9 @@ $codeChars = str_split(substr(strtoupper((string) preg_replace('/[^0-9A-Z]/', ''
                     <span><b>Sign-in code</b><small>Use a code from an admin.</small></span>
                     <i class="cmsIcon cmsIcon-chevron-right"></i>
                 </a>
-                <a class="authMethod ajax" href="?method=device">
+                <a class="authMethod ajax" href="?method=device_code">
                     <i class="cmsIcon cmsIcon-qrcode"></i>
-                    <span><b>Remote login</b><small>Use a device that is already signed in.</small></span>
+                    <span><b>Sign in from another device</b><small>Use a device that is already signed in.</small></span>
                     <i class="cmsIcon cmsIcon-chevron-right"></i>
                 </a>
             <?php } ?>

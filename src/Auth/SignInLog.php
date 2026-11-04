@@ -6,31 +6,30 @@ namespace Systopic\System\Auth;
 
 /**
  * One line per sign-in, failed sign-in and sign-out.
- * `var/log/login.log` in the project: `date ; name ; action ; ip ; method`
+ * `var/log/signin.log` in the project: `date ; name ; action ; ip ; method`
  * (lines of before have no method).
  */
-final class LoginLog
+final class SignInLog
 {
     public const PASSWORD = 'password';
     public const EMAIL_LINK = 'email link';
-    public const EMAIL_CODE = 'email code';
-    public const INVITATION = 'invitation';
-    public const RECOVERY = 'recovery code';
-    public const QR_CODE = 'qr code';
     public const PASSKEY = 'passkey';
-    public const DEVICE = 'device';
-    public const REMOTE = 'remote login';
-    public const SCREEN = 'screen';
+    /** A code made for this account (`Auth\SignInCodes`). */
+    public const CODE = 'code';
+    /** A device code someone approved (`Auth\DeviceCode`). */
+    public const DEVICE_CODE = 'device_code';
+    /** The cookie of a device that is signed in already (`Auth\Devices`). */
+    public const TRUSTED_DEVICE = 'trusted_device';
     public const SWITCH = 'superuser switch';
     /** A provider signs in as `oauth:<provider>`, e.g. `oauth:google`. */
     public const OAUTH = 'oauth:';
     /** How a sign-out came about. */
-    public const LOGOUT_BUTTON = 'logout button';
+    public const SIGN_OUT_BUTTON = 'sign-out button';
     public const TIMEOUT = 'session timeout';
     public const EXPIRED = 'access expired';
     public const REVOKED = 'device revoked';
     /**
-     * Session files that only name a timed-out session. Login-log retention is handled separately by Maintenance\LogRetention.
+     * Session files that only name a timed-out session. Sign-in log retention is handled separately by Maintenance\LogRetention.
      */
     public const KEEP_DAYS = 90;
 
@@ -38,7 +37,7 @@ final class LoginLog
 
     public static function file(): string
     {
-        return rtrim((string) \fs::$root, '/\\') . '/var/log/login.log';
+        return \fs::toNative(rtrim((string) \fs::$root, '/\\') . '/var/log/signin.log');
     }
 
     /**
@@ -119,16 +118,12 @@ final class LoginLog
         return match (true) {
             $method === self::PASSWORD => 'Password',
             $method === self::EMAIL_LINK => 'Email link',
-            $method === self::EMAIL_CODE => 'Code by email',
-            $method === self::INVITATION => 'Invitation',
-            $method === self::RECOVERY => 'Recovery code',
-            $method === self::QR_CODE => 'QR code',
             $method === self::PASSKEY => 'Passkey',
-            $method === self::DEVICE => 'Trusted device',
-            $method === self::REMOTE => 'Remote login',
-            $method === self::SCREEN => 'Screen',
+            $method === self::CODE => 'Sign-in code',
+            $method === self::DEVICE_CODE => 'Device code',
+            $method === self::TRUSTED_DEVICE => 'Trusted device',
             $method === self::SWITCH => 'Superuser switch',
-            $method === self::LOGOUT_BUTTON => 'Logout button',
+            $method === self::SIGN_OUT_BUTTON => 'Sign-out button',
             $method === self::TIMEOUT => 'Session timed out',
             $method === self::EXPIRED => 'Access expired',
             $method === self::REVOKED => 'Device signed out',
@@ -140,7 +135,7 @@ final class LoginLog
 
     /**
      * One line under a device: when it was first paired, how, and who set
-     * that in motion. The login log is the record; the device row itself
+     * that in motion. The sign-in log is the record; the device row itself
      * only knows its own time.
      *
      * @return array{how: string, by: string}
@@ -165,7 +160,7 @@ final class LoginLog
             $delta = $when->getTimestamp() - $stamp;
             $who = mb_strtolower($parts[1]);
             $action = mb_strtolower($parts[2]);
-            if ($who === $want && $action === 'logged in' && abs($delta) <= 90) {
+            if ($who === $want && $action === 'signed in' && abs($delta) <= 90) {
                 if ($login === null || abs($delta) < $login[0]) {
                     $login = [abs($delta), $parts[4] === '' ? '' : self::methodLabel($parts[4])];
                 }
@@ -178,10 +173,7 @@ final class LoginLog
             }
         }
         $how = $login[1] ?? '';
-        $remote = in_array($how, [
-            'Remote login', 'Recovery code', 'Invitation', 'QR code', 'Screen',
-            'Trusted device', 'Code by email', 'Email link',
-        ], true);
+        $remote = in_array($how, ['Device code', 'Sign-in code', 'Email link'], true);
         $by = $remote ? (string) $actor : '';
         // A password or a passkey was this person. A remote code names whoever sent it.
         if ($by === '' && $how !== '') {
@@ -190,7 +182,7 @@ final class LoginLog
         return ['how' => $how, 'by' => $by];
     }
 
-    /** "Paired 28 Oct 2026, 00:34 · Remote login · by Lars · as Anna", or '' when there is no time. "as" is left off when the approver is the account. */
+    /** "Paired 28 Oct 2026, 00:34 · Device code · by Lars · as Anna", or '' when there is no time. "as" is left off when the approver is the account. */
     public static function paired(string $account, ?\DateTimeInterface $at): string
     {
         if ($at === null) {
@@ -250,14 +242,11 @@ final class LoginLog
     /** The action prefix of an invitation email, including the trailing space. */
     public const MAILED_INVITATION = 'emailed invitation to ';
 
-    /** The action prefix of a password-link email, including the trailing space. */
-    public const MAILED_PASSWORD = 'emailed password link to ';
-
-    /** Who sent this mail, and when. The login log is the record. Nothing is written when the mail did not go out. */
+    /** Who sent this mail, and when. The sign-in log is the record. Nothing is written when the mail did not go out. */
     public static function mailed(string $kind, string $target): void
     {
         $target = trim($target);
-        if ($target === '' || ($kind !== self::MAILED_INVITATION && $kind !== self::MAILED_PASSWORD)) {
+        if ($target === '' || $kind !== self::MAILED_INVITATION) {
             return;
         }
         $actor = Session::active() ? trim((string) Session::current()->name) : '';

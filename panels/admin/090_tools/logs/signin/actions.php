@@ -2,9 +2,9 @@
 
 /** @var \Systopic\System\Panels\PanelNode $this */
 
-use Systopic\System\Auth\LoginLog;
+use Systopic\System\Auth\SignInLog;
 
-$path = LoginLog::file();
+$path = SignInLog::file();
 
 switch ($this->action) {
 	case 'downloadLog':

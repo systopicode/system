@@ -43,12 +43,9 @@ class Panel extends CmsPanel {
 
 	/**
 	 * A code made in this request - shown once, right after the action that
-	 * made it: ['purpose' => …, 'code' => …, 'expires' => ts].
+	 * made it: ['code' => …, 'expires' => ts].
 	 */
 	public ?array $issuedCode = NULL;
-
-	/** What the last access action did (mail sent, screen paired) - shown in the lightbox. */
-	public ?string $accessNote = NULL;
 
 	function getDefaultState() {
 		return (object) [
@@ -58,11 +55,5 @@ class Panel extends CmsPanel {
             'emailsAll' => false,
 			'devicesAll' => false,
 		];
-	}
-
-	/** Mail the user a fresh activation link; the key must be saved alongside. */
-	function mailActivation(User $user) {
-		$active = \Systopic\System\Auth\Session::current();
-		return $this->sendUserEmail('emailInvitation.tpl.php', 'Your invitation from ' . $active->name, $user);
 	}
 }

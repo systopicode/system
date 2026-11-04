@@ -15,7 +15,7 @@ const head = await read('panels/admin/head.tpl.php');
 assert.match(head, /viewport-fit=cover,interactive-widget=<\?= \$onAuth \? 'resizes-visual' : 'resizes-content'/);
 const template = new URL('src/Auth/login.card.tpl.php', root).pathname;
 const render = method => method === 'signedIn' ? execFileSync('php', [new URL('tests/auth-screen-fixture.php', root).pathname, method], {encoding:'utf8'}) : execFileSync('php', ['-r', `class http {public static $root='/';} class message {static function flush(...$args){return '';}} $authMethod=$argv[1];$authCodes=true;include $argv[2];`, method, template], {encoding:'utf8'}).replace(/<script>[\s\S]*?<\/script>/g, '');
-const methods = Object.fromEntries(['', 'password', 'code', 'device', 'signedIn'].map(method => [method, render(method)]));
+const methods = Object.fromEntries(['', 'password', 'code', 'device_code', 'signedIn'].map(method => [method, render(method)]));
 const renderLegal = name => execFileSync('php', ['-r', `class http {public static $root='/';} require $argv[1];include $argv[2];`, new URL('tests/bootstrap.php', root).pathname, new URL('panels/auth/' + name + '.tpl.php', root).pathname], {encoding:'utf8'});
 const body = content => `<body class="cms"><div class="authCard cms"><a class="logo"><img alt="fluxo" width="120" height="40"></a>${content}</div><footer class="authFooter"><span>© 2026 systopic GmbH · GUI 0.5.5</span><nav><a>License</a><a>Imprint</a><a>Privacy</a><a>Website</a><a>Help</a></nav></footer></body>`;
 const markup = (content, sheet=auth, globals=base) => `<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,interactive-widget=resizes-visual"><style>@layer cms {${globals}\n${sheet}}</style>${body(content)}`;
@@ -90,7 +90,7 @@ try {
  // A method switch replaces only the existing main, as a partial render does.
  await page.setContent(markup(methods.password));
  const height = await page.locator('.authCard').evaluate(node=>node.getBoundingClientRect().height);
- for(const method of ['code','device','','password']) {
+ for(const method of ['code','device_code','','password']) {
   await page.locator('.authSignin').evaluate((node,html)=>node.outerHTML=html,methods[method]);
   assert.equal(await page.locator('.authCard').evaluate(node=>node.getBoundingClientRect().height),height);
  }

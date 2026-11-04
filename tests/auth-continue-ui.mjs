@@ -55,7 +55,7 @@ try {
  }
  assert.ok(Math.abs(gaps[0]-gaps[1])<=1,'actual button-to-link gaps match: '+gaps);
  // Remote pairing uses the same success renderer and waits before navigation.
- await page.setContent('<div class="authCard"><main class="authSignin"><div class="authPane"><div data-screen-pairing>Remote code</div></div><div data-auth-success hidden>Successfully signed in</div></main></div>');
+ await page.setContent('<div class="authCard"><main class="authSignin"><div class="authPane"><div data-device-code>Remote code</div></div><div data-auth-success hidden>Successfully signed in</div></main></div>');
  await page.evaluate(()=>{
   window.sys={lib:{add(setup,ctor){if(setup.shorthand){const instance={};ctor.call(instance);sys[setup.shorthand]=instance;}else window.authCtor=ctor;},applyParentConstructor(){}}};
   window.fetch=async()=>({json:async()=>({paired:true,redirect:'/admin/'})});

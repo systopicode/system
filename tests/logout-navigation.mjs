@@ -12,7 +12,7 @@ const counter=join(root,'logout-count');
 await writeFile(join(root,'router.php'),`<?php
 namespace Systopic\\System\\Auth {
  class Session {static function current(){return (object)['name'=>'Test'];}static function logout(){file_put_contents(${quote(counter)},'logout\\n',FILE_APPEND);}}
- class LoginLog {const LOGOUT_BUTTON='button';static function write(...$args){}}
+ class SignInLog {const SIGN_OUT_BUTTON='button';static function write(...$args){}}
 }
 namespace {
  require ${quote(system+'lib/class/http/helper/httpHelper.php')};

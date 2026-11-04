@@ -193,16 +193,16 @@ final class Session
         // is worth nothing afterwards. The CLI agent keeps its own - it has no
         // cookie anybody could plant.
         if (PHP_SAPI !== 'cli' && session_status() === PHP_SESSION_ACTIVE && !headers_sent()) {
-            LoginLog::sessionClosed(session_id());
+            SignInLog::sessionClosed(session_id());
             session_regenerate_id(true);
-            LoginLog::sessionOpened(session_id(), (string) $row->name);
+            SignInLog::sessionOpened(session_id(), (string) $row->name);
         }
         $_SESSION[self::USER_KEY] = (int) $row->id;
         $_SESSION['systopic_access_key'] = (string) $row->sessionKey;
         $_SESSION[self::PASSKEY_GRANT] = ['user' => (int) $row->id, 'expires' => time() + 600];
         $now = new \DateTimeImmutable();
-        $row->firstLogin ??= $now;
-        $row->lastLogin = $now;
+        $row->firstSignIn ??= $now;
+        $row->lastSignIn = $now;
         $scope->save($row);
         self::$current = new Identity($scope, $row);
     }
@@ -243,7 +243,7 @@ final class Session
         }
         \http::sessionStartOnce();
         if (session_status() === PHP_SESSION_ACTIVE) {
-            LoginLog::sessionClosed(session_id());
+            SignInLog::sessionClosed(session_id());
         }
         unset($_SESSION[self::USER_KEY], $_SESSION[self::PASSKEY_GRANT]);
         self::$current = self::load();
@@ -397,8 +397,8 @@ final class Session
     private static function noteLapsed(): void
     {
         $sid = PHP_SAPI === 'cli' || isset($_SESSION[self::USER_KEY]) ? '' : (string) ($_COOKIE[session_name()] ?? '');
-        if ($sid !== '' && ($name = LoginLog::sessionLapsed($sid)) !== null) {
-            LoginLog::write($name, 'logged out', LoginLog::TIMEOUT);
+        if ($sid !== '' && ($name = SignInLog::sessionLapsed($sid)) !== null) {
+            SignInLog::write($name, 'signed out', SignInLog::TIMEOUT);
         }
     }
 

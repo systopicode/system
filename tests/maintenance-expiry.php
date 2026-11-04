@@ -14,7 +14,7 @@ $old = $base . 'var/log/sessions/' . str_repeat('a', 64);
 $fresh = $base . 'var/log/sessions/' . str_repeat('b', 64);
 file_put_contents($old, 'old'); touch($old, time() - 91 * 86400);
 file_put_contents($fresh, 'fresh');
-file_put_contents($base . 'var/log/login.log', 'Must survive');
+file_put_contents($base . 'var/log/signin.log', 'Must survive');
 $registry = $base . 'var/debug/remote.json';
 $data = ['clients' => ['old' => ['seen' => time() - 90000], 'active' => ['seen' => time()]], 'sessions' => ['expired' => ['expires' => time() - 10], 'active' => ['expires' => time() + 120]]];
 file_put_contents($registry, json_encode($data));
@@ -24,7 +24,7 @@ try {
     check('session preview leaves expired files intact', is_file($old));
     Runner::run('manual', 'session-markers');
     check('only old hashed attribution markers are deleted', !is_file($old) && is_file($fresh));
-    check('login log is never part of marker cleanup', file_get_contents($base . 'var/log/login.log') === 'Must survive');
+    check('login log is never part of marker cleanup', file_get_contents($base . 'var/log/signin.log') === 'Must survive');
     for ($i = 1; $i <= 550; $i++) file_put_contents($base . 'var/log/sessions/' . str_pad(dechex($i), 64, '0', STR_PAD_LEFT), 'fresh');
     $late = $base . 'var/log/sessions/' . str_repeat('f', 64);
     file_put_contents($late, 'expired'); touch($late, time() - 91 * 86400);

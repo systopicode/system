@@ -19,7 +19,7 @@ $license = $render($system . '/panels/auth/license.tpl.php');
 check('GUI displays the actual selected license', str_contains($license, 'systopic Software License') && str_contains($license, 'Third-party software'));
 $privacy = $render($system . '/panels/auth/privacy.tpl.php');
 check('privacy renders without project configuration', str_contains($privacy,'<main class="authText">') && str_contains($privacy,'<div class="authScroll">'));
-check('privacy matches purpose-based log retention and actual cookie lifetime', str_contains($privacy,'login-log entries older than 365 days eligible for automatic deletion') && str_contains($privacy,'maximum lifetime of 400 days'));
+check('privacy matches purpose-based log retention and actual cookie lifetime', str_contains($privacy,'sign-in log entries older than 365 days eligible for automatic deletion') && str_contains($privacy,'maximum lifetime of 400 days'));
 check('retention criteria and installation duties are explicit', str_contains($privacy, 'detection and investigation window') && str_contains($privacy, 'define and document review intervals') && str_contains($privacy, 'not a scheduled daily deletion'));
 check('consent and rights are not replaced by a notice', str_contains($privacy, 'requests must be prevented until it has been given') && str_contains($privacy, 'Signing in does not waive') && str_contains($privacy, 'particular situation'));
 check('browser storage is covered', str_contains($privacy,'cmsDeviceMobile') && str_contains($privacy,'cmsTimezone') && str_contains($privacy,'cmsOpenSheet'));
