@@ -170,7 +170,7 @@ $builtin = UserRights::keyedRoles($scope);
 $system = ['everyone', 'authenticated', 'cmsAdmin', 'cmsEditor', 'cmsPageEditor'];
 check('the system\'s roles are made at their first use', array_diff($system, array_keys($builtin)) === []
     && $builtin['everyone']->isBuiltin && !$builtin['cmsEditor']->isBuiltin && $builtin['cmsEditor']->isSystem && !$builtin['hrEditor']->isSystem);
-check('… once', count(UserRights::keyedRoles($scope)) === 7
+check('… once', count(UserRights::keyedRoles($scope)) === 8
     && (int) $connection->value("SELECT COUNT(*) FROM usm_roles WHERE role_key IN ('" . implode("','", $system) . "')") === 5);
 $public = new Group(); $public->name = 'public';
 $scope->save($public);

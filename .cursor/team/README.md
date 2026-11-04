@@ -59,3 +59,4 @@ Fehlt die Zeile, gilt die Tabelle oben.
 | 2026-11-02 | [Mehrere Karten, eine Tabelle: gleich breite Spalten über Karten hinweg](2026-11-02-card-table.md) | Oliver | Lars | offen | in admin/controlmap/discover eingebaut (`cardTable`), zur Übernahme nach 24_table.css |
 | 2026-11-02 | [Nach dem Rendern verliert ein Feld im Pylon-`nav` den Fokus](2026-11-02-nav-blur.md) | Oliver | Lars | offen | in admin/controlmap umgangen (Feld außerhalb `nav`) |
 | 2026-11-03 | [auth liegt oben: `auth/` statt `admin/auth/`](2026-11-03-auth-top-level.md) | Oliver | Lars | offen | verschoben; Kopf und Body-Klasse minimal angepasst, Modul-CSS/JS von admin zur Entscheidung |
+| 2026-11-04 | [Anmeldung umgebaut: was an der GUI hängt](2026-11-04-auth-workflows.md) | Oliver | Lars | offen | umgesetzt wie abgesprochen, Aussehen und gui.md zur Durchsicht |

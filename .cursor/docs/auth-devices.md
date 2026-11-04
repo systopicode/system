@@ -2,6 +2,8 @@
 
 Seit `systopic/system` 1.3 (2026-10). Entstehungsgeschichte, Befunde und
 Entscheidungen: [devices-auth.plan.md](../plans/devices-auth.plan.md).
+Wer wen wo anmelden darf, mit allen Use Cases und Befunden:
+[auth-workflows.md](auth-workflows.md).
 
 ## Begriffe
 
@@ -11,7 +13,7 @@ Entscheidungen: [devices-auth.plan.md](../plans/devices-auth.plan.md).
 | **Screen** | Ein Konto ohne Menschen (Kiosk, Lobby). Hat weder Passwort noch Login-Formular und wird gekoppelt. |
 | **Gerät** | Eine Zeile in `usm_devices`: ein Browser, eine installierte Web-App oder ein Screen, auf dem ein User angemeldet ist. Ein User kann viele haben. |
 | **Session** | Die PHP-Session, kurz. Ist sie weg, meldet das Gerät still wieder an. |
-| **Einmal-Code** | 8 Zeichen (`K7Q4-M2XD`), gilt einmal, in `usm_logincodes` nur als HMAC. |
+| **Einmal-Code** | 8 Zeichen (`K7Q4-M2XD`), gilt einmal, in `usm_signincodes` nur als HMAC. |
 
 ## Wie ein Gerät angemeldet bleibt
 
@@ -43,12 +45,13 @@ Entscheidungen: [devices-auth.plan.md](../plans/devices-auth.plan.md).
 
 ## Einmal-Codes
 
-| Zweck | Wer erzeugt | Gilt | Eingelöst |
+Ein Code hat keinen Zweck. Es gibt zwei Arten (`Auth\SignInCodes`), wer welche
+wo erzeugt, steht in [auth-workflows.md](auth-workflows.md):
+
+| Art | Entsteht | Gilt | Eingelöst |
 |---|---|---|---|
-| `invite` | Benutzer-Admin im CMS (Mail oder Code/QR vorzeigen) | 24 h | in der App, Konto wird aktiv |
-| `recover` | Benutzer-Admin oder „Code anfordern“ per Mail | 10 min | in der App |
-| `pair` | „Gerät hinzufügen“ auf einem angemeldeten Gerät | 10 min | in der App des neuen Geräts |
-| `pair_screen` | der Screen selbst (Login-Seite oder `auth/screen/`) | 10 min | ein Benutzer-Admin bestätigt ihn im CMS oder in der App (Code oder QR), der Screen fragt alle 3 s nach |
+| Code | auf einem angemeldeten Gerät, für genau ein Konto | 10 min, Einladung 24 h | auf dem neuen Gerät, das dieses Konto wird |
+| Gerätecode | auf dem neuen Gerät selbst (`Auth\DeviceCode`), noch ohne Konto | 10 min | jemand benennt auf einem angemeldeten Gerät das Konto, das Gerät fragt alle 3 s nach |
 
 - **Eingabe immer in der App.** Ein Link (`auth/?code=`) oder QR-Code füllt
   das Feld nur vor. Grund: Eine installierte Web-App teilt auf iOS keine
@@ -56,49 +59,33 @@ Entscheidungen: [devices-auth.plan.md](../plans/devices-auth.plan.md).
 - Gespeichert wird der HMAC-SHA256 mit `auth.secret`. Codes werden über
   ihn gefunden, deshalb zählt nur die IP-Drossel: 10 Fehlversuche in
   15 min → 15 min Sperre (`usm_authfailures`).
-- Code-Mails (`Auth\CodeMail`, Template eines Projekts unter
-  `panels/auth/emailCode.tpl.php`) landen ohne Inhalt in `var/log/email.log`.
+- Die Einladungs-Mail (`Auth\CodeMail`, Template eines Projekts unter
+  `panels/auth/emailCode.tpl.php`) landet ohne Inhalt in `var/log/email.log`.
 
 ## Rechte
 
-Benutzer anlegen, Codes für andere erzeugen, Geräte anderer sperren und
-Screens koppeln darf, wer die Rolle `cmsAdmin` hat. Superuser zählen
+Wer wen anmelden darf, sagen die Rechte `authPersons` und `authScreens` der
+Controlmap, siehe [auth-workflows.md](auth-workflows.md#rechte). Benutzer anlegen
+und Geräte anderer sperren darf, wer die Rolle `cmsAdmin` hat. Superuser zählen
 immer mit (`Session::hasRole()`).
 
 ## Konfiguration
 
-Siehe [deployment.md](deployment.md) §5: `mail` und `auth.secret` je Server,
-auf Servern nie in Git oder im Sync. DEV-Configs dürfen sie im privaten
-Projekt-Repo tragen. Ohne `auth.secret` ist das CMS wie vor 1.3
-(Aktivierungs-Mail), damit Projekte, deren Login keine Codes kennt,
-unverändert bleiben.
+Das `auth.secret` entsteht von selbst, sobald es gebraucht wird
+(`AuthConfig::secret()`), in der Datei der laufenden Instanz
+(`EnvironmentFile::createAuth()`, unter Sperre, zwei Anfragen zugleich lesen
+denselben Schlüssel zurück). Ist die Datei nicht schreibbar, gibt es keine Codes.
+Die Benutzerverwaltung sagt das dann. Passwörter, Passkeys und Geräte gehen
+weiter.
 
-**Auch jeder DEV-Platz braucht ein eigenes Secret**, in
-`config/config.local.json` des Projekts: `{"auth": {"secret": "<64 hex>"}}`
-(erzeugen mit `php -r "echo bin2hex(random_bytes(32));"`). Die Datei ist in
-git und im Sync ignoriert, kommt also auf keinem anderen Platz an.
-
-Seit `909e013` (Lars, 2026-10-27) geht es auch im CMS: Settings →
-Environment → Sign-in key anlegen (`EnvironmentFile::createAuth()`). Der
-Schlüssel landet dann aber in der **Instanzdatei**
-(`config/DEV.<platz>.config.json`). Ob die in git liegt, hängt vom Projekt
-ab (bei spaceticker ja). Dann wäre der Schlüssel im Repo. Ins Backup kommt
-er nicht. Für DEV daher `config.local.json` nehmen. Sie überschreibt die Instanzdatei
-(`Config::load()`, `LOCAL_INSTANCE_KEYS` enthält `auth`).
-
-- *Symptom:* Auf DEV fehlen Code und QR des Screens auf der Login-Seite,
-  Code-Login und „Code per E-Mail“ gehen nicht. Auf staging geht alles. Das
-  sieht aus wie ein verlorener Merge (so geschehen am 2026-10-27).
-- *Ursache:* `LoginCodes::available()` ist falsch, weil `auth.secret` fehlt.
-  `screenPairing()` kehrt dann still zurück, ohne Fehler und ohne Log.
-- *Lösung:* `config.local.json` wie oben anlegen. Prüfen per CLI:
-  `cd public && php index.php @auth.json` mit `{"path": "/projects/<p>/public/auth/", "output": "html"}`.
-  Im Ergebnis muss `appScreenCode` vorkommen.
+`mail` je Server: [deployment.md](deployment.md) §5. Unter Settings → Environment
+lässt sich der Schlüssel ersetzen. Codes, die gerade unterwegs sind, gelten dann
+nicht mehr.
 
 ## Anmeldung im CMS
 
 Eine Karte (`src/Auth/login.card.tpl.php`), Englisch, ohne Sprachumschalter.
-`AuthConfig::loginMethod()` entscheidet den ersten Schritt. Leer oder
+`AuthConfig::signInMethod()` entscheidet den ersten Schritt. Leer oder
 `choose` zeigt die Methoden. Passwort bleibt immer erreichbar, „Use another
 method“ auch.
 
@@ -106,13 +93,12 @@ method“ auch.
 |---|---|
 | Passwort | wie bisher, Passwörter werden nicht neu gehasht |
 | Passkey | Fingerabdruck, Gesicht oder Geräte-PIN. Die RP-ID ist nur der Host, jede Datenbank hat ihre eigenen Schlüssel |
-| Code | acht Felder, oder die Kamera liest den QR. Ein Screen-QR (`?screen=`) führt auf das Profil und wartet auf Erlaubnis |
-| Gerät hinzufügen | das angemeldete Profil zeigt einen Recover-QR (`auth/?code=…&auto=1`). Darunter steht der Code, zehn Minuten |
-| Screen | der Screen zeigt seinen QR. Ein angemeldetes Gerät erlaubt ihn. Sehen allein meldet niemanden an |
+| Code | acht Felder, oder die Kamera liest den QR. Das Konto steht im Code, niemand wählt |
+| Gerätecode | die Karte zeigt Code und QR (`admin/user/?deviceCode=`). Ein angemeldetes Gerät sagt, wer dieses Gerät ist. Sehen allein meldet niemanden an |
 
 Die Kamera startet aus dem Klick (`getUserMedia({video:true, audio:false})`
-in demselben Turn). Auf dem Handy öffnet „Add device“ die Kamera gleich,
-der Desktop bleibt beim QR. Eine gespeicherte Sperre (Chrome „Block“,
+in demselben Turn). Auf dem Handy öffnet „Scan code from another screen“ die
+Kamera gleich, der Desktop bleibt beim Eingabefeld. Eine gespeicherte Sperre (Chrome „Block“,
 Firefox mit „Remember“) fragt nicht noch einmal: der Knopf sagt das per
 Alert. Solange der Browser noch fragen darf, fragt der Knopf erneut. Ein
 Neuladen holt eine gespeicherte Sperre nicht zurück.
@@ -120,7 +106,7 @@ Neuladen holt eine gespeicherte Sperre nicht zurück.
 `Devices::issue()` hängt einen neuen Browser als neue Zeile an. Derselbe
 Browser mit gültigem Cookie aktualisiert seine Zeile (Name, den der Nutzer
 vergeben hat, bleibt). Eine Zeile nennt das erste Koppeln: Datum, Methode
-und wer es ausgelöst hat (`LoginLog::paired()`, aus `var/log/login.log`).
+und wer es ausgelöst hat (`SignInLog::paired()`, aus `var/log/signin.log`).
 `Presence` färbt live, untätig oder offline, solange das Relay verbunden ist.
 Abmelden eines Geräts schickt `logout` über das Relay; die offene Seite
 prüft die Session und lädt neu.
@@ -137,25 +123,18 @@ Die eigene Auth eines Projekts entfällt. Nicht angemeldet geht es nach
 spaceticker hat `panels/auth/` deshalb nicht mehr.
 
 Was spaceticker dafür tut:
-- Nach einem Passwort-Login `Devices::issue($user)`.
-- Code-Login: `LoginCodes::redeem($code, [INVITE, RECOVER, PAIR])`, dann
-  `Session::login()` und `Devices::issue()`. Bei `invite` außerdem
-  `Users\Operator::joined()`.
-- „Code anfordern“: `LoginCodes::create(RECOVER, …)` und `CodeMail::send()`.
-- Eine Seite „Meine Geräte“ (`Devices::revoke()`, `revokeAllOf()`,
-  `LoginCodes::create(PAIR, …)`).
-- Eine Screen-Seite: `LoginCodes::startScreenPairing()` und
-  `pollScreen()`, Poll-Secret im Cookie. spaceticker zeigt den Code auch auf
-  der Login-Seite (ein abgemeldeter Screen braucht nach dem Neustart keine
-  Tastatur) und koppelt in „Meine Geräte“ → „Screen koppeln“ mit
-  `LoginCodes::approveScreen()`. Der QR des Screens öffnet dort
-  `devices/?screen=<code>`, auf iOS liest der Scanner der App ihn
-  (Kamera-App öffnet Safari mit eigenen Cookies).
+- „Meine Geräte“ mit den beiden Wegen wie im Profil: `SignInCodes::offer()`,
+  `SignInCodes::peekDeviceCode()`, `SignInCodes::approve()`, die Konten aus
+  `SignInGrant::accounts()`.
+- `install/` legt mit `SignInCodes::create()` den Code für den ersten Start der
+  App an.
+- Der Rest kommt von `auth/`: Passwort, Passkey, Code und Gerätecode.
 
 ## Prüfen
 
+- `php .cursor/tools/auth-workflows-check.php`: die Workflows gegen spaceticker
+  auf DEV, je Gerät eine Cookie-Datei, temporäre Konten `zzz-wf-*`.
 - `php .cursor/tools/devices-check.php unit`: die Regeln, ohne HTTP.
-- `php .cursor/tools/devices-check.php http`: 15 Szenarien gegen
-  spaceticker auf DEV (Cookies je Projekt: `__Host-sys_device_<key>`,
-  `SID<key>`, Schlüssel = `http::projectCookieKey()`). Mails liest der Test aus Mailpit; eines der
-  Szenarien wartet 61 s.
+- `php .cursor/tools/devices-check.php http` stammt aus der Zeit der eigenen
+  App-Anmeldung, viele Szenarien schlagen fehl. Die Abläufe prüft
+  `auth-workflows-check.php`, die Geräte-Szenarien sind noch nachzuziehen.
