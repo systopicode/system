@@ -138,89 +138,11 @@ switch ($this->action) {
 			Codes::PAIR => \Systopic\System\Auth\LoginLog::DEVICE,
 			default => \Systopic\System\Auth\LoginLog::EMAIL_CODE,
 		};
-		if ($user->type === User::SCREEN) {
-			$this->signIn($user, $method);
-			$this->form = 'signedIn';
-			$this->updateView('main');
-			$this->enterCms(2);
-			break;
-		}
-		if ($code->purpose === Codes::INVITE || !$user->isActive) {
+		if ($user->type !== User::SCREEN && ($code->purpose === Codes::INVITE || !$user->isActive)) {
 			$this->scope->save(UserOperator::joined($user));
 		}
-		$mayChoose = $user->isActive && $code->purpose !== Codes::INVITE && (
-			\Systopic\System\Auth\SignInRights::allows($this->scope, $user, \Systopic\System\Auth\SignInRights::PERSONS)
-			|| \Systopic\System\Auth\SignInRights::allows($this->scope, $user, \Systopic\System\Auth\SignInRights::SCREENS)
-		);
-		if ($mayChoose) {
-			$this->state->pendingUser = (int) $user->id;
-			$this->state->pendingUntil = time() + 600;
-			$this->state->pendingMethod = $method;
-			$this->form = 'identify';
-			$this->updateView('main');
-			break;
-		}
+		// The code names the account. Who made it decided that, this device does not.
 		$this->signIn($user, $method);
-		$this->form = 'signedIn';
-		$this->updateView('main');
-		$this->enterCms(2);
-		break;
-
-	case 'confirmIdentity':
-		$me = $this->pendingAccount();
-		if ($me === null) {
-			$this->state->pendingUser = 0;
-			$this->state->pendingUntil = 0;
-			$this->state->pendingMethod = '';
-			\message::error('That confirmation has expired. Enter the code again.');
-			$this->form = 'login';
-			$this->state->loginMethod = 'code';
-			$this->updateView('main');
-			break;
-		}
-		$posted = (int) \http::post('person', 0);
-		$screenId = (int) \http::post('screen', 0);
-		$target = $me;
-		$rights = \Systopic\System\Auth\SignInRights::class;
-		if ($screenId > 0) {
-			$other = $rights::allows($this->scope, $me, $rights::SCREENS) ? UserLookup::byId($this->scope, $screenId) : null;
-			$screenOk = $other !== null && $other->type === User::SCREEN && $other->isActive && (int) $other->id > 1;
-			if (!$screenOk) {
-				\message::error('That screen cannot be signed in.');
-				$this->form = 'identify';
-				$this->updateView('main');
-				break;
-			}
-			$target = $other;
-		} elseif ($posted > 0 && $posted !== (int) $me->id) {
-			$other = $rights::allows($this->scope, $me, $rights::PERSONS) ? UserLookup::byId($this->scope, $posted) : null;
-			if ($other !== null && $other->isSuperuser && !$me->isSuperuser) {
-				\message::error('Only a superuser can sign in as a superuser.');
-				$this->form = 'identify';
-				$this->updateView('main');
-				break;
-			}
-			$personOk = $other !== null
-				&& (int) $other->id > 1
-				&& $other->isActive
-				&& ($other->type === null || $other->type === '' || $other->type === User::PERSON);
-			if (!$personOk) {
-				\message::error('That account cannot be signed in.');
-				$this->form = 'identify';
-				$this->updateView('main');
-				break;
-			}
-			$target = $other;
-		}
-		$method = (string) ($this->state->pendingMethod ?: \Systopic\System\Auth\LoginLog::RECOVERY);
-		$this->state->pendingUser = 0;
-		$this->state->pendingUntil = 0;
-		$this->state->pendingMethod = '';
-		$label = static fn(User $account): string => trim((string) ($account->name ?: $account->email));
-		if ((int) $target->id !== (int) $me->id) {
-			\Systopic\System\Auth\LoginLog::write($label($me), 'approved sign-in as ' . $label($target), \Systopic\System\Auth\LoginLog::REMOTE);
-		}
-		$this->signIn($target, $method);
 		$this->form = 'signedIn';
 		$this->updateView('main');
 		$this->enterCms(2);

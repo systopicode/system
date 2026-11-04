@@ -609,67 +609,6 @@ main.is-passkey-signing-in .passkeyLogin--quiet {
 	gap: 0.55rem;
 }
 
-.authCard .authMethods > form {
-	width: 100%;
-	margin: 0;
-}
-
-.authCard .authPicks {
-	display: flex;
-	flex-direction: column;
-	gap: 0.45rem;
-	width: 100%;
-	margin-top: 0.85rem;
-}
-
-.authCard .authPick {
-	display: flex;
-	align-items: center;
-	gap: 0.75rem;
-	width: 100%;
-	margin: 0;
-	padding: 0.55rem 0.65rem;
-	border: 1px solid var(--cmsLine);
-	border-radius: var(--cmsRadius);
-	background: transparent;
-}
-
-.authCard .authPick img {
-	width: 2.5rem;
-	height: 2.5rem;
-	border-radius: 50%;
-	object-fit: cover;
-	flex: 0 0 auto;
-	background: var(--cmsCanvas);
-}
-
-.authCard .authPick > span {
-	flex: 1 1 auto;
-	min-width: 0;
-	display: flex;
-	flex-direction: column;
-	gap: 0.1rem;
-}
-
-.authCard .authPick b {
-	font-weight: 600;
-}
-
-.authCard .authPick small {
-	color: var(--cmsMuted);
-	font-size: 0.8125rem;
-}
-
-body.cms:has(.authCard) div.authCard .authPick button:where(:not([data-cms-action])).submit,
-body.appBody:has(.authCard) div.authCard .authPick button:where(:not([data-cms-action])).submit {
-	flex: 0 0 2.75rem;
-	width: 2.75rem;
-	min-width: 2.75rem;
-	min-height: 2.75rem;
-	margin: 0;
-	padding: 0;
-}
-
 .cms .authCard :is(:is(a, button:where([data-cms-action])).authMethod, button:where(:not([data-cms-action])).authMethod),
 .cms .authCard :is(:is(a, button:where([data-cms-action])).authMethod, button:where(:not([data-cms-action])).authMethod):hover {
 	display: flex;
