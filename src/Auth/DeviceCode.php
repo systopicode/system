@@ -79,8 +79,9 @@ final class DeviceCode
             SignInCodes::cancelDeviceCode($poll);
         }
         $start = SignInCodes::startDeviceCode();
-        $expires = time() + \Systopic\System\Tables\SignInCodes\Operator::LIFETIME;
-        self::cookie($start['poll'], $expires);
+        $expires = time() + \Systopic\System\Tables\SignInCodes\Operator::DEVICE_CODE_LIFETIME;
+        // A little longer than the code: the renewing load still finds the old row and removes it.
+        self::cookie($start['poll'], $expires + 60);
         return $_SESSION[self::SESSION] = ['code' => $start['code'], 'expires' => $expires];
     }
 

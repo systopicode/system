@@ -1,8 +1,12 @@
 /**
  * A shown one-time code (data-code-until, unix seconds). While it is valid
  * the block [data-code-live] stays. After that it is hidden and
- * [data-code-expired] is shown. The login card reloads on its own when the
- * poll notices; this covers a lightbox that just sits there.
+ * [data-code-expired] is shown. This covers a lightbox that just sits there.
+ *
+ * data-code-left counts from the seconds the server gave, so a wrong clock on
+ * a screen does no harm. [data-code-countdown] shows what is left. With
+ * data-code-renew a visible page loads again for a new code; a hidden one
+ * leaves that to the poll, once it is back.
  */
 (function () {
 	function retire(node) {
@@ -18,12 +22,26 @@
 		node.dataset.codeWatch = '1';
 		var until = parseInt(node.getAttribute('data-code-until'), 10);
 		if (!until) return;
+		var left = parseInt(node.getAttribute('data-code-left'), 10);
+		var end = left > 0 ? Date.now() + left * 1000 : until * 1000;
+		var clock = node.querySelector('[data-code-countdown]');
 		var go = function () {
-			if (Date.now() >= until * 1000) retire(node);
+			if (!node.isConnected) return;
+			var wait = end - Date.now();
+			if (clock) {
+				var rest = Math.max(0, Math.ceil(wait / 1000));
+				clock.textContent = Math.floor(rest / 60) + ':' + String(rest % 60).padStart(2, '0');
+			}
+			if (wait > 0) {
+				window.setTimeout(go, clock ? Math.min(wait, 1000) : wait + 250);
+				return;
+			}
+			retire(node);
+			if (node.hasAttribute('data-code-renew') && node.offsetParent && document.visibilityState === 'visible') {
+				location.reload();
+			}
 		};
 		go();
-		var wait = until * 1000 - Date.now();
-		if (wait > 0) window.setTimeout(go, wait + 250);
 	}
 
 	function bind(root) {

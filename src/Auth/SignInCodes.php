@@ -136,6 +136,13 @@ final class SignInCodes
         return $held;
     }
 
+    /** The code on show leaves the page. It stays good until it runs out. */
+    public static function dropOffer(): void
+    {
+        \http::sessionStartOnce();
+        unset($_SESSION[self::SESSION]);
+    }
+
     /**
      * A new code for `$user`, saved; returns it formatted (`K7Q4-M2XD`) - the
      * only time it exists in clear. `$by` is who asked for it.
@@ -209,7 +216,7 @@ final class SignInCodes
             null,
             $hash,
             hash('sha256', $poll),
-            Operator::LIFETIME,
+            Operator::DEVICE_CODE_LIFETIME,
             $now,
             $ip,
             $agent,

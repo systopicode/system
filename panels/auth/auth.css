@@ -555,6 +555,10 @@ main.is-passkey-signing-in .passkeyLogin--quiet {
 	letter-spacing: 0.14em;
 }
 
+.authCard .authCountdown {
+	font-variant-numeric: tabular-nums;
+}
+
 .authCard .authBody > .qrScan,
 .authCard .authBody > .authCodeForm {
 	margin-top: .5rem;

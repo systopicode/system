@@ -83,13 +83,15 @@ $codeChars = str_split(substr(strtoupper((string) preg_replace('/[^0-9A-Z]/', ''
             <h1>Sign in from another device</h1>
             <?= $authMessages ?>
             <?php if ($qr !== '') { ?>
-                <div class="authQrWrap" data-device-code data-code-until="<?= (int) ($authPair['expires'] ?? 0) ?>">
+                <?php $authLeft = max(0, (int) ($authPair['expires'] ?? 0) - time()); ?>
+                <div class="authQrWrap" data-device-code data-code-until="<?= (int) ($authPair['expires'] ?? 0) ?>" data-code-left="<?= $authLeft ?>" data-code-renew>
                     <div data-code-live>
                         <div class="authQr"><?= $qr ?></div>
                         <p class="authCodeLine"><?= $e($authPair['code'] ?? '') ?></p>
-                        <p class="authLead">Valid for 10 minutes. Scan this on a device that is already signed in, or open the link there. That device says who this one is.</p>
+                        <p class="authLead authCountdown" role="timer">New code in <span data-code-countdown><?= intdiv($authLeft, 60) . ':' . sprintf('%02d', $authLeft % 60) ?></span></p>
+                        <p class="authLead">Scan or enter code from your device that is signed in.</p>
                     </div>
-                    <div class="cms message" data-code-expired hidden><div class="warning"><p>The key has expired. Reload the page for a new one.</p></div></div>
+                    <div class="cms message" data-code-expired hidden><div class="info"><p>This code has expired. A new one is on its way.</p></div></div>
                 </div>
             <?php } else { ?>
                 <p class="authNote">A code is not ready yet. Reload this page, or use another method.</p>
@@ -129,7 +131,7 @@ $codeChars = str_split(substr(strtoupper((string) preg_replace('/[^0-9A-Z]/', ''
                 </div>
                 <p class="authError" id="appCodeError" hidden></p>
                 <button class="button submit" type="submit"><i class="cmsIcon cmsIcon-right-to-bracket"></i> Sign in</button>
-                <button type="button" class="button authScan" data-qr-start><i class="cmsIcon cmsIcon-camera"></i> Scan QR code</button>
+                <button type="button" class="button authScan" data-qr-start><i class="cmsIcon cmsIcon-object-scan"></i> Scan QR code</button>
             </form>
             <script>
                 (function () {

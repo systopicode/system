@@ -21,9 +21,13 @@ final class Operator
     public const ALPHABET = '0123456789ABCDEFGHJKMNPQRSTVWXYZ';
     public const LENGTH   = 8;
 
-    /** Seconds a code lives. An invitation has to survive a night in the inbox. */
-    public const LIFETIME            = 600;
-    public const INVITATION_LIFETIME = 86_400;
+    /**
+     * Seconds a code lives. An invitation has to survive a night in the inbox.
+     * A device code renews itself on the page that shows it, so it can be short.
+     */
+    public const LIFETIME             = 600;
+    public const DEVICE_CODE_LIFETIME = 120;
+    public const INVITATION_LIFETIME  = 86_400;
 
     public static function generate(): string
     {
