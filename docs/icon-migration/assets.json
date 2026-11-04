@@ -1344,6 +1344,14 @@
       "changes": "regular stroke 2 retained, removed provider classes"
     },
     {
+      "path": "public/icons/tabler/object-scan.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "d522a9522eae0a961dcb086a89f38b9dba50de1992832e7eb25e87e9ed7f1afe",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
       "path": "public/icons/tabler/palette.svg",
       "provider": "tabler",
       "version": "3.50.0",
