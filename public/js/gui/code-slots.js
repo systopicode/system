@@ -1,7 +1,8 @@
 /**
  * The eight boxes of a sign-in code. One binder for the login card, the
  * account lightbox and the screen approval. A full code with data-on_change
- * sends itself. data-auto-submit clicks the form once the page is ready.
+ * sends itself, a form with data-code-send too. data-auto-submit clicks the
+ * form once the page is ready.
  */
 (function () {
 	var letters = /[^0-9A-Z]/g;
@@ -16,10 +17,16 @@
 				var raw = boxes.map(function (box) { return box.value; }).join('');
 				if (!hidden) return;
 				hidden.value = raw.length > 4 ? raw.slice(0, 4) + '-' + raw.slice(4) : raw;
-				if (!hidden.hasAttribute('data-on_change')) return;
+				var send = hidden.form && hidden.form.hasAttribute('data-code-send');
+				if (!send && !hidden.hasAttribute('data-on_change')) return;
 				if (raw.length === 8 && hidden.dataset.sent !== raw) {
 					hidden.dataset.sent = raw;
-					hidden.dispatchEvent(new Event('change', { bubbles: true }));
+					if (send) {
+						// The answer closes the box. A focused box would stay: focusPath
+						// keeps what leads to the focus through a rebuild.
+						document.activeElement.blur();
+						hidden.form.querySelector('button[type="submit"]').click();
+					} else hidden.dispatchEvent(new Event('change', { bubbles: true }));
 				} else if (raw.length < 8) {
 					delete hidden.dataset.sent;
 				}

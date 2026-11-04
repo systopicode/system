@@ -9,7 +9,7 @@
 	$url = \Systopic\System\Auth\CodeMail::link((string) $issued['code']);
 	$svg = class_exists('qr') ? \qr::svgMarkup(\qr::payload('url', ['url' => $url]), 4, 'M', 'qr-code') : '';
 	$screenCode = $issuedFor === 'screen';
-	$heading = $screenCode ? 'Pairing code' : 'Sign-in code';
+	$heading = $screenCode ? 'Auth code' : 'Sign-in code';
 	$lead = $screenCode
 		? 'Valid for 10 minutes. On the new device, enter this code or open the link, then choose Sign in. That device becomes this screen.'
 		: 'Valid for 10 minutes. On the new device, enter this code or open the link, then choose Sign in. The account becomes active when the code is used.';

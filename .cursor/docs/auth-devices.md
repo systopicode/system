@@ -51,7 +51,7 @@ wo erzeugt, steht in [auth-workflows.md](auth-workflows.md):
 | Art | Entsteht | Gilt | Eingelöst |
 |---|---|---|---|
 | Code | auf einem angemeldeten Gerät, für genau ein Konto | 10 min, Einladung 24 h | auf dem neuen Gerät, das dieses Konto wird |
-| Gerätecode | auf dem neuen Gerät selbst (`Auth\DeviceCode`), noch ohne Konto | 10 min | jemand benennt auf einem angemeldeten Gerät das Konto, das Gerät fragt alle 3 s nach |
+| Gerätecode | auf dem neuen Gerät selbst (`Auth\DeviceCode`), noch ohne Konto | 2 min, erneuert sich | jemand benennt auf einem angemeldeten Gerät das Konto, das Gerät fragt alle 3 s nach |
 
 - **Eingabe immer in der App.** Ein Link (`auth/?code=`) oder QR-Code füllt
   das Feld nur vor. Grund: Eine installierte Web-App teilt auf iOS keine
@@ -97,7 +97,7 @@ method“ auch.
 | Gerätecode | die Karte zeigt Code und QR (`admin/user/?deviceCode=`). Ein angemeldetes Gerät sagt, wer dieses Gerät ist. Sehen allein meldet niemanden an |
 
 Die Kamera startet aus dem Klick (`getUserMedia({video:true, audio:false})`
-in demselben Turn). Auf dem Handy öffnet „Scan code from another screen“ die
+in demselben Turn). Auf dem Handy öffnet „Scan code“ im Profil die
 Kamera gleich, der Desktop bleibt beim Eingabefeld. Eine gespeicherte Sperre (Chrome „Block“,
 Firefox mit „Remember“) fragt nicht noch einmal: der Knopf sagt das per
 Alert. Solange der Browser noch fragen darf, fragt der Knopf erneut. Ein

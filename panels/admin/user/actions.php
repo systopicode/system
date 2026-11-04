@@ -111,10 +111,15 @@ switch ($this->action) {
 		$this->updateView('main');
 		break;
 
+	case 'newDeviceCode':
+		SignInCodes::dropOffer();
+		$this->updateView('main');
+		break;
+
 	case 'checkDeviceCode':
 		if (!SignInCodes::available() || SignInCodes::peekDeviceCode((string) \http::post('deviceCode', '')) === null) {
 			\message::error('That code is wrong or has expired.')->target('deviceBox');
-			\clientDocument::replaceInner('.scanCodeBox [data-remote-feedback]', \message::flush('deviceBox'));
+			\clientDocument::replaceInner($this->scanFeedback, \message::flush('deviceBox'));
 		} else {
 			$this->updateView('main');
 		}
@@ -126,7 +131,8 @@ switch ($this->action) {
 		if ($account === null) {
 			\message::error('That account cannot be signed in.')->target('deviceBox');
 		} elseif (SignInCodes::approve((string) \http::post('deviceCode', ''), $account, $me)) {
-			\message::confirm('Allowed. The other device signs in within a few seconds.')->target('devices');
+			$this->deviceAllowed = true;
+			\message::confirm('Allowed. The other device signs in within a few seconds.')->target($this->deviceMessages);
 			\http::redirect($this->href);
 			break;
 		} else {
@@ -134,7 +140,7 @@ switch ($this->action) {
 				? 'Too many attempts. Please try again in 15 minutes.'
 				: 'That code is wrong or has expired.')->target('deviceBox');
 		}
-		\clientDocument::replaceInner('.scanCodeBox [data-remote-feedback]', \message::flush('deviceBox'));
+		\clientDocument::replaceInner($this->scanFeedback, \message::flush('deviceBox'));
 		break;
 
 	case 'revokeOtherDevices':
@@ -150,6 +156,16 @@ switch ($this->action) {
 		if ($device !== null && $this->me && (int) $device->relationId('user') === (int) $this->me->id) {
 			Devices::revoke($device, 'user');
 			\message::confirm('Device signed out.')->target('devices');
+		}
+		$this->updateView('main');
+		break;
+
+	case 'revokeScreenDevice':
+		$device = DeviceQuery::byId($this->scope, (int) \http::dataset('device_id'));
+		$screen = $device !== null && $this->me ? SignInGrant::account($this->scope, $this->me, $this, (int) $device->relationId('user')) : null;
+		if ($screen?->type === \Systopic\System\Tables\Users\Model::SCREEN) {
+			Devices::revoke($device, 'admin');
+			\message::confirm('Device signed out.')->target('devicesScreen');
 		}
 		$this->updateView('main');
 		break;

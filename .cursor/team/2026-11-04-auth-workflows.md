@@ -8,16 +8,22 @@ berührt deinen Bereich, das war abgesprochen. Bitte ansehen, ob du es so willst
 
 ## Was sich geändert hat
 
-- **Profil (`admin/user`):** Aus „Add device“ wurden zwei Knöpfe, „Add device“
-  (`.addDeviceBox`) und „Scan code from another screen“ (`.scanCodeBox`). Beide
+- **Profil (`admin/user`):** Drei Widgets mit je zwei Knöpfen, „Scan code“
+  (`.scanCodeBox`) und „Create code“ (`.addDeviceBox`): My devices, neu
+  Paired screens und Authorize other user. Bei den beiden neuen steht ein
+  Dropdown über den Knöpfen (`.deviceWays`, in `profile.css`). Die Boxen gibt es je Widget, dazu
+  `.kindSelf`, `.kindScreen`, `.kindPerson`. Neues Icon `object-scan` für jedes
+  Scannen, `camera` bleibt nur für die Kamera-Freigabe. Alle Boxen
   tragen die Klasse `.deviceBox` statt `.remoteLoginBox`, ihr `main` heißt
   `.deviceBoxMain` statt `.remoteLogin`. Neu ist „Sign out other devices“.
 - **`ui.js`:** Die Kamera startet auf dem Handy jetzt beim Knopf für das Scannen.
 - **`qr-scan.js`:** `data-remote-offer` und „Show QR“ sind weg, der Parameter heißt
   `deviceCode` statt `screen`.
-- **Benutzerverwaltung:** Die Screen-Liste hat in der Aktionsspalte ein neues
-  Panel `pair/`. Die Lightbox nutzt die vorhandenen Bausteine, das Layout ist
-  bewusst schlicht.
+- **Benutzerverwaltung:** Die Screen-Liste hat in der Aktionsspalte zwei neue
+  Aktionen, „Scan device code from screen“ und „Create new auth code“. Beide
+  öffnen eine Lightbox des Panels `pair/` mit `.deviceBox` und Info-Hinweis.
+  Die Scan-Bausteine liegen jetzt in `panels/admin/user/scanCode.tpl.php`,
+  `pair/pair.css` bindet `profile.css` ein.
 - **`auth/`:** „Who is signing in?“ und die CSS-Regeln `.authPick` sind weg.
 - **Texte:** „Sign in from another device“ statt „Remote login“, „Sign out“ statt
   „Log out“, „Sign-in log“ statt „Login log“.

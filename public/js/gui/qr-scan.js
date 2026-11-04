@@ -1,7 +1,8 @@
 /**
- * One camera for two places: the sign-in card (data-qr-host="login") and the
- * account lightbox (data-qr-host="profile"). It starts from a click. Texts on
- * the host can be replaced with data-hint, data-timeout-title,
+ * One camera for three places: the sign-in card (data-qr-host="login"), the
+ * account lightbox (data-qr-host="profile") and the boxes where the account
+ * is settled, so a hit is the approval (data-qr-host="approve"). It starts
+ * from a click. Texts on the host can be replaced with data-hint, data-timeout-title,
  * data-timeout-text, data-denied-title, data-invalid, data-dark, data-again
  * and data-allow.
  */
@@ -112,9 +113,12 @@
 		return host.getAttribute('data-hint') || 'Hold the QR code steady and well lit in the frame.';
 	}
 
-	function go(base, code) {
+	function go(base, code, kind) {
 		var form=document.createElement('form');form.method='post';form.action=base;
-        var input=document.createElement('input');input.type='hidden';input.name='deviceCode';input.value=code;form.append(input);document.body.append(form);form.submit();
+		[['deviceCode', code], ['kind', kind || '']].forEach(function (field) {
+			var input=document.createElement('input');input.type='hidden';input.name=field[0];input.value=field[1];form.append(input);
+		});
+		document.body.append(form);form.submit();
 	}
 
 	function fill(form, code) {
@@ -126,6 +130,15 @@
 		}
 		var hidden = form.querySelector('input[name="code"]');
 		if (hidden) hidden.value = chars.length > 4 ? chars.slice(0, 4) + '-' + chars.slice(4) : chars;
+	}
+
+	function send(form, code) {
+		fill(form, code);
+		if (form.hasAttribute('data-code-send')) return;
+		var button = form.querySelector('button[type="submit"]');
+		if (button) button.click();
+		else if (form.requestSubmit) form.requestSubmit();
+		else form.submit();
 	}
 
 	function showFields(host, keep) {
@@ -236,7 +249,12 @@
 		flash(host, 'info', 'Checking code…');
 		var call = new sys.core.server.call({method: 'put', code: token});
         call.background = true;
-        var invalid = function () { flash(host, 'error', host.getAttribute('data-invalid') || 'That code is wrong or has expired.'); showFields(host, true); };
+        var invalid = function () {
+			flash(host, 'error', host.getAttribute('data-invalid') || 'That code is wrong or has expired.');
+			showFields(host, true);
+			// This box has no "Scan QR code": the camera comes back from here.
+			if (host.getAttribute('data-qr-host') === 'approve') showDim(host, 'timeout');
+		};
         call.send(settings.siteRoot + 'auth/validateQr').done(function (data) {
             if (data && data.valid) run(); else invalid();
         }).fail(invalid);
@@ -248,21 +266,20 @@
 		if (host.getAttribute('data-qr-host') === 'profile') {
 			var token = found.deviceCode || found.bare;
 			if (!token) return false;
-			return accept(host, token, function () { go(host.getAttribute('data-base') || '', token); });
+			return accept(host, token, function () { go(host.getAttribute('data-base') || '', token, host.getAttribute('data-kind')); });
+		}
+		var form = formOf(host);
+		if (host.getAttribute('data-qr-host') === 'approve') {
+			var scanned = found.deviceCode || found.bare;
+			if (!scanned || !form) return false;
+			return accept(host, scanned, function () { send(form, scanned); });
 		}
 		if (found.deviceCode) {
 			return accept(host, found.deviceCode, function () { go(host.getAttribute('data-profile') || '', found.deviceCode); });
 		}
 		var typed = found.code || found.bare;
-		var form = formOf(host);
 		if (!typed || !form) return false;
-		return accept(host, typed, function () {
-			fill(form, typed);
-			var button = form.querySelector('button[type="submit"]');
-			if (button) button.click();
-			else if (form.requestSubmit) form.requestSubmit();
-			else form.submit();
-		});
+		return accept(host, typed, function () { send(form, typed); });
 	}
 
 	var BLOCKED = 'The browser will not ask for the camera again. Allow it for this site in the address bar, then try again.';
@@ -288,7 +305,7 @@
 		var dim = host.querySelector('[data-qr-dim]');
 		if (dim) dim.hidden = true;
 		var form = formOf(host);
-		if (form) form.hidden = true;
+		if (form && host.getAttribute('data-qr-host') !== 'approve') form.hidden = true;
 		clearFlash(host);
 		hint(host, steady(host));
 		waiting(host, true);
@@ -517,5 +534,24 @@
 		if (name && option) name.textContent = (option.textContent || '').trim();
 	});
 
-	window.QrScan = { start: start, stop: stop };
+	// Camera and code boxes together, whichever comes first. A phone keeps its
+	// keyboard down, it would cover the camera.
+	function open(host) {
+		start(host);
+		var form = formOf(host);
+		var first = form && form.querySelector('[data-slot]');
+		if (first && !window.matchMedia('(max-width: 720px), (hover: none) and (pointer: coarse)').matches) first.focus();
+	}
+
+	// A box that came in by ajax has no click of its own. A browser that insists
+	// on one refuses, and the box then offers "Allow access".
+	function openAuto() {
+		document.querySelectorAll('[data-qr-auto]').forEach(function (host) {
+			host.removeAttribute('data-qr-auto');
+			open(host);
+		});
+	}
+	new MutationObserver(openAuto).observe(document.documentElement, { childList: true, subtree: true });
+
+	window.QrScan = { start: start, stop: stop, open: open };
 })();

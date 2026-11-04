@@ -63,7 +63,8 @@ $screens = ($this->accountKind ?? '') === \Systopic\System\Tables\Users\Model::S
 									<li><button type="button" data-cms-action class="button icononly" title="Sign in as this user" data-on_click="../hijackUser"><i class="cmsIcon cmsIcon-ghost-3"></i></button></li>
 								<?php } ?>
 								<?php if ($screens) { ?>
-									<li><a class="ajax button icononly" title="Pair screen: <?= $e($user->name) ?>" aria-label="Pair screen: <?= $e($user->name) ?>" href="<?= $e($this->href . 'pair/?user_id=' . (int) $user->id) ?>"><i class="cmsIcon cmsIcon-qrcode"></i></a></li>
+									<li><a class="ajax button icononly" title="Scan device code from screen: <?= $e($user->name) ?>" aria-label="Scan device code from screen: <?= $e($user->name) ?>" href="<?= $e($this->href . 'pair/?user_id=' . (int) $user->id . '&way=scan') ?>"><i class="cmsIcon cmsIcon-object-scan"></i></a></li>
+									<li><a class="ajax button icononly" title="Create new auth code: <?= $e($user->name) ?>" aria-label="Create new auth code: <?= $e($user->name) ?>" href="<?= $e($this->href . 'pair/?user_id=' . (int) $user->id) ?>"><i class="cmsIcon cmsIcon-qrcode"></i></a></li>
 								<?php } ?>
 								<?php if (\Systopic\System\Auth\Session::hasRole('cmsAdmin')) { ?>
 									<li><a class="ajax button icononly" title="Edit <?= $screens ? 'screen' : 'user' ?>: <?= $e($user->name) ?>" aria-label="Edit <?= $screens ? 'screen' : 'user' ?>: <?= $e($user->name) ?>" href="<?= $e($this->href . 'edit/?user_id=' . (int) $user->id) ?>"><i class="cmsIcon cmsIcon-pen"></i></a></li>

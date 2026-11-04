@@ -27,13 +27,14 @@ switch ($this->action) {
 		break;
 
 	case 'approveDeviceCode':
-		if ($account !== null && SignInCodes::approve((string) \http::values('value'), $account, $me)) {
+		if ($account !== null && SignInCodes::approve((string) \http::post('deviceCode', ''), $account, $me)) {
 			\message::confirm('Screen paired. It signs in within a few seconds.');
-		} else {
-			\message::error(SignInCodes::$error === SignInCodes::BLOCKED
-				? 'Too many wrong codes from here. Try again in 15 minutes.'
-				: 'That code is wrong or has expired.');
+			\http::redirect($this->parent->href);
+			break;
 		}
+		\message::error(SignInCodes::$error === SignInCodes::BLOCKED
+			? 'Too many wrong codes from here. Try again in 15 minutes.'
+			: 'That code is wrong or has expired.');
 		$this->updateView('lightbox');
 		break;
 }

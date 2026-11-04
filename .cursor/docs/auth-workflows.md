@@ -35,8 +35,10 @@ Das Zielgerät hat noch keine Identität, es kann nur fragen.
 4. Bei der nächsten Frage meldet der Server das Gerät als dieses Konto an. Ein
    Screen geht auf die Startseite, eine Person auf die gemerkte Seite.
 
-Der Code gilt 10 Minuten. Ist er abgelaufen, lädt die Seite neu und zeigt einen
-neuen. Ein Screen erneuert seinen Code also von selbst.
+Der Code gilt 2 Minuten (`Operator::DEVICE_CODE_LIFETIME`), die Seite zählt
+sichtbar herunter. Bei null lädt sie neu und zeigt einen neuen. Ein Screen
+erneuert seinen Code also von selbst. Eine verborgene Seite wartet damit, bis sie
+wieder sichtbar ist.
 
 Der angezeigte Code identifiziert das Gerät nicht, das tut das Poll-Geheimnis.
 Wer den Code nur sieht, kann ihn freigeben, aber die Anmeldung landet immer auf
@@ -117,31 +119,53 @@ Anfrage zählt gegen die IP.
 
 | Nr. | Weg | Start | Abschluss |
 |---|---|---|---|
-| 4.1 | T, Admin | `admin/user` → „Add device“ → „Create code“ | Zielgerät: `auth/?code=` |
+| 4.1 | T, Admin | `admin/user`, Widget „My devices“ → „Create code“ | Zielgerät: `auth/?code=` |
 | 4.2 | T, App | `devices/` → „Code für ein neues Gerät“ | Zielgerät: `auth/?code=` |
-| 4.3 | Z, Admin | Zielgerät: `auth/` → „Sign in from another device“ | `admin/user` → „Scan code from another screen“, dann „Allow“ |
+| 4.3 | Z, Admin | Zielgerät: `auth/` → „Sign in from another device“ | `admin/user`, Widget „My devices“ → „Scan code“, dann „Allow“ |
 | 4.4 | Z, App | wie 4.3 | `devices/` → „Code von anderem Bildschirm scannen“, dann „Freigeben“ |
+
+Im Profil trennen drei Widgets, wen A anmeldet. Jedes hat beide Richtungen,
+„Scan code“ (Icon `object-scan`) und „Create code“ (Icon `qrcode`):
+
+| Widget | Wen | Sichtbar mit |
+|---|---|---|
+| My devices | immer das eigene Konto, keine Auswahl | alle |
+| Paired screens | einen Screen, zeigt alle Geräte der Screens, jedes mit Abmelden | `authScreens` |
+| Authorize other user | eine andere Person | `authPersons` |
+
+Bei „Paired screens“ und „Authorize other user“ steht die Auswahl im Widget über
+den Knöpfen. Danach kommt nur eine Lightbox mit dem Hinweis: „Create code“ zeigt
+den Code sofort, bei „Scan code“ gilt der eingegebene oder gescannte Code gleich
+als Freigabe, ohne „Allow“. Die Box zeigt Kamera und Eingabe zusammen, ein
+vollständiger Code geht von selbst los, bei Erfolg schließt sie sich. Das gilt
+auch für die Aktion in der Screen-Tabelle. „My devices“ behält beide Schritte.
+
+Das Formular trägt `kind` (`self`, `screen`, `person`). Es begrenzt nur die Auswahl,
+das Recht prüft `SignInGrant::account()`. Kommt ein Gerätecode ohne `kind` über
+den QR-Link, stehen alle erlaubten Konten zur Wahl.
 
 ### UC 5 · Gerät für eine andere Person anmelden (A → B)
 
 | Nr. | Weg | Start | Abschluss | Recht |
 |---|---|---|---|---|
 | 5.1 | T, Admin | `admin/access/users/edit` → „Create code“ | Zielgerät: `auth/?code=` | `cmsAdmin` |
-| 5.2 | T, Profil oder App | „Add device“ mit Auswahl des Kontos | Zielgerät: `auth/?code=` | `authPersons` |
-| 5.3 | Z, Admin | Zielgerät zeigt den Gerätecode | `admin/user`: Konto wählen, Hinweis, „Allow“ | `authPersons` |
+| 5.2 | T, Profil oder App | Widget „Authorize other user“: Konto wählen, dann „Create code“ | Zielgerät: `auth/?code=` | `authPersons` |
+| 5.3 | Z, Admin | Zielgerät zeigt den Gerätecode | `admin/user`, Widget „Authorize other user“: Konto wählen, dann „Scan code“ | `authPersons` |
 | 5.4 | Z, App | Zielgerät zeigt den Gerätecode | `devices/`: Konto wählen, Hinweis, „Freigeben“ | `authPersons` |
 
 ### UC 6 · Screen anmelden
 
 | Nr. | Weg | Start | Abschluss | Recht |
 |---|---|---|---|---|
-| 6.1 | T oder Z, Benutzerverwaltung | `admin/access/screens`, Aktionsspalte → Panel „Pair“ | Code zeigen oder Gerätecode eingeben | `authScreens` |
-| 6.2 | Z, Admin | Screen zeigt den Gerätecode auf `auth/` | `admin/user`: Screen wählen, Hinweis, „Allow“ | `authScreens` |
+| 6.1 | Z, Benutzerverwaltung | `admin/access/screens`, Aktionsspalte → „Scan device code from screen“ | Gerätecode scannen oder eingeben | `authScreens` |
+| 6.1a | T, Benutzerverwaltung | `admin/access/screens`, Aktionsspalte → „Create new auth code“ | Code erzeugen, auf dem Gerät eingeben | `authScreens` |
+| 6.2 | T oder Z, Admin | Screen zeigt den Gerätecode auf `auth/`, oder A erzeugt einen Code | `admin/user`, Widget „Paired screens“: Screen wählen, dann „Scan code“ oder „Create code“ | `authScreens` |
 | 6.3 | Z, App | wie 6.2 | `devices/`: Screen wählen, Hinweis, „Freigeben“ | `authScreens` |
 
 Wer nur `authScreens` hat (Rolle `screenOperator`), sieht in der
-Benutzerverwaltung nur die Screens. „Pair“ ist ein eigenes Panel, getrennt von
-„edit“. Der Screen steht dort schon fest, A wählt nichts aus.
+Benutzerverwaltung nur die Screens. Beide Aktionen liegen im Panel `pair`
+(`&way=scan` für das Scannen), getrennt von „edit“. Der Screen steht dort schon
+fest, A wählt nichts aus. Der Hinweis nennt das Konto und das Log.
 
 Damit ein Screen ohne Tastatur seinen Code zeigt, steht in seiner Instanz
 `defaultSignInMethod: device_code`.
@@ -186,10 +210,11 @@ denselben Ablauf. Der Server-Ablauf ist einer (`Auth\SignInCodes`,
 
 | Funktion | Weg | Admin | App |
 |---|---|---|---|
-| **Add device / Gerät hinzufügen:** Konto bestätigen, Hinweis, dann QR und Code | T | `admin/user` | `devices/#add`, Menü |
-| **Scan code from another screen / Code von anderem Bildschirm scannen:** scannen oder tippen, Konto wählen, Hinweis, „Allow“ | Z | `admin/user`, eigener Knopf | `devices/#scan`, Menü |
+| **Create code / Gerät hinzufügen:** Konto bestätigen, Hinweis, dann QR und Code | T | `admin/user`, je Widget | `devices/#add`, Menü |
+| **Scan code / Code von anderem Bildschirm scannen:** scannen oder tippen, Konto wählen, Hinweis, „Allow“ | Z | `admin/user`, je Widget | `devices/#scan`, Menü |
 | **Code für eine Person:** Hinweis, dann Code oder Mail | T | `admin/access/users/edit` | – |
-| **Pair (Screen):** Hinweis, dann Code zeigen oder Gerätecode eingeben | T, Z | `admin/access/screens`, Panel in der Aktionsspalte | – |
+| **Scan device code from screen:** Hinweis, Gerätecode scannen oder eingeben | Z | `admin/access/screens`, Aktionsspalte | – |
+| **Create new auth code:** Hinweis, dann Code und QR | T | `admin/access/screens`, Aktionsspalte | – |
 | **Gerätecode zeigen:** Code und QR, fragt nach, erneuert sich | Z | `auth/` | `auth/` |
 | **Code einlösen:** ohne Auswahl | T | `auth/` | `auth/` |
 
@@ -268,7 +293,7 @@ gilt weiter nur die Whitelist.
 | **sign in / sign out** | Was eine Person oder ein Gerät tut | Einziges Verb in Oberfläche, Log und Config. `signIn` in PHP und JS, `signin` in Datenbank und Routen |
 | **authorize / allow** | Was A für ein Zielgerät tut | Freigabe, Knopf „Allow“ |
 | **authenticate** | Nur das technische Prüfen | WebAuthn und die Pseudo-Rolle `authenticated`, keine Oberfläche |
-| **pair** | Nur für Screens | Oberfläche „Pair“, Panel `pair`. Kein Name für Codes |
+| **pair** | Nur für Screens | Panel `pair`, Meldung „Screen paired“. Kein Name für Codes |
 
 Auf Deutsch heißt es **anmelden, abmelden, freigeben, koppeln**. Alle Schlüssel
 stehen in camelCase.
