@@ -221,7 +221,6 @@ final class SignInCodes
             $ip,
             $agent,
         ));
-        SignInLog::write('–', 'created device code');
         return ['code' => $code, 'poll' => $poll];
     }
 

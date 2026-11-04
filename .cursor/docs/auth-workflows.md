@@ -204,14 +204,15 @@ Das Log nennt beide: „A switched to B“.
 
 ## Verortung
 
-Dieselben Funktionen tragen im Admin und in der App denselben Sinn und
-denselben Ablauf. Der Server-Ablauf ist einer (`Auth\SignInCodes`,
-`Auth\SignInGrant`), nur die Oberfläche unterscheidet sich.
+Dieselben Funktionen tragen im Admin und in der App denselben Sinn. Der
+Server-Ablauf ist einer (`Auth\SignInCodes`, `Auth\SignInGrant`), die Oberfläche
+unterscheidet sich: Die App geht noch in zwei Schritten vor wie „My devices“, die
+Widgets „Paired screens“ und „Authorize other user“ gibt es dort nicht.
 
 | Funktion | Weg | Admin | App |
 |---|---|---|---|
-| **Create code / Gerät hinzufügen:** Konto bestätigen, Hinweis, dann QR und Code | T | `admin/user`, je Widget | `devices/#add`, Menü |
-| **Scan code / Code von anderem Bildschirm scannen:** scannen oder tippen, Konto wählen, Hinweis, „Allow“ | Z | `admin/user`, je Widget | `devices/#scan`, Menü |
+| **Create code / Gerät hinzufügen:** Konto bestätigen, Hinweis, dann QR und Code. Im Admin nur bei „My devices“ so, die beiden anderen Widgets wählen vorher | T | `admin/user`, je Widget | `devices/#add`, Menü |
+| **Scan code / Code von anderem Bildschirm scannen:** scannen oder tippen, Konto wählen, Hinweis, „Allow“. Im Admin nur bei „My devices“ und über den QR-Link so | Z | `admin/user`, je Widget | `devices/#scan`, Menü |
 | **Code für eine Person:** Hinweis, dann Code oder Mail | T | `admin/access/users/edit` | – |
 | **Scan device code from screen:** Hinweis, Gerätecode scannen oder eingeben | Z | `admin/access/screens`, Aktionsspalte | – |
 | **Create new auth code:** Hinweis, dann Code und QR | T | `admin/access/screens`, Aktionsspalte | – |
@@ -221,12 +222,22 @@ denselben Ablauf. Der Server-Ablauf ist einer (`Auth\SignInCodes`,
 Im Schritt „Konto wählen“ steht zuerst A selbst. Personen und Screens kommen
 nur dazu, wenn A das Recht dafür hat.
 
-Der Hinweis lautet: „You, A, are signing this device in. You identify the user
-on that device as B. This choice is written to the sign-in log.“
+Der Hinweis lautet in den zweistufigen Boxen: „You, A, are signing this device
+in. You identify the user on that device as B. This choice is written to the
+sign-in log.“ In den einstufigen Boxen und in der Screen-Tabelle steht er als
+Info-Kasten (`panels/admin/user/authInfo.tpl.php`): „By entering or scanning the
+code, you authorize the device to be signed in as 'B'.“ oder „By creating the
+auth code, you allow any person who gets to know it to sign in as 'B' on one
+device.“, danach jeweils „Your choice is documented in the system's sign-in log.“
 
-Die Freigabe von Weg Z zeigt, welches Gerät fragt: Browser, System, IP und
-Uhrzeit. So merkt A, wenn ein fremder Code untergeschoben wird. Browser und
-System meldet das Gerät selbst, sie sind ein Hinweis und kein Beweis.
+Die Freigabe von Weg Z zeigt in den zweistufigen Boxen, welches Gerät fragt:
+Browser, System, IP und Uhrzeit. So merkt A, wenn ein fremder Code untergeschoben
+wird. Browser und System meldet das Gerät selbst, sie sind ein Hinweis und kein
+Beweis. Die einstufigen Boxen zeigen das nicht: Dort gilt der Code sofort, das
+war so gewünscht.
+
+Das Erzeugen eines Gerätecodes steht nicht im Log, sonst schriebe ein wartender
+Screen rund 720 Zeilen am Tag. Die Freigabe und die Anmeldung stehen drin.
 
 ## Rechte
 
@@ -353,4 +364,14 @@ Die alten Spalten `user_first_login` und `user_last_login` und die Tabelle
 3. **`db audit`:** alte Spalten und die Tabelle `usm_logincodes` löschen, sobald
    kein älterer Stand mehr auf derselben Datenbank läuft.
 4. **Am Handy prüfen:** Kamera in „Scan code“ im Admin und in der App, Erster
-   Start der installierten App. Das ließ sich ohne echtes Gerät nicht testen.
+   Start der installierten App. Die Boxen im Admin liefen am 2026-11-04 in Chrome
+   mit Fake-Kamera, Firefox, Safari und echte Geräte fehlen noch.
+5. **Zu entscheiden:**
+   - Bei „Create code“ steht der Hinweis neben dem fertigen Code, nicht davor.
+     Das ist die Folge von „nicht mehr zweistufig“. Bleibt das so?
+   - Wird „My devices“ auch einstufig, mit Kamera sofort und ohne „Allow“?
+   - Bekommt die App die drei Widgets wie `admin/user`?
+   - Heißt es bei Personen auch „Auth code“? Dort steht noch „Sign-in code“.
+6. **Kleinigkeiten:** Nach einem falschen Code im Profil steht der Cursor nicht
+   mehr im Feld. Wer in den letzten Sekunden eines Gerätecodes freigibt, kann ins
+   Leere laufen, dann ist eine zweite Freigabe nötig. Die 2 Minuten sind vorläufig.
