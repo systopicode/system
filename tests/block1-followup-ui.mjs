@@ -4,7 +4,7 @@ const {chromium}=await import(process.env.FLUXO_PLAYWRIGHT_MODULE);
 const browser=await chromium.launch({channel:'chrome',headless:true});
 try {
  const page=await browser.newPage();const errors=[];page.on('pageerror',e=>errors.push(e.message));
- const css=['00_theme','18_ui','19_appearance','20_base','24_table','27_tree','50_forms','60_lightbox','70_components','75_passkeys'].map(n=>fs.readFileSync(`public/css/${n}.css`,'utf8')).join('\n')+fs.readFileSync('panels/admin/auth/auth.css','utf8');
+ const css=['00_theme','18_ui','19_appearance','20_base','24_table','27_tree','50_forms','60_lightbox','70_components','75_passkeys'].map(n=>fs.readFileSync(`public/css/${n}.css`,'utf8')).join('\n')+fs.readFileSync('panels/auth/auth.css','utf8');
  await page.setContent(`<style>${css}</style><body class=cms><div class="authCard cms"><main class="authSignin is-passkey-signing-in"><div class=authPane><div class=passkeyLogin><div class=passkeyAuthFeedback>Old lock animation</div></div></div><div class="authSuccess" data-auth-success hidden><h1 data-success-title></h1><img data-success-portrait hidden><p class="authLead" data-success-name></p><p class="authWait">Redirecting in 2 seconds …</p></div><p class="authFoot" data-success-footer hidden><a class="authSkip" data-success-continue>Continue now</a></p></main></div><div class="tableScroll canScrollX"><table><tr><td>Content</td><td class=icons>Action</td></tr></table></div><div class="cms message is-stay"><div class=warning><p class=message>Backup warning</p></div></div></body>`);
  await page.evaluate(()=>window.sys={lib:{add(setup,constructor){const instance={};constructor.call(instance);window.sys[setup.shorthand]=instance;}}});
  await page.addScriptTag({path:'src/Auth/passkeys.js'});

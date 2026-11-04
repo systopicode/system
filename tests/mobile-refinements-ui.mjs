@@ -5,7 +5,7 @@ import assert from 'node:assert/strict';
 const root=new URL('../',import.meta.url);
 const read=p=>readFile(new URL(p,root),'utf8');
 const {chromium}=await import(process.env.FLUXO_PLAYWRIGHT_MODULE ? pathToFileURL(process.env.FLUXO_PLAYWRIGHT_MODULE).href : 'playwright');
-const css=(await Promise.all((await readdir(new URL('public/css/',root))).filter(n=>n.endsWith('.css')).sort().map(n=>read('public/css/'+n)))).join('\n')+await read('panels/admin/dashboard.css')+await read('panels/admin/080_users/010_users/edit/user.css');
+const css=(await Promise.all((await readdir(new URL('public/css/',root))).filter(n=>n.endsWith('.css')).sort().map(n=>read('public/css/'+n)))).join('\n')+await read('panels/admin/dashboard.css')+await read('panels/admin/080_access/010_users/edit/user.css');
 const controller=await read('panels/admin/mobile.js'),tables=await read('public/js/gui/tableFit.js');
 const browser=await chromium.launch({channel:'chrome',headless:true});
 try {

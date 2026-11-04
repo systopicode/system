@@ -8,7 +8,7 @@ const {chromium}=await import(pathToFileURL(process.env.FLUXO_PLAYWRIGHT_MODULE)
 const browser=await chromium.launch({channel:'chrome',headless:true});
 try {
  const page=await browser.newPage({colorScheme:'dark'});
- const css=await read('public/css/50_forms.css')+await read('panels/admin/auth/auth.css');
+ const css=await read('public/css/50_forms.css')+await read('panels/auth/auth.css');
  await page.setContent(`<style>${css}</style><body class="cms"><div class="authCard"><main><p class="authFoot"><a class="authSkip">Continue →</a></p><p class="authFoot"><a class="authBack">← Back</a></p></main></div></body>`);
  assert.equal(await page.locator('.authFoot').first().evaluate(e=>getComputedStyle(e).justifyContent),'flex-end');
  assert.equal(await page.locator('.authFoot').last().evaluate(e=>getComputedStyle(e).justifyContent),'flex-start');
@@ -69,7 +69,7 @@ try {
  assert.equal(await page.locator('.authMethod').evaluate(e=>e.hidden),true);
  await page.evaluate(()=>{Object.defineProperty(window,'isSecureContext',{value:true,configurable:true});window.PublicKeyCredential=function(){};PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable=async()=>false;Object.defineProperty(navigator,'credentials',{value:{get:async()=>null},configurable:true});});
  assert.equal(await page.evaluate(()=>sys.passkeys.checkSupport()),true,'lack of platform biometrics does not block external authenticators');
- await page.addScriptTag({content:await read('panels/admin/auth/panel.js')});
+ await page.addScriptTag({content:await read('panels/auth/panel.js')});
  await page.evaluate(()=>{
   document.querySelector('.authCard').insertAdjacentHTML('beforeend','<input name="username" value="test@example.test"><p class="authLinks"><a class="ajax" href="?view=resetPassword">Forgot</a></p>');
   const link=document.querySelector('.authLinks a');link.addEventListener('click',e=>e.preventDefault());link.click();

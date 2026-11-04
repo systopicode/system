@@ -11,7 +11,7 @@ $panel=new class {
  function updateView($view) {check('updates auth main only',$view==='main');}
  function signIn($user,$method){}
  function enterCms($delay,$target=null){$this->redirect=[$delay,$target];}
- function run(){include dirname(__DIR__).'/panels/admin/auth/actions.php';}
+ function run(){include dirname(__DIR__).'/panels/auth/actions.php';}
 };
 $panel->run();
 check('skip displays success instead of password form',$panel->form==='signedIn');

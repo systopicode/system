@@ -31,8 +31,18 @@ So klein wie möglich gehalten, damit die Anmeldung aussieht wie vorher
    Passwort-Formular, Registrieren, Impressum). Falls auth etwas davon
    braucht (Tastatur auf dem Handy, `mobile.js`?): in auth einbinden oder
    nach `public/css` bzw. `public/js` ziehen.
-2. **gui.md** nennt noch `admin/auth` (Zeilen ~465, 556, 566) — bitte
-   anpassen: `auth/`, `system/panels/auth/releases.php`.
+2. **gui.md** ist noch nicht nachgezogen (Stand 2026-11-04), bitte anpassen:
+   - Zeilen 469, 562, 572: `admin/auth` → `auth/`, `system/panels/auth/releases.php`.
+     Zeile 572 nennt außerdem `public/js/core/server.js`, die Datei liegt jetzt
+     unter `public/js/core/server/server.js`.
+   - Zeile 41: `system/panels/cms` → `system/panels/admin`.
+   - Zeile 60: `system/panels/admin/080_users` → `080_access`.
+   - Zeilen 30, 62, 304, 585: `admin/public/…` meint das Paket, richtig ist
+     `cms/public/…` (die Ersetzung `cms` → `admin` hat es mitgenommen).
+3. **`cms/tests/info-dialogs.php`** erwartet in `sidebar/relationsHelp` einen
+   `href` zum Schließen, der Dialog schließt aber per `data-box-close`. Der
+   Test schlägt deshalb fehl. Test oder Dialog anpassen, je nachdem, was gelten
+   soll.
 
 Betroffene Dateien: `panels/auth/*`, `panels/admin/head.tpl.php` (unverändert,
 `$headHost->name === 'auth'` passt weiter), `src/Panels/Tree/PanelTree.php`,

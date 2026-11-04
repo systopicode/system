@@ -4,7 +4,7 @@ import {pathToFileURL} from 'node:url';
 import assert from 'node:assert/strict';
 const {Window}=await import(pathToFileURL(process.env.FLUXO_DOM_MODULE || 'node_modules/happy-dom/lib/index.js').href);
 const base=await readFile(new URL('../public/css/20_base.css',import.meta.url),'utf8');
-const auth=await readFile(new URL('../panels/admin/auth/auth.css',import.meta.url),'utf8');
+const auth=await readFile(new URL('../panels/auth/auth.css',import.meta.url),'utf8');
 // Happy DOM cannot evaluate CSS nesting. Retain the real html/body selectors
 // and their initial layout declarations; the nested card styling is irrelevant here.
 const layout=Array.from(auth.matchAll(/^(html[^{}]*|body[^{}]*)\{([^{}]*)/gm),match=>match[1]+'{'+match[2].slice(0,match[2].lastIndexOf(';')+1)+'}').join('\n');

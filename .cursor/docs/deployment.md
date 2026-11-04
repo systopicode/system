@@ -138,7 +138,8 @@ Weg. Mediendateien also nicht gesondert kopieren oder als fehlend melden
 ## 5. Je Server: Mail und Login (seit systopic/system 1.3)
 
 In `config/<Instance>.config.json` oder `config/config.local.json` des
-Servers, nie in Git (Doku: [auth-devices.md](auth-devices.md)):
+Servers, nie in Git (Doku: [auth-devices.md](auth-devices.md)). Die DEV-Configs
+dürfen ins private Projekt-Repo, auch mit `auth.secret` (Benutzer, 2026-11-04):
 
 ```json
 "mail": {"host": "smtp.systopic.net", "port": 587, "secure": "tls",

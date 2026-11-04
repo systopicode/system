@@ -166,7 +166,7 @@ if (php_sapi_name() !== 'cli'
 	&& ($reqPath[1] ?? '') !== 'auth'
 	&& !\Systopic\System\Auth\Session::known()
 ) {
-	$loginUrl = rtrim((string) http::$root, '/') . '/admin/auth/';
+	$loginUrl = rtrim((string) http::$root, '/') . '/auth/';
 	// an ajax call comes from the page on screen: that is where to come back to
 	\Systopic\System\Auth\Session::rememberReturn((string) (http::ajax() ? ($_SERVER['HTTP_REFERER'] ?? '') : ($_SERVER['REQUEST_URI'] ?? '')));
 	if (http::ajax()) {

@@ -62,13 +62,14 @@ Entscheidungen: [devices-auth.plan.md](../plans/devices-auth.plan.md).
 ## Rechte
 
 Benutzer anlegen, Codes für andere erzeugen, Geräte anderer sperren und
-Screens koppeln darf, wer die Rolle `userAdmin` hat. Superuser zählen
+Screens koppeln darf, wer die Rolle `cmsAdmin` hat. Superuser zählen
 immer mit (`Session::hasRole()`).
 
 ## Konfiguration
 
 Siehe [deployment.md](deployment.md) §5: `mail` und `auth.secret` je Server,
-nie in Git oder im Sync. Ohne `auth.secret` ist das CMS wie vor 1.3
+auf Servern nie in Git oder im Sync. DEV-Configs dürfen sie im privaten
+Projekt-Repo tragen. Ohne `auth.secret` ist das CMS wie vor 1.3
 (Aktivierungs-Mail), damit Projekte, deren Login keine Codes kennt,
 unverändert bleiben.
 

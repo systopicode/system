@@ -5,7 +5,7 @@ const {chromium}=await import(process.env.FLUXO_PLAYWRIGHT_MODULE);
 const browser=await chromium.launch({channel:'chrome',headless:true});
 try {
  const page=await browser.newPage();
- const css=await readFile('public/css/18_ui.css','utf8')+await readFile('public/css/20_base.css','utf8')+await readFile('public/css/50_forms.css','utf8')+await readFile('panels/admin/auth/auth.css','utf8');
+ const css=await readFile('public/css/18_ui.css','utf8')+await readFile('public/css/20_base.css','utf8')+await readFile('public/css/50_forms.css','utf8')+await readFile('panels/auth/auth.css','utf8');
  const html=execFileSync('php',['tests/auth-screen-fixture.php','password'],{encoding:'utf8'});
  await page.setContent(`<style>${css}</style><body class="cms"><div class="authCard">${html}</div></body>`);
  assert.equal(await page.locator('[data-success-footer]').isVisible(),false);
