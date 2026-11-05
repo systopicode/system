@@ -120,9 +120,9 @@ Anfrage zählt gegen die IP.
 | Nr. | Weg | Start | Abschluss |
 |---|---|---|---|
 | 4.1 | T, Admin | `admin/user`, Widget „My devices“ → „Create code“ | Zielgerät: `auth/?code=` |
-| 4.2 | T, App | `devices/` → „Code für ein neues Gerät“ | Zielgerät: `auth/?code=` |
+| 4.2 | T, App | Benutzermenü am Desktop → „Auf Mobilgerät anmelden“, „Verstanden“ (oder `devices/` → „Code für ein neues Gerät“) | Zielgerät: `auth/?code=` |
 | 4.3 | Z, Admin | Zielgerät: `auth/` → „Sign in from another device“ | `admin/user`, Widget „My devices“ → „Scan code“, dann „Allow“ |
-| 4.4 | Z, App | wie 4.3 | `devices/` → „Code von anderem Bildschirm scannen“, dann „Freigeben“ |
+| 4.4 | Z, App | wie 4.3 | Benutzermenü am Mobilgerät → „Am Arbeitsplatz anmelden“, „Verstanden“, Code scannen (oder `devices/` → „Code von anderem Bildschirm scannen“, dann „Freigeben“) |
 
 Im Profil trennen drei Widgets, wen A anmeldet. Jedes hat beide Richtungen,
 „Scan code“ (Icon `object-scan`) und „Create code“ (Icon `qrcode`):
@@ -160,7 +160,7 @@ den QR-Link, stehen alle erlaubten Konten zur Wahl.
 | 6.1 | Z, Benutzerverwaltung | `admin/access/screens`, Aktionsspalte → „Scan device code from screen“ | Gerätecode scannen oder eingeben | `authScreens` |
 | 6.1a | T, Benutzerverwaltung | `admin/access/screens`, Aktionsspalte → „Create new auth code“ | Code erzeugen, auf dem Gerät eingeben | `authScreens` |
 | 6.2 | T oder Z, Admin | Screen zeigt den Gerätecode auf `auth/`, oder A erzeugt einen Code | `admin/user`, Widget „Paired screens“: Screen wählen, dann „Scan code“ oder „Create code“ | `authScreens` |
-| 6.3 | Z, App | wie 6.2 | `devices/`: Screen wählen, Hinweis, „Freigeben“ | `authScreens` |
+| 6.3 | Z, App | wie 6.2 | Benutzermenü → „Bildschirm koppeln“, Code scannen oder eingeben, solange es genau einen Screen gibt. Bei mehreren `devices/`: Screen wählen, Hinweis, „Freigeben“ | `authScreens` |
 
 Wer nur `authScreens` hat (Rolle `screenOperator`), sieht in der
 Benutzerverwaltung nur die Screens. Beide Aktionen liegen im Panel `pair`
@@ -200,6 +200,7 @@ Das Log nennt beide: „A switched to B“.
 | 9.2 | Alle anderen eigenen Geräte abmelden | `admin/user` | `devices/` |
 | 9.3 | Gerät einer anderen Person abmelden | `admin/access/users/edit` | – |
 | 9.4 | Screen abmelden | `admin/access/screens/edit` | `devices/` |
+| 9.4a | Alle Screens abmelden | – | Benutzermenü → „Bildschirme abmelden“ |
 | 9.5 | Konto sperren | `admin/access/users/edit` | – |
 
 ## Verortung
