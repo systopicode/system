@@ -22,7 +22,7 @@
       "sha256": "3972dc9744f6499f0f9b2dbf76696f2ae7ad8af9b23dde66d6af86c9dfb36986"
     },
     "webauthn-MIT.txt": {
-      "source": "system/lib/webauthn/LICENSE (vendored lbuchs/webauthn)",
+      "source": "https://github.com/lbuchs/WebAuthn/blob/v2.2.0/LICENSE (Composer package lbuchs/webauthn)",
       "sha256": "2b0936c64a2f78bae10ac2f88361cd7e638fe5f3364ea5e9e633f6945bfd5ecc"
     },
     "centrifuge-MIT.txt": {
@@ -87,7 +87,7 @@
     },
     "DiceBear-Styles-NOTICE.txt": {
       "source": "https://github.com/dicebear/styles/blob/22a9abebc54ed68275da811573204ad83db646b8/LICENSE.md",
-      "sha256": "2587d09f51f514e7f967c25fbf46d9eb4d1ac8e039ee5e8380680b50a6cc7195"
+      "sha256": "46da9f06491ab2c58242c7a5d647dd937f99015228c2e5ad6a3694f91cf80011"
     },
     "Phosphor-MIT.txt": {
       "source": "https://registry.npmjs.org/@phosphor-icons/core/-/core-2.1.1.tgz (package/LICENSE)",

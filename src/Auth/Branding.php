@@ -5,6 +5,40 @@ namespace Systopic\System\Auth;
 /** Frontend branding only follows a validated, remembered frontend destination. */
 final class Branding
 {
+    /** Remember a same-project entry, without trusting external Referer headers. */
+    public static function rememberSource(): void
+    {
+        if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'GET') return;
+        $source = parse_url((string) ($_SERVER['HTTP_REFERER'] ?? ''));
+        $site = parse_url((string) \http::$siteUrl);
+        if (!is_array($source) || !is_array($site)) return;
+        foreach (['scheme', 'host', 'port'] as $part) {
+            if (($source[$part] ?? null) !== ($site[$part] ?? null)) return;
+        }
+        $path = (string) ($source['path'] ?? '');
+        $root = rtrim((string) \http::$root, '/') . '/';
+        if (!str_starts_with($path, $root)) return;
+        $relative = substr($path, strlen($root));
+        if (preg_match('~^(?:(admin/)?auth(?:/|$)|admin/user/logout(?:/|$))~', $relative)) return;
+        Session::rememberReturn($path . (isset($source['query']) ? '?' . $source['query'] : ''));
+    }
+
+    public static function name(): string
+    {
+        if (!self::frontend()) return \Systopic\System\Sys\WebApp::name();
+        $meta = \Systopic\System\Config\Config::current()?->site()?->meta('appName');
+        $name = is_string($meta) ? trim(strip_tags($meta)) : '';
+        if ($name === '' && defined('PUBLIC_APP_NAME')) $name = trim(strip_tags((string) PUBLIC_APP_NAME));
+        return $name !== '' ? $name : (\Systopic\System\Sys\WebApp::publicName() ?: \Systopic\System\Sys\WebApp::name());
+    }
+
+    public static function documentTitle(): string
+    {
+        return self::frontend()
+            ? \Systopic\System\Sys\WebApp::stageMark() . self::name()
+            : \Systopic\System\Sys\WebApp::documentTitle();
+    }
+
     public static function frontend(): bool
     {
         $target = Session::peekReturn();

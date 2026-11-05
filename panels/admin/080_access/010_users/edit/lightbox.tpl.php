@@ -13,8 +13,9 @@ if (!$this->user) {
 	</section>
 </div>
 <?php
-$issued = $this->issuedCode;
-if ($issued !== null) {
-	$issuedFor = $this->user->type === \Systopic\System\Tables\Users\Model::SCREEN ? 'screen' : 'person';
-	include __DIR__ . '/code.tpl.php';
-}
+$fixedUser = $this->user;
+$fixedMode = 'hidden';
+$fixedClose = null;
+$fixedRefresh = $this->href . 'refreshDevices';
+include dirname(__DIR__, 3) . '/user/fixedDialogs.tpl.php';
+?>

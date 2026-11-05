@@ -49,7 +49,7 @@ if ($authPasskey && $authEndpoint !== '') {
     include __DIR__ . '/passkey-icons.tpl.php';
     $passkeyIcons = ob_get_clean();
     $passkeyBox = '<div class="passkeys passkeyLogin' . $quiet . '" data-passkey-endpoint="' . $e($authEndpoint) . '" data-passkey-origin="' . $e($origin) . '" data-passkey-token="' . $e(\Systopic\System\Auth\PasskeyChallenge::token()) . '"' . ($authMethod === 'passkey' ? ' data-passkey-auto="1"' : '') . '>'
-        . '<button type="button" class="button submit passkeyLoginButton" data-on_click="passkeyAction" data-passkey-mode="login"><i class="cmsIcon cmsIcon-user-viewfinder"></i> Use your passkey</button>'
+        . '<button type="button" class="button submit passkeyLoginButton" data-on_click="passkeyAction" data-passkey-mode="login"><i class="cmsIcon cmsIcon-user-viewfinder"></i> <span data-passkey-label>Use your passkey</span></button>'
         . '<div class="passkeyAuthFeedback" hidden><div class="passkeyArtwork">' . $passkeyIcons . '</div></div>'
         . '</div>';
 }
@@ -76,7 +76,7 @@ $codeChars = str_split(substr(strtoupper((string) preg_replace('/[^0-9A-Z]/', ''
             <h1>Use your passkey</h1>
             <p class="authLead">Sign in with Face ID, Touch ID or your security key.</p>
             <?= $authMessages ?>
-            <button type="button" class="button submit passkeyLoginButton" data-on_click="passkeyAction" data-passkey-mode="login"><i class="cmsIcon cmsIcon-user-viewfinder"></i> Use your passkey</button>
+            <button type="button" class="button submit passkeyLoginButton" data-on_click="passkeyAction" data-passkey-mode="login"><i class="cmsIcon cmsIcon-user-viewfinder"></i> <span data-passkey-label>Use your passkey</span></button>
         </div>
     <?php } elseif ($authMethod === 'device_code' && $authCodes) { ?>
         <div class="authBody">
@@ -171,27 +171,27 @@ $codeChars = str_split(substr(strtoupper((string) preg_replace('/[^0-9A-Z]/', ''
         <h1>Sign in</h1>
         <p class="authLead">&nbsp;</p>
         <?= $authMessages ?>
-        <div class="authMethods">
+        <div class="authMethods cmsChoices">
             <?php if ($authPasskey) { ?>
-                <a class="authMethod ajax" href="?method=passkey">
+                <a class="authMethod cmsChoice ajax" href="?method=passkey">
                     <i class="cmsIcon cmsIcon-user-viewfinder"></i>
                     <span><b>Passkey</b><small>Face ID, Touch ID or a security key.</small></span>
                     <i class="cmsIcon cmsIcon-chevron-right"></i>
                 </a>
             <?php } ?>
             <?php if ($authCodes) { ?>
-                <a class="authMethod ajax" href="?method=code">
+                <a class="authMethod cmsChoice ajax" href="?method=code">
                     <i class="cmsIcon cmsIcon-input-numeric"></i>
                     <span><b>Sign-in code</b><small>Use a code from an admin.</small></span>
                     <i class="cmsIcon cmsIcon-chevron-right"></i>
                 </a>
-                <a class="authMethod ajax" href="?method=device_code">
+                <a class="authMethod cmsChoice ajax" href="?method=device_code">
                     <i class="cmsIcon cmsIcon-qrcode"></i>
                     <span><b>Sign in from another device</b><small>Use a device that is already signed in.</small></span>
                     <i class="cmsIcon cmsIcon-chevron-right"></i>
                 </a>
             <?php } ?>
-            <a class="authMethod ajax" href="?method=password">
+            <a class="authMethod cmsChoice ajax" href="?method=password">
                 <i class="cmsIcon cmsIcon-input-password"></i>
                 <span><b>Username &amp; password</b><small>Username and password.</small></span>
                 <i class="cmsIcon cmsIcon-chevron-right"></i>

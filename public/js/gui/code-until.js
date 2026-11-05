@@ -17,6 +17,23 @@
         try { window.sys?.passkeys?.showSignedIn?.(block, answer.profile, answer.redirect); }
         catch (error) { console.error('Sign-in feedback could not be displayed', error); }
     };
+    // Use the standard command transport quietly for the already open dialog.
+    window.requestDeviceOffer = function (form) {
+        if (form._offerRequest) return form._offerRequest;
+        var values = {};
+        form.querySelectorAll('input[name]').forEach(function (input) { values[input.name] = input.value; });
+        var button = form.querySelector('button[type="submit"]');
+        if (button) button.disabled = true;
+        form._offerRequest = new Promise(function (resolve, reject) {
+            var call = new sys.core.server.call({method: 'put', form: values});
+            call.background = true;
+            call.send(form.action).done(resolve).fail(reject);
+        }).finally(function () {
+            delete form._offerRequest;
+            if (button) button.disabled = false;
+        });
+        return form._offerRequest;
+    };
     var renewal = null;
     window.renewDeviceCode = function () {
         if (renewal) return renewal;
@@ -63,6 +80,15 @@
 				window.setTimeout(go, clock ? Math.min(wait, 1000) : wait + 250);
 				return;
 			}
+            if (node.hasAttribute('data-offer-renew')) {
+                var box = node.closest('.deviceBox');
+                if (!box || box.hidden || !node.offsetParent || box.dataset.codeComplete === '1') return;
+                var form = node.querySelector('form');
+                if (form) window.requestDeviceOffer(form).catch(function () {
+                    if (node.isConnected) window.setTimeout(go, 3000);
+                });
+                return;
+            }
             if (node.hasAttribute('data-code-renew')) {
                 if (node.offsetParent && document.visibilityState === 'visible') {
                     window.renewDeviceCode().catch(function () {
@@ -73,9 +99,14 @@
             }
             retire(node);
 		};
+        node._codeDeadlineTick = go;
 		go();
 	}
 
+    document.addEventListener('visibilitychange', function () {
+        if (document.visibilityState !== 'visible') return;
+        document.querySelectorAll('[data-offer-renew]').forEach(function (node) { node._codeDeadlineTick?.(); });
+    });
 	function bind(root) {
 		(root || document).querySelectorAll('[data-code-until]').forEach(watch);
 	}
@@ -115,7 +146,7 @@
             // ORM updates may replace the profile while the target finishes signing in.
             // Keep this completion check, but never reopen or write into a new dialog.
             if (Date.now() > deadline || (!node.isConnected && !profileFlow)) { clearInterval(node._codeInterval); return; }
-			if (node.hidden || node.closest('.cmslightbox')?.hidden || busy) return;
+			if (node.hidden || node.closest('.cmslightbox')?.hidden || busy || node.querySelector('[data-create-gate]:not([hidden])')) return;
 			busy = true;
 			var body = new URLSearchParams();
 			body.set('code', code);
@@ -133,6 +164,13 @@
 			}).then(function (data) {
 				busy = false;
 				if (!data || data.alive !== false || node.getAttribute('data-code-value') !== code || node.closest('.cmslightbox')?.hidden) return;
+                if (data.used !== true && node.isConnected) {
+                    var offer = node.querySelector('[data-offer-renew]');
+                    if (offer && !offer.closest('[hidden]')) {
+                        window.requestDeviceOffer(offer.querySelector('form')).catch(function () {});
+                        return;
+                    }
+                }
                 clearInterval(node._codeInterval);
                 if (!node.isConnected && data.used !== true) return;
                 var feedback = node.querySelector('[data-code-feedback], [data-remote-feedback]');
@@ -150,10 +188,10 @@
                     var box = node.closest('.cmslightbox') || node;
                     box.dataset.codeComplete = '1';
                     box.querySelectorAll('[data-code-live], [data-code-form], [data-qr-host], .message.is-stay').forEach(function (part) { part.hidden = true; });
-                    var refresh = node.getAttribute('data-code-refresh');
+                    var refresh = box.getAttribute('data-code-refresh') || node.getAttribute('data-code-refresh');
                     if (refresh && window.sys && sys.core && sys.core.server) {
                         var refreshList = function () {
-                            if (!document.querySelector('[data-own-devices], [data-paired-screen-devices]')) return;
+                            if (!document.querySelector('[data-own-devices], [data-paired-screen-devices], [data-access-user-list], .userEdit')) return;
                             var call = new sys.core.server.call({method: 'put'});
                             call.background = true;
                             call.send(refresh);

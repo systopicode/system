@@ -1,6 +1,6 @@
 # Local avatar subset
 
-Pinned DiceBear PHP core and Notionists/Bottts definitions: **10.6.0**. Archive revisions, SHA-256 digests, retained style metadata and generated-file hashes are in `manifest.json`.
+Pinned Composer renderer and Notionists/Bottts definitions: **10.6.0**. Upstream archive revisions, SHA-256 digests, retained style metadata and generated resource hashes are in `manifest.json`.
 
 ## Runtime
 
@@ -16,17 +16,18 @@ The `.json.gz` files remain compressed **on disk**. `gzdecode()` expands only th
 
 The cache fingerprint is a derived digest, not an authentication token. It must not be reused for authentication or treated as anonymous merely because it is hashed. Neither a clear email address nor the raw seed is embedded in the generated SVG.
 
-## Restricted upstream adaptation
+## Composer renderer
 
-This is deliberately **not** a generic DiceBear installation or public rendering endpoint:
+The unmodified `dicebear/core` 10.6.0 package and its schema validators are
+installed by Composer under the project's `vendor/` directory. No renderer
+source or private vendor namespace is copied into System. `Auth/LocalAvatar`
+remains the application adapter: it accepts only a 64-character hexadecimal
+seed and three six-digit colours and loads the two digest-checked definitions.
+No uploaded styles or arbitrary HTTP options are accepted.
 
-1. The core uses the private `Systopic\System\Vendor\DiceBear` namespace, so a project's normal DiceBear package cannot collide with it.
-2. The schema-validator entry calls and their imports are removed from Style/Options. Validator classes and the Opis/schema packages are not shipped. Style alias checks remain.
-3. Only two fixed, digest-checked definitions are accepted. They are checked with the unmodified schema-validating upstream library during reference testing. `LocalAvatar` accepts only a 64-character hexadecimal seed and three six-digit colours; it constructs the fixed option list itself. Do not expose the private vendor classes to uploaded styles or arbitrary HTTP options.
-4. Documentation blocks are omitted to reduce source size. Runtime code comments, attribution generation and the full MIT notice are retained.
-5. Definitions are JSON-compacted without discarding artwork or licence metadata, then gzip-compressed at build time.
-
-PHP 8.4 is already required by the System package. This path also uses mbstring, DOM/libxml and zlib. It needs no Composer execution, Node, Docker or service on the target hosting package. If generation cannot run there, the neutral fallback remains available.
+PHP 8.4 is required by System; the avatar path also uses mbstring, DOM/libxml
+and zlib. The complete Composer dependency tree must be deployed with System.
+No Node, Docker, external avatar API or background service is required.
 
 ## Rebuild and verify
 
@@ -40,12 +41,10 @@ php tests/portrait-fallback.php
 php tests/third-party-notices.php
 ```
 
-For reference comparison, temporarily install unmodified `dicebear/core:10.6.0` including its dependencies outside the project with Composer scripts/plugins disabled. Put the original Notionists/Bottts JSON files beside that reference directory. Then run:
-
-```sh
-FLUXO_DICEBEAR_REFERENCE=/tmp/fluxo-local-avatars/reference php tests/local-avatars.php
-```
-
-This validates the definitions/options through upstream and compares **48 SVGs byte for byte** across both styles, 12 seeds per style and two light/dark palettes. Run the full comparison before updating versions; increase the adaptation revision when output-affecting wrapper/vendor changes are made. Without a reference directory the local functional checks still run and clearly report the skipped upstream comparison.
+`tests/local-avatars.php` now exercises the actual Composer renderer, including
+its original schema validators. Set `FLUXO_DICEBEAR_AUTOLOAD` to another Composer
+installation's `vendor/autoload.php` when running standalone checks outside an
+installed System package. Before changing the pinned renderer/style version,
+compare generated SVGs against the previous release and review cache identity.
 
 Licences: `legal/third-party/DiceBear-MIT.txt`, `DiceBear-Styles-NOTICE.txt`, `CC0-1.0.txt`. No public API usage permission is needed for this implementation because it never calls that API.

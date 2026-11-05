@@ -62,8 +62,8 @@ $screens = ($this->accountKind ?? '') === \Systopic\System\Tables\Users\Model::S
 								<?php if (\Systopic\System\Auth\Session::isSuperuser(true) && !$user->isSuperuser) { ?>
 									<li><button type="button" data-cms-action class="button icononly" title="Sign in as this user" data-on_click="../hijackUser"><i class="cmsIcon cmsIcon-ghost-3"></i></button></li>
 								<?php } ?>
-								<?php if ($screens) { ?>
-									<li><a class="ajax button icononly" title="Scan device code from screen: <?= $e($user->name) ?>" aria-label="Scan device code from screen: <?= $e($user->name) ?>" href="<?= $e($this->href . 'pair/?user_id=' . (int) $user->id . '&way=scan') ?>"><i class="cmsIcon cmsIcon-object-scan"></i></a></li>
+								<?php if (\Systopic\System\Auth\SignInGrant::account($this->scope, \Systopic\System\Queries\UserLookup\UserLookup::byId($this->scope, (int) \Systopic\System\Auth\Session::id()), $this, (int) $user->id)) { ?>
+									<li><a class="ajax button icononly" title="Scan sign-in code: <?= $e($user->name) ?>" aria-label="Scan sign-in code: <?= $e($user->name) ?>" href="<?= $e($this->href . 'pair/?user_id=' . (int) $user->id . '&way=scan') ?>"><i class="cmsIcon cmsIcon-object-scan"></i></a></li>
 									<li><a class="ajax button icononly" title="Create new auth code: <?= $e($user->name) ?>" aria-label="Create new auth code: <?= $e($user->name) ?>" href="<?= $e($this->href . 'pair/?user_id=' . (int) $user->id) ?>"><i class="cmsIcon cmsIcon-qrcode"></i></a></li>
 								<?php } ?>
 								<?php if (\Systopic\System\Auth\Session::hasRole('cmsAdmin')) { ?>

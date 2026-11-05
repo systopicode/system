@@ -104,6 +104,8 @@
     };
 
     document.addEventListener('click', captureSlide, true);
+    // AJAX method selection updates the shared card, not necessarily this panel's main view.
+    document.addEventListener('cms:rendered', boot);
 
     sys.lib.add(setup, function () {
         sys.lib.applyParentConstructor(this, setup, []);

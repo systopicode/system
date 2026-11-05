@@ -41,12 +41,6 @@ class Panel extends CmsPanel {
 		get => $this->user !== NULL ? \Systopic\System\Queries\Devices\Devices::ofUser($this->scope, (int) $this->user->id, (bool) $this->user->isBlocked) : [];
 	}
 
-	/**
-	 * A code made in this request - shown once, right after the action that
-	 * made it: ['code' => …, 'expires' => ts].
-	 */
-	public ?array $issuedCode = NULL;
-
 	function getDefaultState() {
 		return (object) [
 			'userTab' => 'general',

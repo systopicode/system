@@ -3,8 +3,8 @@
 declare(strict_types=1);
 namespace Systopic\System\Auth;
 
-use Systopic\System\Vendor\DiceBear\Avatar;
-use Systopic\System\Vendor\DiceBear\Style;
+use DiceBear\Avatar;
+use DiceBear\Style;
 
 /** Restricted local renderer; never accepts uploaded styles or arbitrary options. */
 final class LocalAvatar

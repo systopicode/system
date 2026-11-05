@@ -2,6 +2,7 @@
 /** Real local renderer and filesystem integration; never bootstraps project data. */
 declare(strict_types=1);
 require __DIR__ . '/bootstrap.php';
+require getenv('FLUXO_DICEBEAR_AUTOLOAD') ?: dirname(__DIR__) . '/vendor/autoload.php';
 use Systopic\System\Auth\LocalAvatar;
 use Systopic\System\Auth\Portrait;
 class fs {public static string $siteRoot;public static function toNative($p){return $p;}}
@@ -72,18 +73,6 @@ try {
  check('storage failure keeps a local duotone fallback',str_starts_with(Portrait::src(73,'storage@example.test'),'data:image/svg+xml,'));fs::$siteRoot=$root.'/';
  $process=proc_open([PHP_BINARY,'-d','disable_functions=gzdecode',__FILE__,'--fallback-fixture'],[0=>['pipe','r'],1=>['pipe','w'],2=>['pipe','w']],$pipes);fclose($pipes[0]);$result=stream_get_contents($pipes[1]);$errors=stream_get_contents($pipes[2]);fclose($pipes[1]);fclose($pipes[2]);$exit=proc_close($process);
  check('generation failure keeps the Phosphor fallback without PHP errors',$exit===0&&$errors===''&&str_starts_with(json_decode($result,true)['src']??'','data:image/svg+xml,'));
- $reference=getenv('FLUXO_DICEBEAR_REFERENCE');
- if($reference){
-  require $reference.'/vendor/autoload.php';
-  $cases=0;
-  foreach([false,true] as $screen){$name=$screen?'bottts':'notionists';$raw=file_get_contents(dirname($reference).'/'.$name.'.json');$style=\DiceBear\Style::fromJson($raw);
-   foreach([$colors,['ink'=>'f2f3f4','paper'=>'66b5ff','background'=>'172024']]as$palette)foreach(range(1,12)as$i){
-    $s=LocalAvatar::seed($i,'reference-'.$i.'@example.test',$screen);
-    $expected=(string)new \DiceBear\Avatar($style,LocalAvatar::options($s,$screen,$palette));
-    check('upstream SVG equivalence '.$name.' '.(++$cases),$expected===LocalAvatar::render($s,$screen,$palette));
-   }
-  }
- }else echo "SKIP: upstream comparison requires FLUXO_DICEBEAR_REFERENCE.\n";
 } finally {
  $files=new RecursiveIteratorIterator(new RecursiveDirectoryIterator($root,FilesystemIterator::SKIP_DOTS),RecursiveIteratorIterator::CHILD_FIRST);
  foreach($files as$f){$f->isDir()?rmdir($f->getPathname()):unlink($f->getPathname());}rmdir($root);

@@ -37,24 +37,24 @@ final class SignInGrant
     /**
      * What `$me` can choose from, themselves first.
      *
-     * @return list<array{id: int, label: string, name: string, self: bool, screen: bool}>
+     * @return list<array{id: int, label: string, name: string, email: ?string, self: bool, screen: bool}>
      */
     public static function accounts(Scope $scope, User $me, PanelNode $node): array
     {
         $table = Schema::tableNameOf(User::class);
-        $mine = [['id' => (int) $me->id, 'label' => self::label($me->fullname, $me->name), 'name' => (string) $me->name, 'self' => true, 'screen' => false]];
-        $where = 'user_id > 1 AND user_id <> ? AND user_is_active = 1 AND COALESCE(user_is_blocked, 0) = 0';
+        $mine = [['id' => (int) $me->id, 'label' => self::label($me->fullname, $me->name), 'name' => (string) $me->name, 'email' => $me->email, 'self' => true, 'screen' => false]];
+        $where = 'user_id > 1 AND user_id <> ? AND COALESCE(user_is_blocked, 0) = 0';
         $rows = [];
         if (self::mayPersons($node)) {
             $persons = "$where AND (user_type = ? OR user_type IS NULL OR user_type = '')";
             $persons .= $me->isSuperuser ? '' : ' AND COALESCE(user_is_superuser, 0) = 0';
-            $rows = $scope->connection->all("SELECT user_id, user_name, user_fullname, user_type FROM $table WHERE $persons ORDER BY user_name", [(int) $me->id, User::PERSON]);
+            $rows = $scope->connection->all("SELECT user_id, user_name, user_fullname, user_type, user_email FROM $table WHERE $persons ORDER BY user_name", [(int) $me->id, User::PERSON]);
         }
         if (self::mayScreens($node)) {
-            $rows = array_merge($rows, $scope->connection->all("SELECT user_id, user_name, user_fullname, user_type FROM $table WHERE $where AND user_type = ? ORDER BY user_name", [(int) $me->id, User::SCREEN]));
+            $rows = array_merge($rows, $scope->connection->all("SELECT user_id, user_name, user_fullname, user_type, user_email FROM $table WHERE $where AND user_type = ? ORDER BY user_name", [(int) $me->id, User::SCREEN]));
         }
         foreach ($rows as $row) {
-            $mine[] = ['id' => (int) $row['user_id'], 'label' => self::label($row['user_fullname'], $row['user_name']), 'name' => (string) $row['user_name'], 'self' => false, 'screen' => $row['user_type'] === User::SCREEN];
+            $mine[] = ['id' => (int) $row['user_id'], 'label' => self::label($row['user_fullname'], $row['user_name']), 'name' => (string) $row['user_name'], 'email' => $row['user_email'] ?? null, 'self' => false, 'screen' => $row['user_type'] === User::SCREEN];
         }
         return $mine;
     }

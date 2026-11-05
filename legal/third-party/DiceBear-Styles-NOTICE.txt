@@ -22,4 +22,4 @@ Permission stated by the pinned upstream definition and licence overview: Free f
 Upstream attribution: Remix of Bottts by Pablo Stanley, licensed under Free for personal and commercial use.
 This notice records those artist-specific terms; it does not relabel Bottts as MIT or CC0.
 
-The adapted PHP renderer is separately MIT-licensed. Its complete licence and copyright notice are supplied in DiceBear-MIT.txt. The system's proprietary licence does not restrict the rights granted by these third-party terms.
+The Composer-managed PHP renderer is separately MIT-licensed. Its complete licence and copyright notice are supplied in DiceBear-MIT.txt. The system's proprietary licence does not restrict the rights granted by these third-party terms.

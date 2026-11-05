@@ -8,6 +8,17 @@ composer require systopic/system
 ```
 
 Requires PHP 8.4 and [systopic/db](https://github.com/systopicode/db).
+External PHP libraries are installed exclusively by Composer: `lbuchs/webauthn`
+for passkeys, `dicebear/core` 10.6.0 for local avatars and `tecnickcom/tcpdf`
+for PDF output. No embedded PHP-library fallback is shipped.
+
+Before deploying this change to an existing project, run `composer update
+systopic/system --with-all-dependencies` in that project to refresh its lock
+file, then deploy the resulting `vendor/` tree together with the application.
+Production builds can use `composer install --no-dev --prefer-dist
+--optimize-autoloader`. Composer need not run on the hosting server when the
+complete build is uploaded. Do not upload `system/` alone with stale dependencies.
+
 Websites add [systopic/cms](https://github.com/systopicode/cms).
 
 ## Documentation

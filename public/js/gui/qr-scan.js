@@ -164,6 +164,12 @@
 		host.classList.remove('is-on');
 		dim.hidden = false;
 		var denied = mode === 'denied';
+        var profile = !!host.closest('.deviceBoxMain');
+        var status = formOf(host)?.querySelector('[data-qr-status]');
+        if (status) {
+            status.hidden = false;
+            status.textContent = denied ? 'Camera access is unavailable.' : mode === 'aborted' ? 'Camera stopped.' : 'Camera timed out.';
+        }
 		if (title) title.textContent = denied
 			? (host.getAttribute('data-denied-title') || 'Camera access is required')
 			: (host.getAttribute('data-timeout-title') || 'Scanning timed out');
@@ -171,7 +177,7 @@
 			? ''
 			: (host.getAttribute('data-timeout-text') || 'The camera stopped. You can try again.');
 		if (again) {
-			var words = denied
+			var words = denied && !profile
 				? (host.getAttribute('data-allow') || 'Allow access')
 				: (host.getAttribute('data-again') || 'Try again');
             if (host.dataset.qrHost === 'login') {
@@ -182,11 +188,11 @@
 			if (label) label.textContent = words;
 			else again.textContent = words;
 			var mark = again.querySelector('i');
-			if (mark) mark.className = 'cmsIcon ' + (denied ? 'cmsIcon-camera' : 'cmsIcon-arrows-rotate');
+			if (mark) mark.className = 'cmsIcon ' + (denied && !profile ? 'cmsIcon-camera' : 'cmsIcon-arrows-rotate');
 		}
-		// The account lightbox already offers "Or use code" and keeps the QR.
-		// Opening the form there hides that QR.
-		if (denied && formOf(host) && !host.closest('.deviceBoxMain') && !dim.querySelector('[data-remote-code]')) showFields(host, true);
+        // The existing auth fallback also applies to the profile dialogs:
+        // retry above the manual input, with no extra mode-selection step.
+        if (formOf(host) && (host.closest('.deviceBoxMain') || (denied && !dim.querySelector('[data-remote-code]')))) showFields(host, true);
 		if (denied) whenAllowed(host);
 	}
 
@@ -435,7 +441,7 @@
 			if (host._qr !== live) return;
 			var fast = askedAt && (Date.now() - askedAt < 300);
 			finish();
-			showDim(host, 'denied');
+			showDim(host, error?.name === 'AbortError' ? 'aborted' : 'denied');
 			var note = host.querySelector('[data-qr-dim-text]');
 			if (note && error && error.name === 'NotFoundError') {
 				note.textContent = 'No camera was found on this device.';
@@ -496,7 +502,7 @@
 			if (codeForm) {
 				codeForm.hidden = false;
 				var first = codeForm.querySelector('[data-slot]');
-				if (first) first.focus();
+				if (first) first.focus({preventScroll: true});
 			}
 			return;
 		}
@@ -547,6 +553,7 @@
     }
 
     function resetBox(box) {
+        box.querySelectorAll('[data-qr-status]').forEach(function (status) { status.hidden = true; });
         box.dataset.scanInstance = Array.from(crypto.getRandomValues(new Uint8Array(16)), function (b) { return b.toString(16).padStart(2, '0'); }).join('');
         box.querySelectorAll('[data-qr-host]').forEach(function (host) { stop(host); host.hidden = true; });
         box.querySelectorAll('[data-remote-feedback]').forEach(function (feedback) { feedback.replaceChildren(); });

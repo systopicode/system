@@ -59,20 +59,48 @@ document.addEventListener('click', function (event) {
 
 /****************************** KEEPRESS FUNCTIONSs ***************************/
 document.addEventListener('click', function (event) {
+    var understood = event.target.closest?.('[data-scan-understood]');
+    if (understood) {
+        var gate = understood.closest('[data-scan-gate]');
+        gate.closest('.deviceBox').setAttribute('data-auth-understood', '');
+        gate.removeAttribute('data-gated');
+        var content = gate.querySelector('[data-scan-content]');
+        content.inert = false; content.removeAttribute('aria-hidden');
+        gate.querySelector('[data-scan-placeholder]').hidden = true;
+        window.QrScan?.open(content.querySelector('[data-qr-host]'));
+        return;
+    }
 	var open = event.target.closest ? event.target.closest('[data-open-box]') : null;
 	if (open) {
 		var box = document.querySelector(open.getAttribute('data-open-box'));
 		if (box) {
-			box.hidden = false;
+            box.hidden = false;
+            box.removeAttribute('data-auth-understood');
+            box.querySelectorAll('.message.is-stay').forEach(function (message) { message.hidden = false; });
+            var createGate = box.querySelector('[data-create-gate]');
+            if (createGate) {
+                createGate.hidden = false;
+                box.querySelector('[data-create-result]').hidden = true;
+                box.querySelector('[data-remote-feedback]').replaceChildren();
+            }
             if (box.classList.contains('scanCodeBox') && typeof window.QrScan?.resetBox === 'function') window.QrScan.resetBox(box);
 			// The widget chose the account: the box names it and sends it along.
 			var chosen = open.form && open.form.elements.account;
 			if (chosen) {
-				box.querySelector('input[name="account"]').value = chosen.value;
-				box.querySelector('[data-identify-name]').textContent = chosen.selectedOptions[0].textContent;
+				box.querySelectorAll('input[name="account"]').forEach(function (input) { input.value = chosen.value; });
+				box.querySelectorAll('[data-identify-name]').forEach(function (name) { name.textContent = chosen.selectedOptions ? chosen.selectedOptions[0].textContent : (open.form.dataset.accountLabel || name.textContent); });
 			}
             var scanHost = box.classList.contains('scanCodeBox') && window.QrScan ? box.querySelector('[data-qr-host]') : null;
-            if (scanHost) window.QrScan.open(scanHost);
+            if (scanHost) {
+                var gate = box.querySelector('[data-scan-gate]');
+                gate.setAttribute('data-gated', '');
+                var content = gate.querySelector('[data-scan-content]');
+                content.inert = true; content.setAttribute('aria-hidden', 'true');
+                gate.querySelector('[data-scan-placeholder]').hidden = false;
+                var cameraFirst = window.matchMedia('(max-width: 720px), (hover: none) and (pointer: coarse)').matches;
+                scanHost.hidden = !cameraFirst;
+                content.querySelector('[data-code-form]').hidden = cameraFirst;
+            }
 		}
 		return;
 	}
@@ -192,6 +220,33 @@ function renameUserAdminTitle(button) {
     heading.focus();
     selectElementContents(heading);
 }
+
+// Filter the existing account choices locally; selecting only prepares the shared code dialogs.
+document.addEventListener('input', function (event) {
+    if (!event.target.matches('[data-account-search]')) return;
+    var widget = event.target.closest('.widget');
+    var query = event.target.value.trim().toLocaleLowerCase();
+    var visible = 0;
+    widget.querySelectorAll('[data-account-choice]').forEach(function (choice) {
+        choice.hidden = !choice.dataset.accountLabel.toLocaleLowerCase().includes(query);
+        if (!choice.hidden) visible++;
+    });
+    widget.querySelector('[data-account-empty]').hidden = visible > 0;
+});
+document.addEventListener('click', function (event) {
+    var choice = event.target.closest('[data-account-choice]');
+    if (!choice) return;
+    var widget = choice.closest('.widget');
+    var form = widget.querySelector('.deviceWays');
+    var selected = choice.getAttribute('aria-pressed') !== 'true';
+    form.elements.account.value = selected ? choice.dataset.accountChoice : '';
+    form.dataset.accountLabel = selected ? choice.dataset.accountLabel : '';
+    widget.querySelectorAll('[data-account-choice]').forEach(function (item) {
+        item.classList.toggle('selected', selected && item === choice);
+        item.setAttribute('aria-pressed', selected && item === choice ? 'true' : 'false');
+    });
+    form.querySelectorAll('[data-open-box]').forEach(function (button) { button.disabled = !selected; });
+});
 
 // Autosaved technical keys use native validity without sending invalid changes.
 ['input', 'change', 'blur', 'focusout'].forEach(function (type) {
@@ -880,3 +935,18 @@ document.addEventListener('click',event=>{
         if (form) validate(form);
     });
 })();
+
+document.addEventListener('click', function (event) {
+    var button = event.target.closest?.('.addDeviceBox .cmsBoxActions button[type="submit"]');
+    if (button && window.requestDeviceOffer) {
+        event.preventDefault(); event.stopImmediatePropagation();
+        window.requestDeviceOffer(button.form).catch(function () {});
+    }
+}, true);
+document.addEventListener('submit', function (event) {
+    var box = event.target.closest?.('.addDeviceBox');
+    if (box && window.requestDeviceOffer) {
+        event.preventDefault(); event.stopImmediatePropagation();
+        window.requestDeviceOffer(event.target).catch(function () {});
+    }
+}, true);

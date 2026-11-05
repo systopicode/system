@@ -223,7 +223,8 @@ body > main > div.pylon nav{
     min-height: 0;
     overflow: hidden;
     background: var(--cmsBgColor);
-    border-radius: var(--cmsRadiusLg) 0 0 0;
+    border-top-left-radius: var(--cmsRadiusLg);
+    border-top-right-radius: 0;
 }
 
 body > main > div.pylon footer{
@@ -305,7 +306,8 @@ body > main > div.pylon:has(> .pylonTreeToolbar) > header:empty {
     margin: 0;
     padding: .5rem .75rem;
     background: var(--cmsPanelAlt);
-    border-radius: var(--cmsRadiusLg) 0 0 0;
+    border-top-left-radius: var(--cmsRadiusLg);
+    border-top-right-radius: 0;
 }
 .cms .pylonTreeToolbar .searchInput { flex: 1 1 auto; min-width: 0; }
 .cms .pylonTreeToolbar .treeNavi { flex: 0 0 auto; margin-inline-start: auto; }
@@ -356,7 +358,8 @@ body.tools > main > div.pylon{
     margin: 0.5rem 0 var(--cmsStatusBar) 0;
     padding-bottom: 0;
     background: var(--cmsBgColor);
-    border-radius: var(--cmsRadiusLg) 0 0 0;
+    border-top-left-radius: var(--cmsRadiusLg);
+    border-top-right-radius: 0;
     box-shadow: 0 8px 24px rgba(0,0,0,.18);
     clip-path: inset(-40px 0 -40px -40px);
     z-index: 2;
@@ -378,7 +381,8 @@ body.settings > main > div.pylon nav,
 body.access:not(:has(> main > .pylonColumns)) > main > div.pylon nav,
 body.tools > main > div.pylon nav{
     background: transparent;
-    border-radius: var(--cmsRadiusLg) 0 0 0;
+    border-top-left-radius: var(--cmsRadiusLg);
+    border-top-right-radius: 0;
     border-right: 1px solid var(--cmsLineStrong);
 }
 
@@ -389,7 +393,8 @@ body.tools > main > div.content{
     width: 0;
     min-width: 0;
     margin-left: 0;
-    border-radius: 0 var(--cmsRadiusLg) 0 0;
+    border-top-left-radius: 0;
+    border-top-right-radius: var(--cmsRadiusLg);
     clip-path: inset(-40px -40px -40px 0);
     container-type: inline-size;
     container-name: cms-module;
@@ -398,7 +403,8 @@ body.tools > main > div.content{
 body.settings > main > div.content > header,
 body.access:not(:has(> main > .pylonColumns)) > main > div.content > header,
 body.tools > main > div.content > header{
-    border-radius: 0 var(--cmsRadiusLg) 0 0;
+    border-top-left-radius: 0;
+    border-top-right-radius: var(--cmsRadiusLg);
 }
 
 /* Without a pylon the content owns the shoulder beside the main navigation.
@@ -640,4 +646,39 @@ body.cms:not(.pages) > main > div.content > .flexRow > .flexColumn > section.cms
     .cms .pylonSheetLayout[data-pylon-view="tree"] > .pylonSheetDetail,
     .cms .pylonSheetLayout[data-pylon-view="detail"] > .pylonSheetTree { display: none; }
     .cms .pylonSheetLayout .button.pylonSheetBack { display: inline-flex; }
+}
+
+/* Desktop windows have matching lower corners; mobile sheets meet the edge. */
+@media (min-width:1025px) and (orientation:landscape), (min-width:1401px) {
+    body.cms > main > div.content {
+        border-bottom-left-radius:var(--cmsRadiusLg);
+        border-bottom-right-radius:var(--cmsRadiusLg);
+    }
+    body.cms:is(.settings,.access,.tools) > main:has(> div.pylon:not(:empty)):not(:has(> .pylonColumns)) > div.content {
+        border-bottom-left-radius:0;
+    }
+    body.cms:is(.settings,.access,.tools) > main > div.pylon {
+        border-bottom-left-radius:var(--cmsRadiusLg);
+    }
+    body.cms.pages > main > div.content,
+    body.cms > main > .pylonColumns + div.content {
+        border-bottom-left-radius:0;
+    }
+    body.cms.pages > main > div.pylon,
+    body.cms > main > .pylonColumns > .pylonPrimary {
+        border-bottom-left-radius:var(--cmsRadiusLg);
+    }
+    body.cms > main > div.pylon nav,
+    body.cms > main > .pylonColumns > .pylonPrimary nav {
+        border-bottom-left-radius:inherit;
+    }
+    body.cms.pages > main > div.pylon > footer {
+        border-bottom-left-radius:var(--cmsRadiusLg);
+    }
+    body.cms > main > div.content > .flexRow,
+    body.cms > main > div.content > .flexRow > .flexColumn,
+    body.cms > main > div.content > .flexRow > .flexColumn > section.cms:last-child {
+        border-bottom-left-radius:inherit;
+        border-bottom-right-radius:inherit;
+    }
 }

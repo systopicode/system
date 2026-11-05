@@ -1,47 +1,7 @@
 <?php
-/** @var \Systopic\System\Panels\Root\Admin\Access\Screens\Pair\Panel $this */
-
-$screen = $this->screen;
-if ($screen === null) {
-	return;
-}
-$e = static fn($v): string => htmlspecialchars((string) $v, ENT_QUOTES);
-$name = trim((string) $screen->name);
-$scanning = $this->scanning;
-$scanInstance = bin2hex(random_bytes(8));
-?>
-<div class="cms cmslightbox deviceBox" data-scan-instance="<?= $scanInstance ?>" data-feedback="parameters">
-	<section class="is-expanded">
-		<header>
-			<h1><?= $scanning ? 'Scan device code from screen' : 'Create new auth code' ?></h1>
-			<ul class="barmenu">
-				<li><a class="ajax" href="<?= $e($this->parent->href) ?>" aria-label="Close"><i class="cmsIcon cmsIcon-xmark"></i></a></li>
-			</ul>
-		</header>
-		<main class="deviceBoxMain">
-            <div data-remote-feedback><?= \message::flush() ?></div>
-			<?php
-			$infoScan = $scanning;
-			$infoName = $name;
-			include dirname(__DIR__, 3) . '/user/authInfo.tpl.php';
-			if ($scanning) {
-				$scanHost = 'approve';
-				$scanAction = $this->href . 'approveDeviceCode';
-				$scanLead = 'The screen shows a code on its sign-in page.';
-				$scanFields = ['user_id' => (int) $screen->id];
-				$scanAuto = true;
-				include dirname(__DIR__, 3) . '/user/scanCode.tpl.php';
-			} else { ?>
-				<div class="cmsBoxActions">
-					<button type="button" class="button submit" data-feedback="none" data-on_click="createCode" data-user_id="<?= (int) $screen->id ?>"><i class="cmsIcon cmsIcon-qrcode"></i> Create auth code</button>
-				</div>
-			<?php } ?>
-		</main>
-	</section>
-</div>
-<?php
-$issued = $this->issuedCode;
-if ($issued !== null) {
-	$issuedFor = 'screen';
-	include dirname(__DIR__, 2) . '/010_users/edit/code.tpl.php';
-}
+$fixedUser = $this->screen;
+if (!$fixedUser) return;
+$fixedMode = $this->scanning ? 'scan' : 'create';
+$fixedClose = $this->parent->href;
+$fixedRefresh = $this->parent->href . 'refreshDevices';
+include dirname(__DIR__, 3) . '/user/fixedDialogs.tpl.php';

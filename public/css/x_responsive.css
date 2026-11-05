@@ -15,7 +15,9 @@ body.cms > .cmsMobileHeader > .cmsMobileMenuClose, body.cms > .cmsMobileHeader >
 		height: 100dvh;
 		padding: var(--mobileTop) 0 0 0;
 		margin: 0; border: 0;
-		background-color: var(--cmsBgColor);
+		/* Safari samples the page canvas as well as html and theme-color.
+           Content surfaces own their grey; the shell stays in the theme colour. */
+		background-color: var(--cmsMainColor);
 		background-image: linear-gradient(var(--cmsMainColor), var(--cmsMainColor));
 		background-size: 100% var(--mobileTop, 103px);
 		background-repeat: no-repeat;
@@ -1295,6 +1297,9 @@ body.cms .cmslightbox:not(.upload,.fileEditor) > section.cmsHeaderScrolled > hea
         height: var(--cmsVvHeight, 100%);
         padding: 0;
         overflow: hidden;
+        /* Safari's floating address/input controls extend below visualViewport.
+           Paint behind them without making the interactive sheet taller. */
+        box-shadow: 0 var(--cmsVvHeight, 100dvh) 0 0 var(--cmsBgColor);
     }
     html.cms-keyboard body.cms .cmslightbox:not(.cmsFind) > section {
         position: absolute;
@@ -1418,7 +1423,7 @@ body.cms .cmsIconActionMenu > li > :is(a,button) {
     body.cms .dashNotice > p { grid-column:2; grid-row:1; }
     body.cms .dashNotice > .button { grid-column:2; justify-self:end; }
     body.cms .cmslightbox > section > footer:not(.cmsDialogStatus),
-    body.cms .widget > footer { flex-wrap:wrap; white-space:normal; }
+    body.cms .widget > footer { flex-wrap:wrap; white-space:normal; padding-block:.5rem; }
     body.cms .cmslightbox > section > footer.roleNote > p { min-width:0; flex:1; margin:0; }
     body.cms .userEdit .signInTools { flex-wrap:wrap; }
     body.cms .userEdit .signInTools > :is(button,.button) { max-width:100%; }

@@ -17,7 +17,7 @@ use Systopic\Db\Scope;
 // Minimal web boundary for standalone service tests, no project bootstrap.
 class http { public static string $root = '/'; public static string $hostUrl = 'https://cms.example.test'; public static function redirect(string $target): never { throw new TestRedirect($target); } public static function projectCookieKey(): ?string { return null; } public static function sessionStartOnce(): void {} public static function put($key, $default = '') { return $default; } }
 class TestRedirect extends RuntimeException {}
-class fs { public static string $root; }
+class fs { public static string $root; public static function toNative(string $path): string { return $path; } }
 // Presentation is covered separately; this fixture exercises cryptographic account boundaries.
 class PasskeyPortraitFixture { public static function src(int $id, ?string $email, bool $screen): string { return '/fixture-portrait.svg'; } }
 class_alias(PasskeyPortraitFixture::class, \Systopic\System\Auth\Portrait::class);

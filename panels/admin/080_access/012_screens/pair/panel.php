@@ -32,6 +32,4 @@ class Panel extends CmsPanel
         }
     }
 
-    /** The code made in this request: ['code' => …, 'expires' => ts]. */
-    public ?array $issuedCode = null;
 }

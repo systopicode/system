@@ -97,7 +97,7 @@ function chromeColor() {
 		var stale = document.getElementById('cmsChromeColor');
 		if (stale) stale.remove();
 		if (document.documentElement) if (document.documentElement.style.background) document.documentElement.style.background = '';
-		if (document.body) if (document.body.style.background) document.body.style.background = '';
+		if (document.body) document.body.style.removeProperty('background-color');
 		return;
 	}
 	var login = !!document.querySelector('.authCard');
@@ -120,7 +120,7 @@ function chromeColor() {
 		if (node.textContent) node.textContent = '';
 	}
 	if (ink) document.documentElement.style.backgroundColor = ink;
-	if (document.body.style.background) document.body.style.background = '';
+	if (!login && ink) document.body.style.backgroundColor = ink;
 	var edge = document.getElementById('cmsChromeEdge');
 	if (!edge) {
 		edge = document.createElement('div');
@@ -375,6 +375,21 @@ function queueSlide() {
 	});
 }
 function syncMobile() {
+    // Account sections use the existing phone sheet, with the same node on desktop.
+    var accountPhone = matchMedia('(max-width:767px)').matches;
+    var accountOverview = document.querySelector('section.profile[data-account-view=overview]');
+    document.querySelectorAll('[data-account-selected]').forEach(function (link) {
+        var selected = link.dataset.accountSelected === '1' && !(accountPhone && accountOverview);
+        link.classList.toggle('selected', selected);
+        if (selected) link.setAttribute('aria-current', 'page'); else link.removeAttribute('aria-current');
+    });
+    document.querySelectorAll('[data-account-sheet]').forEach(function (box) {
+        box.classList.toggle('cmslightbox', accountPhone);
+        box.classList.toggle('cms', accountPhone);
+        box.querySelector(':scope > section')?.classList.toggle('is-expanded', accountPhone);
+        var hideAccount = accountPhone && box.dataset.accountOpen !== '1';
+        if (box.hidden !== hideAccount) box.hidden = hideAccount;
+    });
 	syncDialogRoots();
 	var pylon = windowNode('base');
 	var content = windowNode('edit');
@@ -600,7 +615,7 @@ function syncMobile() {
 	var dialogs = [...document.querySelectorAll('.cmslightbox')].filter(function (box) { return !box.hidden && box.getClientRects().length > 0; });
 	root.classList.toggle('cmsPhoneDialogOpen', matchMedia('(max-width:767px)').matches && dialogs.length > 0);
 	dialogs.forEach(function (box, index) {
-		box.classList.toggle('cmsNestedDialog', index > 0 || box.matches('.upload, .fileEditor, .mediaGroupHelp, .qrZoom, [id^=userMailPreview], [data-mobile-dialog=static]'));
+		box.classList.toggle('cmsNestedDialog', (index > 0 && !box.matches('[data-mobile-dialog=sheet]')) || box.matches('.upload, .fileEditor, .mediaGroupHelp, .qrZoom, [id^=userMailPreview], [data-mobile-dialog=static]'));
 		box.style.setProperty('--cmsDialogLevel', index);
 	});
 	document.querySelectorAll('.cmslightbox > section').forEach(function (section) {

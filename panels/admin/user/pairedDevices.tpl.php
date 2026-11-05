@@ -17,6 +17,6 @@ foreach (SignInGrant::accounts($this->scope, $me, $this) as $screen) {
 }
 usort($screenDevices, static fn(array $a, array $b): int => $b[0]->lastSeen <=> $a[0]->lastSeen);
 ?>
-<p class="tagsHint">Devices that are signed in as a screen.</p>
-<?php if ($screenDevices === []) { ?><p class="profileEmpty">No devices paired yet.</p><?php } ?>
+<p class="tagsHint">Devices using the screen accounts you can manage.</p>
+<?php if ($screenDevices === []) { ?><p class="profileEmpty">No screens connected yet.</p><?php } ?>
 <?php foreach ($screenDevices as [$device, $screen]) { include __DIR__ . '/deviceRow.tpl.php'; } ?>

@@ -87,10 +87,19 @@ class Panel extends CmsPanel {
         }
 	}
 
+    public function onLoadSelected() {
+        parent::onLoadSelected();
+        // Browser history visits section addresses without invoking an action.
+        if (\http::ajax() && \http::$method === 'GET' && empty($this->action)) {
+            $this->updateView('main');
+        }
+    }
+
 	function getDefaultState() {
 		$state = parent::getDefaultState();
 		$state->hijackerId = NULL;   // set by admin/access' hijackUser, for "Back to my account"
 		$state->hijackedId = NULL;
+        $state->accountSection = 'devices';
 		return $state;
 	}
 

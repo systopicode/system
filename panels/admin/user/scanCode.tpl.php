@@ -21,7 +21,7 @@
 	</div>
 	<p class="qrScanHint" data-qr-hint>Hold the QR code steady and well lit in the frame.</p>
 		<div class="remoteMethods">
-			<button type="button" class="button" data-remote-code><i class="cmsIcon cmsIcon-input-numeric"></i> Use code</button>
+			<button type="button" class="button" data-remote-code><i class="cmsIcon cmsIcon-input-numeric"></i> Type code</button>
 		</div>
 	<div class="cms message qrScanMsg" data-qr-msg hidden></div>
 	<div class="qrScanDim remoteAbort" data-qr-dim hidden>
@@ -29,6 +29,8 @@
 	</div>
 </div>
 <form class="ajax remoteCode" data-feedback="parameters" data-code-form method="put" action="<?= $e($scanAction) ?>">
+    <div class="remoteEntryFields">
+        <p class="tagsHint cameraStatus" data-qr-status role="status" hidden></p>
 	<p class="cmsBoxLead"><?= $e($scanLead) ?></p>
     <input type="hidden" name="scanInstance" value="<?= $e($scanInstance ?? '') ?>">
 	<?php foreach ($scanFields as $field => $value) { ?>
@@ -47,6 +49,7 @@
 		</div>
 		<button class="button submit" type="submit" aria-label="Continue" title="Continue"><i class="cmsIcon cmsIcon-check"></i></button>
 	</div>
+    </div>
 		<div class="remoteSwitch">
 			<button type="button" class="button" data-qr-start><i class="cmsIcon cmsIcon-object-scan"></i> Scan QR code</button>
 		</div>

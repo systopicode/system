@@ -97,22 +97,86 @@ header.cms .rightAlign form{
     cursor: pointer;
 }
 
-.profileGrid{
-    columns: 3 22rem;
-    column-gap: 1.25rem;
-}
+/* The account navigation and content share the existing selected surface,
+   borders, typography and widget components. No button or touch overrides. */
 
-.profileGrid > .widget{
-    break-inside: avoid;
-    margin: 0 0 1.25rem;
-    display: flow-root;
-    vertical-align: top;
-    width: 100%;
+.profile .accountHeader { position:relative; background:var(--cmsBgColor); display:flex; flex-direction:row-reverse; justify-content:space-between; align-items:center; gap:1rem; padding-block:.5rem 1.5rem; margin-bottom:1.25rem; }
+.profile .accountHeader .profileHead { margin:0; gap:2rem; }
+.profile .accountHeader .accountAvatar { width:7rem; border-width:3px; }
+.profile .accountHeader .profileHead h1 { font-size:1.35rem; }
+.profile .accountHeader .profileHead p { font-size:1rem; }
+.profile .accountHeader .profileRoles { margin-top:.35rem; }
+.profile .accountHeader .cmsPanelActions { flex:0 0 auto; align-self:flex-start; width:auto; margin:0; }
+.accountLayout { display:grid; grid-template-columns:minmax(16rem,20rem) minmax(0,1fr); align-items:start; column-gap:1.5rem; }
+.accountOverview { display:contents; }
+.accountHeader, .profilePreview { grid-column:1 / -1; }
+.accountNavigation { grid-column:1; }
+.accountContent { grid-column:2; }
+.accountBack { display:none; }
+.accountNavigation { min-width:0; position:sticky; top:11rem; }
+.accountSectionPicker { display:none; }
+.accountContent { min-width:0; }
+.accountSectionIcon { display:grid; place-items:center; flex:0 0 3rem; height:3rem; border-radius:var(--cmsRadius); background:var(--cmsSelected); color:var(--cmsTextColor); font-size:1.5rem; }
+.accountSectionLinks { gap:.35rem; padding:0; }
+.cms .accountSectionLinks a.cmsChoice { border:0; padding:.8rem .65rem; gap:.65rem; }
+.cms .accountSectionLinks a.cmsChoice.selected { background:color-mix(in srgb, var(--cmsHighlightColor) 32%, var(--cmsCanvas)); color:var(--cmsTextColor); }
+.accountSectionLinks .cmsChoice small { font-size:.75rem; line-height:1.35; }
+.accountSectionLinks .cmsChoice > i:last-child { font-size:.75rem; }
+.profileGrid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:1.25rem; align-items:stretch; }
+.profileGrid > .widget { display:flex; flex-direction:column; min-width:0; margin:0; width:100%; }
+.profileGrid > .widget > main { flex:1 1 auto; }
+.profileGrid > .widget:only-child, .profileGrid > .accountWide { grid-column:1 / -1; }
+@media (min-width:1367px) {
+    .profileGrid[data-account-area="profile"] > .widget { grid-column:1; }
+    .profileGrid[data-account-area="profile"] .accountProfileFields { grid-template-columns:minmax(4.5rem,28%) minmax(0,1fr); gap:1.25rem; }
+    .profileGrid[data-account-area="profile"] .accountProfileFields :is(.portraitFrame,.signet) { width:100%; max-width:8rem; }
+}
+.profileGrid:is([data-account-area="security"],[data-account-area="devices"],[data-account-area="preferences"]) { align-items:start; }
+@media (min-width:768px) {
+    .profile .accountHeader { padding-block:.75rem 2.25rem; }
+    .profile .accountDesktopNavigation, .profile .accountDesktopNavigation > :is(header,main) { background:color-mix(in srgb, var(--cmsMainColor) 3%, var(--cmsCanvas)); }
+    .accountSelfConnect > main { display:flex; align-items:center; justify-content:space-between; gap:1.5rem; }
+    .accountSelfConnect > main > p { margin:0; max-width:28rem; }
+    .profile .accountSelfConnect .deviceWays { flex:0 0 auto; width:20rem; max-width:55%; }
+}
+.accountProfileFields { display:grid; grid-template-columns:10rem minmax(0,1fr); gap:1.5rem; align-items:center; }
+.profile .accountProfileFields .portraitFrame, .profile .accountProfileFields .signet { width:8rem; }
+@media (max-width:1366px) {
+    .profileGrid { grid-template-columns:minmax(0,1fr); }
+    .accountNavigation { position:static; }
+}
+@media (max-width:767px) {
+    body.cms > main > .content section.cms.profile { padding-top:1.25rem; }
+    .profile .accountHeader { flex-direction:column; align-items:stretch; padding-top:0; padding-bottom:.85rem; margin-bottom:1.25rem; }
+    .profile .accountHeader .cmsPanelActions { align-self:flex-end; }
+    .profile .accountHeader .profileHead { flex:1 1 auto; gap:1.25rem; min-width:0; }
+    .profile .accountHeader .accountAvatar { width:2.75rem; border-width:1px; }
+    .profile .accountHeader .profileHead h1 { font-size:1rem; }
+    .profile .accountHeader .profileHead p { font-size:.8125rem; }
+    .profile .accountHeader .profileHead > div:last-child { min-width:0; }
+    .profile .accountHeader .profileHead p { display:block; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .profile .accountHeader .profileRoles { display:none; }
+    .accountLayout { grid-template-columns:minmax(0,1fr); gap:0; min-height:0; }
+    .accountNavigation { position:static; padding:.65rem .85rem; }
+    .accountContent { padding:0; }
+    .accountDesktopNavigation { display:block; }
+    .accountSectionPicker { display:none; }
+    .accountSectionPicker > summary { display:flex; align-items:center; justify-content:flex-start; gap:.5rem; cursor:pointer; list-style:none; font-weight:600; }
+    .accountSectionPicker > summary > .summaryToggle { margin-left:auto; }
+    .accountSectionPicker > summary::-webkit-details-marker { display:none; }
+    .accountSectionPicker .cmsChoices { margin-top:.5rem; }
+    .accountSectionHeading { display:none; }
+    .accountSectionTitle { font-size:1.25rem; }
+    .accountSectionHeading p { display:none; }
+    .accountSectionIcon { flex-basis:2.5rem; height:2.5rem; font-size:1.25rem; }
+    .accountProfileFields { grid-template-columns:minmax(0,1fr); gap:1rem; }
+    .accountProfileFields .profilePortrait { justify-self:center; }
 }
 
 .profile .widget{
     margin: 0 0 1.25rem;
 }
+.profile .profileGrid > .widget { margin:0; }
 
 .profile .widget > header h2{
     display: flex;
@@ -143,25 +207,7 @@ header.cms .rightAlign form{
     justify-content: flex-start;
 }
 
-.profile .widget > footer:has(.deviceWays){
-    height: auto;
-    padding-top: 0.9rem;
-    padding-bottom: 0.9rem;
-}
-
-.profile .deviceWays{
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
-    width: 100%;
-}
-
-.profile .deviceWaysActions{
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: flex-end;
-    gap: 0.5rem;
-}
+.profile .widget > footer :is(.deviceWays,.deviceWaysActions) { display:contents; }
 
 .profile .widget > footer:has(.tagsHint){
     flex-direction: column;
@@ -489,8 +535,8 @@ header.cms .rightAlign form{
 .profile .profilePassword > summary { box-sizing: border-box; align-items: center; padding: 0 var(--cmsCardPadding); min-height: 3rem; }
 .profile .profilePassword > form > main { padding-bottom: .75rem; }
 .profile .portraitDrop { border-radius: 50%; }
-.profile .widget > footer:has([data-action="resetState"]) { align-items:flex-end; }
-.profile .widget > footer [data-action="resetState"] { align-self:flex-end; margin-left:auto; }
+
+
 
 @media (max-width:1024px), (orientation:portrait) and (max-width:1400px){
     /* This dialog is hosted in the profile's scrolling content. Keep its
@@ -509,16 +555,115 @@ header.cms .rightAlign form{
 
 .deviceBoxMain > .deviceRequest { width: 100%; margin: 0 0 1rem; }
 
-@media (max-width: 767px) {
-    .profile .widget > footer.deviceActionsFooter {
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        align-items: stretch;
-        gap: .5rem;
-        padding-block: .9rem;
+
+/* Consent occupies the same stage as the existing code/scanner controls. */
+.deviceBoxMain > [data-create-gate], .deviceBoxMain > [data-create-result] { width:100%; }
+[data-create-gate] > .remoteOffer { margin-inline:auto; }
+.deviceScanGate { position:relative; width:min(100%,22rem); }
+[data-scan-content] { display:flex; flex-direction:column; align-items:center; }
+[data-scan-gate][data-gated] > [data-scan-content] { visibility:hidden; }
+.deviceGatePlaceholder { position:absolute; inset:0; display:flex; flex-direction:column; gap:1rem; }
+.deviceGatePlaceholder[hidden] { display:none; }
+.deviceGateDrawing { flex:1; min-height:3rem; display:grid; place-items:center; border:1px dashed var(--cmsLineStrong); border-radius:var(--cmsRadius); background:var(--cmsPanelAlt); color:var(--cmsSubText); }
+.deviceGateDrawing i { font-size:2rem; opacity:.4; }
+.deviceGatePlaceholder > .button { width:100%; margin:0; }
+
+@media (max-width:720px), (hover:none) and (pointer:coarse) {
+ .deviceGateDrawing { width:min(100%,16rem); max-height:16rem; align-self:center; }
+}
+
+[data-auth-understood] [data-auth-long] { display:none; }
+[data-auth-understood] [data-auth-short][hidden] { display:block; }
+.deviceBox [data-auth-info] p { margin-block:0; }
+.deviceBox [data-auth-long] p + p { margin-top:.6rem; }
+.codeGateStage { position:relative; width:100%; min-height:16rem; }
+.codeGateCover { position:absolute; inset:0; display:grid; place-items:center; border:1px dashed var(--cmsLineStrong); border-radius:var(--cmsRadius); background:var(--cmsPanelAlt); color:var(--cmsSubText); }
+.codeGateCover i { font-size:2rem; opacity:.4; }
+
+/* The existing dialog flows naturally; task groups stay compact. */
+.deviceBoxMain { overflow-y:auto; }
+.deviceBoxMain > [data-remote-feedback]:empty { display:none; }
+.deviceBoxMain > :is([data-create-gate],[data-create-result],.deviceScanGate) { flex:1 0 auto; min-height:0; }
+.deviceBoxMain > :is([data-create-gate],[data-create-result]) { display:flex; flex-direction:column; align-items:center; }
+.deviceBoxMain > :is([data-create-gate],[data-create-result])[hidden] { display:none; }
+.deviceBoxMain > :is([data-create-gate],[data-create-result]) > .remoteOffer { flex:1 0 auto; min-height:0; }
+.remoteOffer > :is([data-code-live],.codeGateStage) { flex:1 0 auto; width:100%; display:flex; flex-direction:column; justify-content:center; }
+.remoteOffer > [data-code-live][hidden] { display:none; }
+.remoteOffer .cmsBoxLead { text-align:center; }
+.remoteOffer > .cmsBoxActions { flex:0 0 auto; margin-bottom:0; }
+.deviceScanGate > [data-scan-content] { height:100%; }
+.deviceScanGate .remoteCode { flex:1 0 auto; display:flex; flex-direction:column; width:100%; }
+.deviceScanGate .remoteCode[hidden] { display:none; }
+.deviceScanGate .remoteEntryFields { width:100%; margin-block:auto; }
+.deviceScanGate .remoteEntryFields > .cmsBoxLead { text-align:center; margin:0 0 1rem; }
+.deviceScanGate .remoteSwitch { flex:0 0 auto; margin-top:1rem; }
+.deviceScanGate .qrScan { flex:1 0 auto; }
+.deviceScanGate .qrScanStage { flex-shrink:0; margin-top:auto; }
+.deviceScanGate .qrScanHint { margin-bottom:auto; }
+.deviceScanGate .remoteMethods { flex:0 0 auto; }
+.deviceGatePlaceholder { justify-content:space-between; }
+.deviceGateDrawing { flex:1 0 auto; width:100%; max-height:none; margin:0; }
+@media (max-width:720px), (hover:none) and (pointer:coarse) {
+ .deviceGateDrawing { width:min(100%,16rem); flex:0 0 auto; aspect-ratio:1; margin-block:auto; }
+}
+
+
+.deviceScanGate .qrScan.is-dim .remoteMethods,
+.deviceScanGate [data-scan-content]:has(> .qrScan.is-dim) .remoteSwitch { display:none; }
+.deviceScanGate .qrScan.is-dim,
+.deviceScanGate .qrScan.is-dim .remoteAbort:not([hidden]) { display:contents; }
+.deviceScanGate [data-scan-content]:has(> .qrScan.is-dim) .remoteCode { order:1; }
+.cms .deviceScanGate .qrScan.is-dim .remoteAbort > .button { order:2; flex:0 0 auto; margin-top:1rem; }
+.deviceScanGate .cameraStatus { text-align:center; margin:0 0 .75rem; }
+
+/* Mobile consent must fit the available sheet rather than reserve a hidden
+   camera's full height. Keep actions in flow and let only the preview shrink. */
+@media (max-width:767px) {
+    body.cms .cmslightbox.deviceBox > section:not(.is-expanded) {
+        max-height:calc(100dvh - max(1rem, env(safe-area-inset-top)) - var(--cmsKeyboard, 0px));
     }
-    .profile .deviceActionsFooter > .cmsBoxMore,
-    .profile .deviceActionsFooter > [data-action="revokeOtherDevices"] { grid-column: 1 / -1; }
-    .profile .deviceActionsFooter > form { min-width: 0; margin: 0; }
-    .profile .deviceActionsFooter .button { width: 100%; margin: 0; }
+    .deviceScanGate[data-gated] > [data-scan-content] { display:none; }
+    .deviceScanGate[data-gated] > .deviceGatePlaceholder {
+        position:static;
+    }
+    .deviceScanGate[data-gated] .deviceGateDrawing {
+        width:100%;
+        min-height:4rem;
+        height:clamp(4rem, 22dvh, 12rem);
+        aspect-ratio:auto;
+        margin:0;
+    }
+    .deviceBoxMain .codeGateStage { min-height:clamp(4rem, 22dvh, 12rem); }
+    .deviceBoxMain .qrScanStage {
+        width:min(100%, 16rem, 32dvh);
+        height:auto;
+        aspect-ratio:1;
+        margin-inline:auto;
+    }
+}
+
+@media (max-width:767px) {
+    .deviceBoxMain .remoteQr svg.qr-code,
+    .deviceBoxMain .qrCodeBar { width:min(12.5rem, 26dvh); }
+}
+
+.profile .accountChoices { margin-top:.75rem; max-height:calc(16rem + 1.65rem); overflow:auto; }
+.profile .accountChoices > .cmsChoice { min-height:4rem; flex:0 0 4rem; }
+.profile .accountChoices [hidden] { display:none; }
+
+.profile .accountChoices .userListAvatar { width:2rem; height:2rem; flex:0 0 2rem; border-radius:50%; object-fit:cover; }
+
+
+.accountSectionSurface, .accountSectionBody { display:contents; }
+body.cms .accountContent .accountSheetHeader { display:none; }
+@media (max-width:767px) {
+    .accountOverview { display:block; }
+    .accountNavigation { padding:0; }
+    .accountLayout { display:block; }
+    .accountSectionSurface { display:flex; }
+    body.cms [data-account-sheet] > section > .accountSectionBody { display:block; }
+    body.cms [data-account-sheet] > section > .accountSheetHeader { display:flex; }
+    .profile .accountHeader .profileRoles { display:flex; }
+    .profile .accountHeader .accountAvatar { width:5rem; flex-shrink:0; }
+    .profile .accountHeader .profileHead p { white-space:normal; overflow-wrap:anywhere; }
 }

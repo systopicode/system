@@ -1,3 +1,4 @@
+@import url("../../../user/profile.css");
 .cmslightbox .userTabs{
     position: relative;
     display: flex;
@@ -391,7 +392,8 @@ body.cms:has(.cmslightbox.userEdit) .userKeyWarn{
 }
 
 @media (max-width: 720px){
-    .userAccess .accessRow{
+    .userAccess .accessRow,
+    .userAccess .accessRow:has(> :nth-child(3)){
         grid-template-columns: minmax(0, 1fr);
     }
 }

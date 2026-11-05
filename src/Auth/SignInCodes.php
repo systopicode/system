@@ -275,10 +275,11 @@ final class SignInCodes
         return true;
     }
 
-    /** An account a code may sign in: active, not blocked, not the system's own. */
+    /** An account a code may sign in: not blocked, not the system's own.
+     * A successful code sign-in activates an invited account. */
     public static function canSignIn(User $account): bool
     {
-        return (int) $account->id > 1 && $account->isActive && !$account->isBlocked;
+        return (int) $account->id > 1 && !$account->isBlocked;
     }
 
     /**

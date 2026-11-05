@@ -8,11 +8,13 @@
  */
 	$e = static fn($v): string => htmlspecialchars((string) $v, ENT_QUOTES);
 ?>
-<div class="cms message is-stay"><div class="info">
+<div class="cms message is-stay" data-auth-info><div class="info">
+    <p data-auth-short hidden>Account: <strong data-identify-name><?= $e($infoName) ?></strong></p>
+    <div data-auth-long>
 	<?php if ($infoScan) { ?>
-		<p>By entering or scanning the code, you authorize the device to be signed in as <strong data-identify-name><?= $e($infoName) ?></strong>.</p>
+		<p>Scan or enter the code shown on the other device to sign it in as <strong data-identify-name><?= $e($infoName) ?></strong>.</p>
 	<?php } else { ?>
-		<p>By creating the auth code, you allow any person who gets to know it to sign in as <strong data-identify-name><?= $e($infoName) ?></strong> on one device.</p>
+		<p>Anyone with this code can sign in as <strong data-identify-name><?= $e($infoName) ?></strong> on one device.</p>
 	<?php } ?>
-	<p>Your choice is documented in the system's sign-in log.</p>
-</div></div>
+	<p>This sign-in is recorded in the sign-in log.</p>
+</div></div></div>

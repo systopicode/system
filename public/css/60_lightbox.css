@@ -208,7 +208,7 @@ body .cmslightbox section > main{
 
 /* One section style in every lightbox: a small uppercase heading over a
    hairline. Cards (.widget) drop their frame here and read as sections. */
-.cmslightbox section > main h2,
+.cmslightbox:not([data-account-sheet]) section > main h2,
 body .cmslightbox section > div.layout > aside:not(.cms) h3{
     margin: 0 0 0.75rem;
     padding-bottom: 0.4rem;
@@ -221,7 +221,7 @@ body .cmslightbox section > div.layout > aside:not(.cms) h3{
     border-bottom: 1px solid var(--cmsLineStrong);
 }
 
-.cmslightbox section > main .widget:not(.is-list){
+.cmslightbox:not([data-account-sheet]) section > main .widget:not(.is-list){
     margin-bottom: 1.75rem;
     background: none;
     border: 0;
@@ -230,32 +230,32 @@ body .cmslightbox section > div.layout > aside:not(.cms) h3{
     overflow: visible;
 }
 
-.cmslightbox section > main .widget > header,
-.cmslightbox section > main .widget > main,
-.cmslightbox section > main .widget > footer{
+.cmslightbox:not([data-account-sheet]) section > main .widget > header,
+.cmslightbox:not([data-account-sheet]) section > main .widget > main,
+.cmslightbox:not([data-account-sheet]) section > main .widget > footer{
     min-height: 0;
     padding: 0;
     background: none;
     border: 0;
 }
 
-.cmslightbox section > main .widget > header{
+.cmslightbox:not([data-account-sheet]) section > main .widget > header{
     margin-bottom: 0.75rem;
     padding-bottom: 0.4rem;
     border-bottom: 1px solid var(--cmsLineStrong);
 }
 
-.cmslightbox section > main .widget > header h2{
+.cmslightbox:not([data-account-sheet]) section > main .widget > header h2{
     margin: 0;
     padding: 0;
     border: 0;
 }
 
-.cmslightbox section > main .widget > footer{
+.cmslightbox:not([data-account-sheet]) section > main .widget > footer{
     margin-top: 0.75rem;
 }
 
-.cmslightbox section > main .widget > header h2 i{
+.cmslightbox:not([data-account-sheet]) section > main .widget > header h2 i{
     display: none;
 }
 

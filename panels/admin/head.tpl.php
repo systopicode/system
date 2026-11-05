@@ -1,9 +1,15 @@
 <head lang="en">
+    <?php
+    $onAuth = isset($headHost) && $headHost->name === 'auth';
+    if ($onAuth) \Systopic\System\Auth\Branding::rememberSource();
+    $appTitle = $onAuth ? \Systopic\System\Auth\Branding::name() : \Systopic\System\Sys\WebApp::name();
+    $documentTitle = $onAuth ? \Systopic\System\Auth\Branding::documentTitle() : \Systopic\System\Sys\WebApp::documentTitle();
+    ?>
 	<!-- +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+ TITLE -+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+ -->
-	<title><?= htmlspecialchars(\Systopic\System\Sys\WebApp::documentTitle(), ENT_QUOTES, 'UTF-8') ?></title>
+	<title><?= htmlspecialchars($documentTitle, ENT_QUOTES, 'UTF-8') ?></title>
 	<script>
 	if (matchMedia('(display-mode: standalone)').matches || window.navigator.standalone) {
-		document.title = <?= json_encode(\Systopic\System\Sys\WebApp::name(), JSON_UNESCAPED_UNICODE) ?>;
+		document.title = <?= json_encode($appTitle, JSON_UNESCAPED_UNICODE) ?>;
 	}
 	</script>
 
@@ -11,7 +17,6 @@
 	<?php
 	$asset = static fn(string $file): string => htmlspecialchars(\Systopic\System\Sys\Packages::panelAssetHref($file), ENT_QUOTES);
 	$brandColor = '#' . \Systopic\System\Sys\Theme::color('cmsMainColor');
-	$onAuth = isset($headHost) && $headHost->name === 'auth';
     if ($onAuth && \Systopic\System\Auth\Branding::frontend()) {
         $asset = static fn(string $file): string => htmlspecialchars(\Systopic\System\Auth\Branding::href($file) ?? \Systopic\System\Sys\Packages::panelAssetHref($file), ENT_QUOTES);
     }
@@ -104,13 +109,13 @@
     <?php } if (!$customIcons || $shortcutIcon !== null) { ?>
     <link rel="shortcut icon" href="<?= htmlspecialchars($shortcutIcon ?? \Systopic\System\Sys\Packages::panelAssetHref('img/favicons/favicon.ico'), ENT_QUOTES) ?>">
     <?php } ?>
-    <meta name="apple-mobile-web-app-title" content="<?= htmlspecialchars(\Systopic\System\Sys\WebApp::shortName(), ENT_QUOTES) ?>">
+    <meta name="apple-mobile-web-app-title" content="<?= htmlspecialchars($appTitle, ENT_QUOTES) ?>">
     <?php if (!$skipApp) { ?>
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="mobile-web-app-capable" content="yes">
     <?php } ?>
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="application-name" content="fluxo">
+    <meta name="application-name" content="<?= htmlspecialchars($appTitle, ENT_QUOTES) ?>">
     <meta name="description" content="fluxo">
     <meta name="author" content="systopic GmbH"/>
     <meta name="copyright" content="systopic GmbH"/>

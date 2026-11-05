@@ -153,6 +153,9 @@ final class DeviceCode
         if ($user === null || !SignInCodes::canSignIn($user)) {
             return null;
         }
+        if (!$user->isActive) {
+            $scope->save(\Systopic\System\Tables\Users\Operator::joined($user));
+        }
         Session::login($user);
         Devices::issue($user);
         SignInLog::write((string) $user->name, 'signed in', SignInLog::DEVICE_CODE);

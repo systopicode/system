@@ -244,7 +244,11 @@ if ($heading === '') {
 				</section>
 			<?php } elseif ($isScreen) { ?>
 				<section class="cmsBox userAccess">
-					<header><div class="cmsBoxTitles"><h2>Pairing</h2><p class="cmsBoxLead">Pair this screen with the code button in the list of screens.</p></div></header>
+					<header><div class="cmsBoxTitles"><h2>Pairing</h2><p class="cmsBoxLead">Sign this screen in on another device.</p></div></header>
+                    <div class="cmsBoxBody"><div class="cmsBoxActions">
+                        <button type="button" class="button" data-open-box=".scanCodeBox.kindScreen"><i class="cmsIcon cmsIcon-object-scan"></i>Scan code</button>
+                        <button type="button" class="button submit" data-open-box=".addDeviceBox.kindScreen"><i class="cmsIcon cmsIcon-qrcode"></i>Create code</button>
+                    </div></div>
 				</section>
 			<?php } elseif ((string) $user->email === '') { ?>
 				<section class="cmsBox userAccess">
@@ -257,7 +261,12 @@ if ($heading === '') {
 					<header><div class="cmsBoxTitles"><h2>Sign-in code</h2><p class="cmsBoxLead"><?php if (!$user->firstSignIn) { ?>This person has not signed in yet. A code is the first way in and makes the account active.<?php } else { ?>A code signs this person in on another device. A signed-in account can confirm that device instead.<?php } ?></p></div></header>
 					<div class="accessRow">
 						<div>
-							<button type="button" class="button submit" data-feedback="none" data-on_click="userConfirm" data-action="createCode" data-confirm="<?= $e($hint) ?>"><i class="cmsIcon cmsIcon-qrcode"></i> Create code</button>
+							<?php $dialogKind = (int) $user->id === (int) \Systopic\System\Auth\Session::id() ? 'Self' : 'Person'; ?>
+                            <button type="button" class="button" data-open-box=".scanCodeBox.kind<?= $dialogKind ?>"><i class="cmsIcon cmsIcon-object-scan"></i>Scan code</button>
+                            <p class="cmsBoxLead">Use the code shown on the other device.</p>
+                        </div>
+                        <div>
+                            <button type="button" class="button submit" data-open-box=".addDeviceBox.kind<?= $dialogKind ?>"><i class="cmsIcon cmsIcon-qrcode"></i>Create code</button>
 							<p class="cmsBoxLead">Valid for 10 minutes. Shown here.</p>
 						</div>
 						<div>

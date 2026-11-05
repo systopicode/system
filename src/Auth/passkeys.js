@@ -57,6 +57,8 @@
         const restoreLogin = box => {
             box.closest('main')?.classList.remove('is-passkey-signing-in');
             box.dataset.step = 'ready';
+            const retry = box.querySelector('[data-passkey-mode="login"] [data-passkey-label]');
+            if (retry) retry.textContent = 'Try again';
             const feedback = box.querySelector('.passkeyAuthFeedback');
             if (feedback) feedback.hidden = true;
         };

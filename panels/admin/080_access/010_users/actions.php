@@ -7,6 +7,14 @@ use Systopic\System\Tables\Users\Operator as UserOperator;
 use Systopic\System\Tables\UsersAtRoles\Model as UserAtRole;
 
 switch ($this->action) {
+    case 'refreshDevices':
+        $renderStyle = 'none';
+        ob_start();
+        try { include __DIR__ . '/users.tpl.php'; $html = (string) ob_get_contents(); }
+        finally { ob_end_clean(); }
+        \clientDocument::replaceInner('[data-access-user-list]', $html);
+        break;
+
 	case 'addUser':
 		$rows = UserOperator::create(\Systopic\System\Auth\Session::id(), $this->admin->roleNamed('user'));
 		$screen = ($this->accountKind ?? '') === \Systopic\System\Tables\Users\Model::SCREEN;

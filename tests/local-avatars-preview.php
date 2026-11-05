@@ -1,6 +1,7 @@
 <?php
 declare(strict_types=1);
 require __DIR__.'/bootstrap.php';
+require getenv('FLUXO_DICEBEAR_AUTOLOAD') ?: dirname(__DIR__) . '/vendor/autoload.php';
 use Systopic\System\Auth\LocalAvatar;
 use Systopic\System\Auth\Portrait;
 $colors=['ink'=>'203c48','background'=>'eef2f4','paper'=>'ffbb00'];

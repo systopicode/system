@@ -34,6 +34,10 @@ if ($user->isBlocked && in_array($this->action, ['makeSuperuser', 'inviteCode', 
     return;
 }
 switch ($this->action) {
+    case 'refreshDevices':
+        $this->updateView('user');
+        break;
+
     case 'blockUser':
     case 'unblockUser':
         if (!\Systopic\System\Auth\Session::isSuperuser() || (int) $user->id <= 1 || (int) $user->id === (int) \Systopic\System\Auth\Session::id()) {
@@ -210,7 +214,6 @@ switch ($this->action) {
 		$this->updateView('lightbox');
 		break;
 
-	case 'createCode':
 	case 'inviteMail':
 		if (!SignInCodes::available()) {
 			break;
@@ -233,8 +236,6 @@ switch ($this->action) {
 			} else {
 				\message::error('The email could not be sent. Create a code instead.');
 			}
-		} else {
-			$this->issuedCode = ['code' => SignInCodes::create($user, $by), 'expires' => time() + Codes::LIFETIME];
 		}
 		$this->updateView('lightbox');
 		break;

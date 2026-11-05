@@ -16,6 +16,19 @@ if (str_starts_with((string) $this->action, 'passkey')) {
 }
 
 switch ($this->action) {
+
+    case 'showOverview':
+        $this->updateView('main');
+        break;
+
+    case 'showSection':
+        $section = (string) \http::get('section', '');
+        if (in_array($section, ['profile', 'security', 'devices', 'pairing', 'preferences'], true)) {
+            $this->state->accountSection = $section;
+        }
+        $this->updateView('main');
+        break;
+
 	case 'logout':
 		// signed out as a taken-on user: no way back for whoever signs in next
 		$this->state->hijackerId = NULL;
@@ -102,15 +115,31 @@ switch ($this->action) {
 		break;
 
 	case 'createDeviceCode':
+        $renderStyle = 'none'; // Existing command-only response: never rebuild the profile or reload its assets.
         if ((int) \http::posted('account', 0) <= 0) break;
-		$account = $this->me ? SignInGrant::account($this->scope, $this->me, $this, (int) \http::posted('account', 0)) : null;
-		if ($account === null || !SignInCodes::available()) {
-			\message::error('That account cannot be signed in.')->target('addDevice');
-		} else {
-			SignInCodes::offer($account, (int) $this->me->id);
-		}
-		$this->updateView('main');
-		break;
+        $kind = $this->authKind ?: 'self';
+        $selector = '.addDeviceBox.kind' . ucfirst($kind) . ':not([hidden])';
+        $account = $this->me ? SignInGrant::account($this->scope, $this->me, $this, (int) \http::posted('account', 0)) : null;
+        if ($account === null || !SignInCodes::available()) {
+            \message::error('That account cannot be signed in.')->target('addDevice');
+            \clientDocument::replaceInner($selector . ' [data-remote-feedback]', \message::flush('addDevice'));
+            break;
+        }
+        $boxOffer = SignInCodes::offer($account, (int) $this->me->id);
+        $offerName = trim((string) $account->fullname) ?: (string) $account->name;
+        $offerSvg = \qr::svgMarkup(\qr::payload('url', ['url' => \Systopic\System\Auth\CodeMail::link($boxOffer['code'])]), 4, 'M', 'qr-code');
+        $e = static fn($v): string => htmlspecialchars((string) $v, ENT_QUOTES);
+        ob_start();
+        try { include __DIR__ . '/createResult.tpl.php'; $html = (string) ob_get_contents(); }
+        finally { ob_end_clean(); }
+        \clientDocument::replaceInner($selector . ' [data-create-result]', $html);
+        \clientDocument::replaceInner($selector . ' [data-remote-feedback]', '');
+        foreach (['data-code-value' => $boxOffer['code'], 'data-code-complete' => null, 'data-auth-understood' => ''] as $attr => $value) {
+            \client::addCommand('setAttribute')->selector($selector)->attr($attr)->value($value);
+        }
+        \client::addCommand('setAttribute')->selector($selector . ' [data-create-gate]')->attr('hidden')->value('hidden');
+        \client::addCommand('setAttribute')->selector($selector . ' [data-create-result]')->attr('hidden')->value(null);
+        break;
 
 	case 'newDeviceCode':
 		SignInCodes::dropOffer();
@@ -127,6 +156,7 @@ switch ($this->action) {
 		break;
 
 	case 'approveDeviceCode':
+        $renderStyle = 'none'; // Shared Access dialogs must keep their host panel in place.
         // A route/render refresh has no new code to approve.
         if (trim((string) \http::posted('deviceCode', '')) === '') break;
 		$me = $this->me;
@@ -151,6 +181,7 @@ switch ($this->action) {
 		break;
 
     case 'refreshScreenDevices':
+        $renderStyle = 'none';
         ob_start();
         try { include __DIR__ . '/ownDevices.tpl.php'; $ownHtml = (string) ob_get_contents(); }
         finally { ob_end_clean(); }
