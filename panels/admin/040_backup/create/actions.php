@@ -123,12 +123,6 @@ switch ($this->action) {
 				'value' => 'settings'
 			);
 		}
-		if (\Systopic\System\Panels\Root\Admin\Backup\Panel::chosen($this->parent->state, 'backupEnvironment', true) && $this->environmentArchiveMap() !== []) {
-			$this->parent->state->taskList[] = array(
-				'action' => 'addEnvironment',
-				'value' => 'config'
-			);
-		}
 		if (\Systopic\System\Panels\Root\Admin\Backup\Panel::chosen($this->parent->state, 'backupFiles', false)) {
 			$mediadirs = fs::glob($mediadirpath . '*', GLOB_ONLYDIR);
 			foreach ($mediadirs as $mediadir) {
@@ -234,9 +228,6 @@ switch ($this->action) {
 		break;
 	case 'addSettings':
 		$addPlainFiles($this->chosenSettingsArchiveMap($this->parent->state), 'Settings files added.');
-		break;
-	case 'addEnvironment':
-		$addPlainFiles($this->environmentArchiveMap(), 'Environment added.');
 		break;
 	case 'addMediaDir':
 		if ($this->parent->state->cancel) {

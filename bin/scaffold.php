@@ -23,8 +23,9 @@ declare(strict_types=1);
  *
  * The folder mirrors a project. A file listed under "owned" belongs to the
  * package and is written again whenever it differs (public/index.php,
- * .htaccess …); a block between "# >>> project" and "# <<< project" in the
- * project's copy survives that. Every other file is created once, when it is
+ * .htaccess …), with a DO NOT EDIT header the template does not have; a block
+ * between "# >>> project" and "# <<< project" in the project's copy survives
+ * that. Every other file is created once, when it is
  * missing, and belongs to the project from then on. systopic/system goes
  * first, the other packages follow in install order and may add or replace.
  *
@@ -97,7 +98,7 @@ function scaffoldPackage(string $name, string $dir, string $root, array $owned, 
 			$content = $template;
 		} else {
 			$current = $exists ? (string) file_get_contents($target) : '';
-			$content = keepProjectBlock($template, $current);
+			$content = keepProjectBlock(withOwnedHeader($template, $rel, $name), $current);
 			if ($exists && $content === $current) {
 				continue;
 			}
@@ -119,6 +120,29 @@ function scaffoldPackage(string $name, string $dir, string $root, array $owned, 
 		$written++;
 	}
 	return $written;
+}
+
+/**
+ * The copy in the project says it is not to be edited, the template does not:
+ * the template is where changes go. Only for files that have comments.
+ */
+function withOwnedHeader(string $template, string $rel, string $package): string
+{
+	$lines = [
+		'DO NOT EDIT - written by bin/scaffold.php on every composer install and update.',
+		"The template is $rel in the scaffold of $package, changes go there.",
+	];
+	if (str_contains($template, '# >>> project')) {
+		$lines[] = 'Rules of this project only between the "project" markers below - that block is kept.';
+	}
+	if (str_ends_with($rel, '.php') && str_starts_with($template, '<?php')) {
+		$header = implode("\n", array_map(static fn(string $line) => "// $line", $lines));
+		return "<?php\n\n$header\n\n" . ltrim(substr($template, 5));
+	}
+	if (str_ends_with($rel, '.htaccess')) {
+		return implode("\n", array_map(static fn(string $line) => "# $line", $lines)) . "\n\n" . $template;
+	}
+	return $template;
 }
 
 /** the template, with the project block of the current file put back in */

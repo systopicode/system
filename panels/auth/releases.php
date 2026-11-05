@@ -11,6 +11,7 @@ return [
     '0.5.7' => [
         'date' => '2026-11-01',
         'new' => [
+            'Backups no longer contain the environment files, and restoring an older backup leaves them alone.',
             'Administration now opens under /admin/. Existing /cms/ links redirect automatically.',
             'The main menu now lists Pages, Backup, Settings, Access and Tools. Access groups user management, Roles, Content permissions and Panel Map.',
             'Panel Map keeps the Access menu visible beside its resizable tree on desktop. On phones, the tree and details slide within the same sheet.',

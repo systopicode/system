@@ -1,10 +1,4 @@
 ############################################
-# Written by systopic/system (bin/scaffold.php) on every composer install
-# and update - the template is vendor/systopic/system/scaffold/public/.htaccess.
-# Do not edit here: changes go into the template, rules of this project only
-# between the "project" markers below - that block is kept.
-############################################
-############################################
 # SEO & SECURITY HEADERS
 ############################################
 <IfModule mod_headers.c>
@@ -18,7 +12,8 @@
 
   # Referrer-Policy & Permissions-Policy
   Header set Referrer-Policy "strict-origin-when-cross-origin"
-  Header set Permissions-Policy "geolocation=(), microphone=(), camera=(), autoplay=(*), fullscreen=(*), payment=()"
+  # camera=(self): the QR scanners (gui/qr-scan.js, the apps of the projects)
+  Header set Permissions-Policy "geolocation=(), microphone=(), camera=(self), autoplay=(*), fullscreen=(*), payment=()"
 
   # CORS für Schriften
   <FilesMatch "\.(?:ttf|otf|eot|woff|woff2)$">
@@ -34,6 +29,7 @@
 ############################################
 AddDefaultCharset utf-8
 AddType image/svg+xml             svg svgz
+AddType application/manifest+json webmanifest
 AddType font/ttf                  ttf
 AddType font/otf                  otf
 AddType font/woff                 woff
@@ -190,15 +186,11 @@ RewriteCond %{QUERY_STRING} !updateMediaCrop
 RewriteCond %{QUERY_STRING} !rebuild
 RewriteRule ^(var/|img/|fonts/) - [NC,L]
 
-# Module-Assets direkt senden
-RewriteCond %{REQUEST_FILENAME} -f
-RewriteRule ^system/modules/ - [NC,L]
-
 ######################## public ######################################
 # Statische Dateien whitelisten (ohne PHP) - ein Rebuild geht ans Script,
 # ein fehlendes Format unter var/ auch (media.php erzeugt es)
 RewriteCond %{QUERY_STRING} !rebuild
-RewriteRule ^(system/|overrides/|)(css/|fonts/|img/|js/|modules/|class/).*\.(css|js|mjs|ttf|woff2|woff|otf|svg|png|jpe?g|webp|gif|ico)$ - [L]
+RewriteRule ^(overrides/|)(css/|fonts/|img/|js/).*\.(css|js|mjs|ttf|woff2|woff|otf|svg|png|jpe?g|webp|gif|ico)$ - [L]
 
 # Valide Requests ans Script
 RewriteRule ^[a-z0-9/_\-\&=\.~]*$ index.php [NC,QSA,L]

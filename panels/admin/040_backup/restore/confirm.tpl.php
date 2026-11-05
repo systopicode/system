@@ -16,7 +16,7 @@ foreach ($this->parent->backupfilestable ?? [] as $backupRecord) {
 }
 $showList = false;
 if (is_array($contents)) {
-	$showList = !empty($contents['database']) || !empty($contents['media']) || !empty($contents['environment']);
+	$showList = !empty($contents['database']) || !empty($contents['media']);
 	foreach ($this::SETTING_LABELS as $which => $label) {
 		if (!empty($contents[$which . 'Settings'])) {
 			$showList = true;
@@ -74,18 +74,9 @@ if (is_array($contents)) {
 							</label>
 						</li>
 					<?php } ?>
-					<?php if ($superuser && !empty($contents['environment'])) { ?>
-						<li>
-							<label class="checkbox">
-								<span>Environment</span>
-								<input data-on_change="updateRestoreSelection" value="1" type="checkbox" <?= $chosen($state, 'restoreEnvironment', false) ? "checked='checked'" : "" ?> name="restoreEnvironment" class="switch tinyswitch">
-								<div><div></div></div>
-							</label>
-						</li>
-					<?php } ?>
 				</ul>
-				<?php if ($superuser && (!empty($contents['environment']) || !empty($contents['pageSettings']) || !empty($contents['mediaSettings']))) { ?>
-					<p class="tagsHint">Settings and environment are not selected by default. Including them can replace sign-in, mail and theme configuration.</p>
+				<?php if ($superuser && (!empty($contents['pageSettings']) || !empty($contents['mediaSettings']))) { ?>
+					<p class="tagsHint">Settings are not selected by default. Including them can replace the current configuration.</p>
 				<?php } ?>
 			<?php } ?>
         </form>

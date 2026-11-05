@@ -120,18 +120,25 @@ normal von Packagist.
 
 ## 4. Daten zwischen Stages (DEV → STAGING …)
 
-Datenbank, Global Settings (`config/global.settings.json`), Media Settings
-(`config/media.settings.json`) und die Environment-Dateien (`config/*.config.json`,
-`config.local.json`, nicht `config.json`) wandern über das Backup-Panel im CMS
+Datenbank, Global Settings (`config/global.settings.json`) und Media Settings
+(`config/media.settings.json`) wandern über das Backup-Panel im CMS
 (`admin/backup`, `panels/admin/040_backup`). Mediendateien unter
 `public/var/original/` nur, wenn „Media files“ an ist. Die Liste zeigt unter
 Contents, was im Archiv liegt. Zurückspielen bietet dieselben Teile an, gelesen
 aus dem ZIP, und lässt sich einzeln abwählen. Die Datenbank bleibt beim
-Anlegen immer drin und ist beim Zurückspielen abwählbar. Datenbank, Settings
-und Environment stehen in der ersten Datei. Weitere Teile gibt es nur für
+Anlegen immer drin und ist beim Zurückspielen abwählbar. Datenbank und Settings
+stehen in der ersten Datei. Weitere Teile gibt es nur für
 Medien. Dass `.sync` `var/` ignoriert, betrifft nur den Code-Sync, nicht diesen
 Weg. Mediendateien also nicht gesondert kopieren oder als fehlend melden
 (Benutzer, 2026-10-12, mehrfach gesagt).
+
+**Vermerk für Lars (Oliver, 2026-11-05):** Die Environment-Dateien
+(`config/*.config.json`, `config.local.json`) sind wieder aus dem Backup
+entfernt, beim Anlegen wie beim Zurückspielen. Sie gehören zur Maschine und
+enthalten Passwörter. Ältere Archive bleiben gültig, ihr `config/`-Teil wird
+übergangen. Bitte nicht wieder aufnehmen: Sollen Config-Werte mitreisen, geht das
+nur über eine Definition, welche Werte am Inhalt hängen. Das Thema steht in
+[backup-config.md](backup-config.md).
 
 `composer update` auf dem Server führt der Benutzer selbst aus.
 

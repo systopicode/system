@@ -34,7 +34,9 @@ kann in seiner composer.json einen Scaffold anmelden:
 "extra": { "systopic-scaffold": { "dir": "scaffold/", "owned": ["public/index.php", "public/asset.php", "public/.htaccess", ".htaccess"] } }
 ```
 
-- **owned**: gehört dem Paket, wird neu geschrieben, wenn es abweicht. Ein
+- **owned**: gehört dem Paket, wird neu geschrieben, wenn es abweicht. Den
+  Hinweis „DO NOT EDIT“ setzt `scaffold.php` beim Schreiben, die Vorlage selbst
+  hat ihn nicht. Ein
   Block `# >>> project` … `# <<< project` in der Projektkopie bleibt
   erhalten (in `public/.htaccess` vorgesehen). Eine handgeschriebene Datei
   (ohne `bin/scaffold.php` im Text) wird beim ersten Mal nach
