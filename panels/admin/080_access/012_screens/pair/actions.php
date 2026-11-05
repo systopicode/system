@@ -27,14 +27,20 @@ switch ($this->action) {
 		break;
 
 	case 'approveDeviceCode':
-		if ($account !== null && SignInCodes::approve((string) \http::post('deviceCode', ''), $account, $me)) {
-			\message::confirm('Screen paired. It signs in within a few seconds.');
-			\http::redirect($this->parent->href);
+        if (trim((string) \http::posted('deviceCode', '')) === '') break;
+        $feedbackTarget = '.deviceBox';
+        $instance = (string) \http::posted('scanInstance', '');
+        if (preg_match('/^[a-f0-9]{16,64}$/D', $instance)) $feedbackTarget .= '[data-scan-instance="' . $instance . '"]';
+        $feedbackTarget .= ':not([hidden]) [data-remote-feedback]';
+		if ($account !== null && SignInCodes::approve((string) \http::posted('deviceCode', ''), $account, $me)) {
+            \message::confirm('Allowed. Waiting for the screen to sign in.');
+            $watchCode = htmlspecialchars((string) \http::posted('deviceCode', ''), ENT_QUOTES);
+            \clientDocument::replaceInner($feedbackTarget, '<div data-code-approved data-code-value="' . $watchCode . '"><div data-code-feedback>' . \message::flush() . '</div></div>');
 			break;
 		}
 		\message::error(SignInCodes::$error === SignInCodes::BLOCKED
 			? 'Too many wrong codes from here. Try again in 15 minutes.'
 			: 'That code is wrong or has expired.');
-		$this->updateView('lightbox');
+		\clientDocument::replaceInner($feedbackTarget, \message::flush());
 		break;
 }

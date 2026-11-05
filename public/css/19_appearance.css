@@ -125,16 +125,6 @@ html[data-mode="dark"] .cmslightbox.upload .currentFile {
 		linear-gradient(45deg, #34393d 25%, transparent 25%, transparent 75%, #34393d 75%),
 		linear-gradient(45deg, #34393d 25%, transparent 25%, transparent 75%, #34393d 75%);
 }
-html[data-mode="dark"] body.cms:not(:has(.authCard)) svg.qr-code,
-html[data-mode="dark"] body.cms .qrZoom svg.qr-code,
-html[data-mode="dark"] body.cms .fileFrame svg.qr-code {
-	display: block;
-	box-sizing: border-box;
-	color: var(--cmsMainColor);
-	background: #fff;
-	padding: 0.65rem;
-	border-radius: var(--cmsRadius);
-}
 
 html[data-mode="dark"] body.cms:not(:has(.authCard)) .cmslightbox :is(:is(a, button:where([data-cms-action])), button:where(:not([data-cms-action]))):has([class*="xmark"]),
 html[data-mode="dark"] body.cms:not(:has(.authCard)) .cmslightbox :is(:is(a, button:where([data-cms-action])), button:where(:not([data-cms-action]))):has([class*="xmark"]) i,

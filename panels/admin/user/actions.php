@@ -102,7 +102,8 @@ switch ($this->action) {
 		break;
 
 	case 'createDeviceCode':
-		$account = $this->me ? SignInGrant::account($this->scope, $this->me, $this, (int) \http::post('account', 0)) : null;
+        if ((int) \http::posted('account', 0) <= 0) break;
+		$account = $this->me ? SignInGrant::account($this->scope, $this->me, $this, (int) \http::posted('account', 0)) : null;
 		if ($account === null || !SignInCodes::available()) {
 			\message::error('That account cannot be signed in.')->target('addDevice');
 		} else {
@@ -117,7 +118,7 @@ switch ($this->action) {
 		break;
 
 	case 'checkDeviceCode':
-		if (!SignInCodes::available() || SignInCodes::peekDeviceCode((string) \http::post('deviceCode', '')) === null) {
+		if (!SignInCodes::available() || SignInCodes::peekDeviceCode((string) \http::posted('deviceCode', '')) === null) {
 			\message::error('That code is wrong or has expired.')->target('deviceBox');
 			\clientDocument::replaceInner($this->scanFeedback, \message::flush('deviceBox'));
 		} else {
@@ -126,14 +127,20 @@ switch ($this->action) {
 		break;
 
 	case 'approveDeviceCode':
+        // A route/render refresh has no new code to approve.
+        if (trim((string) \http::posted('deviceCode', '')) === '') break;
 		$me = $this->me;
-		$account = $me ? SignInGrant::account($this->scope, $me, $this, (int) \http::post('account', 0)) : null;
+		$account = $me ? SignInGrant::account($this->scope, $me, $this, (int) \http::posted('account', 0)) : null;
 		if ($account === null) {
 			\message::error('That account cannot be signed in.')->target('deviceBox');
-		} elseif (SignInCodes::approve((string) \http::post('deviceCode', ''), $account, $me)) {
+		} elseif (SignInCodes::approve((string) \http::posted('deviceCode', ''), $account, $me)) {
 			$this->deviceAllowed = true;
-			\message::confirm('Allowed. The other device signs in within a few seconds.')->target($this->deviceMessages);
-			\http::redirect($this->href);
+            \message::confirm('Allowed. Waiting for the other device to sign in.')->target('deviceBox');
+            $watchCode = htmlspecialchars((string) \http::posted('deviceCode', ''), ENT_QUOTES);
+            $refresh = ' data-code-refresh="' . htmlspecialchars($this->href . 'refreshScreenDevices', ENT_QUOTES) . '"';
+            $noticeKind = $account->type === \Systopic\System\Tables\Users\Model::SCREEN ? 'screen' : ((int) $account->id === (int) $me->id ? 'self' : 'person');
+            $feedback = '<div data-device-kind="' . $noticeKind . '" data-code-approved data-code-value="' . $watchCode . '"' . $refresh . '><div data-code-feedback>' . \message::flush('deviceBox') . '</div></div>';
+            \clientDocument::replaceInner($this->scanFeedback, $feedback);
 			break;
 		} else {
 			\message::error(SignInCodes::$error === SignInCodes::BLOCKED
@@ -142,6 +149,17 @@ switch ($this->action) {
 		}
 		\clientDocument::replaceInner($this->scanFeedback, \message::flush('deviceBox'));
 		break;
+
+    case 'refreshScreenDevices':
+        ob_start();
+        try { include __DIR__ . '/ownDevices.tpl.php'; $ownHtml = (string) ob_get_contents(); }
+        finally { ob_end_clean(); }
+        \clientDocument::replaceInner('[data-own-devices]', $ownHtml);
+        ob_start();
+        try { include __DIR__ . '/pairedDevices.tpl.php'; $html = (string) ob_get_contents(); }
+        finally { ob_end_clean(); }
+        \clientDocument::replaceInner('[data-paired-screen-devices]', $html);
+        break;
 
 	case 'revokeOtherDevices':
 		if ($this->me) {

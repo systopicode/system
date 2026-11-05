@@ -94,11 +94,9 @@
                 .then(answer => {
                     if (answer.paired) {
                         clearInterval(deviceCodeTimer);
-                        sys.passkeys.showSignedIn(block, answer.profile, answer.redirect);
-                        setTimeout(() => { location.href = answer.redirect; }, 2000);
+                        window.finishDeviceSignIn(block, answer);
                     } else if (answer.expired) {
-                        clearInterval(deviceCodeTimer);
-                        location.reload();
+                        window.renewDeviceCode?.().catch(() => {});
                     }
                 })
                 .catch(() => {});

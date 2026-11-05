@@ -131,6 +131,7 @@ switch ($this->action) {
 		}
 		// The code names the account. Who made it decided that, this device does not.
 		$this->signIn($user, SignInLog::CODE);
+        \Systopic\System\Auth\SecurityNotice::deviceSignedIn($user, $code);
 		if ((string) \http::posted('passkey_supported', '') === '1' && $user->type !== User::SCREEN && \Systopic\System\Auth\Passkeys::offerSetup($user)) {
 			$this->form = 'passkeySetup';
 			$this->updateView('main');
@@ -138,7 +139,12 @@ switch ($this->action) {
 		}
 		$this->form = 'signedIn';
 		$this->updateView('main');
-		$this->enterCms(2);
+        $target = null;
+        if ($user->type === User::SCREEN) {
+            \Systopic\System\Auth\Session::takeReturn();
+            $target = \http::$root;
+        }
+		$this->enterCms(2, $target);
 		break;
 
 	case 'doSignIn':

@@ -70,7 +70,7 @@ final class SignInCodes
             header('Content-Type: application/json; charset=utf-8');
             header('Cache-Control: no-store');
         }
-        echo json_encode(['alive' => $alive]);
+        echo json_encode(['alive' => $alive, 'used' => Session::known() && self::consumed($raw)]);
         exit;
     }
 
@@ -94,6 +94,18 @@ final class SignInCodes
             return null;
         }
         return Operator::usable($row, new DateTimeImmutable());
+    }
+
+    /** Distinguish successful consumption from expiry for the authorizing dialog. */
+    public static function consumed(string $input): bool
+    {
+        $secret = AuthConfig::secret();
+        $normalized = Operator::normalize($input);
+        if ($secret === null || $normalized === '' || strlen($input) > 32) return false;
+        try {
+            $row = CodeQuery::byHash(Scope::default(), Operator::hash($normalized, $secret));
+            return $row?->usedAt !== null;
+        } catch (\Throwable) { return false; }
     }
 
     /** Codes need `auth.secret`, which `AuthConfig` makes when there is none. */

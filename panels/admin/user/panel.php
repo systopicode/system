@@ -64,7 +64,7 @@ class Panel extends CmsPanel {
 	 */
 	public string $authKind {
 		get {
-			$kind = (string) (\http::post('kind') ?: \http::dataset('kind') ?: \http::get('kind'));
+			$kind = (string) (\http::posted('kind') ?: \http::dataset('kind') ?: \http::get('kind'));
 			return in_array($kind, ['self', 'screen', 'person'], true) ? $kind : '';
 		}
 	}
@@ -79,7 +79,12 @@ class Panel extends CmsPanel {
 
 	/** Where the answer to a scanned code goes. */
 	public string $scanFeedback {
-		get => '.scanCodeBox.kind' . ucfirst($this->authKind ?: 'self') . ' [data-remote-feedback]';
+        get {
+            $box = \http::posted('feedback') === 'allow' ? '.allowDeviceBox' : '.scanCodeBox.kind' . ucfirst($this->authKind ?: 'self');
+            $instance = (string) \http::posted('scanInstance', '');
+            if (preg_match('/^[a-f0-9]{16,64}$/D', $instance)) $box .= '[data-scan-instance="' . $instance . '"]';
+            return $box . ':not([hidden]) [data-remote-feedback]';
+        }
 	}
 
 	function getDefaultState() {

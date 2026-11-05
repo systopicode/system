@@ -112,6 +112,26 @@ final class SignInLog
         return $entries;
     }
 
+    /** Dashboard compatibility for installations upgraded from login.log. Read-only. */
+    public static function recentSignIns(int $limit = 5): array
+    {
+        $entries = self::entries();
+        $legacy = \fs::toNative(rtrim((string) \fs::$root, '/\\') . '/var/log/login.log');
+        foreach (is_file($legacy) ? (file($legacy, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES) ?: []) : [] as $line) {
+            $entries[] = array_pad(array_map('trim', explode(' ; ', $line)), 5, '');
+        }
+        $recent = [];
+        foreach ($entries as $parts) {
+            if (!in_array($parts[2], ['signed in', 'logged in'], true)) continue;
+            $parts[2] = 'signed in';
+            $date = \DateTimeImmutable::createFromFormat('!d.m.Y-H:i:s', $parts[0]);
+            if (!$date) continue;
+            $recent[implode(' ; ', $parts)] = ['time' => $date->getTimestamp(), 'entry' => $parts];
+        }
+        uasort($recent, static fn(array $a, array $b): int => $b['time'] <=> $a['time']);
+        return array_column(array_slice($recent, 0, max(0, $limit)), 'entry');
+    }
+
     /** How a method reads in a list: `oauth:google` is "Google". */
     public static function methodLabel(string $method): string
     {

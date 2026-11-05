@@ -609,10 +609,7 @@ body > main:has(> div.content .dashboard) .cms div.bottomMenu :is(a, button:wher
     background: var(--cmsOnDark);
 }
 
-body > main:has(> div.content .dashboard) .cms div.bottomMenu :is(a, button:where([data-cms-action])).cmsAccount:hover div.signet:after,
-body > main:has(> div.content .dashboard) .cms div.bottomMenu :is(a, button:where([data-cms-action])).cmsAccount:focus-within div.signet:after{
-    content: none;
-}
+
 
 
 body > main:has(> div.content .dashboard) .cms div.bottomMenu .signet{

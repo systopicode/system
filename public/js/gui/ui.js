@@ -64,23 +64,15 @@ document.addEventListener('click', function (event) {
 		var box = document.querySelector(open.getAttribute('data-open-box'));
 		if (box) {
 			box.hidden = false;
+            if (box.classList.contains('scanCodeBox') && typeof window.QrScan?.resetBox === 'function') window.QrScan.resetBox(box);
 			// The widget chose the account: the box names it and sends it along.
 			var chosen = open.form && open.form.elements.account;
 			if (chosen) {
 				box.querySelector('input[name="account"]').value = chosen.value;
 				box.querySelector('[data-identify-name]').textContent = chosen.selectedOptions[0].textContent;
 			}
-			// Scanning a code: a phone opens the camera from this click. A desktop
-			// stays on the code field. The click is the gesture the prompt needs.
-			var phone = window.matchMedia('(max-width: 720px), (hover: none) and (pointer: coarse)').matches;
-			var scanHost = box.classList.contains('scanCodeBox') && window.QrScan ? box.querySelector('[data-qr-host]') : null;
-			var settled = scanHost && scanHost.dataset.qrHost === 'approve';
-			if (scanHost && (phone || settled)) {
-				box.classList.add('cmsOpening');
-				// With the account settled the camera comes up on a desktop too.
-				if (settled) window.QrScan.open(scanHost);
-				else window.QrScan.start(scanHost);
-			}
+            var scanHost = box.classList.contains('scanCodeBox') && window.QrScan ? box.querySelector('[data-qr-host]') : null;
+            if (scanHost) window.QrScan.open(scanHost);
 		}
 		return;
 	}

@@ -2,8 +2,8 @@
 /**
  * The camera and the eight boxes of a device code.
  *
- * With `approve` the account is settled: camera and boxes are there together,
- * and a full code goes out on its own.
+ * Manual entry is submitted with the check button; a camera hit uses
+ * the existing scanner submission path.
  *
  * @var string $scanHost profile | approve, what `qr-scan.js` does with a hit
  * @var string $scanAction where the form goes
@@ -12,7 +12,6 @@
  * @var bool $scanAuto the box comes in by ajax, no click opens the camera
  */
 	$e = static fn($v): string => htmlspecialchars((string) $v, ENT_QUOTES);
-	$approve = $scanHost === 'approve';
 ?>
 <div class="qrScan" data-qr-host="<?= $e($scanHost) ?>" data-base="<?= $e($this->href) ?>" data-kind="<?= $e($scanFields['kind'] ?? '') ?>"<?= !empty($scanAuto) ? ' data-qr-auto' : '' ?> hidden>
 	<div class="qrScanStage">
@@ -21,18 +20,17 @@
 		<button type="button" class="qrScanTorch" data-qr-torch hidden aria-label="Light"><i class="cmsIcon cmsIcon-bolt"></i></button>
 	</div>
 	<p class="qrScanHint" data-qr-hint>Hold the QR code steady and well lit in the frame.</p>
-	<?php if (!$approve) { ?>
 		<div class="remoteMethods">
 			<button type="button" class="button" data-remote-code><i class="cmsIcon cmsIcon-input-numeric"></i> Use code</button>
 		</div>
-	<?php } ?>
 	<div class="cms message qrScanMsg" data-qr-msg hidden></div>
 	<div class="qrScanDim remoteAbort" data-qr-dim hidden>
 		<button type="button" class="button submit" data-qr-again><i class="cmsIcon cmsIcon-arrows-rotate"></i> <span data-qr-label>Try again</span></button>
 	</div>
 </div>
-<form class="remoteCode" data-feedback="parameters" data-code-form<?= $approve ? ' data-code-send' : '' ?> method="post" action="<?= $e($scanAction) ?>">
+<form class="ajax remoteCode" data-feedback="parameters" data-code-form method="put" action="<?= $e($scanAction) ?>">
 	<p class="cmsBoxLead"><?= $e($scanLead) ?></p>
+    <input type="hidden" name="scanInstance" value="<?= $e($scanInstance ?? '') ?>">
 	<?php foreach ($scanFields as $field => $value) { ?>
 		<input type="hidden" name="<?= $e($field) ?>" value="<?= $e($value) ?>">
 	<?php } ?>
@@ -49,9 +47,7 @@
 		</div>
 		<button class="button submit" type="submit" aria-label="Continue" title="Continue"><i class="cmsIcon cmsIcon-check"></i></button>
 	</div>
-	<?php if (!$approve) { ?>
 		<div class="remoteSwitch">
 			<button type="button" class="button" data-qr-start><i class="cmsIcon cmsIcon-object-scan"></i> Scan QR code</button>
 		</div>
-	<?php } ?>
 </form>

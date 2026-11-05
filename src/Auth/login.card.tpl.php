@@ -83,16 +83,7 @@ $codeChars = str_split(substr(strtoupper((string) preg_replace('/[^0-9A-Z]/', ''
             <h1>Sign in from another device</h1>
             <?= $authMessages ?>
             <?php if ($qr !== '') { ?>
-                <?php $authLeft = max(0, (int) ($authPair['expires'] ?? 0) - time()); ?>
-                <div class="authQrWrap" data-device-code data-code-until="<?= (int) ($authPair['expires'] ?? 0) ?>" data-code-left="<?= $authLeft ?>" data-code-renew>
-                    <div data-code-live>
-                        <div class="authQr"><?= $qr ?></div>
-                        <p class="authCodeLine"><?= $e($authPair['code'] ?? '') ?></p>
-                        <p class="authLead authCountdown" role="timer">New code in <span data-code-countdown><?= intdiv($authLeft, 60) . ':' . sprintf('%02d', $authLeft % 60) ?></span></p>
-                        <p class="authLead">Scan or enter code from your device that is signed in.</p>
-                    </div>
-                    <div class="cms message" data-code-expired hidden><div class="info"><p>This code has expired. A new one is on its way.</p></div></div>
-                </div>
+                <?php include __DIR__ . '/device-code.tpl.php'; ?>
             <?php } else { ?>
                 <p class="authNote">A code is not ready yet. Reload this page, or use another method.</p>
             <?php } ?>

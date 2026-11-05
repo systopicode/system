@@ -8,9 +8,10 @@ if ($screen === null) {
 $e = static fn($v): string => htmlspecialchars((string) $v, ENT_QUOTES);
 $name = trim((string) $screen->name);
 $scanning = $this->scanning;
+$scanInstance = bin2hex(random_bytes(8));
 ?>
-<div class="cms cmslightbox deviceBox" data-feedback="parameters">
-	<section>
+<div class="cms cmslightbox deviceBox" data-scan-instance="<?= $scanInstance ?>" data-feedback="parameters">
+	<section class="is-expanded">
 		<header>
 			<h1><?= $scanning ? 'Scan device code from screen' : 'Create new auth code' ?></h1>
 			<ul class="barmenu">
@@ -18,7 +19,7 @@ $scanning = $this->scanning;
 			</ul>
 		</header>
 		<main class="deviceBoxMain">
-			<?= \message::flush() ?>
+            <div data-remote-feedback><?= \message::flush() ?></div>
 			<?php
 			$infoScan = $scanning;
 			$infoName = $name;

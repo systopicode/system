@@ -340,53 +340,28 @@ header.cms .rightAlign form{
     height: auto;
 }
 
-.remoteOffer .remoteCodeLine{
-    margin: 0.65rem 0 0;
-    text-align: center;
-    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-    letter-spacing: 0.14em;
-    font-weight: 600;
-}
-
 .remoteOffer > .tagsHint{
     margin: 0.75rem 0 0;
     max-width: none;
     text-align: center;
 }
 
-.remoteOfferCopy{
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    align-items: stretch;
-    gap: 0.75rem;
-    width: 100%;
-}
-
-.remoteOfferCopy > :not(.button){
-    grid-column: 1 / -1;
-}
-
-.remoteOffer .cmsBoxLead{
-    margin: 1rem 0 0.25rem;
+.remoteOffer > .cmsBoxLead{
+    margin: 0 0 1rem;
     text-align: center;
+}
+
+.remoteOffer > .cmsBoxActions{
+    width: 100%;
+    margin-top: 1rem;
+    justify-content: center;
 }
 
 .remoteExpiry{
-    margin: 0;
+    margin: 0.75rem 0 0;
     color: var(--cmsMuted);
     font-size: 0.875rem;
     text-align: center;
-}
-
-/* While the camera runs, the code stays out of the way. When it stops,
-   the code is the page again and the ten minutes go with the lead. */
-.deviceBoxMain:has(.qrScan:not([hidden]):not(.is-dim)) > .remoteOffer,
-.deviceBoxMain:has(.remoteCode:not([hidden])) > .remoteOffer{
-    display: none;
-}
-
-.deviceBoxMain:has(.qrScan.is-dim) .remoteOfferCopy{
-    display: none;
 }
 
 .deviceBoxMain .remoteMethods{
@@ -396,10 +371,6 @@ header.cms .rightAlign form{
     gap: 0.75rem;
     width: 100%;
     margin-top: 0.75rem;
-}
-
-.qrScan.is-dim .remoteMethods{
-    display: none;
 }
 
 .deviceBoxMain .remoteAbort:not([hidden]){
@@ -421,14 +392,18 @@ header.cms .rightAlign form{
     width: 100%;
 }
 
+.cms .deviceBoxMain .cmsBoxActions .button,
 .cms .deviceBoxMain .remoteSwitch .button,
-.cms .remoteOfferCopy .button,
 .cms .deviceBoxMain .remoteMethods .button{
     width: 100%;
     min-width: 0;
     margin: 0;
     white-space: normal;
     justify-content: center;
+}
+
+.deviceBoxMain .remoteCode > .cmsBoxLead{
+    margin: 0 0 0.75rem;
 }
 
 .deviceBoxMain .remoteCodeEntry{
@@ -527,3 +502,23 @@ header.cms .rightAlign form{
 
 /* Camera retry is a separate action above the code entry. */
 .cms .deviceBoxMain .remoteAbort:not([hidden]){margin-bottom:1rem;}
+
+.deviceBoxMain > form { width: 100%; }
+
+.deviceBoxMain > [data-code-value] { width: 100%; }
+
+.deviceBoxMain > .deviceRequest { width: 100%; margin: 0 0 1rem; }
+
+@media (max-width: 767px) {
+    .profile .widget > footer.deviceActionsFooter {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        align-items: stretch;
+        gap: .5rem;
+        padding-block: .9rem;
+    }
+    .profile .deviceActionsFooter > .cmsBoxMore,
+    .profile .deviceActionsFooter > [data-action="revokeOtherDevices"] { grid-column: 1 / -1; }
+    .profile .deviceActionsFooter > form { min-width: 0; margin: 0; }
+    .profile .deviceActionsFooter .button { width: 100%; margin: 0; }
+}

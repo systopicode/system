@@ -138,3 +138,9 @@ Was spaceticker dafür tut:
 - `php .cursor/tools/devices-check.php http` stammt aus der Zeit der eigenen
   App-Anmeldung, viele Szenarien schlagen fehl. Die Abläufe prüft
   `auth-workflows-check.php`, die Geräte-Szenarien sind noch nachzuziehen.
+
+## Sicherheitsmail nach Code-Anmeldung
+
+Nach erfolgreicher Anmeldung auf dem Zielgerät senden beide Code-Wege über `Auth\SecurityNotice` und die bestehende `emailSmtp`-/Letter-Infrastruktur eine sensible Benachrichtigung an die Mailadresse des angemeldeten Kontos. Die Nachricht nennt Zeitpunkt, Gerät und Autorisierenden (`approvedBy`, sonst `createdBy`). Erstellen, bloße Freigabe, fehlgeschlagene Einlösung und wiederholte Polls nach Verbrauch lösen hier keine Nachricht aus. Konten ohne gültige Mailadresse werden übersprungen; Versandfehler dürfen die erfolgte Anmeldung nicht zurücknehmen. Codes, Poll-Geheimnisse und Anmeldelinks werden nicht in die Nachricht aufgenommen.
+
+Isolierte Prüfung: `php tests/sign-in-security-notice.php` und `php tests/security-notice.php`. Der echte Zwei-Geräte-/SMTP-Test ist noch offen, da dev.local am 2026-11-05 keine HTTPS-Verbindung annimmt.

@@ -268,16 +268,22 @@ final class Session
      * the path and query are kept, and only below the site root: the sign-in
      * cannot be sent anywhere else.
      */
-    public static function rememberReturn(string $url): void
+    private static function returnPage(string $url): ?string
     {
         $path = (string) parse_url($url, PHP_URL_PATH);
         $query = (string) parse_url($url, PHP_URL_QUERY);
         $root = rtrim((string) \http::$root, '/') . '/';
-        if (!str_starts_with($path, $root) || preg_match('~^(admin/)?auth(/|$)~', substr($path, strlen($root)))) {
-            return;
-        }
+        $relative = substr($path, strlen($root));
+        if (!str_starts_with($path, $root) || preg_match('~^(?:(admin/)?auth(/|$)|admin/user/logout(/|$))~', $relative)) return null;
+        return $path . ($query !== '' ? '?' . $query : '');
+    }
+
+    public static function rememberReturn(string $url): void
+    {
+        $page = self::returnPage($url);
+        if ($page === null) return;
         \http::sessionStartOnce();
-        $_SESSION[self::RETURN_KEY] = $path . ($query !== '' ? '?' . $query : '');
+        $_SESSION[self::RETURN_KEY] = $page;
     }
 
     /** The remembered page, still there for a password or a passkey on the same card. */
@@ -285,7 +291,7 @@ final class Session
     {
         \http::sessionStartOnce();
         $url = $_SESSION[self::RETURN_KEY] ?? null;
-        return is_string($url) && $url !== '' ? $url : null;
+        return is_string($url) ? self::returnPage($url) : null;
     }
 
     /** Where the sign-in leads, once. */
@@ -294,7 +300,7 @@ final class Session
         \http::sessionStartOnce();
         $url = $_SESSION[self::RETURN_KEY] ?? null;
         unset($_SESSION[self::RETURN_KEY]);
-        return is_string($url) ? $url : null;
+        return is_string($url) ? self::returnPage($url) : null;
     }
 
     /**

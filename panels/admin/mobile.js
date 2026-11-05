@@ -112,14 +112,14 @@ function chromeColor() {
 	// and not from the background shorthand. A hex, so a variable is not skipped.
 	var chrome = document.getElementById('cmsSafariChrome');
 	if (!login && ink) {
-		var rule = 'html{background-color:' + ink + '}';
+		var rule = 'html,html:has(>body.cms.system),body.cms.system{background-color:' + ink + '}';
 		if (!menu) rule += 'body.cms>.cmsMobileHeader{background-color:' + ink + '}';
 		if (chrome && chrome.textContent !== rule) chrome.textContent = rule;
 		if (node.textContent) node.textContent = '';
 	} else {
 		if (node.textContent) node.textContent = '';
 	}
-	if (document.documentElement.style.background) document.documentElement.style.background = '';
+	if (ink) document.documentElement.style.backgroundColor = ink;
 	if (document.body.style.background) document.body.style.background = '';
 	var edge = document.getElementById('cmsChromeEdge');
 	if (!edge) {
@@ -135,10 +135,6 @@ function chromeColor() {
 		var section = boxes.at(-1)?.querySelector(':scope > section');
 		if (!menu && section && !boxes.at(-1).classList.contains('cmsFind')) {
 			paper = hexColor(getComputedStyle(section).backgroundColor) || paper;
-			if (!boxes.at(-1).classList.contains('cmsFind')) {
-				document.querySelectorAll('meta[name="theme-color"]').forEach(function (bar) { bar.content = paper; });
-				if (chrome) chrome.textContent = 'html{background-color:' + paper + '}';
-			}
 		}
 	}
 	edge.style.backgroundColor = menu || login ? ink : paper;
@@ -895,7 +891,10 @@ function shutSheet(sheet) {
 			var live = lightbox.isConnected ? lightbox : (document.querySelector('.cmslightbox') || lightbox);
 			// The first link can be a download. Close is the plain ajax link,
 			// or a control marked for a lightbox that is not its own address.
-			live.querySelector('[data-box-close], [data-close-find], [data-lightbox-close], header [aria-label="Close"]')?.click();
+			// Same markers as system lightbox headers (aria-label="Close"), plus xmark fallback.
+			(live.querySelector('[data-box-close], [data-close-find], [data-lightbox-close], header [aria-label="Close"]')
+				|| live.querySelector('header a.ajax:has(.cmsIcon-xmark), header button:has(.cmsIcon-xmark)'))
+				?.click();
 			return;
 		}
 		if (sheet.matches && sheet.matches('ul.contextmenu') && typeof closeAllMenus === 'function') {
@@ -917,6 +916,13 @@ function shutSheet(sheet) {
 	sheet.getBoundingClientRect();
 	sheet.style.transition = 'transform ' + dur + 'ms cubic-bezier(.25,.65,.3,1)';
 	sheet.style.transform = 'translateY(110%)';
+	if (lightbox) {
+		lightbox.style.transition = 'background ' + dur + 'ms linear';
+		lightbox.style.background = 'color-mix(in srgb, var(--cmsMainColor) 0%, transparent)';
+	} else if (backdrop) {
+		backdrop.style.transition = 'opacity ' + dur + 'ms linear';
+		backdrop.style.opacity = '0';
+	}
 	var done = false;
 	function complete(event) {
 		if (done) return;
@@ -924,6 +930,15 @@ function shutSheet(sheet) {
 		if (event && event.propertyName !== 'transform') return;
 		done = true;
 		finish();
+		// Clear drag styles only if the surface is still there (X/ajax closes remove it).
+		if (lightbox?.isConnected) {
+			lightbox.style.removeProperty('transition');
+			lightbox.style.removeProperty('background');
+			lightbox.style.removeProperty('--cmsGlassFade');
+		} else if (backdrop && !lightbox) {
+			backdrop.style.removeProperty('transition');
+			backdrop.style.removeProperty('opacity');
+		}
 	}
 	sheet.addEventListener('transitionend', complete);
 	setTimeout(function () { complete(); }, dur + 80);
@@ -993,6 +1008,15 @@ document.addEventListener('pointerdown', function (event) {
 		sheet.style.transition = 'none';
 		sheet.style.transform = 'translateY(' + distance + 'px)';
 		if (!lightbox) sheet.style.boxShadow = distance > 2 ? '0 -10px 24px -8px rgb(0 0 0 / .32), 0 120px 0 0 var(--cmsBgColor)' : '';
+		// Glass / sheet backdrop fades with the finger, same as closing.
+		var fadeBase = lightbox ? (baseHeight || sheet.getBoundingClientRect().height) : sheet.getBoundingClientRect().height;
+		var fade = Math.max(0, Math.min(1, 1 - distance / Math.max(1, fadeBase * 0.85)));
+		if (lightbox) {
+			lightbox.style.setProperty('--cmsGlassFade', String(fade));
+			lightbox.style.background = 'color-mix(in srgb, var(--cmsMainColor) calc(48% * ' + fade + '), transparent)';
+		} else if (backdrop) {
+			backdrop.style.opacity = String(fade);
+		}
 	}
 	function end(e) {
 		if (e.pointerId !== event.pointerId) return;
@@ -1013,6 +1037,8 @@ document.addEventListener('pointerdown', function (event) {
 				sheet.style.removeProperty('height');
 				sheet.style.removeProperty('max-height');
 				sheet.style.removeProperty('transform');
+				lightbox.style.removeProperty('--cmsGlassFade');
+				lightbox.style.removeProperty('background');
 				return;
 			}
 			if (dy > 80) {
@@ -1023,12 +1049,15 @@ document.addEventListener('pointerdown', function (event) {
 			sheet.style.removeProperty('height');
 			sheet.style.removeProperty('max-height');
 			sheet.style.removeProperty('transform');
+			lightbox.style.removeProperty('--cmsGlassFade');
+			lightbox.style.removeProperty('background');
 			return;
 		}
 		var shut = e.type !== 'pointercancel' && distance > 80;
 		if (!shut) {
 			sheet.style.removeProperty('transition');
 			sheet.style.removeProperty('transform');
+			if (backdrop) backdrop.style.removeProperty('opacity');
 		}
 		if (shut) shutSheet(sheet);
 	}

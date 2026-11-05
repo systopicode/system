@@ -229,7 +229,7 @@ final class ThemeFile
             echo 'document.documentElement.style.setProperty(' . json_encode('--' . $name) . ',' . json_encode('#' . Theme::color($name)) . ');';
         }
         echo 'document.querySelectorAll("meta[name=theme-color]").forEach(function(n){n.setAttribute("content",' . json_encode($main) . ');});';
-        echo 'var themeChrome=document.getElementById("cmsSafariChrome");if(themeChrome)themeChrome.textContent=' . json_encode('html{background-color:' . $main . '}body.cms>.cmsMobileHeader{background-color:' . $main . '}') . ';';
+        echo 'var themeChrome=document.getElementById("cmsSafariChrome");if(themeChrome)themeChrome.textContent=' . json_encode('html,html:has(>body.cms.system),body.cms.system{background-color:' . $main . '}body.cms>.cmsMobileHeader{background-color:' . $main . '}') . ';';
         echo '</script>';
     }
 

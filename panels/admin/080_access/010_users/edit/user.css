@@ -225,30 +225,6 @@ body.cms .cmslightbox .userTabs button:where(:not([data-cms-action])):hover{
     background: #fff;
 }
 
-.cmslightbox.qrZoom .qrCodeBar{
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 0.75rem;
-    margin: 0;
-    padding: 0.55rem 0.7rem 0.55rem 0.9rem;
-    border: 1px solid var(--cmsLine);
-    border-radius: var(--cmsRadius);
-    background: var(--cmsCanvas);
-}
-
-.cmslightbox.qrZoom .qrCodeBar strong{
-    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-    font-size: 1.35rem;
-    font-weight: 700;
-    letter-spacing: 0.14em;
-}
-
-.cms .cmslightbox.qrZoom .qrCodeBar .button{
-    flex: 0 0 auto;
-    margin: 0;
-}
-
 .cmslightbox.qrZoom .fileFrame{
     display: flex;
     align-items: center;

@@ -33,6 +33,9 @@ final class DeviceCode
     /** Answer a poll, or on a normal GET start a new code. */
     public static function handle(): void
     {
+        if (isset($_SERVER['HTTP_X_DEVICE_CODE_RENEW'])) {
+            self::answerRenewal();
+        }
         if (isset($_SERVER['HTTP_X_DEVICE_CODE_POLL'])) {
             self::answerPoll();
         }
@@ -95,9 +98,33 @@ final class DeviceCode
         return is_string($back) && $back !== '' ? $back : \http::$root . 'admin/';
     }
 
+    /** Only this block changes; the card and surrounding document stay in place. */
+    private static function answerRenewal(): never
+    {
+        if (Session::known()) self::answerPoll();
+        $authPair = self::begin();
+        $qr = $authPair !== null && class_exists('qr')
+            ? \qr::svgMarkup(\qr::payload('url', ['url' => self::url($authPair['code'])]), 4, 'M', 'qr-code') : '';
+        if ($qr === '') {
+            http_response_code(503);
+            $answer = ['error' => true];
+        } else {
+            ob_start();
+            include __DIR__ . '/device-code.tpl.php';
+            $answer = ['html' => (string) ob_get_clean()];
+        }
+        while (ob_get_level()) ob_end_clean();
+        header('Content-Type: application/json; charset=utf-8');
+        header('Cache-Control: no-store');
+        echo json_encode($answer);
+        exit;
+    }
+
     private static function answerPoll(): never
     {
-        $user = self::approved((string) ($_COOKIE[self::cookieName()] ?? ''));
+        $user = Session::known()
+            ? UserLookup::byId(\Systopic\Db\Scope::default(), (int) Session::id())
+            : self::approved((string) ($_COOKIE[self::cookieName()] ?? ''));
         $answer = $user !== null
             ? ['paired' => true, 'redirect' => self::target($user), 'profile' => SignInFeedback::profile()]
             : ['paired' => false, 'expired' => SignInCodes::$error !== ''];
@@ -129,6 +156,7 @@ final class DeviceCode
         Session::login($user);
         Devices::issue($user);
         SignInLog::write((string) $user->name, 'signed in', SignInLog::DEVICE_CODE);
+        SecurityNotice::deviceSignedIn($user, $code);
         self::cookie('', time() - 3600);
         unset($_SESSION[self::SESSION]);
         return $user;

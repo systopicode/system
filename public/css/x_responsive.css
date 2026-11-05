@@ -871,19 +871,16 @@ body.cms .cmslightbox > section > :is(header,header.cmsMobileEditHeader,footer) 
     }
     body.cms .cmslightbox > section > header :is(a,button):has([class*="xmark"]):is(:hover,:focus-visible) { background: var(--cmsButtonBg); }
     body.cms .cmslightbox > section { animation: cmsPhoneSheetIn 480ms cubic-bezier(.25,.65,.3,1); }
-    body.cms .deviceBox:not(.cmsOpening) > section { animation: none; }
     body.cms .cmslightbox.cmsNestedDialog {
         align-items: center; padding: max(1rem, env(safe-area-inset-top)) 1rem max(1rem, env(safe-area-inset-bottom));
     }
-    body.cms .cmslightbox.cmsNestedDialog > section {
+    body.cms .cmslightbox.cmsNestedDialog > section:not(.is-expanded) {
         position: relative; inset: auto; width: 100%; height: auto;
         max-height: calc(100dvh - 3rem - var(--cmsKeyboard, 0px));
         border-radius: var(--cmsRadiusLg); padding-bottom: 0;
         box-shadow: var(--cmsShadow); animation: none;
     }
     body.cms .cmsNestedDialog .cmsMobileGrip { display: none; }
-    body.cms .qrCodeBar { display: flex; flex-wrap: wrap; gap: .75rem; align-items: center; }
-    body.cms .qrCodeBar > strong { min-width: 0; overflow-wrap: anywhere; }
     body.cms > main > div.content .projectFiles.themeEditor .widget { border-radius: var(--cmsRadiusLg); overflow: hidden; }
     body.cms .themeSwatches { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); }
     body.cms .themeSwatches > label { min-width: 0; width: auto; }

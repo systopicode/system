@@ -514,7 +514,7 @@ main.is-passkey-signing-in .passkeyLogin--quiet {
 	max-width: 100%;
 	height: auto !important;
 	margin: 0 auto !important;
-	background: transparent;
+	background: #fff;
 }
 
 .authCard .authCodeSlots {

@@ -186,7 +186,7 @@
 		}
 		// The account lightbox already offers "Or use code" and keeps the QR.
 		// Opening the form there hides that QR.
-		if (denied && formOf(host) && !dim.querySelector('[data-remote-code]')) showFields(host, true);
+		if (denied && formOf(host) && !host.closest('.deviceBoxMain') && !dim.querySelector('[data-remote-code]')) showFields(host, true);
 		if (denied) whenAllowed(host);
 	}
 
@@ -251,9 +251,7 @@
         call.background = true;
         var invalid = function () {
 			flash(host, 'error', host.getAttribute('data-invalid') || 'That code is wrong or has expired.');
-			showFields(host, true);
-			// This box has no "Scan QR code": the camera comes back from here.
-			if (host.getAttribute('data-qr-host') === 'approve') showDim(host, 'timeout');
+			showFields(host, !host.closest('.deviceBoxMain'));
 		};
         call.send(settings.siteRoot + 'auth/validateQr').done(function (data) {
             if (data && data.valid) run(); else invalid();
@@ -285,6 +283,8 @@
 	var BLOCKED = 'The browser will not ask for the camera again. Allow it for this site in the address bar, then try again.';
 
 	function start(host, again) {
+        host.hidden = false;
+        if (formOf(host)) formOf(host).hidden = true;
 		if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
 			showDim(host, 'denied');
 			return;
@@ -305,7 +305,7 @@
 		var dim = host.querySelector('[data-qr-dim]');
 		if (dim) dim.hidden = true;
 		var form = formOf(host);
-		if (form && host.getAttribute('data-qr-host') !== 'approve') form.hidden = true;
+		if (form) form.hidden = true;
 		clearFlash(host);
 		hint(host, steady(host));
 		waiting(host, true);
@@ -534,18 +534,48 @@
 		if (name && option) name.textContent = (option.textContent || '').trim();
 	});
 
-	// Camera and code boxes together, whichever comes first. A phone keeps its
-	// keyboard down, it would cover the camera.
-	function open(host) {
-		start(host);
-		var form = formOf(host);
-		var first = form && form.querySelector('[data-slot]');
-		if (first && !window.matchMedia('(max-width: 720px), (hover: none) and (pointer: coarse)').matches) first.focus();
-	}
+	// The same two modes everywhere: desktop types first, touch scans first.
+    function open(host) {
+        if (window.matchMedia('(max-width: 720px), (hover: none) and (pointer: coarse)').matches) {
+            start(host);
+        } else {
+            stop(host);
+            showFields(host, false);
+            var first = formOf(host)?.querySelector('[data-slot]');
+            if (first) first.focus();
+        }
+    }
+
+    function resetBox(box) {
+        box.dataset.scanInstance = Array.from(crypto.getRandomValues(new Uint8Array(16)), function (b) { return b.toString(16).padStart(2, '0'); }).join('');
+        box.querySelectorAll('[data-qr-host]').forEach(function (host) { stop(host); host.hidden = true; });
+        box.querySelectorAll('[data-remote-feedback]').forEach(function (feedback) { feedback.replaceChildren(); });
+        box.querySelectorAll('[data-code-form]').forEach(function (form) {
+            form.reset(); form.hidden = false;
+            var instance = form.querySelector('input[name="scanInstance"]');
+            if (instance) instance.value = box.dataset.scanInstance;
+            var code = form.querySelector('input[name="deviceCode"]');
+            if (code) { code.value = ''; delete code.dataset.sent; }
+        });
+    }
+
+    function settleApproved() {
+        document.querySelectorAll('[data-code-approved]:not([data-approved-ready])').forEach(function (notice) {
+            notice.setAttribute('data-approved-ready', '');
+            var box = notice.closest('.cmslightbox');
+            if (!box) return;
+            box.querySelectorAll('[data-qr-host]').forEach(function (host) { stop(host); host.hidden = true; });
+            box.querySelectorAll('form').forEach(function (form) {
+                if (form.contains(document.activeElement)) document.activeElement.blur();
+                form.hidden = true;
+            });
+        });
+    }
 
 	// A box that came in by ajax has no click of its own. A browser that insists
 	// on one refuses, and the box then offers "Allow access".
 	function openAuto() {
+        settleApproved();
 		document.querySelectorAll('[data-qr-auto]').forEach(function (host) {
 			host.removeAttribute('data-qr-auto');
 			open(host);
@@ -553,5 +583,5 @@
 	}
 	new MutationObserver(openAuto).observe(document.documentElement, { childList: true, subtree: true });
 
-	window.QrScan = { start: start, stop: stop, open: open };
+	window.QrScan = { start: start, stop: stop, open: open, resetBox: resetBox };
 })();

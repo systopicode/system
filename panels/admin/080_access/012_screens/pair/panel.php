@@ -21,7 +21,7 @@ class Panel extends CmsPanel
 
     public ?User $screen {
         get {
-            $user = UserAdmin::of($this->scope)->user((int) (\http::get('user_id') ?: \http::dataset('user_id') ?: \http::post('user_id')));
+            $user = UserAdmin::of($this->scope)->user((int) (\http::get('user_id') ?: \http::dataset('user_id') ?: \http::posted('user_id')));
             return $user?->type === User::SCREEN ? $user : null;
         }
     }

@@ -309,9 +309,9 @@ body.dragging .dashWidgets .dashWidget > div.sort.v{
 }
 
 .dashList .presence{
-	flex: 0 0 0.55rem;
-	width: 0.55rem;
-	height: 0.55rem;
+	flex: 0 0 0.5rem;
+	width: 0.5rem;
+	height: 0.5rem;
 	border-radius: 50%;
 	background: var(--cmsError);
 }
@@ -335,8 +335,8 @@ body.dragging .dashWidgets .dashWidget > div.sort.v{
 }
 
 @keyframes presenceLive{
-	0%, 100%{ opacity: 1; transform: scale(1); }
-	50%{ opacity: 0.4; transform: scale(0.82); }
+	0%, 100%{ opacity: 1; }
+	50%{ opacity: 0.4; }
 }
 
 .dashList li > :is(:is(a, button:where([data-cms-action])), div) > span:not(.dashInitials, .presence, .dashForward){
@@ -850,3 +850,7 @@ body.cms .dashboard .dashTabs button:where(:not([data-cms-action])):hover{
 }
 
 .dashboard .dashWidget > footer[data-signins-tab][hidden] { display: none; }
+
+/* Tab wrappers retain the standard widget content inset for empty states. */
+.dashboard .dashWidget > [role="tabpanel"] > main { padding: var(--cmsCardPadding); }
+.dashboard .dashWidget > [role="tabpanel"] > main > .hint { margin: 0; }

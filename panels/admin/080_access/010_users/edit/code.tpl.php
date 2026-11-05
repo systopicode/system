@@ -15,7 +15,7 @@
 		: 'Valid for 10 minutes. On the new device, enter this code or open the link, then choose Sign in. The account becomes active when the code is used.';
 ?>
 <div class="cms cmslightbox qrZoom cmsNestedDialog" data-mobile-dialog="static" data-size="2" data-code-until="<?= (int) ($issued['expires'] ?? 0) ?>" data-code-value="<?= $e($issued['code']) ?>" hidden>
-	<section>
+	<section class="is-expanded">
 		<header>
 			<h1><?= $e($heading) ?></h1>
 			<ul class="barmenu">
@@ -26,10 +26,7 @@
 			<div data-code-live>
 				<p class="cmsBoxLead"><?= $e($lead) ?></p>
 				<p class="tagsHint">Anyone who can see this can sign in as this <?= $screenCode ? 'screen' : 'person' ?>. Close it when you are done.</p>
-				<div class="qrCodeBar">
-					<strong><?= $e($issued['code']) ?></strong>
-					<button type="button" class="button" data-copy="<?= $e($issued['code']) ?>"><i class="cmsIcon cmsIcon-copy"></i> Copy code</button>
-				</div>
+                <?php $copyCode = $issued['code']; include dirname(__DIR__, 5) . '/src/Auth/codeCopy.tpl.php'; ?>
 				<?php if ($svg !== '') { ?>
 					<div class="qrZoomStage">
 						<div class="fileFrame">
@@ -39,6 +36,9 @@
 				<?php } ?>
 			</div>
 			<p class="cmsBoxLead" data-code-expired hidden>This code has expired. Close this and create a new one.</p>
+            <div class="cmsBoxActions">
+                <button type="button" class="button submit" data-on_click="createCode" data-user_id="<?= (int) (isset($screen) ? $screen->id : $this->user->id) ?>"><i class="cmsIcon cmsIcon-qrcode"></i>Create another code</button>
+            </div>
 		</main>
 	</section>
 </div>

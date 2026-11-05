@@ -71,7 +71,7 @@ $users = [];
 foreach (UserAdmin::of(\Systopic\Db\Scope::default())->users as $user) {
 	$users[mb_strtolower((string) $user->name)] = $user;
 }
-$signIns = array_slice(array_values(array_filter(SignInLog::entries(), static fn(array $parts): bool => $parts[2] === 'signed in')), 0, 5);
+$signIns = SignInLog::recentSignIns();
 ?>
 <?php if ($signIns === []) { ?>
 	<main><p class="hint">No sign-ins logged yet.</p></main>

@@ -138,7 +138,12 @@
 }
 
 svg.qr-code{
+	display: block;
+	box-sizing: border-box;
 	color: var(--cmsMainColor, currentColor);
+	background: #fff;
+	padding: 0.65rem;
+	border-radius: var(--cmsRadius);
 }
 
 .qrScan .qrScanMsg{

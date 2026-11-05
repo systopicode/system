@@ -375,3 +375,15 @@ Die alten Spalten `user_first_login` und `user_last_login` und die Tabelle
 6. **Kleinigkeiten:** Nach einem falschen Code im Profil steht der Cursor nicht
    mehr im Feld. Wer in den letzten Sekunden eines Gerätecodes freigibt, kann ins
    Leere laufen, dann ist eine zweite Freigabe nötig. Die 2 Minuten sind vorläufig.
+
+## Profil-Dialoge (Stand 2026-11-05)
+
+Die drei Geräte-Widgets verwenden `admin/user/authDialogs.tpl.php`, dieselbe manuelle PUT-Freigabe und dieselbe Kamera-Komponente. My devices benötigt keinen zusätzlichen Allow-Schritt. Das gewählte Konto wird explizit übertragen und serverseitig geprüft. Manuelle Eingabe sendet erst über den Haken. Desktop startet mit Eingabe und Kamera-Button; mobile Geräte mit Kamera und Rückweg zur Eingabe.
+
+Create code zeigt direkt den Sicherheitshinweis, QR und ein kompaktes Kopierfeld in QR-Breite. Der weiße QR-Rahmen gilt für beide Erscheinungsbilder. Mobile Code-Dialoge starten hochgezogen mit der normalen Slide-Animation. Nach Verbrauch werden Code und Eingabe ausgeblendet; die Erfolgsmeldung steht im Dialog, ohne doppelte Widget-Meldung. Create another code bleibt verfügbar. Ablauf und Fehler bleiben im jeweiligen aktiven Dialog und dürfen beim Wiederöffnen nicht erneut auftauchen.
+
+Jede tatsächliche Öffnung erhält eine neue clientseitige Darstellungskennung. Server-Renderings desselben Dialogs behalten ihre Kennung. Verspätete Antworten dürfen keine neue Öffnung treffen. Die Abschlussprüfung über HTTP bleibt bei einem Profil-Renderwechsel aktiv. Die vorhandene Leseaktion `refreshScreenDevices` aktualisiert eigene und gekoppelte Screen-Geräte sofort sowie nach 2 und 5 Sekunden; dafür ist kein Centrifugo-Kommando erforderlich. Freigabe und Code-Erzeugung werden nicht wiederholt.
+
+Die Auth-Seite erneuert ausschließlich den QR-Block über `X-Device-Code-Renew`, ohne Seitenreload oder Ablauf-Zwischenmeldung. `X-Device-Code-Poll` liefert auch bei bereits angemeldeter Session JSON-Erfolg, ohne den Code erneut einzulösen. Die Weiterleitung wird vor optionaler Erfolgsdarstellung geplant. Auth- und Logout-Adressen werden nicht als Rücksprungziel gespeichert; Screens landen auf der öffentlichen Startseite.
+
+Verifikation: DEV-Zwei-Geräte-Test mit Screen 30 bestätigte Anmeldung, HTTP-Abschluss und gezielte Listenaktualisierung. Desktop-, Tablet- und schmale Layouts wurden geprüft; der Nutzer bestätigte den angeglichenen My-devices-Ablauf. Regressionen prüfen echte Vorlagen, explizite Kontoübergabe für alle drei Arten, kein Autosenden, verspätete Antworten, QR-Teilersatz und bereits angemeldete Polls. Echte iPhone-/iPad-Kamera, sporadische Centrifugo-Ausfälle und SMTP-Zustellung sind damit nicht vollständig abgedeckt. Die verbleibende Safari-Safe-Area-Einfärbung beim direkten Vollhöhen-Start ist als visuelles Detail offen; Dokumenthintergrund und theme-color verwenden mobil die Projektfarbe.

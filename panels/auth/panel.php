@@ -74,6 +74,9 @@ class Panel extends PanelNode {
 		// they read is installed afterwards. The path is already known.
 		$path = \app::request()->modulePath;
 		$atLogin = $path === ['auth'];
+        if ($atLogin && (isset($_SERVER['HTTP_X_DEVICE_CODE_POLL']) || isset($_SERVER['HTTP_X_DEVICE_CODE_RENEW']))) {
+            \Systopic\System\Auth\DeviceCode::handle();
+        }
 		if (!$atLogin || $this->form !== 'login' || \Systopic\System\Auth\Session::active()) {
 			return;
 		}

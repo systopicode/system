@@ -50,13 +50,15 @@
 		var darkGround = <?= json_encode($darkGround) ?>;
 		var lightGround = <?= json_encode($canvasColor) ?>;
 		var mq = matchMedia('(prefers-color-scheme: dark)');
+		var mobileChrome = matchMedia('(max-width: 1024px), (orientation: portrait) and (max-width: 1400px)');
 		function apply() {
 			var mode = root.getAttribute('data-appearance') || choice;
 			var dark = mode === 'dark' || (mode === 'system' && mq.matches);
 			if (dark) root.setAttribute('data-mode', 'dark');
 			else root.removeAttribute('data-mode');
-			root.style.backgroundColor = dark ? darkGround : lightGround;
+			root.style.backgroundColor = mobileChrome.matches ? <?= json_encode($brandColor) ?> : (dark ? darkGround : lightGround);
 		}
+		mobileChrome.addEventListener('change', apply);
 		root.setAttribute('data-appearance', choice);
 		apply();
 		mq.addEventListener('change', function () {

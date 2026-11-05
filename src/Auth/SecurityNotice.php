@@ -14,6 +14,7 @@ final class SecurityNotice implements Observer
 {
     private static int $rehashing = 0;
     public const EVENTS = [
+        'deviceSignedIn' => 'Your account was signed in on another device',
         'password' => 'Your password was changed',
         'email' => 'Your email address was changed',
         'passkeyAdded' => 'A passkey was added to your account',
@@ -57,6 +58,22 @@ final class SecurityNotice implements Observer
     {
         self::$rehashing++;
         try { return $save(); } finally { self::$rehashing--; }
+    }
+
+    /** Called only on the target device, after a successful code sign-in. */
+    public static function deviceSignedIn(User $user, \Systopic\System\Tables\SignInCodes\Model $code): void
+    {
+        try {
+            $by = $code->approvedBy ?? $code->createdBy;
+            $actor = $by === null ? null : \Systopic\System\Queries\UserLookup\UserLookup::byId(\Systopic\Db\Scope::default(), (int) $by);
+            self::send($user, 'deviceSignedIn', [
+                'actor' => $by === (int) $user->id ? 'You' : ($actor?->fullname ?: $actor?->name ?: ($by === null ? 'Not recorded' : 'Account #' . $by)),
+                'device' => DeviceName::from(DeviceName::requestAgent()),
+            ]);
+        } catch (\Throwable) {
+            // Authentication has succeeded. Mail must never turn it into a failed sign-in.
+            error_log('[auth] sign-in notice could not be prepared for user ' . $user->id);
+        }
     }
 
     public static function send(User $user, string $event, array $details = [], ?array $recipients = null): void
