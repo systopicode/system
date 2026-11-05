@@ -1,6 +1,3 @@
-# Written by systopic/system (bin/scaffold.php) on every composer install and
-# update - do not edit.
-#
 # Allow Apache to follow symlinks in this directory tree.
 # Required on servers where vendor/systopic/system/ is a symlink
 # (e.g. to a shared /packages/system/ directory): without this,
@@ -16,6 +13,9 @@ Options +SymLinksIfOwnerMatch
 # its own, so this rule never reaches a request below it.
 <IfModule mod_rewrite.c>
 	RewriteEngine On
+	# assets mode "source": the browser reads these from their folders, as the
+	# folders of Http\Assets - the files themselves, never a script or a config
+	RewriteRule ^(vendor/[^/]+/[^/]+/)?(lib|panels|site|sites|src)/.+\.(css|js|mjs|map|png|jpe?g|gif|webp|svg|ico|woff2?|ttf|otf|eot)$ - [L]
 	RewriteRule !^(public|vendor/[^/]+/[^/]+/public)(/|$) - [F]
 </IfModule>
 <IfModule !mod_rewrite.c>
