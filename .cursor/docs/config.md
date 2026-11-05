@@ -4,6 +4,9 @@ Ersetzt den `switch ($_SERVER['SERVER_NAME'])` in `public/index.php`.
 Klassen: `src/Config/` (`Config`, `Instance`, `Site`, `Sites`, `SiteHit`,
 `SiteLinks`, `InstanceFiles`).
 
+Geplanter Umbau (Definitionen je Paket, `packages.*`, Secrets in local):
+[config-struktur.md](config-struktur.md). Bis dahin gilt, was hier steht.
+
 ## Dateien
 
 | Datei | Inhalt | Sync |
