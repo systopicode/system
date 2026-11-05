@@ -18,4 +18,3 @@ if ($issued !== null) {
 	$issuedFor = $this->user->type === \Systopic\System\Tables\Users\Model::SCREEN ? 'screen' : 'person';
 	include __DIR__ . '/code.tpl.php';
 }
-
