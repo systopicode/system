@@ -15,7 +15,6 @@ switch ($this->action) {
 		}
 	case 'extractMysqldump':
 	case 'extractSettings':
-	case 'extractEnvironment':
 	case 'extractMediaDir':
 		$title = 'Restoring';
 		$include = 'progress.tpl.php';

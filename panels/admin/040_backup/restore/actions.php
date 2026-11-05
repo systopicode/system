@@ -19,7 +19,7 @@ switch ($this->action) {
 	case 'updateRestoreSelection':
 		$values = http::put()->values;
 		if (!\Systopic\System\Auth\Session::isSuperuser()) {
-			foreach (['restorePageSettings', 'restoreMediaSettings', 'restoreEnvironment'] as $key) {
+			foreach (['restorePageSettings', 'restoreMediaSettings'] as $key) {
 				if (is_object($values)) {
 					unset($values->$key);
 				} elseif (is_array($values)) {
@@ -96,23 +96,20 @@ switch ($this->action) {
 		http::refresh('./', $this->parent->state->taskList[$this->parent->state->taskListNextIndex]['action']);
 		break;
 	case 'extractSettings':
-	case 'extractEnvironment':
 		if ($this->parent->state->cancel) {
 			break;
 		}
 		if (!\Systopic\System\Auth\Session::isSuperuser()) {
-			message::error('Only a superuser can restore settings and the environment.');
+			message::error('Only a superuser can restore settings.');
 			break;
 		}
-		$prefix = $this->action === 'extractSettings' ? 'settings/' : 'config/';
-		$label = $this->action === 'extractSettings' ? 'Settings' : 'Environment';
-		if (!$this->parent->restoreGroup($prefix)) {
-			message::error($label . ' could not be restored.');
-			$this->parent->log('ERROR ' . $label . ' restore failed');
+		if (!$this->parent->restoreGroup('settings/')) {
+			message::error('Settings could not be restored.');
+			$this->parent->log('ERROR Settings restore failed');
 			break;
 		}
 		$this->parent->state->taskListNextIndex++;
-		message::confirm($label . ' restored.');
+		message::confirm('Settings restored.');
 		$this->updateView('lightbox');
 		http::refresh('./', $this->parent->state->taskList[$this->parent->state->taskListNextIndex]['action']);
 		break;

@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Systopic\System\Panels\Root\Admin\Backup;
 
 use Systopic\System\Panels\Root\Admin\Panel as CmsPanel;
-use Systopic\System\Settings\EnvironmentFile;
 use Systopic\System\Settings\ProjectFile;
 
 /**
@@ -68,14 +67,12 @@ class Panel extends CmsPanel
 				'backupFiles'        => false,
 				'backupPageSettings' => true,
 				'backupMediaSettings' => true,
-				'backupEnvironment'  => true,
 				'spanbasename'       => '',
 				'restoreName'        => '',
 				'restoreDatabase'    => true,
 				'restoreMedia'       => false,
 				'restorePageSettings' => false,
 				'restoreMediaSettings' => false,
-				'restoreEnvironment' => false,
 				'restoreNotice'      => '',
 				'restoreMediaFolder' => false,
 				'date'               => '',
@@ -92,7 +89,6 @@ class Panel extends CmsPanel
 		'media' => 'Media',
 		'pageSettings' => 'Global Settings',
 		'mediaSettings' => 'Media Settings',
-		'environment' => 'Environment',
 	];
 
 	/** File settings, named like their panels. Template settings stay in the database. */
@@ -128,10 +124,10 @@ class Panel extends CmsPanel
 		$patch = new \stdClass();
 		$superuser = \Systopic\System\Auth\Session::isSuperuser();
 		foreach ([
-			'backupNotes', 'backupFiles', 'backupPageSettings', 'backupMediaSettings', 'backupEnvironment',
-			'restoreDatabase', 'restoreMedia', 'restorePageSettings', 'restoreMediaSettings', 'restoreEnvironment',
+			'backupNotes', 'backupFiles', 'backupPageSettings', 'backupMediaSettings',
+			'restoreDatabase', 'restoreMedia', 'restorePageSettings', 'restoreMediaSettings',
 		] as $key) {
-			if (!$superuser && in_array($key, ['restorePageSettings', 'restoreMediaSettings', 'restoreEnvironment'], true)) {
+			if (!$superuser && in_array($key, ['restorePageSettings', 'restoreMediaSettings'], true)) {
 				continue;
 			}
 			if (property_exists($form, $key)) {
@@ -161,8 +157,6 @@ class Panel extends CmsPanel
 				$contents['media'] = true;
 			} elseif (($which = self::settingWhich($name)) !== '') {
 				$contents[$which . 'Settings'] = true;
-			} elseif (self::isEnvironmentEntry($name)) {
-				$contents['environment'] = true;
 			}
 		}
 		return $contents;
@@ -216,25 +210,6 @@ class Panel extends CmsPanel
 	}
 
 	/**
-	 * Instance files the environment panel writes. config.json is not one of them.
-	 *
-	 * @return array<string, string> archive path => source path
-	 */
-	public function environmentArchiveMap(): array
-	{
-		$map = [];
-		foreach (EnvironmentFile::files() as $file) {
-			$base = (string) ($file['file'] ?? '');
-			$path = (string) ($file['path'] ?? '');
-			if ($path === '' || !is_file($path) || !self::isEnvironmentEntry('config/' . $base)) {
-				continue;
-			}
-			$map['config/' . $base] = $path;
-		}
-		return $map;
-	}
-
-	/**
 	 * @return array<string, bool>|null null when that backup is not in the folder
 	 */
 	public function contentsOfBackup(string $basename): ?array
@@ -263,8 +238,8 @@ class Panel extends CmsPanel
 			'extractSettings' => \Systopic\System\Auth\Session::isSuperuser()
 				&& (self::chosen($this->state, 'restorePageSettings', false)
 					|| self::chosen($this->state, 'restoreMediaSettings', false)),
-			'extractEnvironment' => \Systopic\System\Auth\Session::isSuperuser()
-				&& self::chosen($this->state, 'restoreEnvironment', false),
+			// an older backup may hold config/: it never goes back, see .cursor/docs/backup-config.md
+			'extractEnvironment' => false,
 			default => true,
 		};
 	}
@@ -341,18 +316,7 @@ class Panel extends CmsPanel
 			$which = self::settingWhich($entry);
 			return $which === '' ? null : ProjectFile::jsonPath($which);
 		}
-		if (!self::isEnvironmentEntry($entry)) {
-			return null;
-		}
-		$dir = EnvironmentFile::directory();
-		if ($dir === null) {
-			$root = rtrim(\fs::toNative((string) \fs::$projectRoot), '\\/');
-			if ($root === '' || !is_dir($root)) {
-				return null;
-			}
-			$dir = $root . DIRECTORY_SEPARATOR . 'config';
-		}
-		return rtrim($dir, '\\/') . DIRECTORY_SEPARATOR . basename($entry);
+		return null;
 	}
 
 	/** @param list<string> $spans */
@@ -390,11 +354,6 @@ class Panel extends CmsPanel
 			}
 		}
 		return '';
-	}
-
-	private static function isEnvironmentEntry(string $name): bool
-	{
-		return preg_match('#^config/(?:[A-Za-z0-9][A-Za-z0-9._-]*\.config\.json|config\.local\.json)$#', $name) === 1;
 	}
 
 	private function replaceFile(string $path, string $bytes): bool

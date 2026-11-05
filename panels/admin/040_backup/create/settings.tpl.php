@@ -2,7 +2,6 @@
 /** @var \Systopic\System\Panels\Root\Admin\Backup\Create\Panel $this */
 $state = $this->parent->state;
 $chosen = [\Systopic\System\Panels\Root\Admin\Backup\Panel::class, 'chosen'];
-$hasEnvironment = $this->environmentArchiveMap() !== [];
 ?>
 <main class="backupCreate">
 	<?= message::flush(); ?>
@@ -32,15 +31,6 @@ $hasEnvironment = $this->environmentArchiveMap() !== [];
 				<label class="checkbox">
 					<span><?= htmlspecialchars($label, ENT_QUOTES) ?></span>
 					<input data-on_change="updateBackupSettings" value="1" type="checkbox" <?= $chosen($state, $key, true) ? "checked='checked'" : "" ?> name="<?= htmlspecialchars($key, ENT_QUOTES) ?>" class="switch tinyswitch">
-					<div><div></div></div>
-				</label>
-			</li>
-		<?php } ?>
-		<?php if ($hasEnvironment) { ?>
-			<li>
-				<label class="checkbox">
-					<span>Environment</span>
-					<input data-on_change="updateBackupSettings" value="1" type="checkbox" <?= $chosen($state, 'backupEnvironment', true) ? "checked='checked'" : "" ?> name="backupEnvironment" class="switch tinyswitch">
 					<div><div></div></div>
 				</label>
 			</li>
