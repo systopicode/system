@@ -89,6 +89,17 @@ Pfade statt Git-Quellen, und `update.php` übersprünge sie. Danach in den
 Projekten `composer update <paket>` — sie nehmen den neuen Stand aus dem
 Spiegel (Junction).
 
+`packages/update.php` ist nur der Einstieg, der Code liegt in
+`tools/composer/bin/update.php`. Auf einem Server zuerst `tools` syncen, dann
+`packages`.
+
+Was die Pakete brauchen, trägt `update.php` selbst ein: Vor dem Lauf liest es
+die `require` aller `packages/*/composer.json` und ergänzt oder erhöht das
+Manifest. Die Projekte zählen nicht, `php`, `ext-*` und `systopic/*` auch nicht,
+und entfernt wird nichts, denn das Manifest hat auch eigene Einträge.
+Verlangen zwei Pakete verschiedene Versionen, nimmt es die neuere, läuft weiter
+und meldet das ganz am Ende gelb. Dann bitte in den Paketen angleichen.
+
 Prüfen, ob die Umlenkung greift: `composer show -s` bzw. `dir /al vendor\systopic`
 — die Einträge sind Junctions auf `C:\laragon\www\packages\…`. Im CMS zeigt
 **Tools → System → Systemcheck** („Composer Packages (<Stage>)“) jedes
