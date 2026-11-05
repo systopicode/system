@@ -126,8 +126,8 @@ html.nprogress-busy{
 }
 
 @keyframes cmsBusy {
-	from { transform: translateX(-120%); }
-	to { transform: translateX(380%); }
+	from { transform: translateX(0); }
+	to { transform: translateX(186%); }
 }
 
 
@@ -424,7 +424,7 @@ body:has(footer.cmsStatusbar .cmsJobs.on) > .cmsSaveState.is-mobile { bottom: ca
 
 .cms .cmsSaveState .cmsSaveRetry, body > .cmsSaveState .cmsSaveRetry { pointer-events: auto; padding: .1rem .4rem; font: inherit; color: inherit; }
 
-.cms :is(button:where(:not([data-cms-action])),.button)[data-save-state] { outline:1.5px solid var(--cmsFieldFeedback); outline-offset:2px; }
+.cms :is(button:where(:not([data-cms-action])),.button,[data-media-copied])[data-save-state] { outline:1.5px solid var(--cmsFieldFeedback); outline-offset:2px; }
 
 /* Accessible entry points use the existing upload surface and native file picker. */
 .cmsSkipLink { position:fixed;top:8px;left:8px;z-index:10000;transform:translateY(-180%);padding:.65rem 1rem;background:var(--cmsCanvas,#fff);color:var(--cmsTextColor,#172024);border:2px solid currentColor; }

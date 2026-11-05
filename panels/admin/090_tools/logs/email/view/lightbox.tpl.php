@@ -10,7 +10,7 @@ $entryIndex = (int)http::get('index', 0);
 
 if (empty($output)) {
     ?>
-    <div class="cmslightbox cms" data-size="1">
+    <div class="cmslightbox cms cmsNestedDialog mailPreviewBox" data-mobile-dialog="static" data-size="1">
 	<section>
 	    <header>
 		<h1>Email Log Entry</h1>
@@ -36,7 +36,7 @@ if (empty($output)) {
     
     if (!isset($entries[$entryIndex])) {
 	?>
-	<div class="cmslightbox cms" data-size="1">
+	<div class="cmslightbox cms cmsNestedDialog mailPreviewBox" data-mobile-dialog="static" data-size="1">
 	    <section>
 		<header>
 		    <h1>Email Log Entry</h1>
@@ -130,7 +130,7 @@ if (empty($output)) {
 	$pill = ($status === 'error' || $status === 'failed') ? 'is-bad' : ($status === 'success' ? 'is-ok' : '');
 	$who = $recipients !== [] ? implode(', ', $recipients) : $to;
 	?>
-	<div class="cmslightbox cms" data-size="1">
+	<div class="cmslightbox cms cmsNestedDialog mailPreviewBox" data-mobile-dialog="static" data-size="1">
 	    <section>
 		<header>
 		    <h1><?= htmlspecialchars($subject !== '' ? $subject : 'Email') ?></h1>
@@ -141,25 +141,15 @@ if (empty($output)) {
 		    </ul>
 		</header>
 		<main class="mailLog">
-		    <dl>
-			<div><dt>From</dt><dd><?= htmlspecialchars($from) ?></dd></div>
-			<div><dt>To</dt><dd><?= htmlspecialchars($who) ?></dd></div>
-			<div><dt>Date</dt><dd><?= htmlspecialchars(($timestamp === '' ? '' : (new \DateTimeImmutable($timestamp))->format(\Systopic\System\Sys\LocalTime::DATETIME_SECONDS))) ?></dd></div>
-			<div><dt>Status</dt><dd><span class="logPill <?= $pill ?>"><?= htmlspecialchars($status) ?></span></dd></div>
-			<?php if ($user !== '' && $user !== 'not logged in') { ?>
-			    <div><dt>Sent by</dt><dd><?= htmlspecialchars($user) ?><?php if ($userId !== '') { ?> <span class="logActorId">#<?= htmlspecialchars($userId) ?></span><?php } ?></dd></div>
-			<?php } ?>
-			<?php if ($userEmail !== '') { ?>
-			    <div><dt>Email</dt><dd><?= htmlspecialchars($userEmail) ?></dd></div>
-			<?php } ?>
-			<?php if ($attachments !== []) { ?>
-			    <div><dt>Attachments</dt><dd><?= htmlspecialchars(implode(', ', $attachments)) ?></dd></div>
-			<?php } ?>
-		    </dl>
-		    <?php if ($error !== '') { ?>
-			<p class="logError"><?= htmlspecialchars($error) ?></p>
-		    <?php } ?>
-<?php include __DIR__ . '/../preview.tpl.php'; ?>
+            <?php
+            $mailDetails = [
+                'sender' => $from, 'recipients' => $recipients !== [] ? $recipients : [$to],
+                'timestamp' => $timestamp, 'status' => $status, 'username' => $user,
+                'userId' => $userId, 'userEmail' => $userEmail, 'attachments' => $attachments,
+                'error' => $error, 'htmlContent' => $htmlContent, 'textContent' => $textContent,
+            ];
+            include __DIR__ . '/../details.tpl.php';
+            ?>
 		</main>
 	    </section>
 	</div>

@@ -16,8 +16,8 @@ $rows = [
 	'Size' => $status['bytes'] > 0 ? str_replace('&nbsp;', ' ', (string) str::formatbytes($status['bytes'])) : '0',
 	'Newest' => $newest,
 ];
-$html = '<table><tbody>';
+$html = '<div class="tableScroll"><table><tbody>';
 foreach ($rows as $label => $value) {
 	$html .= '<tr><td class="muted">' . $e($label) . '</td><td>' . $e($value) . '</td></tr>';
 }
-return $html . '</tbody></table>';
+return $html . '</tbody></table></div>';

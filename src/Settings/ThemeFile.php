@@ -26,6 +26,14 @@ final class ThemeFile
         return rtrim((string) \fs::$siteRoot, '/\\') . '/overrides/css/zz_system_theme.css';
     }
 
+    public static function stylesheet(): ?string
+    {
+        $path = self::path();
+        if (is_file($path)) return $path;
+        $legacy = dirname($path) . '/zz_cms_theme.css';
+        return is_file($legacy) ? $legacy : null;
+    }
+
     public static function save(string $key, string $raw): bool
     {
         return \Systopic\System\Config\FileWriter::locked(self::path(), static fn() => self::saveLocked($key, $raw));
@@ -213,16 +221,23 @@ final class ThemeFile
         return true;
     }
 
-    public static function render(\Systopic\System\Panels\PanelNode $panel): void
+    public static function renderColors(): void
     {
-        $e = static fn($value): string => htmlspecialchars((string) $value, ENT_QUOTES);
         $main = '#' . Theme::color('cmsMainColor');
         echo '<script>';
         foreach (self::FIELDS as $name => $label) {
             echo 'document.documentElement.style.setProperty(' . json_encode('--' . $name) . ',' . json_encode('#' . Theme::color($name)) . ');';
         }
         echo 'document.querySelectorAll("meta[name=theme-color]").forEach(function(n){n.setAttribute("content",' . json_encode($main) . ');});';
-        echo 'var chrome=document.getElementById("cmsSafariChrome");if(chrome)chrome.textContent=' . json_encode('html{background-color:' . $main . '}body.cms>.cmsMobileHeader{background-color:' . $main . '}') . ';';
+        echo 'var themeChrome=document.getElementById("cmsSafariChrome");if(themeChrome)themeChrome.textContent=' . json_encode('html{background-color:' . $main . '}body.cms>.cmsMobileHeader{background-color:' . $main . '}') . ';';
+        echo '</script>';
+    }
+
+    public static function render(\Systopic\System\Panels\PanelNode $panel): void
+    {
+        $e = static fn($value): string => htmlspecialchars((string) $value, ENT_QUOTES);
+        self::renderColors();
+        echo '<script>';
         echo 'document.querySelectorAll(".themeSwatches input").forEach(function(input){input.addEventListener("input",function(){var dot=input.parentElement.querySelector("i");if(dot)dot.style.backgroundColor=input.value;var hex=input.parentElement.querySelector("small");if(hex)hex.textContent=input.value;});});';
         echo '</script>';
         echo '<h1>Theme</h1>';

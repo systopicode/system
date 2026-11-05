@@ -7,6 +7,10 @@ use Systopic\System\Settings\ProjectFile;
 use Systopic\System\Settings\ProjectJson;
 
 class fs { public static string $siteRoot; }
+class fsUploader {
+    public static ?array $fixture = null;
+    public static function postedFile(string $name): ?array { return self::$fixture; }
+}
 if (($argv[1] ?? '') === 'theme-worker') {
     fs::$siteRoot = $argv[2];
     exit(\Systopic\System\Settings\ThemeFile::save($argv[3], $argv[4]) ? 0 : 1);
@@ -48,8 +52,12 @@ try {
     fs::$siteRoot = $root;
     mkdir($root . '/overrides/css', 0700, true);
     $theme = \Systopic\System\Settings\ThemeFile::path();
+    $legacyTheme = dirname($theme) . '/zz_cms_theme.css';
+    file_put_contents($legacyTheme, ':root{--cmsMainColor:#004b93;}');
+    check('legacy theme is loaded before migration', \Systopic\System\Settings\ThemeFile::stylesheet() === $legacyTheme);
     $fields = array_keys(\Systopic\System\Settings\ThemeFile::FIELDS);
     file_put_contents($theme, ':root {' . implode('', array_map(fn($key) => '--'.$key.': #112233;', $fields)) . '}');
+    check('new theme takes precedence over legacy', \Systopic\System\Settings\ThemeFile::stylesheet() === $theme);
     $children = [];
     foreach ($fields as $i => $key) {
         $pipes = [];
@@ -81,6 +89,26 @@ try {
         $raster = new ReflectionMethod(\Systopic\System\Settings\ThemeAssets::class, 'writeRaster');
         check('theme raster published as PNG', $raster->invoke(null, $source, $root.'/asset.png', false) && getimagesize($root.'/asset.png')[2] === IMAGETYPE_PNG);
         check('theme raster published as JPEG', $raster->invoke(null, $source, $root.'/asset.jpg', true) && getimagesize($root.'/asset.jpg')[2] === IMAGETYPE_JPEG);
+        if (function_exists('imagewebp') && function_exists('imagecreatefromwebp')) {
+            imagealphablending($image, false);
+            imagesavealpha($image, true);
+            imagefill($image, 0, 0, imagecolorallocatealpha($image, 0, 0, 0, 127));
+            $webp = $root . '/transparent.webp';
+            imagewebp($image, $webp, IMG_WEBP_LOSSLESS);
+            $mime = new ReflectionMethod(\Systopic\System\Settings\ThemeAssets::class, 'mime');
+            check('theme detects WebP', $mime->invoke(null, $webp) === 'image/webp');
+            check('theme converts WebP through existing raster pipeline', $raster->invoke(null, $webp, $root.'/webp.png', false));
+            $decoded = imagecreatefrompng($root.'/webp.png');
+            check('theme WebP transparency retained', imagecolorsforindex($decoded, imagecolorat($decoded, 0, 0))['alpha'] === 127);
+            imagedestroy($decoded);
+            fsUploader::$fixture = ['tmp_name' => $webp, 'uploader' => true];
+            foreach (['wordDark', 'wordLight', 'signet', 'favicon'] as $slot) {
+                check('public theme upload accepts WebP: '.$slot, \Systopic\System\Settings\ThemeAssets::store($slot) === null);
+                check('theme picker advertises WebP: '.$slot, str_contains(\Systopic\System\Settings\ThemeAssets::SLOTS[$slot]['accept'], 'image/webp'));
+            }
+            fsUploader::$fixture = null;
+
+        }
         $square = new ReflectionMethod(\Systopic\System\Settings\ThemeAssets::class, 'pngSquare');
         check('favicon generated atomically', $square->invoke(null, $image, 32, $root.'/favicon.png') && getimagesize($root.'/favicon.png')[0] === 32);
         imagedestroy($image);

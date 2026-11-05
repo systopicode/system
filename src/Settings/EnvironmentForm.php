@@ -229,11 +229,11 @@ final class EnvironmentForm
         if (Session::isSuperuser()) echo '<button type="button" class="button" data-on_click="addAddress" data-file="' . $e($file) . '"><i class="cmsIcon cmsIcon-plus"></i>Add domain / IP</button>';
         echo '</div><p class="cmsBoxLead">Browser origins must be allowed by the shared live-update server. The addresses below come from “Where this config applies”. Shared permissions already exist in the hub configuration; newly added permissions belong to this project.</p>';
         if ($invalidIp) echo '<p class="envHubInvalid">An IP address below is invalid. Correct the marked field before adding its hub permission.</p>';
-        echo '<ul class="envOrigins">';
+        echo '<section class="widget is-list envHubTable"><div class="tableScroll"><table class="envOrigins"><thead><tr><th>Browser address</th><th>Permission</th><th></th></tr></thead><tbody>';
         foreach ($origins as $origin) {
             $known = $allowed === null ? null : CentrifugoHub::originAllowed($origin, $allowed);
             $canRemove = in_array($origin, $owned, true);
-            echo '<li><div><code>' . $e($origin) . '</code><small>' . ($known === null ? 'Hub config unavailable' : ($known ? ($canRemove ? 'Added for this project' : 'Shared permission') : 'Missing in saved hub config')) . '</small></div>';
+            echo '<tr><td><code>' . $e($origin) . '</code></td><td><small>' . ($known === null ? 'Hub config unavailable' : ($known ? ($canRemove ? 'Added for this project' : 'Shared permission') : 'Missing in saved hub config')) . '</small></td><td class="icons">';
             if (Session::isSuperuser() && $allowed !== null) {
                 if (!$known && in_array($origin, $required, true)) {
                     echo '<button type="button" class="button" data-on_click="userConfirm" data-action="addHubOrigin" data-file="' . $e($file) . '" data-origin="' . $e($origin) . '" data-confirm="Add this browser origin to the shared hub config? Applying it requires an administrator to restart the hub." title="Add permission"><i class="cmsIcon cmsIcon-plus"></i>Add</button>';
@@ -241,10 +241,10 @@ final class EnvironmentForm
                     echo '<button type="button" class="button transparent" data-on_click="userConfirm" data-action="removeHubOrigin" data-file="' . $e($file) . '" data-origin="' . $e($origin) . '" data-confirm="Remove this project’s origin permission? A permission still registered by another project is kept. Otherwise all uses of this managed origin end after the administrator restarts the hub." title="Remove project permission"><i class="cmsIcon cmsIcon-link-slash"></i></button>';
                 }
             }
-            echo '</li>';
+            echo '</td></tr>';
         }
-        if ($origins === []) echo '<li>No browser addresses configured yet.</li>';
-        echo '</ul><p class="cmsBoxLead envHubRestart"><i class="cmsIcon cmsIcon-circle-info"></i>Permissions shown are the saved configuration. Origin changes need an administrator to restart the shared hub; these controls never restart it.</p></div>';
+        if ($origins === []) echo '<tr><td colspan="3">No browser addresses configured yet.</td></tr>';
+        echo '</tbody></table></div></section><p class="cmsBoxLead envHubRestart"><i class="cmsIcon cmsIcon-circle-info"></i>Permissions shown are the saved configuration. Origin changes need an administrator to restart the shared hub; these controls never restart it.</p></div>';
     }
 
     /** @param array<string, mixed> $data */

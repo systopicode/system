@@ -69,3 +69,11 @@ body.backup .backupProgress div.bar > div > b { display:none; }
     .cmslightbox.upload footer div.bar > div,
     body.backup .backupProgress div.bar > div { transition:none; }
 }
+
+/* Empty progress counters have no label surface. */
+div.bar > b:empty,
+div.bar > div > b:empty,
+.cmslightbox.upload footer div.bar > b:empty,
+body.backup .backupProgress div.bar > b:empty {
+    display: none;
+}

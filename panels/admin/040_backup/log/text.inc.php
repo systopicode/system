@@ -21,15 +21,9 @@ foreach (preg_split('/\R/', $text) ?: [] as $line) {
 	if ($line === '') {
 		continue;
 	}
-	if (preg_match('/^(.*?)\s+-\s+([\d.]+)s\s+([\d.]+)MB$/', $line, $match) === 1) {
-		if (preg_match('/^\[([^\]]+)\] (.*)$/', $match[1], $dated)) {
-            $rows[] = [$dated[2], $dated[1], $match[3] . ' MB'];
-        } else {
-            $rows[] = [trim($match[1]), $when($match[2]), $match[3] . ' MB'];
-        }
-	} else {
-		$rows[] = [$line, '', ''];
-	}
+    $record = \Systopic\System\Backup\LogEntry::parse($line);
+    $time = $record['date'] !== '' ? $record['date'] : ($record['elapsed'] !== '' ? $when($record['elapsed']) : '');
+    $rows[] = [$record['event'], $time, $record['memory'], $record['user']];
 }
 $rows = array_reverse($rows);
 $e = static fn($value): string => htmlspecialchars((string) $value, ENT_QUOTES);
@@ -44,14 +38,16 @@ if ($rows === []) {
 			<tr>
 				<th>Event</th>
 				<th>Time</th>
+				<th>User</th>
 				<th>Memory</th>
 			</tr>
 		</thead>
 		<tbody>
 			<?php foreach ($rows as $row) { ?>
-				<tr<?= \Systopic\System\Logs\Filters::attributes($row[1], '', $row[0]) ?>>
+				<tr<?= \Systopic\System\Logs\Filters::attributes($row[1], $row[3], $row[0]) ?>>
 					<td><?= $e($row[0]) ?></td>
 					<td><?= $e($displayTime($row[1])) ?></td>
+					<td><?= $row[3] !== '' ? \Systopic\System\Logs\Filters::userLink($row[3]) : 'Not recorded' ?></td>
 					<td><?= $e($row[2]) ?></td>
 				</tr>
 			<?php } ?>

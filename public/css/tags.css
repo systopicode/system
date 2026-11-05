@@ -578,29 +578,6 @@ body.tagDragging .cms .layout.tags .tag.dragged > .tagActions{
     margin: 0;
 }
 
-.cmslightbox .tagAssignments :is(a, button:where([data-cms-action])),
-.cmslightbox .tagAssignments button:where(:not([data-cms-action])){
-    display: inline-flex;
-    flex: 0 0 auto;
-    align-items: center;
-    justify-content: center;
-    width: 1.75rem;
-    height: 1.75rem;
-    margin: 0;
-    padding: 0;
-    border: 0;
-    border-radius: var(--cmsRadius);
-    background: transparent;
-    color: var(--cmsMuted);
-    cursor: pointer;
-}
-
-.cmslightbox .tagAssignments :is(a, button:where([data-cms-action])):hover,
-.cmslightbox .tagAssignments button:where(:not([data-cms-action])):hover{
-    background: var(--cmsButtonBg);
-    color: var(--cmsTextColor);
-}
-
 .cmslightbox .tagAssignmentsEmpty{
     margin: 0;
     color: var(--cmsMuted);
@@ -612,7 +589,6 @@ body.tagDragging .cms .layout.tags .tag.dragged > .tagActions{
     .cms .layout.tags .tag > .tagActions button:where(:not([data-cms-action])) { width: 1.15rem; height: 1.15rem; flex-basis: 1.15rem; }
     .cms .layout.tags .tag > .tagActions button:where(:not([data-cms-action])) i { font-size: 0.7rem; }
     .cms .layout.tags .tag > .tagActions .tagGrip { padding-inline: 0.35rem; }
-    .cmslightbox .tagAssignments :is(:is(a, button:where([data-cms-action])), button:where(:not([data-cms-action]))) { width: 2.5rem; height: 2.5rem; }
     /* One cue, drawn by the shared drag helper, centred on its gap line. */
     body.tagDragging .layout.tags .tag:has(> .sort.dropTarget)::after { display: none; }
 }

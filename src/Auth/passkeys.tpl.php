@@ -53,7 +53,7 @@ $passkeyRow = static function ($key) use ($escape, $canRemove, $own, $noAutofill
     <?php } else { ?>
         <header>
             <div class="cmsBoxTitles">
-                <h2><i class="cmsIcon cmsIcon-user-key" aria-hidden="true"></i>Passkeys</h2>
+                <h2>Passkeys</h2>
                 <p class="cmsBoxLead"><?= $escape($passkeyLead) ?></p>
             </div>
         </header>

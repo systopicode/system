@@ -713,12 +713,9 @@ sys.core.event.drag = function (event, hooks) { // 2. param raus
     // A dashboard hold already passed the shared recogniser before its edit render.
     if (e.cmsHeld) {
 		mouseHeld = true;
-		if (mediaHold) {
-			mediaHoldEvent('start');
-		} else {
-			beginDrag();
-			mousemove(e);
-		}
+		if (mediaHold) mediaHoldEvent('start');
+		beginDrag();
+		mousemove(e);
 	}
 	$(document).bind(upType, mouseup);
 	e.preventDefault();

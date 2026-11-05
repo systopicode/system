@@ -251,10 +251,11 @@
 	// The colour file has to be a link in the project layer. A style tag
 	// that repeats "@layer project" does not join the layer named on the
 	// cms links, so those links kept the default colours.
-	$themeCss = \Systopic\System\Settings\ThemeFile::path();
-	if (is_file($themeCss)) {
+	$themeCss = \Systopic\System\Settings\ThemeFile::stylesheet();
+	if ($themeCss !== null) {
 		echo $cmsCss($themeCss, 'project');
 	}
+	\Systopic\System\Settings\ThemeFile::renderColors();
 	// The site reset sits in the preview layer and zeros every border. These
 	// frames stay unlayered so they win inside the page preview.
 	?>

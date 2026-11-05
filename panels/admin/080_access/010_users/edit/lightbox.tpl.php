@@ -24,7 +24,7 @@ if ($issued !== null) {
 		? 'Valid for 10 minutes. On the new device, enter this code or open the link, then choose Sign in. That device becomes this screen.'
 		: 'Valid for 10 minutes. On the new device, enter this code or open the link, then choose Sign in. The account becomes active when the code is used.';
 ?>
-<div class="cms cmslightbox qrZoom" data-size="2" data-code-until="<?= (int) ($issued['expires'] ?? 0) ?>" data-code-value="<?= $e($issued['code']) ?>" hidden>
+<div class="cms cmslightbox qrZoom cmsNestedDialog" data-mobile-dialog="static" data-size="2" data-code-until="<?= (int) ($issued['expires'] ?? 0) ?>" data-code-value="<?= $e($issued['code']) ?>" hidden>
 	<section>
 		<header>
 			<h1><?= $e($heading) ?></h1>

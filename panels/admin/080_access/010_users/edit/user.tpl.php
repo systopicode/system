@@ -58,7 +58,7 @@ if ($heading === '') {
 <header>
 	<h1><?= $e($heading) ?></h1>
 	<ul class="barmenu">
-		<li><a class="ajax" href="../" aria-label="Close"><i class="cmsIcon cmsIcon-xmark"></i></a></li>
+		<li><a class="ajax" href="../" aria-label="Close" data-focus-id="user-edit-close"><i class="cmsIcon cmsIcon-xmark"></i></a></li>
 	</ul>
 </header>
 <nav class="dashTabs userTabs" role="tablist">
@@ -210,12 +210,11 @@ if ($heading === '') {
                 <div class="userMailEntry">
                     <div><i class="cmsIcon cmsIcon-envelope"></i> <?= $e($mail['subject'] ?? '') ?> <small><?= $e($mail['timestamp'] ?? '') ?> · <?= $e($mail['status'] ?? '') ?></small></div>
                     <div class="userMailContent"><button type="button" class="button transparent icononly" aria-label="Preview email" data-feedback="none" data-open-box="#userMailPreview<?= (int) $user->id ?>-<?= (int) $mailIndex ?>"><i class="cmsIcon cmsIcon-eye"></i></button></div>
-                    <div class="cms cmslightbox" id="userMailPreview<?= (int) $user->id ?>-<?= (int) $mailIndex ?>" data-size="2" data-feedback="none" hidden><section>
+                    <div class="cms cmslightbox cmsNestedDialog mailPreviewBox" data-mobile-dialog="static" id="userMailPreview<?= (int) $user->id ?>-<?= (int) $mailIndex ?>" data-size="1" data-feedback="none" hidden><section>
                         <header><h1><?= $e($mail['subject'] ?? 'Email') ?></h1><ul class="barmenu"><li><button type="button" data-box-close aria-label="Close"><i class="cmsIcon cmsIcon-xmark"></i></button></li></ul></header>
-                        <main><?php
-                            $htmlContent = (string) ($mail['htmlContent'] ?? '');
-                            $textContent = (string) ($mail['textContent'] ?? $mail['contentPreview'] ?? '');
-                            include __DIR__ . '/../../../090_tools/logs/email/preview.tpl.php';
+                        <main class="mailLog"><?php
+                            $mailDetails = $mail;
+                            include __DIR__ . '/../../../090_tools/logs/email/details.tpl.php';
                         ?></main>
                     </section></div>
                 </div>

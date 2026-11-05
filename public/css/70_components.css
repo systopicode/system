@@ -661,9 +661,6 @@ body.cms .cmslightbox .cmsBox > header{
 .cms .themeContrast > main { padding:var(--cmsCardPadding); }
 .cms .themeContrast > main > .tagsHint { margin-bottom:1rem; }
 
-.cms .mediaCheckInfo { margin-top:1rem; border-top:1px solid var(--cmsLine); padding-top:.8rem; }
-.cms .mediaCheckInfo > summary { display:flex; justify-content:space-between; align-items:center; cursor:pointer; font-weight:600; }
-.cms .mediaCheckInfo > main { padding-top:.8rem; }
 
 .cms .logFilters .logReset { flex:0 0 auto; }
 .cms .logFilters .logReset .button { margin:0; min-height:2.25rem; }
@@ -733,9 +730,9 @@ details[open] > summary > .summaryToggle i { transform:rotate(180deg); }
 .summaryToggle { width: var(--cmsControl); height: var(--cmsControl); min-height: var(--cmsControl); padding: .4rem; display: inline-flex; align-items: center; justify-content: center; flex: 0 0 var(--cmsControl); }
 
 /* Accordion actions share the same control geometry as widget header actions. */
-:is(.widget,.cmsBox,.dashTasks details) > summary:hover > .summaryToggle,
-:is(.widget,.cmsBox,.dashTasks details) > summary:focus-visible > .summaryToggle {
-    background: color-mix(in srgb, var(--cmsMainColor) 12%, transparent);
+.cms :is(.widget,.cmsBox,.dashTasks details) > summary:hover > .button.summaryToggle,
+.cms :is(.widget,.cmsBox,.dashTasks details) > summary:focus-visible > .button.summaryToggle {
+    background: var(--cmsHover);
 }
 :is(.widget,.cmsBox) > summary > .summaryToggle i { margin: 0; }
 .widget > header .button:last-of-type { margin-right: 0; }
@@ -872,3 +869,70 @@ body.cms .tableWidgets.stacked.is-foldable > table.tableWidgetGrid > tbody.table
 .cms .tableWidgets.stacked.is-foldable > table.tableWidgetGrid > tbody.tableWidget > tr.tableWidgetTitle {
     border-bottom: 0;
 }
+
+/* Shared mail metadata and status pills. */
+.cms .logPill{
+	display: inline-block;
+	padding: 0.1rem 0.5rem;
+	border-radius: 999px;
+	font-size: 0.75rem;
+	line-height: 1.4;
+	background: var(--cmsHover);
+}
+
+.cms .logPill.is-ok{
+	background: color-mix(in srgb, #7cb249 22%, var(--cmsCanvas));
+}
+
+.cms .logPill.is-bad{
+	background: color-mix(in srgb, var(--cmsError) 16%, var(--cmsCanvas));
+	color: var(--cmsError);
+}
+
+.cms .logPill.is-warn{
+	background: color-mix(in srgb, var(--cmsWarning) 28%, var(--cmsCanvas));
+	color: var(--cmsTextColor);
+}
+
+.cms .logPill.is-quiet{
+	color: var(--cmsMuted);
+}
+
+.cms .mailLog dl{
+	display: grid;
+	grid-template-columns: 1fr;
+	gap: 0;
+	margin: 0 0 1.25rem;
+	border-top: 0;
+}
+
+.cms .mailLog dl > div{
+	display: grid;
+	grid-template-columns: 7.5rem minmax(0, 1fr);
+	gap: 0.75rem;
+	align-items: baseline;
+	padding: 0.7rem 0;
+	border-bottom: 1px solid var(--cmsLineStrong);
+}
+
+.cms .mailLog dt{
+	margin: 0;
+	font-size: 0.75rem;
+	color: var(--cmsMuted);
+}
+
+.cms .mailLog dd{
+	margin: 0;
+}
+
+.cms .logActorId{
+	margin-left: 0.35rem;
+	color: var(--cmsMuted);
+	font-variant-numeric: tabular-nums;
+}
+
+
+
+
+.cms .mailLog dl > div:last-child { border-bottom:0; }
+.cms .mailLog dd { min-width:0; overflow-wrap:anywhere; }

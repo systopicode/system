@@ -287,6 +287,10 @@ body .cmslightbox section > div.layout > aside{
     border-left: 1px solid var(--cmsLine);
 }
 
+body.cms .cmslightbox:is(.upload,.fileEditor) > section > header {
+    border-bottom: 1px solid var(--cmsLine);
+}
+
 /* Same sidebar as the page: accordion, fields, tags. No second skin. */
 body .cmslightbox section > div.layout > aside.cms{
     flex: 0 0 22rem;
@@ -296,7 +300,7 @@ body .cmslightbox section > div.layout > aside.cms{
     padding: 0;
     background: var(--cmsCanvas);
     border-left: 1px solid var(--cmsLineStrong);
-    border-top: 1px solid var(--cmsLineStrong);
+    border-top: 0;
 }
 
 /* Tablet: the image gets the room */
@@ -846,6 +850,8 @@ div.imageEditor .editorAspect > button{
 .cmslightbox.upload .uploader,
 .cmslightbox.upload .currentFile{
     width: 100%;
+    box-sizing: border-box;
+    min-width: 0;
     border: 1px dashed color-mix(in srgb, var(--cmsMainColor) 34%, var(--cmsLine));
     background-color: #f7f7f7;
     background-image:
@@ -1029,19 +1035,19 @@ div.imageEditor .editorAspect > button{
 body.cms-dialog-open > footer.cmsStatusbar { visibility:hidden; }
 
 /* Format and existing tools share one row; the active slider overlays the preview. */
-.cmslightbox .fileImageTools{display:grid;grid-template-columns:minmax(5rem,1fr) auto;align-items:center;gap:.4rem;position:relative;}
-.cmslightbox .fileImageTools > select{width:100%;min-width:0;height:var(--cmsControl);}
+.cmslightbox .fileImageTools{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:.4rem;position:relative;}
+.cmslightbox .fileImageTools > :is(select, [data-edit-image]){box-sizing:border-box;height:var(--cmsControl);min-height:var(--cmsControl);margin:0;align-self:stretch;}
+.cmslightbox .fileImageTools > select{width:100%;min-width:0;}
 .cmslightbox .fileImageTools .fileAdjust{display:contents;}
 .cmslightbox .fileImageTools .adjustSlider{position:absolute;top:calc(100% + 1.4rem);left:.75rem;right:.75rem;width:auto;padding:.65rem .8rem;border:1px solid var(--cmsLine);border-radius:var(--cmsRadius);background:color-mix(in srgb,var(--cmsCanvas) 92%,transparent);box-shadow:0 3px 12px rgb(0 0 0 / .18);backdrop-filter:blur(8px);z-index:4;}
 .cmslightbox .fileImageTools .fileAdjustActions{grid-column:2;grid-row:1;margin-left:0;flex-wrap:nowrap;}
 body .cmslightbox.fileEditor section > .layout > aside.cms{position:relative;overflow:visible;}
 @media(max-width:600px){
- .cmslightbox .fileImageTools{grid-template-columns:minmax(0,1fr);}
  .cmslightbox .fileImageTools .fileAdjustActions{grid-column:1/-1;grid-row:2;justify-content:flex-end;flex-wrap:wrap;}
 
- body .cmslightbox.fileEditor:has(.fileImageTools) section > .layout{display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(20rem,1fr) 8rem;}
+ body .cmslightbox.fileEditor:has(.fileImageTools) section > .layout{display:block;overflow-y:auto;min-height:0;}
  body .cmslightbox.fileEditor:has(.fileImageTools) section > .layout > main{min-height:0;}
- body .cmslightbox.fileEditor:has(.fileImageTools) section > .layout > aside.cms{width:100%;min-width:0;max-width:none;height:100%;min-height:0;border-left:0;border-top:1px solid var(--cmsLine);}
+ body .cmslightbox.fileEditor:has(.fileImageTools) section > .layout > aside.cms{width:100%;min-width:0;max-width:none;height:auto;min-height:0;border-left:0;border-top:0;}
  body .cmslightbox.fileEditor:has(.fileImageTools) .fileFrame{min-height:5rem;}
 }
 
@@ -1074,14 +1080,14 @@ div.imageEditor.unifiedImageEditor .cropBar [hidden]{display:none !important;}
     body .cmslightbox.upload .uploadPane { flex:0 0 auto; width:100%; min-height:14rem; }
     body .cmslightbox.upload .uploadPane > div { height:auto; padding:0; overflow:visible; }
     body .cmslightbox.upload .currentFile { min-height:12rem; }
-    body .cmslightbox.upload section > div.layout > aside.cms { flex:0 0 auto; width:100%; min-width:0; max-width:none; border-left:0; border-top:1px solid var(--cmsLine); overflow:visible; }
-    body .cmslightbox.upload aside.cms > .flexContainer,
-    body .cmslightbox.upload aside.cms .scrollContainer,
-    body .cmslightbox.upload aside.cms .scrollContainerContent { height:auto; max-height:none; flex:0 0 auto; overflow:visible; }
+    body .cmslightbox.upload section > div.layout > aside.cms { flex:0 0 auto; width:100%; min-width:0; max-width:none; border-left:0; border-top:0; overflow:visible; }
+    body .cmslightbox:is(.upload,.fileEditor) aside.cms > .flexContainer,
+    body .cmslightbox:is(.upload,.fileEditor) aside.cms .scrollContainer,
+    body .cmslightbox:is(.upload,.fileEditor) aside.cms .scrollContainerContent { height:auto; max-height:none; flex:0 0 auto; overflow:visible; }
 }
 
 /* Replacement notice belongs to the preview content, beside the sidebar. */
-body .cmslightbox.upload main.uploadStage:has(> .uploadNotice) { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); grid-template-rows:auto minmax(0,1fr); row-gap:0; }
+body .cmslightbox.upload main.uploadStage:has(> .uploadNotice) { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); grid-template-rows:auto minmax(0,1fr); row-gap:1rem; }
 body .cmslightbox.upload main.uploadStage > .uploadNotice { grid-column:1 / -1; height:auto; padding:0; margin:.75rem 1.25rem 0; overflow:visible; }
 body .cmslightbox.upload main.uploadStage > .uploadNotice > .info { margin:0; }
 @media(max-width:767px){
@@ -1120,3 +1126,11 @@ body .cmslightbox.upload main.uploadStage > .uploadNotice > .info { margin:0; }
 /* Dialogs in ordinary content must also clear the mobile shell header. */
 body.cms:has(> .cmsMobileHeader) > main > div.content:has(.cmslightbox:not([hidden])) { z-index: 12000; clip-path: none; }
 body.cms:not(:has(> main > .content[data-cms-sheet="1"])):has(.cmslightbox:not([hidden]) > :is(.is-expanding, .is-expanded)) > .cmsMobileHeader { z-index: 0; pointer-events: none; }
+
+.cmslightbox.upload .uploadNotice > .info::before {
+    top: calc(.8rem + (1.5 * .875rem - 1rem) / 2);
+    transform: none;
+}
+
+/* A mail preview is an independent lightbox, above its originating user dialog. */
+.cmslightbox.mailPreviewBox { z-index:calc(8100 + var(--cmsDialogLevel,0) * 2); }

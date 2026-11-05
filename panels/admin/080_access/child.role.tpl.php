@@ -12,7 +12,7 @@ $field = static function (string $label, string $type, string $action, ?string $
 	<button type="button" class="tagGroupRename" onclick="renameUserAdminTitle(this)" data-rename-url="<?= $e($this->href . 'updateRoleName?role_id=' . (int) $role->id) ?>" title="Rename or confirm" aria-label="Rename or confirm"><i class="cmsIcon cmsIcon-pen"></i><i class="cmsIcon cmsIcon-check pencilConfirm"></i></button>
 	<ul class="barmenu">
 		<?php if (!$role->isSystem && !$role->isBuiltin && (int) $role->id !== 1) { ?><li><button type="button" class="button icononly" aria-label="Remove" title="Remove" data-on_click="userConfirm" data-action="removeRole" data-confirm="Delete this role? This cannot be undone." data-role_id="<?= (int) $role->id ?>"><i class="cmsIcon cmsIcon-trash"></i></button></li><?php } ?>
-		<li><a class="ajax" href="../" aria-label="Close"><i class="cmsIcon cmsIcon-xmark"></i></a></li>
+		<li><a class="ajax" href="../" aria-label="Close" data-focus-id="role-edit-close"><i class="cmsIcon cmsIcon-xmark"></i></a></li>
 	</ul>
 </header>
 <main class="roleEdit">
@@ -55,7 +55,7 @@ $field = static function (string $label, string $type, string $action, ?string $
 		</div>
 	</section>
 </main>
-<footer>
+<footer class="roleNote">
 	<?php if ($role->isBuiltin) { ?>
 		<p class="hint"><?= $role->key === 'everyone' ? 'Every visitor holds this role, signed in or not.' : 'Every signed-in user holds this role.' ?> It is given by the system: not assigned to users, and not to be deleted.</p>
 	<?php } elseif ($role->isSystem) { ?>

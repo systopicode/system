@@ -216,6 +216,54 @@ function parentHref() {
 }
 // Move the live view into the standard lightbox and return it on close.
 var pageBoxes = new Map();
+// A fixed dialog inside a transformed/scrolled page is not viewport-fixed on
+// Safari. Keep the original node and its listeners, and park only its position.
+var dialogHomes = new Map();
+function restoreDialog(box, home) {
+    dialogHomes.delete(box);
+    if (home.isConnected) home.replaceWith(box);
+    else box.remove();
+}
+function syncDialogRoots() {
+    var phone = matchMedia('(max-width:767px)').matches;
+    for (var [box, home] of dialogHomes) {
+        if (!box.isConnected) { home.remove(); dialogHomes.delete(box); continue; }
+        if ((!phone && !box.matches('.mailPreviewBox')) || box.hidden || box.matches('dialog:not([open])') || home.parentElement?.closest('.cmslightbox[hidden], dialog:not([open])')) {
+            restoreDialog(box, home);
+        } else if (!home.isConnected) {
+            box.remove(); dialogHomes.delete(box);
+        }
+    }
+    root.querySelectorAll('.cmslightbox').forEach(function (box) {
+        if (!phone && !box.matches('.mailPreviewBox')) return;
+        if (box.tagName === 'DIALOG' || box.parentElement === root || box.hidden || !box.getClientRects().length) return;
+        var home = document.createComment('dialog home');
+        box.before(home);
+        dialogHomes.set(box, home);
+        root.append(box);
+    });
+}
+
+var mediaOpenKey = 'fluxo.mml.open:' + location.pathname.split('/admin/')[0];
+var returnToMedia = !!previousMobile?.returnToMedia;
+try {
+	returnToMedia = returnToMedia || sessionStorage.getItem(mediaOpenKey) === '1';
+} catch (error) {}
+function rememberMediaOpen(open) {
+	try { sessionStorage.setItem(mediaOpenKey, open ? '1' : '0'); } catch (error) {}
+}
+document.addEventListener('click', function (event) {
+	if (event.target.closest?.('.pageToolBox[data-page-tool="media"] a.ajax')) {
+		returnToMedia = true;
+		mobileState.returnToMedia = true;
+	}
+}, {capture: true, signal: mobileEvents.signal});
+document.addEventListener('change', function (event) {
+	if (event.target.matches('.pageToolBox[data-page-tool="media"] input[type="file"]')) {
+		returnToMedia = true;
+		mobileState.returnToMedia = true;
+	}
+}, {capture: true, signal: mobileEvents.signal});
 function closePageBox(kind) {
 	var entry = pageBoxes.get(kind);
 	if (!entry) return;
@@ -244,9 +292,21 @@ function openPageBox(kind) {
 	view.before(home);
 	main.append(view);
 	var observer = new MutationObserver(function () {
-		if (box.hidden) closePageBox(kind);
+		if (box.hidden) {
+			if (kind === 'media') {
+				returnToMedia = false;
+				mobileState.returnToMedia = false;
+				rememberMediaOpen(false);
+			}
+			closePageBox(kind);
+		}
 	});
 	observer.observe(box, {attributes: true, attributeFilter: ['hidden']});
+	if (kind === 'media') {
+		rememberMediaOpen(true);
+		returnToMedia = false;
+		mobileState.returnToMedia = false;
+	}
 	pageBoxes.set(kind, {box, home, main, observer});
 	root.append(box);
 	if (kind === 'properties') view.querySelector('.collapsed .sidebarFlag')?.click();
@@ -319,10 +379,25 @@ function queueSlide() {
 	});
 }
 function syncMobile() {
+	syncDialogRoots();
 	var pylon = windowNode('base');
 	var content = windowNode('edit');
 	for (var [kind, entry] of pageBoxes) {
-		if (!entry.home.isConnected || !mobile.matches) closePageBox(kind);
+		if (!entry.home.isConnected || !mobile.matches) {
+			if (kind === 'media' && mobile.matches && root.classList.contains('pages')) {
+				returnToMedia = true;
+				mobileState.returnToMedia = true;
+			}
+			closePageBox(kind);
+		} else {
+			var info = root.querySelector('.cmslightbox:not(.pageToolBox)');
+			if (kind === 'media' && info && (info.compareDocumentPosition(entry.box) & Node.DOCUMENT_POSITION_FOLLOWING)) {
+				info.before(entry.box);
+			}
+		}
+	}
+	if (returnToMedia && !root.querySelector('.cmslightbox:not(.pageToolBox)') && !pageBoxes.has('media')) {
+		openPageBox('media');
 	}
 	var media = document.querySelector('main > .pylon > footer');
 	if (content && mobileState.innerHref === location.pathname + location.search && content.dataset.cmsSheet === '1') {
@@ -497,7 +572,11 @@ function syncMobile() {
 					grip.className = 'cmsMobileGrip cmsMobileOnly'; grip.setAttribute('aria-hidden', 'true');
 					head.prepend(grip);
 				}
-				head.querySelector('.cmsPageToolsMenu .langMenu')?.removeAttribute('hidden');
+				var pageLanguages = head.querySelector('.cmsPageToolsMenu .langMenu');
+                if (pageLanguages && !pageLanguages.classList.contains('is-open')) {
+                    pageLanguages.removeAttribute('hidden');
+                    pageLanguages.removeAttribute('style');
+                }
 				var properties = head.querySelector('[data-cms-properties]');
 				properties?.toggleAttribute('hidden', !node.querySelector('aside.cms') && !pageBoxes.has('properties'));
 				properties?.setAttribute('aria-pressed', String(pageBoxes.has('properties')));
@@ -523,12 +602,20 @@ function syncMobile() {
 		content.querySelector(':scope > header > .cmsMobileGrip')?.remove();
 	}
 	var dialogs = [...document.querySelectorAll('.cmslightbox')].filter(function (box) { return !box.hidden && box.getClientRects().length > 0; });
+	root.classList.toggle('cmsPhoneDialogOpen', matchMedia('(max-width:767px)').matches && dialogs.length > 0);
 	dialogs.forEach(function (box, index) {
-		box.classList.toggle('cmsNestedDialog', index > 0);
+		box.classList.toggle('cmsNestedDialog', index > 0 || box.matches('.upload, .fileEditor, .mediaGroupHelp, .qrZoom, [id^=userMailPreview], [data-mobile-dialog=static]'));
 		box.style.setProperty('--cmsDialogLevel', index);
 	});
 	document.querySelectorAll('.cmslightbox > section').forEach(function (section) {
 		var head = section.querySelector(':scope > header') || section;
+		if (section.parentElement.matches('.cmsNestedDialog')) {
+			if (matchMedia('(max-width:767px)').matches || section.parentElement.matches('.mailPreviewBox')) section.style.removeProperty('--cmsGlassHeader');
+			head.querySelector(':scope > .cmsMobileGrip')?.remove();
+			section.querySelector(':scope > .cmsMobileGrip')?.remove();
+			head.classList.remove('cmsMobileEditHeader');
+			return;
+		}
 		if (head.querySelector(':scope > .cmsMobileGrip')) return;
 		section.querySelector(':scope > .cmsMobileGrip')?.remove();
 		var grip = document.createElement('span');
@@ -539,7 +626,7 @@ function syncMobile() {
 	});
 	if (mobileObserver) mobileObserver.disconnect();
 	placeTitle(content);
-	if (mobileObserver) mobileObserver.observe(root, {childList: true, subtree: true});
+	if (mobileObserver) mobileObserver.observe(root, {childList: true, subtree: true, attributes: true, attributeFilter: ['hidden', 'open']});
 	document.querySelectorAll('.cmslightbox .tabmenu .active, .cmslightbox .tabs .active, .cmslightbox [role=tab][aria-selected=true]').forEach(function (tab) {
 		if (!mobile.matches) return;
 		requestAnimationFrame(function () {
@@ -553,12 +640,13 @@ function syncMobile() {
 	// Let scrolling content pass beneath the existing header (and its tab rail).
 	document.querySelectorAll('.cmslightbox > section, main > .content[data-cms-sheet="1"]').forEach(function (surface) {
 		var head = surface.querySelector(':scope > header');
-		var scroll = surface.querySelector(':scope > main, :scope > .flexRow');
+		var scroll = surface.querySelector(':scope > main, :scope > .flexRow, :scope > .layout');
 		if (!head || !scroll || !head.getClientRects().length) return;
 		var tabs = head.nextElementSibling;
 		var height = head.offsetHeight + (tabs?.matches('.userTabs, .tabmenu, .tabs') ? tabs.offsetHeight : 0);
 		var value = height + 'px';
-		if (surface.style.getPropertyValue('--cmsGlassHeader') !== value) surface.style.setProperty('--cmsGlassHeader', value);
+		if (surface.parentElement.matches('.mailPreviewBox') || (matchMedia('(max-width:767px)').matches && surface.parentElement.matches('.cmsNestedDialog'))) surface.style.removeProperty('--cmsGlassHeader');
+		else if (surface.style.getPropertyValue('--cmsGlassHeader') !== value) surface.style.setProperty('--cmsGlassHeader', value);
 		surface.classList.toggle('cmsHeaderScrolled', scroll.scrollTop > 1 || [...scroll.querySelectorAll('.flexColumn, section.cms')].some(function (node) { return node.scrollTop > 1; }));
 	});
 	if (typeof fitKeyboard === 'function') fitKeyboard();
@@ -585,6 +673,12 @@ function placeTitle(content) {
 		if (!source && !node.classList.contains('cmsSheetTitle') && !node.closest('header, .widget, .cmslightbox')) source = node;
 	});
 	var copy = head.querySelector(':scope > h1.cmsSheetTitle');
+	// Editor pages already own an editable title; never copy a content heading beside it.
+	if (head.querySelector('.pageHead')) {
+		copy?.remove();
+		if (source) source.hidden = false;
+		return;
+	}
 	var fallback = root.classList.contains('backup') ? 'Backup' : '';
 	if (!sheet || (!source && !fallback)) {
 		copy?.remove();
@@ -624,6 +718,23 @@ function pinSearch() {
 	box.scrollTop = 0;
 }
 function fitHeader(head) {
+    var pageMore = head?.querySelector('[data-cms-page-more]');
+    var pageSplit = pageMore?.closest('.cmsPageMore');
+    var pageMenu = pageSplit && (pageSplit.querySelector('.cmsPageToolsMenu') || pageSplit.splitList);
+    if (pageMenu) {
+        if (!mobile.matches && pageMenu.classList.contains('is-open')) closeSplitMenus(list => list === pageMenu);
+        pageMore.classList.toggle('splitApplyMenu', mobile.matches);
+        pageMore.toggleAttribute('data-menu-selected', mobile.matches);
+        pageMenu.classList.toggle('splitApplyList', mobile.matches);
+        if (!mobile.matches) {
+            pageMenu.hidden = false;
+            pageMenu.removeAttribute('style');
+            pageMore.classList.remove('selected');
+            pageMore.setAttribute('aria-expanded', 'false');
+            pageMore.removeAttribute('aria-pressed');
+            pageSplit.splitList = null;
+        }
+    }
 	if (!head || head.querySelector('.cmsPageTools')) return;
 	var previous = head.querySelector('.cmsMobileMore');
 	if (!mobile.matches || (head.closest('.cmslightbox') && !matchMedia('(max-width:767px)').matches)) {
@@ -657,6 +768,7 @@ function fitHeader(head) {
 		item.before(marker); moved.push({item:item, marker:marker}); menu.append(item);
 	});
 	if (!menu.children.length) return;
+	if (overflow.every(item => !item.textContent.trim() && item.querySelector('.cmsIcon'))) menu.classList.add('cmsIconActionMenu');
 	var more = document.createElement('button');
 	more.type = 'button';
 	more.cmsItems = moved;
@@ -677,14 +789,7 @@ function fitHeader(head) {
 // Use capture so existing AJAX handlers still receive actual links and actions.
 document.addEventListener('click', function (event) {
 	if (!mobile.matches || !event.target.closest) return;
-	var pageMore = document.querySelector('[data-cms-page-more]');
-	if (event.target.closest('[data-cms-page-more]')) {
-		pageMore.setAttribute('aria-expanded', String(pageMore.getAttribute('aria-expanded') !== 'true'));
-		return;
-	}
-	if (!event.target.closest('.cmsPageToolsMenu, .langMenu') || event.target.closest('[data-cms-device], .langMenu a')) {
-		pageMore?.setAttribute('aria-expanded', 'false');
-	}
+	if (event.target.closest('[data-cms-page-more], .cmsPageToolsMenu .splitApplyMenu')) return;
 	var properties = event.target.closest('button[data-cms-properties]');
 	if (properties) {
 		openPageBox('properties');
@@ -755,7 +860,7 @@ document.addEventListener('keydown', function (event) {
 	if (event.key === 'Escape') {
 		event.preventDefault();
 		var more = document.querySelector(':is([data-cms-more], [data-cms-page-more])[aria-expanded="true"]');
-		if (more) { more.setAttribute('aria-expanded', 'false'); more.focus(); }
+		if (more) { closeSplitMenus(); more.focus(); }
 		else closeWindow();
 	}
 	if (event.key === 'Tab') {
@@ -780,6 +885,7 @@ document.addEventListener('touchend', function (event) {
 // A dedicated grip area cannot conflict with long press, editor selection or scrolling.
 function shutSheet(sheet) {
 	if (dismissing) return;
+    if (sheet.contains(document.activeElement)) document.activeElement.blur();
 	var lightbox = sheet.closest && sheet.closest('.cmslightbox');
 	function finish() {
 		dismissing = false;
@@ -822,12 +928,22 @@ function shutSheet(sheet) {
 	sheet.addEventListener('transitionend', complete);
 	setTimeout(function () { complete(); }, dur + 80);
 }
+var sheetClickGuard = null;
+window.addEventListener('click', function (event) {
+    if (!mobile.matches || !event.isTrusted || !sheetClickGuard || Date.now() > sheetClickGuard.until) return;
+    if (sheetClickGuard.bar.contains(event.target)) {
+        event.preventDefault(); event.stopImmediatePropagation(); sheetClickGuard = null;
+    }
+}, {capture: true, signal: mobileEvents.signal});
 document.addEventListener('pointerdown', function (event) {
+    if (!event.isPrimary || event.button !== 0) return;
+	if (event.target.closest?.('.cmslightbox.cmsNestedDialog')) return;
 	var bar = event.target.closest?.('.cmsMobileEditHeader');
 	var sheet = null;
+    var phoneHeader = matchMedia('(max-width:767px)').matches;
 	if (bar) {
-		if (event.target.closest('button, a, input, select, textarea, [contenteditable="plaintext-only"], .cmsPageTools') || activeWindow === 'menu' || root.classList.contains('dragging')) return;
-		if (bar.classList.contains('cmsMobileEditHeader') && !event.target.closest('.cmsMobileGrip')) return;
+        if (activeWindow === 'menu' || root.classList.contains('dragging')) return;
+        if (!phoneHeader && (event.target.closest('button, a, input, select, textarea, [contenteditable="plaintext-only"], .cmsPageTools') || !event.target.closest('.cmsMobileGrip'))) return;
 		sheet = bar.parentElement;
 	} else if (mobile.matches && event.target.closest?.('.cmslightbox > section > .cmsMobileGrip')) {
 		sheet = event.target.closest('.cmslightbox > section');
@@ -842,15 +958,24 @@ document.addEventListener('pointerdown', function (event) {
 	}
 	if (!mobile.matches || !sheet || !bar) return;
 	var startY = event.clientY;
+    var startX = event.clientX;
+    var tracking = !phoneHeader;
 	var distance = 0;
 	var lightbox = sheet.closest && sheet.closest('.cmslightbox');
 	var baseHeight = lightbox ? sheet.getBoundingClientRect().height : 0;
-	sheetGesture = true;
-	bar.setPointerCapture(event.pointerId);
+	sheetGesture = tracking;
+	if (tracking) bar.setPointerCapture(event.pointerId);
 	function move(e) {
 		if (e.pointerId !== event.pointerId) return;
+        var dy = e.clientY - startY;
+        if (!tracking) {
+            if (Math.abs(dy) < 10 || Math.abs(dy) <= Math.abs(e.clientX - startX)) return;
+            tracking = true;
+            sheetGesture = true;
+            bar.setPointerCapture(event.pointerId);
+            if (typeof closeSplitMenus === 'function') closeSplitMenus();
+        }
 		if (e.cancelable) e.preventDefault();
-		var dy = e.clientY - startY;
 		// Pulling a dialog up grows it with the finger. Down still dismisses,
 		// including a dialog that is already full height.
 		if (lightbox && dy < 0 && !sheet.classList.contains('is-expanded')) {
@@ -871,9 +996,11 @@ document.addEventListener('pointerdown', function (event) {
 	}
 	function end(e) {
 		if (e.pointerId !== event.pointerId) return;
-		bar.removeEventListener('pointermove', move);
-		bar.removeEventListener('pointerup', end);
-		bar.removeEventListener('pointercancel', end);
+		document.removeEventListener('pointermove', move, true);
+		document.removeEventListener('pointerup', end, true);
+		document.removeEventListener('pointercancel', end, true);
+        if (!tracking) return;
+        sheetClickGuard = {bar: bar, until: Date.now() + 400};
 		sheetGesture = false;
 		sheet.classList.remove('is-expanding');
 		sheet.style.removeProperty('box-shadow');
@@ -905,10 +1032,10 @@ document.addEventListener('pointerdown', function (event) {
 		}
 		if (shut) shutSheet(sheet);
 	}
-	bar.addEventListener('pointermove', move);
-	bar.addEventListener('pointerup', end);
-	bar.addEventListener('pointercancel', end);
-}, {signal: mobileEvents.signal});
+	document.addEventListener('pointermove', move, {capture: true, signal: mobileEvents.signal});
+	document.addEventListener('pointerup', end, {capture: true, signal: mobileEvents.signal});
+	document.addEventListener('pointercancel', end, {capture: true, signal: mobileEvents.signal});
+}, {capture: true, signal: mobileEvents.signal});
 document.addEventListener('scroll', function (event) {
 	var scroll = event.target;
 	if (scroll.matches?.('.controlmapTree > nav')) {
@@ -967,9 +1094,18 @@ if (window.visualViewport) {
 	fitKeyboard();
 }
 // Panel updates replace nodes; refresh only chrome and availability, never the editor.
-var mobileObserver = new MutationObserver(syncMobile);
-mobileObserver.observe(root, {childList: true, subtree: true});
-mobileState.destroy = function () { for (var kind of pageBoxes.keys()) closePageBox(kind); mobileEvents.abort(); mobileObserver.disconnect(); clearTimeout(arriveTimer); };
+var mobileFrame = 0;
+var phoneLayout = matchMedia('(max-width:767px)');
+phoneLayout.addEventListener('change', syncMobile, {signal: mobileEvents.signal});
+var mobileObserver = new MutationObserver(function (records) {
+    records = records.filter(function (record) { return record.type !== 'attributes' || record.target.matches('.cmslightbox'); });
+    if (!records.length) return;
+    if (!phoneLayout.matches) { syncMobile(); return; }
+    if (records.every(record => record.target.nodeType === 1 && record.target.closest('[contenteditable]'))) return;
+    if (!mobileFrame) mobileFrame = requestAnimationFrame(function () { mobileFrame = 0; syncMobile(); });
+});
+mobileObserver.observe(root, {childList: true, subtree: true, attributes: true, attributeFilter: ['hidden', 'open']});
+mobileState.destroy = function () { for (var [box, home] of dialogHomes) restoreDialog(box, home); for (var kind of pageBoxes.keys()) closePageBox(kind); mobileEvents.abort(); mobileObserver.disconnect(); cancelAnimationFrame(mobileFrame); clearTimeout(arriveTimer); };
 mobileState.sync = syncMobile;
 syncMobile();
 

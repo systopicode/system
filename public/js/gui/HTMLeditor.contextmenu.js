@@ -435,7 +435,7 @@ var contextMenuWW = function (params, event) {
 	var mediaBar = target && target.closest && (target.closest('img, video, iframe') || target.closest('a')?.querySelector('img, video, iframe'));
 	if (editorPointer === 'touch' && wysiwygOf(target) && !mediaBar) {
 		const editor = wysiwygOf(target);
-		if (sys.pagesMedia && editorRange && document.body.classList.contains('cmsMobile')) {
+		if (sys.pagesMedia && editorRange && editor.dataset.drop_accept?.split(/\s+/).includes('media') && editor.dataset.on_drop && document.body.classList.contains('cmsMobile')) {
 			const range = editorRange.cloneRange();
 			const mediaButton = (label, icon, action, showLabel = false) => {
 				const button = $('<button type="button" data-cms-action></button>').attr({'aria-label': label, title: label});
@@ -505,7 +505,12 @@ var contextMenuWW = function (params, event) {
 		.toggleClass('cmsPageDock', document.body.matches('.pages.cmsMobile') && !!wysiwygOf(target))
 		.append(ul);
 	$('body').append(this.domWrapper.append(this.domObj));
-	if (this.domObj.hasClass('cmsPageDock')) enableEditorDockSwipe(ul[0]);
+	if (this.domObj.hasClass('cmsPageDock')) {
+		const editor = wysiwygOf(target);
+		ul[0].scrollLeft = editor.cmsDockScrollLeft || 0;
+		ul[0].addEventListener('scroll', () => { editor.cmsDockScrollLeft = ul[0].scrollLeft; }, {passive: true});
+		enableEditorDockSwipe(ul[0]);
+	}
 
 	var rect = event.anchorRect;
 	if (!rect) {

@@ -18,8 +18,8 @@ $hint = match ($mode) {
 		<header><h2>Delivery</h2></header>
 		<main>
 			<p class="tagsHint"><?= $e($hint) ?></p>
-			<div class="assetsStatus"><?= include __DIR__ . '/status.php' ?></div>
 		</main>
+		<div class="assetsStatus"><?= include __DIR__ . '/status.php' ?></div>
 		<footer>
 			<a class="button submit put" href="publishAll"><i class="cmsIcon cmsIcon-cloud-arrow-up"></i><span>Publish all</span></a>
 			<button type="button" data-cms-action class="button" data-on_click="userConfirm" data-action="clearAll" data-confirm="Remove all published copies? They are made again on first use."><i class="cmsIcon cmsIcon-broom"></i><span>Clear all</span></button>
@@ -29,6 +29,7 @@ $hint = match ($mode) {
 		<header><h2>Sources</h2></header>
 		<main>
 			<p class="tagsHint">The folders the copies are made from.</p>
+		</main>
 			<div class="tableScroll">
 				<table>
 					<tbody>
@@ -41,6 +42,5 @@ $hint = match ($mode) {
 					</tbody>
 				</table>
 			</div>
-		</main>
 	</section>
 </div>

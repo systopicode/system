@@ -351,14 +351,14 @@
     box-shadow: var(--cmsShadowLg);
     box-sizing: border-box;
 }
-.cms :is(ul.contextmenu > li:not(.iconsonly) > :is(a, button:where([data-cms-action])), .splitApplyList > button:where(:not([data-cms-action])), .splitApplyList > :is(a, button:where([data-cms-action]))) {
+.cms :is(ul.contextmenu > li:not(.iconsonly) > :is(a, button:where([data-cms-action])), .splitApplyList.is-open > button:where(:not([data-cms-action])), .splitApplyList.is-open > :is(a, button:where([data-cms-action]))) {
     display: flex; align-items: center; gap: 0.6rem; min-height: 2.25rem;
     width: 100%; max-width: 100%; box-sizing: border-box; margin: 0; padding: 0.45rem 0.65rem;
     border-radius: var(--cmsRadius); font-size: 0.8125rem; font-weight: 500;
     color: var(--cmsTextColor); text-align: left;
 }
-.cms :is(ul.contextmenu, .splitApplyList) :is(:is(a, button:where([data-cms-action])), button:where(:not([data-cms-action]))):is(:hover, :focus-visible) { background: var(--cmsHover); }
-.cms :is(ul.contextmenu, .splitApplyList) :is(:is(a, button:where([data-cms-action])), button:where(:not([data-cms-action]))) > i { font-size: 1rem; flex: 0 0 1.25rem; text-align: center; }
+.cms :is(ul.contextmenu, .splitApplyList.is-open) :is(:is(a, button:where([data-cms-action])), button:where(:not([data-cms-action]))):is(:hover, :focus-visible) { background: var(--cmsHover); }
+.cms :is(ul.contextmenu, .splitApplyList.is-open) :is(:is(a, button:where([data-cms-action])), button:where(:not([data-cms-action]))) > i { font-size: 1rem; flex: 0 0 1.25rem; text-align: center; }
 .cms ul.contextmenu li.seperator { margin: 0.35rem 0; }
 .cms ul.contextmenu li.iconsonly ul { margin: 0; }
 

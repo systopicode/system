@@ -92,3 +92,11 @@ Checked again in the running Dev application: Backup/Profile at 390, 1194 and 14
 AJAX navigation now updates an existing module stylesheet when its versioned URL changes, retaining its node and cascade position. Previously the path-only lookup discarded the new modification timestamp. Document responses already use no-store; CSS and JS URLs use individual file modification times. An open tab still needs a normal reload to load changed core JavaScript; runtime class replacement is intentionally avoided.
 
 Verified with the running Environment panel: changed version updates the existing stylesheet, repeated identical versions retain it, and no duplicate module links are created. Native iPhone cache behaviour remains to be verified on-device.
+
+## Mobile layout consolidation (2026-11-05)
+
+Phone layouts reuse the shared buttons, widget footers and tables. Nested static dialogs (including email previews) have no sheet handle. Email previews in user details and the global email log share the same metadata and sandboxed message body. On phones without a pylon, an open dialog hides the shell header until it closes. Desktop geometry is retained.
+
+Theme colours are loaded at entry independently of opening Theme Settings, with legacy configuration supported. Theme raster uploads accept transparent WebP through the existing conversion pipeline. Backup logs now retain actor information; older records without it remain readable without inventing an actor.
+
+Validation: changed PHP files pass syntax checks; `php tests/backup-log-users.php`, `php tests/config-writes.php` and JavaScript syntax checks pass. The user mail preview was visually checked at phone and desktop widths. Final cross-preview and native iPhone checks remain pending: dev.local became unavailable (DNS resolution failed). These limitations are not a visual acceptance pass.

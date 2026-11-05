@@ -37,14 +37,6 @@ body.tools .toolCheck li.info{
 	background: var(--cmsHover);
 }
 
-body.tools .phpinfo{
-	overflow: auto;
-}
-
-body.tools .phpinfo table{
-	font-size: 0.8125rem;
-}
-
 body.tools .schemaBar{
 	display: flex;
 	flex-wrap: wrap;
@@ -401,68 +393,6 @@ body.tools .logTrace{
 	white-space: pre-wrap;
 }
 
-body.tools .logPill{
-	display: inline-block;
-	padding: 0.1rem 0.5rem;
-	border-radius: 999px;
-	font-size: 0.75rem;
-	line-height: 1.4;
-	background: var(--cmsHover);
-}
-
-body.tools .logPill.is-ok{
-	background: color-mix(in srgb, #7cb249 22%, var(--cmsCanvas));
-}
-
-body.tools .logPill.is-bad{
-	background: color-mix(in srgb, var(--cmsError) 16%, var(--cmsCanvas));
-	color: var(--cmsError);
-}
-
-body.tools .logPill.is-warn{
-	background: color-mix(in srgb, var(--cmsWarning) 28%, var(--cmsCanvas));
-	color: var(--cmsTextColor);
-}
-
-body.tools .logPill.is-quiet{
-	color: var(--cmsMuted);
-}
-
-body.tools .mailLog dl{
-	display: grid;
-	grid-template-columns: 1fr;
-	gap: 0;
-	margin: 0 0 1.25rem;
-	border-top: 0;
-}
-
-body.tools .mailLog dl > div{
-	display: grid;
-	grid-template-columns: 7.5rem minmax(0, 1fr);
-	gap: 0.75rem;
-	align-items: baseline;
-	padding: 0.7rem 0;
-	border-bottom: 1px solid var(--cmsLineStrong);
-}
-
-body.tools .mailLog dt{
-	margin: 0;
-	font-size: 0.75rem;
-	color: var(--cmsMuted);
-}
-
-body.tools .mailLog dd{
-	margin: 0;
-}
-
-body.tools .logActorId{
-	margin-left: 0.35rem;
-	color: var(--cmsMuted);
-	font-variant-numeric: tabular-nums;
-}
-
-
-
 body.tools .mediaResult{
 	margin-top: 0.25rem;
 	overflow: auto;
@@ -512,7 +442,7 @@ body.tools .toolCheck li > span { min-width:0; overflow-wrap:anywhere; }
 
 .remoteDebugClients th:first-child,.remoteDebugClients td:first-child { min-width:14rem; }
 
-body.tools .mailLog dl > div:last-child{border-bottom:0;}
+
 
 body.tools .schemaScroll.stacked table.schemaAll .schemaCard > tr:not(.schemaCardHead, .schemaCardCols) {
     padding: .4rem .75rem;
@@ -543,3 +473,5 @@ body.tools .schemaScroll.stacked table.schemaAll .schemaCard .tableFoldToggle {
 }
 
 body.tools .auditList .tableScroll.stacked td.auditCheck { padding-inline: 0; }
+
+.phpinfo .phpInfoBrand > header { padding-block: .5rem; }

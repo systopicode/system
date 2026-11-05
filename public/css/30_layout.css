@@ -412,6 +412,9 @@ body.cms:not(.pages) > main > div.content:not(:has(> header :is(a, button, input
     border-top-left-radius: inherit;
     border-top-right-radius: inherit;
 }
+body > main > div.content > .flexRow {
+    border-top-right-radius: inherit;
+}
 body.cms:not(.pages) > main > div.content > .flexRow > .flexColumn,
 body.cms:not(.pages) > main > div.content > .flexRow > .flexColumn > section.cms:first-child {
     border-top-left-radius: inherit;

@@ -19,39 +19,39 @@ final class ThemeAssets
             'file' => 'img/logo.svg',
             'png' => 'img/logo.png',
             'label' => 'Logo',
-            'hint' => 'SVG or PNG.',
-            'accept' => '.svg,.png,image/svg+xml,image/png',
+            'hint' => 'SVG, PNG or WebP.',
+            'accept' => '.svg,.png,.webp,image/svg+xml,image/png,image/webp',
             'kind' => 'logo',
-        ],
-        'signet' => [
-            'file' => 'img/signet.svg',
-            'png' => 'img/signet.png',
-            'label' => 'Signet',
-            'hint' => 'SVG or PNG.',
-            'accept' => '.svg,.png,image/svg+xml,image/png',
-            'kind' => 'signet',
         ],
         'wordDark' => [
             'file' => 'img/logo-horizontal-dark.png',
             'svg' => 'img/logo-horizontal-dark.svg',
-            'label' => 'Word mark, dark bar',
-            'hint' => 'SVG or PNG.',
-            'accept' => '.svg,.png,image/svg+xml,image/png',
+            'label' => 'Logo on dark',
+            'hint' => 'SVG, PNG or WebP.',
+            'accept' => '.svg,.png,.webp,image/svg+xml,image/png,image/webp',
             'kind' => 'dark',
         ],
         'wordLight' => [
             'file' => 'img/logo-horizontal-light.png',
             'svg' => 'img/logo-horizontal-light.svg',
-            'label' => 'Word mark, light',
-            'hint' => 'SVG or PNG.',
-            'accept' => '.svg,.png,image/svg+xml,image/png',
+            'label' => 'Logo on bright',
+            'hint' => 'SVG, PNG or WebP.',
+            'accept' => '.svg,.png,.webp,image/svg+xml,image/png,image/webp',
             'kind' => 'light',
+        ],
+        'signet' => [
+            'file' => 'img/signet.svg',
+            'png' => 'img/signet.png',
+            'label' => 'Signet',
+            'hint' => 'SVG, PNG or WebP.',
+            'accept' => '.svg,.png,.webp,image/svg+xml,image/png,image/webp',
+            'kind' => 'signet',
         ],
         'favicon' => [
             'file' => 'img/icon.svg',
             'label' => 'Favicon',
-            'hint' => 'SVG or PNG.',
-            'accept' => '.svg,.png,image/svg+xml,image/png',
+            'hint' => 'SVG, PNG or WebP.',
+            'accept' => '.svg,.png,.webp,image/svg+xml,image/png,image/webp',
             'kind' => 'icon',
         ],
         'share' => [
@@ -69,6 +69,7 @@ final class ThemeAssets
         $href = (string) $panel->href;
         echo '<div class="widgets themeAssets">';
         foreach (self::SLOTS as $slot => $spec) {
+            if ($slot === 'logo') continue; // Legacy sign-in fallback; no separate editable slot.
             $path = self::path($slot);
             $own = self::isOverride($path);
             $note = $own ? '' : 'System default';
@@ -106,9 +107,10 @@ final class ThemeAssets
         }
         $mime = self::mime($tmp);
         if ($slot === 'favicon') {
-            if ($mime === 'image/png') {
+            if (in_array($mime, ['image/png', 'image/webp'], true)) {
+                if (!self::storeFaviconPng($tmp)) return 'That image could not be saved.';
                 self::remove(self::overridePath('img/icon.svg'));
-                return self::storeFaviconPng($tmp) ? null : 'That image could not be saved.';
+                return null;
             }
             if ($mime === 'image/svg+xml') {
                 $svg = self::cleanSvg((string) file_get_contents($tmp));
@@ -120,7 +122,7 @@ final class ThemeAssets
                 }
                 return self::write(self::overridePath('img/icon.svg'), $svg) ? null : 'That file could not be saved.';
             }
-            return 'Use an SVG or a PNG.';
+            return 'Use an SVG, PNG or WebP.';
         }
         if ($slot === 'share') {
             $info = @getimagesize($tmp);
@@ -141,15 +143,14 @@ final class ThemeAssets
             $svgFile = $spec['svg'] ?? $spec['file'];
             return self::write(self::overridePath($svgFile), $svg) ? null : 'That file could not be saved.';
         }
-        if ($mime === 'image/png') {
+        if (in_array($mime, ['image/png', 'image/webp'], true)) {
             $svgFile = str_ends_with($spec['file'], '.svg') ? $spec['file'] : ($spec['svg'] ?? null);
-            if ($svgFile !== null) {
-                self::remove(self::overridePath($svgFile));
-            }
             $png = $spec['png'] ?? $spec['file'];
-            return self::writeRaster($tmp, self::overridePath($png), false) ? null : 'That image could not be saved.';
+            if (!self::writeRaster($tmp, self::overridePath($png), false)) return 'That image could not be saved.';
+            if ($svgFile !== null) self::remove(self::overridePath($svgFile));
+            return null;
         }
-        return 'Use an SVG or a PNG.';
+        return 'Use an SVG, PNG or WebP.';
     }
 
     public static function clear(string $slot): bool
@@ -251,7 +252,7 @@ final class ThemeAssets
 
     private static function storeFaviconPng(string $tmp): bool
     {
-        $src = @imagecreatefrompng($tmp);
+        $src = @imagecreatefromstring((string) file_get_contents($tmp));
         if ($src === false) {
             return false;
         }
@@ -390,8 +391,8 @@ final class ThemeAssets
     private static function mime(string $tmp): string
     {
         $info = @getimagesize($tmp);
-        if (is_array($info) && ($info['mime'] ?? '') === 'image/png') {
-            return 'image/png';
+        if (is_array($info) && in_array($info['mime'] ?? '', ['image/png', 'image/webp'], true)) {
+            return $info['mime'];
         }
         $head = (string) file_get_contents($tmp, false, null, 0, 200);
         return preg_match('/<svg\b/i', $head) === 1 ? 'image/svg+xml' : '';

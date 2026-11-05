@@ -21,7 +21,7 @@ $card = static function (string $title, array $rows): void {
 	}
 	echo '</ul>';
     if ($remedy && array_filter($rows, static fn($row) => ($row['status'] ?? '') !== 'confirm')) {
-        echo '<p class="tagsHint">' . htmlspecialchars($remedy[0], ENT_QUOTES) . '</p><a class="button transparent" href="' . htmlspecialchars($remedy[1], ENT_QUOTES) . '"><i class="cmsIcon cmsIcon-arrow-right"></i><span>' . htmlspecialchars($remedy[2], ENT_QUOTES) . '</span></a>';
+        echo '<p class="tagsHint">' . htmlspecialchars($remedy[0], ENT_QUOTES) . '</p><a class="button ' . ($remedy[2] === 'Environment' ? 'outline' : 'transparent') . '" href="' . htmlspecialchars($remedy[1], ENT_QUOTES) . '"><i class="cmsIcon cmsIcon-arrow-right"></i><span>' . htmlspecialchars($remedy[2], ENT_QUOTES) . '</span></a>';
     }
     echo '</main></section>';
 };

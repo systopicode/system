@@ -409,7 +409,9 @@ class Panel extends CmsPanel
 		[$usec, $sec] = explode(' ', microtime());
 		$time   = round(((float) $usec + (float) $sec) - $scripttimeStart, 3);
 		$memory = round(memory_get_usage() / 1024 / 1024, 2);
-		\fs::file_put_contents($this->logfile->filepath, "[" . date('c') . "] $info - {$time}s {$memory}MB\n", FILE_APPEND | LOCK_EX);
+        $actor = \Systopic\System\Auth\Session::current();
+        $line = \Systopic\System\Backup\LogEntry::format($info, (int) $actor->id, $actor->name ?: 'Unknown user', $time, $memory);
+        \fs::file_put_contents($this->logfile->filepath, $line, FILE_APPEND | LOCK_EX);
 	}
 
 	function getBackupfilestable(string $backupdirpath): array
