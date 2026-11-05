@@ -93,6 +93,7 @@ class PanelTree implements RenderTree
     public function addRoot(PanelRootFolder $root): void
     {
         $this->roots[] = $root;
+        \Systopic\System\Controlmap\Discover::$treeRoots = $this->roots;
     }
 
     /**

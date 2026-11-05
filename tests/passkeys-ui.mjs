@@ -165,7 +165,7 @@ check('onboarding follows the server redirect',redirects.at(-1)==='/admin/');
 document.body.innerHTML=onboardingFixture;
 window.PublicKeyCredential=undefined;
 const skip=document.querySelector('.passkeySkip a');
-check('skip is ordinary navigation independent of WebAuthn and Origin validation',skip&&skip.getAttribute('href')==='/admin/auth/continueWithoutPasskey'&&!skip.dataset.on_click&&!document.querySelector('[data-passkey-mode=skip]'));
+check('skip is ordinary navigation independent of WebAuthn and Origin validation',skip&&skip.getAttribute('href')==='/auth/continueWithoutPasskey'&&!skip.dataset.on_click&&!document.querySelector('[data-passkey-mode=skip]'));
 document.body.innerHTML=loginFixture;
 window.PublicKeyCredential=function(){};
 window.navigator.credentials.get=async()=>{throw new window.DOMException('No matching passkey','NotAllowedError');};

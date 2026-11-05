@@ -1,4 +1,4 @@
--- The failures of one IP (Auth\LoginCodes).
+-- The failures of one IP (Auth\SignInCodes).
 
 SELECT usm_authfailures.*
 FROM usm_authfailures

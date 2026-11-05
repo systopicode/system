@@ -137,6 +137,7 @@
   --icon-movie-off: url("../icons/tabler/movie-off.svg");
   --icon-music: url("../icons/tabler/music.svg");
   --icon-number-123: url("../icons/tabler/number-123.svg");
+  --icon-object-scan: url("../icons/tabler/object-scan.svg");
   --icon-palette: url("../icons/tabler/palette.svg");
   --icon-password: url("../icons/tabler/password.svg");
   --icon-pencil: url("../icons/tabler/pencil.svg");
@@ -353,6 +354,7 @@
 .cmsIcon-mobile-slash { --icon-mask: var(--icon-device-mobile-off); }
 .cmsIcon-moon { --icon-mask: var(--icon-moon); }
 .cmsIcon-music { --icon-mask: var(--icon-music); }
+.cmsIcon-object-scan { --icon-mask: var(--icon-object-scan); }
 .cmsIcon-palette { --icon-mask: var(--icon-palette); }
 .cmsIcon-paper-plane { --icon-mask: var(--icon-send); }
 .cmsIcon-paragraph { --icon-mask: var(--icon-pilcrow); }

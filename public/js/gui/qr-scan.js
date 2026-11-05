@@ -1,7 +1,8 @@
 /**
- * One camera for two places: the sign-in card (data-qr-host="login") and the
- * account lightbox (data-qr-host="profile"). It starts from a click. Texts on
- * the host can be replaced with data-hint, data-timeout-title,
+ * One camera for three places: the sign-in card (data-qr-host="login"), the
+ * account lightbox (data-qr-host="profile") and the boxes where the account
+ * is settled, so a hit is the approval (data-qr-host="approve"). It starts
+ * from a click. Texts on the host can be replaced with data-hint, data-timeout-title,
  * data-timeout-text, data-denied-title, data-invalid, data-dark, data-again
  * and data-allow.
  */
@@ -37,17 +38,17 @@
 
 	function parse(text) {
 		var raw = String(text || '').trim();
-		var screen = '';
+		var deviceCode = '';
 		var code = '';
 		if (/^https?:/i.test(raw) || raw.indexOf('?') !== -1) {
 			try {
 				var url = new URL(raw, location.href);
-				screen = clean(url.searchParams.get('screen'));
+				deviceCode = clean(url.searchParams.get('deviceCode'));
 				code = clean(url.searchParams.get('code'));
 			} catch (e) {}
 		}
-		var bare = !screen && !code && /^[0-9A-Za-z]{4}-?[0-9A-Za-z]{4}$/.test(raw) ? raw : '';
-		return { screen: screen, code: code, bare: bare };
+		var bare = !deviceCode && !code && /^[0-9A-Za-z]{4}-?[0-9A-Za-z]{4}$/.test(raw) ? raw : '';
+		return { deviceCode: deviceCode, code: code, bare: bare };
 	}
 
 	function formOf(host) {
@@ -112,9 +113,12 @@
 		return host.getAttribute('data-hint') || 'Hold the QR code steady and well lit in the frame.';
 	}
 
-	function go(base, code) {
+	function go(base, code, kind) {
 		var form=document.createElement('form');form.method='post';form.action=base;
-        var input=document.createElement('input');input.type='hidden';input.name='screen';input.value=code;form.append(input);document.body.append(form);form.submit();
+		[['deviceCode', code], ['kind', kind || '']].forEach(function (field) {
+			var input=document.createElement('input');input.type='hidden';input.name=field[0];input.value=field[1];form.append(input);
+		});
+		document.body.append(form);form.submit();
 	}
 
 	function fill(form, code) {
@@ -126,6 +130,15 @@
 		}
 		var hidden = form.querySelector('input[name="code"]');
 		if (hidden) hidden.value = chars.length > 4 ? chars.slice(0, 4) + '-' + chars.slice(4) : chars;
+	}
+
+	function send(form, code) {
+		fill(form, code);
+		if (form.hasAttribute('data-code-send')) return;
+		var button = form.querySelector('button[type="submit"]');
+		if (button) button.click();
+		else if (form.requestSubmit) form.requestSubmit();
+		else form.submit();
 	}
 
 	function showFields(host, keep) {
@@ -236,7 +249,12 @@
 		flash(host, 'info', 'Checking code…');
 		var call = new sys.core.server.call({method: 'put', code: token});
         call.background = true;
-        var invalid = function () { flash(host, 'error', host.getAttribute('data-invalid') || 'That code is wrong or has expired.'); showFields(host, true); };
+        var invalid = function () {
+			flash(host, 'error', host.getAttribute('data-invalid') || 'That code is wrong or has expired.');
+			showFields(host, true);
+			// This box has no "Scan QR code": the camera comes back from here.
+			if (host.getAttribute('data-qr-host') === 'approve') showDim(host, 'timeout');
+		};
         call.send(settings.siteRoot + 'auth/validateQr').done(function (data) {
             if (data && data.valid) run(); else invalid();
         }).fail(invalid);
@@ -246,23 +264,22 @@
 	function take(host, text) {
 		var found = parse(text);
 		if (host.getAttribute('data-qr-host') === 'profile') {
-			var token = found.screen || found.bare;
+			var token = found.deviceCode || found.bare;
 			if (!token) return false;
-			return accept(host, token, function () { go(host.getAttribute('data-base') || '', token); });
+			return accept(host, token, function () { go(host.getAttribute('data-base') || '', token, host.getAttribute('data-kind')); });
 		}
-		if (found.screen) {
-			return accept(host, found.screen, function () { go(host.getAttribute('data-profile') || '', found.screen); });
+		var form = formOf(host);
+		if (host.getAttribute('data-qr-host') === 'approve') {
+			var scanned = found.deviceCode || found.bare;
+			if (!scanned || !form) return false;
+			return accept(host, scanned, function () { send(form, scanned); });
+		}
+		if (found.deviceCode) {
+			return accept(host, found.deviceCode, function () { go(host.getAttribute('data-profile') || '', found.deviceCode); });
 		}
 		var typed = found.code || found.bare;
-		var form = formOf(host);
 		if (!typed || !form) return false;
-		return accept(host, typed, function () {
-			fill(form, typed);
-			var button = form.querySelector('button[type="submit"]');
-			if (button) button.click();
-			else if (form.requestSubmit) form.requestSubmit();
-			else form.submit();
-		});
+		return accept(host, typed, function () { send(form, typed); });
 	}
 
 	var BLOCKED = 'The browser will not ask for the camera again. Allow it for this site in the address bar, then try again.';
@@ -288,7 +305,7 @@
 		var dim = host.querySelector('[data-qr-dim]');
 		if (dim) dim.hidden = true;
 		var form = formOf(host);
-		if (form) form.hidden = true;
+		if (form && host.getAttribute('data-qr-host') !== 'approve') form.hidden = true;
 		clearFlash(host);
 		hint(host, steady(host));
 		waiting(host, true);
@@ -431,7 +448,7 @@
 	}
 
 	document.addEventListener('click', function (event) {
-		if (event.target.closest && event.target.closest('[data-on_click="loginMethod"], a.authSwitch, a.authMethod')) {
+		if (event.target.closest && event.target.closest('[data-on_click="signInMethod"], a.authSwitch, a.authMethod')) {
 			document.querySelectorAll('[data-qr-host]').forEach(stop);
 		}
 		var typeCode = event.target.closest && event.target.closest('[data-qr-fields]');
@@ -443,12 +460,12 @@
 			}
 			return;
 		}
-		if (event.target.closest?.('[data-qr-start], [data-remote-offer], [data-remote-code], [data-qr-close]')) {
+		if (event.target.closest?.('[data-qr-start], [data-remote-code], [data-qr-close]')) {
 			event.target.closest('.cmslightbox')?.querySelector('[data-remote-feedback]')?.replaceChildren();
 		}
 		var openScan = event.target.closest && event.target.closest('[data-qr-start]');
 		if (openScan) {
-			var scope = openScan.closest('.authBody, .remoteLogin') || openScan.parentElement;
+			var scope = openScan.closest('.authBody, .deviceBoxMain') || openScan.parentElement;
 			var scanHost = scope && scope.querySelector('[data-qr-host]');
 			if (scanHost) start(scanHost);
 			return;
@@ -464,24 +481,9 @@
 			start(againHost, true);
 			return;
 		}
-		var showQr = event.target.closest && event.target.closest('[data-remote-offer]');
-		if (showQr) {
-			var offerScope = showQr.closest('.remoteLogin');
-			var offerHost = offerScope && offerScope.querySelector('[data-qr-host]');
-			if (offerHost) {
-				stop(offerHost);
-				offerHost.hidden = true;
-				offerHost.classList.remove('is-dim', 'is-on');
-				var offerDim = offerHost.querySelector('[data-qr-dim]');
-				if (offerDim) offerDim.hidden = true;
-			}
-			var offerForm = offerScope && offerScope.querySelector('[data-code-form]');
-			if (offerForm) offerForm.hidden = true;
-			return;
-		}
 		var useCode = event.target.closest && event.target.closest('[data-remote-code]');
 		if (useCode) {
-			var scope = useCode.closest('.remoteLogin');
+			var scope = useCode.closest('.deviceBoxMain');
 			var codeHost = scope && scope.querySelector('[data-qr-host]');
 			if (codeHost) {
 				stop(codeHost);
@@ -511,32 +513,45 @@
 			closeHost.classList.remove('is-dim', 'is-on');
 			var closedDim = closeHost.querySelector('[data-qr-dim]');
 			if (closedDim) closedDim.hidden = true;
-			var home = closeHost.closest('.remoteLogin');
+			var home = closeHost.closest('.deviceBoxMain');
 			var homeForm = home && home.querySelector('[data-code-form]');
-			if (home && home.querySelector('.remoteOffer') && homeForm) {
-				homeForm.hidden = true;
+			if (home && homeForm) {
+				homeForm.hidden = false;
 			} else if (formOf(closeHost)) {
 				showFields(closeHost, false);
 			}
 		}
 		scanBox.hidden = true;
         const cleanUrl=new URL(location.href);
-        if(cleanUrl.searchParams.has('screen')) { cleanUrl.searchParams.delete('screen');history.replaceState(history.state,'',cleanUrl); }
+        if(cleanUrl.searchParams.has('deviceCode')) { cleanUrl.searchParams.delete('deviceCode');history.replaceState(history.state,'',cleanUrl); }
 	}, true);
 
 	document.addEventListener('change', function (event) {
 		var select = event.target && event.target.closest ? event.target.closest('[data-identify-select]') : null;
 		if (!select || !select.form) return;
 		var option = select.options[select.selectedIndex];
-		var mine = !!(option && option.getAttribute('data-self') === '1');
-		var own = select.form.querySelector('[data-identify-self]');
-		var other = select.form.querySelector('[data-identify-other]');
-		if (own) own.hidden = !mine;
-		if (!other) return;
-		other.hidden = !!mine;
-		var name = other.querySelector('[data-identify-name]');
+		var name = select.form.querySelector('[data-identify-name]');
 		if (name && option) name.textContent = (option.textContent || '').trim();
 	});
 
-	window.QrScan = { start: start, stop: stop };
+	// Camera and code boxes together, whichever comes first. A phone keeps its
+	// keyboard down, it would cover the camera.
+	function open(host) {
+		start(host);
+		var form = formOf(host);
+		var first = form && form.querySelector('[data-slot]');
+		if (first && !window.matchMedia('(max-width: 720px), (hover: none) and (pointer: coarse)').matches) first.focus();
+	}
+
+	// A box that came in by ajax has no click of its own. A browser that insists
+	// on one refuses, and the box then offers "Allow access".
+	function openAuto() {
+		document.querySelectorAll('[data-qr-auto]').forEach(function (host) {
+			host.removeAttribute('data-qr-auto');
+			open(host);
+		});
+	}
+	new MutationObserver(openAuto).observe(document.documentElement, { childList: true, subtree: true });
+
+	window.QrScan = { start: start, stop: stop, open: open };
 })();

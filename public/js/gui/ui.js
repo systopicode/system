@@ -64,13 +64,22 @@ document.addEventListener('click', function (event) {
 		var box = document.querySelector(open.getAttribute('data-open-box'));
 		if (box) {
 			box.hidden = false;
-			// Add device: a phone opens the camera from this click. A desktop
-			// stays on the QR. The click is the gesture the prompt needs.
+			// The widget chose the account: the box names it and sends it along.
+			var chosen = open.form && open.form.elements.account;
+			if (chosen) {
+				box.querySelector('input[name="account"]').value = chosen.value;
+				box.querySelector('[data-identify-name]').textContent = chosen.selectedOptions[0].textContent;
+			}
+			// Scanning a code: a phone opens the camera from this click. A desktop
+			// stays on the code field. The click is the gesture the prompt needs.
 			var phone = window.matchMedia('(max-width: 720px), (hover: none) and (pointer: coarse)').matches;
-			if (phone && box.classList.contains('remoteLoginBox') && window.QrScan) {
+			var scanHost = box.classList.contains('scanCodeBox') && window.QrScan ? box.querySelector('[data-qr-host]') : null;
+			var settled = scanHost && scanHost.dataset.qrHost === 'approve';
+			if (scanHost && (phone || settled)) {
 				box.classList.add('cmsOpening');
-				var scanHost = box.querySelector('[data-qr-host="profile"]');
-				if (scanHost) window.QrScan.start(scanHost);
+				// With the account settled the camera comes up on a desktop too.
+				if (settled) window.QrScan.open(scanHost);
+				else window.QrScan.start(scanHost);
 			}
 		}
 		return;
@@ -605,7 +614,7 @@ function renameUserAdminTitle(button) {
             if (!first) { e.preventDefault(); return; }
             if (e.shiftKey && (document.activeElement === first || !box.contains(document.activeElement))) { e.preventDefault(); last.focus(); }
             else if (!e.shiftKey && (document.activeElement === last || !box.contains(document.activeElement))) { e.preventDefault(); first.focus(); }
-        } else if (e.key === 'Escape' && !e.target.closest('input,textarea,select,[contenteditable="true"],[contenteditable="plaintext-only"],.dropdownMenu')) {
+        } else if (e.key === 'Escape' && (e.target.closest('[data-code-slots]') || !e.target.closest('input,textarea,select,[contenteditable="true"],[contenteditable="plaintext-only"],.dropdownMenu'))) {
             const close = closeButton(box);
             if (close) { e.preventDefault(); close.click(); }
         }

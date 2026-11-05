@@ -11,8 +11,8 @@ const chrome = stripPHP(template.match(/<header class="cmsMobileHeader[\s\S]*?<\
 const backdrop = template.match(/<button type="button" class="cmsMobileBackdrop[^>]*><\/button>/)[0];
 const styles = (await Promise.all(['00_theme', '18_ui', '20_base', '23_pylon', '30_layout', '40_nav', '45_sidebar', '50_forms', '60_lightbox', '62_find', '10_dropdown', '70_components', 'x_responsive'].map(name => read('public/css/' + name + '.css')))).join('\n');
 const controller = await read('panels/admin/mobile.js');
-const pageStyles = await readFile(new URL('../admin/public/css/pages.css', root), 'utf8');
-const pagesCSS = pageStyles + (await Promise.all(['pages.mml.css', 'pages.tree.css'].map(file => readFile(new URL('../admin/panels/admin/010_pages/' + file, root), 'utf8')))).join('\n');
+const pageStyles = await readFile(new URL('../cms/public/css/pages.css', root), 'utf8');
+const pagesCSS = pageStyles + (await Promise.all(['pages.mml.css', 'pages.tree.css'].map(file => readFile(new URL('../cms/panels/admin/010_pages/' + file, root), 'utf8')))).join('\n');
 const browser = await chromium.launch({headless: true, channel: process.env.FLUXO_BROWSER_CHANNEL || 'chrome'});
 try {
  const page = await browser.newPage({viewport: {width: 390, height: 844}, isMobile: true, hasTouch: true});

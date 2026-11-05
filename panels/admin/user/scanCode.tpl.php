@@ -1,0 +1,57 @@
+<?php
+/**
+ * The camera and the eight boxes of a device code.
+ *
+ * With `approve` the account is settled: camera and boxes are there together,
+ * and a full code goes out on its own.
+ *
+ * @var string $scanHost profile | approve, what `qr-scan.js` does with a hit
+ * @var string $scanAction where the form goes
+ * @var string $scanLead
+ * @var array<string, int|string> $scanFields further hidden fields
+ * @var bool $scanAuto the box comes in by ajax, no click opens the camera
+ */
+	$e = static fn($v): string => htmlspecialchars((string) $v, ENT_QUOTES);
+	$approve = $scanHost === 'approve';
+?>
+<div class="qrScan" data-qr-host="<?= $e($scanHost) ?>" data-base="<?= $e($this->href) ?>" data-kind="<?= $e($scanFields['kind'] ?? '') ?>"<?= !empty($scanAuto) ? ' data-qr-auto' : '' ?> hidden>
+	<div class="qrScanStage">
+		<video playsinline muted autoplay disablepictureinpicture disableremoteplayback></video>
+		<div class="qrScanFrame" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+		<button type="button" class="qrScanTorch" data-qr-torch hidden aria-label="Light"><i class="cmsIcon cmsIcon-bolt"></i></button>
+	</div>
+	<p class="qrScanHint" data-qr-hint>Hold the QR code steady and well lit in the frame.</p>
+	<?php if (!$approve) { ?>
+		<div class="remoteMethods">
+			<button type="button" class="button" data-remote-code><i class="cmsIcon cmsIcon-input-numeric"></i> Use code</button>
+		</div>
+	<?php } ?>
+	<div class="cms message qrScanMsg" data-qr-msg hidden></div>
+	<div class="qrScanDim remoteAbort" data-qr-dim hidden>
+		<button type="button" class="button submit" data-qr-again><i class="cmsIcon cmsIcon-arrows-rotate"></i> <span data-qr-label>Try again</span></button>
+	</div>
+</div>
+<form class="remoteCode" data-feedback="parameters" data-code-form<?= $approve ? ' data-code-send' : '' ?> method="post" action="<?= $e($scanAction) ?>">
+	<p class="cmsBoxLead"><?= $e($scanLead) ?></p>
+	<?php foreach ($scanFields as $field => $value) { ?>
+		<input type="hidden" name="<?= $e($field) ?>" value="<?= $e($value) ?>">
+	<?php } ?>
+	<div class="remoteCodeEntry">
+		<div class="authCodeSlots" data-code-slots>
+			<?php for ($slot = 0; $slot < 8; $slot++) {
+				if ($slot === 4) {
+					echo '<span class="authCodeDash" aria-hidden="true">-</span>';
+				}
+			?>
+			<input required pattern="[A-Za-z0-9]" data-slot="<?= $slot ?>" inputmode="text" autocapitalize="characters" spellcheck="false" autocomplete="<?= $slot === 0 ? 'one-time-code' : 'off' ?>" aria-label="Character <?= $slot + 1 ?>">
+			<?php } ?>
+			<input type="hidden" name="deviceCode" value="">
+		</div>
+		<button class="button submit" type="submit" aria-label="Continue" title="Continue"><i class="cmsIcon cmsIcon-check"></i></button>
+	</div>
+	<?php if (!$approve) { ?>
+		<div class="remoteSwitch">
+			<button type="button" class="button" data-qr-start><i class="cmsIcon cmsIcon-object-scan"></i> Scan QR code</button>
+		</div>
+	<?php } ?>
+</form>

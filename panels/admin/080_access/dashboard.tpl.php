@@ -1,8 +1,8 @@
 <?php
-/** Dashboard: the last sign-ins, from the login log. @var \Systopic\System\Panels\PanelNode $this */
+/** Dashboard: the last sign-ins, from the sign-in log. @var \Systopic\System\Panels\PanelNode $this */
 
 use Systopic\Db\Scope;
-use Systopic\System\Auth\LoginLog;
+use Systopic\System\Auth\SignInLog;
 use Systopic\System\Auth\Portrait;
 use Systopic\System\Auth\Presence;
 use Systopic\System\Panels\Root\Admin\Panel as Cms;
@@ -71,7 +71,7 @@ $users = [];
 foreach (UserAdmin::of(\Systopic\Db\Scope::default())->users as $user) {
 	$users[mb_strtolower((string) $user->name)] = $user;
 }
-$signIns = array_slice(array_values(array_filter(LoginLog::entries(), static fn(array $parts): bool => $parts[2] === 'logged in')), 0, 5);
+$signIns = array_slice(array_values(array_filter(SignInLog::entries(), static fn(array $parts): bool => $parts[2] === 'signed in')), 0, 5);
 ?>
 <?php if ($signIns === []) { ?>
 	<main><p class="hint">No sign-ins logged yet.</p></main>
@@ -98,7 +98,7 @@ $signIns = array_slice(array_values(array_filter(LoginLog::entries(), static fn(
 					<?php } ?>
 					<span><strong><?= $e($shown) ?></strong><small><?= $e(implode(' · ', array_filter([
 						Cms::ago(\DateTime::createFromFormat('d.m.Y-H:i:s', $date)?->format('Y-m-d H:i:s')),
-						$method !== '' ? LoginLog::methodLabel($method) : '',
+						$method !== '' ? SignInLog::methodLabel($method) : '',
 					]))) ?></small></span>
 				</div>
 			</li>
@@ -108,4 +108,4 @@ $signIns = array_slice(array_values(array_filter(LoginLog::entries(), static fn(
 
 
 </div>
-<footer data-signins-tab="recent"<?= $tab !== 'recent' ? ' hidden' : '' ?>><a class="ajax button" href="<?= $e(\http::$root . 'admin/tools/logs/login/') ?>"><i class="cmsIcon cmsIcon-list"></i><span>Login log</span></a></footer>
+<footer data-signins-tab="recent"<?= $tab !== 'recent' ? ' hidden' : '' ?>><a class="ajax button" href="<?= $e(\http::$root . 'admin/tools/logs/signin/') ?>"><i class="cmsIcon cmsIcon-list"></i><span>Sign-in log</span></a></footer>

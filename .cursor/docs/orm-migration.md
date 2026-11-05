@@ -286,13 +286,14 @@ src/Queries/               PageTree (+Level, Node, FoldMode), PageDetail, Branch
                            Translations, NodeChildren, RewritepathLookup, RewritepathIndex,
                            SettingTree, SettingValues, TagGroups (+Panel), TagLinks,
                            UserAdmin, UserLookup, LastLogin, TrashedPages, Duplicates, Sites, SiteOfNode; Params
-panels/admin/                Wurzel (logout, Release-Note-Check), user/, auth/ (+ root/)
+panels/admin/                Wurzel (logout, Release-Note-Check), user/
+panels/auth/                 ganz (+ root/)
 panels/admin/010_pages/      ganz, außer mml/, upload/, editor/file/ und den Actions
                            insertMediaInEditor, getImageEditor (Legacy media)
 panels/admin/030_settings/   010_page (+delete), 040_tags (+edit, join)
 panels/admin/040_backup/     kein ORM-Stoff außer dem Restore (Db\Schema\Restore)
-panels/admin/080_users/      users/ (+edit), permissions/ (+edit)
-panels/admin/090_tools/      020_database/{status,audit}, 030_maintenance/{trash,duplicates,rewrite},
+panels/admin/080_access/     users/ (+edit), content/ (+edit)
+panels/admin/090_tools/      020_database/{status,audit}, 040_cleanup/{trash,duplicates}, 035_website/paths,
                            010_system, 060_polyfill, logs/php — ohne DB
 ```
 
@@ -350,7 +351,7 @@ In der Reihenfolge, in der es sinnvoll ist:
    `users::toUserList()`, `groups::toGroupList()`, `userRoles::toRolesList()`
    haben keinen Aufrufer mehr.
 4. **Übrige Panels**: `020_shop`, `050_statistics`, `070_email`,
-   `090_tools/030_maintenance/media`, `090_tools/logs/email`.
+   `090_tools/070_media`, `090_tools/logs/email`.
 5. **pwk**: eigene Tabellen und Panels, nach Abschnitt 1. **spaceticker**:
    erledigt 2026-10-12 (`../plans/spaceticker-orm.plan.md`), läuft ohne
    `systopic/system-legacy`.
@@ -412,7 +413,7 @@ Klein, gefunden und nicht angefasst:
 - `admin/users`: `UserAdmin.sql` sind fünf Anweisungen in einem Roundtrip —
   in der MySQL-Zählung (`Questions`) +4 gegenüber vorher, in Roundtrips
   gleich.
-- Die Panel-JS in `080_users/panel.js` (`onUpdateRoles`) ist Legacy und
+- Die Panel-JS in `080_access/panel.js` (`onUpdateRoles`) ist Legacy und
   unangetastet.
 - Der Legacy-Rest in `lib/` liest Wurzeln als `= 0` (`nodeSql.php`,
   `tree.sql`, `setting.sql`); das Frontend-Fallback in `UrlResolver` ist auf

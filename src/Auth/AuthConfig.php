@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Systopic\System\Auth;
 
 use Systopic\System\Config\Config;
+use Systopic\System\Settings\EnvironmentFile;
 
 /**
  * The "auth" block of the instance's config (<Instance>.config.json or
@@ -13,8 +14,8 @@ use Systopic\System\Config\Config;
  *   "auth": {"secret": "<at least 32 random characters>",
  *            "deviceDays": 180, "screenDays": null}
  *
- * The secret keys the HMAC of the one-time codes (Auth\LoginCodes); without
- * it there are no codes. Devices work without it.
+ * The secret keys the HMAC of the one-time codes (Auth\SignInCodes). It is made the first
+ * time it is needed. Devices work without it.
  */
 final class AuthConfig
 {
@@ -45,7 +46,27 @@ final class AuthConfig
             return strlen(self::$heldSecret) >= 32 ? self::$heldSecret : null;
         }
         $secret = (string) (self::block()['secret'] ?? '');
-        return strlen($secret) >= 32 ? $secret : null;
+        if (strlen($secret) >= 32) {
+            return $secret;
+        }
+        self::$heldSecret = self::made();
+        return strlen(self::$heldSecret) >= 32 ? self::$heldSecret : null;
+    }
+
+    /**
+     * No key yet: whoever needs one first makes it, in this instance's file.
+     * Two requests at once: `createAuth()` writes under a lock and leaves a
+     * key that is there, so both read the same one back.
+     */
+    private static function made(): string
+    {
+        $file = Config::current() !== null ? EnvironmentFile::activeFile() : null;
+        if ($file === null) {
+            return '';
+        }
+        EnvironmentFile::createAuth($file);
+        $auth = EnvironmentFile::read($file)['auth'] ?? null;
+        return is_array($auth) ? (string) ($auth['secret'] ?? '') : '';
     }
 
     /** How long a person's device lives after its last use. */
@@ -65,10 +86,12 @@ final class AuthConfig
      * Which sign-in the card opens with. Empty means the person picks.
      * Anything else is treated as empty.
      */
-    public static function defaultLoginMethod(): string
+    public static function defaultSignInMethod(): string
     {
-        $method = (string) (self::block()['default_login_method'] ?? '');
-        return in_array($method, ['', 'code', 'device', 'passkey', 'password'], true) ? $method : '';
+        $block = self::block();
+        $method = (string) ($block['defaultSignInMethod'] ?? $block['default_login_method'] ?? '');
+        $method = $method === 'device' ? 'device_code' : $method;
+        return in_array($method, ['', 'code', 'device_code', 'passkey', 'password'], true) ? $method : '';
     }
 
     /**
@@ -88,16 +111,16 @@ final class AuthConfig
         return $freshGet ? '' : $stored;
     }
 
-    public static function loginMethod(?string $chosen): string
+    public static function signInMethod(?string $chosen): string
     {
         if ($chosen === 'choose') {
             return '';
         }
-        $method = ($chosen === null || $chosen === '') ? self::defaultLoginMethod() : $chosen;
-        if (!in_array($method, ['code', 'device', 'passkey', 'password'], true)) {
+        $method = ($chosen === null || $chosen === '') ? self::defaultSignInMethod() : $chosen;
+        if (!in_array($method, ['code', 'device_code', 'passkey', 'password'], true)) {
             return '';
         }
-        if (($method === 'code' || $method === 'device') && !LoginCodes::available()) {
+        if (($method === 'code' || $method === 'device_code') && !SignInCodes::available()) {
             return '';
         }
         if ($method === 'passkey' && !Passkeys::available()) {

@@ -5,7 +5,7 @@ namespace Systopic\System\Panels\Root\Admin;
 
 use Systopic\Db\Scope;
 use Systopic\System\Panels\PanelNode;
-use Systopic\System\Queries\LastLogin\LastLogin;
+use Systopic\System\Queries\LastSignIn\LastSignIn;
 use Systopic\System\Queries\UserAdmin\UserAdmin;
 
 class Panel extends PanelNode {
@@ -65,8 +65,8 @@ class Panel extends PanelNode {
 		if (!defined('RELEASE_NOTE_DATE') || !\Systopic\System\Auth\Session::known() || !\Systopic\System\Auth\Session::id()) {
 			return;
 		}
-		$lastLogin = LastLogin::of($this->scope, (int) \Systopic\System\Auth\Session::id());
-		if (($lastLogin?->getTimestamp() ?? 0) < strtotime(RELEASE_NOTE_DATE)) {
+		$lastSignIn = LastSignIn::of($this->scope, (int) \Systopic\System\Auth\Session::id());
+		if (($lastSignIn?->getTimestamp() ?? 0) < strtotime(RELEASE_NOTE_DATE)) {
 			\http::redirect(\http::$root . 'auth/releases');   // auth/ is no panel below this one
 		}
 	}

@@ -11,14 +11,14 @@ $panel=new class {
  function updateView($view) {check('updates auth main only',$view==='main');}
  function signIn($user,$method){}
  function enterCms($delay,$target=null){$this->redirect=[$delay,$target];}
- function run(){include dirname(__DIR__).'/panels/admin/auth/actions.php';}
+ function run(){include dirname(__DIR__).'/panels/auth/actions.php';}
 };
 $panel->run();
 check('skip displays success instead of password form',$panel->form==='signedIn');
 check('success waits 2 seconds and retains frontend return',$panel->redirect===[2,'/frontend/original/']);
 \Systopic\System\Auth\Session::$active=false;$panel->redirect=[];$panel->run();
 check('inactive skip never grants access',$panel->form==='login'&&$panel->redirect===[]&&\Systopic\System\Auth\Passkeys::$calls===1);
-$panel->action='doLogin';$panel->redirect=[];http::$fields=['passkey_supported'=>'0'];$panel->run();
+$panel->action='doSignIn';$panel->redirect=[];http::$fields=['passkey_supported'=>'0'];$panel->run();
 check('unsupported browser finishes password login without setup offer',$panel->form==='signedIn'&&$panel->redirect===[2,null]&&\Systopic\System\Auth\Passkeys::$offers===0);
 $panel->redirect=[];http::$fields=['passkey_supported'=>'1'];$panel->run();
 check('support is checked per request without an account preference',$panel->form==='passkeySetup'&&$panel->redirect===[]&&\Systopic\System\Auth\Passkeys::$offers===1);

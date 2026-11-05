@@ -58,6 +58,30 @@ class Panel extends CmsPanel {
 		get => (array) (\Systopic\System\Auth\Session::current()->state->fakeRoles ?? []);
 	}
 
+	/**
+	 * Which widget the device boxes of this request belong to: `self`, `screen`
+	 * or `person`. '' when a code came in by link, then every account is offered.
+	 */
+	public string $authKind {
+		get {
+			$kind = (string) (\http::post('kind') ?: \http::dataset('kind') ?: \http::get('kind'));
+			return in_array($kind, ['self', 'screen', 'person'], true) ? $kind : '';
+		}
+	}
+
+	/** The device code of this request went through: its box has nothing left to show. */
+	public bool $deviceAllowed = false;
+
+	/** The message target of the widget that asked. */
+	public string $deviceMessages {
+		get => in_array($this->authKind, ['screen', 'person'], true) ? 'devices' . ucfirst($this->authKind) : 'devices';
+	}
+
+	/** Where the answer to a scanned code goes. */
+	public string $scanFeedback {
+		get => '.scanCodeBox.kind' . ucfirst($this->authKind ?: 'self') . ' [data-remote-feedback]';
+	}
+
 	function getDefaultState() {
 		$state = parent::getDefaultState();
 		$state->hijackerId = NULL;   // set by admin/access' hijackUser, for "Back to my account"

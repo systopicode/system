@@ -13,9 +13,10 @@ WHERE user_id != 1
     AND COALESCE(user_is_blocked, 0) IN (0, 1)
     AND (:id IS NOT NULL OR COALESCE(user_is_blocked, 0) = 0)
     AND (:id IS NOT NULL OR COALESCE(user_type, 'person') != 'screen')
-    -- Names user_appearance so a database from before the column fails
-    -- with 1054 and the provisioner adds it. The comparison is always true.
+    -- Names columns so a database from before them fails with 1054 and the
+    -- provisioner adds them. The comparisons are always true.
     AND COALESCE(user_appearance, 'light') IS NOT NULL
+    AND COALESCE(user_first_sign_in, user_last_sign_in, 0) IS NOT NULL
     AND CASE
         WHEN :id IS NOT NULL THEN user_id = :id
         WHEN :key IS NOT NULL THEN user_activation_key = :key

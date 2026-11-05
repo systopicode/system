@@ -13,7 +13,7 @@ await page.route('**/*',async route=>{
  return route.fulfill({contentType:req.resourceType()==='image'?'image/svg+xml':'text/html',body:req.resourceType()==='image'?'<svg xmlns="http://www.w3.org/2000/svg"/>':'<p>Player fixture</p>'});
 });
 await page.goto('https://cms.example.test/editor');
-await page.addScriptTag({content:await readFile(new URL('../../admin/public/site/embedConsent.js',import.meta.url),'utf8')});
+await page.addScriptTag({content:await readFile(new URL('../../cms/public/site/embedConsent.js',import.meta.url),'utf8')});
 assert.equal(await page.locator('iframe').count(),0);
 assert.equal(requests.filter(r=>/youtube|vimeo/.test(r.url)).length,0,'no provider request before a click');
 assert.equal(requests.find(r=>r.url.includes('dicebear')).referer,undefined,'external image sends no referrer');

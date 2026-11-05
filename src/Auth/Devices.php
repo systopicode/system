@@ -93,7 +93,7 @@ final class Devices
         }
         if ($verdict !== Operator::OK && $verdict !== Operator::GRACED) {
             if ($verdict === Operator::EXPIRED && ($user = UserLookup::byId($scope, (int) $device->relationId('user'))) !== null) {
-                LoginLog::write((string) $user->name, 'logged out', LoginLog::EXPIRED);
+                SignInLog::write((string) $user->name, 'signed out', SignInLog::EXPIRED);
             }
             self::clearCookie();
             return;
@@ -103,7 +103,7 @@ final class Devices
         if (!Session::known()) {
             return;
         }
-        LoginLog::write((string) Session::current()->name, 'logged in', LoginLog::DEVICE);
+        SignInLog::write((string) Session::current()->name, 'signed in', SignInLog::TRUSTED_DEVICE);
         if ($verdict === Operator::OK && Operator::dueForRotation($device, $now)) {
             $secret = bin2hex(random_bytes(32));
             Operator::rotated($device, $secret, $now);
@@ -278,7 +278,7 @@ final class Devices
         $device = DeviceQuery::byId($scope, $id);
         if ($device === null || $device->revokedAt !== null || ($device->expiresAt !== null && $device->expiresAt < $now)) {
             $expired = $device !== null && $device->revokedAt === null;
-            LoginLog::write((string) Session::current()->name, 'logged out', $expired ? LoginLog::EXPIRED : LoginLog::REVOKED);
+            SignInLog::write((string) Session::current()->name, 'signed out', $expired ? SignInLog::EXPIRED : SignInLog::REVOKED);
             self::forget();
             self::clearCookie();
             Session::logout(false);

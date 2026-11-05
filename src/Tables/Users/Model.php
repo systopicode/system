@@ -76,11 +76,11 @@ final class Model extends TableRow
         set => $this->__set__(__PROPERTY__, $value);
     }
 
-    public ?DateTimeImmutable $firstLogin {
+    public ?DateTimeImmutable $firstSignIn {
         get => $this->__get__(__PROPERTY__);
         set => $this->__set__(__PROPERTY__, $value);
     }
-    public ?DateTimeImmutable $lastLogin {
+    public ?DateTimeImmutable $lastSignIn {
         get => $this->__get__(__PROPERTY__);
         set => $this->__set__(__PROPERTY__, $value);
     }
@@ -135,7 +135,7 @@ final class Model extends TableRow
     /**
      * What the account is: a person, or a screen - a device nobody owns (a
      * kiosk, a lobby display). A screen never logs in with a password; it is
-     * paired by a user admin (Auth\LoginCodes, Auth\Devices). Rights come
+     * paired by a user admin (Auth\SignInCodes, Auth\Devices). Rights come
      * from roles either way. null on a row read before the column existed:
      * a person.
      */

@@ -75,7 +75,7 @@ try {
    assert.equal(await page.locator('.tableScroll').evaluate(n=>n.classList.contains('canScrollX')),true);
    assert.equal(await page.locator('.tableScroll').evaluate(n=>getComputedStyle(n).overflowX),'auto');
   }
-  const userCss=await read('panels/admin/080_users/010_users/edit/user.css');
+  const userCss=await read('panels/admin/080_access/010_users/edit/user.css');
   await page.setContent(`<style>${css}\n${userCss}</style><body class="cms"><div class="cmslightbox" style="display:block"><section><main class="userEdit"><div class="userAccount"><div class="cmsBoxBody"><div class="cms message">That username is already in use.</div><div class="accountPhoto">Portrait</div><div class="accountFields">Fields</div></div></div><div class="cmsBoxBody"><button class="cmsBoxMore">Show all devices</button></div></main></section></div></body>`);
   const form=await page.locator('.userAccount .cmsBoxBody').boundingBox(),message=await page.locator('.message').boundingBox(),photo=await page.locator('.accountPhoto').boundingBox(),fields=await page.locator('.accountFields').boundingBox();
   assert.ok(Math.abs(message.width-form.width)<2);
@@ -85,7 +85,7 @@ try {
   await page.setContent('<input id="cmsSearchInput" value="Sport"><ul id="cmsSearchResults"></ul><div class="scrollContainerContent" data-node_id="10"><div class="relationSearch" data-relation="redirect"><input value="Sport"><ul class="relationResults"></ul></div></div>');
   await page.evaluate(()=>{sys.onDocumentReady=()=>{};sys.initEvents=()=>{};sys.core.server={};});
   await page.addScriptTag({content:await read('public/js/core/server/server.command.js')});
-  await page.addScriptTag({content:await read('../admin/panels/admin/010_pages/pages.js')});
+  await page.addScriptTag({content:await read('../cms/panels/admin/010_pages/pages.js')});
   await page.locator('#cmsSearchInput').focus();
   await page.evaluate(()=>{window.searchBefore=document.querySelector('#cmsSearchInput');updatePageSearchResults('Start','<li>stale</li>');});
   assert.equal(await page.locator('#cmsSearchResults').innerText(),'');
@@ -130,7 +130,7 @@ try {
   await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(()=>requestAnimationFrame(resolve)))));
   assert.ok(await page.locator('[data-relation-section="aliases"]').evaluate(n=>Math.abs(n.getBoundingClientRect().top-n.closest('.scrollContainer').getBoundingClientRect().top-8)<2));
   await page.waitForFunction(()=>{const n=document.querySelector('li.active > label'),a=n.getBoundingClientRect(),b=n.closest('div.tree').getBoundingClientRect();return a.top>=b.top&&a.bottom<=b.bottom;});
-  const pagesCss=await read('../admin/panels/admin/010_pages/panel.css');
+  const pagesCss=await read('../cms/panels/admin/010_pages/panel.css');
   await page.setContent(`<style>${css}\n${pagesCss}</style><body class="cms"><aside class="cms"><div class="pageRelations"><ul class="relationIncoming"><li><a class="sideAction relationLink"><span>Alias</span></a><button class="button transparent icononly small" id="remove-relation">Remove</button></li></ul></div></aside><button class="button" id="normal-button">Normal</button></body>`);
   const radius=await page.locator('#normal-button').evaluate(n=>getComputedStyle(n).borderRadius);
   assert.equal(await page.locator('#remove-relation').evaluate(n=>getComputedStyle(n).borderLeftWidth),'0px');
@@ -141,7 +141,7 @@ try {
   await page.setContent(`<style>${css}</style><body class="cms"><ul class="contextmenu mediaContextMenu"><li class="iconsonly"><ul>${['crop-simple','eye','arrow-down-to-line','trash'].map(icon=>`<li class="iconOnly"><a><i class="cmsIcon cmsIcon-${icon}"></i></a></li>`).join('')}</ul></li></ul></body>`);
   assert.ok(await page.locator('.mediaContextMenu').evaluate(el=>el.getBoundingClientRect().width)<220,'media icon menu has no empty text-column width');
   assert.ok(await page.locator('.mediaContextMenu').evaluate(el=>{const box=el.getBoundingClientRect(),actions=el.querySelectorAll('a'),first=actions[0].getBoundingClientRect(),last=actions[actions.length-1].getBoundingClientRect();return Math.abs((first.left-box.left)-(box.right-last.right))<1;}),'media menu has equal left and right padding');
-  const mediaCss=await read('../admin/panels/admin/010_pages/pages.mml.css');
+  const mediaCss=await read('../cms/panels/admin/010_pages/pages.mml.css');
   await page.setContent(`<style>${css}\n${mediaCss}</style><body class="cms"><aside class="cms" style="width:280px"><div class="mediaDrop shareImage"></div></aside></body>`);
   assert.ok(await page.locator('.mediaDrop.shareImage').evaluate(n=>n.getBoundingClientRect().height)>80,'empty share-image drop keeps its height');
   await page.close();

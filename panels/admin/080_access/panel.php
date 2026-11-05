@@ -25,7 +25,6 @@ class Panel extends CmsPanel {
 		// in a sibling panel - and app.php renders the whole body as soon as a
 		// single view is marked (see app.php, http::ajax() branch).
 		if ($this->inPath()) {
-			\Systopic\System\Auth\SignInRights::ensure($this->scope);
 			$this->updateView('pylon');
 		}
 		$this->rememberOrOpenChild();

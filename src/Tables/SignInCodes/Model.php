@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Systopic\System\Tables\LoginCodes;
+namespace Systopic\System\Tables\SignInCodes;
 
 use DateTimeImmutable;
 use Systopic\Db\Schema\Col;
@@ -11,35 +11,24 @@ use Systopic\Db\TableRow;
 use Systopic\System\Tables\Users\Model as User;
 
 /**
- * A one-time code — `usm_logincodes`. Typed into the app (a link or QR code
- * only fills the field), so it also works in an installed iOS web app, which
- * does not share cookies with Safari.
+ * A one-time code — `usm_signincodes`. Typed in (a link or QR code only fills
+ * the field), so it also works in an installed iOS web app, which does not
+ * share cookies with Safari.
  *
  * Only the HMAC of the code is stored, keyed with `auth.secret` from the
  * config: a code is looked up by it, and a leaked table alone gives nothing.
  *
- *   invite       a user admin invites a person, 24 h
- *   recover      back in after the app was deleted, from an admin or by mail, 10 min
- *   pair         "add a device" on a device that is logged in, 10 min
- *   pair_screen  a screen shows it, a user admin approves it, 10 min; the
- *                screen polls with its own secret (`pollHash`) and has no
- *                user until the approval names one
- *   pair_user    remote login: the new device shows it, the signed-in person
- *                allows it, 10 min. Same poll, and the approval names that person
+ * A code has no purpose. It names an account from the start, or it is a
+ * device code (`pollHash`, see `Auth\DeviceCode`) and gets its account when
+ * someone approves it.
  */
 final class Model extends TableRow
 {
-    public const TABLE        = 'logincodes';
+    public const TABLE        = 'signincodes';
     public const TABLE_PREFIX = 'usm';
-    public const PREFIX       = 'logincode';
+    public const PREFIX       = 'signincode';
 
     public ?User $user {
-        get => $this->__get__(__PROPERTY__);
-        set => $this->__set__(__PROPERTY__, $value);
-    }
-
-    #[Col(length: 12)]
-    public ?string $purpose {
         get => $this->__get__(__PROPERTY__);
         set => $this->__set__(__PROPERTY__, $value);
     }
@@ -50,7 +39,7 @@ final class Model extends TableRow
         set => $this->__set__(__PROPERTY__, $value);
     }
 
-    /** sha256 of the secret a pairing screen polls with. */
+    /** sha256 of the secret a device polls with. Only a device code has one. */
     #[Col(length: 64, index: Index::Plain)]
     public ?string $pollHash {
         get => $this->__get__(__PROPERTY__);
@@ -79,7 +68,7 @@ final class Model extends TableRow
         set => $this->__set__(__PROPERTY__, $value);
     }
 
-    /** pair_screen: when a user admin approved it, and who. */
+    /** Device code: when someone named its account, and who. */
     public ?DateTimeImmutable $approvedAt {
         get => $this->__get__(__PROPERTY__);
         set => $this->__set__(__PROPERTY__, $value);
@@ -87,6 +76,19 @@ final class Model extends TableRow
 
     #[Col(unsigned: true)]
     public ?int $approvedBy {
+        get => $this->__get__(__PROPERTY__);
+        set => $this->__set__(__PROPERTY__, $value);
+    }
+
+    /** Device code: what can be read about the device that asks, for the one who approves. */
+    #[Col(length: 45)]
+    public ?string $ip {
+        get => $this->__get__(__PROPERTY__);
+        set => $this->__set__(__PROPERTY__, $value);
+    }
+
+    #[Col(length: 255)]
+    public ?string $userAgent {
         get => $this->__get__(__PROPERTY__);
         set => $this->__set__(__PROPERTY__, $value);
     }

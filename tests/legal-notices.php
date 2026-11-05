@@ -15,11 +15,11 @@ foreach ([$system, $cms] as $root) {
 check('package license texts agree', file_get_contents($cms . '/LICENSE') === Release::license());
 check('earlier license grants remain unaffected', str_contains(Release::license(), 'does not revoke rights already granted'));
 $render = static function(string $file): string {ob_start(); try {include $file; return ob_get_contents();} finally {ob_end_clean();}};
-$license = $render($system . '/panels/admin/auth/license.tpl.php');
+$license = $render($system . '/panels/auth/license.tpl.php');
 check('GUI displays the actual selected license', str_contains($license, 'systopic Software License') && str_contains($license, 'Third-party software'));
-$privacy = $render($system . '/panels/admin/auth/privacy.tpl.php');
+$privacy = $render($system . '/panels/auth/privacy.tpl.php');
 check('privacy renders without project configuration', str_contains($privacy,'<main class="authText">') && str_contains($privacy,'<div class="authScroll">'));
-check('privacy matches purpose-based log retention and actual cookie lifetime', str_contains($privacy,'login-log entries older than 365 days eligible for automatic deletion') && str_contains($privacy,'maximum lifetime of 400 days'));
+check('privacy matches purpose-based log retention and actual cookie lifetime', str_contains($privacy,'sign-in log entries older than 365 days eligible for automatic deletion') && str_contains($privacy,'maximum lifetime of 400 days'));
 check('retention criteria and installation duties are explicit', str_contains($privacy, 'detection and investigation window') && str_contains($privacy, 'define and document review intervals') && str_contains($privacy, 'not a scheduled daily deletion'));
 check('consent and rights are not replaced by a notice', str_contains($privacy, 'requests must be prevented until it has been given') && str_contains($privacy, 'Signing in does not waive') && str_contains($privacy, 'particular situation'));
 check('browser storage is covered', str_contains($privacy,'cmsDeviceMobile') && str_contains($privacy,'cmsTimezone') && str_contains($privacy,'cmsOpenSheet'));
@@ -56,7 +56,7 @@ try {
     ProjectSettings::apply('page', $data);
     check('project privacy URL loaded', LegalLinks::url('privacy') === 'https://example.org/cms-privacy/');
     check('empty imprint uses frontend root', LegalLinks::url('imprint') === '/example/imprint/');
-    $customPrivacy = $render($system . '/panels/admin/auth/privacy.tpl.php');
+    $customPrivacy = $render($system . '/panels/auth/privacy.tpl.php');
     check('operator details rendered escaped with line breaks', str_contains($customPrivacy, 'Example &amp; Co<br') && str_contains($customPrivacy, 'contact@example.org'));
     check('no appointed DPO is implied for blank details', !str_contains($customPrivacy, '<b>Data protection officer:</b>'));
     check('privacy template uses project destination', str_contains($customPrivacy, 'href="https://example.org/cms-privacy/"'));

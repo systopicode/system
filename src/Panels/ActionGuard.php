@@ -49,7 +49,7 @@ final class ActionGuard
     /**
      * The method of the panel a request names, when it is meant as one
      * (`#[Action]`); null when there is none — or when there is one without
-     * the attribute that actions.php runs instead (`case 'loginMethod'`).
+     * the attribute that actions.php runs instead (`case 'signInMethod'`).
      *
      * @param string|null $actionsDir the folder of the panel's actions.php; the current one, as for runActions()
      * @throws ActionRefused a public method of that name without `#[Action]`, and nothing else runs the action

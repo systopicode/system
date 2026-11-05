@@ -12,13 +12,13 @@ const counter=join(root,'logout-count');
 await writeFile(join(root,'router.php'),`<?php
 namespace Systopic\\System\\Auth {
  class Session {static function current(){return (object)['name'=>'Test'];}static function logout(){file_put_contents(${quote(counter)},'logout\\n',FILE_APPEND);}}
- class LoginLog {const LOGOUT_BUTTON='button';static function write(...$args){}}
+ class SignInLog {const SIGN_OUT_BUTTON='button';static function write(...$args){}}
 }
 namespace {
  require ${quote(system+'lib/class/http/helper/httpHelper.php')};
  class http extends httpHelper {static $root='/project/';static function ajax(){return false;}}
  $path=parse_url($_SERVER['REQUEST_URI'],PHP_URL_PATH);
- if($path==='/project/admin/auth/logout'){echo '<h1>Signed out</h1>';exit;}
+ if($path==='/project/auth/logout'){echo '<h1>Signed out</h1>';exit;}
  $panel=new class {
   public $href='/project/admin/user/';public $action='logout';
   function controls(){include ${quote(system+'panels/admin/user/controls.tpl.php')};}
@@ -42,7 +42,7 @@ try{
  assert.equal(await page.getByRole('link',{name:'Log out'}).getAttribute('target'),'_self');
  const response=page.waitForResponse(res=>res.url().endsWith('/user/logout'));
  await page.getByRole('link',{name:'Log out'}).click();
- await page.waitForURL('**/admin/auth/logout');
+ await page.waitForURL('**/auth/logout');
  assert.equal((await response).status(),302);
  assert.equal((await response).headers()['refresh'],undefined,'no delayed render-and-refresh');
  assert.equal(await page.getByRole('heading').innerText(),'Signed out');

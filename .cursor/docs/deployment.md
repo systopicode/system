@@ -138,7 +138,8 @@ Weg. Mediendateien also nicht gesondert kopieren oder als fehlend melden
 ## 5. Je Server: Mail und Login (seit systopic/system 1.3)
 
 In `config/<Instance>.config.json` oder `config/config.local.json` des
-Servers, nie in Git (Doku: [auth-devices.md](auth-devices.md)):
+Servers, nie in Git (Doku: [auth-devices.md](auth-devices.md)). Die DEV-Configs
+dürfen ins private Projekt-Repo, auch mit `auth.secret` (Benutzer, 2026-11-04):
 
 ```json
 "mail": {"host": "smtp.systopic.net", "port": 587, "secure": "tls",
@@ -148,8 +149,8 @@ Servers, nie in Git (Doku: [auth-devices.md](auth-devices.md)):
 
 - Ohne `mail` versendet ein Server **nichts** (Fehler im Log); DEV ohne Block
   schickt an Mailpit (`127.0.0.1:1025`).
-- Ohne `auth.secret` gibt es keine Einmal-Codes; das CMS zeigt dann die alte
-  Aktivierungs-Mail. Ein Secret erzeugen:
-  `php -r "echo bin2hex(random_bytes(32));"`
+- `auth.secret` entsteht von selbst, sobald es gebraucht wird, in der Datei der
+  Instanz. Dafür muss der Webserver sie schreiben dürfen. Überschreibt ein Sync
+  die Datei, entsteht ein neues. Das trifft nur Codes, die gerade unterwegs sind.
 - Der Systemcheck im CMS (Tools → System) zeigt beides.
-- Erst die Blöcke eintragen, dann die neue `system`-Version ausrollen.
+- Erst den `mail`-Block eintragen, dann die neue `system`-Version ausrollen.

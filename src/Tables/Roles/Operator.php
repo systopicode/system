@@ -34,11 +34,13 @@ final class Operator
      *   cmsEditor      edits pages and content, the page tree included
      *   cmsPageEditor  edits pages, but only orders them in the tree:
      *                  never gives a page another parent
+     *   screenOperator pairs screens, and sees nothing else of admin/access
      */
     public const SYSTEM = [
         'cmsAdmin'      => 'CMS Admin',
         'cmsEditor'     => 'CMS Editor',
         'cmsPageEditor' => 'CMS Page Editor',
+        'screenOperator' => 'Screen Operator',
     ];
 
     /** What a key looks like: a letter, then letters and digits (camelCase). */

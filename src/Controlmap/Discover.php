@@ -25,6 +25,14 @@ use Systopic\System\Panels\Tree\PanelTree;
  */
 final class Discover
 {
+    /**
+     * The roots of the tree, set as they are added: the controlmap is asked
+     * while the tree is being built and `PanelTree::getInstance()` is still null.
+     *
+     * @var list<PanelRootFolder>
+     */
+    public static array $treeRoots = [];
+
     /** @param list<PanelRootFolder> $roots in registration order */
     public function __construct(private readonly array $roots) {}
 
@@ -100,11 +108,22 @@ final class Discover
         return $dirs;
     }
 
+    /**
+     * The folders of the panel tree's root: it has no altPaths of its own, and
+     * its `panel.config.json` lies in every package and in the project.
+     *
+     * @return list<string>
+     */
+    public static function rootFolders(): array
+    {
+        return array_map(static fn(PanelRootFolder $root): string => (string) $root->dir, self::$treeRoots);
+    }
+
     /** The package a folder belongs to — `system`, `cms` … — or `project`. */
     public static function origin(string $absPath): string
     {
         $path = str_replace('\\', '/', $absPath);
-        if (preg_match('~/(?:packages|vendor/systopic)/([^/]+)/panels/~i', $path, $m)) {
+        if (preg_match('~/(?:packages|vendor/systopic)/([^/]+)/panels(?:/|$)~i', $path, $m)) {
             return strtolower($m[1]);
         }
         return 'project';

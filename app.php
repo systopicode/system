@@ -195,8 +195,8 @@ if (http::ajax()) {
 				//
 				// Every other template renders from inside its own folder
 				// (PanelNavigator::openRoot → fs::openDir), so a template may
-				// include a sibling or a parent relatively — admin/auth/head.tpl.php
-				// does exactly that. Included from here without changing
+				// include a sibling or a parent relatively.
+				// Included from here without changing
 				// directory, that relative path resolves against the project
 				// root and the whole <head> is silently lost: no css, no js,
 				// no clientData — and the client renders nothing into the

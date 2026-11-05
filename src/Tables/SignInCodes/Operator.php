@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Systopic\System\Tables\LoginCodes;
+namespace Systopic\System\Tables\SignInCodes;
 
 use DateTimeImmutable;
 use Systopic\System\Tables\Users\Model as User;
@@ -21,21 +21,13 @@ final class Operator
     public const ALPHABET = '0123456789ABCDEFGHJKMNPQRSTVWXYZ';
     public const LENGTH   = 8;
 
-    public const INVITE      = 'invite';
-    public const RECOVER     = 'recover';
-    public const PAIR        = 'pair';
-    public const PAIR_SCREEN = 'pair_screen';
-    /** The new device shows it. The signed-in person allows it and becomes that device. */
-    public const PAIR_USER   = 'pair_user';
-
-    /** Seconds a code of each purpose lives. */
-    public const LIFETIMES = [
-        self::INVITE      => 86_400,
-        self::RECOVER     => 600,
-        self::PAIR        => 600,
-        self::PAIR_SCREEN => 600,
-        self::PAIR_USER   => 600,
-    ];
+    /**
+     * Seconds a code lives. An invitation has to survive a night in the inbox.
+     * A device code renews itself on the page that shows it, so it can be short.
+     */
+    public const LIFETIME             = 600;
+    public const DEVICE_CODE_LIFETIME = 120;
+    public const INVITATION_LIFETIME  = 86_400;
 
     public static function generate(): string
     {
@@ -65,34 +57,39 @@ final class Operator
     }
 
     public static function created(
-        string $purpose,
         ?User $user,
         ?int $createdBy,
         string $codeHash,
         ?string $pollHash,
+        int $lifetime,
         DateTimeImmutable $now,
+        ?string $ip = null,
+        ?string $userAgent = null,
     ): Model {
-        if (!isset(self::LIFETIMES[$purpose])) {
-            throw new \InvalidArgumentException("login code: unknown purpose '$purpose'");
-        }
         $code = new Model();
         $code->user = $user;
-        $code->purpose = $purpose;
         $code->codeHash = $codeHash;
         $code->pollHash = $pollHash;
         $code->createdBy = $createdBy;
         $code->createdAt = $now;
-        $code->expiresAt = $now->modify('+' . self::LIFETIMES[$purpose] . ' seconds');
+        $code->expiresAt = $now->modify('+' . $lifetime . ' seconds');
+        $code->ip = $ip;
+        $code->userAgent = $userAgent;
         return $code;
     }
 
-    /** Not spent, not expired, and of one of these purposes. @param list<string> $purposes */
-    public static function usable(?Model $code, array $purposes, DateTimeImmutable $now): bool
+    /** Not spent and not expired. */
+    public static function usable(?Model $code, DateTimeImmutable $now): bool
     {
         return $code !== null
             && $code->usedAt === null
-            && $code->expiresAt !== null && $code->expiresAt >= $now
-            && in_array($code->purpose, $purposes, true);
+            && $code->expiresAt !== null && $code->expiresAt >= $now;
+    }
+
+    /** A device shows it and polls for it. It has no account until someone names one. */
+    public static function isDeviceCode(Model $code): bool
+    {
+        return $code->pollHash !== null;
     }
 
     public static function used(Model $code, DateTimeImmutable $now): Model
@@ -101,10 +98,10 @@ final class Operator
         return $code;
     }
 
-    /** pair_screen: a user admin names the screen. pair_user: the signed-in person names the account the device becomes. */
-    public static function approved(Model $code, User $screen, int $approvedBy, DateTimeImmutable $now): Model
+    /** Someone named the account the waiting device becomes. */
+    public static function approved(Model $code, User $account, int $approvedBy, DateTimeImmutable $now): Model
     {
-        $code->user = $screen;
+        $code->user = $account;
         $code->approvedAt = $now;
         $code->approvedBy = $approvedBy;
         return $code;

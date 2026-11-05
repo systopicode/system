@@ -1,7 +1,7 @@
 /* global sys */
 (function () {
 	var setup = {
-		info: 'Login log',
+		info: 'Sign-in log',
 		route: 'panels.admin.tools.logs.login',
 		extends: 'panels.admin',
 	};

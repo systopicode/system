@@ -1,7 +1,7 @@
 /* global sys */
 (function () {
     const setup = {info: 'CMS authentication', route: 'panels.admin.auth', extends: 'classes.panelNode'};
-    let screenPollTimer = null;
+    let deviceCodeTimer = null;
     let authSlide = null;
     let resetEmail = '';
     const slideEase = 'transform 0.32s cubic-bezier(0.32, 0.72, 0, 1)';
@@ -79,25 +79,25 @@
             sys.passkeys.attachAutofill();
             sys.passkeys.startIfAuto();
         }
-        if (screenPollTimer || !document.querySelector('[data-screen-pairing]')) return;
+        if (deviceCodeTimer || !document.querySelector('[data-device-code]')) return;
         const url = location.pathname;
-        screenPollTimer = setInterval(() => {
-            const block = document.querySelector('[data-screen-pairing]');
+        deviceCodeTimer = setInterval(() => {
+            const block = document.querySelector('[data-device-code]');
             if (!block || location.pathname !== url) {
-                clearInterval(screenPollTimer);
-                screenPollTimer = null;
+                clearInterval(deviceCodeTimer);
+                deviceCodeTimer = null;
                 return;
             }
             if (!block.offsetParent || document.visibilityState === 'hidden') return;
-            fetch(url, {headers: {'X-Screen-Poll': '1'}, credentials: 'same-origin', cache: 'no-store'})
+            fetch(url, {headers: {'X-Device-Code-Poll': '1'}, credentials: 'same-origin', cache: 'no-store'})
                 .then(response => response.json())
                 .then(answer => {
                     if (answer.paired) {
-                        clearInterval(screenPollTimer);
+                        clearInterval(deviceCodeTimer);
                         sys.passkeys.showSignedIn(block, answer.profile, answer.redirect);
                         setTimeout(() => { location.href = answer.redirect; }, 2000);
                     } else if (answer.expired) {
-                        clearInterval(screenPollTimer);
+                        clearInterval(deviceCodeTimer);
                         location.reload();
                     }
                 })

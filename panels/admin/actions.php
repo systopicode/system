@@ -10,7 +10,7 @@ switch ($this->action) {
 		$user = UserAdmin::of($this->scope)->user((int) \Systopic\System\Auth\Session::id());
 		if ($user) {
 			$this->scope->save(UserOperator::stamped($user));
-			\Systopic\System\Auth\LoginLog::write(\Systopic\System\Auth\Session::current()->name, 'logged out', \Systopic\System\Auth\LoginLog::LOGOUT_BUTTON);
+			\Systopic\System\Auth\SignInLog::write(\Systopic\System\Auth\Session::current()->name, 'signed out', \Systopic\System\Auth\SignInLog::SIGN_OUT_BUTTON);
 		}
 		\Systopic\System\Auth\Session::logout();
 		// ?to= the page of the website the edit bar was on, only below the site root

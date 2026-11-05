@@ -3,13 +3,12 @@
 /** @var \Systopic\System\Panels\Root\Admin\User\Panel $this */
 
 use Systopic\System\Auth\Devices;
-use Systopic\System\Auth\LoginCodes;
 use Systopic\System\Auth\Portrait;
 use Systopic\System\Auth\Session;
+use Systopic\System\Auth\SignInCodes;
+use Systopic\System\Auth\SignInGrant;
 use Systopic\System\Queries\Devices\Devices as DeviceQuery;
 use Systopic\System\Queries\UserLookup\UserLookup;
-use Systopic\System\Tables\LoginCodes\Operator as Codes;
-use Systopic\System\Tables\Users\Model as User;
 use Systopic\System\Tables\Users\Operator as UserOperator;
 
 if (str_starts_with((string) $this->action, 'passkey')) {
@@ -21,7 +20,7 @@ switch ($this->action) {
 		// signed out as a taken-on user: no way back for whoever signs in next
 		$this->state->hijackerId = NULL;
 		$this->state->hijackedId = NULL;
-		\Systopic\System\Auth\LoginLog::write(\Systopic\System\Auth\Session::current()->name, 'logged out', \Systopic\System\Auth\LoginLog::LOGOUT_BUTTON);
+		\Systopic\System\Auth\SignInLog::write(\Systopic\System\Auth\Session::current()->name, 'signed out', \Systopic\System\Auth\SignInLog::SIGN_OUT_BUTTON);
 		\Systopic\System\Auth\Session::logout();
 		// A full document, so the sign-in page brings its own styles.
 		// An ajax answer only swaps the markup and leaves the auth sheet out.
@@ -89,7 +88,7 @@ switch ($this->action) {
 		if ($back !== NULL && $back->isSuperuser) {
 			Session::logout(false);   // back to the superuser, same device
 			Session::login($back);
-			\Systopic\System\Auth\LoginLog::write(Session::current()->name, 'logged in', \Systopic\System\Auth\LoginLog::SWITCH);
+			\Systopic\System\Auth\SignInLog::write(Session::current()->name, 'signed in', \Systopic\System\Auth\SignInLog::SWITCH);
 			if (session_status() === PHP_SESSION_ACTIVE) {
 				session_write_close();
 			}
@@ -102,84 +101,54 @@ switch ($this->action) {
 		\http::redirect('./');
 		break;
 
-	case 'checkRemote':
-		$input = (string) \http::post('screen', '');
-		if (!LoginCodes::available() || LoginCodes::peek($input, [Codes::PAIR_USER, Codes::PAIR_SCREEN]) === null) {
-			\message::error('That code is wrong or has expired.')->target('remoteLogin');
-			\clientDocument::replaceInner('.remoteLoginBox [data-remote-feedback]', \message::flush('remoteLogin'));
+	case 'createDeviceCode':
+		$account = $this->me ? SignInGrant::account($this->scope, $this->me, $this, (int) \http::post('account', 0)) : null;
+		if ($account === null || !SignInCodes::available()) {
+			\message::error('That account cannot be signed in.')->target('addDevice');
+		} else {
+			SignInCodes::offer($account, (int) $this->me->id);
+		}
+		$this->updateView('main');
+		break;
+
+	case 'newDeviceCode':
+		SignInCodes::dropOffer();
+		$this->updateView('main');
+		break;
+
+	case 'checkDeviceCode':
+		if (!SignInCodes::available() || SignInCodes::peekDeviceCode((string) \http::post('deviceCode', '')) === null) {
+			\message::error('That code is wrong or has expired.')->target('deviceBox');
+			\clientDocument::replaceInner($this->scanFeedback, \message::flush('deviceBox'));
 		} else {
 			$this->updateView('main');
 		}
 		break;
 
-	case 'approveRemote':
+	case 'approveDeviceCode':
 		$me = $this->me;
-		$input = (string) \http::post('code', '');
-		$ok = false;
-		$told = false;
-		if (!$me || !LoginCodes::available()) {
-			\message::error('Codes are not set up on this server.')->target('remoteLogin');
-			$told = true;
-		} else {
-			$code = LoginCodes::peek($input, [Codes::PAIR_USER, Codes::PAIR_SCREEN]);
-			if ($code === null) {
-				\message::error(LoginCodes::$error === LoginCodes::BLOCKED
-					? 'Too many attempts. Please try again in 15 minutes.'
-					: 'That code is wrong or has expired.')->target('remoteLogin');
-				$told = true;
-			} elseif ($code->purpose === Codes::PAIR_SCREEN) {
-				$allowed = Session::hasRole('cmsAdmin') || \Systopic\System\Auth\SignInRights::allows($this->scope, $me, \Systopic\System\Auth\SignInRights::SCREENS);
-				$screen = $allowed ? UserLookup::byId($this->scope, (int) \http::post('screen', 0)) : null;
-				$screenOk = $screen !== null && $screen->type === User::SCREEN && $screen->isActive && (int) $screen->id > 1;
-				if (!$allowed) {
-					\message::error('Signing in a screen takes the authScreens permission.')->target('remoteLogin');
-					$told = true;
-				} elseif (!$screenOk) {
-					\message::error('That account cannot be signed in.')->target('remoteLogin');
-					$told = true;
-				} else {
-					$ok = LoginCodes::approveScreen($input, $screen, (int) Session::id());
-				}
-			} else {
-				$posted = (int) \http::post('person', 0);
-				$target = $me;
-				if ($posted > 0 && $posted !== (int) $me->id) {
-					$allowed = \Systopic\System\Auth\SignInRights::allows($this->scope, $me, \Systopic\System\Auth\SignInRights::PERSONS);
-					$other = $allowed ? UserLookup::byId($this->scope, $posted) : null;
-					$personOk = $other !== null
-						&& (int) $other->id > 1
-						&& $other->isActive
-						&& ($other->type === null || $other->type === '' || $other->type === User::PERSON)
-						&& (!$other->isSuperuser || $me->isSuperuser);
-					if (!$allowed) {
-						\message::error('You can only sign this device in as yourself.')->target('remoteLogin');
-						$told = true;
-					} elseif ($other !== null && $other->isSuperuser && !$me->isSuperuser) {
-						\message::error('Only a superuser can sign in as a superuser.')->target('remoteLogin');
-						$told = true;
-					} elseif (!$personOk) {
-						\message::error('That account cannot be signed in.')->target('remoteLogin');
-						$told = true;
-					} else {
-						$target = $other;
-					}
-				}
-				if (!$told) {
-					$ok = LoginCodes::approvePerson($input, $target, $me);
-				}
-			}
-		}
-		if ($ok) {
-			\message::confirm('Allowed. The other device signs in within a few seconds.')->target('devices');
+		$account = $me ? SignInGrant::account($this->scope, $me, $this, (int) \http::post('account', 0)) : null;
+		if ($account === null) {
+			\message::error('That account cannot be signed in.')->target('deviceBox');
+		} elseif (SignInCodes::approve((string) \http::post('deviceCode', ''), $account, $me)) {
+			$this->deviceAllowed = true;
+			\message::confirm('Allowed. The other device signs in within a few seconds.')->target($this->deviceMessages);
 			\http::redirect($this->href);
 			break;
-		}
-		if (!$told) {
-			\message::error(LoginCodes::$error === LoginCodes::BLOCKED
+		} else {
+			\message::error(SignInCodes::$error === SignInCodes::BLOCKED
 				? 'Too many attempts. Please try again in 15 minutes.'
-				: 'That code is wrong or has expired.')->target('remoteLogin');
+				: 'That code is wrong or has expired.')->target('deviceBox');
 		}
-		\clientDocument::replaceInner('.remoteLoginBox [data-remote-feedback]', \message::flush('remoteLogin'));
+		\clientDocument::replaceInner($this->scanFeedback, \message::flush('deviceBox'));
+		break;
+
+	case 'revokeOtherDevices':
+		if ($this->me) {
+			Devices::revokeAllOf((int) $this->me->id, Devices::current()?->id, 'user');
+			\message::confirm('Your other devices are signed out.')->target('devices');
+		}
+		$this->updateView('main');
 		break;
 
 	case 'revokeOwnDevice':
@@ -187,6 +156,16 @@ switch ($this->action) {
 		if ($device !== null && $this->me && (int) $device->relationId('user') === (int) $this->me->id) {
 			Devices::revoke($device, 'user');
 			\message::confirm('Device signed out.')->target('devices');
+		}
+		$this->updateView('main');
+		break;
+
+	case 'revokeScreenDevice':
+		$device = DeviceQuery::byId($this->scope, (int) \http::dataset('device_id'));
+		$screen = $device !== null && $this->me ? SignInGrant::account($this->scope, $this->me, $this, (int) $device->relationId('user')) : null;
+		if ($screen?->type === \Systopic\System\Tables\Users\Model::SCREEN) {
+			Devices::revoke($device, 'admin');
+			\message::confirm('Device signed out.')->target('devicesScreen');
 		}
 		$this->updateView('main');
 		break;

@@ -16,7 +16,7 @@ use Systopic\System\Tables\UsersAtRoles\Model as UserAtRole;
 final class Operator
 {
     /** Columns the user list can be sorted by: request key => property. */
-    public const SORTABLE = ['id' => 'id', 'name' => 'name', 'email' => 'email', 'last_login' => 'lastLogin'];
+    public const SORTABLE = ['id' => 'id', 'name' => 'name', 'email' => 'email', 'last_sign_in' => 'lastSignIn'];
 
     /**
      * A new user, created by `$createdBy`, holding `$role` if one is given.
@@ -130,7 +130,7 @@ final class Operator
     /** Last seen now — at logout. */
     public static function stamped(Model $user): Model
     {
-        $user->lastLogin = new DateTimeImmutable();
+        $user->lastSignIn = new DateTimeImmutable();
         return $user;
     }
 
@@ -198,7 +198,7 @@ final class Operator
     }
 
     /**
-     * In through a one-time code (Auth\LoginCodes): the account is active, a
+     * In through a one-time code (Auth\SignInCodes): the account is active, a
      * key of an old activation mail is spent. A password stays optional.
      */
     public static function joined(Model $user): Model

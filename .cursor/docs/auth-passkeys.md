@@ -2,7 +2,7 @@
 
 ## Installation und URLs
 
-`Auth\Passkeys` verwendet die vorhandenen Scopes, Queries, Session, LoginLog
+`Auth\Passkeys` verwendet die vorhandenen Scopes, Queries, Session, SignInLog
 und `lbuchs/webauthn:^2.2`. Die Abhängigkeit wird über den normalen
 Composer-/Mirror-Workflow installiert; ein Quelltext-Symlink ersetzt kein
 Composer-Update im Projekt.
@@ -86,7 +86,7 @@ Zweck, Benutzer, Projekt und 120 Sekunden Ablaufzeit. Abbruch verwirft nur die
 eigene Ceremony; Autofill erneuert vor Ablauf. AuthFailures drosselt Fehler.
 Signaturzähler werden unter MySQL-Lock gelesen/geprüft/geschrieben; Null-Zähler
 synchronisierter Passkeys sind zulässig. Erfolgreicher Login verwendet
-`Session::login()` und den vorhandenen LoginLog.
+`Session::login()` und den vorhandenen SignInLog.
 
 ## Oberfläche und Passwortmanager
 

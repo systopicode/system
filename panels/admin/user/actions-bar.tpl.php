@@ -6,7 +6,7 @@
 			<button class="button" type="submit"><i class="cmsIcon cmsIcon-arrow-left"></i>Back to my account</button>
 		</form>
 	<?php } ?>
-	<a href="<?= htmlspecialchars($this->href . 'logout', ENT_QUOTES) ?>" target="_self" class="button submit"><i class="cmsIcon cmsIcon-right-from-line"></i>Log out</a>
+	<a href="<?= htmlspecialchars($this->href . 'logout', ENT_QUOTES) ?>" target="_self" class="button submit"><i class="cmsIcon cmsIcon-right-from-line"></i>Sign out</a>
 </div>
 
 </div>

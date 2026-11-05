@@ -263,7 +263,7 @@ final class Passkeys
             Session::login($key->user);
             // with a device, like every other login: otherwise no list shows it and no revocation reaches it
             Devices::issue($key->user);
-            LoginLog::write((string) $key->user->name, 'logged in', LoginLog::PASSKEY);
+            SignInLog::write((string) $key->user->name, 'signed in', SignInLog::PASSKEY);
             return ['profile' => SignInFeedback::profile(), 'redirect' => Session::takeReturn() ?? $afterLogin ?? \http::$root . 'admin/'];
         }
         if ($user === null || $login) {

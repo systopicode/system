@@ -79,7 +79,7 @@ ohne die Action.
    Discover), wirft `ActionGuard::method()` mit dem Hinweis „has no
    #[Action] attribute … Add #[Action] to the method“. Bei einer Methode des
    Frameworks (`updateView` …) lautet er stattdessen „belongs to the panel
-   framework“. Kennt `actions.php` die Action (`auth` → `loginMethod`),
+   framework“. Kennt `actions.php` die Action (`auth` → `signInMethod`),
    wird die Methode still übergangen. Das ist der Hinweis für migrierte
    Panels, deren Methoden früher Actions waren.
 
@@ -87,7 +87,7 @@ Methoden: `app.php` ruft eine Panel-Methode mit dem Namen der Action nur
 noch auf, wenn sie `#[Action]` trägt (`Systopic\System\Panels\Action`).
 Vorher war jede öffentliche Methode der Klasse aufrufbar. In smp waren das
 28 Stück, keine davon als Action gemeint, z. B. `admin/backup/removeOldMediaDir`
-für jeden Editor. `loginMethod` (`auth`) lief dadurch doppelt. pwk habe
+für jeden Editor. `signInMethod` (`auth`) lief dadurch doppelt. pwk habe
 ich nur statisch geprüft: Die Upload-Methoden werden intern aufgerufen,
 `cancel` ist ein `case`. Closure-Properties (`$this->sendData = function …`
 in pwk) laufen weiter wie bisher.
@@ -95,7 +95,7 @@ in pwk) laufen weiter wie bisher.
 **Testen:** `php tests/actionguard.php` (ohne DB). Per CLI-Payload lassen
 sich die Header setzen:
 `"server": {"HTTP_SEC_FETCH_SITE": "cross-site"}`. Über Apache:
-`curl -sk -X PUT -H 'Sec-Fetch-Site: cross-site' …/auth/loginMethod`
+`curl -sk -X PUT -H 'Sec-Fetch-Site: cross-site' …/auth/signInMethod`
 liefert 403.
 
 **Falle:** Eine neue Action, die von außen erreichbar sein muss (ein
@@ -145,7 +145,13 @@ heißt: niemand außer dem Superuser.
 Über den Panels der obersten Ebene steht die Wurzel (Pfad `''`,
 `panels/panel.config.json`): der Default, `build: ["authenticated"]`. Ein
 Projekt ergänzt ihn in seinem `panels/panel.config.json` (spaceticker:
-`actions: ["everyone"]`).
+`actions: ["everyone"]`). Die Wurzel kennt keine `altPaths`, ihre Ordner kommen
+aus `Discover::rootFolders()`. Bis 2026-11-04 fehlten sie, und keine Wurzel-Config
+wurde gelesen.
+
+Hier stehen auch `authPersons` und `authScreens`. Für Rechte, die nicht aus Versehen
+aufgehen dürfen, gibt es `Access::rightNamed()`: Steht das Recht nirgends, hat es
+niemand. `Access::right()` fällt dann auf die Actions des Panels zurück.
 
 **Anzeige:** In Discover öffnet ein Klick auf einen Chip (Herkunft, Access
 in code, Action) die Lightbox `discover/config/?path=cms.pages&focus=…`.
@@ -256,9 +262,8 @@ Umsortieren unter demselben Elternknoten geht.
      Die Knöpfe in Backup fragen `Access::action()`.
    - Erledigt 2026-11-02 (spaceticker): `admin/events`, `admin/contacts`
      (Admin + Editor; die Ausnahme `|| STAGE === 'DEV'` ist weg, auf DEV
-     braucht man jetzt auch die Rolle), `devices` mit dem Recht
-     `pairScreens` (Admin). Der Link „Screen koppeln“ im Header prüft noch
-     `hasRole('cmsAdmin')`, weil das devices-Panel dort nicht gebaut ist.
+     braucht man jetzt auch die Rolle). Das Recht `pairScreens` ist seit
+     2026-11-04 `authScreens`, siehe [auth-workflows.md](auth-workflows.md#rechte).
    - Bleibt im Code: nichts mehr, siehe Schritt 6.
    - Offen: cms-Paket, EditBar und Vorschau (`appRequest`) fragen noch
      `hasOneRole()`.

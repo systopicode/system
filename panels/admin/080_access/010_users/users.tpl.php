@@ -1,7 +1,7 @@
 <?php
 /** @var \Systopic\System\Panels\Root\Admin\Access\Users\Panel $this */
 
-use Systopic\System\Auth\LoginCodes;
+use Systopic\System\Auth\SignInCodes;
 use Systopic\System\Auth\Presence;
 use Systopic\System\Panels\Root\Admin\Access\Panel as Users;
 
@@ -10,8 +10,8 @@ $screens = ($this->accountKind ?? '') === \Systopic\System\Tables\Users\Model::S
 ?>
 <h1><?= $screens ? 'Screens' : 'Users' ?></h1>
 <p class="tagsHint"><?= $screens ? 'Search by name or description. The pen opens the screen.' : 'Search by username, full name or email. The pen opens the user.' ?></p>
-<?php if (!LoginCodes::available()) { ?>
-<div class="cms message is-stay userKeyWarn"><div class="warning"><p>The sign-in key is missing. One-time codes no longer work, including codes already sent. Passwords, passkeys and trusted devices still do.</p></div></div>
+<?php if (!SignInCodes::available()) { ?>
+<div class="cms message is-stay userKeyWarn"><div class="warning"><p>The sign-in key could not be written. One-time codes do not work until the config of this instance can be changed.</p></div></div>
 <?php } ?>
 <section class="widget is-list userList">
 	<header>
@@ -47,7 +47,7 @@ $screens = ($this->accountKind ?? '') === \Systopic\System\Tables\Users\Model::S
 						</td>
 						<td><?= $e($user->fullname) ?></td>
 						<?php if (!$screens) { ?><td><?= $e($user->email) ?></td><?php } ?>
-						<td><?= $user->lastLogin ? $e(\Systopic\System\Sys\LocalTime::format($user->lastLogin, \Systopic\System\Sys\LocalTime::DATETIME)) : 'Unknown' ?></td>
+						<td><?= $user->lastSignIn ? $e(\Systopic\System\Sys\LocalTime::format($user->lastSignIn, \Systopic\System\Sys\LocalTime::DATETIME)) : 'Unknown' ?></td>
 						<td>
 							<div class="roles" data-drop_accept="role" data-on_drop="addRoleToUser">
 								<?php
@@ -62,7 +62,13 @@ $screens = ($this->accountKind ?? '') === \Systopic\System\Tables\Users\Model::S
 								<?php if (\Systopic\System\Auth\Session::isSuperuser(true) && !$user->isSuperuser) { ?>
 									<li><button type="button" data-cms-action class="button icononly" title="Sign in as this user" data-on_click="../hijackUser"><i class="cmsIcon cmsIcon-ghost-3"></i></button></li>
 								<?php } ?>
-								<li><a class="ajax button icononly" title="Edit <?= $screens ? 'screen' : 'user' ?>: <?= $e($user->name) ?>" aria-label="Edit <?= $screens ? 'screen' : 'user' ?>: <?= $e($user->name) ?>" href="<?= $e($this->href . 'edit/?user_id=' . (int) $user->id) ?>"><i class="cmsIcon cmsIcon-pen"></i></a></li>
+								<?php if ($screens) { ?>
+									<li><a class="ajax button icononly" title="Scan device code from screen: <?= $e($user->name) ?>" aria-label="Scan device code from screen: <?= $e($user->name) ?>" href="<?= $e($this->href . 'pair/?user_id=' . (int) $user->id . '&way=scan') ?>"><i class="cmsIcon cmsIcon-object-scan"></i></a></li>
+									<li><a class="ajax button icononly" title="Create new auth code: <?= $e($user->name) ?>" aria-label="Create new auth code: <?= $e($user->name) ?>" href="<?= $e($this->href . 'pair/?user_id=' . (int) $user->id) ?>"><i class="cmsIcon cmsIcon-qrcode"></i></a></li>
+								<?php } ?>
+								<?php if (\Systopic\System\Auth\Session::hasRole('cmsAdmin')) { ?>
+									<li><a class="ajax button icononly" title="Edit <?= $screens ? 'screen' : 'user' ?>: <?= $e($user->name) ?>" aria-label="Edit <?= $screens ? 'screen' : 'user' ?>: <?= $e($user->name) ?>" href="<?= $e($this->href . 'edit/?user_id=' . (int) $user->id) ?>"><i class="cmsIcon cmsIcon-pen"></i></a></li>
+								<?php } ?>
 							</ul>
 						</td>
 					</tr>

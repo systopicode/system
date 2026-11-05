@@ -27,7 +27,7 @@ try{
  await page.getByRole('button',{name:'Inline',exact:true}).press('Enter');assert.equal(await page.evaluate(()=>inlineCalls),1);assert.equal(await page.evaluate(()=>submits),0,'action controls never submit a surrounding form');
  const payload=await page.evaluate(()=>new sys.core.event.pathItem(document.querySelector('[data-action=remove]'),{type:'click'}).getData());
  assert.equal(payload.dataset.on_click,'userConfirm');assert.equal(payload.dataset.action,'remove');assert.equal(payload.dataset.id,'42');assert.equal(payload.form.setting,'kept');assert.ok(!Object.hasOwn(payload.form,''));assert.ok(!Object.hasOwn(payload.values,''));
- execFileSync(process.env.FLUXO_PHP||'php',[resolve(root,'../admin/tests/editor-link-dialog.php'),'--render'],{stdio:'ignore'});
+ execFileSync(process.env.FLUXO_PHP||'php',[resolve(root,'../cms/tests/editor-link-dialog.php'),'--render'],{stdio:'ignore'});
  await page.setContent(await readFile('/private/tmp/fluxo-link-dialog-fixture.html','utf8'));
  await page.addScriptTag({path:root+'/public/js/gui/HTMLeditor.funcs.js'});
  await page.evaluate(()=>{window.linkApplyCalls=0;window.applyHTMLeditorLink=()=>linkApplyCalls++;});
