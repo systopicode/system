@@ -82,9 +82,12 @@ register_shutdown_function('clean');
 
 // the access of DEV on this machine: the first of the DEV files that connects
 $dev = [];
-$local = json_decode((string) @file_get_contents(PROJECT . 'config/config.local.json'), true)['db'] ?? [];
+$access = static function (array $file): array {
+	return array_merge((array) ($file['db'] ?? []), (array) ($file['packages']['db']['connections']['main'] ?? []));
+};
+$local = $access(json_decode((string) @file_get_contents(PROJECT . 'config/config.local.json'), true) ?: []);
 foreach (glob(PROJECT . 'config/DEV.*.config.json') ?: [] as $file) {
-	$db = array_merge(json_decode((string) file_get_contents($file), true)['db'] ?? [], $local);
+	$db = array_merge($access(json_decode((string) file_get_contents($file), true) ?: []), $local);
 	try {
 		new PDO('mysql:host=' . ($db['host'] ?? 'localhost') . ';dbname=' . ($db['name'] ?? ''), (string) ($db['user'] ?? 'root'), (string) ($db['pass'] ?? ''));
 		$dev = $db;
@@ -94,8 +97,7 @@ foreach (glob(PROJECT . 'config/DEV.*.config.json') ?: [] as $file) {
 	}
 }
 if ($dev === []) {
-	echo "skipped: no DEV database on this machine\n";
-	exit(0);
+	throw new RuntimeException('FAIL: the project is here, but no DEV file connects');
 }
 
 mkdir(ROOT . 'public', 0775, true);
