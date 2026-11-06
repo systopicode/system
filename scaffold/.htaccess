@@ -13,6 +13,8 @@ Options +SymLinksIfOwnerMatch
 # its own, so this rule never reaches a request below it.
 <IfModule mod_rewrite.c>
 	RewriteEngine On
+	# sync.php moved to public/: an instance seeded before that still calls it here
+	RewriteRule ^sync\.php$ public/sync.php [L,QSA]
 	# assets mode "source": the browser reads these from their folders, as the
 	# folders of Http\Assets - the files themselves, never a script or a config
 	RewriteRule ^(vendor/[^/]+/[^/]+/)?(lib|panels|site|sites|src)/.+\.(css|js|mjs|map|png|jpe?g|gif|webp|svg|ico|woff2?|ttf|otf|eot)$ - [L]
