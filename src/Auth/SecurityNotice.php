@@ -63,6 +63,21 @@ final class SecurityNotice implements Observer
     /** Called only on the target device, after a successful code sign-in. */
     public static function deviceSignedIn(User $user, \Systopic\System\Tables\SignInCodes\Model $code): void
     {
+        // The browser must receive its session cookie and redirect before SMTP
+        // starts. A timeout (or native transport crash) cannot undo that login.
+        if (function_exists('fastcgi_finish_request')) {
+            register_shutdown_function(static function () use ($user, $code): void {
+                if (session_status() === PHP_SESSION_ACTIVE) session_write_close();
+                fastcgi_finish_request();
+                self::sendDeviceNotice($user, $code);
+            });
+            return;
+        }
+        self::sendDeviceNotice($user, $code);
+    }
+
+    private static function sendDeviceNotice(User $user, \Systopic\System\Tables\SignInCodes\Model $code): void
+    {
         try {
             $by = $code->approvedBy ?? $code->createdBy;
             $actor = $by === null ? null : \Systopic\System\Queries\UserLookup\UserLookup::byId(\Systopic\Db\Scope::default(), (int) $by);

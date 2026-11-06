@@ -1,0 +1,18 @@
+import vm from 'node:vm';
+import fs from 'node:fs';
+import assert from 'node:assert/strict';
+const source = fs.readFileSync(new URL('../panels/auth/panel.js', import.meta.url), 'utf8');
+const listeners = new Map(); let stages = 0;
+const card = {insertBefore(){stages++;}};
+const main = {innerHTML:'old',dataset:{authMethod:'choose'},style:{},cloneNode(){return {style:{},classList:{add(){}},setAttribute(){}};},addEventListener(){}};
+card.querySelector=()=>main;
+const link={href:'https://fixture.test/auth/?method=code',classList:{contains(c){return c==='authMethod';}},matches(){return false;},closest(){return card;}};
+const document={readyState:'complete',querySelector(q){return q==='.authCard'?card:null;},createElement(){return{style:{},append(){},get offsetWidth(){return 100;}};},addEventListener(name,fn){listeners.set(name,fn);}};
+const context=vm.createContext({window:{matchMedia(){return{matches:false};}},document,location:{href:'https://fixture.test/auth/'},URL,setTimeout(){},setInterval(){},sys:{lib:{add(){}}}});
+vm.runInContext(source,context);
+listeners.get('click')({target:{closest(){return link;}}});
+listeners.get('cms:rendered')(); assert.equal(stages,0,'an early render must not consume the pending slide');
+main.innerHTML='new'; main.dataset.authMethod='code'; listeners.get('cms:rendered')(); assert.equal(stages,1,'the target screen must slide');
+listeners.get('cms:rendered')(); assert.equal(stages,1,'later renders must not replay the slide');
+vm.runInContext(source,context); assert.equal(listeners.size,2,'duplicate shared asset must not bind a second controller');
+console.log('PASS auth slides wait for target, run once and tolerate duplicate asset loading');

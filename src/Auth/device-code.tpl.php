@@ -7,6 +7,6 @@
                         <div class="authQr"><?= $qr ?></div>
                         <?php $copyCode = $authPair['code'] ?? ''; include __DIR__ . '/codeCopy.tpl.php'; ?>
                         <p class="authLead authCountdown" role="timer">New code in <span data-code-countdown><?= intdiv($authLeft, 60) . ':' . sprintf('%02d', $authLeft % 60) ?></span></p>
-                        <p class="authLead">Scan or enter code from your device that is signed in.</p>
+                        <p class="authLead">Scan this QR code with a device that is already signed in.</p>
                     </div>
                 </div>

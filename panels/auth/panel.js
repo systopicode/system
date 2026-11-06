@@ -1,5 +1,8 @@
 /* global sys */
 (function () {
+    // The shared auth card can request this asset from more than one render layer.
+    if (window.fluxoAuthNavigationBound) return;
+    window.fluxoAuthNavigationBound = true;
     const setup = {info: 'CMS authentication', route: 'panels.admin.auth', extends: 'classes.panelNode'};
     let deviceCodeTimer = null;
     let authSlide = null;
@@ -20,15 +23,17 @@
         const ghost = main.cloneNode(true);
         ghost.classList.add('authSlideGhost');
         ghost.setAttribute('aria-hidden', 'true');
-        authSlide = {dir, ghost};
+        authSlide = {dir, ghost, html: main.innerHTML, method: new URL(link.href, location.href).searchParams.get('method')};
     };
 
     const runSlide = () => {
         const pending = authSlide;
-        authSlide = null;
         const card = document.querySelector('.authCard');
         const main = card && card.querySelector(':scope > main');
-        if (!card || !main || !pending || (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches)) return;
+        if (!card || !main || !pending) return;
+        if (pending.method ? main.dataset.authMethod !== pending.method : main.innerHTML === pending.html) return;
+        authSlide = null;
+        if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
         // Gap = card padding, so the panes don’t stick (authFoot overhangs that far).
         const forward = pending.dir === 'forward';

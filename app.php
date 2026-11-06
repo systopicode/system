@@ -164,6 +164,9 @@ if (http::ajax()) {
 	scripttime('begin flush response');
 	echo json_encode(client::flushResponse(!$quiet));
 } else {
+    // A document navigation must have a document MIME type, including after auth.
+    // Safari offers a download when a previous handler left a non-HTML type.
+    header('Content-Type: text/html; charset=utf-8');
 	$renderMode = $panelTree->getSelected()?->getRenderMode() ?? $panelTree->getRoot()?->getRenderMode() ?? 'slices';
 	if ($renderMode === 'slices') {
 		scripttime('begin render layers');

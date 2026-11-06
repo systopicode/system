@@ -4,7 +4,7 @@
 <?php $offerLeft = max(0, (int) $boxOffer['expires'] - time()); ?>
 <div class="remoteOffer" data-code-until="<?= (int) $boxOffer['expires'] ?>" data-code-left="<?= $offerLeft ?>" data-offer-renew>
     <div data-code-live>
-        <p class="cmsBoxLead">On the new device, scan this QR code or enter the code below.</p>
+        <p class="cmsBoxLead">Scan this QR code or enter this code on the device you want to sign in.</p>
         <div class="remoteQr"><?= $offerSvg ?></div>
         <?php $copyCode = $boxOffer['code']; include dirname(__DIR__, 3) . '/src/Auth/codeCopy.tpl.php'; ?>
         <p class="remoteExpiry" role="timer">New code in <span data-code-countdown><?= intdiv($offerLeft, 60) . ':' . sprintf('%02d', $offerLeft % 60) ?></span></p>
