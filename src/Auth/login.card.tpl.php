@@ -65,7 +65,7 @@ $showSwitch = ($authMethod === 'passkey' && $authPasskey)
     || $authMethod === 'password';
 $codeChars = str_split(substr(strtoupper((string) preg_replace('/[^0-9A-Z]/', '', $authCode)), 0, 8));
 ?>
-<main class="authSignin">
+<main class="authSignin" data-auth-method="<?= $e($authMethod ?: 'choose') ?>">
     <?php if ($authMethod === 'signedIn') { ?>
         <?php $authSuccessHidden = false; include __DIR__ . '/signed-in.tpl.php'; ?>
     <?php } else { ?>
@@ -80,7 +80,7 @@ $codeChars = str_split(substr(strtoupper((string) preg_replace('/[^0-9A-Z]/', ''
         </div>
     <?php } elseif ($authMethod === 'device_code' && $authCodes) { ?>
         <div class="authBody">
-            <h1>Sign in from another device</h1>
+            <h1>Sign in with another device</h1>
             <?= $authMessages ?>
             <?php if ($qr !== '') { ?>
                 <?php include __DIR__ . '/device-code.tpl.php'; ?>
@@ -90,7 +90,7 @@ $codeChars = str_split(substr(strtoupper((string) preg_replace('/[^0-9A-Z]/', ''
         </div>
     <?php } elseif ($authMethod === 'code' && $authCodes) { ?>
         <div class="authBody">
-            <h1>Sign-in code</h1>
+            <h1>Scan or enter code</h1>
             <?= $authMessages ?>
             <div class="qrScan" data-qr-host="login" data-profile="<?= $e($authProfile) ?>" hidden>
                 <div class="qrScanStage">
@@ -182,18 +182,18 @@ $codeChars = str_split(substr(strtoupper((string) preg_replace('/[^0-9A-Z]/', ''
             <?php if ($authCodes) { ?>
                 <a class="authMethod cmsChoice ajax" href="?method=code">
                     <i class="cmsIcon cmsIcon-input-numeric"></i>
-                    <span><b>Sign-in code</b><small>Use a code from an admin.</small></span>
+                    <span><b>Scan or enter code</b><small>You have a sign-in code or QR code.</small></span>
                     <i class="cmsIcon cmsIcon-chevron-right"></i>
                 </a>
                 <a class="authMethod cmsChoice ajax" href="?method=device_code">
                     <i class="cmsIcon cmsIcon-qrcode"></i>
-                    <span><b>Sign in from another device</b><small>Use a device that is already signed in.</small></span>
+                    <span><b>Sign in with another device</b><small>Use another signed-in device to sign in here.</small></span>
                     <i class="cmsIcon cmsIcon-chevron-right"></i>
                 </a>
             <?php } ?>
             <a class="authMethod cmsChoice ajax" href="?method=password">
                 <i class="cmsIcon cmsIcon-input-password"></i>
-                <span><b>Username &amp; password</b><small>Username and password.</small></span>
+                <span><b>Username &amp; password</b><small>Enter your username or email and password.</small></span>
                 <i class="cmsIcon cmsIcon-chevron-right"></i>
             </a>
         </div>

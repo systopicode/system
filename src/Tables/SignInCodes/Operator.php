@@ -13,7 +13,7 @@ use Systopic\System\Tables\Users\Model as User;
  * A code is 8 characters of Crockford's base32: digits and capitals without
  * I, L, O and U, so nothing can be misread. Shown as `K7Q4-M2XD`, read
  * forgivingly (case, dashes, spaces, O for 0, I and L for 1). 32^8 = 2^40
- * combinations; with codes living 10 minutes to a day and an IP blocked
+ * combinations; with codes living two minutes to a day and an IP blocked
  * after a few failures, guessing is hopeless.
  */
 final class Operator
@@ -25,7 +25,7 @@ final class Operator
      * Seconds a code lives. An invitation has to survive a night in the inbox.
      * A device code renews itself on the page that shows it, so it can be short.
      */
-    public const LIFETIME             = 600;
+    public const LIFETIME             = 120;
     public const DEVICE_CODE_LIFETIME = 120;
     public const INVITATION_LIFETIME  = 86_400;
 

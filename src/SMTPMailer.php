@@ -166,7 +166,32 @@ Class SMTPMailer {
         }
 
 		// Open server connection and run transfers
-		$this->sock = @fsockopen($this->hostname, $this->port, $enum, $estr, 30);
+		// Darwin's getaddrinfo may crash in a forked PHP-FPM worker. Resolve
+        // through libresolv there, but still verify TLS against the original host.
+        $host = $this->server;
+        if (PHP_OS_FAMILY === 'Darwin' && !filter_var(trim($host, '[]'), FILTER_VALIDATE_IP)) {
+            if (strtolower($host) === 'localhost') {
+                $host = '127.0.0.1';
+            } else {
+                $records = @dns_get_record($host, DNS_A | DNS_AAAA);
+                $addresses = [];
+                foreach ($records ?: [] as $record) {
+                    if (!empty($record['ip'])) $addresses[] = $record['ip'];
+                    elseif (!empty($record['ipv6'])) $addresses[] = $record['ipv6'];
+                }
+                $host = $addresses[0] ?? '';
+                if ($host === '') throw new \RuntimeException('SMTP: server address could not be resolved');
+            }
+        }
+        $context = stream_context_create(['ssl' => [
+            'peer_name' => $this->server,
+            'verify_peer' => true,
+            'verify_peer_name' => true,
+            'SNI_enabled' => true,
+        ]]);
+        $socketHost = str_contains($host, ':') ? '[' . trim($host, '[]') . ']' : $host;
+        $transport = $this->secure === 'ssl' ? 'ssl://' : 'tcp://';
+        $this->sock = @stream_socket_client($transport . $socketHost . ':' . $this->port, $enum, $estr, 30, STREAM_CLIENT_CONNECT, $context);
 		if (!$this->sock)
 			throw new \RuntimeException("SMTP: no connection to $this->hostname:$this->port ($estr)");
 		$this->log[] = 'CONNECTION: fsockopen(' . $this->hostname . ')';

@@ -736,12 +736,13 @@ body.cms .dashboard .dashTabs button:where(:not([data-cms-action])):hover{
 	margin: 0;
 }
 
-.dashFooter{
+.dashboard > .dashFooter{
 	display: flex;
 	flex-wrap: wrap;
 	justify-content: space-between;
 	gap: 0.5rem 1rem;
-	margin-top: 2rem;
+	margin-top: auto;
+	flex: 0 0 auto;
 	padding-top: var(--cmsCardPadding);
 	border-top: 1px solid var(--cmsLine);
 	color: var(--cmsSubText);

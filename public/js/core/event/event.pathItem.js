@@ -183,7 +183,23 @@ sys.core.event.pathItem = function (element, event) {
 		var formData = {};
 		for (var i = 0; i < form.elements.length; i++) {
 			var el = form.elements[i];
-			if (!el || typeof el !== 'object') continue;
+			if (!el || typeof el !== 'object' || !el.name || el.disabled) continue;
+            // Only the checked radio is a successful control. Unlike a single
+            // switch, an unchecked radio must not overwrite the selected one.
+            if (el.type === 'radio' && !el.checked) continue;
+            if (['submit', 'button', 'reset', 'fieldset'].includes(el.type)) continue;
+            if (el.name.endsWith('[]') && el.type !== 'file') {
+                if (['checkbox', 'radio'].includes(el.type) && !el.checked) continue;
+                var bucket = (form.getAttribute('method') || '').toLowerCase();
+                bucket = bucket === 'get' ? 'get' : bucket === 'post' ? 'post' : 'form';
+                formData[bucket] = formData[bucket] || {};
+                var arrayName = el.name.slice(0, -2);
+                formData[bucket][arrayName] = formData[bucket][arrayName] || [];
+                if (el.tagName === 'SELECT' && el.multiple) {
+                    Array.from(el.selectedOptions).forEach(option => formData[bucket][arrayName].push(option.value));
+                } else formData[bucket][arrayName].push(el.value);
+                continue;
+            }
 			var data = pathItem.getElementData(el);
 			if (data.files && data.files.length) {
 				formData.files = formData.files || {};

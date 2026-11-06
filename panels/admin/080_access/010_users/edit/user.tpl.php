@@ -267,7 +267,7 @@ if ($heading === '') {
                         </div>
                         <div>
                             <button type="button" class="button submit" data-open-box=".addDeviceBox.kind<?= $dialogKind ?>"><i class="cmsIcon cmsIcon-qrcode"></i>Create code</button>
-							<p class="cmsBoxLead">Valid for 10 minutes. Shown here.</p>
+							<p class="cmsBoxLead">Valid for 2 minutes. Shown here.</p>
 						</div>
 						<div>
 							<button type="button" class="button" data-on_click="userConfirm" data-action="inviteMail" data-confirm="<?= $e($hint) ?>"><i class="cmsIcon cmsIcon-paper-plane"></i> Send invitation code</button>
