@@ -35,7 +35,7 @@ final class AuthConfig
     /** @return array<string, mixed> */
     public static function block(): array
     {
-        $auth = Config::current()?->instance->get('auth');
+        $auth = Config::current()?->package('system')['auth'] ?? null;
         return is_array($auth) ? $auth : [];
     }
 

@@ -13,7 +13,7 @@ final class Delivery
 
     public static function settings(): array
     {
-        $mail = class_exists(Config::class) ? Config::current()?->instance->get('mail') : null;
+        $mail = class_exists(Config::class) ? (Config::current()?->package('system')['mail'] ?? null) : null;
         return is_array($mail) ? $mail : [];
     }
 

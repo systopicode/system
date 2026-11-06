@@ -70,7 +70,7 @@ if (DB_NAME !== '') {
 	try {
 		// From the instance config, or the DB_* constants of a project without
 		// config/. The legacy `db` borrows this connection on first use.
-		$__db = \Systopic\System\Config\Config::current()?->instance->db() ?? [];
+		$__db = \Systopic\System\Config\Config::current()?->connection() ?? [];
 		if (($__db['name'] ?? '') === '') {
 			$__db = ['name' => DB_NAME, 'host' => DB_HOST, 'user' => DB_USER, 'pass' => DB_PASS];
 		}

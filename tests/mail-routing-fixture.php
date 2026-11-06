@@ -4,9 +4,9 @@ namespace Systopic\System\Config {
     final class Config {
         public static array $mail = [];
         public static function current(): object {
-            return (object) ['instance' => new class {
-                public function get(string $key): array { return Config::$mail; }
-            }];
+            return new class {
+                public function package(string $name): array { return ['mail' => Config::$mail]; }
+            };
         }
     }
 }
