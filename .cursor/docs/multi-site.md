@@ -127,8 +127,8 @@ Projekte ohne `templates/pages/` laufen mit der alten Struktur (`pages/`).
 1. CMS › Seiten › +-Menü › Site: Domain eingeben; Meta (title, appName, …) eintragen.
 2. Seiten in den neuen Site-Ordner im Seitenbaum ziehen.
 3. Einer Seite der Site den leeren Pfad geben (Home), sonst ist die erste Seite Home.
-4. DEV/STAGING: Pfad-Link anlegen lassen (`"linkSites": true`) oder von Hand
-   `mklink /J …\projects\<domain> …\projects\systopic.net`; LIVE: Domain aufs
+4. DEV/STAGING: Pfad-Link anlegen lassen (`"linkSites": true`) oder auf der Site-Seite
+   „Create site link“ klicken; LIVE: Domain aufs
    selbe Docroot zeigen lassen.
 5. Optional `sites/<domain>/templates/…` füllen, sonst gilt `templates/`.
 

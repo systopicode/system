@@ -125,13 +125,14 @@ eigene Name, nicht Name oder Alias einer anderen Site; `www.` wird entfernt.
 
 ### DEV: zweite Site per Pfad
 
+Ohne `linkSites` geht es von Hand: Die Site-Seite im CMS zeigt einen Button „Create site link“, wenn ein Pfad-Link fehlt. Er legt den Link an und, falls nötig, `sites/<name>/`. Windows bekommt eine Junction, alle anderen einen Symlink, relativ, wenn er neben dem Projekt liegt.
+
 Mit `"linkSites": true` in der Instanz-Datei legt `SiteRegistry::boot()`
 (`$config->linkSites($_SERVER['DOCUMENT_ROOT'], <project>)`, Klasse
 `SiteLinks`) fehlende Links selbst an: pro Pfad-Adresse
 `<DOCUMENT_ROOT><pfad>` → Projektordner. Nur wenn eine der Adressen schon
 das Projekt selbst ist (Schema stimmt auf dieser Maschine), nur Pfad-Adressen,
-Vorhandenes bleibt unangetastet. Bisher nur Windows (Junction, braucht kein
-Admin); macOS/Linux geben `skipped` zurück. Ergebnis in `debugInfo()['siteLinks']`.
+Vorhandenes bleibt unangetastet. Ergebnis in `debugInfo()['siteLinks']`.
 Umbenennen verschiebt den Link mit. Von Hand entspricht das:
 
 ```
