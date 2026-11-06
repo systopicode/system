@@ -13,9 +13,11 @@ alle Repos pullen ([git.md](git.md)).
 | Definitionen | liegen unter `<paket>/config/`, `tests/config-schemas.php` prüft sie gegen alle Config-Dateien |
 | Schritt 1 | fertig: `Config\Layout`, `Config\Schema`, `Config::package()`, `Config::connection()`. Alle Lesestellen laufen über den Baum, `tests/config-tree.php` vergleicht jede Instanz mit den alten Werten |
 | Sync | Build mit `composer` und `openSetup`. `composer update` lief am 2026-11-06 auf RC |
+| Setup über Sync | fertig bis auf das Projekt-Tool, `tests/setup-maintenance.php` spielt jeden Zustand durch |
+| Scaffold | `systopic.net` mit seinen vier Sites (Junctions) umgestellt. `galerie-lattemann.de` und `pwk.systopic.net` nicht, sie haben eigene Logik in `index.php` und `.htaccess` |
 | Bestehende Configs | unverändert, geschrieben wird weiter am alten Ort |
 
-Als Nächstes: die Seite des Setups aus „Setup über Sync“, dann Schritt 2.
+Als Nächstes: Schritt 2.
 
 **Entschieden:** `packages.<paket>` als Namensraum, die drei `.schema.json`-Dateien
 je Paket, JSON Schema mit `x-`-Erweiterungen, Formulare aus den Definitionen, alle
@@ -25,35 +27,29 @@ Instanz-Datei. Das Environment ist aus dem Backup entfernt
 
 ### Versionierung
 
-Entschieden am 2026-11-06:
+Entschieden am 2026-11-06. Es gibt noch keine LIVE-Instanz und nur eine RC-Instanz.
+Gearbeitet wird lokal und auf STAGING, das läuft über Git und Sync, Versionen spielen
+dort keine Rolle.
 
 | Frage | Entscheidung |
 |---|---|
-| Wann wird getaggt? | Der Stand vor dem Umbau wird `system v1.3.0`. Gesetzt wird der Tag erst, wenn der Benutzer es sagt |
+| Wann wird getaggt? | **Einmal am Ende,** wenn alles läuft. Danach wird die eine RC-Instanz aktualisiert |
 | Major-Sprung? | Nein, alles bleibt `1.x`, auch das Entfernen der Altpfade in Schritt 8 |
 | Gemeinsame Versionen? | Nein, jedes Paket zählt einzeln und nennt in `composer.json` seine Mindestversion |
 | Schutz vor zu neuer Config? | Keiner im Code, die Reihenfolge unter „Umzug“ reicht |
 | GUI-Version in `releases.php` | bleibt eine eigene Zählung |
 
-**Offen: die Tags.** Sie markieren den Stand vor dem Umbau, also diese Commits und
-nicht den dann aktuellen `main`:
+Für den Tag am Ende:
 
-| Paket | Letzter Tag | Commits danach | Ziel-Commit |
-|---|---|---|---|
-| `db` | `v1.1.0` | 6 | `cabb79b` |
-| `system` | `v1.2.0` | 122 | `5ca5608` |
-| `cms` | `v1.1.1` | 67 | `87a6457` |
-| `relay` | `v1.0.1` | 20 | `323526c` |
-
-- **Reihenfolge:** `db`, `system`, `cms`, `relay`. `cms` verlangt auf `main` seit
-  2026-10-30 `system ^1.3`. Ein neuer `cms`-Tag vor `system v1.3.0` ließe sich nur
-  mit `1.x-dev` erfüllen.
-- **Nummern:** Für `db`, `cms` und `relay` stehen sie noch nicht fest. Vor dem Tag
-  die Änderungen je Paket zeigen und die `composer.json`-Mindestversionen prüfen.
-- **Ein Tag ändert keinen Server.** `composer.lock` liegt je Rechner, und `composer
-  update` auf dem Server führt der Benutzer selbst aus ([composer.md](composer.md)).
-- **Mindestversionen im Umbau:** Sobald `cms`, `db` oder `relay` etwas aus dem Umbau
-  benutzen, etwa `Config::package()`, müssen sie die passende `system`-Version verlangen.
+- **Reihenfolge:** `db`, `system`, `cms`, `relay`. `system` wird `v1.3.0`, `cms` und
+  `relay` verlangen genau das. Ein Tag von `cms` oder `relay` vor `system v1.3.0` ließe
+  sich nur mit `1.x-dev` erfüllen.
+- **Nummern:** Für `db`, `cms` und `relay` stehen sie noch nicht fest. Vor dem Tag die
+  Änderungen je Paket zeigen und die `composer.json`-Mindestversionen prüfen.
+- **Bis dahin nichts von `systopic.net` nach RC, was den Tag braucht.** RC läuft auf
+  `system v1.2.0`, dort gibt es weder `bin/scaffold.php` noch `index.php`. Die
+  `composer.json` mit dem Scaffold-Script ließe Composer dort scheitern, die neue
+  `public/index.php` verlangte die Paket-`index.php` und nähme die Site vom Netz.
 
 ### Secrets
 
@@ -114,8 +110,11 @@ Regeln:
 
 - **Ein Token, ein Mechanismus.** Sync und `scaffold.php` schreiben dieselbe Datei,
   `Setup::trusts()` prüft sie. Der Recovery-Modus funktioniert damit weiter.
-- **Der Token läuft ab,** nach etwa einer Stunde, gemessen am Alter der Datei. Das
-  Setup-Formular merkt ihn sich in der Session wie der Recovery-Modus.
+- **Der Token läuft ab,** nach einer Stunde, gemessen am Alter der Datei
+  (`Setup::TOKEN_LIFETIME`). Das Formular trägt ihn als verstecktes Feld mit, der
+  Recovery-Modus merkt ihn sich in der Session.
+- **Nur die Adresse der Site öffnet das Setup.** `admin/?setup=` bleibt der
+  Recovery-Modus. Ein lokaler Request genügt hier nicht, die Site soll die Site bleiben.
 - **`scaffold.php` behält seinen Token,** eine Erstinstallation ohne Sync bleibt möglich.
 - **Das Projekt-Tool verliert seinen Token:** `create_recovery()`, `recoveryUrl()` und
   die Links in `main.tpl.php`.
@@ -132,20 +131,18 @@ Grenzen:
 - Sind `.htsync` oder alle vertrauten Instanzen weg, bleibt ein neuer Seed per Plesk
   oder SSH.
 
-**Umgesetzt** ist die Seite von Sync: `action/openSetup.php` legt den Token an, leitet
-weiter und löscht einen alten beim Öffnen der Seite.
+**Umgesetzt:** `action/openSetup.php` in Sync, `Setup::maintenance()` vor `Config::boot()`
+in `index.php`, `Setup\Maintenance` für das Formular. Das Formular zeigt jedes Secret
+und jeden Wert mit `x-overridable` aus den Definitionen, alles andere der Datei als
+JSON-Block. Gespeichert wird in der neuen Form. Das erste Setup schreibt das Passwort
+jetzt immer nach local.
 
-**Noch offen,** bewusst nicht vor der Demo vom 2026-11-06, weil `packages/` mit dem
-Sync auf STAGING geht:
+Eine kaputte `config.local.json` lässt schon `Config::boot()` scheitern. Die Seite
+meldet das und legt die Datei auf Knopfdruck nach `var/scaffold/`. Eine kaputte
+Instanz-Datei kommt per Sync zurück.
 
-- `index.php`: Token vor `Config::boot()` prüfen. Bis dahin öffnet der Button das
-  Setup nur in den Zuständen, in denen es heute schon läuft, sonst nur die Site. Mit
-  „open Recovery“ geht der Recovery-Modus schon.
-- `Setup::trusts()`: Alter des Tokens prüfen. Bis dahin gilt er, bis Sync, das Setup
-  oder ein Restore ihn löscht.
-- `Setup`: Formular für `config.local.json` aus den Definitionen, Passwort immer nach
-  local.
-- Projekt-Tool: Token entfernen, sobald der Button auf den Servern getestet ist.
+**Das gilt nur für Projekte mit der Paket-`index.php`,** also mit Scaffold. Offen: Im
+Projekt-Tool den Token entfernen, sobald der Button auf STAGING getestet ist.
 
 ### Composer über Sync
 

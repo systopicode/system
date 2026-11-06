@@ -170,7 +170,8 @@ function setupToken(string $root, callable $say): void
 		return;
 	}
 	$file = "$root/var/setup.token";
-	$token = is_file($file) ? trim((string) file_get_contents($file)) : '';
+	// an old token no longer opens the setup - see Setup::TOKEN_LIFETIME
+	$token = is_file($file) && time() - (int) filemtime($file) < 3600 ? trim((string) file_get_contents($file)) : '';
 	if ($token === '') {
 		$token = bin2hex(random_bytes(16));
 		@mkdir(dirname($file), 0775, true);

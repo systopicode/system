@@ -58,6 +58,11 @@ ini_set('error_log', $__phpLog);
 // config.json: project constants (and sites without a database);
 // <stage>[.<machine>].config.json: one installation (matches, db, debug);
 // config.local.json: this machine, never synced. See .cursor/docs/config.md
+// With the token sync writes, the setup comes first: it has to work when the
+// config does not (exits).
+if (\Systopic\System\Setup\Setup::maintenance($__projectRoot, $_SERVER)) {
+	\Systopic\System\Setup\Setup::maintain($__projectRoot, $_SERVER);
+}
 try {
 	$config = \Systopic\System\Config\Config::boot(
 		$__projectRoot . '/config',

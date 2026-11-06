@@ -80,6 +80,21 @@ Danach werden Token und `var/setup.account` gelöscht — bei „skip" nur
 nach `admin/?setup=<token>`; das fertige Restore verbraucht ihn
 (`Setup::spendToken()`).
 
+## Wartung — `src/Setup/Maintenance.php` (seit 2026-11-06)
+
+Das Setup läuft sonst nur einmal. Mit einem gültigen Token an der Adresse der Site
+(`public/?setup=<token>`) antwortet `Setup::maintain()` vor `Config::boot()`, in jedem
+Zustand: falsches Passwort, fehlende Datenbank, kaputte Config. Das Formular schreibt
+nur `config/config.local.json`. Den Token legt Sync an (Button „open Setup“ auf der Seite
+eines Servers), siehe `config-struktur.md`, „Setup über Sync“.
+
+- Ein Token gilt eine Stunde (`Setup::TOKEN_LIFETIME`), Speichern verbraucht ihn.
+- Secrets erreichen die Seite nie, auch solche nicht, die keine Definition kennt. Ein
+  leeres Feld behält sie.
+- Ändert sich der Zugang zu `main`, wird die Datenbank vor dem Schreiben getestet.
+- Fehlt die Config oder die Datenbank, läuft das normale Setup weiter.
+- Prüfung: `php tests/setup-maintenance.php`, baut sich ein Projekt unter `www/tmp-setup/`.
+
 ## Recovery-Modus (seit 2026-10-22)
 
 Der Recovery-User (`Auth\Session`, `isRecovery()`) ist nur, wer auch das

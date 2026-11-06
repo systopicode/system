@@ -43,10 +43,16 @@ use Systopic\System\Tables\Users\Operator as UserOperator;
  *
  * Plain HTML, no panels, no database, no system bootstrap: nothing of that
  * works before the config exists.
+ *
+ * After that the token opens Maintenance: config.local.json, in any state.
+ * Sync writes it for that; a token lasts TOKEN_LIFETIME seconds.
  */
 final class Setup
 {
     public const TOKEN_FILE = 'var/setup.token';
+
+    /** seconds, from the time of the file */
+    public const TOKEN_LIFETIME = 3600;
 
     /** left by the database step when the database has no account yet */
     public const ACCOUNT_FILE = 'var/setup.account';
@@ -93,6 +99,66 @@ final class Setup
         exit;
     }
 
+    /**
+     * Does this request bring the token, to the address of the site? Then the
+     * setup answers, whatever state the project is in. `admin/?setup=` is the
+     * recovery user and goes on, like everything on the CLI. A local request
+     * is no reason here: the site has to stay the site.
+     */
+    public static function maintenance(string $projectRoot, array $server): bool
+    {
+        $given = (string) ($_POST['setup'] ?? $_GET['setup'] ?? '');
+        $token = self::tokenIn($projectRoot);
+        if (PHP_SAPI === 'cli' || $given === '' || $token === null || !hash_equals($token, $given)) {
+            return false;
+        }
+        $dir = rtrim(str_replace('\\', '/', dirname((string) ($server['SCRIPT_NAME'] ?? ''))), '/') . '/';
+        $path = (string) parse_url((string) ($server['REQUEST_URI'] ?? ''), PHP_URL_PATH);
+        return $path === $dir || $path === $dir . 'index.php';
+    }
+
+    /** answers the request of maintenance() and ends it */
+    public static function maintain(string $projectRoot, array $server): never
+    {
+        $root = rtrim(str_replace('\\', '/', $projectRoot), '/');
+        $setup = new self($root, $server, null);
+        header('Cache-Control: no-store');
+        try {
+            $config = Config::boot($root . '/config', $server, $root);
+        } catch (NotConfigured $reason) {
+            self::run($projectRoot, $server, $reason);
+        } catch (\Throwable $e) {
+            $setup->brokenConfig($e);
+            exit;
+        }
+        if (!self::hasDatabase($config) || self::accountPending($root)) {
+            self::run($projectRoot, $server, null);
+        }
+        (new Maintenance($setup, $root, $config))->handle();
+        exit;
+    }
+
+    /**
+     * A config that cannot be read. An instance file comes back by sync;
+     * config.local.json lies nowhere else, so it can be set aside here.
+     */
+    private function brokenConfig(\Throwable $e): void
+    {
+        $local = $this->configFile('config.local.json');
+        $isLocal = str_contains($e->getMessage(), 'config.local.json');
+        if ($isLocal && ($this->server['REQUEST_METHOD'] ?? 'GET') === 'POST') {
+            $aside = $this->root . '/var/scaffold/config.local.json.' . date('Ymd-His');
+            @mkdir(dirname($aside), 0775, true);
+            if (@rename($local, $aside)) {
+                @chmod($aside, 0600);
+                $this->page('Set aside', '<p>The file now lies in <code>' . $this->h(substr($aside, strlen($this->root) + 1)) . '</code>.</p><p><a href="./?setup=' . $this->h((string) $this->token()) . '">Go on</a></p>');
+                return;
+            }
+        }
+        $button = $isLocal ? '<form method="post">' . $this->tokenField() . '<button>set config.local.json aside and go on</button></form>' : '<p class="hint">Send a good copy of the file with sync.</p>';
+        $this->page('The config cannot be read', '<p>' . $this->h($e->getMessage()) . '</p>' . $button);
+    }
+
     // -------------------------------------------------------------------------------------
     // Request
     // -------------------------------------------------------------------------------------
@@ -132,7 +198,7 @@ final class Setup
     }
 
     /** the setup is complete: the link is spent */
-    private function finish(): void
+    public function finish(): void
     {
         @unlink($this->root . '/' . self::TOKEN_FILE);
         @unlink($this->root . '/' . self::ACCOUNT_FILE);
@@ -173,7 +239,10 @@ final class Setup
     private static function tokenIn(string $projectRoot): ?string
     {
         $file = rtrim(str_replace('\\', '/', $projectRoot), '/') . '/' . self::TOKEN_FILE;
-        $token = is_file($file) ? trim((string) file_get_contents($file)) : '';
+        if (!is_file($file) || time() - (int) filemtime($file) > self::TOKEN_LIFETIME) {
+            return null;
+        }
+        $token = trim((string) file_get_contents($file));
         return $token === '' ? null : $token;
     }
 
@@ -517,6 +586,21 @@ final class Setup
             $this->errors[] = basename($file) . ' is no plain JSON (comments?) — add the db block by hand';
             return false;
         }
+        // the password stays on this machine, whichever file takes the rest
+        $localFile = $this->configFile('config.local.json');
+        if ($file !== $localFile) {
+            unset($db['pass']);
+            $local = self::readJson($localFile);
+            if ($local === null) {
+                $this->errors[] = 'config.local.json is no plain JSON (comments?) — add the password by hand';
+                return false;
+            }
+            $local['db']['pass'] = $pass;
+            if (!self::writeJson($localFile, $local)) {
+                $this->errors[] = 'cannot write config/config.local.json';
+                return false;
+            }
+        }
         $data['db'] = $db;
         if (!self::writeJson($file, $data)) {
             $this->errors[] = 'cannot write config/' . basename($file);
@@ -673,7 +757,7 @@ final class Setup
                 <label class="choice"><input type="checkbox" name="create" value="1"> create it if it does not exist</label>
                 <fieldset><legend>write the access to</legend>
                     <label class="choice"><input type="radio" name="target" value="instance"$inFile>
-                        config/{$this->h($instance)}.config.json — synced with the project</label>
+                        config/{$this->h($instance)}.config.json — synced with the project, the password still goes to config.local.json</label>
                     <label class="choice"><input type="radio" name="target" value="local"$local>
                         config/config.local.json — this machine only, never synced (LIVE passwords)</label>
                 </fieldset>
@@ -686,7 +770,7 @@ final class Setup
     // Output and files
     // -------------------------------------------------------------------------------------
 
-    private function page(string $title, string $body): void
+    public function page(string $title, string $body): void
     {
         header('Content-Type: text/html; charset=utf-8');
         $title = $this->h($title);
@@ -724,7 +808,7 @@ final class Setup
         return '<ul class="errors"><li>' . implode('</li><li>', array_map([$this, 'h'], $this->errors)) . '</li></ul>';
     }
 
-    private function tokenField(): string
+    public function tokenField(): string
     {
         $given = (string) ($_POST['setup'] ?? $_GET['setup'] ?? '');
         return $given === '' ? '' : '<input type="hidden" name="setup" value="' . $this->h($given) . '">';
@@ -746,7 +830,7 @@ final class Setup
     }
 
     /** plain JSON only - NULL for a file that does not parse (JSONC comments) */
-    private static function readJson(string $file): ?array
+    public static function readJson(string $file): ?array
     {
         if (!is_file($file)) {
             return [];
@@ -756,7 +840,7 @@ final class Setup
     }
 
     /** tabs, like the config files written by hand and by InstanceFiles */
-    private static function writeJson(string $file, array $data): bool
+    public static function writeJson(string $file, array $data): bool
     {
         $json = json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
         if ($json === false) {

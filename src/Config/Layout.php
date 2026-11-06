@@ -22,6 +22,9 @@ final class Layout
     /** top level keys that belong to packages.system */
     private const SYSTEM = ['debug', 'versionAppendix', 'versionDate', 'linkSites', 'assets', 'sysPath', 'ini', 'auth', 'mail'];
 
+    /** what packages() takes out of the top of a file */
+    public const MOVED = [...self::SYSTEM, 'db', 'relay'];
+
     /** the constants of the system - every other one stays free, at the top */
     public const SYSTEM_CONSTANTS = ['DEFAULT_TABLE_PREFIX', 'PROJECT_NAMESPACE', 'ACCOUNT_WHITELIST'];
 
