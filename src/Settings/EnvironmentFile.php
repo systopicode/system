@@ -4,34 +4,30 @@ declare(strict_types=1);
 
 namespace Systopic\System\Settings;
 
+use Systopic\System\Config\Config;
+use Systopic\System\Config\FileWriter;
+use Systopic\System\Config\Layout;
+use Systopic\System\Config\Schema;
+use Systopic\System\Config\Tree;
+
 /**
  * The instance files in `<project>/config`: `DEV.machine.config.json`,
  * `STAGING.config.json`, `LIVE.config.json`, and `config.local.json`.
- * Values are written back as JSON. Nothing the form does not know is dropped.
+ *
+ * What may be written is what the definitions say (Config\Schema), under
+ * `packages.<package>`. A file in the old layout moves to the new one with its
+ * first write, whatever else it holds stays. A secret goes to config.local.json
+ * of this machine, whichever file the form shows: it never travels.
  */
 final class EnvironmentFile
 {
-    /** @var array<string, array<string, string>> group => field => string|bool|int */
-    public const GROUPS = [
-        'db' => ['host' => 'string', 'name' => 'string', 'user' => 'string', 'pass' => 'string'],
-        'debug' => ['debug' => 'bool', 'render' => 'bool', 'time' => 'bool', 'displayErrors' => 'bool'],
-        'mail' => [
-            'host' => 'string', 'port' => 'int', 'secure' => 'string',
-            'user' => 'string', 'password' => 'string', 'from' => 'string', 'fromName' => 'string',
-            'testMode' => 'bool', 'testRecipient' => 'string',
-        ],
-        'auth' => [
-            'deviceDays' => 'int',
-            'screenDays' => 'nullint',
-            'defaultSignInMethod' => 'string',
-        ],
-    ];
-
-    /** @var list<string> */
-    public const SCALARS = ['versionAppendix', 'versionDate'];
+    public const LOCAL = 'config.local.json';
 
     /** @var list<string> */
     public const MATCH = ['serverName', 'serverIp', 'path', 'site'];
+
+    /** the fields resetMail() fills in */
+    private const MAIL_FIELDS = ['host', 'port', 'secure', 'user', 'from', 'fromName', 'testMode', 'testRecipient'];
 
     public static function directory(): ?string
     {
@@ -48,7 +44,7 @@ final class EnvironmentFile
         if ($dir === null) {
             return [];
         }
-        $current = (string) (\Systopic\System\Config\Config::current()?->instance->name ?? '');
+        $current = (string) (Config::current()?->instance->name ?? '');
         $found = glob($dir . '/*.config.json') ?: [];
         sort($found, SORT_STRING);
         $files = [];
@@ -68,11 +64,11 @@ final class EnvironmentFile
                 'current' => $name === $current,
             ];
         }
-        $local = $dir . '/config.local.json';
+        $local = $dir . '/' . self::LOCAL;
         if (is_file($local)) {
             $files[] = [
                 'name' => 'Local overrides',
-                'file' => 'config.local.json',
+                'file' => self::LOCAL,
                 'path' => $local,
                 'current' => true,
             ];
@@ -88,7 +84,7 @@ final class EnvironmentFile
             if (!$info['current']) {
                 continue;
             }
-            if ($info['file'] !== 'config.local.json') {
+            if ($info['file'] !== self::LOCAL) {
                 return $info['file'];
             }
             $local = $info['file'];
@@ -96,7 +92,22 @@ final class EnvironmentFile
         return $local;
     }
 
-    /** @return array<string, mixed> */
+    /** Does this file speak for the installation that is running? */
+    public static function here(string $file): bool
+    {
+        foreach (self::files() as $info) {
+            if ($info['file'] === $file) {
+                return $info['current'];
+            }
+        }
+        return false;
+    }
+
+    /**
+     * The file in the new layout, whichever way it is written.
+     *
+     * @return array<string, mixed>
+     */
     public static function read(string $file): array
     {
         $path = self::path($file);
@@ -108,39 +119,72 @@ final class EnvironmentFile
         } catch (\JsonException) {
             return [];
         }
-        return is_array($data) ? $data : [];
+        return is_array($data) ? Layout::lift($data) : [];
     }
 
-    public static function set(string $file, string $group, string $key, string $raw): bool
+    /**
+     * What a package says in this file, with config.local.json over it when the
+     * file is the one running here: what the secrets of an instance are now.
+     *
+     * @return array<string, mixed>
+     */
+    public static function effective(string $file, string $package): array
     {
-        return self::update($file, static function (array $data) use ($group, $key, $raw): ?array {
-            if ($group === '') {
-                if (!in_array($key, self::SCALARS, true) && !self::isExtraScalar($data, $key)) {
-                    return null;
-                }
-                $data[$key] = $raw;
+        $tree = (array) (self::read($file)['packages'][$package] ?? []);
+        if ($file !== self::LOCAL && self::here($file)) {
+            $tree = Config::merge($tree, (array) (self::read(self::LOCAL)['packages'][$package] ?? []));
+        }
+        return $tree;
+    }
+
+    /**
+     * May this file hold the field? An instance file what the installation
+     * defines, config.local.json what may be overridden. Secrets are not
+     * asked here: they have one place.
+     *
+     * @param array<string, mixed> $definition
+     */
+    public static function holds(string $file, array $definition, string $owner): bool
+    {
+        $overridable = !empty($definition['x-overridable']);
+        return $file === self::LOCAL ? $overridable : $owner === 'machine' || $overridable;
+    }
+
+    /** One field from a form. Empty: the value goes, and what lies below it counts again. */
+    public static function set(string $file, string $package, string $path, string $raw): bool
+    {
+        $field = Schema::field($package, $path);
+        if ($field === null) {
+            return false;
+        }
+        [$definition, $owner] = $field;
+        $keys = ['packages', $package, ...explode('.', $path)];
+        if (!empty($definition['writeOnly'])) {
+            // a secret of another machine stays there; empty keeps the one there is
+            if (!self::here($file)) {
+                return false;
+            }
+            return $raw === '' || self::updateLocal(static function (array $data) use ($keys, $raw): array {
+                Tree::put($data, $keys, $raw);
                 return $data;
-            }
-            $kind = self::GROUPS[$group][$key] ?? null;
-            if ($kind === null) {
-                return null;
-            }
-            // Reject invalid values instead of silently casting them to zero/false.
-            if ($kind === 'bool' && !in_array(strtolower($raw), ['0', '1', 'true', 'false'], true)) return null;
-            if (in_array($kind, ['int', 'nullint'], true) && !($kind === 'nullint' && trim($raw) === '')) {
-                if (!preg_match('/^[0-9]+$/D', $raw) || filter_var($raw, FILTER_VALIDATE_INT) === false || (int) $raw < 1) return null;
-                if ($group === 'mail' && $key === 'port' && (int) $raw > 65535) return null;
-            }
-            if ($group === 'mail' && $key === 'secure' && !in_array($raw, ['tls', 'ssl', 'none'], true)) return null;
-            if ($group === 'mail' && $key === 'from' && $raw !== '' && !filter_var($raw, FILTER_VALIDATE_EMAIL)) return null;
-            if ($group === 'auth' && $key === 'defaultSignInMethod' && !in_array($raw, ['', 'code', 'device_code', 'passkey', 'password'], true)) return null;
-            if ($group === 'mail' && $key === 'testRecipient') {
-                $raw = trim($raw);
-                if ($raw !== '' && !filter_var($raw, FILTER_VALIDATE_EMAIL)) return null;
-            }
-            $bag = is_array($data[$group] ?? null) ? $data[$group] : [];
-            $bag[$key] = self::cast($raw, $kind);
-            $data[$group] = $bag;
+            });
+        }
+        if (!self::holds($file, $definition, $owner)) {
+            return false;
+        }
+        $raw = trim($raw);
+        if ($raw === '') {
+            return self::update($file, static function (array $data) use ($keys): array {
+                Tree::drop($data, $keys);
+                return $data;
+            });
+        }
+        [$valid, $value] = Schema::parse($definition, $raw);
+        if (!$valid) {
+            return false;
+        }
+        return self::update($file, static function (array $data) use ($keys, $value): array {
+            Tree::put($data, $keys, $value);
             return $data;
         });
     }
@@ -148,34 +192,42 @@ final class EnvironmentFile
     public static function resetMail(string $file): bool
     {
         return self::update($file, static function (array $data): array {
-            $mail = is_array($data['mail'] ?? null) ? $data['mail'] : [];
-            $data['mail'] = array_diff_key($mail, self::GROUPS['mail']) + [
+            $mail = (array) Tree::get($data, ['packages', 'system', 'mail']);
+            Tree::put($data, ['packages', 'system', 'mail'], array_diff_key($mail, array_flip(self::MAIL_FIELDS)) + [
                 'host' => \Systopic\System\Mail\Delivery::DEFAULT_HOST,
                 'port' => 587,
                 'secure' => 'tls',
                 'user' => \Systopic\System\Mail\Delivery::DEFAULT_SENDER,
                 'from' => \Systopic\System\Mail\Delivery::DEFAULT_SENDER,
                 'fromName' => 'fluxo',
-            ];
+            ]);
             return $data;
         });
     }
 
+    /** A value of a rule. Several, separated by commas, make a list. */
     public static function setMatch(string $file, int $index, string $field, string $raw): bool
     {
         if (!in_array($field, self::MATCH, true)) {
             return false;
         }
-        if ($field === 'serverIp' && trim($raw) !== '' && !filter_var(trim($raw), FILTER_VALIDATE_IP)) return false;
-        return self::update($file, static function (array $data) use ($index, $field, $raw): ?array {
+        $values = array_values(array_filter(array_map('trim', explode(',', $raw)), static fn(string $v): bool => $v !== ''));
+        if ($field === 'serverIp') {
+            foreach ($values as $ip) {
+                if (!filter_var($ip, FILTER_VALIDATE_IP)) {
+                    return false;
+                }
+            }
+        }
+        return self::update($file, static function (array $data) use ($index, $field, $values): ?array {
             $rules = array_values(is_array($data['matches'] ?? null) ? $data['matches'] : []);
             if (!isset($rules[$index]) || !is_array($rules[$index])) {
                 return null;
             }
-            if (trim($raw) === '') {
+            if ($values === []) {
                 unset($rules[$index][$field]);
             } else {
-                $rules[$index][$field] = $raw;
+                $rules[$index][$field] = count($values) === 1 ? $values[0] : $values;
             }
             $data['matches'] = array_values($rules);
             return $data;
@@ -188,72 +240,6 @@ final class EnvironmentFile
             $rules = array_values(is_array($data['matches'] ?? null) ? $data['matches'] : []);
             $rules[] = ['serverName' => '', 'path' => ''];
             $data['matches'] = $rules;
-            return $data;
-        });
-    }
-
-    /**
-     * Point this environment at the hub on this machine. The block is the
-     * hub's own key. It is not returned and must not be shown.
-     *
-     * @param array{api: string, apiKey: string, secret: string, client: string, plainTopics: bool} $relay
-     */
-    public static function connectRelay(string $file, array $relay): bool
-    {
-        return self::update($file, static function (array $data) use ($relay): array {
-            $data['relay'] = $relay;
-            return $data;
-        }) ?? false;
-    }
-
-    /** Switch this environment only; the shared hub process is untouched. */
-    public static function enableRelay(string $file, bool $enabled): bool
-    {
-        return self::update($file, static function (array $data) use ($enabled): ?array {
-            if (!is_array($data['relay'] ?? null) || empty($data['relay']['api']) || empty($data['relay']['secret'])) {
-                return null;
-            }
-            $data['relay']['enabled'] = $enabled;
-            return $data;
-        });
-    }
-
-    /** Drop the sign-in key. Lifetimes stay. Existing codes stop verifying. */
-    public static function removeAuth(string $file): bool
-    {
-        return self::update($file, static function (array $data): array {
-            $auth = is_array($data['auth'] ?? null) ? $data['auth'] : [];
-            unset($auth['secret']);
-            if ($auth === []) {
-                unset($data['auth']);
-            } else {
-                $data['auth'] = $auth;
-            }
-            return $data;
-        }) ?? false;
-    }
-
-    /**
-     * Writes the auth block when it is missing, and a sign-in key when there
-     * is none. `$replace` rotates a key that is already there. The key is
-     * random and is not returned.
-     */
-    public static function createAuth(string $file, bool $replace = false): bool
-    {
-        return self::update($file, static function (array $data) use ($replace): ?array {
-            $auth = is_array($data['auth'] ?? null) ? $data['auth'] : [];
-            $secret = (string) ($auth['secret'] ?? '');
-            if (strlen($secret) >= 32 && !$replace) {
-                return null;
-            }
-            if (!array_key_exists('deviceDays', $auth)) {
-                $auth['deviceDays'] = \Systopic\System\Auth\AuthConfig::DEVICE_DAYS;
-            }
-            if (!array_key_exists('screenDays', $auth)) {
-                $auth['screenDays'] = null;
-            }
-            $auth['secret'] = bin2hex(random_bytes(32));
-            $data['auth'] = $auth;
             return $data;
         });
     }
@@ -271,6 +257,87 @@ final class EnvironmentFile
         });
     }
 
+    /**
+     * Point this environment at the hub on this machine. The block is the
+     * hub's own key. It is not returned and must not be shown. Its secrets go
+     * to config.local.json like every other.
+     *
+     * @param array{api: string, apiKey: string, secret: string, client: string, plainTopics: bool} $relay
+     */
+    public static function connectRelay(string $file, array $relay): bool
+    {
+        $secrets = array_intersect_key($relay, ['apiKey' => true, 'secret' => true]);
+        $shared = array_diff_key($relay, $secrets);
+        return self::updateLocal(static function (array $data) use ($secrets): array {
+            Tree::put($data, ['packages', 'relay'], Config::merge((array) Tree::get($data, ['packages', 'relay']), $secrets));
+            return $data;
+        }) && self::update($file, static function (array $data) use ($shared): array {
+            Tree::put($data, ['packages', 'relay'], Config::merge((array) Tree::get($data, ['packages', 'relay']), $shared));
+            return $data;
+        });
+    }
+
+    /** Switch this environment only; the shared hub process is untouched. */
+    public static function enableRelay(string $file, bool $enabled): bool
+    {
+        $relay = self::effective($file, 'relay');
+        if (empty($relay['api']) || empty($relay['secret'])) {
+            return false;
+        }
+        return self::update($file, static function (array $data) use ($enabled): array {
+            Tree::put($data, ['packages', 'relay', 'enabled'], $enabled);
+            return $data;
+        });
+    }
+
+    /** The sign-in key of this installation: config.local.json, then a file that has not moved yet. */
+    public static function authSecret(string $file): string
+    {
+        return (string) (self::effective($file, 'system')['auth']['secret'] ?? '');
+    }
+
+    /** Drop the sign-in key, wherever it lies. Lifetimes stay. Existing codes stop verifying. */
+    public static function removeAuth(string $file): bool
+    {
+        $keys = ['packages', 'system', 'auth', 'secret'];
+        $drop = static function (array $data) use ($keys): array {
+            Tree::drop($data, $keys);
+            return $data;
+        };
+        return (self::path(self::LOCAL) === null || self::update(self::LOCAL, $drop)) && self::update($file, $drop);
+    }
+
+    /**
+     * A sign-in key for this installation when there is none. `$replace`
+     * rotates one that is there. The key is random, goes to config.local.json
+     * and is not returned.
+     */
+    public static function createAuth(string $file, bool $replace = false): bool
+    {
+        $keys = ['packages', 'system', 'auth', 'secret'];
+        return self::updateLocal(static function (array $data) use ($file, $replace, $keys): ?array {
+            // read inside the lock: two requests at once make one key
+            $secret = (string) (Tree::get($data, $keys) ?? Tree::get(self::read($file), $keys) ?? '');
+            if (!$replace && strlen($secret) >= 32) {
+                return null;
+            }
+            Tree::put($data, $keys, bin2hex(random_bytes(32)));
+            return $data;
+        }, true) && (!$replace || self::dropFrom($file, $keys));
+    }
+
+    /** @param list<string> $keys */
+    private static function dropFrom(string $file, array $keys): bool
+    {
+        if ($file === self::LOCAL) {
+            return true;
+        }
+        return self::update($file, static function (array $data) use ($keys): array {
+            Tree::drop($data, $keys);
+            return $data;
+        });
+    }
+
     public static function path(string $file): ?string
     {
         $dir = self::directory();
@@ -283,23 +350,22 @@ final class EnvironmentFile
         return is_file($path) ? $path : null;
     }
 
-    /** @param array<string, mixed> $data */
-    private static function isExtraScalar(array $data, string $key): bool
+    /**
+     * config.local.json, which may not exist yet.
+     *
+     * @param callable(array<string, mixed>): ?array<string, mixed> $change
+     * @param bool $unchangedIsFine a change that decides there is nothing to do
+     */
+    private static function updateLocal(callable $change, bool $unchangedIsFine = false): bool
     {
-        if (!array_key_exists($key, $data) || is_array($data[$key])) {
+        $dir = self::directory();
+        if ($dir === null) {
             return false;
         }
-        return !in_array($key, ['matches', 'db', 'debug', 'mail', ...self::SCALARS], true);
-    }
-
-    private static function cast(string $raw, string $kind): string|int|bool|null
-    {
-        return match ($kind) {
-            'bool' => $raw === '1' || strcasecmp($raw, 'true') === 0,
-            'int' => (int) $raw,
-            'nullint' => trim($raw) === '' ? null : max(1, (int) $raw),
-            default => $raw,
-        };
+        if (self::path(self::LOCAL) === null && !FileWriter::write($dir . DIRECTORY_SEPARATOR . self::LOCAL, "{}\n", 0600)) {
+            return false;
+        }
+        return self::update(self::LOCAL, $change, $unchangedIsFine);
     }
 
     /**
@@ -312,13 +378,13 @@ final class EnvironmentFile
      *
      * @param callable(array<string, mixed>): ?array<string, mixed> $change null = nothing to write
      */
-    private static function update(string $file, callable $change): bool
+    private static function update(string $file, callable $change, bool $unchangedIsFine = false): bool
     {
         $path = self::path($file);
         if ($path === null) {
             return false;
         }
-        return \Systopic\System\Config\FileWriter::locked($path, static function () use ($path, $change): bool {
+        return FileWriter::locked($path, static function () use ($path, $change, $unchangedIsFine): bool {
             $raw = file_get_contents($path);
             try {
                 $data = $raw === false ? null : json_decode($raw, true, 512, JSON_THROW_ON_ERROR);
@@ -328,12 +394,12 @@ final class EnvironmentFile
             if (!is_array($data)) {
                 return false;
             }
-            $data = $change($data);
+            $data = $change(Layout::lift($data));
             if ($data === null) {
-                return false;
+                return $unchangedIsFine;
             }
             $json = json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
-            return $json !== false && \Systopic\System\Config\FileWriter::write($path, $json . "\n", 0600);
+            return $json !== false && FileWriter::write($path, $json . "\n", 0600);
         });
     }
 }

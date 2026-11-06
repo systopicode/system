@@ -27,6 +27,9 @@ Instanznamen = `stage`-Feld in `.sync`.
    `DEBUG`, `DEBUGRENDER`, `DEBUGTIME`, `PUBLIC_VERSIONDATE`,
    `PUBLIC_VERSIONAPPENDIX` und alle `constants`; setzt `error_reporting`,
    `display_errors` und `ini`. Jedes `define` ist mit `defined()` geschützt.
+   Bei `constants` und `ini` gewinnt die spätere Datei: `config.json`, Instanz,
+   `config.local.json`. `error_log`, `display_errors` und `error_reporting` sind in
+   `ini` reserviert. Die ini-Defaults setzt `Config::applyIniDefaults()` vor dem Boot.
 2. `loader.php` nach dem DB-Connect: `SiteRegistry::boot()` lädt die Sites aus
    `cms_sites`, `resolveSite()` nimmt die Site der getroffenen Regel (ohne
    Regel: Name/Alias des Hosts), danach ggf. 301 von einer Alias-Domain.

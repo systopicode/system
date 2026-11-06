@@ -8,26 +8,28 @@
 			"title": "Debug",
 			"type": "object",
 			"properties": {
-				"debug": { "title": "Debug", "type": ["boolean", "integer"], "default": false, "x-stages": { "DEV": true } },
-				"render": { "title": "Render time", "type": ["boolean", "integer"], "default": false, "x-stages": { "DEV": true } },
-				"time": { "title": "Script time", "type": ["boolean", "integer"], "default": false, "x-stages": { "DEV": true } },
-				"displayErrors": { "title": "Display errors", "type": ["boolean", "integer"], "default": false, "x-stages": { "DEV": true } }
+				"debug": { "title": "Debug", "type": ["boolean", "integer"], "default": false, "x-stages": { "DEV": true }, "x-overridable": true },
+				"render": { "title": "Render time", "type": ["boolean", "integer"], "default": false, "x-stages": { "DEV": true }, "x-overridable": true },
+				"time": { "title": "Script time", "type": ["boolean", "integer"], "default": false, "x-stages": { "DEV": true }, "x-overridable": true },
+				"displayErrors": { "title": "Display PHP errors", "type": ["boolean", "integer"], "default": false, "x-stages": { "DEV": true }, "x-overridable": true }
 			}
 		},
 		"versionAppendix": {
 			"title": "Version appendix",
 			"description": "Appended to asset URLs. time: the current time. Not set: versionDate.",
 			"type": "string",
-			"x-stages": { "DEV": "time" }
+			"x-stages": { "DEV": "time" },
+			"x-overridable": true
 		},
-		"versionDate": { "title": "Version date", "type": "string" },
+		"versionDate": { "title": "Version date", "type": "string", "x-overridable": true },
 		"linkSites": { "title": "Link sites", "description": "Create the links of the sites in public/", "type": "boolean", "default": false },
 		"assets": {
 			"title": "Assets",
 			"description": "Not set: the originals where the web reaches them, copies where it does not.",
 			"type": "string",
 			"enum": ["source", "serve", "publish"],
-			"x-computed": true
+			"x-computed": true,
+			"x-overridable": true
 		},
 		"sysPath": { "title": "System path", "type": "string", "default": "vendor/systopic/system/" },
 		"mail": {
@@ -38,7 +40,7 @@
 			"properties": {
 				"host": { "title": "SMTP host", "type": "string" },
 				"port": { "title": "Port", "type": "integer", "minimum": 1, "maximum": 65535, "default": 587 },
-				"secure": { "title": "Encryption", "type": "string", "default": "tls" },
+				"secure": { "title": "Encryption", "type": "string", "enum": ["tls", "ssl", "none"], "default": "tls" },
 				"user": { "title": "User", "type": "string" },
 				"from": { "title": "From address", "type": "string", "format": "email" },
 				"fromName": { "title": "From name", "type": "string" },

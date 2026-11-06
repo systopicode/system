@@ -107,6 +107,89 @@ final class Schema
         return $value;
     }
 
+    /**
+     * The definition of one value, and the file it belongs to. `path` is dotted,
+     * a name of a map stands for itself: 'connections.main.host'.
+     *
+     * @return array{0: array<string, mixed>, 1: string}|null
+     */
+    public static function field(string $package, string $path): ?array
+    {
+        foreach (self::load($package) as $file => $definition) {
+            $node = self::node($definition, explode('.', $path));
+            if ($node !== null && !isset($node['properties']) && !is_array($node['additionalProperties'] ?? null)) {
+                return [$node, $file];
+            }
+        }
+        return null;
+    }
+
+    /**
+     * The values directly below a path, from all files of the package: key =>
+     * [definition, file]. Blocks are left out, a form has them as groups.
+     *
+     * @return array<string, array{0: array<string, mixed>, 1: string}>
+     */
+    public static function children(string $package, string $path): array
+    {
+        $found = [];
+        foreach (self::load($package) as $file => $definition) {
+            $node = self::node($definition, $path === '' ? [] : explode('.', $path));
+            foreach ($node['properties'] ?? [] as $key => $child) {
+                if (!isset($child['properties']) && !is_array($child['additionalProperties'] ?? null) && ($child['type'] ?? '') !== 'object') {
+                    $found[(string) $key] = [$child, $file];
+                }
+            }
+        }
+        return $found;
+    }
+
+    /**
+     * @param array<string, mixed> $node
+     * @param list<string>         $keys
+     * @return array<string, mixed>|null
+     */
+    private static function node(array $node, array $keys): ?array
+    {
+        foreach ($keys as $key) {
+            if (isset($node['properties'][$key])) {
+                $node = $node['properties'][$key];
+            } elseif (is_array($node['additionalProperties'] ?? null) && preg_match('~^[a-z][a-zA-Z0-9]*$~', $key) === 1) {
+                $node = $node['additionalProperties'];
+            } else {
+                return null;
+            }
+        }
+        return $node;
+    }
+
+    /**
+     * A value from a form as what the definition wants.
+     *
+     * @param array<string, mixed> $definition
+     * @return array{0: bool, 1: mixed} valid, value
+     */
+    public static function parse(array $definition, string $raw): array
+    {
+        $types = (array) ($definition['type'] ?? 'string');
+        if (in_array('boolean', $types, true)) {
+            $text = strtolower($raw);
+            return in_array($text, ['0', '1', 'true', 'false'], true) ? [true, $text === '1' || $text === 'true'] : [false, null];
+        }
+        if (in_array('integer', $types, true)) {
+            $number = filter_var($raw, FILTER_VALIDATE_INT);
+            $valid = $number !== false && $number >= ($definition['minimum'] ?? PHP_INT_MIN) && $number <= ($definition['maximum'] ?? PHP_INT_MAX);
+            return [$valid, $valid ? $number : null];
+        }
+        if (isset($definition['enum']) && !in_array($raw, $definition['enum'], true)) {
+            return [false, null];
+        }
+        if (($definition['format'] ?? '') === 'email' && !filter_var($raw, FILTER_VALIDATE_EMAIL)) {
+            return [false, null];
+        }
+        return [true, $raw];
+    }
+
     /** for a test: forget what was read */
     public static function reset(): void
     {

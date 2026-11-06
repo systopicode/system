@@ -73,6 +73,31 @@ check('old and new files side by side', $config->package('system')['constants'][
 array_map('unlink', glob("$dir/*") ?: []);
 rmdir($dir);
 
+// ---- constants: the later file wins
+$dir = sys_get_temp_dir() . '/config-tree-' . bin2hex(random_bytes(4));
+mkdir($dir);
+$write = static fn(string $name, array $data) => file_put_contents("$dir/$name", json_encode($data));
+$write('config.json', ['constants' => ['TREE_A' => 'project', 'TREE_B' => 'project', 'TREE_C' => 'project'], 'ini' => ['precision' => 11]]);
+$write('LIVE.config.json', ['default' => true, 'constants' => ['TREE_B' => 'instance', 'TREE_C' => 'instance'], 'ini' => ['precision' => 12, 'error_log' => 'nope.log', 'display_errors' => '1', 'error_reporting' => '0']]);
+$write('config.local.json', ['constants' => ['TREE_C' => 'local']]);
+$config = Config::boot($dir, ['SERVER_NAME' => 'example.com', 'SERVER_ADDR' => '1.2.3.4'], $dir);
+$log = ini_get('error_log');
+$reporting = error_reporting();
+Config::applyIniDefaults();
+check('the defaults come from the definitions', ini_get('memory_limit') === '1G' && ini_get('serialize_precision') === '14');
+$config->defineConstants();
+check('config.json alone', TREE_A === 'project');
+check('the instance beats config.json', TREE_B === 'instance');
+check('config.local.json beats the instance', TREE_C === 'local');
+check('ini: the instance beats config.json', ini_get('precision') === '12');
+check('a config cannot reach error_log', ini_get('error_log') === $log);
+check('nor error_reporting', error_reporting() === -1);
+check('nor display_errors, that is the debug switch', ini_get('display_errors') === '0');
+check('defaults stay where no file says otherwise', ini_get('memory_limit') === '1G');
+ini_set('display_errors', '1'); // the checks below have to be able to fail out loud
+array_map('unlink', glob("$dir/*") ?: []);
+rmdir($dir);
+
 // ---- step 1: every instance says the same as before
 $checked = 0;
 $different = [];
@@ -84,12 +109,17 @@ foreach (glob(dirname(__DIR__, 3) . '/projects/*/config/config.json') ?: [] as $
 		if ($name === 'config') {
 			continue;
 		}
+		// only a file in the old layout can be compared with the old accessors
+		if (isset(json_decode((string) file_get_contents($file), true)['packages'])) {
+			continue;
+		}
 		$config = Config::boot($dir, [], dirname($dir), $name);
 		$old = $config->instance;
 		$system = $config->package('system');
 		$db = $old->db();
 		$bind = $db['bindOnlyUsedParams'] ?? null;
 		unset($db['bindOnlyUsedParams']);
+		unset($db['pass']); // config.local.json of this machine lies over whichever instance is pinned here
 		$main = $config->connection();
 		$pairs = [
 			'db' => [$db, array_intersect_key($main, $db)],
@@ -119,9 +149,5 @@ foreach (glob(dirname(__DIR__, 3) . '/projects/*/config/config.json') ?: [] as $
 		$checked++;
 	}
 }
-if ($checked === 0) {
-	echo "skipped: no projects next to the packages\n";
-	exit(0);
-}
-check("$checked instances say the same as before", $different === []);
+check("$checked instances in the old layout say the same as before", $different === []);
 echo "all fine\n";

@@ -63,4 +63,27 @@ final class Layout
         }
         return Config::merge($tree, is_array($file['packages'] ?? null) ? $file['packages'] : []);
     }
+
+    /**
+     * The whole file in the new layout: what moved goes under `packages`, the
+     * rest stays where it is.
+     *
+     * @param array<string, mixed> $file
+     * @return array<string, mixed>
+     */
+    public static function lift(array $file): array
+    {
+        $packages = self::packages($file);
+        foreach (self::MOVED as $key) {
+            unset($file[$key]);
+        }
+        foreach (self::SYSTEM_CONSTANTS as $name) {
+            unset($file['constants'][$name]);
+        }
+        if (($file['constants'] ?? null) === []) {
+            unset($file['constants']);
+        }
+        unset($file['packages']);
+        return $packages === [] ? $file : $file + ['packages' => $packages];
+    }
 }

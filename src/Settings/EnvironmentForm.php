@@ -6,6 +6,8 @@ namespace Systopic\System\Settings;
 
 use Systopic\System\Auth\AuthConfig;
 use Systopic\System\Auth\Session;
+use Systopic\System\Config\Schema;
+use Systopic\System\Config\Tree;
 use Systopic\System\Panels\PanelNode;
 
 /**
@@ -47,9 +49,9 @@ final class EnvironmentForm
             if ($info['file'] === 'config.local.json') {
                 echo '<p class="tagsHint">Machine-local overrides, merged over the matching environment config. This file is not a separate server and is not synced. Empty values here do not mean the environment’s values are empty.</p>';
             }
-            self::scalars($info['file'], 'Database', 'db', EnvironmentFile::GROUPS['db'], is_array($data['db'] ?? null) ? $data['db'] : []);
-            self::scalars($info['file'], 'Debug', 'debug', EnvironmentFile::GROUPS['debug'], is_array($data['debug'] ?? null) ? $data['debug'] : []);
-            self::scalars($info['file'], 'Mail', 'mail', EnvironmentFile::GROUPS['mail'], is_array($data['mail'] ?? null) ? $data['mail'] : []);
+            self::database($info['file'], $data);
+            self::scalars($info['file'], 'Debug', 'debug', 'system', 'debug', $data);
+            self::scalars($info['file'], 'Mail', 'mail', 'system', 'mail', $data);
             self::auth($info['file'], $data);
             self::hub($info['file'], $data, $info['current'] && $info['file'] !== 'config.local.json');
             self::version($info['file'], $data);
@@ -91,13 +93,13 @@ final class EnvironmentForm
             return;
         }
         $result = match ($panel->action) {
-            'save' => EnvironmentFile::set($file, (string) \http::dataset('group'), (string) \http::dataset('key'), self::posted()),
+            'save' => EnvironmentFile::set($file, (string) \http::dataset('package'), (string) \http::dataset('path'), self::posted()),
             'resetMail' => Session::isSuperuser() && EnvironmentFile::resetMail($file),
             'saveMatch' => EnvironmentFile::setMatch($file, (int) \http::dataset('index'), (string) \http::dataset('field'), self::posted()),
             'addMatch' => EnvironmentFile::addMatch($file),
             'removeMatch' => EnvironmentFile::removeMatch($file, (int) \http::dataset('index')),
-            'createAuth' => EnvironmentFile::createAuth($file),
-            'replaceAuth' => EnvironmentFile::createAuth($file, true),
+            'createAuth' => EnvironmentFile::here($file) && EnvironmentFile::createAuth($file),
+            'replaceAuth' => EnvironmentFile::here($file) && EnvironmentFile::createAuth($file, true),
             'removeAuth' => Session::isSuperuser() ? EnvironmentFile::removeAuth($file) : false,
             default => null,
         };
@@ -113,9 +115,7 @@ final class EnvironmentForm
             return;
         }
         if (in_array($panel->action, ['createAuth', 'replaceAuth', 'removeAuth'], true)) {
-            $written = EnvironmentFile::read($file);
-            $auth = is_array($written['auth'] ?? null) ? $written['auth'] : [];
-            AuthConfig::rememberSecret((string) ($auth['secret'] ?? ''));
+            AuthConfig::rememberSecret(EnvironmentFile::authSecret($file));
         }
         \message::confirm(match ($panel->action) {
             'resetMail' => 'Mail settings reset to defaults.',
@@ -124,7 +124,9 @@ final class EnvironmentForm
             'removeAuth' => 'Sign-in key deleted. Codes already sent stop working.',
             default => 'Saved.',
         });
-        if ($panel->action !== 'save') {
+        // a secret leaves its field empty again, and says that it is set
+        $field = $panel->action === 'save' ? Schema::field((string) \http::dataset('package'), (string) \http::dataset('path')) : null;
+        if ($panel->action !== 'save' || !empty($field[0]['writeOnly'])) {
             $panel->updateView();
         }
     }
@@ -184,7 +186,7 @@ final class EnvironmentForm
     private static function hub(string $file, array $data, bool $here): void
     {
         $e = static fn($v): string => htmlspecialchars((string) $v, ENT_QUOTES);
-        $relay = is_array($data['relay'] ?? null) ? $data['relay'] : [];
+        $relay = EnvironmentFile::effective($file, 'relay');
         $ready = ($relay['api'] ?? '') !== '' && ($relay['apiKey'] ?? '') !== '' && strlen((string) ($relay['secret'] ?? '')) >= 16;
         $status = CentrifugoHub::status();
         $included = class_exists(\Systopic\Relay\Relay::class);
@@ -222,8 +224,9 @@ final class EnvironmentForm
         $allowed = CentrifugoHub::allowedOrigins();
         $invalidIp = false;
         foreach ($data['matches'] ?? [] as $rule) {
-            $ip = is_array($rule) ? trim((string) ($rule['serverIp'] ?? '')) : '';
-            if ($ip !== '' && !filter_var($ip, FILTER_VALIDATE_IP)) $invalidIp = true;
+            foreach (is_array($rule) ? (array) ($rule['serverIp'] ?? []) : [] as $ip) {
+                if (trim((string) $ip) !== '' && !filter_var(trim((string) $ip), FILTER_VALIDATE_IP)) $invalidIp = true;
+            }
         }
         echo '<div class="envHubOrigins"><div class="envHubAddressHeader"><h3>Browser addresses</h3>';
         if (Session::isSuperuser()) echo '<button type="button" class="button" data-on_click="addAddress" data-file="' . $e($file) . '"><i class="cmsIcon cmsIcon-plus"></i>Add domain / IP</button>';
@@ -251,8 +254,14 @@ final class EnvironmentForm
     private static function auth(string $file, array $data): void
     {
         $e = static fn($value): string => htmlspecialchars((string) $value, ENT_QUOTES);
-        $auth = is_array($data['auth'] ?? null) ? $data['auth'] : [];
-        $ready = strlen((string) ($auth['secret'] ?? '')) >= 32;
+        if (!EnvironmentFile::here($file)) {
+            echo '<section class="cmsBox envSignIn"><header><div class="cmsBoxTitles"><h2>Sign-in</h2><p class="cmsBoxLead">The sign-in key lies on that machine, in its config.local.json.</p></div></header>';
+            echo '<div class="cmsBoxBody"><div class="tableScroll"><table class="scalars"><tbody>';
+            self::rows($file, 'system', 'auth', $data, '', ['deviceDays', 'screenDays']);
+            echo '</tbody></table></div></div></section>';
+            return;
+        }
+        $ready = strlen(EnvironmentFile::authSecret($file)) >= 32;
         echo '<section class="cmsBox envSignIn"><header><div class="cmsBoxTitles"><h2>Sign-in</h2>';
         if (!$ready) {
             echo '<p class="cmsBoxLead">A sign-in key enables one-time codes for this environment. Device and screen lifetimes control how long that access remains valid.</p></div></header>';
@@ -263,12 +272,7 @@ final class EnvironmentForm
         }
         echo '<p class="cmsBoxLead">A sign-in key is set. It is not shown. Empty screen days means a screen stays until it is revoked.</p></div></header>';
         echo '<div class="cmsBoxBody"><div class="tableScroll"><table class="scalars"><tbody>';
-        echo '<tr><td><span>Device days<small>deviceDays</small></span></td><td>';
-        self::control($file, 'auth', 'deviceDays', 'int', $auth['deviceDays'] ?? \Systopic\System\Auth\AuthConfig::DEVICE_DAYS);
-        echo '</td></tr>';
-        echo '<tr><td><span>Screen days<small>screenDays</small></span></td><td>';
-        self::control($file, 'auth', 'screenDays', 'string', $auth['screenDays'] ?? '');
-        echo '</td></tr>';
+        self::rows($file, 'system', 'auth', $data, '', ['deviceDays', 'screenDays']);
         echo '</tbody></table></div>';
         echo '<p class="cmsBoxLead">Replacing the key makes codes already sent stop working.</p>';
         echo '<button type="button" class="button" data-on_click="userConfirm" data-action="replaceAuth" data-confirm="Replace the sign-in key? Codes already sent stop working." data-file="' . $e($file) . '"><i class="cmsIcon cmsIcon-arrows-rotate"></i> Replace sign-in key</button>';
@@ -278,8 +282,8 @@ final class EnvironmentForm
         echo '</div></section>';
     }
 
-    /** @param array<string, string> $schema @param array<string, mixed> $values */
-    private static function scalars(string $file, string $title, string $group, array $schema, array $values): void
+    /** @param array<string, mixed> $data the file */
+    private static function scalars(string $file, string $title, string $group, string $package, string $path, array $data): void
     {
         $e = static fn($value): string => htmlspecialchars((string) $value, ENT_QUOTES);
         echo '<section class="widget"><header><h2>' . $e($title) . '</h2></header>';
@@ -287,12 +291,7 @@ final class EnvironmentForm
             echo '<main><p class="tagsHint">Test mode redirects all To, CC and BCC recipients to the test recipient. DEV always uses test routing, even when this switch is off. Enable the switch to use test routing in LIVE or STAGING. Leave the recipient empty to use testmail@fluxo.systems. Invalid test recipients block delivery.</p></main>';
         }
         echo '<div class="tableScroll"><table class="scalars"><tbody>';
-        foreach ($schema as $key => $kind) {
-            $value = $values[$key] ?? ($kind === 'bool' ? false : '');
-            echo '<tr' . ($group === 'debug' ? ' data-debug-option="' . $e($key) . '"' : '') . '><td><span>' . $e($group === 'debug' && $key === 'displayErrors' ? 'Display PHP errors' : self::label($key)) . '<small>' . $e($key) . '</small></span></td><td' . ($kind === 'bool' ? ' data-table-inline' : '') . '>';
-            self::control($file, $group, $key, $kind, $value);
-            echo '</td></tr>';
-        }
+        self::rows($file, $package, $path, $data, $group);
         echo '</tbody></table></div>';
         if ($group === 'mail' && Session::isSuperuser()) {
             $testActions = '';
@@ -315,11 +314,7 @@ final class EnvironmentForm
         $e = static fn($value): string => htmlspecialchars((string) $value, ENT_QUOTES);
         echo '<section class="widget"><header><h2>Version</h2></header>';
         echo '<div class="tableScroll"><table class="scalars"><tbody>';
-        foreach (EnvironmentFile::SCALARS as $key) {
-            echo '<tr><td><span>' . $e(self::label($key)) . '<small>' . $e($key) . '</small></span></td><td>';
-            self::control($file, '', $key, 'string', (string) ($data[$key] ?? ''));
-            echo '</td></tr>';
-        }
+        self::rows($file, 'system', '', $data);
         echo '</tbody></table></div></section>';
     }
 
@@ -345,8 +340,8 @@ final class EnvironmentForm
             foreach (EnvironmentFile::MATCH as $field) {
                 $attrs = ' aria-label="' . $e(self::label($field) . ': rule ' . ($index + 1)) . '" data-file="' . $e($file) . '" data-index="' . (int) $index . '" data-field="' . $e($field) . '"';
                 $validation = $field === 'serverIp' ? ' pattern="(?:(?:(?:25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])\.){3}(?:25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])|(?:[0-9a-fA-F]*:){2,}[0-9a-fA-F:.]*)" title="Enter a valid IPv4 or IPv6 address, or leave empty."' : '';
-                if ($field === 'serverIp' && trim((string) ($rule[$field] ?? '')) !== '' && !filter_var(trim((string) $rule[$field]), FILTER_VALIDATE_IP)) $validation .= ' aria-invalid="true"';
-                echo '<td><input data-on_blur="saveMatch"' . $attrs . $validation . ' name="value" value="' . $e((string) ($rule[$field] ?? '')) . '" autocomplete="off"></td>';
+                if ($field === 'serverIp' && !empty($rule[$field]) && array_filter((array) $rule[$field], static fn($ip) => !filter_var(trim((string) $ip), FILTER_VALIDATE_IP)) !== []) $validation .= ' aria-invalid="true"';
+                echo '<td><input data-on_blur="saveMatch"' . $attrs . $validation . ' name="value" value="' . $e(implode(', ', (array) ($rule[$field] ?? ''))) . '" autocomplete="off"></td>';
             }
             echo '<td class="projectRemove"><button type="button" class="button transparent" title="Remove" data-on_click="userConfirm" data-action="removeMatch" data-confirm="Remove this address?" data-file="' . $e($file) . '" data-index="' . (int) $index . '"><i class="cmsIcon cmsIcon-trash"></i></button></td>';
             echo '</tr>';
@@ -354,25 +349,97 @@ final class EnvironmentForm
         echo '</tbody></table></div></section>';
     }
 
-    private static function control(string $file, string $group, string $key, string $kind, mixed $value): void
+    /**
+     * The widget of a database connection: `main`, and whatever else the
+     * project connects to.
+     *
+     * @param array<string, mixed> $data the file
+     */
+    private static function database(string $file, array $data): void
+    {
+        $names = array_keys((array) (EnvironmentFile::effective($file, 'db')['connections'] ?? []));
+        foreach (array_values(array_unique(['main', ...$names])) as $name) {
+            self::scalars($file, $name === 'main' ? 'Database' : 'Database: ' . $name, 'db', 'db', 'connections.' . $name, $data);
+        }
+    }
+
+    /**
+     * The rows of a group, from the definitions: what this file may hold, and
+     * the secrets of this machine. A value the file does not have shows what
+     * counts instead.
+     *
+     * @param array<string, mixed> $data the file
+     * @param list<string>         $only
+     */
+    private static function rows(string $file, string $package, string $path, array $data, string $group = '', array $only = []): void
+    {
+        $e = static fn($value): string => htmlspecialchars((string) $value, ENT_QUOTES);
+        foreach (Schema::children($package, $path) as $key => [$definition, $owner]) {
+            $secret = !empty($definition['writeOnly']);
+            if (($only !== [] && !in_array($key, $only, true)) || (!$secret && !EnvironmentFile::holds($file, $definition, $owner))) {
+                continue;
+            }
+            $full = $path === '' ? $key : "$path.$key";
+            $value = Tree::get($data, ['packages', $package, ...explode('.', $full)]);
+            $status = !$secret && $value === null ? '<small class="envDefault">not saved</small>' : '';
+            echo '<tr' . ($group === 'debug' ? ' data-debug-option="' . $e($key) . '"' : '') . '><td><span>' . $e((string) ($definition['title'] ?? self::label($key))) . '<small>' . $e($key) . '</small>' . $status . '</span></td><td>';
+            if ($secret) {
+                self::secret($file, $package, $full, $definition);
+            } else {
+                self::control($file, $group, $package, $full, $definition, $value);
+            }
+            echo '</td></tr>';
+        }
+    }
+
+    /**
+     * Never shown. Where this installation runs it can be replaced, an empty
+     * field keeps it. Another machine's secret is not on this one.
+     *
+     * @param array<string, mixed> $definition
+     */
+    private static function secret(string $file, string $package, string $path, array $definition): void
     {
         $e = static fn($v): string => htmlspecialchars((string) $v, ENT_QUOTES);
-        $attrs = ' aria-label="' . $e(self::label($key)) . '" data-file="' . $e($file) . '" data-group="' . $e($group) . '" data-key="' . $e($key) . '" name="value" autocomplete="off" data-1p-ignore data-lpignore="true" data-bwignore="true"';
-        if ($kind === 'bool') {
-            $checked = $value === true || $value === 1 || $value === '1' ? ' checked' : '';
+        if (!EnvironmentFile::here($file)) {
+            echo '<small>Kept on that machine</small>';
+            return;
+        }
+        $set = (string) Tree::get(EnvironmentFile::effective($file, $package), explode('.', $path)) !== '';
+        echo '<input type="password" data-on_blur="save" aria-label="' . $e((string) ($definition['title'] ?? $path)) . '" data-file="' . $e($file) . '" data-package="' . $e($package) . '" data-path="' . $e($path) . '" name="value" autocomplete="new-password" placeholder="' . ($set ? 'set, empty keeps it' : 'not set') . '">';
+    }
+
+    /** @param array<string, mixed> $definition */
+    private static function control(string $file, string $group, string $package, string $path, array $definition, mixed $value): void
+    {
+        $e = static fn($v): string => htmlspecialchars((string) $v, ENT_QUOTES);
+        $key = substr((string) strrchr('.' . $path, '.'), 1);
+        $stage = strtoupper(explode('.', $file)[0]);
+        $fallback = $definition['x-stages'][$stage] ?? $definition['default'] ?? null;
+        $attrs = ' aria-label="' . $e((string) ($definition['title'] ?? self::label($key))) . '" data-file="' . $e($file) . '" data-group="' . $e($group) . '" data-key="' . $e($key) . '" data-package="' . $e($package) . '" data-path="' . $e($path) . '" name="value" autocomplete="off"';
+        if (in_array('boolean', (array) ($definition['type'] ?? []), true)) {
+            $on = $value ?? $fallback;
+            $checked = $on === true || $on === 1 || $on === '1' ? ' checked' : '';
             echo '<label class="projectSwitch"><input type="checkbox" class="switch" data-on_change="save"' . $attrs . $checked . '><div><div></div></div></label>';
             return;
         }
-        if ($group === 'mail' && $key === 'secure') {
+        if (isset($definition['enum'])) {
             echo '<select data-on_change="save"' . $attrs . '>';
-            foreach (['tls', 'ssl', 'none'] as $option) {
-                $selected = (string) $value === $option ? ' selected' : '';
-                echo '<option value="' . $option . '"' . $selected . '>' . $option . '</option>';
+            if (!in_array('', $definition['enum'], true)) {
+                echo '<option value=""' . ($value === null ? ' selected' : '') . '>' . ($fallback === null ? 'automatic' : 'default: ' . $e($fallback)) . '</option>';
+            }
+            foreach ($definition['enum'] as $option) {
+                echo '<option value="' . $e($option) . '"' . ((string) $value === (string) $option && $value !== null ? ' selected' : '') . '>' . ($option === '' ? 'default' : $e($option)) . '</option>';
             }
             echo '</select>';
             return;
         }
-        if ($group === 'mail' && $key === 'testRecipient') $attrs .= ' type="email" placeholder="testmail@fluxo.systems"';
+        if (($definition['format'] ?? '') === 'email') {
+            $attrs .= ' type="email"';
+        }
+        if ($fallback !== null || !empty($definition['x-computed'])) {
+            $attrs .= ' placeholder="' . ($fallback === null ? 'automatic' : $e($fallback)) . '"';
+        }
         echo '<input data-on_blur="save"' . $attrs . ' value="' . $e(is_scalar($value) ? (string) $value : '') . '">';
     }
 

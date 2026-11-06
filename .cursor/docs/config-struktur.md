@@ -15,9 +15,20 @@ alle Repos pullen ([git.md](git.md)).
 | Sync | Build mit `composer` und `openSetup`. `composer update` lief am 2026-11-06 auf RC |
 | Setup über Sync | fertig bis auf das Projekt-Tool, `tests/setup-maintenance.php` spielt jeden Zustand durch |
 | Scaffold | `systopic.net` mit seinen vier Sites (Junctions) umgestellt. `galerie-lattemann.de` und `pwk.systopic.net` nicht, sie haben eigene Logik in `index.php` und `.htaccess` |
-| Bestehende Configs | unverändert, geschrieben wird weiter am alten Ort |
+| Schritt 3 | fertig: Formulare aus den Definitionen, alle Schreibwege schreiben die neue Form, Secrets nach local |
+| Dateien | `systopic.net` und `spaceticker.app` umgestellt, siehe unten. `smp.de` folgt, wenn das läuft |
 
-Als Nächstes: Schritt 2.
+| Schritt 2 | fertig: Defaults aus den Definitionen (`Config::applyIniDefaults()`), reservierte Schlüssel, Reihenfolge der Konstanten |
+
+Als Nächstes: Schritt 4, der Abgleich beim Speichern.
+
+**Noch in alter Form, bis zum Tag:** `config.json` und `RC.config.json` von `systopic.net`. Beide
+gehen nach RC, dort läuft `v1.2.0`, das nur die alte Form liest. Am Tag des Tags:
+`bin/config.php --migrate=all`.
+
+**Secrets je Maschine:** `bin/config.php --move-secrets=<instanz>` läuft auf jeder Maschine
+selbst. Erledigt ist `DEV.ojhome`. In den Dateien der anderen stehen sie noch, unter
+`packages.*`. `bin/config.php --check` zeigt, was fehlt.
 
 **Entschieden:** `packages.<paket>` als Namensraum, die drei `.schema.json`-Dateien
 je Paket, JSON Schema mit `x-`-Erweiterungen, Formulare aus den Definitionen, alle
@@ -241,10 +252,8 @@ Erhebung über alle 53 Config-Dateien in `projects/*/config`:
 - `matches`: `serverName` ist in 25 Regeln eine Liste, `serverIp` in einer.
   `EnvironmentFile::setMatch()` schreibt nur Strings. `rootDir` wird gelesen, aber nirgends benutzt.
 
-Nebenbefund: `Config::defineConstants()` definiert erst `config.json`, dann die
-Instanz, jeweils mit `defined()`-Schutz. Die erste gewinnt, eine Instanz kann also
-nichts überschreiben, obwohl der Kommentar das sagt. Es fällt nur nicht auf, weil
-keine Instanz `constants` hat.
+Konstanten: Die Reihenfolge ist `config.json`, Instanz, `config.local.json`, die spätere
+Datei gewinnt. Bis Schritt 2 gewann die erste, eine Instanz konnte nichts überschreiben.
 
 ## Kernidee
 
@@ -444,16 +453,17 @@ Geprüft mit `ini_get_all()` und `ini_set()` (PHP 8.5.6, CLI):
 
 - Die Definitionen stehen in `system/config/project.schema.json` unter `ini`,
   mit `x-overridable` und `additionalProperties: true`.
-- **Die Upload-Werte wirken heute nicht**, es gilt der Serverwert. Sie werden zu
-  Mindestwerten, die `systemcheck` prüft. Eine generierte `public/.user.ini` könnte
-  sie setzen, das ist auf Plesk und der Synology aber ungetestet.
-- **`error_log`:** `index.php:78-79` setzt ihn nach der Config immer zurück. Der
-  Kommentar in Zeile 49 beschreibt das falsch.
+- **Die Upload-Werte wirkten nie**, es gilt der Serverwert. Die Zeilen sind aus
+  `index.php` entfernt, `systemcheck` prüft sie (Upload ab 50 MB, Post ab 128 MB). Eine
+  generierte `public/.user.ini` könnte sie setzen, das ist auf Plesk und der Synology
+  aber ungetestet.
+- **`error_log`** setzt `index.php` vor der Config. Er ist reserviert, das zweite Setzen
+  nach dem Boot ist entfallen.
 - **Reserviert** in `ini`: `error_log`, `display_errors`, `error_reporting`. Sonst
   könnte ein Eintrag den Debug-Schalter aushebeln.
-- **Reihenfolge bleibt:** Die Defaults müssen vor `Config::boot()` wirken, weil die
-  Einrichtungs-Seite läuft, wenn es noch keine Config gibt. Die Zeilen 41-47 werden
-  zu `Config::applyIniDefaults()`.
+- **Reihenfolge bleibt:** Die Defaults wirken vor `Config::boot()`
+  (`Config::applyIniDefaults()`), weil die Einrichtungs-Seite läuft, wenn es noch keine
+  Config gibt. Danach setzt `defineConstants()` nur noch, was in den Dateien steht.
 
 ## Umzug
 
@@ -465,10 +475,9 @@ Im Code gibt es dagegen keinen Schutz, nur diese Reihenfolge.
 1. **Definitionen, nichts schreiben.** Erledigt. Die Lesestellen verstehen beide Orte
    über `Config\Layout`, das jede Datei beim Boot in die neue Form hebt. Prüfung: Alle
    45 Instanzen liefern dieselben Werte wie vorher.
-2. **ini und Konstanten.** `applyIniDefaults()`, reservierte Schlüssel, Upload-Werte
-   in `systemcheck`, Reihenfolge in `defineConstants()`.
-3. **Admin.** Formulare aus den Definitionen, Status und Herkunft. Die Optik gehört
-   Lars, neues CSS geht als Vorschlag in `team/`.
+2. **ini und Konstanten.** Erledigt.
+3. **Admin.** Erledigt. Die Optik gehört Lars, die Formulare nutzen die vorhandenen
+   Klassen. Neu ist nur `small.envDefault` für „not saved“, ohne eigene Regel.
 4. **Abgleich beim Speichern.** Erst Ergänzen, dann Löschen. Dazu Hook-Meldung,
    `bin/config.php --check` und die Tests.
 5. **Code auf allen Stages.** Die Pakete bis LIVE ausrollen, also Packagist

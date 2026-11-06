@@ -309,7 +309,7 @@ final class ProjectForm
         $file = EnvironmentFile::activeFile();
         if ($file === null && $legalSettings === []) return;
         $data = $file !== null ? EnvironmentFile::read($file) : [];
-        $auth = is_array($data['auth'] ?? null) ? $data['auth'] : [];
+        $auth = (array) ($data['packages']['system']['auth'] ?? []);
         $method = \Systopic\System\Auth\AuthConfig::defaultSignInMethod();
         echo '<section class="widget"><header><h2>System</h2></header>';
         echo '<div class="tableScroll">';

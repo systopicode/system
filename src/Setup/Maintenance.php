@@ -8,6 +8,7 @@ use Systopic\Db\Connection;
 use Systopic\System\Config\Config;
 use Systopic\System\Config\Layout;
 use Systopic\System\Config\Schema;
+use Systopic\System\Config\Tree;
 
 /**
  * The setup of an installation that already has one: config.local.json of
@@ -39,7 +40,7 @@ final class Maintenance
     public function handle(): void
     {
         $file = $this->file();
-        $current = self::lift(Setup::readJson($file) ?? []);
+        $current = Layout::lift(Setup::readJson($file) ?? []);
         $fields = $this->fields();
         if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
             $saved = $this->save($current, $fields);
@@ -110,73 +111,6 @@ final class Maintenance
     }
 
     /**
-     * The file in the new layout. Lifting it here also ends the old block in
-     * it: a value of the form and one left at the old place would disagree.
-     *
-     * @param array<string, mixed> $file
-     * @return array<string, mixed>
-     */
-    private static function lift(array $file): array
-    {
-        $packages = Layout::packages($file);
-        foreach (Layout::MOVED as $key) {
-            unset($file[$key]);
-        }
-        foreach (Layout::SYSTEM_CONSTANTS as $name) {
-            unset($file['constants'][$name]);
-        }
-        if (($file['constants'] ?? null) === []) {
-            unset($file['constants']);
-        }
-        unset($file['packages']);
-        return $packages === [] ? $file : $file + ['packages' => $packages];
-    }
-
-    /** @param list<string> $path */
-    private static function value(array $tree, array $path): mixed
-    {
-        foreach ($path as $key) {
-            if (!is_array($tree) || !array_key_exists($key, $tree)) {
-                return null;
-            }
-            $tree = $tree[$key];
-        }
-        return $tree;
-    }
-
-    /** @param list<string> $path */
-    private static function put(array &$tree, array $path, mixed $value): void
-    {
-        $node = &$tree;
-        foreach ($path as $key) {
-            if (!is_array($node[$key] ?? null)) {
-                $node[$key] = [];
-            }
-            $node = &$node[$key];
-        }
-        $node = $value;
-    }
-
-    /** @param list<string> $path */
-    private static function drop(array &$tree, array $path): void
-    {
-        $key = array_shift($path);
-        if (!array_key_exists($key, $tree)) {
-            return;
-        }
-        if ($path === []) {
-            unset($tree[$key]);
-            return;
-        }
-        if (is_array($tree[$key])) {
-            self::drop($tree[$key], $path);
-            if ($tree[$key] === []) {
-                unset($tree[$key]);
-            }
-        }
-    }
-
-    /**
      * The file in two halves: what the block of JSON shows, and what stays off
      * the page - the fields, and every secret, known to a definition or not.
      *
@@ -189,10 +123,10 @@ final class Maintenance
         $kept = [];
         foreach ($fields as $field) {
             $path = ['packages', $field['package'], ...$field['path']];
-            $value = self::value($file, $path);
+            $value = Tree::get($file, $path);
             if ($value !== null) {
-                self::put($kept, $path, $value);
-                self::drop($file, $path);
+                Tree::put($kept, $path, $value);
+                Tree::drop($file, $path);
             }
         }
         self::hideSecrets($file, [], $kept);
@@ -209,7 +143,7 @@ final class Maintenance
                     unset($node[$key]);
                 }
             } elseif (in_array($key, self::SECRET_KEYS, true)) {
-                self::put($kept, [...$path, (string) $key], $value);
+                Tree::put($kept, [...$path, (string) $key], $value);
                 unset($node[$key]);
             }
         }
@@ -239,13 +173,13 @@ final class Maintenance
             $definition = $field['definition'];
             if (!empty($definition['writeOnly'])) {
                 if ($raw !== '') {
-                    self::put($file, $path, $raw); // empty: the one that is there stays
+                    Tree::put($file, $path, $raw); // empty: the one that is there stays
                 }
                 continue;
             }
             $raw = trim($raw);
             if ($raw === '') {
-                self::drop($file, $path); // empty: what the instance says
+                Tree::drop($file, $path); // empty: what the instance says
                 continue;
             }
             if (($definition['type'] ?? '') === 'integer') {
@@ -259,7 +193,7 @@ final class Maintenance
                 $this->errors[] = $field['label'] . ': not one of the choices';
                 continue;
             }
-            self::put($file, $path, $raw);
+            Tree::put($file, $path, $raw);
         }
         if ($this->errors !== [] || !$this->connects($current, $file)) {
             return null;
@@ -278,8 +212,8 @@ final class Maintenance
     private function connects(array $before, array $after): bool
     {
         $path = ['packages', 'db', 'connections', 'main'];
-        $old = self::value($before, $path);
-        $new = self::value($after, $path);
+        $old = Tree::get($before, $path);
+        $new = Tree::get($after, $path);
         if ($old === $new) {
             return true;
         }
@@ -311,15 +245,15 @@ final class Maintenance
         foreach ($fields as $name => $field) {
             $definition = $field['definition'];
             $input = 'f[' . $h($name) . ']';
-            $local = self::value($current, ['packages', $field['package'], ...$field['path']]);
+            $local = Tree::get($current, ['packages', $field['package'], ...$field['path']]);
             if (!empty($definition['writeOnly'])) {
-                $there = (string) self::value($this->config->package($field['package']), $field['path']) !== '';
+                $there = (string) Tree::get($this->config->package($field['package']), $field['path']) !== '';
                 $html .= '<label><span>' . $h($field['label']) . ' - ' . ($there ? 'set, empty keeps it' : 'not set') . '</span>'
                     . '<input type="password" name="' . $input . '" autocomplete="new-password"></label>';
                 continue;
             }
             $value = (string) ($posted[$name] ?? (is_scalar($local) ? $local : ''));
-            $shared = self::value($this->config->package($field['package']), $field['path']);
+            $shared = Tree::get($this->config->package($field['package']), $field['path']);
             $hint = is_scalar($shared) ? (string) $shared : '';
             if (isset($definition['enum'])) {
                 $options = '<option value="">from the instance' . ($hint === '' ? '' : ": {$h($hint)}") . '</option>';

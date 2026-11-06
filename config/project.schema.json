@@ -45,10 +45,11 @@
 					"description": "What the sign-in card opens with. Empty: the person picks.",
 					"type": "string",
 					"enum": ["", "code", "device_code", "passkey", "password"],
-					"default": ""
+					"default": "",
+					"x-overridable": true
 				},
-				"deviceDays": { "title": "Device days", "description": "How long a device stays signed in", "type": "integer", "minimum": 1, "default": 180 },
-				"screenDays": { "title": "Screen days", "description": "How long a screen lives after its last use. Empty: until revoked.", "type": ["integer", "null"], "default": null }
+				"deviceDays": { "title": "Device days", "description": "How long a device stays signed in", "type": "integer", "minimum": 1, "default": 180, "x-overridable": true },
+				"screenDays": { "title": "Screen days", "description": "How long a screen lives after its last use. Empty: until revoked.", "type": ["integer", "null"], "minimum": 1, "default": null, "x-overridable": true }
 			}
 		}
 	}

@@ -65,8 +65,7 @@ final class AuthConfig
             return '';
         }
         EnvironmentFile::createAuth($file);
-        $auth = EnvironmentFile::read($file)['auth'] ?? null;
-        return is_array($auth) ? (string) ($auth['secret'] ?? '') : '';
+        return EnvironmentFile::authSecret($file);
     }
 
     /** How long a person's device lives after its last use. */

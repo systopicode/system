@@ -13,7 +13,9 @@ use Systopic\Db\Schema\Schema;
 use Systopic\Db\Scope;
 use Systopic\System\Config\Config;
 use Systopic\System\Config\Instance;
+use Systopic\System\Config\Layout;
 use Systopic\System\Config\NotConfigured;
+use Systopic\System\Config\Tree;
 use Systopic\System\Queries\UserLookup\UserLookup;
 use Systopic\System\Tables\Users\Model as User;
 use Systopic\System\Tables\Users\Operator as UserOperator;
@@ -412,10 +414,10 @@ final class Setup
         if (!is_file($this->configFile('config.json'))) {
             $ok = self::writeJson($this->configFile('config.json'), [
                 '//'        => 'Nothing installation specific. Instances: <stage>[.<machine>].config.json, this machine: config.local.json. See SYS/.cursor/docs/config.md',
-                'constants' => [
+                'packages'  => ['system' => ['constants' => [
                     'DEFAULT_TABLE_PREFIX' => 'cms',
                     'PROJECT_NAMESPACE'    => $namespace,
-                ],
+                ]]],
             ]);
             if (!$ok) {
                 $this->errors[] = 'cannot write config/config.json';
@@ -444,10 +446,7 @@ final class Setup
             $data['matches'] = $rules;
         }
         if ($stage === 'DEV') {
-            $data += [
-                'debug'           => ['debug' => true, 'render' => true, 'time' => true, 'displayErrors' => true],
-                'versionAppendix' => 'time',
-            ];
+            // what x-stages says for DEV: nothing to write
         }
         if (!self::writeJson($file, $data)) {
             $this->errors[] = "cannot write config/$instance.config.json";
@@ -595,13 +594,15 @@ final class Setup
                 $this->errors[] = 'config.local.json is no plain JSON (comments?) — add the password by hand';
                 return false;
             }
-            $local['db']['pass'] = $pass;
+            $local = Layout::lift($local);
+            Tree::put($local, ['packages', 'db', 'connections', 'main', 'pass'], $pass);
             if (!self::writeJson($localFile, $local)) {
                 $this->errors[] = 'cannot write config/config.local.json';
                 return false;
             }
         }
-        $data['db'] = $db;
+        $data = Layout::lift($data);
+        Tree::put($data, ['packages', 'db', 'connections', 'main'], $db);
         if (!self::writeJson($file, $data)) {
             $this->errors[] = 'cannot write config/' . basename($file);
             return false;

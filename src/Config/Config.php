@@ -43,6 +43,9 @@ final class Config
 {
     private static ?self $current = null;
 
+    /** never from a config: they would get around the debug switch and the project's log */
+    private const RESERVED_INI = ['error_log', 'display_errors', 'error_reporting'];
+
     /** @var array<string, mixed> merged content of all files */
     public readonly array $data;
 
@@ -136,9 +139,10 @@ final class Config
             $instance  = new Instance($instance->name, $instance->stage, $instanceData);
             [$instance->matchedBy, $instance->match] = [$matchedBy, $match];
         }
-        foreach (['constants', 'ini'] as $key) {
-            if (is_array($local[$key] ?? null)) {
-                $data[$key] = self::merge($data[$key] ?? [], $local[$key]);
+        // the free constants: config.json, the instance over it, config.local.json over both
+        foreach ([$instance->data, $local] as $file) {
+            if (is_array($file['constants'] ?? null)) {
+                $data['constants'] = self::merge($data['constants'] ?? [], $file['constants']);
             }
         }
 
@@ -343,15 +347,9 @@ final class Config
         }
         $this->define('PUBLIC_VERSIONAPPENDIX', $this->versionAppendix());
 
-        foreach ($system['constants'] ?? [] as $name => $value) {
-            $this->define((string) $name, $value);
-        }
-
-        // Free-form constants: top level first, instance overrides.
-        foreach (($this->data['constants'] ?? []) + [] as $name => $value) {
-            $this->define((string) $name, $value);
-        }
-        foreach ($i->get('constants', []) as $name => $value) {
+        // the free ones of the project, and those of the system over them: both
+        // are merged already, what is later in the files has won
+        foreach (array_merge($this->data['constants'] ?? [], $system['constants'] ?? []) as $name => $value) {
             $this->define((string) $name, $value);
         }
 
@@ -387,8 +385,26 @@ final class Config
         $display = $system['debug']['displayErrors'] ?? ($this->instance->stage === 'DEV');
         ini_set('display_errors', $display ? '1' : '0');
 
-        foreach ($system['ini'] ?? [] as $key => $value) {
-            ini_set((string) $key, (string) $value);
+        // what the files say: the defaults were set before there was a config
+        self::setIni($this->packages['system']['ini'] ?? []);
+    }
+
+    /**
+     * The defaults of the definitions. Before Config::boot(): the setup page
+     * runs when there is no config yet.
+     */
+    public static function applyIniDefaults(): void
+    {
+        self::setIni(Schema::withDefaults('system', [], '')['ini'] ?? []);
+    }
+
+    /** @param array<string, mixed> $values */
+    private static function setIni(array $values): void
+    {
+        foreach ($values as $key => $value) {
+            if (is_scalar($value) && !in_array((string) $key, self::RESERVED_INI, true)) {
+                ini_set((string) $key, (string) $value);
+            }
         }
     }
 

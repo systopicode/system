@@ -12,6 +12,9 @@ declare(strict_types=1);
  *   php tests/config-schemas.php
  */
 
+require_once __DIR__ . '/../src/Config/Config.php';
+require_once __DIR__ . '/../src/Config/Layout.php';
+
 const PACKAGES = ['system', 'db', 'relay'];
 const FILES = ['header', 'project', 'machine', 'local'];
 const KEYWORDS = [
@@ -159,29 +162,25 @@ foreach ($files as $file) {
 	$data = json_decode((string) file_get_contents($file), true);
 	$name = basename(dirname($file, 2)) . '/' . basename($file);
 	check("readable: $name", is_array($data));
-	foreach (configKeys($data) as $key => $value) {
-		$top = explode('.', $key)[0];
-		if (in_array($top, ['matches', 'default', 'instance'], true)) {
-			continue; // the header; the rules are lists of objects
-		}
-		$package = in_array($top, ['db', 'relay'], true) ? $top : 'system';
-		$short = in_array($top, ['db', 'relay'], true) ? substr($key, strlen($top) + 1) : $key;
-		// today's db block is the connection main of tomorrow
-		if ($top === 'db' && !isset($flat['db'][$short])) {
-			$short = "connections.*.$short";
-		}
-		$leaf = $flat[$package][$short] ?? null;
-		if ($leaf === null) {
-			if ($top !== 'constants') { // free constants of the project stay
-				$unknown[$key] = $name;
+	foreach (\Systopic\System\Config\Layout::packages($data) as $package => $tree) {
+		foreach (configKeys($tree) as $short => $value) {
+			$key = "$package.$short";
+			if (str_starts_with($short, 'ini.')) {
+				continue; // an open block
 			}
-			continue;
-		}
-		if (!typeOk($value, $leaf)) {
-			$wrongType[$key] = $name;
-		}
-		if (!empty($leaf['writeOnly']) && basename($file) !== 'config.local.json') {
-			$exposed[$key] = ($exposed[$key] ?? 0) + 1;
+			// a name of a map stands for itself
+			$lookup = preg_replace('~^connections\.[^.]+\.~', 'connections.*.', $short);
+			$leaf = $flat[$package][$lookup] ?? null;
+			if ($leaf === null) {
+				$unknown[$key] = $name;
+				continue;
+			}
+			if (!typeOk($value, $leaf)) {
+				$wrongType[$key] = $name;
+			}
+			if (!empty($leaf['writeOnly']) && (string) $value !== '' && basename($file) !== 'config.local.json') {
+				$exposed[$key] = ($exposed[$key] ?? 0) + 1;
+			}
 		}
 	}
 }
