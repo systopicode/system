@@ -1,0 +1,30 @@
+{
+	"$schema": "https://json-schema.org/draft/2020-12/schema",
+	"title": "System",
+	"description": "packages.system in config.local.json: this machine, neither git nor sync.",
+	"type": "object",
+	"properties": {
+		"auth": {
+			"title": "Sign-in",
+			"type": "object",
+			"properties": {
+				"secret": {
+					"title": "Sign-in key",
+					"description": "Keys the one-time codes. Made the first time it is needed.",
+					"type": "string",
+					"minLength": 32,
+					"writeOnly": true,
+					"x-mandatory": "generate"
+				}
+			}
+		},
+		"mail": {
+			"title": "Mail",
+			"type": "object",
+			"x-optional": true,
+			"properties": {
+				"password": { "title": "Password", "type": "string", "writeOnly": true, "x-mandatory": "input" }
+			}
+		}
+	}
+}

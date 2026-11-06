@@ -158,7 +158,7 @@ class http implements \Systopic\System\Client\Contracts\PreloadsClientScript
 
 	private static function resolveAssetsMode(): string
 	{
-		$configured = \Systopic\System\Config\Config::current()?->instance->get('assets');
+		$configured = \Systopic\System\Config\Config::current()?->package('system')['assets'] ?? null;
 		if (is_string($configured) && in_array($configured, self::ASSET_MODES, true)) {
 			return $configured;
 		}

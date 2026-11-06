@@ -1,6 +1,6 @@
 <?php
 namespace Systopic\System\Config {
-    final class Config {public static array $mail=[];public static function current():object{return (object)['instance'=>new class {public function get($key):array{return Config::$mail;}}];}}
+    final class Config {public static array $mail=[];public static function current():object{return new class {public function package($name):array{return ['mail'=>Config::$mail];}};}}
 }
 namespace {
     require __DIR__.'/bootstrap.php';

@@ -1,0 +1,55 @@
+{
+	"$schema": "https://json-schema.org/draft/2020-12/schema",
+	"title": "System",
+	"description": "packages.system in config.json: the same for every instance.",
+	"type": "object",
+	"properties": {
+		"ini": {
+			"title": "PHP settings",
+			"description": "Set with ini_set() on every request. Upload limits do not belong here, PHP cannot change them at runtime.",
+			"type": "object",
+			"additionalProperties": true,
+			"x-overridable": true,
+			"propertyNames": {
+				"not": { "enum": ["error_log", "display_errors", "error_reporting"] }
+			},
+			"properties": {
+				"max_execution_time": { "title": "Max. execution time", "description": "Seconds", "type": "integer", "minimum": 0, "default": 60 },
+				"memory_limit": { "title": "Memory limit", "type": "string", "default": "1G" },
+				"serialize_precision": { "title": "Serialize precision", "description": "Also applies to json_encode", "type": "integer", "default": 14 },
+				"log_errors": { "title": "Log errors", "type": "boolean", "default": true },
+				"html_errors": { "title": "HTML errors", "type": "boolean", "default": false }
+			}
+		},
+		"constants": {
+			"title": "Constants",
+			"type": "object",
+			"properties": {
+				"DEFAULT_TABLE_PREFIX": { "title": "Table prefix", "type": "string", "default": "cms" },
+				"PROJECT_NAMESPACE": { "title": "Project namespace", "type": "string" },
+				"ACCOUNT_WHITELIST": {
+					"title": "Allowed mail domains",
+					"description": "Who may create an account. Empty: everybody.",
+					"type": "array",
+					"default": [],
+					"items": { "type": "string" }
+				}
+			}
+		},
+		"auth": {
+			"title": "Sign-in",
+			"type": "object",
+			"properties": {
+				"defaultSignInMethod": {
+					"title": "Default sign-in",
+					"description": "What the sign-in card opens with. Empty: the person picks.",
+					"type": "string",
+					"enum": ["", "code", "device_code", "passkey", "password"],
+					"default": ""
+				},
+				"deviceDays": { "title": "Device days", "description": "How long a device stays signed in", "type": "integer", "minimum": 1, "default": 180 },
+				"screenDays": { "title": "Screen days", "description": "How long a screen lives after its last use. Empty: until revoked.", "type": ["integer", "null"], "default": null }
+			}
+		}
+	}
+}

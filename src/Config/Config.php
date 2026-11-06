@@ -72,8 +72,15 @@ final class Config
     /** @var array<string, string> what linkSites() did, link => outcome */
     private array $siteLinks = [];
 
-    private function __construct(array $data, array $files, Instance $instance)
+    /** @var array<string, array<string, mixed>> what the files say, package => tree */
+    private array $packages;
+
+    /** @var array<string, array<string, mixed>> the same with the defaults, as far as asked for */
+    private array $packageTrees = [];
+
+    private function __construct(array $data, array $files, Instance $instance, array $packages)
     {
+        $this->packages = $packages;
         $this->data     = $data;
         $this->files    = $files;
         $this->instance = $instance;
@@ -114,6 +121,13 @@ final class Config
         $pinned ??= is_string($local['instance'] ?? null) && $local['instance'] !== '' ? $local['instance'] : null;
         $instance = Instance::select($data['instances'] ?? [], $server, $projectDir, $pinned);
 
+        // each file on its own, or an instance that has moved already would
+        // beat a config.local.json that has not - see Layout
+        $packages = [];
+        foreach ([$data, $instance->data, array_intersect_key($local, array_flip([...self::LOCAL_INSTANCE_KEYS, 'constants', 'ini', 'packages']))] as $file) {
+            $packages = self::merge($packages, Layout::packages($file));
+        }
+
         // config.local.json lies on exactly one machine, so it speaks for the
         // instance that was just selected — flat, without an instance name.
         $instanceData = self::merge($instance->data, array_intersect_key($local, array_flip(self::LOCAL_INSTANCE_KEYS)));
@@ -128,7 +142,7 @@ final class Config
             }
         }
 
-        return self::$current = new self($data, $files, $instance);
+        return self::$current = new self($data, $files, $instance, $packages);
     }
 
     /**
@@ -147,6 +161,28 @@ final class Config
     public static function current(): ?self
     {
         return self::$current;
+    }
+
+    /**
+     * The settings of a package: defaults, config.json, instance,
+     * config.local.json - see Layout and Schema.
+     *
+     * @return array<string, mixed>
+     */
+    public function package(string $name): array
+    {
+        return $this->packageTrees[$name] ??= Schema::withDefaults($name, $this->packages[$name] ?? [], $this->instance->stage);
+    }
+
+    /**
+     * A database connection by its name. `main` is the project's own.
+     *
+     * @return array<string, mixed> driver, host, port, name, user, pass, charset
+     */
+    public function connection(string $name = 'main'): array
+    {
+        $connection = $this->package('db')['connections'][$name] ?? null;
+        return is_array($connection) ? $connection : [];
     }
 
     /**
@@ -280,31 +316,36 @@ final class Config
     public function defineConstants(): void
     {
         $i = $this->instance;
+        $system = $this->package('system');
 
         $this->define('STAGE', $i->stage);
         // Spelled out as define('NAME') so the IDE knows these constants;
         // through $this->define() they would show as undefined everywhere.
         defined('INSTANCE') || define('INSTANCE', $i->name);
-        defined('SYS_PATH') || define('SYS_PATH', $i->get('sysPath', $this->data['sysPath'] ?? 'vendor/systopic/system/'));
+        defined('SYS_PATH') || define('SYS_PATH', $system['sysPath'] ?? 'vendor/systopic/system/');
 
-        $db = $i->db();
+        $db = $this->connection();
         $this->define('DB_HOST', $db['host'] ?? 'localhost');
         $this->define('DB_USER', $db['user'] ?? 'root');
         $this->define('DB_PASS', $db['pass'] ?? '');
         $this->define('DB_NAME', $db['name'] ?? '');
         // PHP 8.4+: the PDO parser skips '# :param' comments in the .sql files
-        defined('DB_BIND_ONLY_USED_PARAMS') || define('DB_BIND_ONLY_USED_PARAMS', (bool) ($db['bindOnlyUsedParams'] ?? (PHP_VERSION_ID >= 80400)));
+        defined('DB_BIND_ONLY_USED_PARAMS') || define('DB_BIND_ONLY_USED_PARAMS', (bool) ($this->package('db')['bindOnlyUsedParams'] ?? (PHP_VERSION_ID >= 80400)));
 
-        $debug = $i->debug();
+        $debug = $system['debug'] ?? [];
         $this->define('DEBUG', $debug['debug'] ?? false);
         $this->define('DEBUGRENDER', $debug['render'] ?? false);
         $this->define('DEBUGTIME', $debug['time'] ?? false);
 
-        $versionDate = $i->get('versionDate');
+        $versionDate = $system['versionDate'] ?? null;
         if (is_string($versionDate) && $versionDate !== '') {
             defined('PUBLIC_VERSIONDATE') || define('PUBLIC_VERSIONDATE', $versionDate);
         }
         $this->define('PUBLIC_VERSIONAPPENDIX', $this->versionAppendix());
+
+        foreach ($system['constants'] ?? [] as $name => $value) {
+            $this->define((string) $name, $value);
+        }
 
         // Free-form constants: top level first, instance overrides.
         foreach (($this->data['constants'] ?? []) + [] as $name => $value) {
@@ -323,14 +364,14 @@ final class Config
      */
     private function versionAppendix(): string
     {
-        $appendix = $this->instance->get('versionAppendix');
+        $appendix = $this->package('system')['versionAppendix'] ?? null;
         if ($appendix === 'time') {
             return '?' . time();
         }
         if (is_string($appendix)) {
             return $appendix;
         }
-        $versionDate = $this->instance->get('versionDate');
+        $versionDate = $this->package('system')['versionDate'] ?? null;
         if (is_string($versionDate) && $versionDate !== '') {
             return '?' . $versionDate;
         }
@@ -342,13 +383,11 @@ final class Config
         // error_reporting is -1 everywhere; whether errors are SHOWN is the
         // instance's business.
         ini_set('error_reporting', '-1');
-        $display = $this->instance->debug()['displayErrors'] ?? ($this->instance->stage === 'DEV');
+        $system = $this->package('system');
+        $display = $system['debug']['displayErrors'] ?? ($this->instance->stage === 'DEV');
         ini_set('display_errors', $display ? '1' : '0');
 
-        foreach (($this->data['ini'] ?? []) as $key => $value) {
-            ini_set((string) $key, (string) $value);
-        }
-        foreach ($this->instance->get('ini', []) as $key => $value) {
+        foreach ($system['ini'] ?? [] as $key => $value) {
             ini_set((string) $key, (string) $value);
         }
     }
@@ -375,7 +414,7 @@ final class Config
      */
     public function linkSites(string $documentRoot, string $projectDir): array
     {
-        if (empty($this->instance->get('linkSites'))) {
+        if (empty($this->package('system')['linkSites'])) {
             return [];
         }
         return $this->siteLinks = SiteLinks::ensure($this->sites, $documentRoot, $projectDir);

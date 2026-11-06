@@ -82,8 +82,9 @@ Media Settings als ganze Dateien im Backup.
 1. **Alte Archive:** löschen, oder den `config/`-Teil aus ihnen entfernen? Erst
    die Server prüfen.
 2. **Totalverlust eines Servers:** `config.local.json` ist dann nirgends gesichert.
-   Erzeugbare Secrets entstehen neu, alles andere muss von Hand zurück. Braucht es
-   eine Ablage außerhalb, etwa einen Passwortmanager?
+   Entschieden am 2026-11-06: Es gibt keine Ablage außerhalb. Erzeugbare Secrets
+   entstehen neu, `relay` kommt aus der Hub-Config, `db.pass` und `mail.password`
+   werden beim Hoster neu vergeben und am Server eingetragen.
 3. **Hochgeladene Archive:** Das Backup-Panel nimmt auch fremde ZIPs an. Der Schutz
    oben gilt für sie genauso, die Settings darin bleiben aber übernehmbar.
 4. **Global Settings:** Sollen sie als Ganzes mitreisen, oder nur `languages`?

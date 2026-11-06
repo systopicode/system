@@ -1,13 +1,21 @@
 # Config-Struktur: Definitionen, Dateien, Abgleich
 
-Stand 2026-11-05. Konzept, nichts umgesetzt. Baut auf [config.md](config.md) auf.
+Stand 2026-11-06. Konzept, in Teilen umgesetzt (siehe „Nächste Sitzung“). Baut auf [config.md](config.md) auf.
 Backup: siehe [backup-config.md](backup-config.md).
 
 ## Nächste Sitzung
 
-Stand Ende 2026-11-05. **Das Konzept ist abgestimmt, die Umsetzung noch nicht
-begonnen.** Am Anfang alle Repos pullen ([git.md](git.md)). Die Reihenfolge der
-Themen ist: erst die zwei offenen Fragen klären, dann Schritt 1 unter „Umzug“.
+Stand 2026-11-06. **Konzept und beide offenen Themen sind entschieden.** Am Anfang
+alle Repos pullen ([git.md](git.md)).
+
+| Stand | |
+|---|---|
+| Definitionen | liegen unter `<paket>/config/`, `tests/config-schemas.php` prüft sie gegen alle Config-Dateien |
+| Schritt 1 | fertig: `Config\Layout`, `Config\Schema`, `Config::package()`, `Config::connection()`. Alle Lesestellen laufen über den Baum, `tests/config-tree.php` vergleicht jede Instanz mit den alten Werten |
+| Sync | Build mit `composer` und `openSetup`. `composer update` lief am 2026-11-06 auf RC |
+| Bestehende Configs | unverändert, geschrieben wird weiter am alten Ort |
+
+Als Nächstes: die Seite des Setups aus „Setup über Sync“, dann Schritt 2.
 
 **Entschieden:** `packages.<paket>` als Namensraum, die drei `.schema.json`-Dateien
 je Paket, JSON Schema mit `x-`-Erweiterungen, Formulare aus den Definitionen, alle
@@ -15,55 +23,194 @@ Secrets immer in local, `x-overridable`, automatisches Löschen nur in der eigen
 Instanz-Datei. Das Environment ist aus dem Backup entfernt
 ([backup-config.md](backup-config.md)).
 
-### Thema 1: Versionierung
+### Versionierung
 
-| Paket | Letzter Tag | Commits danach |
-|---|---|---|
-| `system` | `v1.2.0` | 118 (vor den Commits vom 2026-11-05) |
-| `cms` | `v1.1.1` | 66 |
-| `relay` | `v1.0.1` | 20 |
-| `db` | `v1.1.0` | 6 |
+Entschieden am 2026-11-06:
 
-DEV und Staging laufen über Symlinks auf `main`, LIVE über Packagist. Die Projekte
-verlangen `^1.0` mit `minimum-stability: dev`. `deployment.md` nennt in Abschnitt 5
-schon `systopic/system 1.3`, den Tag gibt es nicht. `panels/auth/releases.php` zählt
-getrennt davon eine GUI-Version (`0.5.7`).
+| Frage | Entscheidung |
+|---|---|
+| Wann wird getaggt? | Der Stand vor dem Umbau wird `system v1.3.0`. Gesetzt wird der Tag erst, wenn der Benutzer es sagt |
+| Major-Sprung? | Nein, alles bleibt `1.x`, auch das Entfernen der Altpfade in Schritt 8 |
+| Gemeinsame Versionen? | Nein, jedes Paket zählt einzeln und nennt in `composer.json` seine Mindestversion |
+| Schutz vor zu neuer Config? | Keiner im Code, die Reihenfolge unter „Umzug“ reicht |
+| GUI-Version in `releases.php` | bleibt eine eigene Zählung |
 
-Zu klären:
+**Offen: die Tags.** Sie markieren den Stand vor dem Umbau, also diese Commits und
+nicht den dann aktuellen `main`:
 
-- Wann wird getaggt, und wer entscheidet das? Packagist soll bisher erst vor dem
-  nächsten Go-live nachziehen. Der Config-Umbau braucht aber neuen Code auf allen
-  Stages, bevor die Dateien umziehen (Schritt 5).
-- Ist der Umzug nach `packages.*` ein Major-Sprung? Solange die Lesestellen beide
-  Orte verstehen, reicht ein Minor. Das Entfernen der Altpfade wäre `2.0`.
-- Laufen die Paketversionen gemeinsam oder einzeln? `relay` verlangt heute `system ^1.2`.
-- Soll eine Instanz erkennen können, dass ihre Config zu neu für ihren Code ist?
-  Das wäre der Schutz vor dem Fall aus „Umzug“.
-- Bleibt die GUI-Version in `releases.php` eine eigene Zählung?
-
-### Thema 2: Wie kommen Secrets auf Staging?
-
-Bisher gehen sie in `STAGING.config.json` per Sync mit. Ist alles in
-`config.local.json`, bewegen weder Git noch Sync sie, und es braucht einen neuen
-Weg. Das gilt nur für Werte mit `"x-mandatory": "input"` (`db.pass`, `mail.password`,
-`relay.secret`, `relay.apiKey`). `auth.secret` entsteht auf dem Server selbst. Bei
-`relay` ist zu prüfen, ob `EnvironmentFile::connectRelay()` das schon abdeckt.
-
-| Weg | Wie | Dafür | Dagegen |
+| Paket | Letzter Tag | Commits danach | Ziel-Commit |
 |---|---|---|---|
-| A. Admin oder Einrichtungs-Seite auf dem Server | Wert dort eintippen | kein neuer Transportweg; `Setup` schreibt `db` schon wahlweise nach local | Henne-Ei bei `db.pass`: Ohne Datenbank gibt es nur Setup oder Recovery, von außen mit Token aus `var/setup.token` |
-| B. Eigene Aktion „Secrets übertragen“ im Sync-Tool | je Server ausdrücklich, nie Teil des normalen Syncs; schreibt die `config.local.json` des Ziels | bequem, Vertrauen zum Server ist schon da | neuer Code. Der Sync signiert nur (`sodium_crypto_sign_*`), verschlüsselt nicht; es bliebe TLS, sonst `sodium_crypto_box_seal` nachrüsten. Ein Arbeitsplatz muss die Werte kennen |
-| C. Von Hand per Plesk oder SSH | Datei auf dem Server anlegen | kein Code, heute schon so für LIVE | jedes Mal Handarbeit, fehleranfällig |
+| `db` | `v1.1.0` | 6 | `cabb79b` |
+| `system` | `v1.2.0` | 122 | `5ca5608` |
+| `cms` | `v1.1.1` | 67 | `87a6457` |
+| `relay` | `v1.0.1` | 20 | `323526c` |
 
-Vorschlag für das Gespräch: B für STAGING und RC, A oder C für LIVE.
+- **Reihenfolge:** `db`, `system`, `cms`, `relay`. `cms` verlangt auf `main` seit
+  2026-10-30 `system ^1.3`. Ein neuer `cms`-Tag vor `system v1.3.0` ließe sich nur
+  mit `1.x-dev` erfüllen.
+- **Nummern:** Für `db`, `cms` und `relay` stehen sie noch nicht fest. Vor dem Tag
+  die Änderungen je Paket zeigen und die `composer.json`-Mindestversionen prüfen.
+- **Ein Tag ändert keinen Server.** `composer.lock` liegt je Rechner, und `composer
+  update` auf dem Server führt der Benutzer selbst aus ([composer.md](composer.md)).
+- **Mindestversionen im Umbau:** Sobald `cms`, `db` oder `relay` etwas aus dem Umbau
+  benutzen, etwa `Config::package()`, müssen sie die passende `system`-Version verlangen.
 
-Zu klären:
+### Secrets
 
-- Wo liegt die Quelle der Werte? `*.local.json` wandert nicht zwischen den
-  Arbeitsplätzen. Der andere Rechner kennt die Staging-Passwörter dann nicht mehr von
-  selbst. Das spricht für einen Passwortmanager als Quelle.
-- Darf ein Arbeitsplatz LIVE-Secrets überhaupt speichern?
-- Totalverlust eines Servers: siehe [backup-config.md](backup-config.md), „Offen“.
+Entschieden am 2026-11-06:
+
+| Frage | Entscheidung |
+|---|---|
+| Wie kommen Secrets auf einen Server? | Im Browser am Server eintippen, im Setup. Geöffnet wird es über Sync (siehe „Setup über Sync“). Die Werte laufen über keinen Arbeitsplatz |
+| Wo liegt die Quelle der Werte? | Nur auf den Servern, keine zweite Ablage |
+| Darf ein Arbeitsplatz LIVE-Secrets speichern? | Nein |
+
+Warum das reicht:
+
+- **Bestehende Server brauchen keinen Transport.** `--move-secrets` läuft dort selbst
+  (Schritt 6). Der Weg gilt nur für neue Server und geänderte Passwörter.
+- **`relay.secret` und `relay.apiKey` kommen vor Ort aus der Hub-Config.**
+  `CentrifugoHub::relayBlock()` liest sie auf derselben Maschine, `connectRelay()`
+  schreibt sie. Es ändert sich nur das Ziel: Sie gehören künftig nach local.
+- **`auth.secret` entsteht auf dem Server selbst.**
+
+Folgen:
+
+- Ein anderer Arbeitsplatz kennt die Staging-Passwörter nicht mehr von selbst.
+- Totalverlust eines Servers: `db.pass` und `mail.password` werden beim Hoster neu
+  vergeben und am Server eingetragen. Bis dahin fallen Datenbank und Mail aus
+  ([backup-config.md](backup-config.md), „Offen“).
+- LIVE gibt es noch nicht. Es bekommt beim Einrichten gleich den Seed, die Secrets
+  gehen von Anfang an nach local.
+
+### Setup über Sync
+
+Entschieden am 2026-11-06.
+
+**Das Problem:** Das Setup läuft heute nur, wenn die Config fehlt oder `db.name` leer
+ist. Nach Schritt 6 kommt ein gesyncter Server mit `db.name`, aber ohne Passwort, und
+antwortet mit 503. Dasselbe gilt für ein geändertes Passwort. Der Recovery-Modus hat
+kein Feld dafür, und einen Token gibt es dort nicht: Das Setup löscht ihn am Ende,
+`scaffold.php` legt nur einen an, wenn die Config fehlt, und das Projekt-Tool gibt es
+auf RC und LIVE nicht.
+
+**Die Lösung:** `sync.php` läuft ohne Framework, Datenbank und Projekt-Config, und
+seine Seite öffnet nur eine signierte Einmal-Challenge eines vertrauten Systems.
+Wer sie öffnen darf, kann ohnehin schon Dateien schreiben, ein neues Recht entsteht
+also nicht.
+
+1. Die Sync-Seite des Servers wird wie bisher vom vertrauten System aus geöffnet.
+2. Ein neuer Button „Setup öffnen“ schreibt `var/setup.token` und leitet auf
+   `public/?setup=<token>` weiter.
+3. `index.php` prüft den Token **vor** `Config::boot()`. Das Setup öffnet sich also
+   auch bei kaputter Config, falschem Passwort oder fehlender Datenbank.
+4. Das Setup zeigt die Werte aus `config.local.json` vorausgefüllt und schreibt nur
+   diese Datei. Das Formular kommt aus den Definitionen. Passwörter werden nie
+   angezeigt, ein leeres Feld behält den alten Wert. Die Datenbank wird vor dem
+   Speichern getestet. Die Schritte „Projekt“ und „Konto“ bleiben der
+   Erstinstallation vorbehalten.
+
+Regeln:
+
+- **Ein Token, ein Mechanismus.** Sync und `scaffold.php` schreiben dieselbe Datei,
+  `Setup::trusts()` prüft sie. Der Recovery-Modus funktioniert damit weiter.
+- **Der Token läuft ab,** nach etwa einer Stunde, gemessen am Alter der Datei. Das
+  Setup-Formular merkt ihn sich in der Session wie der Recovery-Modus.
+- **`scaffold.php` behält seinen Token,** eine Erstinstallation ohne Sync bleibt möglich.
+- **Das Projekt-Tool verliert seinen Token:** `create_recovery()`, `recoveryUrl()` und
+  die Links in `main.tpl.php`.
+- **`driver`, `host`, `port`, `name`, `user` einer Verbindung haben `x-overridable`,**
+  sonst wären sie nach einer Änderung im Setup im Abgleich „falsche Datei“.
+- **`sync.php` kennt das Config-Format nicht.** Es öffnet nur das Setup. Sync wird je
+  Instanz ausgerollt und liefe sonst den Definitionen hinterher.
+
+Grenzen:
+
+- Das Setup liegt in `vendor`. Fehlt es oder ist es kaputt, repariert das Composer
+  über Sync, siehe unten.
+- Jede Instanz braucht den neuen Sync-Build, bevor sie den Button hat.
+- Sind `.htsync` oder alle vertrauten Instanzen weg, bleibt ein neuer Seed per Plesk
+  oder SSH.
+
+**Umgesetzt** ist die Seite von Sync: `action/openSetup.php` legt den Token an, leitet
+weiter und löscht einen alten beim Öffnen der Seite.
+
+**Noch offen,** bewusst nicht vor der Demo vom 2026-11-06, weil `packages/` mit dem
+Sync auf STAGING geht:
+
+- `index.php`: Token vor `Config::boot()` prüfen. Bis dahin öffnet der Button das
+  Setup nur in den Zuständen, in denen es heute schon läuft, sonst nur die Site. Mit
+  „open Recovery“ geht der Recovery-Modus schon.
+- `Setup::trusts()`: Alter des Tokens prüfen. Bis dahin gilt er, bis Sync, das Setup
+  oder ein Restore ihn löscht.
+- `Setup`: Formular für `config.local.json` aus den Definitionen, Passwort immer nach
+  local.
+- Projekt-Tool: Token entfernen, sobald der Button auf den Servern getestet ist.
+
+### Composer über Sync
+
+Umgesetzt am 2026-11-06, Beschreibung in
+`tools/.cursor/docs/sync-build-und-vokabular.md`. Auf einem Server läuft der Weg über
+dieselbe Seite: `install`, `update` und `update <paket>`, feste Befehle, kein freies
+Eingabefeld. Er hängt nicht an `vendor`, repariert also auch ein kaputtes. Auf RC
+holt `composer update` nur getaggte Stände, dafür braucht es v1.3.0.
+
+### Mehrere Datenbanken
+
+Entschieden am 2026-11-06. Anlass ist Octopus, das interne Verwaltungstool, noch
+nicht migriert. Es greift auf die Postgres-Datenbank der Buchhaltung Revolver zu.
+Seine zweite Datenbank ist ein älteres CMS mit Wissensdatenbank und Benutzerverwaltung,
+das bald portiert wird. Der Entwurf dazu steht in
+`.cursor/archive/orm-2026-09/orm-entwurf.md`, „Mehrere Verbindungen, mehrere Engines“.
+
+Alle Verbindungen sind benannt, auch die des Projekts:
+
+```json
+"packages": { "db": { "connections": {
+    "main":     { "host": "localhost", "name": "octopus", "user": "octopus" },
+    "revolver": { "driver": "pgsql", "host": "db.example", "port": 5432, "name": "revolver", "user": "octopus" }
+} } }
+```
+
+In `config.local.json` steht nur `connections.<name>.pass`, das Zusammenführen legt
+beides übereinander. Die Form ist für alle Projekte gleich, der heutige `db`-Block
+wird in Schritt 7 zu `connections.main`.
+
+Regeln:
+
+- **`main` ist Pflicht.** `Setup::hasDatabase()`, der Boot und die `DB_*`-Konstanten
+  hängen nur an `main`.
+- **Jede andere Verbindung öffnet sich bei der ersten Benutzung.** Fehlt sie oder
+  schlägt sie fehl, gibt es weder Setup noch Recovery noch 503. Es scheitert nur die
+  Funktion, die sie braucht. Sonst nähme ein Ausfall von Revolver das ganze Tool mit.
+- **`driver`** nennt die Engine, Default `mysql`. `charset` gilt nur für `mysql`.
+- **Keine Transaktion über zwei Verbindungen,** und der Migrator erzeugt über eine
+  Verbindungsgrenze hinweg kein `FOREIGN KEY`.
+- **Das Formular im Setup zeigt alle Verbindungen,** die Pflichtprüfung gilt nur `main`.
+
+**Fremde Datenbanken** (entschieden am 2026-11-06, nur Konzept): Revolver gehört uns
+nicht, Octopus liest dort und schreibt auch. Die Struktur bestimmt Revolver, unser
+Modell folgt ihr, nicht umgekehrt:
+
+- **Der `Provisioner` greift dort nie ein.** Sonst legt er bei einem Fehler fehlende
+  Tabellen und Spalten an oder ändert Spalten. Die Verbindung läuft ohne
+  `ProvisioningConnection`.
+- **Bei einer Abweichung gibt es einen Fehler,** der Tabelle und Spalte nennt. Danach
+  wird von Hand das Modell nachgezogen, nie die Datenbank.
+- **`Audit` darf vergleichen,** `apply()` ist für so eine Verbindung gesperrt.
+- **Schreibzugriff bleibt erlaubt,** es geht nur um die Struktur, nicht um die Daten.
+
+Vorschlag für den Schlüssel: `"managed": false` an der Verbindung, Default `true`. Er
+steht noch nicht in der Definition.
+
+Offen, gebaut wird das mit Octopus, nicht vorher:
+
+- `Connection::open()` ist fest auf `mysql:` verdrahtet und liest noch kein `driver`.
+- Verbindungen nach Namen verwalten, `CONNECTION` an der Tabellenklasse.
+- `pdo_pgsql` fehlt auf dem Arbeitsplatz. `Platform\Postgres` gibt es, sie ist aber
+  gegen keine echte Datenbank gelaufen.
+- Der `Provisioner` kennt nur MySQL-Fehlercodes. Für Postgres ist das bei einer
+  fremden Datenbank kein Problem, für eine eigene schon.
 
 ## Ziel
 
@@ -116,10 +263,13 @@ Schema, die Zieldatei ergibt sich aus dem Dateinamen, der Besitzer aus dem Pfad.
 
 Beispiele:
 
-- `db/config/machine.schema.json`: `host`, `name`, `user`; `db/config/local.schema.json`: `pass`
-- `system/config/project.schema.json`: `ini`, `auth.methods`, `auth.defaultSignInMethod`
-- `system/config/local.schema.json`: `auth.secret`
-- `relay/config/machine.schema.json`: `api`, `client`, `enabled`; `relay/config/local.schema.json`: `secret`, `apiKey`
+- `db/config/machine.schema.json`: `connections.<name>` mit `driver`, `host`, `port`, `name`, `user`, `charset`; `db/config/local.schema.json`: `connections.<name>.pass`
+- `system/config/project.schema.json`: `ini`, `constants`, `auth.defaultSignInMethod`, `auth.deviceDays`, `auth.screenDays`
+- `system/config/local.schema.json`: `auth.secret`, `mail.password`
+- `relay/config/machine.schema.json`: `api`, `client`, `enabled`, `plainTopics`, `prefix`; `relay/config/local.schema.json`: `secret`, `apiKey`
+
+Eine Datei gibt es nur, wenn sie etwas definiert. `cms` hat keine: Es liest keine
+eigenen Config-Werte, nur `sites` über `Config::current()`.
 
 Regeln:
 
@@ -160,7 +310,7 @@ ein eigener Prüfer in wenigen Zeilen abdeckt, eine Bibliothek braucht es nicht.
 | `x-stages` | Default je Stage: `{ "DEV": true }` |
 | `x-computed` | Default kommt aus dem Code und wird nie eingetragen (`bindOnlyUsedParams` hängt an der PHP-Version) |
 | `x-optional` | Block wird nur ergänzt, wenn es ihn schon gibt (`mail`, `relay`) |
-| `x-overridable` | darf in einer später geladenen Datei abweichen (`ini.*`) |
+| `x-overridable` | darf in einer später geladenen Datei abweichen (`ini.*`, die Zugangsdaten einer Verbindung) |
 | `x-options` | Auswahl zur Laufzeit, zum Beispiel `"sites"` aus `cms_sites` |
 | `x-backup` | siehe [backup-config.md](backup-config.md) |
 
@@ -176,6 +326,7 @@ ein eigener Prüfer in wenigen Zeilen abdeckt, eine Bibliothek braucht es nicht.
 | `array` aus `string` | Liste, ein Wert je Zeile |
 | `array` aus `object` | Zeilen mit Hinzufügen und Entfernen, je Eigenschaft eine Spalte |
 | `object` | Karte oder Gruppe |
+| `object` mit `additionalProperties` als Schema | eine Karte je Name, mit Hinzufügen und Entfernen (`connections`) |
 
 Die letzte Array-Zeile ersetzt `setMatch`, `addMatch` und `removeMatch`:
 
@@ -277,7 +428,7 @@ Offene Blöcke und `"//"`-Schlüssel werden nie gelöscht.
 - Die Reihenfolge der Datei bleibt erhalten, Neues kommt ans Ende des Blocks.
 - Was verwaist ist, sagt die Definition, nicht der Code. Ein Test prüft deshalb
   alle Lesestellen gegen die Definitionen.
-- LIVE-Secrets lassen sich nur noch im Admin auf LIVE selbst ändern.
+- LIVE-Secrets lassen sich nur noch auf LIVE selbst ändern, im Admin oder im Setup.
 
 ## ini
 
@@ -312,10 +463,11 @@ Geprüft mit `ini_get_all()` und `ini_set()` (PHP 8.5.6, CLI):
 Die Reihenfolge ist zwingend. Der Sync überträgt die Config, aber nicht `vendor`.
 Liegt `db` schon unter `packages.db`, während auf einem Server alter Code läuft,
 ist `Setup::hasDatabase()` false, und statt der Site kommt die Einrichtungs-Seite.
+Im Code gibt es dagegen keinen Schutz, nur diese Reihenfolge.
 
-1. **Definitionen, nichts schreiben.** `Config\Schema`, Definitionen für system, db,
-   cms, relay. Die Lesestellen verstehen beide Orte. Prüfung: Alle Projekte verhalten
-   sich wie vorher.
+1. **Definitionen, nichts schreiben.** Erledigt. Die Lesestellen verstehen beide Orte
+   über `Config\Layout`, das jede Datei beim Boot in die neue Form hebt. Prüfung: Alle
+   45 Instanzen liefern dieselben Werte wie vorher.
 2. **ini und Konstanten.** `applyIniDefaults()`, reservierte Schlüssel, Upload-Werte
    in `systemcheck`, Reihenfolge in `defineConstants()`.
 3. **Admin.** Formulare aus den Definitionen, Status und Herkunft. Die Optik gehört
@@ -323,10 +475,14 @@ ist `Setup::hasDatabase()` false, und statt der Site kommt die Einrichtungs-Seit
 4. **Abgleich beim Speichern.** Erst Ergänzen, dann Löschen. Dazu Hook-Meldung,
    `bin/config.php --check` und die Tests.
 5. **Code auf allen Stages.** Die Pakete bis LIVE ausrollen, also Packagist
-   aktualisieren.
+   aktualisieren. Dazu gehört „Setup über Sync“ samt neuem Sync-Build auf jeder
+   Instanz. Ohne das kommt nach Schritt 6 niemand mehr an ein geändertes Passwort.
 6. **Secrets nach local, je Maschine.** `bin/config.php --move-secrets` läuft auf
    jeder Maschine selbst: erst nach local schreiben, dann aus der gesyncten Datei
-   entfernen. Sonst nimmt ein Sync dem Server das Passwort weg. Setzt Thema 2 unter
-   „Nächste Sitzung“ voraus.
-7. **Dateien umstellen.** Blöcke nach `packages.*`, je Projekt.
-8. **Altpfade entfernen,** `config.md` und `setup.md` nachziehen.
+   entfernen. Sonst nimmt ein Sync dem Server das Passwort weg. `connectRelay()`
+   schreibt `apiKey` und `secret` ab dann nach local.
+7. **Dateien umstellen.** Blöcke nach `packages.*`, je Projekt. `db` wird zu
+   `packages.db.connections.main`.
+8. **Altpfade entfernen,** `config.md` und `setup.md` nachziehen. Das bleibt `1.x`.
+   Die Projekte verlangen `^1.0`, jedes `composer update` zieht diesen Schritt also
+   mit. Er kommt deshalb erst, wenn alle Projekte auf allen Stages umgestellt sind.

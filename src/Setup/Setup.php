@@ -68,8 +68,7 @@ final class Setup
     /** does the selected instance name a database? */
     public static function hasDatabase(Config $config): bool
     {
-        $db = $config->instance->get('db', []);
-        return is_array($db) && trim((string) ($db['name'] ?? '')) !== '';
+        return trim((string) ($config->connection()['name'] ?? '')) !== '';
     }
 
     /**
@@ -574,7 +573,7 @@ final class Setup
             return false;
         }
         try {
-            $connection = Connection::open((array) Config::current()?->instance->get('db', []));
+            $connection = Connection::open((array) Config::current()?->connection());
             $scope = Scope::default();
             $this->createTables($connection);
             if ($this->errors) {
