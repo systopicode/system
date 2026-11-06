@@ -11,11 +11,17 @@ Geplanter Umbau (Definitionen je Paket, `packages.*`, Secrets in local):
 
 | Datei | Inhalt | Sync |
 |---|---|---|
-| `config.json` | **nichts Installationsspezifisches**: `constants` (DEFAULT_TABLE_PREFIX, ACCOUNT_WHITELIST, PROJECT_NAMESPACE …), `ini`; `sites` nur als Fallback ohne Datenbank | ja |
-| `<stage>[.<machine>].config.json` | eine Installation. **Dateiname = Instanzname**, der Teil vor dem ersten Punkt ist die Stage (`DEV.ojoffice` → DEV, `RC` → RC). Inhalt: `matches` (Maschine und Site), `default`, `linkSites`, `db`, `debug`, `versionAppendix`/`versionDate`, eigene `constants`/`ini` | ja |
-| `config.local.json` | nur diese Maschine, v. a. LIVE-Zugangsdaten. **Flach**, gilt für die erkannte Instanz: `db`, `debug`, `versionAppendix`, `versionDate`, `constants`, `ini`; `instance` pinnt optional | nein (`*.local.json` in `.sync` ignore) |
+| `config.json` | **nichts Installationsspezifisches**: `packages.system` (`constants`, `ini`, `auth`), freie `constants` des Projekts, `sites` nur als Fallback ohne Datenbank | ja |
+| `<stage>[.<machine>].config.json` | eine Installation. **Dateiname = Instanzname**, der Teil vor dem ersten Punkt ist die Stage (`DEV.ojoffice` → DEV, `RC` → RC). Oben `matches` (Maschine und Site) und `default`, darunter `packages.<paket>`: `db.connections.<name>`, `system` (`debug`, `mail`, `versionAppendix` …), `relay`. Keine Secrets | ja |
+| `config.local.json` | nur diese Maschine: **alle Secrets**, dazu Werte mit `x-overridable`. Gleiche Form unter `packages.*`, gilt für die erkannte Instanz; `instance` pinnt optional eine Instanz | **nein** (`*.local.json`) |
 
 Alle Dateien sind reines JSON; ein Kommentar ist ein `"//"`-Schlüssel.
+
+Was in welche Datei gehört, sagen die Definitionen der Pakete (`<paket>/config/*.schema.json`),
+siehe [config-struktur.md](config-struktur.md). Gelesen wird über `Config::package('db')` und
+`Config::connection('main')`. Dateien in der alten Form (`db`, `debug` … oben) gehen weiter,
+`Config\Layout` hebt sie beim Boot. Sie ziehen mit dem ersten Speichern oder mit
+`bin/config.php --migrate` um.
 Instanznamen = `stage`-Feld in `.sync`.
 
 ## Ablauf

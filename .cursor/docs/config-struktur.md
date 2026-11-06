@@ -16,13 +16,14 @@ alle Repos pullen ([git.md](git.md)).
 | Setup über Sync | fertig bis auf das Projekt-Tool, `tests/setup-maintenance.php` spielt jeden Zustand durch |
 | Scaffold | `systopic.net` mit seinen vier Sites (Junctions) umgestellt. `galerie-lattemann.de` und `pwk.systopic.net` nicht, sie haben eigene Logik in `index.php` und `.htaccess` |
 | Schritt 3 | fertig: Formulare aus den Definitionen, alle Schreibwege schreiben die neue Form, Secrets nach local |
-| Dateien | `systopic.net` und `spaceticker.app` umgestellt, siehe unten. `smp.de` folgt, wenn das läuft |
+| Dateien | `systopic.net`, `spaceticker.app` und `smp.de` umgestellt, auf STAGING getestet. Ausnahme siehe unten |
+| Projekt-Tool | Token entfernt, Setup und Recovery laufen über Sync |
 
 | Schritt 2 | fertig: Defaults aus den Definitionen (`Config::applyIniDefaults()`), reservierte Schlüssel, Reihenfolge der Konstanten |
 
 | Schritt 4 | fertig: `Config\Reconcile` beim Speichern, „Check“-Widget im Admin, `bin/config.php --check`, Meldung im Composer-Hook |
 
-Als Nächstes: `smp.de` nachziehen.
+Als Nächstes: der Tag, siehe „Versionierung“, danach Schritt 8.
 
 **Noch in alter Form, bis zum Tag:** `config.json` und `RC.config.json` von `systopic.net`. Beide
 gehen nach RC, dort läuft `v1.2.0`, das nur die alte Form liest. Am Tag des Tags:
@@ -30,7 +31,8 @@ gehen nach RC, dort läuft `v1.2.0`, das nur die alte Form liest. Am Tag des Tag
 
 **Secrets je Maschine:** Sie ziehen auf jeder Maschine selbst um, im Admin per „Move to this
 machine“ im Check-Widget oder mit `bin/config.php --move-secrets=<instanz>`. Erledigt ist
-`DEV.ojhome`. In den Dateien der anderen stehen sie noch, unter `packages.*`.
+`DEV.ojhome` in allen drei Projekten. In den Dateien der anderen stehen sie noch, unter
+`packages.*`.
 `bin/config.php --check` zeigt, was fehlt.
 
 **Entschieden:** `packages.<paket>` als Namensraum, die drei `.schema.json`-Dateien
@@ -484,15 +486,14 @@ Im Code gibt es dagegen keinen Schutz, nur diese Reihenfolge.
 3. **Admin.** Erledigt. Die Optik gehört Lars, die Formulare nutzen die vorhandenen
    Klassen. Neu ist nur `small.envDefault` für „not saved“, ohne eigene Regel.
 4. **Abgleich beim Speichern.** Erledigt.
-5. **Code auf allen Stages.** Die Pakete bis LIVE ausrollen, also Packagist
-   aktualisieren. Dazu gehört „Setup über Sync“ samt neuem Sync-Build auf jeder
-   Instanz. Ohne das kommt nach Schritt 6 niemand mehr an ein geändertes Passwort.
-6. **Secrets nach local, je Maschine.** `bin/config.php --move-secrets` läuft auf
-   jeder Maschine selbst: erst nach local schreiben, dann aus der gesyncten Datei
-   entfernen. Sonst nimmt ein Sync dem Server das Passwort weg. `connectRelay()`
-   schreibt `apiKey` und `secret` ab dann nach local.
-7. **Dateien umstellen.** Blöcke nach `packages.*`, je Projekt. `db` wird zu
-   `packages.db.connections.main`.
-8. **Altpfade entfernen,** `config.md` und `setup.md` nachziehen. Das bleibt `1.x`.
-   Die Projekte verlangen `^1.0`, jedes `composer update` zieht diesen Schritt also
-   mit. Er kommt deshalb erst, wenn alle Projekte auf allen Stages umgestellt sind.
+5. **Code auf allen Stages.** DEV und STAGING: erledigt. RC bekommt ihn mit dem Tag, LIVE
+   gibt es noch nicht.
+6. **Secrets nach local, je Maschine.** Das Werkzeug ist fertig, im Admin per Klick oder mit
+   `bin/config.php --move-secrets`, erst nach local schreiben, dann aus der gesyncten Datei
+   entfernen. Es läuft auf jeder Maschine selbst, offen sind die übrigen Maschinen.
+7. **Dateien umstellen.** Erledigt bis auf `config.json` und `RC.config.json` von
+   `systopic.net`, die am Tag des Tags folgen (`--migrate=all`).
+8. **Altpfade entfernen.** Die Doku ist nachgezogen. Offen im Code: `Config\Layout`,
+   `Config::LOCAL_INSTANCE_KEYS`, `Instance::db()`, `debug()`, `get()`. Das bleibt `1.x`. Die
+   Projekte verlangen `^1.0`, jedes `composer update` zieht diesen Schritt also mit. Er
+   kommt deshalb erst, wenn RC umgestellt ist und die Secrets aller Maschinen umgezogen sind.

@@ -62,7 +62,7 @@ behalten ihre eigene `index.php`, bis ihre composer.json den
 
 Wann: `Config::boot()` wirft `Config\NotConfigured` (kein config.json,
 keine Instanz, keine passende, lokaler Request auf LIVE-Default), die
-Instanz hat keine `db`, oder `var/setup.account` liegt da.
+Instanz hat keine Verbindung `main` mit Namen, oder `var/setup.account` liegt da.
 
 Wer: ein lokaler Request (Host = IP/`localhost`/`*.local`/`*.test` **und**
 private Client-IP) oder `?setup=<token>` aus `var/setup.token`. Sonst 403.
@@ -71,7 +71,7 @@ Auf der CLI: Meldung auf stderr, Exit 1.
 | Schritt | fragt | schreibt |
 |---|---|---|
 | Projekt | Name (Ordnername), Namespace (`smp.de` → `Smp`), Stage (lokal → DEV, `staging.*`, `rc.*`, sonst LIVE), Maschine (Nachbarprojekt mit Regel auf dieselbe Server-IP → Projektmanager-Config → `gethostname()` → `thismachine`) | `config/config.json` (falls fehlt: `PROJECT_NAMESPACE`, `DEFAULT_TABLE_PREFIX`), `config/<STAGE>[.<maschine>].config.json` mit einer Regel aus diesem Request (`serverIp` oder `serverName` + `path`); DEV mit `debug`. LIVE: `"default": true`, aus einem lokalen Request abgelehnt. Gibt es die Datei schon, wird die Regel angehängt. |
-| Datenbank | host, user, pass, name — leerer Name listet die Datenbanken, ein fehlender kann angelegt werden | `db` in die Instanz-Datei (gesynct) oder `config.local.json` (nie gesynct) |
+| Datenbank | host, user, pass, name — leerer Name listet die Datenbanken, ein fehlender kann angelegt werden | `packages.db.connections.main` in die Instanz-Datei (gesynct) oder `config.local.json` (nie gesynct), das Passwort immer nach local |
 | Konto | Name, Passwort ×2 — oder „skip" (Backup im Recovery-Modus einspielen) | alle Tabellen (verlustfreie Hälfte von `Db\Schema\Audit`), Zeile `user_id 1` (die systemeigene, die der Login nie findet), dann `UserOperator::firstSuperuser()` |
 
 Der Konto-Schritt kommt nur, wenn die gewählte Datenbank noch kein Konto hat.
