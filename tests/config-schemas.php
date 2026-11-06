@@ -133,6 +133,29 @@ foreach (['driver', 'host', 'port', 'name', 'user'] as $key) {
 check('every project has the connection main', $definitions['db']['machine']['properties']['connections']['required'] === ['main']);
 check('mysql is the default engine', $flat['db']['connections.*.driver']['default'] === 'mysql');
 
+// ---- what is orphaned is said by the definitions: everything the code reads has to be in them
+$reads = 0;
+$strays = [];
+foreach (['system/src', 'system/lib', 'cms/src', 'relay/src'] as $folder) {
+	$files = new RecursiveIteratorIterator(new RecursiveDirectoryIterator("$packages/$folder", FilesystemIterator::SKIP_DOTS));
+	foreach ($files as $source) {
+		if ($source->getExtension() !== 'php') {
+			continue;
+		}
+		preg_match_all("~package\('(\w+)'\)((?:\['\w+'\])+)~", (string) file_get_contents($source->getPathname()), $found, PREG_SET_ORDER);
+		foreach ($found as [, $package, $keys]) {
+			preg_match_all("~'(\w+)'~", $keys, $names);
+			$path = implode('.', $names[1]);
+			$reads++;
+			$known = array_filter(array_keys($flat[$package] ?? []), static fn(string $key): bool => $key === $path || str_starts_with($key, "$path."));
+			if ($known === []) {
+				$strays[] = "$package.$path";
+			}
+		}
+	}
+}
+check("$reads reads in the code are defined", $reads > 5 && $strays === []);
+
 // ---- the real files, where their keys lie today
 $projects = glob(dirname($packages) . '/projects/*/config/*.json') ?: [];
 $files = array_values(array_filter($projects, static fn(string $f): bool => str_ends_with($f, 'config.json') || basename($f) === 'config.local.json'));

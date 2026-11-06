@@ -20,15 +20,18 @@ alle Repos pullen ([git.md](git.md)).
 
 | Schritt 2 | fertig: Defaults aus den Definitionen (`Config::applyIniDefaults()`), reservierte Schlüssel, Reihenfolge der Konstanten |
 
-Als Nächstes: Schritt 4, der Abgleich beim Speichern.
+| Schritt 4 | fertig: `Config\Reconcile` beim Speichern, „Check“-Widget im Admin, `bin/config.php --check`, Meldung im Composer-Hook |
+
+Als Nächstes: `smp.de` nachziehen.
 
 **Noch in alter Form, bis zum Tag:** `config.json` und `RC.config.json` von `systopic.net`. Beide
 gehen nach RC, dort läuft `v1.2.0`, das nur die alte Form liest. Am Tag des Tags:
 `bin/config.php --migrate=all`.
 
-**Secrets je Maschine:** `bin/config.php --move-secrets=<instanz>` läuft auf jeder Maschine
-selbst. Erledigt ist `DEV.ojhome`. In den Dateien der anderen stehen sie noch, unter
-`packages.*`. `bin/config.php --check` zeigt, was fehlt.
+**Secrets je Maschine:** Sie ziehen auf jeder Maschine selbst um, im Admin per „Move to this
+machine“ im Check-Widget oder mit `bin/config.php --move-secrets=<instanz>`. Erledigt ist
+`DEV.ojhome`. In den Dateien der anderen stehen sie noch, unter `packages.*`.
+`bin/config.php --check` zeigt, was fehlt.
 
 **Entschieden:** `packages.<paket>` als Namensraum, die drei `.schema.json`-Dateien
 je Paket, JSON Schema mit `x-`-Erweiterungen, Formulare aus den Definitionen, alle
@@ -429,7 +432,9 @@ Offene Blöcke und `"//"`-Schlüssel werden nie gelöscht.
 **Grenzen:**
 
 - Ein eingetragener Default bleibt stehen, auch wenn das Paket ihn ändert. Der
-  Admin markiert „≠ Default“ und bietet „zurücksetzen“ an.
+  Admin markiert „≠ default“ und bietet „reset“ an. Ein geleertes Feld setzt ebenso zurück.
+- „Verschieben per Klick“ gibt es für Secrets und von local in die Instanz-Datei.
+  `config.json` schreibt das Admin nicht, dort bleibt es beim Hinweis.
 - Dateien mit echten Kommentaren (JSONC) werden nur gemeldet, wie heute.
 - Die Reihenfolge der Datei bleibt erhalten, Neues kommt ans Ende des Blocks.
 - Was verwaist ist, sagt die Definition, nicht der Code. Ein Test prüft deshalb
@@ -478,8 +483,7 @@ Im Code gibt es dagegen keinen Schutz, nur diese Reihenfolge.
 2. **ini und Konstanten.** Erledigt.
 3. **Admin.** Erledigt. Die Optik gehört Lars, die Formulare nutzen die vorhandenen
    Klassen. Neu ist nur `small.envDefault` für „not saved“, ohne eigene Regel.
-4. **Abgleich beim Speichern.** Erst Ergänzen, dann Löschen. Dazu Hook-Meldung,
-   `bin/config.php --check` und die Tests.
+4. **Abgleich beim Speichern.** Erledigt.
 5. **Code auf allen Stages.** Die Pakete bis LIVE ausrollen, also Packagist
    aktualisieren. Dazu gehört „Setup über Sync“ samt neuem Sync-Build auf jeder
    Instanz. Ohne das kommt nach Schritt 6 niemand mehr an ein geändertes Passwort.

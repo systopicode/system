@@ -6,6 +6,7 @@ namespace Systopic\System\Settings;
 
 use Systopic\System\Auth\AuthConfig;
 use Systopic\System\Auth\Session;
+use Systopic\System\Config\Reconcile;
 use Systopic\System\Config\Schema;
 use Systopic\System\Config\Tree;
 use Systopic\System\Panels\PanelNode;
@@ -49,6 +50,7 @@ final class EnvironmentForm
             if ($info['file'] === 'config.local.json') {
                 echo '<p class="tagsHint">Machine-local overrides, merged over the matching environment config. This file is not a separate server and is not synced. Empty values here do not mean the environment’s values are empty.</p>';
             }
+            self::findings($info['file'], $data);
             self::database($info['file'], $data);
             self::scalars($info['file'], 'Debug', 'debug', 'system', 'debug', $data);
             self::scalars($info['file'], 'Mail', 'mail', 'system', 'mail', $data);
@@ -94,6 +96,9 @@ final class EnvironmentForm
         }
         $result = match ($panel->action) {
             'save' => EnvironmentFile::set($file, (string) \http::dataset('package'), (string) \http::dataset('path'), self::posted()),
+            'resetValue' => EnvironmentFile::set($file, (string) \http::dataset('package'), (string) \http::dataset('path'), ''),
+            'moveSecrets' => Session::isSuperuser() && EnvironmentFile::moveSecrets($file),
+            'moveToInstance' => Session::isSuperuser() && EnvironmentFile::moveToInstance((string) \http::dataset('package'), (string) \http::dataset('path')),
             'resetMail' => Session::isSuperuser() && EnvironmentFile::resetMail($file),
             'saveMatch' => EnvironmentFile::setMatch($file, (int) \http::dataset('index'), (string) \http::dataset('field'), self::posted()),
             'addMatch' => EnvironmentFile::addMatch($file),
@@ -118,6 +123,8 @@ final class EnvironmentForm
             AuthConfig::rememberSecret(EnvironmentFile::authSecret($file));
         }
         \message::confirm(match ($panel->action) {
+            'moveSecrets' => 'The secrets now lie in config.local.json.',
+            'resetValue' => 'Reset to the default.',
             'resetMail' => 'Mail settings reset to defaults.',
             'createAuth' => 'Sign-in key created.',
             'replaceAuth' => 'Sign-in key replaced. Codes already sent stop working.',
@@ -350,6 +357,44 @@ final class EnvironmentForm
     }
 
     /**
+     * What does not fit in the file. What is missing shows in its row.
+     *
+     * @param array<string, mixed> $data the file
+     */
+    private static function findings(string $file, array $data): void
+    {
+        $e = static fn($value): string => htmlspecialchars((string) $value, ENT_QUOTES);
+        $here = EnvironmentFile::here($file);
+        $lines = [];
+        $exposed = [];
+        foreach (Reconcile::findings($file, $data) as $finding) {
+            $name = trim($finding['package'] . '.' . $finding['path'], '.');
+            if ($finding['status'] === Reconcile::EXPOSED) {
+                $exposed[] = $name;
+            } elseif ($finding['status'] === Reconcile::ORPHAN) {
+                $keeps = $file === EnvironmentFile::LOCAL || !$here;
+                $lines[] = '<s>' . $e($name) . '</s> is defined nowhere. ' . ($keeps ? 'It stays in this file.' : 'It goes with the next save.');
+            } elseif ($finding['status'] === Reconcile::FOREIGN) {
+                $lines[] = '<code>' . $e($name) . '</code> is not installed here. Its settings stay.';
+            } elseif ($finding['status'] === Reconcile::MISPLACED) {
+                $move = $finding['owner'] === 'machine' && $file === EnvironmentFile::LOCAL && Session::isSuperuser()
+                    ? ' <button type="button" class="button" data-on_click="moveToInstance" data-file="' . $e($file) . '" data-package="' . $e($finding['package']) . '" data-path="' . $e($finding['path']) . '">Move</button>'
+                    : '';
+                $lines[] = '<code>' . $e($name) . '</code> belongs into ' . ($finding['owner'] === 'project' ? 'config.json' : ($finding['owner'] === 'local' ? 'config.local.json' : 'the instance file')) . '.' . $move;
+            }
+        }
+        if ($exposed !== []) {
+            $lines[] = 'Secrets outside of config.local.json: <code>' . $e(implode(', ', $exposed)) . '</code>. '
+                . ($here && Session::isSuperuser()
+                    ? '<button type="button" class="button" data-on_click="userConfirm" data-action="moveSecrets" data-confirm="Move the secrets of this file to config.local.json of this machine?" data-file="' . $e($file) . '">Move to this machine</button>'
+                    : 'They move on the machine this file belongs to.');
+        }
+        if ($lines !== []) {
+            echo '<section class="widget"><header><h2>Check</h2></header><main><p class="tagsHint">' . implode('</p><p class="tagsHint">', $lines) . '</p></main></section>';
+        }
+    }
+
+    /**
      * The widget of a database connection: `main`, and whatever else the
      * project connects to.
      *
@@ -381,7 +426,9 @@ final class EnvironmentForm
             }
             $full = $path === '' ? $key : "$path.$key";
             $value = Tree::get($data, ['packages', $package, ...explode('.', $full)]);
-            $status = !$secret && $value === null ? '<small class="envDefault">not saved</small>' : '';
+            $fallback = $definition['x-stages'][strtoupper(explode('.', $file)[0])] ?? $definition['default'] ?? null;
+            $changed = !$secret && $value !== null && $fallback !== null && $value != $fallback;
+            $status = !$secret && $value === null ? '<small class="envDefault">not saved</small>' : ($changed ? '<small class="envDefault">≠ default ' . $e(is_bool($fallback) ? ($fallback ? 'on' : 'off') : $fallback) . ' <button type="button" class="button transparent" data-on_click="resetValue" data-file="' . $e($file) . '" data-package="' . $e($package) . '" data-path="' . $e($full) . '">reset</button></small>' : '');
             echo '<tr' . ($group === 'debug' ? ' data-debug-option="' . $e($key) . '"' : '') . '><td><span>' . $e((string) ($definition['title'] ?? self::label($key))) . '<small>' . $e($key) . '</small>' . $status . '</span></td><td>';
             if ($secret) {
                 self::secret($file, $package, $full, $definition);

@@ -67,6 +67,20 @@ try {
     check('connecting splits the hub block', EnvironmentFile::connectRelay($F,['api'=>'http://127.0.0.1:9','apiKey'=>'hub-key','secret'=>'hub-secret-long-enough','client'=>'/connection/','plainTopics'=>true]));
     check('the keys stay on this machine', $value(['relay','secret'],'config.local.json')==='hub-secret-long-enough' && $value(['relay','apiKey'],'config.local.json')==='hub-key' && $value(['relay','api'])==='http://127.0.0.1:9' && $value(['relay','plainTopics'])===true);
 
+    // saving reconciles the file
+    file_put_contents($file, json_encode(['packages'=>['db'=>['connections'=>['main'=>['name'=>'n','pass'=>'in-the-file']]],'system'=>['gone'=>1]]]));
+    file_put_contents($root . 'config/DEV.other.config.json', json_encode(['packages'=>['system'=>['gone'=>1]]]));
+    check('a save fills in the defaults of this file', EnvironmentFile::set($F,'system','versionDate','2026-01-01') && $value(['system','debug','debug'])===true && $value(['db','connections','main','host'])==='localhost');
+    check('and takes out what nobody defines, in the own file', $value(['system','gone'])===null);
+    check('another instance keeps it', EnvironmentFile::set('DEV.other.config.json','system','versionDate','2026-01-01') && $value(['system','gone'],'DEV.other.config.json')===1);
+    check('a secret is not moved by a save', $value(['db','connections','main','pass'])==='in-the-file');
+    check('emptying a field brings the default back', EnvironmentFile::set($F,'db','connections.main.host','db.test') && EnvironmentFile::set($F,'db','connections.main.host','') && $value(['db','connections','main','host'])==='localhost');
+    check('secrets of another machine are not moved here', !EnvironmentFile::moveSecrets('DEV.other.config.json'));
+    check('the click moves them to local', EnvironmentFile::moveSecrets($F) && $value(['db','connections','main','pass'],'config.local.json')!==null && !str_contains(file_get_contents($file),'in-the-file'));
+    check('what local had stays', $value(['db','connections','main','pass'],'config.local.json')==='s3cret');
+    file_put_contents($local, json_encode(['packages'=>['system'=>['mail'=>['host'=>'in-local']]]]));
+    check('a value in the wrong file moves to the instance', EnvironmentFile::moveToInstance('system','mail.host') && $value(['system','mail','host'])==='in-local' && $value(['system','mail','host'],'config.local.json')===null);
+
     // rules
     check('a rule is added', EnvironmentFile::addMatch($F));
     check('a list stays a list', EnvironmentFile::setMatch($F,0,'serverName','a.test, b.test') && EnvironmentFile::read($F)['matches'][0]['serverName']===['a.test','b.test']);

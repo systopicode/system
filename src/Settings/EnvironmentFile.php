@@ -7,6 +7,7 @@ namespace Systopic\System\Settings;
 use Systopic\System\Config\Config;
 use Systopic\System\Config\FileWriter;
 use Systopic\System\Config\Layout;
+use Systopic\System\Config\Reconcile;
 use Systopic\System\Config\Schema;
 use Systopic\System\Config\Tree;
 
@@ -326,6 +327,45 @@ final class EnvironmentFile
         }, true) && (!$replace || self::dropFrom($file, $keys));
     }
 
+    /**
+     * The secrets of the file running here to config.local.json. Local first: a
+     * failure leaves them where they were, and a sync never takes one away.
+     */
+    public static function moveSecrets(string $file): bool
+    {
+        if ($file === self::LOCAL || !self::here($file)) {
+            return false;
+        }
+        $data = self::read($file);
+        $kept = $data;
+        return self::updateLocal(static function (array $local) use (&$kept): array {
+            Reconcile::moveSecrets($kept, $local);
+            return $local;
+        }) && self::update($file, static function (array $data): array {
+            $ignored = [];
+            Reconcile::moveSecrets($data, $ignored);
+            return $data;
+        });
+    }
+
+    /** A value of config.local.json that belongs to the instance file running here. */
+    public static function moveToInstance(string $package, string $path): bool
+    {
+        $target = self::activeFile();
+        $keys = ['packages', $package, ...explode('.', $path)];
+        $value = Tree::get(self::read(self::LOCAL), $keys);
+        if ($target === null || $target === self::LOCAL || $value === null) {
+            return false;
+        }
+        return self::update($target, static function (array $data) use ($keys, $value): array {
+            Tree::put($data, $keys, $value);
+            return $data;
+        }) && self::update(self::LOCAL, static function (array $data) use ($keys): array {
+            Tree::drop($data, $keys);
+            return $data;
+        });
+    }
+
     /** @param list<string> $keys */
     private static function dropFrom(string $file, array $keys): bool
     {
@@ -384,7 +424,9 @@ final class EnvironmentFile
         if ($path === null) {
             return false;
         }
-        return FileWriter::locked($path, static function () use ($path, $change, $unchangedIsFine): bool {
+        $name = basename($file);
+        $own = self::here($file);
+        return FileWriter::locked($path, static function () use ($path, $change, $unchangedIsFine, $name, $own): bool {
             $raw = file_get_contents($path);
             try {
                 $data = $raw === false ? null : json_decode($raw, true, 512, JSON_THROW_ON_ERROR);
@@ -398,6 +440,8 @@ final class EnvironmentFile
             if ($data === null) {
                 return $unchangedIsFine;
             }
+            // the file against the definitions, this file only, see Reconcile
+            $data = Reconcile::apply($name, $data, $own);
             $json = json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
             return $json !== false && FileWriter::write($path, $json . "\n", 0600);
         });

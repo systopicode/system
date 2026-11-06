@@ -72,10 +72,34 @@ declare(strict_types=1);
 		$say($written === 0 ? 'nothing to write' : "$written file(s) written");
 
 		setupToken($root, $say);
+		configNotice($root, $say);
 	} catch (\Throwable $e) {
 		$say('failed: ' . $e->getMessage());
 	}
 })();
+
+/** Says what does not fit the definitions. Writes nothing: that would change every instance file at once. */
+function configNotice(string $root, callable $say): void
+{
+	if (!is_file("$root/vendor/autoload.php")) {
+		return;
+	}
+	require_once "$root/vendor/autoload.php";
+	if (!class_exists(\Systopic\System\Config\Reconcile::class)) {
+		return;
+	}
+	$count = 0;
+	foreach (glob("$root/config/*.json") ?: [] as $file) {
+		$name = basename($file);
+		$data = str_ends_with($name, 'config.json') || $name === 'config.local.json' ? json_decode((string) file_get_contents($file), true) : null;
+		foreach (is_array($data) ? \Systopic\System\Config\Reconcile::findings($name, $data) : [] as $finding) {
+			$count += in_array($finding['status'], ['orphan', 'misplaced', 'exposed'], true) ? 1 : 0;
+		}
+	}
+	if ($count > 0) {
+		$say("config: $count to look at - php vendor/systopic/system/bin/config.php --check");
+	}
+}
 
 /** copies one package's scaffold, returns how many files were written */
 function scaffoldPackage(string $name, string $dir, string $root, array $owned, callable $say): int

@@ -48,11 +48,9 @@ final class Schema
     private static function directory(string $package): ?string
     {
         $name = "systopic/$package";
-        if (class_exists(InstalledVersions::class) && InstalledVersions::isInstalled($name)) {
-            $path = InstalledVersions::getInstallPath($name);
-            if ($path !== null) {
-                return rtrim(str_replace('\\', '/', $path), '/');
-            }
+        if (class_exists(InstalledVersions::class)) {
+            $path = InstalledVersions::isInstalled($name) ? InstalledVersions::getInstallPath($name) : null;
+            return $path === null ? null : rtrim(str_replace('\\', '/', $path), '/');
         }
         $dir = str_replace('\\', '/', dirname(__DIR__, 3)) . "/$package";
         return is_dir($dir) ? $dir : null;
@@ -76,12 +74,36 @@ final class Schema
         return $tree;
     }
 
+    /** Is the package there on this installation? */
+    public static function installed(string $package): bool
+    {
+        return self::directory($package) !== null;
+    }
+
+    /** Does the path lie in a block that takes anything (`ini`)? */
+    public static function open(string $package, string $path): bool
+    {
+        foreach (self::load($package) as $definition) {
+            $node = $definition;
+            foreach (explode('.', $path) as $key) {
+                if (($node['additionalProperties'] ?? false) === true) {
+                    return true;
+                }
+                $node = $node['properties'][$key] ?? null;
+                if (!is_array($node)) {
+                    break;
+                }
+            }
+        }
+        return false;
+    }
+
     /**
      * @param array<string, mixed> $node  a definition with `properties`
      * @param array<string, mixed> $value
      * @return array<string, mixed>
      */
-    private static function fill(array $node, array $value, string $stage): array
+    public static function fill(array $node, array $value, string $stage): array
     {
         foreach ($node['properties'] ?? [] as $key => $child) {
             if (is_array($child['additionalProperties'] ?? null)) {

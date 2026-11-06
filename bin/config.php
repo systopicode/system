@@ -21,8 +21,7 @@ declare(strict_types=1);
  */
 
 use Systopic\System\Config\Layout;
-use Systopic\System\Config\Schema;
-use Systopic\System\Config\Tree;
+use Systopic\System\Config\Reconcile;
 use Systopic\System\Setup\Setup;
 
 $root = str_replace('\\', '/', (string) getcwd());
@@ -49,26 +48,6 @@ $backup = static function (string $file) use ($root, $stamp): void {
 	@chmod("$dir/$file", 0600);
 };
 
-/**
- * Every value below a package: dotted path => value. Lists are values, open
- * blocks (ini, the free constants) are the business of whoever fills them.
- */
-$leaves = static function (array $tree, string $path = '') use (&$leaves): array {
-	$out = [];
-	foreach ($tree as $key => $value) {
-		if ($key === '//') {
-			continue;
-		}
-		$full = $path === '' ? (string) $key : "$path.$key";
-		if (is_array($value) && !array_is_list($value) && $value !== []) {
-			$out += $leaves($value, $full);
-		} else {
-			$out[$full] = $value;
-		}
-	}
-	return $out;
-};
-
 $option = $argv[1] ?? '';
 
 if ($option === '--check') {
@@ -83,20 +62,17 @@ if ($option === '--check') {
 		if (array_intersect(array_keys($data), Layout::MOVED) !== []) {
 			$say("$file: old layout");
 		}
-		foreach (Layout::packages($data) as $package => $tree) {
-			foreach ($leaves($tree) as $path => $value) {
-				if (str_starts_with($path, 'ini.')) {
-					continue;
-				}
-				$field = Schema::field($package, $path);
-				if ($field === null) {
-					$say("$file: $package.$path is defined nowhere");
-					$problems++;
-				} elseif (!empty($field[0]['writeOnly']) && $file !== 'config.local.json' && (string) $value !== '') {
-					$say("$file: $package.$path is a secret outside of config.local.json");
-					$problems++;
-				}
-			}
+		$missing = 0;
+		foreach (Reconcile::findings($file, $data) as $finding) {
+			$name = trim($finding['package'] . '.' . $finding['path'], '.');
+			match ($finding['status']) {
+				Reconcile::MISSING => $missing++,
+				Reconcile::FOREIGN => $say("$file: $name is not installed here, it stays"),
+				default => [$say("$file: $name: " . $finding["status"]), $problems++],
+			};
+		}
+		if ($missing > 0) {
+			$say("$file: $missing defaults go in with the next save");
 		}
 	}
 	$say($problems === 0 ? 'fine' : "$problems to look at");
@@ -137,20 +113,7 @@ if (str_starts_with($option, '--move-secrets=')) {
 	}
 	$data = Layout::lift($data);
 	$local = Layout::lift($local);
-	$moved = [];
-	foreach ((array) ($data['packages'] ?? []) as $package => $tree) {
-		foreach ($leaves((array) $tree) as $path => $value) {
-			if (empty(Schema::field($package, $path)[0]['writeOnly'])) {
-				continue;
-			}
-			$keys = ['packages', $package, ...explode('.', $path)];
-			if ((string) $value !== '' && Tree::get($local, $keys) === null) {
-				Tree::put($local, $keys, $value);
-			}
-			Tree::drop($data, $keys);
-			$moved[] = "$package.$path";
-		}
-	}
+	$moved = Reconcile::moveSecrets($data, $local);
 	if ($moved === []) {
 		$say("$file: no secrets in it");
 		exit(0);
