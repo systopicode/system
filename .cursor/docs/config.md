@@ -11,7 +11,7 @@ Definitionen je Paket, Abgleich, Formular: [config-struktur.md](config-struktur.
 | Datei | Inhalt | Sync |
 |---|---|---|
 | `config.json` | das Projekt, **nichts Installationsspezifisches**: unter `packages.<paket>` die Werte mit `x-project` (`system.constants`, `system.ini`, `system.auth` ohne Secret), freie `constants` des Projekts, `sites` nur als Fallback ohne Datenbank | ja, und Git |
-| `config.local.json` | **diese Installation**: ihr Name `packages.system.instance` (`DEV.ojhome`, `STAGING`, `LIVE`; der Teil vor dem ersten Punkt ist die Stage), `siteAddress`, `db.connections.<name>`, `system` (`debug`, `mail`, `versionAppendix` …), `relay`, **alle Secrets**, und Werte des Projekts mit `x-overridable` | **nein** (`*.local.json`) |
+| `config.local.json` | **diese Installation**: ihr Name `packages.system.instance` (`DEV.ojhome`, `STAGING`, `LIVE`; der Teil vor dem ersten Punkt ist die Stage), `packages.cms.siteAddress`, `db.connections.<name>`, `system` (`debug`, `mail`, `versionAppendix` …), `relay`, **alle Secrets**, und Werte des Projekts mit `x-overridable` | **nein** (`*.local.json`) |
 
 Alle Dateien sind reines JSON; ein Kommentar ist ein `"//"`-Schlüssel.
 
@@ -53,7 +53,7 @@ Baum, Globus für die Default-Site, +-Menü zum Anlegen), siehe
 Solange die Tabelle leer ist, gilt ein `sites`-Block in config.json als Fallback.
 
 **Wo** eine Site antwortet, sagt das Muster der Installation,
-`packages.system.siteAddress`: reguläre Ausdrücke mit Platzhalter, mehrere als Liste.
+`packages.cms.siteAddress` (Settings › CMS › Configuration): reguläre Ausdrücke mit Platzhalter, mehrere als Liste.
 
 | Stage | `siteAddress` | Adressen |
 |---|---|---|

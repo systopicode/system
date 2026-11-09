@@ -4,11 +4,11 @@ include 'checks.inc.php';
 $card = static function (string $title, array $rows): void {
     $root = \http::$root;
     $remedy = match ($title) {
-        'Folders' => ['Check filesystem ownership and grant the PHP user write access only to the listed project folders.', $root . 'admin/settings/environment/', 'Environment'],
-        'Mail & login' => ['Review the active environment and use Send test email to verify SMTP acceptance.', $root . 'admin/settings/environment/', 'Mail & login settings'],
+        'Folders' => ['Check filesystem ownership and grant the PHP user write access only to the listed project folders.', $root . 'admin/settings/config/?package=system', 'System configuration'],
+        'Mail & login' => ['Review the active environment and use Send test email to verify SMTP acceptance.', $root . 'admin/settings/config/?package=system', 'Mail & login settings'],
         'Optional media tools', 'Functions', 'Extensions' => ['Review PHP extensions, disabled functions and project-local binaries with your host. Optional tools can be installed under var/bin/.', $root . 'admin/settings/mediasettings/', 'Media settings'],
         'Background tasks (optional CLI)' => ['Open cleanup for execution status, a manual run and optional scheduling instructions.', $root . 'admin/tools/cleanup/automatic/', 'Cleanup'],
-        'Server' => ['Live-update configuration belongs to this installation; review the environment connection and allowed addresses.', $root . 'admin/settings/environment/', 'Environment'],
+        'Server' => ['Live-update configuration belongs to this installation; review the environment connection and allowed addresses.', $root . 'admin/settings/config/?package=relay', 'Relay configuration'],
         default => null,
     };
 

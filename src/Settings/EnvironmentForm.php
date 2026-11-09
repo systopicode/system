@@ -20,9 +20,10 @@ use Systopic\System\Panels\PanelNode;
  * (config.local.json). Everything is shown, what cannot be changed here is
  * read only, secrets never show. See .cursor/plans/settings-gui.plan.md.
  *
- * Two views: this installation, the one that is written, and the project,
- * read only. Leaving a field writes that value to config.local.json and
- * nothing else.
+ * One package at a time (the settings menu lists every package with a
+ * definition, `?package=`), its blocks open and close. Two views: this
+ * installation, the one that is written, and the project, read only.
+ * Leaving a field writes that value to config.local.json and nothing else.
  */
 final class EnvironmentForm
 {
@@ -48,12 +49,40 @@ final class EnvironmentForm
     /** the config picked in the header (panel state) */
     private static string $picked = '';
 
+    /** the package shown (panel state) */
+    private static string $package = '';
+
+    /**
+     * The packages with a definition, in the order of Reconcile::PACKAGES:
+     * each has its configuration in the settings menu.
+     *
+     * @return list<string>
+     */
+    public static function packages(): array
+    {
+        return array_values(array_filter(Reconcile::PACKAGES, static fn(string $package): bool => Schema::installed($package) && Schema::load($package) !== []));
+    }
+
+    /** the title of a package, from its definition */
+    public static function packageTitle(string $package): string
+    {
+        return (string) (Schema::load($package)['title'] ?? ucfirst($package));
+    }
+
+    /** the icon of a package in the settings menu (`x-icon`), its classes */
+    public static function packageIcon(string $package): string
+    {
+        $icon = (string) (Schema::load($package)['x-icon'] ?? '');
+        return 'cmsIcon cmsIcon-' . (preg_match('/^[a-z0-9-]+$/', $icon) === 1 ? $icon : 'cube');
+    }
+
     /** What the person keeps between calls: the panel's state. */
     private static function remember(PanelNode $panel): void
     {
         $state = $panel->state ?? null;
         self::$open = array_values(array_map('strval', (array) ($state->open ?? [])));
         self::$picked = (string) ($state->file ?? '');
+        self::$package = in_array((string) ($state->package ?? ''), self::packages(), true) ? (string) $state->package : (self::packages()[0] ?? '');
     }
 
     /**
@@ -80,7 +109,7 @@ final class EnvironmentForm
     {
         $e = static fn($value): string => htmlspecialchars((string) $value, ENT_QUOTES);
         self::remember($panel);
-        echo '<div class="projectFiles envSettings">';
+        echo '<div class="projectFiles envSettings" data-package="' . $e(self::$package) . '">';
         echo \message::flush();
         $views = self::views();
         if ($views === []) {
@@ -154,13 +183,14 @@ final class EnvironmentForm
         if (self::$view['project']) {
             echo '<p class="tagsHint envViewHint">config.json holds what is the same for every installation. It is read only here, it changes with the project.</p>';
         }
-        foreach (Reconcile::PACKAGES as $package) {
-            if ((Explain::definition($package)['properties'] ?? []) !== []) {
-                self::package($package);
-            }
+        if (self::$package !== '') {
+            self::package(self::$package);
         }
-        self::foreign();
-        self::rest();
+        // what belongs to no package of this installation: with the first one
+        if (self::$package === (self::packages()[0] ?? '')) {
+            self::foreign();
+            self::rest();
+        }
     }
 
     /**
@@ -425,32 +455,39 @@ final class EnvironmentForm
         return $isSet ? null : ($mandatory === 'input' ? 'input' : 'generate');
     }
 
-    /** One package: its blocks and values in the order of the definitions. */
+    /**
+     * One package: its blocks in the order of the definition, each one opens
+     * and closes. What stands beside the package (optional, Remove) and what
+     * the files note about it come first, its tool last.
+     */
     private static function package(string $package): void
     {
         $e = static fn($value): string => htmlspecialchars((string) $value, ENT_QUOTES);
-        $v = self::$view;
         $definition = Explain::definition($package);
-        // the head of the section like every head: title, (i) with the path, what stands beside it
-        echo '<section class="widget envPackage' . self::foldClass($package) . '" data-fold="' . $e($package) . '" data-package="' . $e($package) . '"><header>' . self::foldToggle($package) . '<h2>' . $e($definition['title'] ?? ucfirst($package)) . self::info([], self::definition($package, []), self::keyPath($package, [])) . '</h2>' . self::aside($package, $definition, []) . '</header>';
+        $aside = self::aside($package, $definition, []);
         $notes = self::comments([$package]);
-        if ($notes !== []) {
-            echo '<main><p class="tagsHint">' . implode('</p><p class="tagsHint">', array_map($e, $notes)) . '</p></main>';
+        if ($aside !== '' || $notes !== []) {
+            echo '<div class="envPackageBar">' . $aside . ($notes === [] ? '' : '<p class="tagsHint">' . implode('</p><p class="tagsHint">', array_map($e, $notes)) . '</p>') . '</div>';
         }
         self::node($package, $definition, []);
         // what nothing defines: a block of its own after the others
         ob_start();
-        self::$head = self::blockHead('Defined nowhere', '', 'In the files, but no definition knows them.');
+        self::$head = self::foldHead($package . '.orphans', self::blockHead('Defined nowhere', '', 'In the files, but no definition knows them.'));
         self::orphans($package);
         $found = self::$head === null;
         self::$head = null;
         self::endRows();
         $orphans = (string) ob_get_clean();
         if ($found) {
-            echo '<div class="envBlock" data-depth="1">' . $orphans . '</div>';
+            echo '<div class="envBlock' . self::foldClass($package . '.orphans') . '" data-depth="1" data-fold="' . $e($package . '.orphans') . '">' . $orphans . '</div>';
         }
         self::tool($definition);
-        echo '</section>';
+    }
+
+    /** the head of a block that opens and closes: the chevron first */
+    private static function foldHead(string $key, string $head): string
+    {
+        return preg_replace('~^<div class="envGroupHead">~', '<div class="envGroupHead">' . self::foldToggle($key), $head, 1) ?? $head;
     }
 
     /**
@@ -569,12 +606,20 @@ final class EnvironmentForm
         }
     }
 
-    /** A block: a box, its head waits for the first row. */
-    private static function openBlock(int $depth, string $head, string $class = ''): void
+    /**
+     * A block: a box, its head waits for the first row. With a fold key it
+     * opens and closes (the blocks of the first level), as it was left.
+     */
+    private static function openBlock(int $depth, string $head, string $class = '', ?string $fold = null): void
     {
+        $e = static fn($value): string => htmlspecialchars((string) $value, ENT_QUOTES);
         self::flushHead();
         self::endRows();
-        echo '<div class="envBlock' . $class . '" data-depth="' . $depth . '">';
+        if ($fold !== null) {
+            $class .= self::foldClass($fold);
+            $head = self::foldHead($fold, $head);
+        }
+        echo '<div class="envBlock' . $class . '" data-depth="' . $depth . '"' . ($fold !== null ? ' data-fold="' . $e($fold) . '"' : '') . '>';
         self::$head = $head;
     }
 
@@ -617,7 +662,7 @@ final class EnvironmentForm
         // a package has no loose values: they are its block General
         $general = $path === [] && ($values !== [] || $free);
         if ($general) {
-            self::openBlock(1, self::blockHead('General'));
+            self::openBlock(1, self::blockHead('General'), '', $package . '.general');
         }
         foreach ($values as [$child, $at]) {
             self::row($package, $child, $at);
@@ -662,7 +707,7 @@ final class EnvironmentForm
     {
         $e = static fn($value): string => htmlspecialchars((string) $value, ENT_QUOTES);
         $head = self::blockHead($e($title) . self::info($node, self::definition($package, $path), self::keyPath($package, $path)), $aside, ...self::comments([$package, ...$path]));
-        self::openBlock(count($path), $head, $class);
+        self::openBlock(count($path), $head, $class, count($path) === 1 ? self::keyPath($package, $path) : null);
         if (is_array($node['additionalProperties'] ?? null)) {
             self::entries($package, $node, $path);
         } else {

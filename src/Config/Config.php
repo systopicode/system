@@ -17,7 +17,7 @@ use RuntimeException;
  *                      the sites before the database knows them. Git, sync.
  *   config.local.json  this installation: its name (`packages.system.instance`,
  *                      DEV.ojhome, STAGING, LIVE), how its sites are reached
- *                      (`siteAddress`), its databases, secrets. Lies in the
+ *                      (`packages.cms.siteAddress`), its databases, secrets. Lies in the
  *                      project folder of one installation and travels nowhere
  *                      (`*.local.json` is in the sync ignore list), so it
  *                      needs no rule to be found.
@@ -367,10 +367,10 @@ final class Config
         $this->site  = null;
     }
 
-    /** the patterns of `siteAddress`, [] on LIVE */
+    /** the patterns of `packages.cms.siteAddress`, [] on LIVE */
     public function siteAddresses(): array
     {
-        $address = $this->package('system')['siteAddress'] ?? [];
+        $address = $this->package('cms')['siteAddress'] ?? [];
         return array_values(array_filter(array_map('strval', (array) $address), static fn(string $a): bool => trim($a) !== ''));
     }
 

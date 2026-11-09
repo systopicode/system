@@ -70,9 +70,10 @@ document.addEventListener('change', event => {
     sys.core.server.sendCall({dataset: {pick: name}}, 'pick');
 });
 
-// Main sections open and close: a click on the header or its chevron, all
-// at once from the header bar. Every config shows the same ones open; the
-// server keeps them, so a redrawn page opens them again.
+// The blocks of a package open and close: a click on their head (the first
+// row of their table) or its chevron, all at once from the header bar. Every
+// config shows the same ones open; the server keeps them, so a redrawn page
+// opens them again.
 function foldKeys() {
     var keys = new Set();
     document.querySelectorAll('.envSettings .envFold.is-open[data-fold]').forEach(section => keys.add(section.dataset.fold));
@@ -82,7 +83,8 @@ function setFold(key, open) {
     document.querySelectorAll('.envSettings .envFold[data-fold]').forEach(section => {
         if (key !== null && section.dataset.fold !== key) return;
         section.classList.toggle('is-open', open);
-        section.querySelector(':scope > header .envFoldToggle')?.setAttribute('aria-expanded', open ? 'true' : 'false');
+        // the first chevron is the section's own: nested blocks have none
+        section.querySelector('.envFoldToggle')?.setAttribute('aria-expanded', open ? 'true' : 'false');
     });
 }
 function sendFolds() {
@@ -95,12 +97,14 @@ document.addEventListener('click', event => {
         sendFolds();
         return;
     }
-    var head = event.target.closest?.('.envSettings .envFold > header');
+    var head = event.target.closest?.('.envSettings .envFold > header, .envSettings .envBlock.envFold tr.envHead');
     if (!head) return;
+    var section = head.closest('.envFold');
+    // the head of a nested block belongs to that block, not to this one
+    if (head.matches('tr.envHead') && head.closest('.envBlock') !== section) return;
     var toggle = event.target.closest('.envFoldToggle');
     // buttons, links and fields in the header do their own thing
     if (!toggle && event.target.closest('a, button, input, select, label, .envInfo')) return;
-    var section = head.parentElement;
     setFold(section.dataset.fold, !section.classList.contains('is-open'));
     sendFolds();
 });

@@ -12,7 +12,7 @@ in der Sicherheit.
 | Datei | Hält | Reist |
 |---|---|---|
 | `config/config.json` | das Projekt: was für jede Installation gleich ist (`x-project`), die Sites vor der Datenbank | Git, Sync |
-| `config/config.local.json` | diese Installation: ihr Name (`packages.system.instance`), wie ihre Sites erreichbar sind (`siteAddress`), Datenbanken, Debug, Mail, alle Secrets | nirgends |
+| `config/config.local.json` | diese Installation: ihr Name (`packages.system.instance`), wie ihre Sites erreichbar sind (`packages.cms.siteAddress`), Datenbanken, Debug, Mail, alle Secrets | nirgends |
 
 - **Kein Erkennen mehr.** `config.local.json` liegt im Projektordner genau einer
   Installation, sie sagt selbst, wer sie ist. Fehlt sie oder ihr Name, kommt die
@@ -37,7 +37,7 @@ in der Sicherheit.
 Ein Projekt mit mehreren Sites (`systopic.net` mit `beautiful-technology.de`,
 `expo-systems.de` …) erkennt die Site am Ordner (DEV, STAGING), an der Subdomain (RC) oder
 an der Domain (LIVE). Statt einer Regel je Site und Maschine steht in
-`packages.system.siteAddress` ein Muster, ein regulärer Ausdruck mit Platzhalter:
+`packages.cms.siteAddress` ein Muster, ein regulärer Ausdruck mit Platzhalter:
 
 | Stage | `siteAddress` | Platzhalter |
 |---|---|---|
@@ -323,12 +323,12 @@ der Installation (`config.local.json`), außer er oder ein Block über ihm sagt
 
 Beispiele:
 
-- `system`: `instance`, `siteAddress`, `debug`, `versionAppendix`, `assets`, `mail` gehören der Installation; `ini`, `constants`, `auth.defaultSignInMethod`, `auth.deviceDays`, `auth.screenDays` dem Projekt; `auth.secret`, `mail.password` sind Secrets der Installation
+- `system`: `instance`, `debug`, `versionAppendix`, `assets`, `mail` gehören der Installation; `ini`, `constants`, `auth.defaultSignInMethod`, `auth.deviceDays`, `auth.screenDays` dem Projekt; `auth.secret`, `mail.password` sind Secrets der Installation
 - `db`: `connections.<name>` mit `driver`, `host`, `port`, `name`, `user`, `pass`, `charset`
 - `relay`: `api`, `client`, `enabled`, `plainTopics`, `prefix`, `secret`, `apiKey`
+- `cms`: `siteAddress`
 
-Eine Datei gibt es nur, wenn sie etwas definiert. `cms` hat keine: Es liest keine
-eigenen Config-Werte, nur `sites` über `Config::current()`.
+Jedes Schema trägt `title`, `description` und `x-icon`: Titel und Symbol seines Bereichs im Settings-Menü.
 
 Regeln:
 
@@ -371,9 +371,25 @@ ein eigener Prüfer in wenigen Zeilen abdeckt, eine Bibliothek braucht es nicht.
 | `x-options` | Auswahl zur Laufzeit, zum Beispiel `"sites"` aus `cms_sites` |
 | `x-backup` | siehe [backup-config.md](backup-config.md) |
 | `x-tool` | an einem Block: Klasse, die `Settings\SettingsTool` umsetzt. Sie zeigt unter den Werten, was mehr ist als ein Wert (Testmail, Sign-in-Key, Hub), und nimmt ihre Aufrufe an. Das Paket bringt sie mit: `system` `Tools\MailTool` und `Tools\AuthTool`, `relay` `Settings\HubTool` |
+| `x-icon` | an der Wurzel: das Symbol des Pakets im Settings-Menü (`server`, `database`, `sitemap`, `bolt`) |
 | `x-entry-name` | an einem Wert eines Eintrags: ein neuer Eintrag beginnt mit seinem Namen darin (eine Verbindung `revolver` mit der Datenbank `revolver`) |
 
 ### Formular aus dem Schema
+
+**Menü:** Settings zeigt oben Theme und Tags, darunter einen Bereich je Paket: Titel und
+`x-icon` aus seinem Schema, die Panels, die das Paket mitbringt (welches, sagt der Ordner,
+in dem das Panel liegt), und als letztes seine „Configuration“
+(`admin/settings/config/?package=<paket>`, Panel `035_config`, ein Paket je Ansicht).
+Panels des Projekts selbst stehen in einem Bereich „Project“ am Ende. Das frühere
+Environment-Panel mit allen Paketen untereinander ist entfallen.
+
+**Global Settings** (`config/global.settings.json`) teilen sich zwei Pakete: Ein Panel eines
+Pakets nennt die Schlüssel, die es zeigt (`public array $globalSettings`); Global Settings
+lässt sie weg (`ProjectForm::render('page', $show, $hide)`). Das cms bringt „Website“ mit:
+`PAGE_IS_PUBLIC`, `PAGE_ACL`, `FRONTEND_EDIT_BAR`, `PUBLIC_PAGE_*`, `META_*`, `DEFAULT_LANG`,
+`LANGUAGES`, `AUTO_LANGUAGE_DETECTION`, nur das cms liest sie. Im System bleiben Name,
+App-Name, Titeltrenner, Rechtliches und der Standard der Anmeldung. Ohne cms (spaceticker)
+bleibt alles in Global Settings. Media Settings bleiben, wie sie sind.
 
 Zwei Ansichten: „This installation“ (geschrieben wird nur `config.local.json`) und
 „Project: config.json“ (nur lesen, ändert sich mit dem Projekt). Jeder Wert und jeder
@@ -407,8 +423,9 @@ rechnet der Browser je Tabelle (`table-layout:auto`, keine %-Breiten); Felder
 zählen mit dem, was in ihnen steht (`field-sizing:content`), leer sind sie
 mindestens 8rem breit.
 
-Die Hauptabschnitte (je Paket, fremde Pakete, Rest) sind
-zugeklappt, bis man sie öffnet; offen bleibt, was offen war (Panel-State
+Die Blöcke der ersten Ebene (General, Debug, PHP settings …) sind zugeklappt, bis man
+ihren Kopf anklickt; ebenso „Defined nowhere“, fremde Pakete und „More in the files“
+(diese beiden beim ersten Paket). Offen bleibt, was offen war (Panel-State
 `open`, Aufruf `fold`). Die Kopfzeile trägt die Auswahl der Config (State
 `file`, Aufruf `pick`), „Open all“/„Close all“ und „Check“: was zu prüfen ist
 (Wiederholtes, Unbekanntes, Falschplatziertes, Secrets, Fehlendes) als

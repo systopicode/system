@@ -1,6 +1,6 @@
 <?php
 
-/** @var \Systopic\System\Panels\Root\Admin\Settings\Environment\Check\Panel $this */
+/** @var \Systopic\System\Panels\Root\Admin\Settings\Config\Check\Panel $this */
 
 use Systopic\System\Settings\EnvironmentForm;
 

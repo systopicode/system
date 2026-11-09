@@ -43,8 +43,8 @@ try {
     check('invalid writes leave file unchanged', file_get_contents($local) === $snapshot);
     check('mail edit preserves database configuration', EnvironmentFile::set('db','connections.main.name','fixture_database') && EnvironmentFile::set('system','mail.testRecipient','sink@example.test') && $value(['db','connections','main','name'])==='fixture_database');
     check('a second connection works the same', EnvironmentFile::set('db','connections.revolver.driver','pgsql') && $value(['db','connections','revolver','driver'])==='pgsql');
-    check('site addresses take several, separated by commas', EnvironmentFile::set('system','siteAddress','rc.example.test, {name}.example.test') && $value(['system','siteAddress'])===['rc.example.test','{name}.example.test']);
-    check('one is a string', EnvironmentFile::set('system','siteAddress','/projects(\.[a-z]+)?/{site}/') && $value(['system','siteAddress'])==='/projects(\.[a-z]+)?/{site}/');
+    check('site addresses take several, separated by commas', EnvironmentFile::set('cms','siteAddress','rc.example.test, {name}.example.test') && $value(['cms','siteAddress'])===['rc.example.test','{name}.example.test']);
+    check('one is a string', EnvironmentFile::set('cms','siteAddress','/projects(\.[a-z]+)?/{site}/') && $value(['cms','siteAddress'])==='/projects(\.[a-z]+)?/{site}/');
     file_put_contents($local, '{invalid json');
     check('broken JSON cannot be overwritten by a field save', !EnvironmentFile::set('system','mail.testRecipient','sink@example.test') && file_get_contents($local) === '{invalid json');
     file_put_contents($local, $snapshot);

@@ -14,19 +14,27 @@ final class ProjectForm
     /** Record fields that name page templates (`a;b`, empty for all) - ticked, not typed. */
     private const TEMPLATE_FIELDS = ['var:media_groups' => 'templates'];
 
-    public static function render(string $which): void
+    /**
+     * One settings file as tables. Global Settings is shared by packages: a
+     * panel of a package shows its keys (`$show`, Website of the cms), Global
+     * Settings shows what no installed package claims (`$hide`).
+     *
+     * @param list<string> $show the keys to show, [] for all
+     * @param list<string> $hide the keys another panel shows
+     */
+    public static function render(string $which, array $show = [], array $hide = [], string $title = ''): void
     {
         $e = static fn($value): string => htmlspecialchars((string) $value, ENT_QUOTES);
-        $title = $which === 'media' ? 'Media Settings' : 'Global Settings';
+        $title = $title !== '' ? $title : ($which === 'media' ? 'Media Settings' : 'Global Settings');
         $path = ProjectFile::path($which);
         $filename = $path !== null ? basename($path) : (ProjectFile::FILES[$which] ?? '');
         echo '<div class="projectFiles">';
         echo '<h1>' . $e($title) . '</h1>';
-        echo '<p class="tagsHint">' . ($which === 'media' ? 'Image and video formats control generated media. Groups define where files can be used and which uploads are allowed.' : 'Shared defaults for this project. Page-specific settings can provide their own values.') . '</p>';
+        echo '<p class="tagsHint">' . ($which === 'media' ? 'Image and video formats control generated media. Groups define where files can be used and which uploads are allowed.' : ($show !== [] ? 'Defaults of the website: who may see it, its meta data, its languages. Page-specific settings can provide their own values.' : 'Shared defaults for this project. Page-specific settings can provide their own values.')) . '</p>';
         echo \message::flush();
         if ($path === null) {
             echo '<p>Missing ' . $e($filename) . '.</p>';
-            if ($which === 'page') {
+            if ($which === 'page' && $show === []) {
                 self::systemSettings();
             }
             echo '</div>';
@@ -37,6 +45,9 @@ final class ProjectForm
         $hasLanguages = false;
         $autoLanguage = null;
         foreach (ProjectFile::groups($path) as $group) {
+            if (!self::shown($group, $show, $hide)) {
+                continue;
+            }
             if (in_array(substr($group->id, 7), LegalLinks::FIELDS, true) && str_starts_with($group->id, 'define:')) {
                 $legalSettings[] = $group;
                 continue;
@@ -116,10 +127,23 @@ final class ProjectForm
             }
             echo '</section>';
         }
-        if ($which === 'page') {
+        if ($which === 'page' && $show === []) {
             self::systemSettings($legalSettings);
         }
         echo '</div>';
+    }
+
+    /**
+     * Does a panel show this group? Its key without the kind
+     * (`define:LANGUAGES` → LANGUAGES) against the keys of the panel.
+     *
+     * @param list<string> $show
+     * @param list<string> $hide
+     */
+    private static function shown(Group $group, array $show, array $hide): bool
+    {
+        $key = (string) preg_replace('/^[a-z]+:/', '', $group->id);
+        return ($show === [] || in_array($key, $show, true)) && !in_array($key, $hide, true);
     }
 
     public static function handle(PanelNode $panel, string $which): void
@@ -569,11 +593,18 @@ final class ProjectForm
         return (string) $values;
     }
 
-    public static function searchHits(\Systopic\System\Sys\Search $search, string $which, string $href): void
+    /**
+     * @param list<string> $show as render()
+     * @param list<string> $hide as render()
+     */
+    public static function searchHits(\Systopic\System\Sys\Search $search, string $which, string $href, array $show = [], array $hide = [], string $title = ''): void
     {
         $path = ProjectFile::path($which);
-        $title = $which === 'media' ? 'Media Settings' : 'Global Settings';
+        $title = $title !== '' ? $title : ($which === 'media' ? 'Media Settings' : 'Global Settings');
         foreach ($path === null ? [] : ProjectFile::groups($path) as $group) {
+            if (!self::shown($group, $show, $hide)) {
+                continue;
+            }
             $label = self::human($group->label);
             if ($search->matches($label) || $search->matches(ltrim($group->label, '$')) || $search->matches($group->category)) {
                 $search->add('Settings', 'cmsIcon-gear', $label, $group->category !== '' ? $title . ' › ' . $group->category : $title, $href);

@@ -9,7 +9,7 @@ namespace Systopic\System\Config;
  *
  * WHAT a site is comes from cms_sites (or config.json before the database is
  * connected), the same on every installation. WHERE it answers here comes
- * from `packages.system.siteAddress` of the installation: patterns, regular
+ * from `packages.cms.siteAddress` of the installation: patterns, regular
  * expressions with a placeholder for the site.
  *
  *   /projects(\.[a-z]+)?/{site}/   DEV, STAGING: a folder per site, named like it

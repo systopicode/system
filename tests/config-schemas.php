@@ -15,11 +15,11 @@ declare(strict_types=1);
 require_once __DIR__ . '/../src/Config/Config.php';
 require_once __DIR__ . '/../src/Config/Layout.php';
 
-const PACKAGES = ['system', 'db', 'relay'];
+const PACKAGES = ['system', 'db', 'cms', 'relay'];
 const KEYWORDS = [
 	'$schema', 'title', 'description', 'type', 'properties', 'required', 'items', 'enum', 'default', 'minimum', 'maximum',
 	'minLength', 'pattern', 'format', 'additionalProperties', 'propertyNames', 'not', 'anyOf', 'writeOnly',
-	'x-mandatory', 'x-stages', 'x-computed', 'x-optional', 'x-overridable', 'x-options', 'x-backup', 'x-tool', 'x-entry-name', 'x-project',
+	'x-mandatory', 'x-stages', 'x-computed', 'x-optional', 'x-overridable', 'x-options', 'x-backup', 'x-tool', 'x-entry-name', 'x-project', 'x-icon',
 ];
 
 function check(string $label, bool $ok, string $detail = ''): void
@@ -93,7 +93,7 @@ foreach (PACKAGES as $package) {
 	keywords($json, $used);
 	$unknown = array_diff(array_keys($used), KEYWORDS);
 	check("$package uses known keywords only", $unknown === [], implode(', ', $unknown));
-	check("$package has a title and a description", ($json['title'] ?? '') !== '' && ($json['description'] ?? '') !== '');
+	check("$package has a title, a description and an icon", ($json['title'] ?? '') !== '' && ($json['description'] ?? '') !== '' && ($json['x-icon'] ?? '') !== '');
 	$definitions[$package] = $json;
 	$flat[$package] = leaves($json);
 }

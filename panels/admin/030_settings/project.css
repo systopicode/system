@@ -819,7 +819,16 @@ body .envTip small { display:block; margin-top:.3rem; color:inherit; opacity:.75
 
 /* main sections open and close, closed until opened (state on the server) */
 .envSettings .envFold > header { cursor:pointer; }
-.envSettings .envFold:not(.is-open) > :not(header) { display:none !important; }
+.envSettings .envFold:not(.envBlock):not(.is-open) > :not(header) { display:none !important; }
+/* a block of a package opens and closes on its head, the first row of its table */
+.envSettings .envBlock.envFold tr.envHead { cursor:pointer; }
+.envSettings .envBlock.envFold:not(.is-open) > :not(:first-child) { display:none !important; }
+.envSettings .envBlock.envFold:not(.is-open) > .tableScroll:first-child tbody > tr:not(.envHead) { display:none !important; }
+.envSettings .envBlock.envFold > .tableScroll:first-child tr.envHead .envGroupHead { align-items:center; }
+/* what stands beside the package: optional, Remove, the notes of the files */
+.envSettings .envPackageBar { display:flex; flex-wrap:wrap; align-items:center; gap:.5rem 1rem; margin:.75rem .75rem 0; }
+.envSettings .envPackageBar .tagsHint { flex:1 1 100%; margin:0; }
+.envSettings .envViewHint { margin:.75rem; }
 .envSettings .envFold:not(.is-open) > header { border-bottom:0; }
 .envSettings .envFoldToggle { display:inline-flex; align-items:center; justify-content:center; flex:0 0 auto; width:1.75rem; height:1.75rem; margin:0 .25rem 0 -.35rem; padding:0; border:0; border-radius:var(--cmsRadius, .4rem); background:none; color:var(--cmsMuted); cursor:pointer; }
 .envSettings .envFoldToggle:is(:hover, :focus-visible) { color:var(--cmsTextColor); background:var(--cmsLine); }

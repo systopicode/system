@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Systopic\System\Panels\Root\Admin\Settings\Environment\Check;
+namespace Systopic\System\Panels\Root\Admin\Settings\Config\Check;
 
 use Systopic\System\Panels\PanelNode;
 

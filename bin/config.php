@@ -171,8 +171,8 @@ if ($option === '--adopt' || str_starts_with($option, '--adopt=')) {
 	$addresses = array_values(array_unique($addresses));
 	// a literal host (rc.systopic.net) is the default site's: first
 	usort($addresses, static fn(string $a, string $b): int => (int) str_contains($a, '{') <=> (int) str_contains($b, '{'));
-	if ($addresses !== [] && !isset($packages['system']['siteAddress'])) {
-		$packages['system']['siteAddress'] = count($addresses) === 1 ? $addresses[0] : $addresses;
+	if ($addresses !== [] && !isset($packages['cms']['siteAddress'])) {
+		$packages['cms']['siteAddress'] = count($addresses) === 1 ? $addresses[0] : $addresses;
 	}
 	foreach ($old as $key => $value) {
 		if ($key === 'constants' && is_array($value)) {

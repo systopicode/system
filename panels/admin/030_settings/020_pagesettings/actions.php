@@ -15,21 +15,8 @@ if ((string) $this->action === 'saveAuthMethod') {
 	return;
 }
 
-if (in_array((string) $this->action, ['uploadFlag', 'resetFlag'], true)) {
-    $token = (string) (\http::posted('flagToken') ?? \http::put('flagToken') ?? '');
-    $code = (string) \http::get('code');
-    if (!\Systopic\System\Auth\Session::hasRole('cmsAdmin') || strtoupper((string) \http::$method) !== 'POST' || !\Systopic\System\Settings\LanguageFlags::checkToken($token)) {
-        \message::error('Reload the settings page and try again.');
-    } elseif ($this->action === 'uploadFlag') {
-        $error = \Systopic\System\Settings\LanguageFlags::store($code);
-        $error === null ? \message::confirm('Flag saved.') : \message::error($error);
-    } else {
-        \Systopic\System\Settings\LanguageFlags::reset($code)
-            ? \message::confirm('Project flag removed. The local default is used where available.')
-            : \message::error('There was no project flag to remove.');
-    }
-    if (\http::ajax()) $this->updateView('main');
-    else \http::redirect($this->getHref(\http::$root));
+// the languages show here while no other package shows them
+if (\Systopic\System\Settings\LanguageFlags::handleAction($this)) {
     return;
 }
 
