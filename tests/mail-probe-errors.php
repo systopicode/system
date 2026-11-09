@@ -1,5 +1,5 @@
 <?php
-namespace Systopic\System\Settings { class EnvironmentFile {const LOCAL='config.local.json';static function directory(){return '/fixture';}static function activeFile(){return self::LOCAL;}} }
+namespace Systopic\System\Settings { class EnvironmentFile {const LOCAL='config.local.json';const PROJECT='config.json';static function directory(){return '/fixture';}static function activeFile(){return self::LOCAL;}} }
 namespace Systopic\System\Auth {class Session {static function isSuperuser(){return true;}}}
 namespace Systopic\System\Panels {class PanelNode {public $action='testMail';public bool $updated=false;function updateView(){ $this->updated=true;}function updateViews($views=[]){ $this->updated=true;}}}
 namespace Systopic\System\Mail {class TestDelivery {public static string $error='';static function send(){throw new \RuntimeException(self::$error);}}class Delivery {static function settings(){return ['password'=>'fixture-secret'];}}}

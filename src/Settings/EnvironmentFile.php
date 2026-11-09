@@ -13,22 +13,24 @@ use Systopic\System\Config\Schema;
 use Systopic\System\Config\Tree;
 
 /**
- * The two files in `<project>/config`: config.json, the project, read here
- * and never written (it changes with the project, in git), and
- * config.local.json, this installation, the only file the settings write.
+ * The two files in `<project>/config`: config.json, the project, and
+ * config.local.json, this installation.
  *
  * What may be written is what the definition says (Config\Schema), under
- * `packages.<package>`: a value of the installation, a secret, or a value of
- * the project that may be overridden (`x-overridable`). A file in the old
- * layout moves to the new one with its first write, whatever else it holds
- * stays.
+ * `packages.<package>`, into the file the value belongs to: a value of the
+ * project (`x-project`) into config.json, where the last change wins, be it
+ * from here, git or sync; a value of the installation and every secret into
+ * config.local.json. A value of the project that this installation already
+ * overrides (`x-overridable`) is changed where it is overridden. A file in
+ * the old layout moves to the new one with its first write, whatever else it
+ * holds stays.
  */
 final class EnvironmentFile
 {
-    /** this installation: the file that is written */
+    /** this installation */
     public const LOCAL = 'config.local.json';
 
-    /** the project: read here, never written */
+    /** the project: what is the same on every installation */
     public const PROJECT = 'config.json';
 
     /** in ini, as in the definition: they would undo the debug switch */
@@ -83,14 +85,20 @@ final class EnvironmentFile
     }
 
     /**
-     * May config.local.json hold the field? A value of the installation, or
-     * one of the project that may be overridden.
+     * The file a field is written to: a secret and a value of the
+     * installation into config.local.json, a value of the project into
+     * config.json, unless this installation overrides it already.
      *
      * @param array<string, mixed> $definition
+     * @param list<string>         $keys packages, package, path
      */
-    public static function holds(array $definition, string $owner): bool
+    public static function target(array $definition, string $owner, array $keys): string
     {
-        return $owner === 'local' || !empty($definition['x-overridable']) || !empty($definition['writeOnly']);
+        if (!empty($definition['writeOnly']) || $owner !== 'project') {
+            return self::LOCAL;
+        }
+        $overridden = !empty($definition['x-overridable']) && Tree::get(self::read(self::LOCAL), $keys) !== null;
+        return $overridden ? self::LOCAL : self::PROJECT;
     }
 
     /**
@@ -104,10 +112,9 @@ final class EnvironmentFile
             return false;
         }
         [$definition, $owner] = $field;
-        if (!self::holds($definition, $owner)) {
-            return false;
-        }
         $keys = ['packages', $package, ...explode('.', $path)];
+        $file = self::target($definition, $owner, $keys);
+        $write = static fn(callable $change): bool => $file === self::LOCAL ? self::updateLocal($change) : self::update(self::PROJECT, $change);
         if (!empty($definition['writeOnly'])) {
             return $raw === '' || self::updateLocal(static function (array $data) use ($keys, $raw): array {
                 Tree::put($data, $keys, $raw);
@@ -120,7 +127,7 @@ final class EnvironmentFile
             if (($definition['x-mandatory'] ?? '') === 'input') {
                 return false;
             }
-            return self::updateLocal(static function (array $data) use ($keys): array {
+            return $write(static function (array $data) use ($keys): array {
                 Tree::drop($data, $keys);
                 return $data;
             });
@@ -129,7 +136,7 @@ final class EnvironmentFile
         if (!$valid) {
             return false;
         }
-        return self::updateLocal(static function (array $data) use ($keys, $value): array {
+        return $write(static function (array $data) use ($keys, $value): array {
             Tree::put($data, $keys, $value);
             return $data;
         });
@@ -262,15 +269,19 @@ final class EnvironmentFile
             return false;
         }
         $start = [];
+        $project = false;
         foreach ($entry['properties'] ?? [] as $key => $field) {
             if (!empty($field['x-entry-name'])) {
                 $start[$key] = $name;
             }
+            $project = $project || ($field['x-file'] ?? '') === 'project';
         }
-        return self::updateLocal(static function (array $data) use ($keys, $start): array {
+        $change = static function (array $data) use ($keys, $start): array {
             Tree::put($data, $keys, $start === [] ? new \stdClass() : $start);
             return $data;
-        });
+        };
+        // an entry of the project (a language) goes to config.json
+        return $project ? self::update(self::PROJECT, $change) : self::updateLocal($change);
     }
 
     /** Is it a named entry the definition requires (`connections.main`)? */
@@ -300,7 +311,7 @@ final class EnvironmentFile
     }
 
     /**
-     * A block, out of config.local.json. Only optional blocks and named
+     * A block, out of the files that have it. Only optional blocks and named
      * entries the definition does not require.
      */
     public static function removeBlock(string $package, string $path): bool
@@ -313,10 +324,21 @@ final class EnvironmentFile
             return false;
         }
         $keys = ['packages', $package, ...($path === '' ? [] : explode('.', $path))];
-        return self::path(self::LOCAL) !== null && self::updateLocal(static function (array $data) use ($keys): array {
+        $drop = static function (array $data) use ($keys): array {
             Tree::drop($data, $keys);
             return $data;
-        });
+        };
+        // out of every file that has it
+        $done = false;
+        foreach ([self::LOCAL, self::PROJECT] as $file) {
+            if (Tree::get(self::read($file), $keys) !== null) {
+                if (!self::update($file, $drop)) {
+                    return false;
+                }
+                $done = true;
+            }
+        }
+        return $done;
     }
 
     /**
@@ -356,10 +378,10 @@ final class EnvironmentFile
         return is_file($path) ? $path : null;
     }
 
-    /** config.local.json, the file that may be written; null when it is not there */
+    /** where a file that may be written lies, config.json or config.local.json; null when it is not there */
     public static function path(string $file = self::LOCAL): ?string
     {
-        return $file === self::LOCAL ? self::source(self::LOCAL) : null;
+        return self::source($file);
     }
 
     /**
@@ -387,7 +409,7 @@ final class EnvironmentFile
      * read - the later one dropping the earlier value. The lock lives outside
      * config/; the file is replaced by rename, so a reader never sees it half
      * written. A file that does not parse is left alone instead of being
-     * overwritten with what the form knows. Only config.local.json.
+     * overwritten with what the form knows, nor one with comments (JSONC).
      *
      * @param callable(array<string, mixed>): ?array<string, mixed> $change null = nothing to write
      */

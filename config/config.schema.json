@@ -13,6 +13,29 @@
 			"pattern": "^[A-Z]+(\\.[A-Za-z0-9_-]+)?$",
 			"x-mandatory": "input"
 		},
+		"website": {
+			"title": "Website",
+			"description": "The names of the project, the same on every installation.",
+			"type": "object",
+			"x-project": true,
+			"properties": {
+				"name": { "title": "Name", "description": "The name of the website: the title of the pages, the name of the web app.", "type": "string", "default": "fluxo", "x-constant": "PUBLIC_PAGE_NAME" },
+				"appName": { "title": "App name", "description": "The name on the sign-in pages and in the admin. Empty: the name.", "type": "string", "x-constant": "PUBLIC_APP_NAME" },
+				"titleSeparator": { "title": "Title separator", "description": "Between the parts of a page title, and in the subject of a mail.", "type": "string", "default": "|", "x-constant": "PAGE_TITLE_SEPERATOR" }
+			}
+		},
+		"legal": {
+			"title": "Legal",
+			"description": "What the sign-in pages of this system link and show about who runs it. The website has its own imprint and privacy pages.",
+			"type": "object",
+			"x-project": true,
+			"properties": {
+				"imprintUrl": { "title": "Imprint", "description": "Where the imprint link of the sign-in pages leads: an http(s) URL or a path starting with /. Empty: the /imprint/ page of the website.", "type": "string", "x-constant": "CMS_IMPRINT_URL" },
+				"privacyUrl": { "title": "Privacy policy", "description": "Where the privacy link of the sign-in pages leads: an http(s) URL or a path starting with /. Empty: the /privacy/ page of the website.", "type": "string", "x-constant": "CMS_PRIVACY_URL" },
+				"operator": { "title": "Responsible operator", "description": "Who runs this system, shown on the privacy page of the sign-in. Empty: the start page of the admin reminds of it.", "type": "string", "x-constant": "CMS_OPERATOR_DETAILS" },
+				"dpo": { "title": "Data protection officer", "description": "If one is appointed: shown on the privacy page of the sign-in.", "type": "string", "x-constant": "CMS_DPO_DETAILS" }
+			}
+		},
 		"debug": {
 			"title": "Debug",
 			"description": "What a developer sees while working on the installation. On by default on DEV, off everywhere else.",

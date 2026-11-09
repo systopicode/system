@@ -9,7 +9,7 @@ if (Overview::needsAttention()) {
     $notices[] = [Overview::summary(), 'Review cleanup', 'broom', '/admin/tools/cleanup/automatic/'];
 }
 if (LegalLinks::details('operator') === '') {
-    $notices[] = ['Please check: operator details are not entered in System Privacy. Add them or verify that your linked imprint and privacy policy cover them.', 'Privacy settings', 'gear', '/admin/settings/pagesettings/'];
+    $notices[] = ['Please check: operator details are not entered (Settings, System, Configuration: Legal). Add them or verify that your linked imprint and privacy policy cover them.', 'Legal settings', 'gear', '/admin/settings/config/?package=system'];
 }
 if ($notices === []) return;
 $escape = static fn($v) => htmlspecialchars((string) $v, ENT_QUOTES);

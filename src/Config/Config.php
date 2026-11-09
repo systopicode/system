@@ -291,6 +291,52 @@ final class Config
     }
 
     /**
+     * The constants the definitions name (`x-constant`: PUBLIC_PAGE_NAME,
+     * META_*, LANGUAGES …), from the values with their defaults. Run by
+     * loader.php after a settings.php of the project: what that file still
+     * defines wins, nothing is defined twice.
+     */
+    public function defineSettingConstants(): void
+    {
+        foreach (Reconcile::PACKAGES as $package) {
+            $definition = Schema::load($package);
+            if ($definition === []) {
+                continue;
+            }
+            $tree = $this->package($package);
+            foreach (self::constantsOf($definition, []) as [$name, $path]) {
+                $value = Tree::get($tree, $path);
+                if ($value !== null && !defined($name)) {
+                    define($name, $value);
+                }
+            }
+        }
+    }
+
+    /**
+     * Where a definition names a constant: [name, path].
+     *
+     * @param array<string, mixed> $node
+     * @param list<string>         $path
+     * @return list<array{0: string, 1: list<string>}>
+     */
+    public static function constantsOf(array $node, array $path): array
+    {
+        $found = [];
+        foreach ($node['properties'] ?? [] as $key => $child) {
+            if (!is_array($child)) {
+                continue;
+            }
+            $at = [...$path, (string) $key];
+            if (is_string($child['x-constant'] ?? null) && preg_match('/^[A-Z][A-Z0-9_]*$/', $child['x-constant']) === 1) {
+                $found[] = [$child['x-constant'], $at];
+            }
+            array_push($found, ...self::constantsOf($child, $at));
+        }
+        return $found;
+    }
+
+    /**
      * '?' . time() while developing, '?<versionDate>' when released, a literal
      * otherwise. The legacy switch spelled the same three cases by hand.
      */

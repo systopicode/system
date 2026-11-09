@@ -13,7 +13,7 @@ use Systopic\System\Config\Schema;
 use Systopic\System\Config\Tree;
 
 $system = Explain::definition('system');
-check('one definition per package, in its own order', array_slice(array_keys($system['properties']), 0, 2) === ['instance', 'debug']);
+check('one definition per package, in its own order', array_slice(array_keys($system['properties']), 0, 3) === ['instance', 'website', 'legal']);
 check('the site addresses are the cms\'s', isset(Explain::definition('cms')['properties']['siteAddress']));
 check('a block holds the project\'s values and the installation\'s', array_keys($system['properties']['auth']['properties']) === ['defaultSignInMethod', 'deviceDays', 'screenDays', 'secret']);
 check('every value knows its file', $system['properties']['auth']['properties']['secret']['x-file'] === 'local'

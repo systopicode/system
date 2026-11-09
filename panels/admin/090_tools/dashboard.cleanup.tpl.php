@@ -20,4 +20,4 @@ $root = rtrim((string) \http::$root, '/');
         </div>
     </div>
 </main>
-<footer><a class="button ajax" href="<?= $e($root . '/admin/settings/pagesettings/') ?>"><i class="cmsIcon cmsIcon-gear"></i>Privacy settings</a><a class="button ajax" href="<?= $e($root . '/admin/tools/cleanup/automatic/') ?>"><i class="cmsIcon cmsIcon-broom"></i>Open cleanup</a></footer>
+<footer><a class="button ajax" href="<?= $e($root . '/admin/settings/config/?package=system') ?>"><i class="cmsIcon cmsIcon-gear"></i>Legal settings</a><a class="button ajax" href="<?= $e($root . '/admin/tools/cleanup/automatic/') ?>"><i class="cmsIcon cmsIcon-broom"></i>Open cleanup</a></footer>

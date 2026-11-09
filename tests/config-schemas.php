@@ -19,7 +19,7 @@ const PACKAGES = ['system', 'db', 'cms', 'relay'];
 const KEYWORDS = [
 	'$schema', 'title', 'description', 'type', 'properties', 'required', 'items', 'enum', 'default', 'minimum', 'maximum',
 	'minLength', 'pattern', 'format', 'additionalProperties', 'propertyNames', 'not', 'anyOf', 'writeOnly',
-	'x-mandatory', 'x-stages', 'x-computed', 'x-optional', 'x-overridable', 'x-options', 'x-backup', 'x-tool', 'x-entry-name', 'x-project', 'x-icon',
+	'x-mandatory', 'x-stages', 'x-computed', 'x-optional', 'x-overridable', 'x-options', 'x-backup', 'x-tool', 'x-entry-name', 'x-project', 'x-icon', 'x-constant',
 ];
 
 function check(string $label, bool $ok, string $detail = ''): void
@@ -178,8 +178,14 @@ foreach ($files as $file) {
 				continue; // an open block
 			}
 			// a name of a map stands for itself
-			$lookup = preg_replace('~^connections\.[^.]+\.~', 'connections.*.', $short);
-			$leaf = $flat[$package][$lookup] ?? null;
+			// a name of a map stands for itself: connections.*.host, languages.list.*.label
+			$leaf = null;
+			foreach ($flat[$package] ?? [] as $pattern => $definition) {
+				if (preg_match('~^' . str_replace('\\*', '[^.]+', preg_quote($pattern, '~')) . '$~', $short) === 1) {
+					$leaf = $definition;
+					break;
+				}
+			}
 			if ($leaf === null) {
 				$unknown[$key] = $name;
 				continue;

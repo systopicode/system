@@ -34,7 +34,7 @@ try {
     check('non-numeric port rejected', !EnvironmentFile::set('system','mail.port','abc'));
     check('invalid boolean rejected', !EnvironmentFile::set('system','mail.testMode','maybe'));
     check('invalid TLS mode rejected', !EnvironmentFile::set('system','mail.secure','other'));
-    check('only config.json and config.local.json are files here', EnvironmentFile::source('../config.local.json') === null && EnvironmentFile::source('DEV.test.config.json') === null && EnvironmentFile::path('config.json') === null);
+    check('only config.json and config.local.json are files here', EnvironmentFile::source('../config.local.json') === null && EnvironmentFile::source('DEV.test.config.json') === null && EnvironmentFile::path('config.json') !== null);
     $snapshot = file_get_contents($local);
     check('unknown configuration fields rejected', !EnvironmentFile::set('db','connections.main.unknown','value') && !EnvironmentFile::set('system','unknown','value'));
     check('a bad connection name is rejected', !EnvironmentFile::set('db','connections.../x.host','value'));
@@ -50,9 +50,14 @@ try {
     file_put_contents($local, $snapshot);
 
     // values of the project
-    check('config.json is never written', !EnvironmentFile::set('system','constants.PROJECT_NAMESPACE','X') && json_decode(file_get_contents($project), true)['constants']['PROJECT_NAMESPACE']==='Test');
-    check('what the project allows is overridden here', EnvironmentFile::set('system','auth.deviceDays','30') && $value(['system','auth','deviceDays'])===30);
-    check('an ini value of its own', EnvironmentFile::set('system','ini.session_x','5') && $value(['system','ini','session_x'])==='5');
+    check('a value of the project goes to config.json', EnvironmentFile::set('system','website.name','Test site') && $value(['system','website','name'],'config.json')==='Test site' && $value(['system','website','name'])===null);
+    check('emptying it takes it out of config.json', EnvironmentFile::set('system','website.name','') && $value(['system','website','name'],'config.json')===null);
+    check('a language is added to config.json', EnvironmentFile::addEntry('cms','languages.list','fr') && $value(['cms','languages','list','fr','code'],'config.json')==='fr');
+    check('and goes again', EnvironmentFile::removeBlock('cms','languages.list.fr') && $value(['cms','languages','list','fr'],'config.json')===null);
+    check('what the project allows goes to config.json too', EnvironmentFile::set('system','auth.deviceDays','30') && $value(['system','auth','deviceDays'],'config.json')===30);
+    file_put_contents($local, json_encode(['packages' => ['system' => ['instance' => 'DEV.test', 'auth' => ['deviceDays' => 7]]]] + json_decode(file_get_contents($local), true)));
+    check('where this installation overrides it, the override changes', EnvironmentFile::set('system','auth.deviceDays','14') && $value(['system','auth','deviceDays'])===14 && $value(['system','auth','deviceDays'],'config.json')===30);
+    check('an ini value of its own', EnvironmentFile::set('system','ini.session_x','5') && $value(['system','ini','session_x'],'config.json')==='5');
     check('but not a reserved one', !EnvironmentFile::set('system','ini.display_errors','1'));
 
     // secrets

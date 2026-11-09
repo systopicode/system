@@ -17,14 +17,14 @@ use Systopic\System\Panels\PanelNode;
  * The configuration of this installation, built from the definitions of the
  * packages, in their order. Every value shows where it comes from: the
  * package, the project (config.json) or this installation
- * (config.local.json). Everything is shown, what cannot be changed here is
- * read only, secrets never show. See .cursor/plans/settings-gui.plan.md.
+ * (config.local.json). Everything is shown, secrets never show. See
+ * .cursor/plans/settings-gui.plan.md.
  *
  * One package at a time (the settings menu lists every package with a
- * definition, `?package=`), its blocks open and close. What config.json
- * says shows at every value (blue (i), chip Project); config.json is read
- * here, never written. Leaving a field writes that value to
- * config.local.json and nothing else.
+ * definition, `?package=`), its blocks open and close. Leaving a field
+ * writes that value, and nothing else, to the file it belongs to
+ * (EnvironmentFile::target()): a value of the project to config.json, one of
+ * the installation and every secret to config.local.json.
  */
 final class EnvironmentForm
 {
@@ -504,9 +504,9 @@ final class EnvironmentForm
             $out .= '<span class="envNote">' . ($active ? 'optional, set up' : 'optional, not set up: its defaults apply once a value is entered') . '</span>';
         }
         $removable = ($optional || $entry && !EnvironmentFile::requiredEntry($package, $path))
-            && self::writable() && Explain::has((array) $v['layers']['local'], [$package, ...$path]);
+            && self::writable() && (Explain::has((array) $v['layers']['local'], [$package, ...$path]) || Explain::has((array) $v['layers']['project'], [$package, ...$path]));
         if ($removable) {
-            $out .= '<button type="button" class="button transparent" data-on_click="userConfirm" data-action="removeBlock" data-confirm="Remove ' . $e(self::keyPath($package, $path)) . ' from config.local.json?" data-file="' . $e($v['file']) . '" data-package="' . $e($package) . '" data-path="' . $e(implode('.', $path)) . '"><i class="cmsIcon cmsIcon-trash"></i>Remove</button>';
+            $out .= '<button type="button" class="button transparent" data-on_click="userConfirm" data-action="removeBlock" data-confirm="Remove ' . $e(self::keyPath($package, $path)) . '?" data-file="' . $e($v['file']) . '" data-package="' . $e($package) . '" data-path="' . $e(implode('.', $path)) . '"><i class="cmsIcon cmsIcon-trash"></i>Remove</button>';
         }
         return $out;
     }
@@ -744,14 +744,14 @@ final class EnvironmentForm
         $owner = (string) ($field['x-file'] ?? 'local');
         $active = Explain::active(Explain::definition($package), $v['layers'], $path, $package);
         $value = Explain::value($field, $v['layers'], $keys, $v['stage'], $active);
-        $inLocal = is_array($v['layers']['local']) && Explain::has($v['layers']['local'], $keys);
         $findings = $v['findings'][$package . '.' . $dotted] ?? [];
         $misplaced = array_values(array_filter($findings, static fn(array $f): bool => $f['status'] === Reconcile::MISPLACED));
 
-        // a change goes to config.local.json, where the installation may set it
-        $target = !$v['project'] && EnvironmentFile::holds($field, $owner) ? EnvironmentFile::LOCAL : null;
-        $own = $target !== null && $inLocal;
-        $below = Explain::below($value['stack'], 'local');
+        // a change goes to the file the value belongs to (EnvironmentFile::target())
+        $target = EnvironmentFile::target($field, $owner, ['packages', ...$keys]);
+        $layer = $target === EnvironmentFile::LOCAL ? 'local' : 'project';
+        $own = is_array($v['layers'][$layer] ?? null) && Explain::has($v['layers'][$layer], $keys);
+        $below = Explain::below($value['stack'], $layer);
 
         self::rows();
         echo '<tr' . (count($path) > 1 ? ' data-group="' . $e($path[count($path) - 2]) . '"' : '') . ' data-key="' . $e($key) . '"' . ($target === null ? ' class="is-readonly"' : '') . '>';
@@ -768,7 +768,7 @@ final class EnvironmentForm
         } elseif ($target === null) {
             echo '<span class="envValue' . ($value['source'] === 'none' ? ' is-empty' : '') . '">' . $e(self::show($value)) . '</span>';
         } else {
-            self::control($target, $package, $dotted, $field, $own ? Tree::get((array) $v['layers']['local'], $keys) : null, $own, $below, $value);
+            self::control($target, $package, $dotted, $field, $own ? Tree::get((array) $v['layers'][$layer], $keys) : null, $own, $below, $value);
         }
         echo '</td><td class="envOrigin">';
         if ($secret) {
@@ -777,10 +777,10 @@ final class EnvironmentForm
             echo self::chip($value['source'], $value['source'] === 'stage' ? $v['stage'] : '', self::sourceLink($value['source'], $package, $path));
         }
         // notes
-        if (!$secret && $own && Explain::redundant($value['stack'], 'local')) {
+        if (!$secret && $own && Explain::redundant($value['stack'], $layer)) {
             echo '<small class="envNote">same as below</small>';
         }
-        if (!$secret && $own && $owner === 'project') {
+        if (!$secret && $own && $owner === 'project' && $layer === 'local') {
             echo '<small class="envNote">overrides the project</small>';
         }
         if (!$active && $value['default'] !== null && $value['default']['source'] !== 'computed') {
@@ -801,7 +801,7 @@ final class EnvironmentForm
         echo '</td><td class="envActions">';
         // a required value with nothing below it cannot be emptied: the installation would lose its name
         if ($own && !$secret && !(($field['x-mandatory'] ?? '') === 'input' && $below['source'] === 'none')) {
-            echo '<button type="button" class="button transparent" data-on_click="resetValue" data-file="' . $e($target) . '" data-package="' . $e($package) . '" data-path="' . $e($dotted) . '" title="' . $e('Remove from config.local.json: ' . self::show($below) . ' applies then') . '"><i class="cmsIcon cmsIcon-arrow-rotate-left"></i><span>' . $e(self::show($below)) . '</span></button>';
+            echo '<button type="button" class="button transparent" data-on_click="resetValue" data-file="' . $e($target) . '" data-package="' . $e($package) . '" data-path="' . $e($dotted) . '" title="' . $e('Remove from ' . $target . ': ' . self::show($below) . ' applies then') . '"><i class="cmsIcon cmsIcon-arrow-rotate-left"></i><span>' . $e(self::show($below)) . '</span></button>';
         }
         echo '</td></tr>';
     }
@@ -1203,8 +1203,8 @@ final class EnvironmentForm
     {
         $action ??= (string) $panel->action;
         $file = (string) \http::dataset('file');
-        if ($file !== EnvironmentFile::LOCAL || EnvironmentFile::directory() === null) {
-            \message::error('Only config.local.json of this installation is written here.');
+        if (!in_array($file, [EnvironmentFile::LOCAL, EnvironmentFile::PROJECT], true) || EnvironmentFile::directory() === null) {
+            \message::error('Only config.json and config.local.json are written here.');
             return;
         }
         // a call of a tool goes to the tool (x-tool in the definitions)

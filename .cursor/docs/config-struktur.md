@@ -11,7 +11,7 @@ in der Sicherheit.
 
 | Datei | Hält | Reist |
 |---|---|---|
-| `config/config.json` | das Projekt: was für jede Installation gleich ist (`x-project`), die Sites vor der Datenbank | Git, Sync |
+| `config/config.json` | das Projekt: was für jede Installation gleich ist (`x-project`): Namen, Rechtliches, Meta, Sprachen, `ini`, Konstanten; die Sites vor der Datenbank. Das Formular schreibt hinein, die letzte Änderung gewinnt, ob aus dem Admin, Git oder Sync | Git, Sync |
 | `config/config.local.json` | diese Installation: ihr Name (`packages.system.instance`), wie ihre Sites erreichbar sind (`packages.cms.siteAddress`), Datenbanken, Debug, Mail, alle Secrets | nirgends |
 
 - **Kein Erkennen mehr.** `config.local.json` liegt im Projektordner genau einer
@@ -371,6 +371,7 @@ ein eigener Prüfer in wenigen Zeilen abdeckt, eine Bibliothek braucht es nicht.
 | `x-options` | Auswahl zur Laufzeit, zum Beispiel `"sites"` aus `cms_sites` |
 | `x-backup` | siehe [backup-config.md](backup-config.md) |
 | `x-tool` | an einem Block: Klasse, die `Settings\SettingsTool` umsetzt. Sie zeigt unter den Werten, was mehr ist als ein Wert (Testmail, Sign-in-Key, Hub), und nimmt ihre Aufrufe an. Das Paket bringt sie mit: `system` `Tools\MailTool` und `Tools\AuthTool`, `relay` `Settings\HubTool` |
+| `x-constant` | an einem Wert oder einer Map: die PHP-Konstante, die `Config::defineSettingConstants()` daraus macht (nach einer evtl. noch vorhandenen settings.php, die gewinnt). So lesen die bisherigen Stellen weiter `PUBLIC_PAGE_NAME`, `META_*`, `LANGUAGES` |
 | `x-icon` | an der Wurzel: das Symbol des Pakets im Settings-Menü (`server`, `database`, `sitemap`, `bolt`) |
 | `x-entry-name` | an einem Wert eines Eintrags: ein neuer Eintrag beginnt mit seinem Namen darin (eine Verbindung `revolver` mit der Datenbank `revolver`) |
 
@@ -383,16 +384,29 @@ in dem das Panel liegt), und als letztes seine „Configuration“
 Panels des Projekts selbst stehen in einem Bereich „Project“ am Ende. Das frühere
 Environment-Panel mit allen Paketen untereinander ist entfallen.
 
-**Global Settings** (`config/global.settings.json`) teilen sich zwei Pakete: Ein Panel eines
-Pakets nennt die Schlüssel, die es zeigt (`public array $globalSettings`); Global Settings
-lässt sie weg (`ProjectForm::render('page', $show, $hide)`). Das cms bringt „Website“ mit:
-`PAGE_IS_PUBLIC`, `PAGE_ACL`, `FRONTEND_EDIT_BAR`, `PUBLIC_PAGE_*`, `META_*`, `DEFAULT_LANG`,
-`LANGUAGES`, `AUTO_LANGUAGE_DETECTION`, nur das cms liest sie. Im System bleiben Name,
-App-Name, Titeltrenner, Rechtliches und der Standard der Anmeldung. Ohne cms (spaceticker)
-bleibt alles in Global Settings. Media Settings bleiben, wie sie sind.
+**Global Settings sind aufgelöst** (2026-11-09). Was die Pakete lesen, steht in ihren
+Schemas, mit `x-project` und `x-constant`, und liegt in config.json:
 
-Zwei Ansichten: „This installation“ (geschrieben wird nur `config.local.json`) und
-„Project: config.json“ (nur lesen, ändert sich mit dem Projekt). Jeder Wert und jeder
+| Paket | Block | Konstanten |
+|---|---|---|
+| system | Website | `PUBLIC_PAGE_NAME`, `PUBLIC_APP_NAME`, `PAGE_TITLE_SEPERATOR` |
+| system | Legal | `CMS_IMPRINT_URL`, `CMS_PRIVACY_URL` (Ziele der Links auf den Anmeldeseiten), `CMS_OPERATOR_DETAILS`, `CMS_DPO_DETAILS` (Betreiber und Datenschutzbeauftragter auf der Datenschutzseite der Anmeldung) |
+| cms | Access | `PAGE_IS_PUBLIC`, `PAGE_ACL`, `FRONTEND_EDIT_BAR` |
+| cms | Meta | `META_AUTHOR`, `META_KEYWORDS`, `META_DESCRIPTION`, `META_PAGE_TOPIC`, `META_ROBOTS` |
+| cms | Languages | `DEFAULT_LANG`, `AUTO_LANGUAGE_DETECTION`, `LANGUAGES` (eine Map: Code → Name, Code, an) |
+
+Eine neue Sprache wird damit auf allen Installationen nachgezogen; wo die Datenbank sie
+noch nicht hat, sind die Seiten leer. `bin/config.php --import-settings` überträgt
+global.settings.json oder die `define()` einer settings.php (auch mehrzeilige
+Literal-Arrays) nach config.json und nimmt sie dort heraus. Was übrig bleibt (freie
+Konstanten des Projekts in settings.php), zeigt das Panel Global Settings weiter; ohne
+Quelle verschwindet es aus dem Menü. Media Settings bleiben, wie sie sind. Noch offen:
+sortierbare Listen und die Flaggen der Sprachen im Formular.
+
+Eine Ansicht: Jeder Wert wird in die Datei geschrieben, der er gehört
+(`EnvironmentFile::target()`): ein Wert des Projekts nach config.json, einer der
+Installation und jedes Secret nach config.local.json; einen Wert des Projekts, den die
+Installation schon überschreibt (`x-overridable`), dort. Check prüft beide Dateien. Jeder Wert und jeder
 Abschnitt trägt ein graues (i) für die Definition. Ein Wert trägt dazu ein farbiges (i)
 je Datei, in der er steht: blau `config.json`, grün `config.local.json`. Deren Tooltip
 zeigt, was die Datei sagt (bei Secrets nur „set“). Die Herkunfts-Chips tragen dieselben
@@ -489,7 +503,7 @@ Offene Blöcke und `"//"`-Schlüssel werden nie gelöscht.
 - Ein Wert in der Datei bleibt stehen, auch wenn das Paket seinen Default ändert. Das Admin
   zeigt daneben, was darunter gilt, und bietet das Zurücksetzen an. Ein geleertes Feld
   setzt ebenso zurück.
-- `config.json` schreibt das Admin nicht, dort bleibt es beim Hinweis.
+- Verwaistes in config.json bleibt beim Hinweis, auch wenn das Admin sonst hineinschreibt.
 - Dateien mit echten Kommentaren (JSONC) werden nur gemeldet, wie heute.
 - Die Reihenfolge der Datei bleibt erhalten, Neues kommt ans Ende des Blocks.
 - Was verwaist ist, sagt die Definition, nicht der Code. Ein Test prüft deshalb
