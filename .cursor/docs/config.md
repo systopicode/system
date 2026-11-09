@@ -90,15 +90,14 @@ eigene Name, nicht Name oder Alias einer anderen Site; `www.` wird entfernt.
 
 ### DEV: zweite Site per Pfad
 
-Ohne `linkSites` geht es von Hand: Die Site-Seite im CMS zeigt einen Button „Create site link“, wenn ein Pfad-Link fehlt. Er legt den Link an und, falls nötig, `sites/<name>/`. Windows bekommt eine Junction, alle anderen einen Symlink, relativ, wenn er neben dem Projekt liegt.
-
-Mit `"linkSites": true` in `config.local.json` legt `SiteRegistry::boot()`
-(`$config->linkSites($_SERVER['DOCUMENT_ROOT'], <project>)`, Klasse
-`SiteLinks`) fehlende Links selbst an: pro Pfad-Adresse
-`<DOCUMENT_ROOT><pfad>` → Projektordner. Nur wenn eine der Adressen schon
-das Projekt selbst ist (Schema stimmt auf dieser Maschine), nur Pfad-Adressen,
-Vorhandenes bleibt unangetastet. Ergebnis in `debugInfo()['siteLinks']`.
-Umbenennen verschiebt den Link mit. Von Hand entspricht das:
+Fehlt auf dieser Maschine der Link einer Site, sagt es ihre Seite im CMS oben
+(„Site link not created“) und bietet „Create site link“ an: Er legt den Link an und, falls
+nötig, `sites/<name>/`. Windows bekommt eine Junction, alle anderen einen Symlink, relativ,
+wenn er neben dem Projekt liegt (`SiteLinks`). Gesucht wird pro Pfad-Adresse
+`<DOCUMENT_ROOT><pfad>` → Projektordner, nur wenn eine der Adressen schon das Projekt
+selbst ist (das Muster stimmt auf dieser Maschine); Vorhandenes bleibt unangetastet.
+Umbenennen verschiebt den Link mit. Beim Booten wird nichts angelegt (die Einstellung
+`linkSites` ist 2026-11-09 entfallen). Von Hand entspricht das:
 
 ```
 mklink /J C:\laragon\www\projects\beautiful-technology.de C:\laragon\www\projects\systopic.net
@@ -112,5 +111,5 @@ Auf STAGING braucht es denselben Link (`ln -s systopic.net beautiful-technology.
 ## Debug
 
 `Config::current()->debugInfo()`: gelesene Dateien, Installation, Stage,
-`siteAddress`, Site, getroffene Adresse, Rest, Links. In den Core-JS-Settings stehen
+`siteAddress`, Site, getroffene Adresse, Rest. In den Core-JS-Settings stehen
 `instance` und `site`.

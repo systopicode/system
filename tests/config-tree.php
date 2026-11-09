@@ -61,7 +61,7 @@ $write('config.json', ['constants' => ['PROJECT_NAMESPACE' => 'Old', 'FREE' => 1
 rejects('without config.local.json there is no installation', static fn() => Config::boot($dir, [], $dir));
 $write('DEV.old.config.json', ['packages' => ['system' => ['instance' => 'DEV.old']]]);
 rejects('an old instance file names nothing', static fn() => Config::boot($dir, [], $dir));
-$write('config.local.json', ['db' => ['pass' => 'from-local'], 'packages' => ['system' => ['instance' => 'STAGING', 'linkSites' => true], 'db' => ['connections' => [
+$write('config.local.json', ['db' => ['pass' => 'from-local'], 'packages' => ['system' => ['instance' => 'STAGING', 'versionDate' => '2026-01-01'], 'db' => ['connections' => [
 	'main' => ['host' => 'h', 'name' => 'n'],
 	'revolver' => ['driver' => 'pgsql', 'name' => 'r', 'pass' => 'r-local'],
 ]]]]);
@@ -70,7 +70,7 @@ check('config.local.json names the installation', $config->instance->name === 'S
 check('the old layout and the new one in one file', $config->connection()['pass'] === 'from-local' && $config->connection()['host'] === 'h');
 check('a second connection', $config->connection('revolver')['driver'] === 'pgsql' && $config->connection('revolver')['pass'] === 'r-local');
 check('an unknown connection is empty', $config->connection('nope') === []);
-check('config.json and config.local.json side by side', $config->package('system')['constants']['PROJECT_NAMESPACE'] === 'Old' && $config->package('system')['linkSites'] === true);
+check('config.json and config.local.json side by side', $config->package('system')['constants']['PROJECT_NAMESPACE'] === 'Old' && $config->package('system')['versionDate'] === '2026-01-01');
 check('the stage decides the defaults', $config->package('system')['debug']['debug'] === false);
 check('a pinned name runs as its stage', Config::boot($dir, [], $dir, 'DEV.cli')->package('system')['debug']['debug'] === true);
 check('the files read', array_map('basename', $config->files) === ['config.json', 'config.local.json']);

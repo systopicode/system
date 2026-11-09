@@ -75,9 +75,6 @@ final class Config
      */
     private string $siteRemainder = '';
 
-    /** @var array<string, string> what linkSites() did, link => outcome */
-    private array $siteLinks = [];
-
     /** @var array<string, array<string, mixed>> what the files say, package => tree */
     private array $packages;
 
@@ -357,23 +354,6 @@ final class Config
     // =========================================================================
 
     /**
-     * DEV convenience, opt-in per installation (`"linkSites": true`): creates
-     * the missing directory links so every site answers under its path entry
-     * (/projects/beautiful-technology.de/ → this project). See SiteLinks.
-     *
-     * @param string $documentRoot $_SERVER['DOCUMENT_ROOT']
-     * @param string $projectDir   the project root
-     * @return array<string, string> link => outcome, [] when nothing was missing
-     */
-    public function linkSites(string $documentRoot, string $projectDir): array
-    {
-        if (empty($this->package('system')['linkSites'])) {
-            return [];
-        }
-        return $this->siteLinks = SiteLinks::ensure($this->sites, $documentRoot, $projectDir);
-    }
-
-    /**
      * Replaces the sites — name => root (site node id, NULL = default site),
      * default, meta, aliases — with those from the database. Where they
      * answer still comes from the installation.
@@ -523,7 +503,6 @@ final class Config
             'siteEntry'     => $this->siteEntry,
             'siteRemainder' => $this->siteRemainder,
             'sites'         => array_keys($this->sites->all()),
-            'siteLinks'     => $this->siteLinks,
         ];
     }
 }

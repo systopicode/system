@@ -18,7 +18,6 @@
 			"type": ["string", "array"],
 			"items": { "type": "string" }
 		},
-		"linkSites": { "title": "Link sites", "description": "Create the missing links of the sites next to the project, so every site answers under its own path on this machine. A DEV convenience.", "type": "boolean", "default": false },
 		"debug": {
 			"title": "Debug",
 			"description": "What a developer sees while working on the installation. On by default on DEV, off everywhere else.",

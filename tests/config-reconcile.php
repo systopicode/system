@@ -15,7 +15,7 @@ $of = static function (string $file, array $data, string $status): array {
 
 $file = ['packages' => [
 	'db' => ['connections' => ['main' => ['name' => 'n', 'pass' => 'secret', 'gone' => 1]]],
-	'system' => ['ini' => ['anything' => '1'], 'oldKey' => 'x', '//' => 'a note', 'linkSites' => true],
+	'system' => ['ini' => ['anything' => '1'], 'oldKey' => 'x', '//' => 'a note', 'versionDate' => '2026-01-01'],
 	'unknownpackage' => ['a' => 1],
 ]];
 
@@ -36,7 +36,7 @@ check('an override is not', $of('config.local.json', ['packages' => ['system' =>
 // orphans go by a click
 $clean = Reconcile::withoutOrphans('config.local.json', $file);
 check('every orphan goes', !isset($clean['packages']['db']['connections']['main']['gone']) && !isset($clean['packages']['system']['oldKey']));
-check('a value stays', $clean['packages']['system']['linkSites'] === true && $clean['packages']['db']['connections']['main']['name'] === 'n');
+check('a value stays', $clean['packages']['system']['versionDate'] === '2026-01-01' && $clean['packages']['db']['connections']['main']['name'] === 'n');
 check('no default comes in', !isset($clean['packages']['system']['debug']) && !isset($clean['packages']['db']['connections']['main']['host']));
 check('the secret stays', $clean['packages']['db']['connections']['main']['pass'] === 'secret');
 check('a foreign package stays', $clean['packages']['unknownpackage'] === ['a' => 1]);

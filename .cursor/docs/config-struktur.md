@@ -323,7 +323,7 @@ der Installation (`config.local.json`), außer er oder ein Block über ihm sagt
 
 Beispiele:
 
-- `system`: `instance`, `siteAddress`, `linkSites`, `debug`, `versionAppendix`, `assets`, `mail` gehören der Installation; `ini`, `constants`, `auth.defaultSignInMethod`, `auth.deviceDays`, `auth.screenDays` dem Projekt; `auth.secret`, `mail.password` sind Secrets der Installation
+- `system`: `instance`, `siteAddress`, `debug`, `versionAppendix`, `assets`, `mail` gehören der Installation; `ini`, `constants`, `auth.defaultSignInMethod`, `auth.deviceDays`, `auth.screenDays` dem Projekt; `auth.secret`, `mail.password` sind Secrets der Installation
 - `db`: `connections.<name>` mit `driver`, `host`, `port`, `name`, `user`, `pass`, `charset`
 - `relay`: `api`, `client`, `enabled`, `plainTopics`, `prefix`, `secret`, `apiKey`
 

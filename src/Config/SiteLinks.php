@@ -12,7 +12,7 @@ namespace Systopic\System\Config;
  *
  * For every path entry of the instance ('/projects/{site}/') the link is
  * <document root><entry> → <project dir>. Opt-in per instance
- * (`"linkSites": true` in config.local.json), so STAGING and LIVE are
+ * (the site page in the CMS, a click per site), so STAGING and LIVE are
  * never touched unless asked. The site page of the cms asks with a button
  * (missing(), create()).
  *
