@@ -27,10 +27,10 @@ class Panel extends SettingsPanel
         $this->label = 'Configuration';
     }
 
-    /** package: the one shown, open: the blocks open (fold keys), file: the config picked in the header */
+    /** package: the one shown, open: the blocks open (fold keys) */
     function getDefaultState()
     {
-        return (object) ((array) parent::getDefaultState() + ['package' => 'system', 'open' => [], 'file' => '']);
+        return (object) ((array) parent::getDefaultState() + ['package' => 'system', 'open' => []]);
     }
 
     function onLoad()

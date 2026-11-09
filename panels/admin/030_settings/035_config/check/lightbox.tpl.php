@@ -4,4 +4,4 @@
 
 use Systopic\System\Settings\EnvironmentForm;
 
-EnvironmentForm::checkList((string) $this->state->file);
+EnvironmentForm::checkList();

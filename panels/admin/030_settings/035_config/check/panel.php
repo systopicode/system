@@ -7,9 +7,8 @@ namespace Systopic\System\Panels\Root\Admin\Settings\Config\Check;
 use Systopic\System\Panels\PanelNode;
 
 /**
- * Check: what to look at in one config file, and what can be done about it
- * (EnvironmentForm::checks()). Opened from the header with `?file=`; the
- * file stays in the state, the calls of the lightbox name other files.
+ * Check: what to look at in config.json and config.local.json, and what can
+ * be done about it (EnvironmentForm::checks()). Opened from the header.
  */
 class Panel extends PanelNode
 {
@@ -19,17 +18,5 @@ class Panel extends PanelNode
     {
         parent::__construct($name, $parent);
         $this->label = 'Check';
-    }
-
-    public function getDefaultState()
-    {
-        return (object) ['file' => ''];
-    }
-
-    public function onLoad()
-    {
-        if (\http::get('file') !== null) {
-            $this->state->file = basename((string) \http::get('file'));
-        }
     }
 }

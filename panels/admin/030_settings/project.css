@@ -220,10 +220,6 @@
     margin: 0.75rem 0 0;
 }
 
-.projectFiles .envFile[hidden]{
-    display: none;
-}
-
 .projectFiles .widget > header h2{
     flex: 1 1 auto;
 }
@@ -618,7 +614,7 @@ body:has(> .projectTemplatesMenu.is-sheet)::after{
 .envHubAddressHeader { display: flex; align-items: center; flex-wrap: wrap; gap: .5rem; margin-bottom: .5rem; }
 .envHubAddressHeader h3 { flex: 1; margin: 0; }
 .envHubAddressHeader .button { margin: 0; }
-.envFile input[aria-invalid="true"] { border-color: #dc3545; box-shadow: 0 0 0 2px rgb(220 53 69 / 16%); }
+.envSettings input[aria-invalid="true"] { border-color: #dc3545; box-shadow: 0 0 0 2px rgb(220 53 69 / 16%); }
 
 .envHubInvalid { color: #b4232e; font-size: .85rem; margin: .5rem 0; }
 
@@ -837,10 +833,7 @@ body .envTip small { display:block; margin-top:.3rem; color:inherit; opacity:.75
 .envSettings .envFold > header { display:flex; align-items:center; gap:.25rem; }
 .envSettings .envFold > header h2 { flex:1 1 auto; min-width:0; }
 
-/* header bar: the config, open/close all, Check */
-.envPick { display:inline-flex; align-items:center; min-width:0; }
-/* .cms select brings the margin below of a form field: here it would lift the select */
-.envPick select { width:auto; max-width:16rem; min-width:0; margin:0; padding:.3rem 2rem .3rem .6rem; font-size:.875rem; }
+/* header bar: open/close all, Check */
 
 /* the legend below the menu of the settings */
 div.pylon > .envLegend { flex:0 0 auto; padding:.75rem 1.1rem 1rem; background:var(--cmsBgColor); border-top:1px solid var(--cmsLine); font-size:.75rem; color:var(--cmsMuted); }
@@ -862,7 +855,6 @@ div.pylon > .envLegend li span { min-width:0; overflow-wrap:anywhere; }
     .envSettings .envFold > header { flex-wrap:wrap; }
     .envSettings .envFold > header h2 { flex:1 1 calc(100% - 2.5rem); }
     .envSettings .envFold > header > :not(.envFoldToggle, h2) { margin-left:2rem; }
-    .envPick select { max-width:45vw; }
     .envSettings .envBlock { width:auto; max-width:none; margin:.5rem; }
     .envSettings .envBlock .envBlock { margin:.5rem .5rem .5rem .75rem; }
     /* folded into cards: the head stays a full row on top */

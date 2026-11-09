@@ -40,35 +40,9 @@
 	});
 })();
 
-// Check in the header follows the config shown: its link and its count.
-function syncCheck(name) {
-    document.querySelectorAll('.envCheckButton').forEach(button => {
-        var counts = {};
-        try { counts = JSON.parse(button.dataset.checks || '{}'); } catch (error) {}
-        var url = new URL(button.getAttribute('href'), location.href);
-        url.searchParams.set('file', name);
-        button.setAttribute('href', url.pathname + url.search);
-        var badge = button.querySelector('.envBadge');
-        if (badge) {
-            badge.textContent = String(counts[name] || 0);
-            badge.hidden = !counts[name];
-        }
-    });
-}
-
 // The page script may run more than once: the listeners on document only once.
 if (!window.cmsEnvironmentBound) {
 window.cmsEnvironmentBound = true;
-
-// The config in the header: shows its card, the server keeps it for the next visit.
-document.addEventListener('change', event => {
-    var select = event.target.closest?.('.envPick select');
-    if (!select) return;
-    var name = String(select.value || '');
-    document.querySelectorAll('.projectFiles .envFile').forEach(card => { card.hidden = card.getAttribute('data-env') !== name; });
-    syncCheck(name);
-    sys.core.server.sendCall({dataset: {pick: name}}, 'pick');
-});
 
 // The blocks of a package open and close: a click on their head (the first
 // row of their table) or its chevron, all at once from the header bar. Every
@@ -189,7 +163,7 @@ addEventListener('scroll', () => hideTip(), true);
 
 // Preserve Render/Time preferences while Debug is off; PHP error output is independent.
 function refreshDebugControls(){
- document.querySelectorAll('.envFile').forEach(file=>{
+ document.querySelectorAll('.envSettings').forEach(file=>{
   const refresh=()=>{
    const debug=file.querySelector('input[data-group="debug"][data-key="debug"]');
    if(!debug)return;
@@ -207,5 +181,5 @@ sys.onJSReady(refreshDebugControls);
 
 // beforeinput covers typing, paste and mobile keyboards, unlike autofill on load.
 document.addEventListener('beforeinput', event => {
-    if (event.target.matches?.('.envFile input:not([type="checkbox"])')) event.target.cmsConnectionEdited = true;
+    if (event.target.matches?.('.envSettings input:not([type="checkbox"])')) event.target.cmsConnectionEdited = true;
 }, true);

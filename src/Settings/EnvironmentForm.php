@@ -21,9 +21,10 @@ use Systopic\System\Panels\PanelNode;
  * read only, secrets never show. See .cursor/plans/settings-gui.plan.md.
  *
  * One package at a time (the settings menu lists every package with a
- * definition, `?package=`), its blocks open and close. Two views: this
- * installation, the one that is written, and the project, read only.
- * Leaving a field writes that value to config.local.json and nothing else.
+ * definition, `?package=`), its blocks open and close. What config.json
+ * says shows at every value (blue (i), chip Project); config.json is read
+ * here, never written. Leaving a field writes that value to
+ * config.local.json and nothing else.
  */
 final class EnvironmentForm
 {
@@ -45,9 +46,6 @@ final class EnvironmentForm
 
     /** the main sections open, by their fold key (panel state, see fold()) */
     private static array $open = [];
-
-    /** the config picked in the header (panel state) */
-    private static string $picked = '';
 
     /** the package shown (panel state) */
     private static string $package = '';
@@ -81,25 +79,19 @@ final class EnvironmentForm
     {
         $state = $panel->state ?? null;
         self::$open = array_values(array_map('strval', (array) ($state->open ?? [])));
-        self::$picked = (string) ($state->file ?? '');
         self::$package = in_array((string) ($state->package ?? ''), self::packages(), true) ? (string) $state->package : (self::packages()[0] ?? '');
     }
 
     /**
-     * Calls that only change what is shown, nothing in a file: a section
-     * opened or closed (`fold`, the keys of all open ones), a config picked
-     * (`pick`). Nothing is drawn again, the page did it already.
+     * Calls that only change what is shown, nothing in a file: a block
+     * opened or closed (`fold`, the keys of all open ones). Nothing is drawn
+     * again, the page did it already.
      */
     public static function viewState(PanelNode $panel): bool
     {
         if ($panel->action === 'fold') {
             $open = trim((string) \http::dataset('open'));
             $panel->state->open = $open === '' ? [] : array_values(array_unique(array_filter(explode(',', $open), static fn(string $key): bool => (bool) preg_match('/^[a-z][a-zA-Z0-9:._-]*$/', $key))));
-            return true;
-        }
-        if ($panel->action === 'pick') {
-            $file = basename((string) \http::dataset('pick'));
-            $panel->state->file = isset(self::views()[$file]) ? $file : '';
             return true;
         }
         return false;
@@ -111,78 +103,40 @@ final class EnvironmentForm
         self::remember($panel);
         echo '<div class="projectFiles envSettings" data-package="' . $e(self::$package) . '">';
         echo \message::flush();
-        $views = self::views();
-        if ($views === []) {
-            echo '<p>No environment config was found.</p></div>';
+        if (EnvironmentFile::directory() === null) {
+            echo '<p>No config folder was found.</p></div>';
             return;
         }
-        $selected = self::selected($views);
-        foreach (array_keys($views) as $file) {
-            echo '<div class="envFile"' . ($file === $selected ? '' : ' hidden') . ' data-env="' . $e($file) . '">';
-            self::view($file);
-            echo '</div>';
-        }
+        self::view();
         echo '</div>';
     }
 
     /**
-     * The configs to pick from: this installation, then the project.
-     *
-     * @return array<string, string> file => label
+     * This installation side by side with what lies below it: self::$view.
+     * The findings of both files, config.json as well: its rows say so.
      */
-    private static function views(): array
+    private static function prepare(): void
     {
-        if (EnvironmentFile::directory() === null) {
-            return [];
-        }
-        $name = (string) (\Systopic\System\Config\Config::current()?->instance->name ?? '');
-        return [
-            EnvironmentFile::LOCAL => 'This installation' . ($name === '' ? '' : ': ' . $name),
-            EnvironmentFile::PROJECT => 'Project: config.json',
-        ];
-    }
-
-    /**
-     * The config shown: the one a call names, else the one picked last, else
-     * this installation.
-     *
-     * @param array<string, string> $views
-     */
-    private static function selected(array $views, string $asked = ''): string
-    {
-        foreach ([$asked, (string) \http::dataset('file'), self::$picked] as $file) {
-            if ($file !== '' && isset($views[$file])) {
-                return $file;
-            }
-        }
-        return EnvironmentFile::LOCAL;
-    }
-
-    /** What one config file is, side by side with what lies below it: self::$view. */
-    private static function prepare(string $file): void
-    {
-        $project = $file === EnvironmentFile::PROJECT;
-        $data = EnvironmentFile::read($file);
+        $data = EnvironmentFile::read(EnvironmentFile::LOCAL);
         self::$view = [
-            'file' => $file,
-            'here' => !$project,
-            'project' => $project,
+            'file' => EnvironmentFile::LOCAL,
+            'here' => true,
+            'project' => false,
             'stage' => EnvironmentFile::stage(),
-            'layers' => EnvironmentFile::layers($project),
+            'layers' => EnvironmentFile::layers(),
             'data' => $data,
             'findings' => [],
         ];
-        foreach (Reconcile::findings($file, $data) as $finding) {
-            self::$view['findings'][trim($finding['package'] . '.' . $finding['path'], '.')][] = ['status' => $finding['status'], 'file' => $file, 'owner' => $finding['owner']];
+        foreach ([EnvironmentFile::PROJECT => EnvironmentFile::readProject(), EnvironmentFile::LOCAL => $data] as $file => $content) {
+            foreach (Reconcile::findings($file, $content) as $finding) {
+                self::$view['findings'][trim($finding['package'] . '.' . $finding['path'], '.')][] = ['status' => $finding['status'], 'file' => $file, 'owner' => $finding['owner']];
+            }
         }
     }
 
-    private static function view(string $file): void
+    private static function view(): void
     {
-        self::prepare($file);
-        if (self::$view['project']) {
-            echo '<p class="tagsHint envViewHint">config.json holds what is the same for every installation. It is read only here, it changes with the project.</p>';
-        }
+        self::prepare();
         if (self::$package !== '') {
             self::package(self::$package);
         }
@@ -194,53 +148,37 @@ final class EnvironmentForm
     }
 
     /**
-     * The header of the page: Check, with what there is to look at in the
-     * config shown. The counts of the others go along, the page switches
-     * between them without asking the server (panel.js).
+     * The header of the page: open and close all blocks, Check with what
+     * there is to look at in both files.
      */
     public static function controls(PanelNode $panel): void
     {
-        $e = static fn($value): string => htmlspecialchars((string) $value, ENT_QUOTES);
         self::remember($panel);
-        $views = self::views();
-        if ($views === []) {
+        if (EnvironmentFile::directory() === null) {
             return;
         }
-        $counts = [];
-        foreach (array_keys($views) as $file) {
-            $counts[$file] = count(self::checks($file));
-        }
-        $selected = self::selected($views);
-        $count = $counts[$selected] ?? 0;
-        // the config: in the header, so it can be switched with every section closed
-        echo '<label class="envPick" title="The config shown"><select name="env" aria-label="Config">';
-        foreach ($views as $name => $label) {
-            echo '<option value="' . $e($name) . '"' . ($name === $selected ? ' selected' : '') . '>' . $e($label) . '</option>';
-        }
-        echo '</select></label>';
+        $count = count(self::checks());
         echo '<div class="rightAlign envControls">';
-        echo '<button type="button" class="button transparent envFoldAll" data-open="1" title="Open all sections"><i class="cmsIcon cmsIcon-chevron-down"></i><span>Open all</span></button>';
-        echo '<button type="button" class="button transparent envFoldAll" data-open="0" title="Close all sections"><i class="cmsIcon cmsIcon-chevron-up"></i><span>Close all</span></button>';
-        echo '<a class="ajax button transparent envCheckButton" href="check/?file=' . $e(rawurlencode($selected)) . '" data-checks="' . $e((string) json_encode($counts)) . '" title="What to look at in this config: repeated, unknown and misplaced values, secrets, required values">'
+        echo '<button type="button" class="button transparent envFoldAll" data-open="1" title="Open all blocks"><i class="cmsIcon cmsIcon-chevron-down"></i><span>Open all</span></button>';
+        echo '<button type="button" class="button transparent envFoldAll" data-open="0" title="Close all blocks"><i class="cmsIcon cmsIcon-chevron-up"></i><span>Close all</span></button>';
+        echo '<a class="ajax button transparent envCheckButton" href="check/" title="What to look at in config.json and config.local.json: repeated, unknown and misplaced values, secrets, required values">'
             . '<i class="cmsIcon cmsIcon-list-check"></i><span>Check</span><b class="envBadge"' . ($count === 0 ? ' hidden' : '') . '>' . $count . '</b></a>';
         echo '</div>';
     }
 
     /**
-     * The Check lightbox: every point of one config, each with what can be
+     * The Check lightbox: every point of both files, each with what can be
      * done about it here.
      */
-    public static function checkList(string $asked): void
+    public static function checkList(): void
     {
         $e = static fn($value): string => htmlspecialchars((string) $value, ENT_QUOTES);
-        $views = self::views();
-        $file = $views === [] ? '' : self::selected($views, $asked);
-        $checks = $file === '' ? [] : self::checks($file);
-        echo '<div class="cmslightbox cms envCheck" data-size="1"><section><header><h1>Check<small>' . $e($file) . '</small></h1>'
+        $checks = EnvironmentFile::directory() === null ? [] : self::checks();
+        echo '<div class="cmslightbox cms envCheck" data-size="1"><section><header><h1>Check<small>config.json, config.local.json</small></h1>'
             . '<ul class="barmenu"><li><a class="ajax" href="../" aria-label="Close"><i class="cmsIcon cmsIcon-xmark"></i></a></li></ul></header><main>';
         echo \message::flush();
         if ($checks === []) {
-            echo '<p class="envCheckEmpty"><i class="cmsIcon cmsIcon-circle-check"></i>Nothing to look at in ' . $e($file) . '.</p>';
+            echo '<p class="envCheckEmpty"><i class="cmsIcon cmsIcon-circle-check"></i>Nothing to look at.</p>';
         } else {
             echo '<section class="widget is-list"><div class="tableScroll"><table class="envChecks"><tbody>';
             foreach ($checks as $check) {
@@ -285,7 +223,7 @@ final class EnvironmentForm
     }
 
     /**
-     * What to look at in one config: values that only repeat what applies
+     * What to look at in both files: values that only repeat what applies
      * anyway, values nobody defines, secrets and values in the wrong file,
      * packages not installed here, required values that are missing. Each
      * with what can be done about it here; the rows of the page carry the
@@ -293,10 +231,11 @@ final class EnvironmentForm
      *
      * @return list<array{kind: string, icon: string, title: string, text: string, action: string}> text and action are HTML
      */
-    public static function checks(string $file): array
+    public static function checks(): array
     {
         $e = static fn($value): string => htmlspecialchars((string) $value, ENT_QUOTES);
-        self::prepare($file);
+        $file = EnvironmentFile::LOCAL;
+        self::prepare();
         $v = self::$view;
         $list = static fn(array $names): string => '<code>' . implode('</code>, <code>', array_map($e, $names)) . '</code>';
         $checks = [];
@@ -850,7 +789,7 @@ final class EnvironmentForm
         foreach ($misplaced as $finding) {
             echo '<small class="envNote is-warn">set in ' . $e($finding['file']) . ', belongs into ' . $e($finding['owner'] === 'project' ? 'config.json' : 'config.local.json') . '</small>';
         }
-        if ($secret && $v['project'] && Explain::has((array) $v['layers']['project'], $keys)) {
+        if ($secret && Explain::has((array) $v['layers']['project'], $keys) && (string) Tree::get((array) $v['layers']['project'], $keys) !== '') {
             echo '<small class="envNote is-warn">lies in config.json, belongs into config.local.json</small>';
         }
         $mandatory = self::mandatory($package, $field, $path);
