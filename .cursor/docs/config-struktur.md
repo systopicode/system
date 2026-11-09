@@ -1,7 +1,59 @@
 # Config-Struktur: Definitionen, Dateien, Abgleich
 
-Stand 2026-11-06. Konzept, in Teilen umgesetzt (siehe „Nächste Sitzung“). Baut auf [config.md](config.md) auf.
-Backup: siehe [backup-config.md](backup-config.md).
+Stand 2026-11-09. Baut auf [config.md](config.md) auf. Backup: siehe [backup-config.md](backup-config.md).
+
+## Zwei Dateien (entschieden 2026-11-09)
+
+Die reisenden Instanz-Dateien (`DEV.ojhome.config.json`, `STAGING.config.json` …) sind
+abgelöst. Sie gab es aus Gründen der Struktur; seit die Definitionen Defaults, Stages
+und Pflichtwerte mitbringen, unterschieden sich Instanz und `config.local.json` nur noch
+in der Sicherheit.
+
+| Datei | Hält | Reist |
+|---|---|---|
+| `config/config.json` | das Projekt: was für jede Installation gleich ist (`x-project`), die Sites vor der Datenbank | Git, Sync |
+| `config/config.local.json` | diese Installation: ihr Name (`packages.system.instance`), wie ihre Sites erreichbar sind (`siteAddress`), Datenbanken, Debug, Mail, alle Secrets | nirgends |
+
+- **Kein Erkennen mehr.** `config.local.json` liegt im Projektordner genau einer
+  Installation, sie sagt selbst, wer sie ist. Fehlt sie oder ihr Name, kommt die
+  Einrichtungs-Seite (`NotConfigured::NO_INSTANCE`). Den LIVE-Default und die Sperre
+  für lokale Adressen braucht es nicht mehr.
+- **Die Stage** ist der Teil des Namens vor dem ersten Punkt (`DEV.ojhome` → `DEV`).
+- **Mehrere Installationen in einem Ordner** gibt es nicht. Bräuchte es sie, müsste
+  `config.local.json` nach Host unterscheiden.
+- **Die Site** kommt aus einem Muster je Installation, siehe „Site-Adressen“.
+- **Ein Schema je Paket** (`<paket>/config/config.schema.json`), der Master für Titel,
+  Beschreibung, Reihenfolge, Defaults und den Ort jedes Werts.
+- **Umstellen:** `php vendor/systopic/system/bin/config.php --adopt[=<instanz>]` übernimmt
+  die alte Instanz-Datei dieser Maschine in `config.local.json`: Werte, Namen und die
+  Site-Adressen, die ihre Regeln ausschreiben. Ohne Namen die, deren Regeln auf diese
+  Maschine passen (`Config\MachineRules`, das auch die Maschinen-Dateien von syscoder
+  auswählt). Die alten Dateien bleiben liegen, bis jede Maschine umgestellt ist; der
+  neue Code liest sie nicht. Erledigt: `DEV.ojhome` in `spaceticker.app`, `systopic.net`,
+  `smp.de`.
+
+### Site-Adressen
+
+Ein Projekt mit mehreren Sites (`systopic.net` mit `beautiful-technology.de`,
+`expo-systems.de` …) erkennt die Site am Ordner (DEV, STAGING), an der Subdomain (RC) oder
+an der Domain (LIVE). Statt einer Regel je Site und Maschine steht in
+`packages.system.siteAddress` ein Muster, ein regulärer Ausdruck mit Platzhalter:
+
+| Stage | `siteAddress` | Platzhalter |
+|---|---|---|
+| DEV | `/projects(\.[a-z]+)?/{site}/` | `{site}`: der Name der Site. Auch `projects.archive/`, `projects.work/` |
+| STAGING | `staging.systopic.net/projects/{site}/` | |
+| RC | `rc.systopic.net`, `{name}.systopic.net` | `{name}`: der Name ohne TLD (wegen der Zertifikate). Ein Muster ohne Platzhalter gehört der Default-Site |
+| LIVE | leer | jede Site unter ihrem Namen und ihren Aliasen |
+
+`Config\Sites` macht aus den Mustern je Anfrage die Adressen aller Sites: Passt ein
+Muster auf die Anfrage, wird das, was der Platzhalter genommen hat, gegen die andere
+Site getauscht (aus `/projects.archive/expo-systems.de/` wird
+`/projects.archive/systopic.net/`); passt es nicht, wird es ausgeschrieben, soweit es
+reiner Text ist. Die längste passende Adresse gewinnt, die erste einer Site ist ihre
+kanonische. Die Datenbank bekommt nichts Stage-Spezifisches: Sie reist mit jedem Backup.
+Ein Feld für Abweichungen (Ordner ≠ Name) gibt es erst, wenn eine Site nicht ins Muster
+passt. Site anlegen, umbenennen, löschen schreibt keine Config mehr.
 
 ## Nächste Sitzung
 
@@ -263,21 +315,17 @@ Datei gewinnt. Bis Schritt 2 gewann die erste, eine Instanz konnte nichts übers
 ## Kernidee
 
 **Das Paket definiert, das Projekt speichert.** Die Definition steht in JSON
-Schema, die Zieldatei ergibt sich aus dem Dateinamen, der Besitzer aus dem Pfad.
-
-| Definition im Paket | Landet in | Unter | Gilt für |
-|---|---|---|---|
-| `<paket>/config/project.schema.json` | `config/config.json` | `packages.<paket>` | alle Instanzen |
-| `<paket>/config/machine.schema.json` | `config/<stage>[.<machine>].config.json` | `packages.<paket>` | eine Installation |
-| `<paket>/config/local.schema.json` | `config/config.local.json` | `packages.<paket>` | diese Maschine, weder Git noch Sync |
-| `system/config/match.schema.json` | Instanz-Datei | oberste Ebene | `matches`, `default` |
+Schema, eine Datei je Paket: `<paket>/config/config.schema.json`. Jeder Wert gehört
+der Installation (`config.local.json`), außer er oder ein Block über ihm sagt
+`x-project`: dann ist er für jede Installation gleich und steht in `config.json`.
+`Schema::load()` markiert jeden Wert mit seiner Datei (`x-file`: `project` oder
+`local`), damit niemand den Baum wieder hinaufgehen muss.
 
 Beispiele:
 
-- `db/config/machine.schema.json`: `connections.<name>` mit `driver`, `host`, `port`, `name`, `user`, `charset`; `db/config/local.schema.json`: `connections.<name>.pass`
-- `system/config/project.schema.json`: `ini`, `constants`, `auth.defaultSignInMethod`, `auth.deviceDays`, `auth.screenDays`
-- `system/config/local.schema.json`: `auth.secret`, `mail.password`
-- `relay/config/machine.schema.json`: `api`, `client`, `enabled`, `plainTopics`, `prefix`; `relay/config/local.schema.json`: `secret`, `apiKey`
+- `system`: `instance`, `siteAddress`, `linkSites`, `debug`, `versionAppendix`, `assets`, `mail` gehören der Installation; `ini`, `constants`, `auth.defaultSignInMethod`, `auth.deviceDays`, `auth.screenDays` dem Projekt; `auth.secret`, `mail.password` sind Secrets der Installation
+- `db`: `connections.<name>` mit `driver`, `host`, `port`, `name`, `user`, `pass`, `charset`
+- `relay`: `api`, `client`, `enabled`, `plainTopics`, `prefix`, `secret`, `apiKey`
 
 Eine Datei gibt es nur, wenn sie etwas definiert. `cms` hat keine: Es liest keine
 eigenen Config-Werte, nur `sites` über `Config::current()`.
@@ -292,16 +340,12 @@ Regeln:
 - **Das System findet sie selbst:** über die installierten `systopic/*`-Pakete
   (`Composer\InstalledVersions`). Eine Anmeldung ginge nicht, `db` kennt `system`
   nicht und hat keine `autoload.php`.
-- **Jeder Schlüssel ist in genau einer Definition.** Ein Test prüft das.
-- **Ein Baum:** Alle Dateien haben dieselbe Form und werden in der Reihenfolge
-  Defaults, `config.json`, Instanz, `config.local.json` zusammengeführt.
-  `LOCAL_INSTANCE_KEYS` entfällt. Zugriff: `Config::package('db')`.
-- **Oben bleiben** `matches`, `default`, `instance` (wählen die Instanz, bevor
-  zusammengeführt wird) und die freien `constants` des Projekts. Sie werden nicht
-  abgeglichen. `debug`, `versionAppendix`, `versionDate`, `linkSites`, `assets`,
-  `ini` und die Systemkonstanten wandern unter `packages.system`.
-- **Alle Secrets liegen immer in local**, ohne Ausnahme je Stage. Das ersetzt die
-  Entscheidung vom 2026-11-04, dass DEV-Configs `auth.secret` enthalten dürfen.
+- **Ein Baum:** Beide Dateien haben dieselbe Form und werden in der Reihenfolge
+  Defaults, `config.json`, `config.local.json` zusammengeführt. Zugriff:
+  `Config::package('db')`.
+- **Oben bleiben** die freien `constants` des Projekts. Sie werden nicht abgeglichen.
+- **Alle Secrets liegen in `config.local.json`.** Ein Secret mit `x-project` lehnt der
+  Test ab.
 
 `global.settings.json`, `media.settings.json` und `controlmap.json` bleiben, wie sie sind.
 
@@ -318,11 +362,12 @@ ein eigener Prüfer in wenigen Zeilen abdeckt, eine Bibliothek braucht es nicht.
 | `required`, `items`, `minItems`, `additionalProperties` | Standard; `additionalProperties: true` = offener Block wie `ini`, ein Schema = Block mit Namen (`connections`), `required` darin = Einträge, die bleiben (`main`) |
 | `propertyNames` | Standard; bei einem Block mit Namen: was ein Name sein darf (`pattern`, `description` als Hinweis). Nur dann bietet der Admin „New …“ an |
 | `writeOnly` | Standard; Passwortfeld, Wert wird nie angezeigt oder geloggt |
-| `x-mandatory` | `"generate"`: entsteht bei Bedarf (`auth.secret`). `"input"`: muss jemand eintragen, der Admin fragt danach (`relay.secret` muss zum Hub passen) |
+| `x-mandatory` | `"generate"`: entsteht bei Bedarf (`auth.secret`). `"input"`: muss jemand eintragen, der Admin fragt danach (`relay.secret` muss zum Hub passen, `instance`); ein solcher Wert lässt sich nicht leeren |
 | `x-stages` | Default je Stage: `{ "DEV": true }` |
 | `x-computed` | Default kommt aus dem Code und wird nie eingetragen (`bindOnlyUsedParams` hängt an der PHP-Version) |
 | `x-optional` | Block wird nur ergänzt, wenn es ihn schon gibt (`mail`, `relay`) |
-| `x-overridable` | darf in einer später geladenen Datei abweichen (`ini.*`, die Zugangsdaten einer Verbindung) |
+| `x-project` | an einem Block oder Wert: gehört dem Projekt, steht in `config.json`. Ohne: gehört der Installation |
+| `x-overridable` | ein Wert des Projekts, den eine Installation in `config.local.json` abweichend setzen darf (`ini.*`, `auth.deviceDays`) |
 | `x-options` | Auswahl zur Laufzeit, zum Beispiel `"sites"` aus `cms_sites` |
 | `x-backup` | siehe [backup-config.md](backup-config.md) |
 | `x-tool` | an einem Block: Klasse, die `Settings\SettingsTool` umsetzt. Sie zeigt unter den Werten, was mehr ist als ein Wert (Testmail, Sign-in-Key, Hub), und nimmt ihre Aufrufe an. Das Paket bringt sie mit: `system` `Tools\MailTool` und `Tools\AuthTool`, `relay` `Settings\HubTool` |
@@ -330,12 +375,13 @@ ein eigener Prüfer in wenigen Zeilen abdeckt, eine Bibliothek braucht es nicht.
 
 ### Formular aus dem Schema
 
-Jeder Wert und jeder Abschnitt trägt ein graues (i) für die Definition. Ein
-Wert trägt dazu ein farbiges (i) je Datei, in der er steht: blau config.json,
-grün die Instanz-Datei, rot config.local.json. Deren Tooltip zeigt, was die
-Datei sagt (bei Secrets nur „set“). Abschnitte haben kein solches (i), ihre
-Werte können aus verschiedenen Dateien kommen. Die Herkunfts-Chips tragen
-dieselben Farben.
+Zwei Ansichten: „This installation“ (geschrieben wird nur `config.local.json`) und
+„Project: config.json“ (nur lesen, ändert sich mit dem Projekt). Jeder Wert und jeder
+Abschnitt trägt ein graues (i) für die Definition. Ein Wert trägt dazu ein farbiges (i)
+je Datei, in der er steht: blau `config.json`, grün `config.local.json`. Deren Tooltip
+zeigt, was die Datei sagt (bei Secrets nur „set“). Die Herkunfts-Chips tragen dieselben
+Farben (Package, Project, Installation). Ein Wert des Projekts mit `x-overridable` ist
+in der Installation ein normales Feld; steht er dort, heißt es „overrides the project“.
 
 Für Superuser, wo syscoder liegt (DEV), öffnet ein Klick auf ein (i) die
 Stelle in syscoder, je an der Zeile: das graue die Definition, ein farbiges
@@ -361,7 +407,7 @@ rechnet der Browser je Tabelle (`table-layout:auto`, keine %-Breiten); Felder
 zählen mit dem, was in ihnen steht (`field-sizing:content`), leer sind sie
 mindestens 8rem breit.
 
-Die Hauptabschnitte (Instance, je Paket, fremde Pakete, Rest) sind
+Die Hauptabschnitte (je Paket, fremde Pakete, Rest) sind
 zugeklappt, bis man sie öffnet; offen bleibt, was offen war (Panel-State
 `open`, Aufruf `fold`). Die Kopfzeile trägt die Auswahl der Config (State
 `file`, Aufruf `pick`), „Open all“/„Close all“ und „Check“: was zu prüfen ist
@@ -381,64 +427,8 @@ Herkunft steht unten in der Navi der Settings.
 | `object` | Karte oder Gruppe |
 | `object` mit `additionalProperties` als Schema | eine Karte je Name, mit Hinzufügen und Entfernen (`connections`) |
 
-Die letzte Array-Zeile ersetzt `setMatch`, `addMatch` und `removeMatch`:
-
-```json
-{
-	"$schema": "https://json-schema.org/draft/2020-12/schema",
-	"title": "Installation",
-	"type": "object",
-	"properties": {
-		"matches": {
-			"title": "Rules",
-			"description": "Detect this machine and the site of a request. One rule has to match.",
-			"type": "array",
-			"default": [],
-			"items": {
-				"title": "Rule",
-				"type": "object",
-				"additionalProperties": false,
-				"anyOf": [
-					{ "required": ["serverName"] },
-					{ "required": ["serverIp"] },
-					{ "required": ["rootDir"] },
-					{ "required": ["path"] }
-				],
-				"properties": {
-					"serverName": {
-						"title": "Host",
-						"description": "* as a wildcard",
-						"type": ["string", "array"],
-						"items": { "type": "string" }
-					},
-					"serverIp": {
-						"title": "IP",
-						"type": ["string", "array"],
-						"items": { "type": "string", "format": "ip" }
-					},
-					"rootDir": { "title": "Project folder", "type": "string" },
-					"path": { "title": "URL path", "type": "string", "pattern": "^/" },
-					"site": {
-						"title": "Site",
-						"type": "string",
-						"x-options": "sites"
-					}
-				}
-			}
-		},
-		"default": {
-			"title": "Default instance",
-			"type": "boolean",
-			"default": false
-		}
-	}
-}
-```
-
-`["string", "array"]` hält die 26 bestehenden Listen gültig. Das Formular zeigt
-solche Felder immer als Liste, ein einzelner Wert ist eine Liste mit einem
-Eintrag. `anyOf` verlangt mindestens ein Kriterium, eine leere Regel kann also
-nicht gespeichert werden.
+`siteAddress` ist `["string", "array"]`: im Formular ein Feld, mehrere Muster durch
+Kommas getrennt.
 
 ## Abgleich
 
@@ -455,8 +445,8 @@ nicht gespeichert werden.
 | überflüssig | in der Datei, gleich dem Wert darunter | „same as below“ | bleibt; „Remove them“ bzw. `--prune-defaults` nimmt ihn heraus |
 | verwaist | unter `packages.<x>`, `x` installiert, nicht definiert | durchgestrichen, am Ende des Paket-Blocks | bleibt bis zum Klick, Regeln unten |
 | fremd | unter `packages.<x>`, `x` nicht installiert | Hinweis | bleibt |
-| falsche Datei | gehört in eine andere Datei, kein `x-overridable` | „gehört nach …“, verschieben per Klick | bleibt |
-| Secret ungeschützt | `writeOnly`-Wert außerhalb von local | Warnung | bleibt |
+| falsche Datei | ein Wert der Installation in `config.json`, oder einer des Projekts ohne `x-overridable` in `config.local.json` | „belongs into …“ | bleibt |
+| Secret ungeschützt | `writeOnly`-Wert in `config.json` | Warnung | bleibt |
 
 **Wann:** im Admin beim Anzeigen, und nur die gezeigte Datei. Gespeichert wird nur die
 Änderung. Nie beim Booten. Nicht
@@ -472,10 +462,8 @@ Werten nicht zu unterscheiden. Das Admin zeigt sie jetzt als „same as below“
 
 | Datei | Verwaiste Schlüssel |
 |---|---|
-| eigene Instanz-Datei | per Klick, einzeln oder alle |
-| fremde Instanz-Datei | bleiben. Der DEV-Code kann neuer sein als der auf LIVE (Tag `v1.2.0` ist älter als `main`) |
-| `config.json` | nur Hinweis. Die Datei gilt für alle Stages, derselbe Grund |
-| `config.local.json` | per Klick, mit Bestätigung. Die Datei liegt nirgends sonst |
+| `config.local.json` | per Klick, einzeln oder alle, mit Bestätigung |
+| `config.json` | nur Hinweis. Die Datei gilt für alle Stages, und der DEV-Code kann neuer sein als der auf LIVE |
 
 Offene Blöcke und `"//"`-Schlüssel werden nie gelöscht.
 
@@ -484,8 +472,7 @@ Offene Blöcke und `"//"`-Schlüssel werden nie gelöscht.
 - Ein Wert in der Datei bleibt stehen, auch wenn das Paket seinen Default ändert. Das Admin
   zeigt daneben, was darunter gilt, und bietet das Zurücksetzen an. Ein geleertes Feld
   setzt ebenso zurück.
-- „Verschieben per Klick“ gibt es für Secrets und von local in die Instanz-Datei.
-  `config.json` schreibt das Admin nicht, dort bleibt es beim Hinweis.
+- `config.json` schreibt das Admin nicht, dort bleibt es beim Hinweis.
 - Dateien mit echten Kommentaren (JSONC) werden nur gemeldet, wie heute.
 - Die Reihenfolge der Datei bleibt erhalten, Neues kommt ans Ende des Blocks.
 - Was verwaist ist, sagt die Definition, nicht der Code. Ein Test prüft deshalb
@@ -507,8 +494,8 @@ Geprüft mit `ini_get_all()` und `ini_set()` (PHP 8.5.6, CLI):
 | `html_errors` | false | ja | Definition |
 | `error_log` | `var/log/PHP_errors.log` | ja | bleibt im Code |
 
-- Die Definitionen stehen in `system/config/project.schema.json` unter `ini`,
-  mit `x-overridable` und `additionalProperties: true`.
+- Die Definitionen stehen in `system/config/config.schema.json` unter `ini`,
+  mit `x-project`, `x-overridable` und `additionalProperties: true`.
 - **Die Upload-Werte wirkten nie**, es gilt der Serverwert. Die Zeilen sind aus
   `index.php` entfernt, `systemcheck` prüft sie (Upload ab 50 MB, Post ab 128 MB). Eine
   generierte `public/.user.ini` könnte sie setzen, das ist auf Plesk und der Synology
@@ -542,6 +529,8 @@ Im Code gibt es dagegen keinen Schutz, nur diese Reihenfolge.
    entfernen. Es läuft auf jeder Maschine selbst, offen sind die übrigen Maschinen.
 7. **Dateien umstellen.** Erledigt bis auf `config.json` und `RC.config.json` von
    `systopic.net`, die am Tag des Tags folgen (`--migrate=all`).
+9. **Zwei Dateien.** 2026-11-09, siehe oben. Offen: `--adopt` auf den anderen Maschinen,
+   STAGING und LIVE; danach die alten Instanz-Dateien löschen.
 8. **Altpfade entfernen.** Die Doku ist nachgezogen. Offen im Code: `Config\Layout`,
    `Config::LOCAL_INSTANCE_KEYS`, `Instance::db()`, `debug()`, `get()`. Das bleibt `1.x`. Die
    Projekte verlangen `^1.0`, jedes `composer update` zieht diesen Schritt also mit. Er

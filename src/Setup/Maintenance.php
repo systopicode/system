@@ -72,10 +72,9 @@ final class Maintenance
         $fields = [];
         foreach (['db', 'system', 'relay'] as $package) {
             $tree = $this->config->package($package);
-            foreach (Schema::load($package) as $definition) {
-                if (empty($definition['x-optional']) || $tree !== []) {
-                    $this->walk($package, $definition, [], $tree, $fields);
-                }
+            $definition = Schema::load($package);
+            if ($definition !== [] && (empty($definition['x-optional']) || $tree !== [])) {
+                $this->walk($package, $definition, [], $tree, $fields);
             }
         }
         return $fields;
@@ -99,7 +98,7 @@ final class Maintenance
                 if (empty($child['x-optional']) || isset($tree[$key])) {
                     $this->walk($package, $child, $here, is_array($tree[$key] ?? null) ? $tree[$key] : [], $fields);
                 }
-            } elseif (!empty($child['writeOnly']) || !empty($child['x-overridable'])) {
+            } elseif (!empty($child['writeOnly']) || !empty($child['x-overridable']) || ($child['x-file'] ?? 'local') === 'local') {
                 $fields[$package . '.' . implode('.', $here)] = [
                     'package' => $package,
                     'path' => $here,
@@ -168,6 +167,9 @@ final class Maintenance
         $file = Config::merge($shown, $kept);
         $posted = is_array($_POST['f'] ?? null) ? $_POST['f'] : [];
         foreach ($fields as $name => $field) {
+            if (!array_key_exists($name, $posted)) {
+                continue; // a field the form did not send stays as it is
+            }
             $path = ['packages', $field['package'], ...$field['path']];
             $raw = (string) ($posted[$name] ?? '');
             $definition = $field['definition'];
@@ -179,7 +181,7 @@ final class Maintenance
             }
             $raw = trim($raw);
             if ($raw === '') {
-                Tree::drop($file, $path); // empty: what the instance says
+                Tree::drop($file, $path); // empty: what config.json or the package says
                 continue;
             }
             if (($definition['type'] ?? '') === 'integer') {
@@ -217,9 +219,9 @@ final class Maintenance
         if ($old === $new) {
             return true;
         }
-        // the access as it will be: the instance file under what this file says
-        $instance = Setup::readJson($this->root . '/config/' . $this->config->instance->name . '.config.json') ?? [];
-        $shared = Layout::packages($instance)['db']['connections']['main'] ?? [];
+        // the access as it will be: config.json under what this file says
+        $project = Setup::readJson($this->root . '/config/config.json') ?? [];
+        $shared = Layout::packages($project)['db']['connections']['main'] ?? [];
         $access = array_merge($shared, is_array($new) ? $new : []);
         if (($access['driver'] ?? 'mysql') !== 'mysql') {
             return true;
@@ -256,7 +258,7 @@ final class Maintenance
             $shared = Tree::get($this->config->package($field['package']), $field['path']);
             $hint = is_scalar($shared) ? (string) $shared : '';
             if (isset($definition['enum'])) {
-                $options = '<option value="">from the instance' . ($hint === '' ? '' : ": {$h($hint)}") . '</option>';
+                $options = '<option value="">as below' . ($hint === '' ? '' : ": {$h($hint)}") . '</option>';
                 foreach ($definition['enum'] as $choice) {
                     $options .= '<option' . ((string) $choice === $value ? ' selected' : '') . '>' . $h((string) $choice) . '</option>';
                 }
@@ -270,8 +272,8 @@ final class Maintenance
         $rest = (string) ($_POST['rest'] ?? ($shown === [] ? '' : json_encode($shown, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)));
         $errors = $this->errors === [] ? '' : '<ul class="errors"><li>' . implode('</li><li>', array_map($h, $this->errors)) . '</li></ul>';
         $this->setup->page('Setup of ' . basename($this->root), <<<HTML
-            <p>Installation <b>{$h($this->config->instance->name)}</b>. This writes <code>config/config.local.json</code>, on this machine only.
-            An empty field falls back to the instance file, the grey value.</p>
+            <p>Installation <b>{$h($this->config->instance->name)}</b>. This writes <code>config/config.local.json</code>, on this installation only.
+            An empty field falls back to config.json or the package, the grey value.</p>
             $errors
             <form method="post">
                 {$this->setup->tokenField()}

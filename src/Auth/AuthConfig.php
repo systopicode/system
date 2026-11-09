@@ -8,8 +8,8 @@ use Systopic\System\Config\Config;
 use Systopic\System\Settings\EnvironmentFile;
 
 /**
- * The "auth" block of the instance's config (<Instance>.config.json or
- * config.local.json — never git, never synced to another machine):
+ * The "auth" block of the installation\'s config (config.local.json —
+ * never git, never synced to another machine):
  *
  *   "auth": {"secret": "<at least 32 random characters>",
  *            "deviceDays": 180, "screenDays": null}
@@ -60,12 +60,11 @@ final class AuthConfig
      */
     private static function made(): string
     {
-        $file = Config::current() !== null ? EnvironmentFile::activeFile() : null;
-        if ($file === null) {
+        if (EnvironmentFile::activeFile() === null) {
             return '';
         }
-        EnvironmentFile::createAuth($file);
-        return EnvironmentFile::authSecret($file);
+        EnvironmentFile::createAuth();
+        return EnvironmentFile::authSecret();
     }
 
     /** How long a person's device lives after its last use. */

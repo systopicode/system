@@ -80,24 +80,15 @@ if (!is_dir(PROJECT . 'vendor') || http('https://192.168.22.50/')[0] === 0) {
 clean();
 register_shutdown_function('clean');
 
-// the access of DEV on this machine: the first of the DEV files that connects
-$dev = [];
+// the access of the project on this machine: its config.local.json
 $access = static function (array $file): array {
 	return array_merge((array) ($file['db'] ?? []), (array) ($file['packages']['db']['connections']['main'] ?? []));
 };
-$local = $access(json_decode((string) @file_get_contents(PROJECT . 'config/config.local.json'), true) ?: []);
-foreach (glob(PROJECT . 'config/DEV.*.config.json') ?: [] as $file) {
-	$db = array_merge($access(json_decode((string) file_get_contents($file), true) ?: []), $local);
-	try {
-		new PDO('mysql:host=' . ($db['host'] ?? 'localhost') . ';dbname=' . ($db['name'] ?? ''), (string) ($db['user'] ?? 'root'), (string) ($db['pass'] ?? ''));
-		$dev = $db;
-		break;
-	} catch (PDOException) {
-		continue; // another machine's
-	}
-}
-if ($dev === []) {
-	throw new RuntimeException('FAIL: the project is here, but no DEV file connects');
+$dev = $access(json_decode((string) @file_get_contents(PROJECT . 'config/config.local.json'), true) ?: []);
+try {
+	new PDO('mysql:host=' . ($dev['host'] ?? 'localhost') . ';dbname=' . ($dev['name'] ?? ''), (string) ($dev['user'] ?? 'root'), (string) ($dev['pass'] ?? ''));
+} catch (PDOException) {
+	throw new RuntimeException('FAIL: the project is here, but its config.local.json does not connect');
 }
 
 mkdir(ROOT . 'public', 0775, true);
@@ -108,11 +99,11 @@ copy(PROJECT . '.htaccess', ROOT . '.htaccess');
 exec('powershell.exe -NoProfile -Command "New-Item -ItemType Junction -Path \'' . ROOT . 'vendor\' -Target \'' . PROJECT . 'vendor\' | Out-Null"');
 check('the test project has a vendor', is_file(ROOT . 'vendor/autoload.php'));
 file_put_contents(ROOT . 'config/config.json', json_encode(['constants' => ['PROJECT_NAMESPACE' => 'TmpSetup', 'DEFAULT_TABLE_PREFIX' => 'cms', 'ACCOUNT_WHITELIST' => []]]));
-$instance = ROOT . 'config/DEV.test.config.json';
-$goodInstance = json_encode(['matches' => [['path' => '/tmp-setup/']], 'db' => ['host' => $dev['host'] ?? 'localhost', 'name' => $dev['name'], 'user' => $dev['user'] ?? 'root']]);
-file_put_contents($instance, $goodInstance);
+$project = ROOT . 'config/config.json';
+$goodProject = (string) file_get_contents($project);
 $canary = 'canary-' . bin2hex(random_bytes(6));
-$good = ['//' => 'a note', 'db' => ['pass' => (string) ($dev['pass'] ?? '')], 'auth' => ['secret' => str_repeat('k', 40) . $canary], 'custom' => ['secret' => $canary, 'open' => 'visible-value']];
+$installation = ['system' => ['instance' => 'DEV.test'], 'db' => ['connections' => ['main' => ['host' => $dev['host'] ?? 'localhost', 'name' => $dev['name'], 'user' => $dev['user'] ?? 'root']]]];
+$good = ['//' => 'a note', 'db' => ['pass' => (string) ($dev['pass'] ?? '')], 'auth' => ['secret' => str_repeat('k', 40) . $canary], 'custom' => ['secret' => $canary, 'open' => 'visible-value'], 'packages' => $installation];
 writeLocal($good);
 
 // ---- who gets in
@@ -128,7 +119,7 @@ $token = token();
 [$status, $form] = http(PAGE . "?setup=$token");
 check('the token opens the form on a healthy site', $status === 200 && isForm($form));
 check('admin/ goes on to the system', !isForm(http(PAGE . "admin/?setup=$token")[1]));
-check('the form has the fields of the definitions', str_contains($form, 'f[db.connections.main.host]') && str_contains($form, 'f[db.connections.main.pass]') && str_contains($form, 'f[system.auth.secret]'));
+check('the form has the fields of the definitions', str_contains($form, 'f[db.connections.main.host]') && str_contains($form, 'f[db.connections.main.pass]') && str_contains($form, 'f[system.auth.secret]') && str_contains($form, 'f[system.instance]'));
 check('no relay without a relay', !str_contains($form, 'f[relay.'));
 check('no secret reaches the page', !str_contains($form, $canary));
 // the password of DEV may be any word: one that can be found. The form opens
@@ -175,16 +166,15 @@ $token = token();
 check('a broken config.local.json says so', str_contains($broken, 'The config cannot be read') && str_contains($broken, 'set config.local.json aside'));
 [, $aside] = http(PAGE, ['setup' => $token]);
 check('it can be set aside', str_contains($aside, 'Set aside') && !is_file(ROOT . 'config/config.local.json') && count(glob(ROOT . 'var/scaffold/config.local.json.*') ?: []) === 1);
-check('and the form comes back', isForm(http(PAGE . "?setup=$token")[1]));
+check('and the setup asks for the name of the installation again', str_contains(http(PAGE . "?setup=$token")[1], 'name="stage"'));
 
-writeLocal(['db' => ['pass' => (string) ($dev['pass'] ?? '')]]);
-file_put_contents($instance, '{ broken');
+writeLocal(['db' => ['pass' => (string) ($dev['pass'] ?? '')], 'packages' => $installation]);
+file_put_contents($project, '{ broken');
 [, $broken] = http(PAGE . "?setup=$token");
-check('a broken instance file says so', str_contains($broken, 'The config cannot be read') && str_contains($broken, 'with sync') && !str_contains($broken, '<button'));
-file_put_contents($instance, $goodInstance);
+check('a broken config.json says so', str_contains($broken, 'The config cannot be read') && str_contains($broken, 'with sync') && !str_contains($broken, '<button'));
+file_put_contents($project, $goodProject);
 
-unlink($instance);
-unlink(ROOT . 'config/config.json');
+unlink($project);
 [, $fresh] = http(PAGE . "?setup=$token");
 check('no config: the first setup asks', !isForm($fresh) && str_contains($fresh, 'name="') && !str_contains($fresh, 'cannot be read'));
 

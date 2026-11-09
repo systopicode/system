@@ -14,14 +14,15 @@ use Systopic\System\Config\Tree;
 use Systopic\System\Panels\PanelNode;
 
 /**
- * The configuration of one instance, built from the definitions of the
+ * The configuration of this installation, built from the definitions of the
  * packages, in their order. Every value shows where it comes from: the
- * package, config.json, the instance file, or this machine
+ * package, the project (config.json) or this installation
  * (config.local.json). Everything is shown, what cannot be changed here is
  * read only, secrets never show. See .cursor/plans/settings-gui.plan.md.
  *
- * Leaving a field writes that value, to the file the row names, and nothing
- * else.
+ * Two views: this installation, the one that is written, and the project,
+ * read only. Leaving a field writes that value to config.local.json and
+ * nothing else.
  */
 final class EnvironmentForm
 {
@@ -30,15 +31,14 @@ final class EnvironmentForm
         'stage' => 'Package',
         'computed' => 'Automatic',
         'project' => 'Project',
-        'instance' => 'Instance',
-        'local' => 'This machine',
+        'local' => 'Installation',
         'none' => 'Not set',
     ];
 
     /**
      * The view being rendered.
      *
-     * @var array{file: string, here: bool, project: bool, stage: string, layers: array<string, mixed>, data: array<string, mixed>, findings: array<string, list<array{status: string, file: string, owner: string}>>, required: int, overrides: int}
+     * @var array{file: string, here: bool, project: bool, stage: string, layers: array<string, mixed>, data: array<string, mixed>, findings: array<string, list<array{status: string, file: string, owner: string}>>}
      */
     private static array $view = [];
 
@@ -88,86 +88,72 @@ final class EnvironmentForm
             return;
         }
         $selected = self::selected($views);
-        foreach ($views as $file => $info) {
+        foreach (array_keys($views) as $file) {
             echo '<div class="envFile"' . ($file === $selected ? '' : ' hidden') . ' data-env="' . $e($file) . '">';
-            self::view($file, $views);
+            self::view($file);
             echo '</div>';
         }
         echo '</div>';
     }
 
     /**
-     * The configs to pick from: every instance file, then config.json.
+     * The configs to pick from: this installation, then the project.
      *
-     * @return array<string, array{name: string, file: string, current: bool}>
+     * @return array<string, string> file => label
      */
     private static function views(): array
     {
-        $views = [];
-        foreach (EnvironmentFile::files() as $info) {
-            if ($info['file'] !== EnvironmentFile::LOCAL) {
-                $views[$info['file']] = $info;
-            }
-        }
-        if ($views === [] && EnvironmentFile::readProject() === []) {
+        if (EnvironmentFile::directory() === null) {
             return [];
         }
-        $views[EnvironmentFile::PROJECT] = ['name' => 'Project', 'file' => EnvironmentFile::PROJECT, 'current' => false];
-        return $views;
+        $name = (string) (\Systopic\System\Config\Config::current()?->instance->name ?? '');
+        return [
+            EnvironmentFile::LOCAL => 'This installation' . ($name === '' ? '' : ': ' . $name),
+            EnvironmentFile::PROJECT => 'Project: config.json',
+        ];
     }
 
     /**
      * The config shown: the one a call names, else the one picked last, else
-     * the one running here.
+     * this installation.
      *
-     * @param array<string, array{name: string, file: string, current: bool}> $views
+     * @param array<string, string> $views
      */
     private static function selected(array $views, string $asked = ''): string
     {
-        $selected = $asked !== '' ? $asked : (string) \http::dataset('file');
-        if ($selected === EnvironmentFile::LOCAL || !isset($views[$selected])) {
-            $selected = self::$picked;
+        foreach ([$asked, (string) \http::dataset('file'), self::$picked] as $file) {
+            if ($file !== '' && isset($views[$file])) {
+                return $file;
+            }
         }
-        if (!isset($views[$selected])) {
-            $selected = (string) (EnvironmentFile::activeFile() ?? '');
-        }
-        if (!isset($views[$selected]) || $selected === EnvironmentFile::LOCAL) {
-            $selected = (string) array_key_first($views);
-        }
-        return $selected;
+        return EnvironmentFile::LOCAL;
     }
 
     /** What one config file is, side by side with what lies below it: self::$view. */
     private static function prepare(string $file): void
     {
         $project = $file === EnvironmentFile::PROJECT;
-        $here = !$project && EnvironmentFile::here($file);
-        $data = $project ? EnvironmentFile::readProject() : EnvironmentFile::read($file);
+        $data = EnvironmentFile::read($file);
         self::$view = [
             'file' => $file,
-            'here' => $here,
+            'here' => !$project,
             'project' => $project,
-            'stage' => EnvironmentFile::stage($file),
-            'layers' => EnvironmentFile::layers($file),
+            'stage' => EnvironmentFile::stage(),
+            'layers' => EnvironmentFile::layers($project),
             'data' => $data,
             'findings' => [],
         ];
-        $sources = [$file => $data];
-        if ($here) {
-            $sources[EnvironmentFile::LOCAL] = EnvironmentFile::read(EnvironmentFile::LOCAL);
-        }
-        foreach ($sources as $name => $content) {
-            foreach (Reconcile::findings($name, $content) as $finding) {
-                self::$view['findings'][trim($finding['package'] . '.' . $finding['path'], '.')][] = ['status' => $finding['status'], 'file' => $name, 'owner' => $finding['owner']];
-            }
+        foreach (Reconcile::findings($file, $data) as $finding) {
+            self::$view['findings'][trim($finding['package'] . '.' . $finding['path'], '.')][] = ['status' => $finding['status'], 'file' => $file, 'owner' => $finding['owner']];
         }
     }
 
-    /** @param array<string, array{name: string, file: string, current: bool}> $views */
-    private static function view(string $file, array $views): void
+    private static function view(string $file): void
     {
         self::prepare($file);
-        self::instance($views);
+        if (self::$view['project']) {
+            echo '<p class="tagsHint envViewHint">config.json holds what is the same for every installation. It is read only here, it changes with the project.</p>';
+        }
         foreach (Reconcile::PACKAGES as $package) {
             if ((Explain::definition($package)['properties'] ?? []) !== []) {
                 self::package($package);
@@ -198,8 +184,7 @@ final class EnvironmentForm
         $count = $counts[$selected] ?? 0;
         // the config: in the header, so it can be switched with every section closed
         echo '<label class="envPick" title="The config shown"><select name="env" aria-label="Config">';
-        foreach ($views as $name => $info) {
-            $label = $name === EnvironmentFile::PROJECT ? 'Project: config.json' : $info['name'] . ($info['current'] ? ' (runs here)' : '');
+        foreach ($views as $name => $label) {
             echo '<option value="' . $e($name) . '"' . ($name === $selected ? ' selected' : '') . '>' . $e($label) . '</option>';
         }
         echo '</select></label>';
@@ -221,12 +206,11 @@ final class EnvironmentForm
         $views = self::views();
         $file = $views === [] ? '' : self::selected($views, $asked);
         $checks = $file === '' ? [] : self::checks($file);
-        $name = $file === EnvironmentFile::PROJECT ? 'config.json' : $file;
-        echo '<div class="cmslightbox cms envCheck" data-size="1"><section><header><h1>Check<small>' . $e($name) . '</small></h1>'
+        echo '<div class="cmslightbox cms envCheck" data-size="1"><section><header><h1>Check<small>' . $e($file) . '</small></h1>'
             . '<ul class="barmenu"><li><a class="ajax" href="../" aria-label="Close"><i class="cmsIcon cmsIcon-xmark"></i></a></li></ul></header><main>';
         echo \message::flush();
         if ($checks === []) {
-            echo '<p class="envCheckEmpty"><i class="cmsIcon cmsIcon-circle-check"></i>Nothing to look at in ' . $e($name) . '.</p>';
+            echo '<p class="envCheckEmpty"><i class="cmsIcon cmsIcon-circle-check"></i>Nothing to look at in ' . $e($file) . '.</p>';
         } else {
             echo '<section class="widget is-list"><div class="tableScroll"><table class="envChecks"><tbody>';
             foreach ($checks as $check) {
@@ -247,13 +231,11 @@ final class EnvironmentForm
         $item = static fn(string $mark, string $text): string => '<li>' . $mark . '<span>' . $text . '</span></li>';
         echo '<div class="envLegend"><h2 class="pylonGroupTitle">Where values come from</h2><ul>'
             . $item(self::chip('package'), 'default of the package')
-            . $item(self::chip('project'), 'config.json')
-            . $item(self::chip('instance'), '&lt;instance&gt;.config.json')
-            . $item(self::chip('local'), 'config.local.json, this machine')
+            . $item(self::chip('project'), 'config.json, the project')
+            . $item(self::chip('local'), 'config.local.json, this installation')
             . '</ul><h2 class="pylonGroupTitle">Marks</h2><ul>'
             . $item('<span class="envInfo"><i class="cmsIcon cmsIcon-circle-info"></i></span>', 'the definition: what it is')
             . $item('<span class="envInfo envPlace is-project"><i class="cmsIcon cmsIcon-circle-info"></i></span>', 'set in config.json')
-            . $item('<span class="envInfo envPlace is-instance"><i class="cmsIcon cmsIcon-circle-info"></i></span>', 'set in the instance file')
             . $item('<span class="envInfo envPlace is-local"><i class="cmsIcon cmsIcon-circle-info"></i></span>', 'set in config.local.json')
             . $item('<i class="cmsIcon cmsIcon-database"></i>', 'travels with a backup')
             . '</ul><p>Without a backup mark a value stays on the installation. A click on an (i) opens it in its file.</p></div>';
@@ -273,75 +255,6 @@ final class EnvironmentForm
     }
 
     /**
-     * The config picked, where it applies, and whether it may go: one block.
-     *
-     * @param array<string, array{name: string, file: string, current: bool}> $views
-     */
-    private static function instance(array $views): void
-    {
-        $e = static fn($value): string => htmlspecialchars((string) $value, ENT_QUOTES);
-        $v = self::$view;
-        $file = $v['file'];
-        echo '<section class="widget envInstance' . self::foldClass('instance') . '" data-fold="instance"><header>' . self::foldToggle('instance') . '<h2>Instance<small>' . $e($v['project'] ? 'config.json' : $file) . '</small></h2>';
-        if (!$v['project'] && Session::isSuperuser() && EnvironmentFile::deletable($file)) {
-            echo '<button type="button" class="button transparent" data-on_click="userConfirm" data-action="deleteInstance" data-confirm="Delete ' . $e($file) . '? No rule points at it." data-file="' . $e($file) . '"><i class="cmsIcon cmsIcon-trash"></i>Delete this config</button>';
-        }
-        echo '</header><main>';
-        echo '<p class="tagsHint">' . match (true) {
-            $v['project'] => 'config.json holds what is the same for every instance. It is read only here, it changes with the project.',
-            $v['here'] => 'This instance runs on this machine. What config.local.json sets shows as “This machine”: it wins and is neither synced nor in git.',
-            default => 'This instance runs elsewhere. Its machine has a config.local.json of its own, with the secrets: they cannot be seen from here.',
-        } . '</p></main>';
-        if (!$v['project']) {
-            self::matches();
-        }
-        echo '</section>';
-    }
-
-    /** the rules of the instance file, after the header definition */
-    private static function matches(): void
-    {
-        $e = static fn($value): string => htmlspecialchars((string) $value, ENT_QUOTES);
-        $v = self::$view;
-        $file = $v['file'];
-        $header = Schema::matching()['properties'] ?? [];
-        $columns = $header['matches']['items']['properties'] ?? [];
-        $rules = array_values(array_filter((array) ($v['data']['matches'] ?? []), 'is_array'));
-        echo '<div class="projectBar"><h3>' . $e($header['matches']['title'] ?? 'Rules') . self::info($header['matches']['items'] ?? [], self::definition('', ['matches'])) . '<small>' . $e($header['matches']['description'] ?? '') . '</small></h3>';
-        echo '<button type="button" class="button" data-on_click="addMatch" data-file="' . $e($file) . '"><i class="cmsIcon cmsIcon-plus"></i>Add</button></div>';
-        echo '<div class="tableScroll"><table class="projectRows envMatches"><thead><tr>';
-        foreach (EnvironmentFile::MATCH as $field) {
-            echo '<th>' . $e($columns[$field]['title'] ?? self::label($field)) . self::info($columns[$field] ?? [], self::definition('', ['matches', $field])) . self::backup($columns[$field] ?? []) . '</th>';
-        }
-        echo '<th></th></tr></thead><tbody>';
-        if ($rules === []) {
-            $default = !empty($v['data']['default']) && $v['stage'] === 'LIVE';
-            echo '<tr><td colspan="' . (count(EnvironmentFile::MATCH) + 1) . '">' . ($default ? 'No rule. This is the default instance, it is taken when no other matches.' : ($v['here'] ? 'No rule. It runs here as the pinned instance.' : 'No rule points at this config. It can be deleted.')) . '</td></tr>';
-        }
-        foreach ($rules as $index => $rule) {
-            echo '<tr>';
-            foreach (EnvironmentFile::MATCH as $field) {
-                $attrs = ' aria-label="' . $e(($columns[$field]['title'] ?? self::label($field)) . ': rule ' . ($index + 1)) . '" data-file="' . $e($file) . '" data-index="' . (int) $index . '" data-field="' . $e($field) . '"';
-                $validation = $field === 'serverIp' ? ' pattern="(?:(?:(?:25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])\.){3}(?:25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])|(?:[0-9a-fA-F]*:){2,}[0-9a-fA-F:.]*)" title="Enter a valid IPv4 or IPv6 address, or leave empty."' : '';
-                if ($field === 'serverIp' && !empty($rule[$field]) && array_filter((array) $rule[$field], static fn($ip) => !filter_var(trim((string) $ip), FILTER_VALIDATE_IP)) !== []) $validation .= ' aria-invalid="true"';
-                echo '<td><input data-on_blur="saveMatch"' . $attrs . $validation . ' name="value" value="' . $e(implode(', ', (array) ($rule[$field] ?? ''))) . '" autocomplete="off"></td>';
-            }
-            echo '<td class="projectRemove">' . self::place('instance', $file, self::valueIn($file, '', ['matches', (string) $index]), 'rule ' . ($index + 1)) . '<button type="button" class="button transparent" title="Remove" data-on_click="userConfirm" data-action="removeMatch" data-confirm="Remove this rule?" data-file="' . $e($file) . '" data-index="' . (int) $index . '"><i class="cmsIcon cmsIcon-trash"></i></button></td>';
-            echo '</tr>';
-        }
-        echo '</tbody></table></div>';
-        $default = $header['default'] ?? [];
-        $on = !empty($v['data']['default']);
-        echo '<div class="tableScroll"><table class="envRows"><tbody><tr><td class="envLabel"><span>' . $e($default['title'] ?? 'Default instance') . self::info($default, self::definition('', ['default']), 'default') . ($on ? self::place('instance', $file, self::valueIn($file, '', ['default']), 'on') : '') . '</span></td><td class="envControl">';
-        if ($v['stage'] === 'LIVE' || $on) {
-            echo '<label class="projectSwitch"><input type="checkbox" class="switch" data-on_change="setDefault" data-file="' . $e($file) . '" name="value" aria-label="' . $e($default['title'] ?? 'Default instance') . '"' . ($on ? ' checked' : '') . '><div><div></div></div></label>';
-        } else {
-            echo '<span class="envValue">off</span>';
-        }
-        echo '</td><td class="envOrigin">' . self::chip($on ? 'instance' : 'package', '', $on ? self::valueIn($file, '', ['default']) : self::definition('', ['default'])) . ($on && $v['stage'] !== 'LIVE' ? '<small class="envNote is-warn">only LIVE may be the default</small>' : '') . '</td><td class="envActions"></td></tr></tbody></table></div>';
-    }
-
-    /**
      * What to look at in one config: values that only repeat what applies
      * anyway, values nobody defines, secrets and values in the wrong file,
      * packages not installed here, required values that are missing. Each
@@ -358,18 +271,14 @@ final class EnvironmentForm
         $list = static fn(array $names): string => '<code>' . implode('</code>, <code>', array_map($e, $names)) . '</code>';
         $checks = [];
         if (!$v['project']) {
-            $layers = $v['layers'];
-            $layers['local'] = null;
-            $redundant = array_map(static fn(array $r): string => $r['package'] . '.' . $r['path'], Explain::redundantIn($layers, 'instance', $v['stage']));
+            $redundant = array_map(static fn(array $r): string => $r['package'] . '.' . $r['path'], Explain::redundantIn($v['layers'], 'local', $v['stage']));
             if ($redundant !== []) {
                 $checks[] = [
                     'kind' => 'redundant',
                     'icon' => 'cmsIcon-copy',
                     'title' => count($redundant) . ' ' . (count($redundant) === 1 ? 'value repeats' : 'values repeat') . ' what applies anyway',
-                    'text' => 'In <code>' . $e($file) . '</code>: ' . $list($redundant) . '. Without them the instance follows the package and config.json.',
-                    'action' => $v['here']
-                        ? '<button type="button" class="button" data-on_click="userConfirm" data-action="prune" data-confirm="Remove from ' . $e($file) . ': ' . $e(implode(', ', $redundant)) . '?" data-file="' . $e($file) . '"><i class="cmsIcon cmsIcon-broom"></i>Remove them</button>'
-                        : '<small>They go on the machine this file belongs to.</small>',
+                    'text' => 'In <code>' . $e($file) . '</code>: ' . $list($redundant) . '. Without them the installation follows the package and config.json.',
+                    'action' => '<button type="button" class="button" data-on_click="userConfirm" data-action="prune" data-confirm="Remove from ' . $e($file) . ': ' . $e(implode(', ', $redundant)) . '?" data-file="' . $e($file) . '"><i class="cmsIcon cmsIcon-broom"></i>Remove them</button>',
                 ];
             }
         }
@@ -380,26 +289,23 @@ final class EnvironmentForm
             }
         }
         foreach ($by[Reconcile::ORPHAN] ?? [] as $in => $names) {
-            $may = !$v['project'] && ($in === EnvironmentFile::LOCAL || $v['here']);
             $checks[] = [
                 'kind' => 'orphan',
                 'icon' => 'cmsIcon-eraser',
                 'title' => count($names) . ' defined nowhere',
                 'text' => 'In <code>' . $e($in) . '</code>: ' . $list($names) . '. No package defines ' . (count($names) === 1 ? 'it' : 'them') . '.',
-                'action' => $may
+                'action' => $in === EnvironmentFile::LOCAL
                     ? '<button type="button" class="button" data-on_click="userConfirm" data-action="dropOrphans" data-confirm="Remove from ' . $e($in) . ': ' . $e(implode(', ', $names)) . '?" data-file="' . $e($in) . '"><i class="cmsIcon cmsIcon-eraser"></i>Remove them</button>'
-                    : '<small>Code elsewhere may still read them, so they stay.</small>',
+                    : '<small>config.json counts for every installation: code elsewhere may still read them, so they stay.</small>',
             ];
         }
         foreach ($by[Reconcile::EXPOSED] ?? [] as $in => $names) {
             $checks[] = [
                 'kind' => 'exposed',
                 'icon' => 'cmsIcon-key-skeleton',
-                'title' => 'Secrets outside of config.local.json',
-                'text' => 'In <code>' . $e($in) . '</code>: ' . $list($names) . '. That file is synced and in git.',
-                'action' => $v['here'] && Session::isSuperuser()
-                    ? '<button type="button" class="button" data-on_click="userConfirm" data-action="moveSecrets" data-confirm="Move the secrets of this file to config.local.json of this machine?" data-file="' . $e($in) . '">Move to this machine</button>'
-                    : '<small>They move on the machine this file belongs to.</small>',
+                'title' => 'Secrets in config.json',
+                'text' => 'In <code>' . $e($in) . '</code>: ' . $list($names) . '. That file is in git. Enter them for each installation and take them out of config.json.',
+                'action' => '',
             ];
         }
         foreach ($by[Reconcile::MISPLACED] ?? [] as $in => $names) {
@@ -420,7 +326,7 @@ final class EnvironmentForm
                 'action' => '',
             ];
         }
-        $required = self::required();
+        $required = $v['project'] ? [] : self::required();
         if ($required !== []) {
             $checks[] = [
                 'kind' => 'required',
@@ -507,7 +413,7 @@ final class EnvironmentForm
         $v = self::$view;
         $mandatory = (string) ($field['x-mandatory'] ?? '');
         $secret = !empty($field['writeOnly']);
-        if ($mandatory === '' || $v['project'] || (!$v['here'] && $secret)) {
+        if ($mandatory === '' || $v['project']) {
             return null;
         }
         $active = Explain::active(Explain::definition($package), $v['layers'], $path, $package);
@@ -604,7 +510,7 @@ final class EnvironmentForm
 
     /**
      * What stands beside the title of a block: optional or not, and Remove
-     * where the instance file has it. The same for a package, a block and a
+     * where config.local.json has it. The same for a package, a block and a
      * named entry (`connections.main`): an entry the definition requires
      * stays.
      *
@@ -622,9 +528,9 @@ final class EnvironmentForm
             $out .= '<span class="envNote">' . ($active ? 'optional, set up' : 'optional, not set up: its defaults apply once a value is entered') . '</span>';
         }
         $removable = ($optional || $entry && !EnvironmentFile::requiredEntry($package, $path))
-            && self::writable() && Explain::has((array) $v['layers']['instance'], [$package, ...$path]);
+            && self::writable() && Explain::has((array) $v['layers']['local'], [$package, ...$path]);
         if ($removable) {
-            $out .= '<button type="button" class="button transparent" data-on_click="userConfirm" data-action="removeBlock" data-confirm="Remove ' . $e(self::keyPath($package, $path)) . ' from this instance' . ($v['here'] ? ' and from config.local.json' : '') . '?" data-file="' . $e($v['file']) . '" data-package="' . $e($package) . '" data-path="' . $e(implode('.', $path)) . '"><i class="cmsIcon cmsIcon-trash"></i>Remove</button>';
+            $out .= '<button type="button" class="button transparent" data-on_click="userConfirm" data-action="removeBlock" data-confirm="Remove ' . $e(self::keyPath($package, $path)) . ' from config.local.json?" data-file="' . $e($v['file']) . '" data-package="' . $e($package) . '" data-path="' . $e(implode('.', $path)) . '"><i class="cmsIcon cmsIcon-trash"></i>Remove</button>';
         }
         return $out;
     }
@@ -833,7 +739,7 @@ final class EnvironmentForm
         if (self::writable()) {
             $dotted = implode('.', $path);
             self::rows();
-            echo '<tr class="envAdd"><td class="envLabel"><span>Another value<small>' . $e($dotted) . '.&lt;name&gt;, lower case and _</small></span></td><td class="envControl"><span class="envPair"><input name="key" aria-label="Name" pattern="[a-z][a-z0-9_]*" autocomplete="off" placeholder="name"><input name="value" aria-label="Value" autocomplete="off" placeholder="value"></span></td><td class="envOrigin">' . self::chip('instance') . '</td><td class="envActions"><button type="button" class="button" data-on_click="addFree" data-file="' . $e($v['file']) . '" data-package="' . $e($package) . '" data-path="' . $e($dotted) . '"><i class="cmsIcon cmsIcon-plus"></i>Add</button></td></tr>';
+            echo '<tr class="envAdd"><td class="envLabel"><span>Another value<small>' . $e($dotted) . '.&lt;name&gt;, lower case and _</small></span></td><td class="envControl"><span class="envPair"><input name="key" aria-label="Name" pattern="[a-z][a-z0-9_]*" autocomplete="off" placeholder="name"><input name="value" aria-label="Value" autocomplete="off" placeholder="value"></span></td><td class="envOrigin">' . self::chip('local') . '</td><td class="envActions"><button type="button" class="button" data-on_click="addFree" data-file="' . $e($v['file']) . '" data-package="' . $e($package) . '" data-path="' . $e($dotted) . '"><i class="cmsIcon cmsIcon-plus"></i>Add</button></td></tr>';
         }
     }
 
@@ -847,34 +753,21 @@ final class EnvironmentForm
     {
         $e = static fn($value): string => htmlspecialchars((string) $value, ENT_QUOTES);
         $v = self::$view;
-        $file = $v['file'];
         $dotted = implode('.', $path);
         $key = (string) end($path);
         $keys = [$package, ...$path];
         $secret = !empty($field['writeOnly']);
-        $overridable = !empty($field['x-overridable']);
-        $owner = (string) ($field['x-file'] ?? 'machine');
+        $owner = (string) ($field['x-file'] ?? 'local');
         $active = Explain::active(Explain::definition($package), $v['layers'], $path, $package);
         $value = Explain::value($field, $v['layers'], $keys, $v['stage'], $active);
         $inLocal = is_array($v['layers']['local']) && Explain::has($v['layers']['local'], $keys);
-        $inInstance = is_array($v['layers']['instance']) && Explain::has($v['layers']['instance'], $keys);
         $findings = $v['findings'][$package . '.' . $dotted] ?? [];
         $misplaced = array_values(array_filter($findings, static fn(array $f): bool => $f['status'] === Reconcile::MISPLACED));
 
-        // where a change goes
-        $target = null;
-        if ($v['project']) {
-            $target = null;
-        } elseif ($secret) {
-            $target = $v['here'] ? EnvironmentFile::LOCAL : null;
-        } elseif ($inLocal && $overridable) {
-            $target = EnvironmentFile::LOCAL;
-        } elseif ($owner === 'machine' || $overridable) {
-            $target = $file;
-        }
-        $layer = $target === EnvironmentFile::LOCAL ? 'local' : 'instance';
-        $own = $target !== null && ($layer === 'local' ? $inLocal : $inInstance);
-        $below = Explain::below($value['stack'], $target === null ? 'local' : $layer);
+        // a change goes to config.local.json, where the installation may set it
+        $target = !$v['project'] && EnvironmentFile::holds($field, $owner) ? EnvironmentFile::LOCAL : null;
+        $own = $target !== null && $inLocal;
+        $below = Explain::below($value['stack'], 'local');
 
         self::rows();
         echo '<tr' . (count($path) > 1 ? ' data-group="' . $e($path[count($path) - 2]) . '"' : '') . ' data-key="' . $e($key) . '"' . ($target === null ? ' class="is-readonly"' : '') . '>';
@@ -886,39 +779,34 @@ final class EnvironmentForm
             if ($target !== null) {
                 echo '<input type="password" data-on_blur="save" aria-label="' . $e((string) ($field['title'] ?? $dotted)) . '" data-file="' . $e($target) . '" data-package="' . $e($package) . '" data-path="' . $e($dotted) . '" name="value" autocomplete="new-password" placeholder="' . ($isSet ? '•••••••• set, empty keeps it' : 'not set') . '">';
             } else {
-                echo '<span class="envValue">' . ($v['project'] ? 'per machine' : ($isSet ? '••••••••' : 'on that machine')) . '</span>';
+                echo '<span class="envValue">per installation</span>';
             }
         } elseif ($target === null) {
             echo '<span class="envValue' . ($value['source'] === 'none' ? ' is-empty' : '') . '">' . $e(self::show($value)) . '</span>';
         } else {
-            self::control($target, $package, $dotted, $field, $own ? Tree::get((array) $v['layers'][$layer], $keys) : null, $own, $below, $value);
+            self::control($target, $package, $dotted, $field, $own ? Tree::get((array) $v['layers']['local'], $keys) : null, $own, $below, $value);
         }
         echo '</td><td class="envOrigin">';
         if ($secret) {
-            echo self::chip($v['project'] ? 'local' : ($isSet ? $value['source'] : ($v['here'] ? 'none' : 'local')));
+            echo self::chip($v['project'] ? 'local' : ($isSet ? $value['source'] : 'none'));
         } else {
             echo self::chip($value['source'], $value['source'] === 'stage' ? $v['stage'] : '', self::sourceLink($value['source'], $package, $path));
         }
         // notes
-        if (!$secret && $own && Explain::redundant($value['stack'], $layer)) {
+        if (!$secret && $own && Explain::redundant($value['stack'], 'local')) {
             echo '<small class="envNote">same as below</small>';
         }
-        if (!$secret && $inLocal && $inInstance) {
-            echo '<small class="envNote">overrides the instance: ' . $e(self::format(Tree::get((array) $v['layers']['instance'], $keys))) . '</small>';
+        if (!$secret && $own && $owner === 'project') {
+            echo '<small class="envNote">overrides the project</small>';
         }
         if (!$active && $value['default'] !== null && $value['default']['source'] !== 'computed') {
             echo '<small class="envNote">default ' . $e(self::format($value['default']['value'])) . ' once set up</small>';
         }
-        if (!$secret && !$overridable && $inInstance && $owner === 'project' && !$v['project']) {
-            echo '<small class="envNote is-warn">belongs into config.json</small>';
-        }
         foreach ($misplaced as $finding) {
-            if ($finding['file'] !== $file || $v['project']) {
-                echo '<small class="envNote is-warn">set in ' . $e($finding['file']) . ', belongs into ' . $e(match ($finding['owner']) { 'project' => 'config.json', 'local' => 'config.local.json', default => 'the instance file' }) . '</small>';
-            }
+            echo '<small class="envNote is-warn">set in ' . $e($finding['file']) . ', belongs into ' . $e($finding['owner'] === 'project' ? 'config.json' : 'config.local.json') . '</small>';
         }
-        if ($secret && $inInstance && (string) Tree::get((array) $v['layers']['instance'], $keys) !== '') {
-            echo '<small class="envNote is-warn">lies in ' . $e($file) . ', belongs into config.local.json</small>';
+        if ($secret && $v['project'] && Explain::has((array) $v['layers']['project'], $keys)) {
+            echo '<small class="envNote is-warn">lies in config.json, belongs into config.local.json</small>';
         }
         $mandatory = self::mandatory($package, $field, $path);
         if ($mandatory === 'input') {
@@ -927,16 +815,9 @@ final class EnvironmentForm
             echo '<small class="envNote">made when it is needed</small>';
         }
         echo '</td><td class="envActions">';
-        if ($own && !$secret) {
-            echo '<button type="button" class="button transparent" data-on_click="resetValue" data-file="' . $e($target) . '" data-package="' . $e($package) . '" data-path="' . $e($dotted) . '" title="' . $e('Remove from ' . ($layer === 'local' ? 'config.local.json' : $file) . ': ' . self::show($below) . ' applies then') . '"><i class="cmsIcon cmsIcon-arrow-rotate-left"></i><span>' . $e(self::show($below)) . '</span></button>';
-        }
-        if ($target === $file && $v['here'] && $overridable && !$secret && !$inLocal) {
-            echo '<button type="button" class="button transparent" data-on_click="overrideLocal" data-file="' . $e($file) . '" data-package="' . $e($package) . '" data-path="' . $e($dotted) . '" title="A value of its own on this machine only, in config.local.json"><i class="cmsIcon cmsIcon-download"></i></button>';
-        }
-        foreach ($misplaced as $finding) {
-            if ($finding['file'] === EnvironmentFile::LOCAL && $finding['owner'] === 'machine' && Session::isSuperuser()) {
-                echo '<button type="button" class="button" data-on_click="moveToInstance" data-file="' . $e(EnvironmentFile::LOCAL) . '" data-package="' . $e($package) . '" data-path="' . $e($dotted) . '">Move</button>';
-            }
+        // a required value with nothing below it cannot be emptied: the installation would lose its name
+        if ($own && !$secret && !(($field['x-mandatory'] ?? '') === 'input' && $below['source'] === 'none')) {
+            echo '<button type="button" class="button transparent" data-on_click="resetValue" data-file="' . $e($target) . '" data-package="' . $e($package) . '" data-path="' . $e($dotted) . '" title="' . $e('Remove from config.local.json: ' . self::show($below) . ' applies then') . '"><i class="cmsIcon cmsIcon-arrow-rotate-left"></i><span>' . $e(self::show($below)) . '</span></button>';
         }
         echo '</td></tr>';
     }
@@ -990,7 +871,8 @@ final class EnvironmentForm
             return;
         }
         $attrs .= ' placeholder="' . $e($below['source'] === 'none' ? '' : self::show($below)) . '"';
-        echo '<input data-on_blur="save"' . $attrs . ' value="' . $e($has && is_scalar($own) ? (string) $own : '') . '">';
+        $shown = is_array($own) ? implode(', ', array_map('strval', $own)) : (is_scalar($own) ? (string) $own : '');
+        echo '<input data-on_blur="save"' . $attrs . ' value="' . $e($has ? $shown : '') . '">';
     }
 
     /** What is under a package that nobody defines, at its end, struck through. */
@@ -1007,15 +889,15 @@ final class EnvironmentForm
                     continue;
                 }
                 $path = substr($name, strlen($package) + 1);
-                $source = $finding['file'] === EnvironmentFile::LOCAL ? (array) ($v['layers']['local'] ?? []) : ($v['project'] ? $v['layers']['project'] : (array) $v['layers']['instance']);
-                $raw = Tree::get($source, [$package, ...explode('.', $path)]);
-                $may = !$v['project'] && ($finding['file'] === EnvironmentFile::LOCAL || $v['here']);
+                $layer = $finding['file'] === EnvironmentFile::LOCAL ? 'local' : 'project';
+                $raw = Tree::get((array) ($v['layers'][$layer] ?? []), [$package, ...explode('.', $path)]);
+                $may = $layer === 'local';
                 self::rows();
-                echo '<tr class="envOrphan"><td class="envLabel"><span><s>' . $e($path) . '</s>' . self::place($finding['file'] === EnvironmentFile::LOCAL ? 'local' : ($v['project'] ? 'project' : 'instance'), $finding['file'], self::valueIn($finding['file'], $package, explode('.', $path)), self::format($raw)) . '</span></td><td class="envControl"><code>' . $e(self::json($raw)) . '</code></td><td class="envOrigin">' . self::chip($finding['file'] === EnvironmentFile::LOCAL ? 'local' : ($v['project'] ? 'project' : 'instance'), '', self::valueIn($finding['file'], $package, explode('.', $path))) . '</td><td class="envActions">';
+                echo '<tr class="envOrphan"><td class="envLabel"><span><s>' . $e($path) . '</s>' . self::place($layer, $finding['file'], self::valueIn($finding['file'], $package, explode('.', $path)), self::format($raw)) . '</span></td><td class="envControl"><code>' . $e(self::json($raw)) . '</code></td><td class="envOrigin">' . self::chip($layer, '', self::valueIn($finding['file'], $package, explode('.', $path))) . '</td><td class="envActions">';
                 if ($may) {
                     echo '<button type="button" class="button transparent" data-on_click="userConfirm" data-action="dropOrphan" data-confirm="Remove ' . $e($name) . ' from ' . $e($finding['file']) . '?" data-file="' . $e($finding['file']) . '" data-name="' . $e($name) . '" title="Remove"><i class="cmsIcon cmsIcon-trash"></i></button>';
                 } else {
-                    echo '<small class="envNote">stays: code elsewhere may read it</small>';
+                    echo '<small class="envNote">stays: another installation may read it</small>';
                 }
                 echo '</td></tr>';
             }
@@ -1027,10 +909,7 @@ final class EnvironmentForm
     {
         $e = static fn($value): string => htmlspecialchars((string) $value, ENT_QUOTES);
         $v = self::$view;
-        foreach (['instance', 'local', 'project'] as $layer) {
-            if ($layer === 'project' && !$v['project']) {
-                continue;
-            }
+        foreach (Explain::LAYERS as $layer) {
             foreach ((array) ($v['layers'][$layer] ?? []) as $package => $tree) {
                 if (Schema::installed((string) $package)) {
                     continue;
@@ -1045,20 +924,19 @@ final class EnvironmentForm
     {
         $e = static fn($value): string => htmlspecialchars((string) $value, ENT_QUOTES);
         $v = self::$view;
-        $files = $v['project'] ? [EnvironmentFile::PROJECT => $v['data']] : [EnvironmentFile::PROJECT => EnvironmentFile::readProject(), $v['file'] => $v['data']];
+        $files = $v['project'] ? [EnvironmentFile::PROJECT => $v['data']] : [EnvironmentFile::PROJECT => EnvironmentFile::readProject(), EnvironmentFile::LOCAL => $v['data']];
         $rows = '';
         foreach ($files as $name => $data) {
             foreach ($data as $key => $value) {
-                if (in_array($key, ['packages', 'matches', 'default'], true)) {
+                if ($key === 'packages') {
                     continue;
                 }
                 $label = match ($key) {
                     'constants' => 'Constants of the project',
                     '//' => 'Note',
-                    'instance' => 'Instance',
                     default => (string) $key,
                 };
-                $rows .= '<tr class="is-readonly"><td class="envLabel"><span>' . $e($label) . self::info([], null, (string) $key) . self::place($name === EnvironmentFile::PROJECT ? 'project' : 'instance', $name, self::valueIn($name, '', [(string) $key])) . '</span></td><td class="envControl"><code>' . $e(self::json($value, true)) . '</code></td><td class="envOrigin">' . self::chip($name === EnvironmentFile::PROJECT ? 'project' : 'instance', '', self::valueIn($name, '', [(string) $key])) . '</td><td class="envActions"><small class="envNote">' . ($name === EnvironmentFile::PROJECT ? 'changes with the project' : 'outside of the definitions') . '</small></td></tr>';
+                $rows .= '<tr class="is-readonly"><td class="envLabel"><span>' . $e($label) . self::info([], null, (string) $key) . self::place($name === EnvironmentFile::PROJECT ? 'project' : 'local', $name, self::valueIn($name, '', [(string) $key])) . '</span></td><td class="envControl"><code>' . $e(self::json($value, true)) . '</code></td><td class="envOrigin">' . self::chip($name === EnvironmentFile::PROJECT ? 'project' : 'local', '', self::valueIn($name, '', [(string) $key])) . '</td><td class="envActions"><small class="envNote">' . ($name === EnvironmentFile::PROJECT ? 'changes with the project' : 'outside of the definitions') . '</small></td></tr>';
             }
         }
         if ($rows !== '') {
@@ -1066,10 +944,10 @@ final class EnvironmentForm
         }
     }
 
-    /** May this view write the instance file? */
+    /** May this view write? This installation's, not the project's. */
     private static function writable(): bool
     {
-        return !self::$view['project'] && EnvironmentFile::path(self::$view['file']) !== null;
+        return !self::$view['project'] && EnvironmentFile::directory() !== null;
     }
 
     /**
@@ -1104,7 +982,6 @@ final class EnvironmentForm
             'stage' => 'Default of the package for this stage',
             'computed' => 'Decided by the code',
             'project' => 'config.json',
-            'instance' => self::$view['file'] ?? 'Instance file',
             'local' => 'config.local.json',
             'none' => 'Nothing sets it',
         ];
@@ -1160,10 +1037,9 @@ final class EnvironmentForm
     }
 
     /**
-     * Where a block or value is defined: the schema of the file shown first,
-     * then the others. Null without a definition or without syscoder.
+     * Where a block or value is defined: config.schema.json of its package,
+     * at the line. Null without a definition or without syscoder.
      *
-     * @param string       $package '' for the top of an instance file (match.schema.json)
      * @param list<string> $path
      * @return array{href: string, where: string}|null
      */
@@ -1172,28 +1048,20 @@ final class EnvironmentForm
         if (!self::links()) {
             return null;
         }
-        $v = self::$view;
-        $names = $package === '' ? ['match'] : (!empty($v['project']) ? ['project', 'machine', 'local'] : ['machine', 'project', 'local']);
-        foreach ($names as $name) {
-            $schema = Schema::file($package === '' ? 'system' : $package, $name);
-            $definition = $package === '' ? Schema::matching() : (Schema::load($package)[$name] ?? null);
-            $keys = is_array($definition) ? self::schemaKeys($definition, $path) : null;
-            if ($schema === null || $keys === null) {
-                continue;
-            }
-            $line = $keys === [] ? 1 : JsonLines::line(self::text($schema), $keys);
-            if ($line !== null) {
-                return ['href' => (string) Syscoder::href($schema, $line), 'where' => basename($schema) . ', line ' . $line];
-            }
+        $schema = Schema::file($package);
+        $keys = self::schemaKeys(Schema::load($package), $path);
+        if ($schema === null || $keys === null) {
+            return null;
         }
-        return null;
+        $line = $keys === [] ? 1 : JsonLines::line(self::text($schema), $keys);
+        return $line === null ? null : ['href' => (string) Syscoder::href($schema, $line), 'where' => basename($schema) . ', line ' . $line];
     }
 
     /**
      * Where a config file writes a block or value, in the new layout or the
      * old one. Null when it does not, or without syscoder.
      *
-     * @param string       $package '' for the top of an instance file (matches, default)
+     * @param string       $package '' for the top of the file (`constants`, `//`)
      * @param list<string> $path
      * @return array{href: string, where: string}|null
      */
@@ -1216,7 +1084,6 @@ final class EnvironmentForm
     {
         return match ($layer) {
             'project' => EnvironmentFile::PROJECT,
-            'instance' => self::$view['project'] ? EnvironmentFile::PROJECT : self::$view['file'],
             'local' => EnvironmentFile::LOCAL,
             default => null,
         };
@@ -1240,8 +1107,7 @@ final class EnvironmentForm
 
     /**
      * Where a value is written: an (i) for each file that has it, coloured
-     * by the file (config.json blue, the instance green, config.local.json
-     * red). The tip tells what the file says; with syscoder it opens the
+     * by the file (config.json blue, config.local.json green). The tip tells what the file says; with syscoder it opens the
      * value there. A secret only tells that it is set.
      *
      * @param list<string> $path
@@ -1282,7 +1148,7 @@ final class EnvironmentForm
 
     /**
      * The keys of a config path inside a definition: properties,
-     * additionalProperties, the items of a list (the columns of matches).
+     * additionalProperties, the items of a list.
      * Null when the definition does not have it.
      *
      * @param list<string> $path
@@ -1353,8 +1219,8 @@ final class EnvironmentForm
     {
         $action ??= (string) $panel->action;
         $file = (string) \http::dataset('file');
-        if (EnvironmentFile::path($file) === null) {
-            \message::error('That config file is not here.');
+        if ($file !== EnvironmentFile::LOCAL || EnvironmentFile::directory() === null) {
+            \message::error('Only config.local.json of this installation is written here.');
             return;
         }
         // a call of a tool goes to the tool (x-tool in the definitions)
@@ -1366,25 +1232,16 @@ final class EnvironmentForm
         }
         $package = (string) \http::dataset('package');
         $path = (string) \http::dataset('path');
-        $superuser = Session::isSuperuser();
         $pruned = null;
         $result = match ($action) {
-            'save' => EnvironmentFile::set($file, $package, $path, self::posted()),
-            'resetValue' => EnvironmentFile::set($file, $package, $path, ''),
-            'overrideLocal' => EnvironmentFile::overrideLocal($file, $package, $path),
-            'addFree' => trim((string) \http::dataset('key')) !== '' && EnvironmentFile::set($file, $package, $path . '.' . trim((string) \http::dataset('key')), (string) \http::dataset('value')),
-            'moveSecrets' => $superuser && EnvironmentFile::moveSecrets($file),
-            'moveToInstance' => $superuser && EnvironmentFile::moveToInstance($package, $path),
-            'prune' => ($pruned = EnvironmentFile::prune($file)) !== false,
-            'dropOrphans' => EnvironmentFile::dropOrphans($file),
-            'dropOrphan' => EnvironmentFile::dropOrphans($file, (string) \http::dataset('name')),
-            'deleteInstance' => $superuser && EnvironmentFile::deleteInstance($file),
-            'setDefault' => EnvironmentFile::setDefault($file, filter_var(self::posted(), FILTER_VALIDATE_BOOL)),
-            'addEntry' => EnvironmentFile::addEntry($file, $package, $path, trim((string) \http::dataset('name'))),
-            'removeBlock' => EnvironmentFile::removeBlock($file, $package, $path),
-            'saveMatch' => EnvironmentFile::setMatch($file, (int) \http::dataset('index'), (string) \http::dataset('field'), self::posted()),
-            'addMatch' => EnvironmentFile::addMatch($file),
-            'removeMatch' => EnvironmentFile::removeMatch($file, (int) \http::dataset('index')),
+            'save' => EnvironmentFile::set($package, $path, self::posted()),
+            'resetValue' => EnvironmentFile::set($package, $path, ''),
+            'addFree' => trim((string) \http::dataset('key')) !== '' && EnvironmentFile::set($package, $path . '.' . trim((string) \http::dataset('key')), (string) \http::dataset('value')),
+            'prune' => ($pruned = EnvironmentFile::prune()) !== false,
+            'dropOrphans' => EnvironmentFile::dropOrphans(),
+            'dropOrphan' => EnvironmentFile::dropOrphans((string) \http::dataset('name')),
+            'addEntry' => EnvironmentFile::addEntry($package, $path, trim((string) \http::dataset('name'))),
+            'removeBlock' => EnvironmentFile::removeBlock($package, $path),
             default => null,
         };
         if ($result === null || $action === '') {
@@ -1396,18 +1253,13 @@ final class EnvironmentForm
             return;
         }
         \message::confirm(match ($action) {
-            'moveSecrets' => 'The secrets now lie in config.local.json.',
             'resetValue' => 'Removed. What lies below applies again.',
-            'overrideLocal' => 'This machine has a value of its own now, in config.local.json.',
             'prune' => $pruned === [] ? 'Nothing to remove.' : 'Removed: ' . implode(', ', (array) $pruned) . '.',
             'dropOrphans', 'dropOrphan', 'removeBlock' => 'Removed.',
-            'deleteInstance' => $file . ' is deleted.',
             default => 'Saved.',
         });
         // a save changes where the value comes from: the row shows it again
-        if (!in_array($action, ['saveMatch'], true)) {
-            $panel->updateViews(['main', 'controls']);
-        }
+        $panel->updateViews(['main', 'controls']);
     }
 
     private static function posted(): string

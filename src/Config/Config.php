@@ -10,32 +10,24 @@ use RuntimeException;
  * The `config/` folder of a project — successor of the SERVER_NAME switch
  * that every `public/index.php` used to carry.
  *
- * Three kinds of file:
+ * Two files:
  *
- *   config.json               nothing installation-specific: project
- *                             constants, and the sites (root node, meta) —
- *                             shared, synced
- *   <stage>[.<machine>].config.json
- *                             one installation — DEV.ojoffice, STAGING, RC,
- *                             LIVE. The file name IS the instance name, the
- *                             part before the first dot its stage. Holds
- *                             its rules (`matches`: machine and site, see
- *                             Instance), db, debug. Synced; site add/rename/
- *                             remove rewrite the rules (InstanceFiles).
- *   config.local.json         this machine only, never synced (`*.local.json`
- *                             is in the sync ignore list) — mainly the LIVE
- *                             credentials. Flat: it speaks for the instance
- *                             that was recognised.
+ *   config.json        the project: what is the same on every installation
+ *                      (values marked `x-project` in the definitions), and
+ *                      the sites before the database knows them. Git, sync.
+ *   config.local.json  this installation: its name (`packages.system.instance`,
+ *                      DEV.ojhome, STAGING, LIVE), how its sites are reached
+ *                      (`siteAddress`), its databases, secrets. Lies in the
+ *                      project folder of one installation and travels nowhere
+ *                      (`*.local.json` is in the sync ignore list), so it
+ *                      needs no rule to be found.
  *
- * Instance names follow the `stage` field of `.sync` (DEV.ojoffice, STAGING,
- * LIVE), so the sync tool and the config speak of the same thing.
+ * Whatever neither file says comes from the definitions of the packages
+ * (Schema). Two resolutions happen at different times:
  *
- * Two resolutions happen at different times, because they need different
- * input:
- *
- *   boot()         picks the INSTANCE from $_SERVER and the project dir, and
- *                  can define the constants the rest of the system reads
- *                  (STAGE, DB_*, DEBUG …). Runs first thing in index.php.
+ *   boot()         reads both files and names the installation; can define
+ *                  the constants the rest of the system reads (STAGE, DB_*,
+ *                  DEBUG …). Runs first thing in index.php.
  *   resolveSite()  picks the SITE from host + root path, once http::setRoot()
  *                  knows them (sys::init).
  */
@@ -46,18 +38,29 @@ final class Config
     /** never from a config: they would get around the debug switch and the project's log */
     private const RESERVED_INI = ['error_log', 'display_errors', 'error_reporting'];
 
-    /** @var array<string, mixed> merged content of all files */
+    /** the file of the installation */
+    public const LOCAL = 'config.local.json';
+
+    /** @var array<string, mixed> config.json, its free constants merged with those of config.local.json */
     public readonly array $data;
 
     /** @var list<string> the files that were read, in merge order */
     public readonly array $files;
 
     public readonly Instance $instance;
+
     /**
      * config.json's `sites` until the database is connected, then the rows of
      * cms_sites (Pages\Sites\SiteRegistry::boot() → useSites()).
      */
     public private(set) Sites $sites;
+
+    /** @var array<string, array<string, mixed>> what $sites is made of */
+    private array $siteData;
+
+    /** host and root path of the request, once resolveSite() had them */
+    private string $host = '';
+    private string $rootPath = '';
 
     private ?Site $site = null;
 
@@ -66,8 +69,8 @@ final class Config
 
     /**
      * The part of the current root path the matched entry does not cover,
-     * e.g. 'public/' for entry '192.168.22.50/projects/systopic.net/' and
-     * root '/projects/systopic.net/public/'. baseUrl() appends it to another
+     * e.g. 'public/' for entry '/projects/systopic.net/' and root
+     * '/projects/systopic.net/public/'. baseUrl() appends it to another
      * site's entry so the two addresses stay parallel.
      */
     private string $siteRemainder = '';
@@ -87,8 +90,8 @@ final class Config
         $this->data     = $data;
         $this->files    = $files;
         $this->instance = $instance;
-        // what a site is: config.json (until the db is there); where it answers: the instance's rules
-        $this->sites    = new Sites($data['sites'] ?? [], $instance->matches());
+        $this->siteData = is_array($data['sites'] ?? null) ? $data['sites'] : [];
+        $this->sites    = $this->makeSites();
     }
 
     // =========================================================================
@@ -96,70 +99,44 @@ final class Config
     // =========================================================================
 
     /**
-     * Reads the folder and picks the instance.
+     * Reads the folder and names the installation.
      *
      * @param string      $configDir  <project>/config
-     * @param array       $server     $_SERVER (or the CLI environment)
-     * @param string      $projectDir the project root, for `match.rootDir`
-     * @param string|null $pinned     instance name forced from outside
-     *                                (CLI `"instance"`), wins over
-     *                                config.local.json
+     * @param array       $server     $_SERVER (or the CLI environment), for the setup page
+     * @param string      $projectDir the project root, for the setup page
+     * @param string|null $pinned     an installation name forced from outside
+     *                                (CLI `"instance"`, a test): the stage it
+     *                                runs as, over config.local.json
      */
     public static function boot(string $configDir, array $server, string $projectDir, ?string $pinned = null): self
     {
-        [$data, $files] = self::load($configDir);
-        if ($files === []) {
+        $configDir = rtrim(str_replace('\\', '/', $configDir), '/');
+        $projectFile = $configDir . '/config.json';
+        if (!is_file($projectFile)) {
+            throw new NotConfigured("config: no config.json in '$configDir'", NotConfigured::NO_CONFIG, MachineRules::requestFacts($server, $projectDir));
+        }
+        $data = self::readJson($projectFile);
+        $files = [$projectFile];
+        $localFile = $configDir . '/' . self::LOCAL;
+        $local = is_file($localFile) ? self::readJson($localFile) : [];
+        if ($local !== []) {
+            $files[] = $localFile;
+        }
+
+        $packages = self::merge(Layout::packages($data), Layout::packages($local));
+        $name = $pinned ?? (is_string($packages['system']['instance'] ?? null) ? trim($packages['system']['instance']) : '');
+        if ($name === '') {
             throw new NotConfigured(
-                "config: no config.json in '$configDir'",
-                NotConfigured::NO_CONFIG,
-                Instance::requestFacts($server, $projectDir),
+                "config: no config.local.json in '$configDir' that names this installation (packages.system.instance)",
+                NotConfigured::NO_INSTANCE,
+                MachineRules::requestFacts($server, $projectDir),
             );
         }
-        $local = self::readLocal($configDir);
-        if ($local !== []) {
-            $files[] = rtrim(str_replace('\\', '/', $configDir), '/') . '/config.local.json';
+        // the free constants: config.json, config.local.json over it
+        if (is_array($local['constants'] ?? null)) {
+            $data['constants'] = self::merge($data['constants'] ?? [], $local['constants']);
         }
-
-        // an empty "instance" means "not pinned"
-        $pinned ??= is_string($local['instance'] ?? null) && $local['instance'] !== '' ? $local['instance'] : null;
-        $instance = Instance::select($data['instances'] ?? [], $server, $projectDir, $pinned);
-
-        // each file on its own, or an instance that has moved already would
-        // beat a config.local.json that has not - see Layout
-        $packages = [];
-        foreach ([$data, $instance->data, array_intersect_key($local, array_flip([...self::LOCAL_INSTANCE_KEYS, 'constants', 'ini', 'packages']))] as $file) {
-            $packages = self::merge($packages, Layout::packages($file));
-        }
-
-        // config.local.json lies on exactly one machine, so it speaks for the
-        // instance that was just selected — flat, without an instance name.
-        $instanceData = self::merge($instance->data, array_intersect_key($local, array_flip(self::LOCAL_INSTANCE_KEYS)));
-        if ($instanceData !== $instance->data) {
-            [$matchedBy, $match] = [$instance->matchedBy, $instance->match];
-            $instance  = new Instance($instance->name, $instance->stage, $instanceData);
-            [$instance->matchedBy, $instance->match] = [$matchedBy, $match];
-        }
-        // the free constants: config.json, the instance over it, config.local.json over both
-        foreach ([$instance->data, $local] as $file) {
-            if (is_array($file['constants'] ?? null)) {
-                $data['constants'] = self::merge($data['constants'] ?? [], $file['constants']);
-            }
-        }
-
-        return self::$current = new self($data, $files, $instance, $packages);
-    }
-
-    /**
-     * Keys of config.local.json that belong to the selected instance — the
-     * same keys an <Instance>.config.json has.
-     */
-    private const LOCAL_INSTANCE_KEYS = ['db', 'debug', 'versionAppendix', 'versionDate', 'assets', 'relay', 'mail', 'auth'];
-
-    /** @return array<string, mixed> config.local.json, [] when there is none */
-    private static function readLocal(string $configDir): array
-    {
-        $file = rtrim(str_replace('\\', '/', $configDir), '/') . '/config.local.json';
-        return is_file($file) ? self::readJson($file) : [];
+        return self::$current = new self($data, $files, new Instance($name), $packages);
     }
 
     public static function current(): ?self
@@ -168,8 +145,8 @@ final class Config
     }
 
     /**
-     * The settings of a package: defaults, config.json, instance,
-     * config.local.json - see Layout and Schema.
+     * The settings of a package: defaults, config.json, config.local.json -
+     * see Layout and Schema.
      *
      * @return array<string, mixed>
      */
@@ -189,48 +166,8 @@ final class Config
         return is_array($connection) ? $connection : [];
     }
 
-    /**
-     * The merged data of the shared files — config.json and every
-     * <Instance>.config.json — without choosing anything, so a test can look
-     * at them alone. config.local.json is not part of it: it speaks for the
-     * selected instance and is applied in boot().
-     *
-     * @return array{0: array<string, mixed>, 1: list<string>}
-     */
-    public static function load(string $configDir): array
-    {
-        $configDir = rtrim(str_replace('\\', '/', $configDir), '/');
-        $files = [];
-        $data  = [];
-
-        $base = $configDir . '/config.json';
-        if (is_file($base)) {
-            $data    = self::readJson($base);
-            $files[] = $base;
-        }
-
-        // <stage>[.<machine>].config.json → instances.<name>. The file name is
-        // the instance; nothing in config.json has to repeat it. Sorted, so
-        // the match order does not depend on the file system.
-        $named = glob($configDir . '/*.config.json') ?: [];
-        sort($named, SORT_STRING);
-        foreach ($named as $file) {
-            $name = basename($file, '.config.json');
-            if ($name === 'config' || $name === '') {
-                continue; // config.local.json is handled below
-            }
-            $data['instances'][$name] = self::merge(
-                $data['instances'][$name] ?? [],
-                self::readJson($file),
-            );
-            $files[] = $file;
-        }
-
-        return [$data, $files];
-    }
-
     /** @return array<string, mixed> */
-    private static function readJson(string $file): array
+    public static function readJson(string $file): array
     {
         $raw = (string) file_get_contents($file);
         // a BOM from a Windows editor would make json_decode fail
@@ -420,8 +357,8 @@ final class Config
     // =========================================================================
 
     /**
-     * DEV convenience, opt-in per instance (`"linkSites": true`): creates the
-     * missing directory links so every site answers under its path entry
+     * DEV convenience, opt-in per installation (`"linkSites": true`): creates
+     * the missing directory links so every site answers under its path entry
      * (/projects/beautiful-technology.de/ → this project). See SiteLinks.
      *
      * @param string $documentRoot $_SERVER['DOCUMENT_ROOT']
@@ -437,40 +374,43 @@ final class Config
     }
 
     /**
-     * Picks the site for host + root path, e.g. '192.168.22.50' and
-     * '/projects/beautiful-technology.de/public/'. See Sites::resolve() for
-     * the matching; the remainder is kept for baseUrl().
-     */
-    /**
      * Replaces the sites — name => root (site node id, NULL = default site),
-     * default, meta — with those from the database. Where they answer still
-     * comes from the instance.
+     * default, meta, aliases — with those from the database. Where they
+     * answer still comes from the installation.
      *
      * @param array<string, array<string, mixed>> $data
      */
     public function useSites(array $data): void
     {
-        $this->sites = new Sites($data, $this->instance->matches());
+        $this->siteData = $data;
+        $this->sites = $this->makeSites();
         $this->site  = null;
     }
 
+    /** the patterns of `siteAddress`, [] on LIVE */
+    public function siteAddresses(): array
+    {
+        $address = $this->package('system')['siteAddress'] ?? [];
+        return array_values(array_filter(array_map('strval', (array) $address), static fn(string $a): bool => trim($a) !== ''));
+    }
+
+    private function makeSites(): Sites
+    {
+        return new Sites($this->siteData, $this->siteAddresses(), $this->host, $this->rootPath);
+    }
+
     /**
-     * The site of the request: the one the matched rule names (a rule
-     * without `site` is the default site's), else — an instance without
-     * rules, LIVE — the site whose name or alias the host is.
+     * Picks the site for host + root path, e.g. '192.168.22.50' and
+     * '/projects/beautiful-technology.de/public/'. The addresses of the
+     * sites are made for this request (Sites), the longest one that fits
+     * wins; the remainder is kept for baseUrl().
      */
     public function resolveSite(string $host, string $rootPath): Site
     {
-        $match = $this->instance->match;
-        if ($match !== null) {
-            $name = $this->instance->matchedSite();
-            $site = $name === null ? $this->sites->default() : $this->sites->byName($name);
-            if ($site !== null) {
-                $entry = Sites::entryOf($match) ?? '*';
-                $hit = new SiteHit($site, $entry, Sites::remainder($entry, rtrim('/' . ltrim(strtolower($rootPath), '/'), '/') . '/'));
-            }
-        }
-        $hit ??= $this->sites->resolve($host, $rootPath);
+        $this->host = $host;
+        $this->rootPath = $rootPath;
+        $this->sites = $this->makeSites();
+        $hit = $this->sites->resolve($host, $rootPath);
         $this->site          = $hit->site;
         $this->siteEntry     = $hit->entry;
         $this->siteRemainder = $hit->remainder;
@@ -578,7 +518,7 @@ final class Config
             'files'         => $this->files,
             'instance'      => $this->instance->name,
             'stage'         => $this->instance->stage,
-            'matchedBy'     => $this->instance->matchedBy,
+            'siteAddress'   => $this->siteAddresses(),
             'site'          => $this->site?->name,
             'siteEntry'     => $this->siteEntry,
             'siteRemainder' => $this->siteRemainder,

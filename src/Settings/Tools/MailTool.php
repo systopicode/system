@@ -15,7 +15,7 @@ use Systopic\System\Settings\SettingsTool;
 use Systopic\System\Settings\ToolView;
 
 /**
- * packages.system.mail (`x-tool` in machine.schema.json): the delivery that
+ * packages.system.mail (`x-tool` in config.schema.json): the delivery that
  * counts, a test mail, and the fluxo account in one go.
  */
 final class MailTool implements SettingsTool
@@ -34,7 +34,7 @@ final class MailTool implements SettingsTool
         if ($view->project) {
             return;
         }
-        // what test mode and the test recipient do is in their descriptions (machine.schema.json)
+        // what test mode and the test recipient do is in their descriptions (config.schema.json)
         echo '<div class="envToolBox">';
         $actions = '';
         if ($view->here && Session::isSuperuser()) {
@@ -49,7 +49,7 @@ final class MailTool implements SettingsTool
             $actions = '<button type="button" class="button" data-action-feedback data-loading data-on_click="testMail" data-file="' . $e($view->file) . '"><i class="cmsIcon cmsIcon-paper-plane"></i>Send test email</button><a class="button outline" href="' . $e(\http::$root . 'admin/tools/logs/email/') . '"><i class="cmsIcon cmsIcon-envelope"></i>Email log</a>';
         }
         if (Session::isSuperuser()) {
-            echo '<div class="envToolActions"><button type="button" class="button outline" data-on_click="userConfirm" data-action="resetMail" data-confirm="Set the mail settings of this file to the fluxo account? This clears SMTP credentials and test routing overrides." data-file="' . $e($view->file) . '"><i class="cmsIcon cmsIcon-arrow-rotate-left"></i>Use the fluxo account</button>' . $actions . '</div>';
+            echo '<div class="envToolActions"><button type="button" class="button outline" data-on_click="userConfirm" data-action="resetMail" data-confirm="Set the mail settings of this installation to the fluxo account? This clears SMTP credentials and test routing overrides." data-file="' . $e($view->file) . '"><i class="cmsIcon cmsIcon-arrow-rotate-left"></i>Use the fluxo account</button>' . $actions . '</div>';
         }
         echo '</div>';
     }
@@ -57,7 +57,7 @@ final class MailTool implements SettingsTool
     public static function handle(PanelNode $panel, string $action, string $file): void
     {
         if ($action === 'resetMail') {
-            Session::isSuperuser() && self::reset($file)
+            Session::isSuperuser() && ToolView::running($file) && self::reset()
                 ? \message::confirm('Mail settings set to the fluxo account.')
                 : \message::error('That change was not saved.');
             $panel->updateViews(['main', 'controls']);
@@ -78,10 +78,10 @@ final class MailTool implements SettingsTool
         $panel->updateViews(['main', 'controls']);
     }
 
-    /** The fluxo account in the file: its fields replaced, test routing off. */
-    public static function reset(string $file): bool
+    /** The fluxo account for this installation: its fields replaced, test routing off. */
+    public static function reset(): bool
     {
-        return EnvironmentFile::update($file, static function (array $data): array {
+        return EnvironmentFile::updateLocal(static function (array $data): array {
             $mail = (array) Tree::get($data, ['packages', 'system', 'mail']);
             Tree::put($data, ['packages', 'system', 'mail'], array_diff_key($mail, array_flip(self::FIELDS)) + [
                 'host' => Delivery::DEFAULT_HOST,

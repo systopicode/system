@@ -3,31 +3,31 @@
 declare(strict_types=1);
 
 /**
- * The config files of the project in the current folder.
+ * The config files of the project in the current folder: config.json, the
+ * project, and config.local.json, this installation.
  *
  *   php vendor/systopic/system/bin/config.php --check
- *       what is unknown, old or in the wrong place. Writes nothing.
- *   php vendor/systopic/system/bin/config.php --migrate
- *       the instance files and config.local.json to `packages.*`. config.json
- *       and RC.config.json stay: they reach RC, which runs the last tag.
- *       `--migrate=all` takes them too, for the day of the tag.
- *   php vendor/systopic/system/bin/config.php --move-secrets=<instance>
- *       the secrets of this machine's instance file to config.local.json. Runs
- *       on each machine for itself: first local, then out of the file, or a
- *       sync would take the password away.
- *   php vendor/systopic/system/bin/config.php --prune-defaults=<instance>
- *       takes out of an instance file what only repeats the package defaults
- *       or config.json. Runs on the machine of the instance: another one may
- *       run other code, with other defaults.
+ *       what is unknown, repeated or in the wrong file. Writes nothing.
+ *   php vendor/systopic/system/bin/config.php --adopt[=<instance>]
+ *       takes an old instance file (DEV.ojhome.config.json …) over into
+ *       config.local.json: its values, its name, and the site addresses its
+ *       rules spell out. Without a name the one whose rules fit this machine.
+ *       What config.local.json already says wins. The old file stays, the
+ *       other machines adopt theirs; delete them all afterwards.
+ *   php vendor/systopic/system/bin/config.php --prune-defaults
+ *       takes out of config.local.json what only repeats the package
+ *       defaults or config.json.
  *
  * Every file that changes is copied to var/config-backup/<time>/ first. See
  * .cursor/docs/config-struktur.md.
  */
 
+use Systopic\System\Config\Config;
 use Systopic\System\Config\Explain;
 use Systopic\System\Config\Layout;
-use Systopic\System\Config\Tree;
+use Systopic\System\Config\MachineRules;
 use Systopic\System\Config\Reconcile;
+use Systopic\System\Config\Tree;
 use Systopic\System\Setup\Setup;
 
 $root = str_replace('\\', '/', (string) getcwd());
@@ -38,39 +38,49 @@ if (!is_file("$root/vendor/autoload.php") || !is_dir("$root/config")) {
 require "$root/vendor/autoload.php";
 
 $say = static fn(string $line) => print($line . "\n");
-
-/** @return list<string> file names: the instances, then config.local.json */
-$instanceFiles = static function () use ($root): array {
-	$files = array_map('basename', glob("$root/config/*.config.json") ?: []);
-	sort($files, SORT_STRING);
-	return is_file("$root/config/config.local.json") ? [...$files, 'config.local.json'] : $files;
-};
-
-/** config.json and an instance file, each its `packages` */
-$layers = static function (string $file) use ($root): array {
-	$project = is_file("$root/config/config.json") ? Setup::readJson("$root/config/config.json") : [];
-	$instance = Setup::readJson("$root/config/$file");
-	return [
-		'project' => (array) (Layout::lift((array) $project)['packages'] ?? []),
-		'instance' => (array) (Layout::lift((array) $instance)['packages'] ?? []),
-		'local' => null,
-	];
-};
+$read = static fn(string $file): ?array => is_file("$root/config/$file") ? Setup::readJson("$root/config/$file") : [];
 
 $stamp = date('Ymd-His');
 $backup = static function (string $file) use ($root, $stamp): void {
+	if (!is_file("$root/config/$file")) {
+		return;
+	}
 	$dir = "$root/var/config-backup/$stamp";
 	@mkdir($dir, 0775, true);
 	copy("$root/config/$file", "$dir/$file");
 	@chmod("$dir/$file", 0600);
 };
 
+/** the layers as Explain sees them, each the `packages` of its file */
+$layers = static function () use ($read): array {
+	return [
+		'project' => (array) (Layout::lift((array) $read('config.json'))['packages'] ?? []),
+		'local' => (array) (Layout::lift((array) $read('config.local.json'))['packages'] ?? []),
+	];
+};
+
+/** the stage config.local.json names, '' without one */
+$stage = static function () use ($layers): string {
+	$name = (string) ($layers()['local']['system']['instance'] ?? '');
+	return $name === '' ? '' : strtoupper(explode('.', $name)[0]);
+};
+
+/** @return array<string, string> the old instance files: name => file */
+$oldFiles = static function () use ($root): array {
+	$found = [];
+	foreach (glob("$root/config/*.config.json") ?: [] as $path) {
+		$found[basename($path, '.config.json')] = basename($path);
+	}
+	ksort($found, SORT_STRING);
+	return $found;
+};
+
 $option = $argv[1] ?? '';
 
 if ($option === '--check') {
 	$problems = 0;
-	foreach (['config.json', ...$instanceFiles()] as $file) {
-		$data = Setup::readJson("$root/config/$file");
+	foreach (['config.json', 'config.local.json'] as $file) {
+		$data = $read($file);
 		if ($data === null) {
 			$say("$file: no plain JSON, not checked");
 			$problems++;
@@ -83,96 +93,126 @@ if ($option === '--check') {
 			$name = trim($finding['package'] . '.' . $finding['path'], '.');
 			match ($finding['status']) {
 				Reconcile::FOREIGN => $say("$file: $name is not installed here, it stays"),
-				default => [$say("$file: $name: " . $finding["status"]), $problems++],
+				default => [$say("$file: $name: " . $finding['status']), $problems++],
 			};
 		}
-		if ($file !== 'config.json' && $file !== 'config.local.json') {
-			$redundant = Explain::redundantIn($layers($file), 'instance', strtoupper(explode('.', $file)[0]));
-			if ($redundant !== []) {
-				$say("$file: " . count($redundant) . " values repeat what applies anyway, --prune-defaults takes them out");
-			}
-		}
+	}
+	if (($layers()['local']['system']['instance'] ?? '') === '') {
+		$say('config.local.json: names no installation (packages.system.instance), --adopt takes an old instance file over');
+		$problems++;
+	}
+	$redundant = Explain::redundantIn($layers(), 'local', $stage());
+	if ($redundant !== []) {
+		$say('config.local.json: ' . count($redundant) . ' values repeat what applies anyway, --prune-defaults takes them out');
+	}
+	if ($oldFiles() !== []) {
+		$say('old instance files, no longer read: ' . implode(', ', $oldFiles()));
 	}
 	$say($problems === 0 ? 'fine' : "$problems to look at");
 	exit($problems === 0 ? 0 : 1);
 }
 
-if ($option === '--migrate' || $option === '--migrate=all') {
-	$files = $instanceFiles();
-	if ($option === '--migrate=all') {
-		$files[] = 'config.json';
-	} else {
-		$files = array_values(array_diff($files, ['RC.config.json']));
-	}
-	foreach ($files as $file) {
-		$data = Setup::readJson("$root/config/$file");
-		if ($data === null) {
-			$say("$file: no plain JSON, left alone");
-			continue;
+if ($option === '--adopt' || str_starts_with($option, '--adopt=')) {
+	$entries = [];
+	foreach ($oldFiles() as $name => $file) {
+		$data = $read($file);
+		if (is_array($data)) {
+			$entries[$name] = $data;
 		}
-		$lifted = Layout::lift($data);
-		if ($lifted === $data) {
-			$say("$file: nothing to do");
-			continue;
-		}
-		$backup($file);
-		$say(Setup::writeJson("$root/config/$file", $lifted) ? "$file: moved" : "$file: cannot write");
 	}
-	exit(0);
-}
-
-if (str_starts_with($option, '--move-secrets=')) {
-	$file = substr($option, strlen('--move-secrets=')) . '.config.json';
-	$data = is_file("$root/config/$file") ? Setup::readJson("$root/config/$file") : null;
-	$local = is_file("$root/config/config.local.json") ? Setup::readJson("$root/config/config.local.json") : [];
-	if ($data === null || $local === null) {
-		fwrite(STDERR, "$file or config.local.json cannot be read\n");
+	$name = substr($option, strlen('--adopt='));
+	if ($name === '' || $option === '--adopt') {
+		$ip = \Systopic\System\Http::getSocketIp();
+		$hit = MachineRules::select(array_filter($entries, static fn(array $e): bool => !empty($e['matches'])), ['SERVER_NAME' => $ip, 'HTTP_HOST' => $ip, 'SERVER_ADDR' => $ip], $root);
+		$name = $hit[0] ?? '';
+		if ($name === '') {
+			fwrite(STDERR, "no instance file fits this machine ($ip): name it, --adopt=<instance> (" . implode(', ', array_keys($entries)) . ")\n");
+			exit(1);
+		}
+	}
+	if (!isset($entries[$name])) {
+		fwrite(STDERR, "$name.config.json cannot be read\n");
 		exit(1);
 	}
-	$data = Layout::lift($data);
+	$local = $read('config.local.json');
+	if ($local === null) {
+		fwrite(STDERR, "config.local.json is no plain JSON: adopt by hand\n");
+		exit(1);
+	}
+	$old = Layout::lift($entries[$name]);
 	$local = Layout::lift($local);
-	$moved = Reconcile::moveSecrets($data, $local);
-	if ($moved === []) {
-		$say("$file: no secrets in it");
-		exit(0);
+	// what config.local.json says already wins, as it did over the instance file
+	$packages = Config::merge((array) ($old['packages'] ?? []), (array) ($local['packages'] ?? []));
+	$packages['system']['instance'] = $name;
+	// the rules, as far as they spell out where the sites answer
+	$addresses = [];
+	foreach ((array) ($old['matches'] ?? []) as $rule) {
+		$site = is_array($rule) ? (string) ($rule['site'] ?? '') : '';
+		if ($site === '') {
+			continue;
+		}
+		$label = substr($site, 0, (int) (strrpos($site, '.') ?: strlen($site)));
+		$host = '';
+		foreach ((array) ($rule['serverName'] ?? []) as $each) {
+			if (!filter_var((string) $each, FILTER_VALIDATE_IP) && !str_contains((string) $each, '*') && $each !== 'dev.local') {
+				$host = strtolower((string) $each);
+				break;
+			}
+		}
+		$path = strtolower(trim((string) (((array) ($rule['path'] ?? []))[0] ?? '')));
+		if ($path !== '' && str_contains($path, "/$site/")) {
+			// the folder of the site: in /projects/ or a folder next to it
+			$pattern = str_starts_with($path, "/projects/$site/") ? '/projects(\.[a-z]+)?/{site}/' : str_replace("/$site/", '/{site}/', $path);
+			$addresses[] = $host === '' ? $pattern : $host . $pattern;
+		} elseif ($host !== '' && $path === '') {
+			$addresses[] = str_starts_with($host, "$label.") ? '{name}' . substr($host, strlen($label)) : $host;
+		}
 	}
-	if (is_file("$root/config/config.local.json")) {
-		$backup('config.local.json');
+	$addresses = array_values(array_unique($addresses));
+	// a literal host (rc.systopic.net) is the default site's: first
+	usort($addresses, static fn(string $a, string $b): int => (int) str_contains($a, '{') <=> (int) str_contains($b, '{'));
+	if ($addresses !== [] && !isset($packages['system']['siteAddress'])) {
+		$packages['system']['siteAddress'] = count($addresses) === 1 ? $addresses[0] : $addresses;
 	}
-	$backup($file);
-	// local first: a failure here leaves the secret where it was
-	if (!Setup::writeJson("$root/config/config.local.json", $local) || !Setup::writeJson("$root/config/$file", $data)) {
-		fwrite(STDERR, "cannot write, see var/config-backup/$stamp/\n");
+	foreach ($old as $key => $value) {
+		if ($key === 'constants' && is_array($value)) {
+			$local['constants'] = Config::merge($value, (array) ($local['constants'] ?? []));
+		}
+	}
+	$local['packages'] = $packages;
+	$backup('config.local.json');
+	if (!Setup::writeJson("$root/config/config.local.json", $local)) {
+		fwrite(STDERR, "config.local.json: cannot write\n");
 		exit(1);
 	}
-	$say("$file: moved to config.local.json: " . implode(', ', $moved));
+	$say("config.local.json: is $name now" . ($addresses === [] ? '' : ', sites at ' . implode(', ', $addresses)));
+	$say("$name.config.json is no longer read. Delete the old instance files once every machine has adopted its own.");
 	exit(0);
 }
 
-if (str_starts_with($option, '--prune-defaults=')) {
-	$file = substr($option, strlen('--prune-defaults=')) . '.config.json';
-	$data = is_file("$root/config/$file") ? Setup::readJson("$root/config/$file") : null;
-	if ($data === null) {
-		fwrite(STDERR, "$file cannot be read\n");
+if ($option === '--prune-defaults') {
+	$data = $read('config.local.json');
+	if (!is_array($data) || $data === []) {
+		fwrite(STDERR, "config.local.json cannot be read\n");
 		exit(1);
 	}
-	$found = Explain::redundantIn($layers($file), 'instance', strtoupper(explode('.', $file)[0]));
+	$found = Explain::redundantIn($layers(), 'local', $stage());
 	if ($found === []) {
-		$say("$file: nothing repeats");
+		$say('config.local.json: nothing repeats');
 		exit(0);
 	}
 	$data = Layout::lift($data);
 	foreach ($found as $value) {
 		Tree::drop($data, ['packages', $value['package'], ...explode('.', $value['path'])]);
 	}
-	$backup($file);
-	if (!Setup::writeJson("$root/config/$file", $data)) {
-		fwrite(STDERR, "$file: cannot write\n");
+	$backup('config.local.json');
+	if (!Setup::writeJson("$root/config/config.local.json", $data)) {
+		fwrite(STDERR, "config.local.json: cannot write\n");
 		exit(1);
 	}
-	$say("$file: took out " . implode(', ', array_map(static fn(array $v): string => $v['package'] . '.' . $v['path'], $found)));
+	$say('config.local.json: took out ' . implode(', ', array_map(static fn(array $v): string => $v['package'] . '.' . $v['path'], $found)));
 	exit(0);
 }
 
-fwrite(STDERR, "usage: config.php --check | --migrate[=all] | --move-secrets=<instance> | --prune-defaults=<instance>\n");
+fwrite(STDERR, "usage: config.php --check | --adopt[=<instance>] | --prune-defaults\n");
 exit(2);

@@ -8,17 +8,18 @@ namespace Systopic\System\Config;
  * One config file against the definitions of the packages. See
  * .cursor/docs/config-struktur.md, "Abgleich".
  *
- *   orphan     below an installed package, defined nowhere: goes by a click,
- *              in the instance file of this very installation and in
- *              config.local.json. Another instance may run newer or older
- *              code, config.json counts for every stage.
+ *   orphan     below an installed package, defined nowhere: goes by a click
+ *              in config.local.json. config.json counts for every
+ *              installation, another one may run newer or older code.
  *   foreign    below a package that is not installed here: stays
- *   misplaced  belongs into another file: shown, moved by a click
- *   exposed    a secret outside of config.local.json: shown, moved by a click
+ *   misplaced  belongs into the other file: a value of the installation in
+ *              config.json, or a value of the project that may not be
+ *              overridden in config.local.json. Shown.
+ *   exposed    a secret in config.json, which travels with git: shown
  *
  * A save writes what was changed and nothing else: no defaults go into a
  * file, they lie at the bottom of the tree (Schema). Never at boot, and not in
- * `composer update`: that would change every instance file at once.
+ * `composer update`.
  */
 final class Reconcile
 {
@@ -86,41 +87,10 @@ final class Reconcile
         return $data;
     }
 
-    /**
-     * Moves the secrets out of a file into config.local.json. What local
-     * already has wins, it is the newer one. Both arrays are in the new layout.
-     *
-     * @param array<string, mixed> $data
-     * @param array<string, mixed> $local
-     * @return list<string> what moved
-     */
-    public static function moveSecrets(array &$data, array &$local): array
-    {
-        $moved = [];
-        foreach ((array) ($data['packages'] ?? []) as $package => $tree) {
-            foreach (self::leaves((array) $tree) as $path => $value) {
-                if (empty(Schema::field($package, $path)[0]['writeOnly'])) {
-                    continue;
-                }
-                $keys = ['packages', $package, ...explode('.', $path)];
-                if ((string) $value !== '' && Tree::get($local, $keys) === null) {
-                    Tree::put($local, $keys, $value);
-                }
-                Tree::drop($data, $keys);
-                $moved[] = "$package.$path";
-            }
-        }
-        return $moved;
-    }
-
-    /** project, machine or local: which definitions speak for this file */
+    /** project or local: which values belong into this file */
     public static function kind(string $file): string
     {
-        return match ($file) {
-            'config.json' => 'project',
-            'config.local.json' => 'local',
-            default => 'machine',
-        };
+        return $file === 'config.json' ? 'project' : 'local';
     }
 
     /**

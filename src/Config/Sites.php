@@ -8,21 +8,22 @@ namespace Systopic\System\Config;
  * The sites of a project, and which one a request belongs to.
  *
  * WHAT a site is comes from cms_sites (or config.json before the database is
- * connected). WHERE it answers on this instance comes from the instance's
- * `matches` (see Instance): every rule naming the site — or naming none, for
- * the default site — that carries a host and/or a path is an address of it,
- * the first one the canonical one:
+ * connected), the same on every installation. WHERE it answers here comes
+ * from `packages.system.siteAddress` of the installation: patterns, regular
+ * expressions with a placeholder for the site.
  *
- *   { "serverIp": "192.168.22.50", "path": "/projects/expo-systems.de/", "site": "expo-systems.de" }
- *       → '/projects/expo-systems.de/'               a path below the host of the request
- *   { "serverName": "staging.systopic.net", "path": "/projects/expo-systems.de/", "site": … }
- *       → 'staging.systopic.net/projects/expo-systems.de/'
- *   { "serverName": "expo-systems.systopic.net", "site": "expo-systems.de" }
- *       → 'expo-systems.systopic.net'
+ *   /projects(\.[a-z]+)?/{site}/   DEV, STAGING: a folder per site, named like it
+ *                                  ('/projects.archive/expo-systems.de/' as well)
+ *   {name}.systopic.net            RC: the name without its TLD as subdomain
+ *   rc.systopic.net                no placeholder: the address of the default site
+ *   (none)                         LIVE: every site on its name and its aliases
  *
- * An instance without rules (LIVE) addresses every site by its name. The
- * site's alias domains (cms_sites, `aliases`) follow its own entries on every
- * instance: they never come first, so they are never canonical.
+ * A pattern becomes an address (an entry) per site: matched against the
+ * request, the part the placeholder took is swapped for the site, so
+ * '/projects.archive/x/' stays in its folder; a pattern the request does
+ * not match is written out, as far as it is plain text. The first entry of
+ * a site is its canonical one. The alias domains (cms_sites, `aliases`)
+ * follow its own entries everywhere: never first, never canonical.
  */
 final class Sites
 {
@@ -30,19 +31,24 @@ final class Sites
     private array $sites = [];
 
     /**
-     * @param array<string, array<string, mixed>> $data    name => root, default, meta, aliases
-     * @param list<array<string, mixed>>           $matches the instance's rules
+     * @param array<string, array<string, mixed>> $data      name => root, default, meta, aliases
+     * @param list<string>                         $addresses the patterns of the installation, [] on LIVE
+     * @param string                               $host      of the request, '' before there is one
+     * @param string                               $rootPath  of the request ('/projects/x/public/')
      */
-    public function __construct(array $data, array $matches = [])
+    public function __construct(array $data, array $addresses = [], string $host = '', string $rootPath = '')
     {
+        $host = strtolower(preg_replace('~:\d+$~', '', trim($host)) ?? $host);
+        $rootPath = $rootPath === '' ? '' : rtrim('/' . ltrim(strtolower($rootPath), '/'), '/') . '/';
+        $addresses = array_values(array_filter(array_map(static fn($a): string => trim((string) $a), $addresses), static fn(string $a): bool => $a !== ''));
         foreach ($data as $name => $entry) {
             if (!is_array($entry)) {
                 continue;
             }
             $name = (string) $name;
-            $entries = $matches === []
+            $entries = $addresses === []
                 ? [strtolower($name)]
-                : self::entriesOf($matches, $name, (bool) ($entry['default'] ?? false));
+                : self::entriesOf($addresses, $name, (bool) ($entry['default'] ?? false), $host, $rootPath);
             foreach ((array) ($entry['aliases'] ?? []) as $alias) {
                 if (is_string($alias) && $alias !== '' && !in_array(strtolower($alias), $entries, true)) {
                     $entries[] = strtolower($alias);
@@ -58,21 +64,21 @@ final class Sites
     }
 
     /**
-     * The addresses of one site among the rules, in rule order.
+     * The addresses of one site, in the order of the patterns.
      *
-     * @param list<array<string, mixed>> $matches
+     * @param list<string> $addresses
      * @return list<string>
      */
-    private static function entriesOf(array $matches, string $name, bool $isDefault): array
+    private static function entriesOf(array $addresses, string $name, bool $isDefault, string $host, string $rootPath): array
     {
         $entries = [];
-        foreach ($matches as $match) {
-            $site = $match['site'] ?? null;
-            $site = is_string($site) && $site !== '' ? $site : null;
-            if ($site !== $name && !($site === null && $isDefault)) {
-                continue;
+        foreach ($addresses as $pattern) {
+            $placeholder = str_contains($pattern, '{site}') ? 'site' : (str_contains($pattern, '{name}') ? 'name' : null);
+            if ($placeholder === null) {
+                $entry = $isDefault ? self::plain($pattern) : null;
+            } else {
+                $entry = self::entryOf($pattern, $placeholder, $placeholder === 'site' ? strtolower($name) : self::label($name), $host, $rootPath);
             }
-            $entry = self::entryOf($match);
             if ($entry !== null && !in_array($entry, $entries, true)) {
                 $entries[] = $entry;
             }
@@ -80,33 +86,45 @@ final class Sites
         return $entries;
     }
 
-    /**
-     * The address a rule stands for: its first host without a wildcard, its
-     * path, or both — null when it has neither (an ip-only rule says which
-     * machine, not where on it).
-     *
-     * @param array<string, mixed> $match
-     */
-    public static function entryOf(array $match): ?string
+    /** 'beautiful-technology.de' → 'beautiful-technology': the name without its TLD. */
+    public static function label(string $name): string
     {
-        $host = null;
-        foreach ((array) ($match['serverName'] ?? []) as $name) {
-            if (is_string($name) && $name !== '' && !str_contains($name, '*')) {
-                $host = strtolower(trim($name));
-                break;
+        $name = strtolower($name);
+        $dot = strrpos($name, '.');
+        return $dot === false ? $name : substr($name, 0, $dot);
+    }
+
+    /**
+     * The address of a pattern for one site: the request where it matches,
+     * with what the placeholder took swapped for the site; else the pattern
+     * written out. Null when it is no plain text then.
+     */
+    public static function entryOf(string $pattern, string $placeholder, string $value, string $host, string $rootPath): ?string
+    {
+        $isPath = str_starts_with($pattern, '/');
+        $subject = $isPath ? $rootPath : ($host === '' ? '' : $host . $rootPath);
+        if ($subject !== '') {
+            $regex = '~^' . str_replace(['~', '{site}', '{name}'], ['\~', '(?<site>[^/]+)', '(?<name>[^./]+)'], $pattern) . '~i';
+            if (@preg_match($regex, $subject, $m, PREG_OFFSET_CAPTURE) === 1 && isset($m[$placeholder]) && $m[$placeholder][1] >= 0) {
+                [$whole] = $m[0];
+                [$taken, $at] = $m[$placeholder];
+                $entry = strtolower(substr($whole, 0, $at) . $value . substr($whole, $at + strlen($taken)));
+                return str_contains($entry, '/') ? rtrim($entry, '/') . '/' : $entry;
             }
         }
-        $path = null;
-        foreach ((array) ($match['path'] ?? []) as $p) {
-            if (is_string($p) && trim($p) !== '') {
-                $path = Instance::normalizePath($p);
-                break;
-            }
+        $plain = self::plain(str_replace('{' . $placeholder . '}', "\0", $pattern));
+        return $plain === null ? null : str_replace("\0", $value, $plain);
+    }
+
+    /** A pattern as plain text: '\.' is a dot; null when it holds more of a regular expression. */
+    private static function plain(string $pattern): ?string
+    {
+        $text = str_replace(['\.', '\/', '\-'], ['.', '/', '-'], $pattern);
+        if (preg_match('~[\\\\()\[\]?*+|^$]~', $text) === 1) {
+            return null;
         }
-        if ($host === null) {
-            return $path;
-        }
-        return $path === null ? $host : $host . $path;
+        $text = strtolower($text);
+        return str_contains($text, '/') ? rtrim($text, '/') . '/' : $text;
     }
 
     /** @return array<string, Site> */

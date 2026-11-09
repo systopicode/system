@@ -13,22 +13,22 @@ use Systopic\System\Config\Schema;
 use Systopic\System\Config\Tree;
 
 /**
- * The instance files in `<project>/config`: `DEV.machine.config.json`,
- * `STAGING.config.json`, `LIVE.config.json`, and `config.local.json`.
+ * The two files in `<project>/config`: config.json, the project, read here
+ * and never written (it changes with the project, in git), and
+ * config.local.json, this installation, the only file the settings write.
  *
- * What may be written is what the definitions say (Config\Schema), under
- * `packages.<package>`. A file in the old layout moves to the new one with its
- * first write, whatever else it holds stays. A secret goes to config.local.json
- * of this machine, whichever file the form shows: it never travels.
+ * What may be written is what the definition says (Config\Schema), under
+ * `packages.<package>`: a value of the installation, a secret, or a value of
+ * the project that may be overridden (`x-overridable`). A file in the old
+ * layout moves to the new one with its first write, whatever else it holds
+ * stays.
  */
 final class EnvironmentFile
 {
+    /** this installation: the file that is written */
     public const LOCAL = 'config.local.json';
 
-    /** @var list<string> */
-    public const MATCH = ['serverName', 'serverIp', 'rootDir', 'path', 'site'];
-
-    /** the file of the project, read here, never written */
+    /** the project: read here, never written */
     public const PROJECT = 'config.json';
 
     /** in ini, as in the definition: they would undo the debug switch */
@@ -40,82 +40,21 @@ final class EnvironmentFile
         return is_dir($dir) ? $dir : null;
     }
 
-    /**
-     * @return list<array{name: string, file: string, path: string, current: bool}>
-     */
-    public static function files(): array
-    {
-        $dir = self::directory();
-        if ($dir === null) {
-            return [];
-        }
-        $current = (string) (Config::current()?->instance->name ?? '');
-        $found = glob($dir . '/*.config.json') ?: [];
-        sort($found, SORT_STRING);
-        $files = [];
-        foreach ($found as $path) {
-            $base = basename($path);
-            if (!str_ends_with($base, '.config.json') || $base === 'config.json') {
-                continue;
-            }
-            $name = substr($base, 0, -strlen('.config.json'));
-            if ($name === '' || $name === 'config') {
-                continue;
-            }
-            $files[] = [
-                'name' => $name,
-                'file' => $base,
-                'path' => $path,
-                'current' => $name === $current,
-            ];
-        }
-        $local = $dir . '/' . self::LOCAL;
-        if (is_file($local)) {
-            $files[] = [
-                'name' => 'Local overrides',
-                'file' => self::LOCAL,
-                'path' => $local,
-                'current' => true,
-            ];
-        }
-        return $files;
-    }
-
-    /** The config the sign-in default is written to: this server, else this machine. */
+    /** The file the settings write, null without a config/ folder or a running config. */
     public static function activeFile(): ?string
     {
-        $local = null;
-        foreach (self::files() as $info) {
-            if (!$info['current']) {
-                continue;
-            }
-            if ($info['file'] !== self::LOCAL) {
-                return $info['file'];
-            }
-            $local = $info['file'];
-        }
-        return $local;
-    }
-
-    /** Does this file speak for the installation that is running? */
-    public static function here(string $file): bool
-    {
-        foreach (self::files() as $info) {
-            if ($info['file'] === $file) {
-                return $info['current'];
-            }
-        }
-        return false;
+        return self::directory() !== null && Config::current() !== null ? self::LOCAL : null;
     }
 
     /**
-     * The file in the new layout, whichever way it is written.
+     * A file in the new layout, whichever way it is written. [] when it is not
+     * there or does not parse.
      *
      * @return array<string, mixed>
      */
     public static function read(string $file): array
     {
-        $path = self::path($file);
+        $path = self::source($file);
         if ($path === null) {
             return [];
         }
@@ -127,59 +66,61 @@ final class EnvironmentFile
         return is_array($data) ? Layout::lift($data) : [];
     }
 
+    /** @return array<string, mixed> config.json in the new layout */
+    public static function readProject(): array
+    {
+        return self::read(self::PROJECT);
+    }
+
     /**
-     * What a package says in this file, with config.local.json over it when the
-     * file is the one running here: what the secrets of an instance are now.
+     * What both files say of a package, config.local.json over config.json.
      *
      * @return array<string, mixed>
      */
-    public static function effective(string $file, string $package): array
+    public static function effective(string $package): array
     {
-        $tree = (array) (self::read($file)['packages'][$package] ?? []);
-        if ($file !== self::LOCAL && self::here($file)) {
-            $tree = Config::merge($tree, (array) (self::read(self::LOCAL)['packages'][$package] ?? []));
-        }
-        return $tree;
+        return Config::merge((array) (self::readProject()['packages'][$package] ?? []), (array) (self::read(self::LOCAL)['packages'][$package] ?? []));
     }
 
     /**
-     * May this file hold the field? An instance file what the installation
-     * defines, config.local.json what may be overridden. Secrets are not
-     * asked here: they have one place.
+     * May config.local.json hold the field? A value of the installation, or
+     * one of the project that may be overridden.
      *
      * @param array<string, mixed> $definition
      */
-    public static function holds(string $file, array $definition, string $owner): bool
+    public static function holds(array $definition, string $owner): bool
     {
-        $overridable = !empty($definition['x-overridable']);
-        return $file === self::LOCAL ? $overridable : $owner === 'machine' || $overridable;
+        return $owner === 'local' || !empty($definition['x-overridable']) || !empty($definition['writeOnly']);
     }
 
-    /** One field from a form. Empty: the value goes, and what lies below it counts again. */
-    public static function set(string $file, string $package, string $path, string $raw): bool
+    /**
+     * One field from a form, into config.local.json. Empty: the value goes,
+     * and what lies below it counts again; a secret stays then.
+     */
+    public static function set(string $package, string $path, string $raw): bool
     {
         $field = Schema::field($package, $path) ?? self::freeField($package, $path);
         if ($field === null) {
             return false;
         }
         [$definition, $owner] = $field;
+        if (!self::holds($definition, $owner)) {
+            return false;
+        }
         $keys = ['packages', $package, ...explode('.', $path)];
         if (!empty($definition['writeOnly'])) {
-            // a secret of another machine stays there; empty keeps the one there is
-            if (!self::here($file)) {
-                return false;
-            }
             return $raw === '' || self::updateLocal(static function (array $data) use ($keys, $raw): array {
                 Tree::put($data, $keys, $raw);
                 return $data;
             });
         }
-        if (!self::holds($file, $definition, $owner)) {
-            return false;
-        }
         $raw = trim($raw);
         if ($raw === '') {
-            return self::update($file, static function (array $data) use ($keys): array {
+            // a required value is not emptied: the installation would lose its name
+            if (($definition['x-mandatory'] ?? '') === 'input') {
+                return false;
+            }
+            return self::updateLocal(static function (array $data) use ($keys): array {
                 Tree::drop($data, $keys);
                 return $data;
             });
@@ -188,249 +129,105 @@ final class EnvironmentFile
         if (!$valid) {
             return false;
         }
-        return self::update($file, static function (array $data) use ($keys, $value): array {
+        return self::updateLocal(static function (array $data) use ($keys, $value): array {
             Tree::put($data, $keys, $value);
             return $data;
         });
     }
 
-    /** A value of a rule. Several, separated by commas, make a list. */
-    public static function setMatch(string $file, int $index, string $field, string $raw): bool
-    {
-        if (!in_array($field, self::MATCH, true)) {
-            return false;
-        }
-        $values = array_values(array_filter(array_map('trim', explode(',', $raw)), static fn(string $v): bool => $v !== ''));
-        if ($field === 'serverIp') {
-            foreach ($values as $ip) {
-                if (!filter_var($ip, FILTER_VALIDATE_IP)) {
-                    return false;
-                }
-            }
-        }
-        return self::update($file, static function (array $data) use ($index, $field, $values): ?array {
-            $rules = array_values(is_array($data['matches'] ?? null) ? $data['matches'] : []);
-            if (!isset($rules[$index]) || !is_array($rules[$index])) {
-                return null;
-            }
-            if ($values === []) {
-                unset($rules[$index][$field]);
-            } else {
-                $rules[$index][$field] = count($values) === 1 ? $values[0] : $values;
-            }
-            $data['matches'] = array_values($rules);
-            return $data;
-        });
-    }
-
-    public static function addMatch(string $file): bool
-    {
-        return self::update($file, static function (array $data): array {
-            $rules = array_values(is_array($data['matches'] ?? null) ? $data['matches'] : []);
-            $rules[] = ['serverName' => '', 'path' => ''];
-            $data['matches'] = $rules;
-            return $data;
-        });
-    }
-
-    public static function removeMatch(string $file, int $index): bool
-    {
-        return self::update($file, static function (array $data) use ($index): ?array {
-            $rules = array_values(is_array($data['matches'] ?? null) ? $data['matches'] : []);
-            if (!isset($rules[$index])) {
-                return null;
-            }
-            array_splice($rules, $index, 1);
-            $data['matches'] = $rules;
-            return $data;
-        });
-    }
-
     /**
-     * Point this environment at the hub on this machine. The block is the
-     * hub's own key. It is not returned and must not be shown. Its secrets go
-     * to config.local.json like every other.
+     * Connects this installation to the hub with a block from the hub's own
+     * config (CentrifugoHub::relayBlock()). The keys are not returned and
+     * must not be shown.
      *
      * @param array{api: string, apiKey: string, secret: string, client: string, plainTopics: bool} $relay
      */
-    public static function connectRelay(string $file, array $relay): bool
+    public static function connectRelay(array $relay): bool
     {
-        $secrets = array_intersect_key($relay, ['apiKey' => true, 'secret' => true]);
-        $shared = array_diff_key($relay, $secrets);
-        return self::updateLocal(static function (array $data) use ($secrets): array {
-            Tree::put($data, ['packages', 'relay'], Config::merge((array) Tree::get($data, ['packages', 'relay']), $secrets));
-            return $data;
-        }) && self::update($file, static function (array $data) use ($shared): array {
-            Tree::put($data, ['packages', 'relay'], Config::merge((array) Tree::get($data, ['packages', 'relay']), $shared));
+        return self::updateLocal(static function (array $data) use ($relay): array {
+            Tree::put($data, ['packages', 'relay'], Config::merge((array) Tree::get($data, ['packages', 'relay']), $relay));
             return $data;
         });
     }
 
-    /** Switch this environment only; the shared hub process is untouched. */
-    public static function enableRelay(string $file, bool $enabled): bool
+    /** Switch this installation only; the shared hub process is untouched. */
+    public static function enableRelay(bool $enabled): bool
     {
-        $relay = self::effective($file, 'relay');
+        $relay = self::effective('relay');
         if (empty($relay['api']) || empty($relay['secret'])) {
             return false;
         }
-        return self::update($file, static function (array $data) use ($enabled): array {
+        return self::updateLocal(static function (array $data) use ($enabled): array {
             Tree::put($data, ['packages', 'relay', 'enabled'], $enabled);
             return $data;
         });
     }
 
-    /** The sign-in key of this installation: config.local.json, then a file that has not moved yet. */
-    public static function authSecret(string $file): string
+    /** The sign-in key of this installation, '' when there is none. */
+    public static function authSecret(): string
     {
-        return (string) (self::effective($file, 'system')['auth']['secret'] ?? '');
+        return (string) (self::effective('system')['auth']['secret'] ?? '');
     }
 
-    /** Drop the sign-in key, wherever it lies. Lifetimes stay. Existing codes stop verifying. */
-    public static function removeAuth(string $file): bool
+    /** Drop the sign-in key. Lifetimes stay. Existing codes stop verifying. */
+    public static function removeAuth(): bool
     {
-        $keys = ['packages', 'system', 'auth', 'secret'];
-        $drop = static function (array $data) use ($keys): array {
-            Tree::drop($data, $keys);
+        return self::path(self::LOCAL) === null || self::updateLocal(static function (array $data): array {
+            Tree::drop($data, ['packages', 'system', 'auth', 'secret']);
             return $data;
-        };
-        return (self::path(self::LOCAL) === null || self::update(self::LOCAL, $drop)) && self::update($file, $drop);
+        });
     }
 
     /**
      * A sign-in key for this installation when there is none. `$replace`
-     * rotates one that is there. The key is random, goes to config.local.json
-     * and is not returned.
+     * rotates one that is there. The key is random and is not returned.
      */
-    public static function createAuth(string $file, bool $replace = false): bool
+    public static function createAuth(bool $replace = false): bool
     {
         $keys = ['packages', 'system', 'auth', 'secret'];
-        return self::updateLocal(static function (array $data) use ($file, $replace, $keys): ?array {
+        return self::updateLocal(static function (array $data) use ($replace, $keys): ?array {
             // read inside the lock: two requests at once make one key
-            $secret = (string) (Tree::get($data, $keys) ?? Tree::get(self::read($file), $keys) ?? '');
-            if (!$replace && strlen($secret) >= 32) {
+            if (!$replace && strlen((string) Tree::get($data, $keys)) >= 32) {
                 return null;
             }
             Tree::put($data, $keys, bin2hex(random_bytes(32)));
             return $data;
-        }, true) && (!$replace || self::dropFrom($file, $keys));
+        }, true);
     }
 
     /**
-     * The secrets of the file running here to config.local.json. Local first: a
-     * failure leaves them where they were, and a sync never takes one away.
-     */
-    public static function moveSecrets(string $file): bool
-    {
-        if ($file === self::LOCAL || !self::here($file)) {
-            return false;
-        }
-        $data = self::read($file);
-        $kept = $data;
-        return self::updateLocal(static function (array $local) use (&$kept): array {
-            Reconcile::moveSecrets($kept, $local);
-            return $local;
-        }) && self::update($file, static function (array $data): array {
-            $ignored = [];
-            Reconcile::moveSecrets($data, $ignored);
-            return $data;
-        });
-    }
-
-    /** A value of config.local.json that belongs to the instance file running here. */
-    public static function moveToInstance(string $package, string $path): bool
-    {
-        $target = self::activeFile();
-        $keys = ['packages', $package, ...explode('.', $path)];
-        $value = Tree::get(self::read(self::LOCAL), $keys);
-        if ($target === null || $target === self::LOCAL || $value === null) {
-            return false;
-        }
-        return self::update($target, static function (array $data) use ($keys, $value): array {
-            Tree::put($data, $keys, $value);
-            return $data;
-        }) && self::update(self::LOCAL, static function (array $data) use ($keys): array {
-            Tree::drop($data, $keys);
-            return $data;
-        });
-    }
-
-    /** @param list<string> $keys */
-    private static function dropFrom(string $file, array $keys): bool
-    {
-        if ($file === self::LOCAL) {
-            return true;
-        }
-        return self::update($file, static function (array $data) use ($keys): array {
-            Tree::drop($data, $keys);
-            return $data;
-        });
-    }
-
-    /**
-     * The layers of an instance, each the `packages` of its file: config.json,
-     * the instance file, and config.local.json when the instance runs here.
-     * For config.json itself only the project.
+     * The layers: config.json and, unless only the project is asked for,
+     * config.local.json. Each the `packages` of its file.
      *
-     * @return array{project: array<string, mixed>, instance: array<string, mixed>|null, local: array<string, mixed>|null}
+     * @return array{project: array<string, mixed>, local: array<string, mixed>|null}
      */
-    public static function layers(string $file): array
+    public static function layers(bool $projectOnly = false): array
     {
-        $project = (array) (self::readProject()['packages'] ?? []);
-        if ($file === self::PROJECT) {
-            return ['project' => $project, 'instance' => null, 'local' => null];
-        }
         return [
-            'project' => $project,
-            'instance' => (array) (self::read($file)['packages'] ?? []),
-            'local' => self::here($file) ? (array) (self::read(self::LOCAL)['packages'] ?? []) : null,
+            'project' => (array) (self::readProject()['packages'] ?? []),
+            'local' => $projectOnly ? null : (array) (self::read(self::LOCAL)['packages'] ?? []),
         ];
     }
 
-    /** DEV, STAGING, LIVE …; empty for config.json */
-    public static function stage(string $file): string
+    /** the stage of this installation: DEV, STAGING, LIVE … */
+    public static function stage(): string
     {
-        return $file === self::PROJECT || $file === self::LOCAL ? '' : strtoupper(explode('.', $file)[0]);
+        return (string) (Config::current()?->instance->stage ?? '');
     }
 
     /**
-     * config.json in the new layout.
-     *
-     * @return array<string, mixed>
-     */
-    public static function readProject(): array
-    {
-        $dir = self::directory();
-        $path = $dir === null ? '' : $dir . DIRECTORY_SEPARATOR . self::PROJECT;
-        if ($path === '' || !is_file($path)) {
-            return [];
-        }
-        try {
-            $data = json_decode((string) file_get_contents($path), true, 512, JSON_THROW_ON_ERROR);
-        } catch (\JsonException) {
-            return [];
-        }
-        return is_array($data) ? Layout::lift($data) : [];
-    }
-
-    /**
-     * Takes out of the instance file what only repeats what lies below it.
-     * Only the file running here: another one may run other code, with other
-     * defaults.
+     * Takes out of config.local.json what only repeats what lies below it:
+     * a default of the package or config.json.
      *
      * @return list<string>|false what went
      */
-    public static function prune(string $file): array|false
+    public static function prune(): array|false
     {
-        if ($file === self::LOCAL || !self::here($file)) {
-            return false;
-        }
-        $layers = self::layers($file);
-        $layers['local'] = null;
-        $found = Explain::redundantIn($layers, 'instance', self::stage($file));
+        $found = Explain::redundantIn(self::layers(), 'local', self::stage());
         if ($found === []) {
             return [];
         }
-        $ok = self::update($file, static function (array $data) use ($found): array {
+        $ok = self::updateLocal(static function (array $data) use ($found): array {
             foreach ($found as $value) {
                 Tree::drop($data, ['packages', $value['package'], ...explode('.', $value['path'])]);
             }
@@ -440,53 +237,13 @@ final class EnvironmentFile
     }
 
     /**
-     * Takes out what nobody defines: all of it, or one (`package.path`). In
-     * the instance file running here and in config.local.json. Another
-     * instance may run code that still reads it.
+     * Takes out of config.local.json what nobody defines: all of it, or one
+     * (`package.path`). config.json is left alone: it counts for every
+     * installation, another one may run code that still reads it.
      */
-    public static function dropOrphans(string $file, ?string $only = null): bool
+    public static function dropOrphans(?string $only = null): bool
     {
-        if ($file !== self::LOCAL && !self::here($file)) {
-            return false;
-        }
-        $name = basename($file);
-        return self::update($file, static fn(array $data): array => Reconcile::withoutOrphans($name, $data, $only === null ? null : [$only]));
-    }
-
-    /**
-     * May this instance file go? Not while a rule points at it, not the LIVE
-     * default, not the one running here.
-     */
-    public static function deletable(string $file): bool
-    {
-        if ($file === self::LOCAL || $file === self::PROJECT || self::path($file) === null || self::here($file)) {
-            return false;
-        }
-        $data = self::read($file);
-        $rules = array_filter((array) ($data['matches'] ?? []), static fn($rule): bool => is_array($rule) && array_filter($rule, static fn($v): bool => $v !== '' && $v !== []) !== []);
-        return $rules === [] && !(self::stage($file) === 'LIVE' && !empty($data['default']));
-    }
-
-    public static function deleteInstance(string $file): bool
-    {
-        $path = self::path($file);
-        return $path !== null && self::deletable($file) && unlink($path);
-    }
-
-    /** `default` of an instance file: taken when no rule matches. LIVE only. */
-    public static function setDefault(string $file, bool $on): bool
-    {
-        if ($file === self::LOCAL || ($on && self::stage($file) !== 'LIVE')) {
-            return false;
-        }
-        return self::update($file, static function (array $data) use ($on): array {
-            if ($on) {
-                $data['default'] = true;
-            } else {
-                unset($data['default']);
-            }
-            return $data;
-        });
+        return self::updateLocal(static fn(array $data): array => Reconcile::withoutOrphans(self::LOCAL, $data, $only === null ? null : [$only]));
     }
 
     /**
@@ -494,13 +251,14 @@ final class EnvironmentFile
      * says what a name may be (`propertyNames`). What is marked `x-entry-name`
      * starts with the name (a connection: its database).
      */
-    public static function addEntry(string $file, string $package, string $path, string $name): bool
+    public static function addEntry(string $package, string $path, string $name): bool
     {
         $node = self::node($package, $path);
         $pattern = (string) ($node['propertyNames']['pattern'] ?? '');
         $entry = $node['additionalProperties'] ?? null;
         $keys = ['packages', $package, ...explode('.', $path), $name];
-        if ($file === self::LOCAL || $pattern === '' || !is_array($entry) || preg_match('~' . str_replace('~', '\~', $pattern) . '~', $name) !== 1 || Tree::get(self::read($file), $keys) !== null) {
+        if ($pattern === '' || !is_array($entry) || preg_match('~' . str_replace('~', '\~', $pattern) . '~', $name) !== 1
+            || Tree::get(self::read(self::LOCAL), $keys) !== null || Tree::get(self::readProject(), $keys) !== null) {
             return false;
         }
         $start = [];
@@ -509,7 +267,7 @@ final class EnvironmentFile
                 $start[$key] = $name;
             }
         }
-        return self::update($file, static function (array $data) use ($keys, $start): array {
+        return self::updateLocal(static function (array $data) use ($keys, $start): array {
             Tree::put($data, $keys, $start === [] ? new \stdClass() : $start);
             return $data;
         });
@@ -542,14 +300,11 @@ final class EnvironmentFile
     }
 
     /**
-     * A block, out of the instance file and, when it runs here, out of
-     * config.local.json too. Only optional blocks and named entries.
+     * A block, out of config.local.json. Only optional blocks and named
+     * entries the definition does not require.
      */
-    public static function removeBlock(string $file, string $package, string $path): bool
+    public static function removeBlock(string $package, string $path): bool
     {
-        if ($file === self::LOCAL) {
-            return false;
-        }
         $node = self::node($package, $path);
         if ($node === null || empty($node['x-optional']) && empty($node['x-entry'])) {
             return false;
@@ -558,29 +313,8 @@ final class EnvironmentFile
             return false;
         }
         $keys = ['packages', $package, ...($path === '' ? [] : explode('.', $path))];
-        $drop = static function (array $data) use ($keys): array {
+        return self::path(self::LOCAL) !== null && self::updateLocal(static function (array $data) use ($keys): array {
             Tree::drop($data, $keys);
-            return $data;
-        };
-        return self::update($file, $drop) && (!self::here($file) || self::path(self::LOCAL) === null || self::update(self::LOCAL, $drop));
-    }
-
-    /**
-     * This machine takes a value of its own, starting with the one that counts
-     * now. Only what may be overridden, never a secret.
-     */
-    public static function overrideLocal(string $file, string $package, string $path): bool
-    {
-        $field = Schema::field($package, $path) ?? self::freeField($package, $path);
-        if ($field === null || empty($field[0]['x-overridable']) || !empty($field[0]['writeOnly']) || $file === self::LOCAL || !self::here($file)) {
-            return false;
-        }
-        $layers = self::layers($file);
-        $layers['local'] = null;
-        $keys = explode('.', $path);
-        $now = Explain::value($field[0], $layers, [$package, ...$keys], self::stage($file))['value'];
-        return self::updateLocal(static function (array $data) use ($package, $keys, $now): array {
-            Tree::put($data, ['packages', $package, ...$keys], $now ?? '');
             return $data;
         });
     }
@@ -602,8 +336,8 @@ final class EnvironmentFile
     }
 
     /**
-     * The file as it is written, config.json included: for the lines of its
-     * keys (JsonLines). '' when it is not there.
+     * The file as it is written: for the lines of its keys (JsonLines). ''
+     * when it is not there.
      */
     public static function text(string $file): string
     {
@@ -611,42 +345,37 @@ final class EnvironmentFile
         return $path === null ? '' : (string) file_get_contents($path);
     }
 
-    /** where a config file lies, config.json included; null when it is not there */
+    /** where config.json or config.local.json lies; null when it is not there */
     public static function source(string $file): ?string
     {
-        if ($file !== self::PROJECT) {
-            return self::path($file);
-        }
         $dir = self::directory();
-        $path = $dir === null ? '' : $dir . DIRECTORY_SEPARATOR . self::PROJECT;
-        return $path !== '' && is_file($path) ? $path : null;
-    }
-
-    public static function path(string $file): ?string
-    {
-        $dir = self::directory();
-        $base = basename($file);
-        if ($file !== $base || is_link(($dir ?? '') . DIRECTORY_SEPARATOR . $base)) return null;
-        if ($dir === null || !preg_match('/^(?:[A-Za-z0-9][A-Za-z0-9._-]*\.config\.json|config\.local\.json)$/', $base)) {
+        if ($dir === null || !in_array($file, [self::PROJECT, self::LOCAL], true) || is_link($dir . DIRECTORY_SEPARATOR . $file)) {
             return null;
         }
-        $path = $dir . DIRECTORY_SEPARATOR . $base;
+        $path = $dir . DIRECTORY_SEPARATOR . $file;
         return is_file($path) ? $path : null;
     }
 
+    /** config.local.json, the file that may be written; null when it is not there */
+    public static function path(string $file = self::LOCAL): ?string
+    {
+        return $file === self::LOCAL ? self::source(self::LOCAL) : null;
+    }
+
     /**
-     * config.local.json, which may not exist yet.
+     * Read, change, write config.local.json as one step, the file made when
+     * it is missing.
      *
-     * @param callable(array<string, mixed>): ?array<string, mixed> $change
+     * @param callable(array<string, mixed>): ?array<string, mixed> $change null = nothing to write
      * @param bool $unchangedIsFine a change that decides there is nothing to do
      */
-    private static function updateLocal(callable $change, bool $unchangedIsFine = false): bool
+    public static function updateLocal(callable $change, bool $unchangedIsFine = false): bool
     {
         $dir = self::directory();
         if ($dir === null) {
             return false;
         }
-        if (self::path(self::LOCAL) === null && !FileWriter::write($dir . DIRECTORY_SEPARATOR . self::LOCAL, "{}\n", 0600)) {
+        if (self::path() === null && !FileWriter::write($dir . DIRECTORY_SEPARATOR . self::LOCAL, "{}\n", 0600)) {
             return false;
         }
         return self::update(self::LOCAL, $change, $unchangedIsFine);
@@ -656,9 +385,9 @@ final class EnvironmentFile
      * Read, change, write as one step: every field saves on its own request,
      * and two overlapping saves would otherwise each write back the state they
      * read - the later one dropping the earlier value. The lock lives outside
-     * config/ (the folder is synced); the file is replaced by rename, so a
-     * reader never sees it half written. A file that does not parse is left
-     * alone instead of being overwritten with what the form knows.
+     * config/; the file is replaced by rename, so a reader never sees it half
+     * written. A file that does not parse is left alone instead of being
+     * overwritten with what the form knows. Only config.local.json.
      *
      * @param callable(array<string, mixed>): ?array<string, mixed> $change null = nothing to write
      */

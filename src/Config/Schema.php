@@ -7,8 +7,15 @@ namespace Systopic\System\Config;
 use Composer\InstalledVersions;
 
 /**
- * The definitions of the packages: `<package>/config/{project,machine,local}.schema.json`,
- * JSON Schema with `x-` keywords. See .cursor/docs/config-struktur.md.
+ * The definition of a package: `<package>/config/config.schema.json`, JSON
+ * Schema with `x-` keywords. One file per package, the master of every
+ * block and value: title, description, order, defaults, where it is kept.
+ * See .cursor/docs/config-struktur.md.
+ *
+ * A value belongs to this installation (config.local.json) unless it or a
+ * block above it says `x-project`: then it is the same everywhere and lives
+ * in config.json. load() marks every value with its file (`x-file`:
+ * project or local), so nobody has to walk up again.
  *
  * The package defines, the project stores. What the definitions say about a
  * value that is not in any file comes from here, at the bottom of the tree:
@@ -16,28 +23,50 @@ use Composer\InstalledVersions;
  */
 final class Schema
 {
-    /** the files of a package, in the order their values are loaded */
-    public const FILES = ['project', 'machine', 'local'];
+    /** the definition file of a package, in its config/ */
+    public const FILE = 'config.schema.json';
 
-    /** @var array<string, array<string, array<string, mixed>>> package => file => definition */
+    /** @var array<string, array<string, mixed>> package => definition, marked */
     private static array $loaded = [];
 
-    /** @return array<string, array<string, mixed>> file => definition, what the package has of them */
+    /**
+     * The definition of a package, every value marked with `x-file` and,
+     * below an overridable block, `x-overridable`. [] when the package has
+     * none.
+     *
+     * @return array<string, mixed>
+     */
     public static function load(string $package): array
     {
         if (isset(self::$loaded[$package])) {
             return self::$loaded[$package];
         }
-        $dir = self::directory($package);
-        $found = [];
-        foreach ($dir === null ? [] : self::FILES as $name) {
-            $file = "$dir/config/$name.schema.json";
-            $definition = is_file($file) ? json_decode((string) file_get_contents($file), true) : null;
-            if (is_array($definition)) {
-                $found[$name] = $definition;
-            }
+        $file = self::file($package);
+        $definition = $file === null ? null : json_decode((string) file_get_contents($file), true);
+        return self::$loaded[$package] = is_array($definition) ? self::mark($definition) : [];
+    }
+
+    /**
+     * Every value gets the file it is kept in, from itself or the nearest
+     * block above it: `x-project` → project, else local.
+     *
+     * @param array<string, mixed> $node
+     * @return array<string, mixed>
+     */
+    private static function mark(array $node, bool $project = false, bool $overridable = false): array
+    {
+        $project = $project || !empty($node['x-project']);
+        if (!isset($node['properties']) && !is_array($node['additionalProperties'] ?? null) && ($node['type'] ?? '') !== 'object') {
+            return ['x-file' => $project ? 'project' : 'local'] + $node + ($overridable ? ['x-overridable' => true] : []);
         }
-        return self::$loaded[$package] = $found;
+        $overridable = $overridable || !empty($node['x-overridable']);
+        foreach ($node['properties'] ?? [] as $key => $child) {
+            $node['properties'][$key] = self::mark($child, $project, $overridable);
+        }
+        if (is_array($node['additionalProperties'] ?? null)) {
+            $node['additionalProperties'] = self::mark($node['additionalProperties'], $project, $overridable);
+        }
+        return $node;
     }
 
     /**
@@ -50,14 +79,19 @@ final class Schema
         $name = "systopic/$package";
         if (class_exists(InstalledVersions::class)) {
             $path = InstalledVersions::isInstalled($name) ? InstalledVersions::getInstallPath($name) : null;
-            return $path === null ? null : rtrim(str_replace('\\', '/', $path), '/');
+            if ($path !== null) {
+                return rtrim(str_replace('\\', '/', $path), '/');
+            }
+            if ($package !== 'system') {
+                return null;
+            }
         }
         $dir = str_replace('\\', '/', dirname(__DIR__, 3)) . "/$package";
         return is_dir($dir) ? $dir : null;
     }
 
     /**
-     * $tree with what the definitions of $package give for the values it does
+     * $tree with what the definition of $package gives for the values it does
      * not have.
      *
      * @param array<string, mixed> $tree
@@ -65,41 +99,21 @@ final class Schema
      */
     public static function withDefaults(string $package, array $tree, string $stage): array
     {
-        foreach (self::load($package) as $definition) {
-            if (!empty($definition['x-optional']) && $tree === []) {
-                continue;
-            }
-            $tree = self::fill($definition, $tree, $stage);
+        $definition = self::load($package);
+        if ($definition === [] || !empty($definition['x-optional']) && $tree === []) {
+            return $tree;
         }
-        return $tree;
+        return self::fill($definition, $tree, $stage);
     }
 
     /**
-     * The top of an instance file (`matches`, `default`): system/config/match.schema.json.
-     *
-     * @return array<string, mixed>
+     * The definition file itself, for a look into it (EnvironmentForm links
+     * it, at the line). Null when the package or the file is not there.
      */
-    public static function matching(): array
+    public static function file(string $package): ?string
     {
-        if (isset(self::$loaded['#match'])) {
-            return self::$loaded['#match']['match'];
-        }
-        $dir = self::directory('system') ?? str_replace('\\', '/', dirname(__DIR__, 2));
-        $file = "$dir/config/match.schema.json";
-        $definition = is_file($file) ? json_decode((string) file_get_contents($file), true) : null;
-        self::$loaded['#match'] = ['match' => is_array($definition) ? $definition : []];
-        return self::$loaded['#match']['match'];
-    }
-
-    /**
-     * The definition file itself, `<package>/config/<name>.schema.json`, for
-     * a look into it (EnvironmentForm links it, at the line). Null when the
-     * package or the file is not there.
-     */
-    public static function file(string $package, string $name): ?string
-    {
-        $dir = self::directory($package) ?? ($package === 'system' ? str_replace('\\', '/', dirname(__DIR__, 2)) : null);
-        $file = $dir === null ? '' : "$dir/config/$name.schema.json";
+        $dir = self::directory($package);
+        $file = $dir === null ? '' : "$dir/config/" . self::FILE;
         // vendor/composer/../systopic/system is a link: the file behind it is the one to edit
         return $file !== '' && is_file($file) ? (realpath($file) ?: $file) : null;
     }
@@ -113,16 +127,14 @@ final class Schema
     /** Does the path lie in a block that takes anything (`ini`)? */
     public static function open(string $package, string $path): bool
     {
-        foreach (self::load($package) as $definition) {
-            $node = $definition;
-            foreach (explode('.', $path) as $key) {
-                if (($node['additionalProperties'] ?? false) === true) {
-                    return true;
-                }
-                $node = $node['properties'][$key] ?? null;
-                if (!is_array($node)) {
-                    break;
-                }
+        $node = self::load($package);
+        foreach (explode('.', $path) as $key) {
+            if (($node['additionalProperties'] ?? false) === true) {
+                return true;
+            }
+            $node = $node['properties'][$key] ?? null;
+            if (!is_array($node)) {
+                return false;
             }
         }
         return false;
@@ -159,55 +171,36 @@ final class Schema
         return $value;
     }
 
+
     /**
-     * The definition of one value, and the file it belongs to. `path` is dotted,
-     * a name of a map stands for itself: 'connections.main.host'.
+     * The definition of one value, and the file it belongs to (project or
+     * local). `path` is dotted, a name of a map stands for itself:
+     * 'connections.main.host'.
      *
      * @return array{0: array<string, mixed>, 1: string}|null
      */
     public static function field(string $package, string $path): ?array
     {
-        foreach (self::load($package) as $file => $definition) {
-            $node = self::node($definition, explode('.', $path));
-            if ($node !== null && !isset($node['properties']) && !is_array($node['additionalProperties'] ?? null)) {
-                // a block that may be overridden passes it on (`ini`)
-                if (empty($node['x-overridable']) && self::overridableAbove($definition, explode('.', $path))) {
-                    $node['x-overridable'] = true;
-                }
-                return [$node, $file];
-            }
+        $node = self::node(self::load($package), explode('.', $path));
+        if ($node === null || isset($node['properties']) || is_array($node['additionalProperties'] ?? null)) {
+            return null;
         }
-        return null;
-    }
-
-    /** @param list<string> $keys */
-    private static function overridableAbove(array $node, array $keys): bool
-    {
-        array_pop($keys);
-        foreach ($keys as $key) {
-            $node = $node['properties'][$key] ?? (is_array($node['additionalProperties'] ?? null) ? $node['additionalProperties'] : []);
-            if (!empty($node['x-overridable'])) {
-                return true;
-            }
-        }
-        return false;
+        return [$node, (string) ($node['x-file'] ?? 'local')];
     }
 
     /**
-     * The values directly below a path, from all files of the package: key =>
-     * [definition, file]. Blocks are left out, a form has them as groups.
+     * The values directly below a path: key => [definition, file]. Blocks are
+     * left out, a form has them as groups.
      *
      * @return array<string, array{0: array<string, mixed>, 1: string}>
      */
     public static function children(string $package, string $path): array
     {
         $found = [];
-        foreach (self::load($package) as $file => $definition) {
-            $node = self::node($definition, $path === '' ? [] : explode('.', $path));
-            foreach ($node['properties'] ?? [] as $key => $child) {
-                if (!isset($child['properties']) && !is_array($child['additionalProperties'] ?? null) && ($child['type'] ?? '') !== 'object') {
-                    $found[(string) $key] = [$child, $file];
-                }
+        $node = self::node(self::load($package), $path === '' ? [] : explode('.', $path));
+        foreach ($node['properties'] ?? [] as $key => $child) {
+            if (!isset($child['properties']) && !is_array($child['additionalProperties'] ?? null) && ($child['type'] ?? '') !== 'object') {
+                $found[(string) $key] = [$child, (string) ($child['x-file'] ?? 'local')];
             }
         }
         return $found;
@@ -233,7 +226,8 @@ final class Schema
     }
 
     /**
-     * A value from a form as what the definition wants.
+     * A value from a form as what the definition wants. A value that may be a
+     * list takes several, separated by commas.
      *
      * @param array<string, mixed> $definition
      * @return array{0: bool, 1: mixed} valid, value
@@ -250,10 +244,17 @@ final class Schema
             $valid = $number !== false && $number >= ($definition['minimum'] ?? PHP_INT_MIN) && $number <= ($definition['maximum'] ?? PHP_INT_MAX);
             return [$valid, $valid ? $number : null];
         }
+        if (in_array('array', $types, true) && in_array('string', $types, true)) {
+            $items = array_values(array_filter(array_map('trim', explode(',', $raw)), static fn(string $item): bool => $item !== ''));
+            return [true, count($items) === 1 ? $items[0] : $items];
+        }
         if (isset($definition['enum']) && !in_array($raw, $definition['enum'], true)) {
             return [false, null];
         }
         if (($definition['format'] ?? '') === 'email' && !filter_var($raw, FILTER_VALIDATE_EMAIL)) {
+            return [false, null];
+        }
+        if (isset($definition['pattern']) && preg_match('~' . str_replace('~', '\~', (string) $definition['pattern']) . '~', $raw) !== 1) {
             return [false, null];
         }
         return [true, $raw];

@@ -3,11 +3,11 @@
 declare(strict_types=1);
 
 /**
- * The config definitions (<package>/config/*.schema.json), see
- * .cursor/docs/config-struktur.md. Nothing at runtime reads them yet.
+ * The config definitions (<package>/config/config.schema.json, one per
+ * package), see .cursor/docs/config-struktur.md.
  *
- * Read only: every config file of projects/* is checked against them, where
- * its keys lie TODAY - before the move to packages.*. Values are never printed.
+ * Read only: config.json and config.local.json of projects/* are checked
+ * against them, in either layout. Values are never printed.
  *
  *   php tests/config-schemas.php
  */
@@ -16,11 +16,10 @@ require_once __DIR__ . '/../src/Config/Config.php';
 require_once __DIR__ . '/../src/Config/Layout.php';
 
 const PACKAGES = ['system', 'db', 'relay'];
-const FILES = ['match', 'project', 'machine', 'local'];
 const KEYWORDS = [
 	'$schema', 'title', 'description', 'type', 'properties', 'required', 'items', 'enum', 'default', 'minimum', 'maximum',
 	'minLength', 'pattern', 'format', 'additionalProperties', 'propertyNames', 'not', 'anyOf', 'writeOnly',
-	'x-mandatory', 'x-stages', 'x-computed', 'x-optional', 'x-overridable', 'x-options', 'x-backup', 'x-tool', 'x-entry-name',
+	'x-mandatory', 'x-stages', 'x-computed', 'x-optional', 'x-overridable', 'x-options', 'x-backup', 'x-tool', 'x-entry-name', 'x-project',
 ];
 
 function check(string $label, bool $ok, string $detail = ''): void
@@ -53,15 +52,16 @@ function keywords(array $node, array &$found): void
  * of objects counts as one leaf, it is one field of the form. A map with
  * names of its own (connections) has '*' in the path.
  */
-function leaves(array $node, string $path = ''): array
+function leaves(array $node, string $path = '', bool $project = false): array
 {
 	$out = [];
+	$project = $project || !empty($node['x-project']);
 	foreach ($node['properties'] ?? [] as $name => $child) {
 		$full = $path === '' ? (string) $name : "$path.$name";
 		if (is_array($child['additionalProperties'] ?? null)) {
-			$out += leaves($child['additionalProperties'], "$full.*");
+			$out += leaves($child['additionalProperties'], "$full.*", $project || !empty($child['x-project']));
 		} else {
-			$out += isset($child['properties']) ? leaves($child, $full) : [$full => $child];
+			$out += isset($child['properties']) ? leaves($child, $full, $project) : [$full => $child + ['_project' => $project || !empty($child['x-project'])]];
 		}
 	}
 	return $out;
@@ -82,55 +82,41 @@ $packages = dirname(__DIR__, 2);
 
 // ---- the definitions themselves
 $definitions = [];
-$all = [];
 $flat = [];
 foreach (PACKAGES as $package) {
-	foreach (FILES as $file) {
-		$path = "$packages/$package/config/$file.schema.json";
-		if (!is_file($path)) {
-			continue;
-		}
-		$json = json_decode((string) file_get_contents($path), true);
-		check("$package/$file is JSON Schema 2020-12", is_array($json)
-			&& ($json['$schema'] ?? '') === 'https://json-schema.org/draft/2020-12/schema' && ($json['type'] ?? '') === 'object');
-		$used = [];
-		keywords($json, $used);
-		$unknown = array_diff(array_keys($used), KEYWORDS);
-		check("$package/$file uses known keywords only", $unknown === [], implode(', ', $unknown));
-		$definitions[$package][$file] = $json;
-		foreach (leaves($json) as $key => $leaf) {
-			$all[$package][$key][] = $file;
-			$leaf['_file'] = $file;
-			$flat[$package][$key] = $leaf;
-		}
-	}
+	$path = "$packages/$package/config/config.schema.json";
+	check("$package has one definition", is_file($path) && glob("$packages/$package/config/*.schema.json") === [$path]);
+	$json = json_decode((string) file_get_contents($path), true);
+	check("$package is JSON Schema 2020-12", is_array($json)
+		&& ($json['$schema'] ?? '') === 'https://json-schema.org/draft/2020-12/schema' && ($json['type'] ?? '') === 'object');
+	$used = [];
+	keywords($json, $used);
+	$unknown = array_diff(array_keys($used), KEYWORDS);
+	check("$package uses known keywords only", $unknown === [], implode(', ', $unknown));
+	check("$package has a title and a description", ($json['title'] ?? '') !== '' && ($json['description'] ?? '') !== '');
+	$definitions[$package] = $json;
+	$flat[$package] = leaves($json);
 }
 
-check('system has match, project, machine, local', array_keys($definitions['system']) === FILES);
-check('match only in system', !isset($definitions['db']['match']) && !isset($definitions['relay']['match']));
-
-$twice = [];
-$misplaced = [];
+$wrong = [];
 foreach ($flat as $package => $keys) {
 	foreach ($keys as $key => $leaf) {
-		if (count($all[$package][$key]) > 1) {
-			$twice[] = "$package.$key";
-		}
-		if (!empty($leaf['writeOnly']) !== ($leaf['_file'] === 'local')) {
-			$misplaced[] = "$package.$key";
+		if (!empty($leaf['writeOnly']) && $leaf['_project']) {
+			$wrong[] = "$package.$key is a secret of the project";
 		}
 		if (isset($leaf['default']) && !typeOk($leaf['default'], $leaf)) {
-			$misplaced[] = "$package.$key default";
+			$wrong[] = "$package.$key default";
+		}
+		if (!empty($leaf['x-overridable']) && !$leaf['_project']) {
+			$wrong[] = "$package.$key: only a value of the project can be overridden";
 		}
 	}
 }
-check('every key is in exactly one definition', $twice === [], implode(', ', $twice));
-check('secrets in local, and only secrets', $misplaced === [], implode(', ', $misplaced));
-check('reserved in ini', $definitions['system']['project']['properties']['ini']['propertyNames']['not']['enum'] === ['error_log', 'display_errors', 'error_reporting']);
-foreach (['driver', 'host', 'port', 'name', 'user'] as $key) {
-	check("a connection's $key may be overridden, the setup writes it to local", ($flat['db']["connections.*.$key"]['x-overridable'] ?? false) === true);
-}
-check('every project has the connection main', $definitions['db']['machine']['properties']['connections']['required'] === ['main']);
+check('secrets belong to the installation, defaults fit, overrides only of the project', $wrong === [], implode(', ', $wrong));
+check('the installation is named', ($definitions['system']['properties']['instance']['x-mandatory'] ?? '') === 'input' && in_array('instance', $definitions['system']['required'] ?? [], true));
+check('reserved in ini', $definitions['system']['properties']['ini']['propertyNames']['not']['enum'] === ['error_log', 'display_errors', 'error_reporting']);
+check('ini and constants are the project\'s', !empty($definitions['system']['properties']['ini']['x-project']) && !empty($definitions['system']['properties']['constants']['x-project']));
+check('every project has the connection main', $definitions['db']['properties']['connections']['required'] === ['main']);
 check('mysql is the default engine', $flat['db']['connections.*.driver']['default'] === 'mysql');
 
 // ---- what is orphaned is said by the definitions: everything the code reads has to be in them
@@ -158,7 +144,7 @@ check("$reads reads in the code are defined", $reads > 5 && $strays === []);
 
 // ---- the real files, where their keys lie today
 $projects = glob(dirname($packages) . '/projects/*/config/*.json') ?: [];
-$files = array_values(array_filter($projects, static fn(string $f): bool => str_ends_with($f, 'config.json') || basename($f) === 'config.local.json'));
+$files = array_values(array_filter($projects, static fn(string $f): bool => in_array(basename($f), ['config.json', 'config.local.json'], true)));
 if ($files === []) {
 	echo "skipped: no projects next to the packages\n";
 	exit(0);
@@ -210,6 +196,6 @@ foreach ($files as $file) {
 check(count($files) . ' config files: every key is defined', $unknown === [], implode(', ', array_keys($unknown)));
 check('every value has the defined type', $wrongType === [], implode(', ', array_keys($wrongType)));
 foreach ($exposed as $key => $count) {
-	echo "note: $key lies outside of local in $count files (step 6)\n";
+	echo "note: $key lies in config.json in $count files\n";
 }
 echo "all fine\n";

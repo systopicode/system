@@ -760,10 +760,9 @@ body:has(> .projectTemplatesMenu.is-sheet)::after{
 .envSettings .envValue.is-empty { color:var(--cmsMuted); font-family:inherit; }
 .envSettings tr.is-readonly td.envLabel { color:var(--cmsMuted); }
 :is(.envSettings, .envLegend) .envChip { display:inline-block; padding:.1rem .5rem; border-radius:999px; border:1px solid var(--cmsLine); font-size:.6875rem; font-weight:600; line-height:1.4; white-space:nowrap; color:var(--cmsMuted); }
-:is(.envSettings, .envLegend) { --envProject:#2563eb; --envInstance:#15803d; --envLocal:#c0262f; }
-html[data-mode="dark"] :is(.envSettings, .envLegend) { --envProject:#7aa7ff; --envInstance:#5fcf87; --envLocal:#ff7b7b; }
+:is(.envSettings, .envLegend) { --envProject:#2563eb; --envLocal:#15803d; }
+html[data-mode="dark"] :is(.envSettings, .envLegend) { --envProject:#7aa7ff; --envLocal:#5fcf87; }
 :is(.envSettings, .envLegend) .envChip.is-project { color:var(--envProject); border-color:currentColor; }
-:is(.envSettings, .envLegend) .envChip.is-instance { color:var(--envInstance); border-color:currentColor; }
 :is(.envSettings, .envLegend) .envChip.is-local { color:var(--envLocal); border-color:currentColor; }
 :is(.envSettings, .envLegend) .envChip.is-none { border-style:dashed; }
 .envSettings .envNote { display:block; margin-top:.2rem; font-size:.6875rem; color:var(--cmsMuted); }
@@ -790,7 +789,6 @@ html[data-mode="dark"] :is(.envSettings, .envLegend) { --envProject:#7aa7ff; --e
 /* where a value is written: the colour of its file, the definition stays grey */
 .envInfo.envPlace { margin-left:.15rem; cursor:pointer; }
 .envInfo.envPlace.is-project { color:var(--envProject); }
-.envInfo.envPlace.is-instance { color:var(--envInstance); }
 .envInfo.envPlace.is-local { color:var(--envLocal); }
 .envInfo.envPlace:hover { box-shadow:0 0 0 2px color-mix(in srgb, currentColor 30%, transparent); }
 .envTip { position:fixed; z-index:10000; padding:.45rem .65rem; border-radius:.4rem; background:var(--cmsTextColor, #1f2937); color:var(--cmsBgColor, #fff); font-size:.75rem; font-weight:400; line-height:1.4; text-transform:none; letter-spacing:0; white-space:normal; box-shadow:0 4px 16px rgb(0 0 0 / 20%); pointer-events:none; }

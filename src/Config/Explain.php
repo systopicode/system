@@ -5,13 +5,12 @@ declare(strict_types=1);
 namespace Systopic\System\Config;
 
 /**
- * Where a value comes from. Sees the layers of one instance side by side,
- * the way Config::package() merges them:
+ * Where a value comes from. Sees the layers of the installation side by
+ * side, the way Config::package() merges them:
  *
  *   package / stage / computed   the definition (default, x-stages, x-computed)
  *   project                      config.json
- *   instance                     <instance>.config.json
- *   local                        config.local.json, when the instance runs here
+ *   local                        config.local.json, this installation
  *
  * The later one wins. Works on plain arrays, the caller reads the files. See
  * .cursor/plans/settings-gui.plan.md.
@@ -19,27 +18,18 @@ namespace Systopic\System\Config;
 final class Explain
 {
     /** the files, in the order they are merged */
-    public const LAYERS = ['project', 'instance', 'local'];
-
-    /** @var array<string, array<string, mixed>> */
-    private static array $definitions = [];
+    public const LAYERS = ['project', 'local'];
 
     /**
-     * All definitions of a package as one tree, in the order project,
-     * machine, local. Every value carries `x-file`, the file it belongs to.
+     * The definition of a package, every value marked with the file it
+     * belongs to (`x-file`), see Schema::load().
      *
      * @return array<string, mixed>
      */
     public static function definition(string $package): array
     {
-        if (isset(self::$definitions[$package])) {
-            return self::$definitions[$package];
-        }
-        $tree = ['type' => 'object', 'properties' => []];
-        foreach (Schema::load($package) as $file => $definition) {
-            $tree = self::join($tree, self::mark($definition, $file));
-        }
-        return self::$definitions[$package] = $tree;
+        $definition = Schema::load($package);
+        return $definition === [] ? ['type' => 'object', 'properties' => []] : $definition;
     }
 
     /** Is this node a value, not a block? Same rule as Schema::children(). */
@@ -196,7 +186,7 @@ final class Explain
     /** for a test */
     public static function reset(): void
     {
-        self::$definitions = [];
+        Schema::reset();
     }
 
     /**
@@ -224,38 +214,5 @@ final class Explain
         }
         array_unshift($out, ['keys' => $keys, 'values' => $values, 'keep' => $keep || ($keys === [] && !empty($node['x-optional']))]);
         return $out;
-    }
-
-    /** every value of a definition gets the file it lies in */
-    private static function mark(array $node, string $file, bool $overridable = false): array
-    {
-        if (self::isValue($node)) {
-            return $node + ['x-file' => $file] + ($overridable ? ['x-overridable' => true] : []);
-        }
-        $overridable = $overridable || !empty($node['x-overridable']);
-        foreach ($node['properties'] ?? [] as $key => $child) {
-            $node['properties'][$key] = self::mark($child, $file, $overridable);
-        }
-        if (is_array($node['additionalProperties'] ?? null)) {
-            $node['additionalProperties'] = self::mark($node['additionalProperties'], $file, $overridable);
-        }
-        return $node;
-    }
-
-    /** two definitions of the same block as one: the first one's order, then what is new */
-    private static function join(array $a, array $b): array
-    {
-        foreach ($b as $key => $value) {
-            if ($key === 'properties') {
-                foreach ($value as $name => $child) {
-                    $a['properties'][$name] = isset($a['properties'][$name]) && !self::isValue($child) ? self::join($a['properties'][$name], $child) : $child;
-                }
-            } elseif ($key === 'additionalProperties' && is_array($value) && is_array($a[$key] ?? null)) {
-                $a[$key] = self::join($a[$key], $value);
-            } elseif (!array_key_exists($key, $a) || in_array($key, ['x-optional'], true) && !empty($value)) {
-                $a[$key] = $value;
-            }
-        }
-        return $a;
     }
 }

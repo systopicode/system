@@ -8,7 +8,7 @@ use Systopic\System\Settings\ProjectForm;
 if ((string) $this->action === 'saveAuthMethod') {
 	$values = \http::values();
 	$text = is_object($values) ? (string) ($values->value ?? '') : (is_array($values) ? (string) ($values['value'] ?? '') : (string) $values);
-	if (!EnvironmentFile::set((string) \http::dataset('file'), 'system', 'auth.defaultSignInMethod', $text)) {
+	if (!EnvironmentFile::set('system', 'auth.defaultSignInMethod', $text)) {
 		\message::error('That change was not saved.');
 		$this->updateView('main');
 	}

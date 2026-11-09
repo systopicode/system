@@ -8,7 +8,7 @@ namespace Systopic\System\Debug;
  * The address that opens a file at a line in syscoder (packages/tools/syscoder,
  * the editor behind the debug links, see tools/.cursor/docs/syscoder.md).
  *
- *   Syscoder::href('/C/laragon/www/packages/system/config/match.schema.json', 8)
+ *   Syscoder::href('/C/laragon/www/packages/system/config/config.schema.json', 8)
  *
  * Null where syscoder is not installed under the document root, as on a
  * stage: a link to it would lead nowhere.

@@ -36,7 +36,7 @@ require $composerAutoload;
 
 /* * **************************** INI DEFAULTS ************************** */
 // Before the config, the setup page runs without one. They come from
-// config/project.schema.json, "ini" in a config file overrides them.
+// config/config.schema.json, "ini" in a config file overrides them.
 // upload_max_filesize and post_max_size are the server's: PHP cannot change
 // them at runtime, the systemcheck says when they are too small.
 \Systopic\System\Config\Config::applyIniDefaults();
@@ -50,9 +50,9 @@ $__phpLog = $__logDir . '/PHP_errors.log';
 ini_set('error_log', $__phpLog);
 
 /* ***************************** INSTANCE + SITE (config/) ************************** */
-// config.json: project constants (and sites without a database);
-// <stage>[.<machine>].config.json: one installation (matches, db, debug);
-// config.local.json: this machine, never synced. See .cursor/docs/config.md
+// config.json: the project (constants, values marked x-project, sites
+// without a database); config.local.json: this installation, its name, its
+// databases and secrets, never synced. See .cursor/docs/config-struktur.md
 // With the token sync writes, the setup comes first: it has to work when the
 // config does not (exits).
 if (\Systopic\System\Setup\Setup::maintenance($__projectRoot, $_SERVER)) {
