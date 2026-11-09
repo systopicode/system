@@ -57,7 +57,63 @@ passt. Site anlegen, umbenennen, löschen schreibt keine Config mehr.
 
 ## Nächste Sitzung
 
-Stand 2026-11-06. **Konzept und beide offenen Themen sind entschieden.** Am Anfang
+### Übergabe 2026-11-09 (Arbeitsplatz-Wechsel)
+
+Am Anfang alle Repos pullen ([git.md](git.md)): system, db, cms, relay, spaceticker.app.
+
+**Was an diesem Tag entstand** (Details in den Abschnitten oben und unten):
+
+- Zwei Dateien statt Instanz-Dateien: config.json (Projekt) und config.local.json (diese
+  Installation, nennt sich selbst über `packages.system.instance`). Ein
+  `config.schema.json` je Paket, `x-project`, `x-tool`, `x-icon`, `x-constant`,
+  `x-entry-name`.
+- Sites über `packages.cms.siteAddress` (Muster), `linkSites` entfallen, die Site-Seite
+  bietet den fehlenden Link an.
+- Settings-Menü: Theme, Tags, dann ein Bereich je Paket (eigene Panels + Configuration,
+  `admin/settings/config/?package=`). Environment-Panel und Datei-Auswahl sind weg, die
+  Blöcke klappen auf. Das Formular schreibt Projektwerte nach config.json.
+- Global Settings aufgelöst: Name, Rechtliches (system), Access, Meta, Sprachen (cms) in
+  config.json, Konstanten per `x-constant`.
+
+**Auf einem neuen Arbeitsplatz zuerst, je Projekt** (`spaceticker.app`, `systopic.net`,
+`smp.de`), im Projektordner:
+
+1. `php vendor/systopic/system/bin/config.php --adopt` — übernimmt die alte Instanz-Datei
+   dieses Rechners (erkennt sie an IP/Pfad, sonst `--adopt=DEV.<maschine>`) in die
+   config.local.json, mit Namen und `packages.cms.siteAddress`. Ohne das zeigt die Site
+   die Einrichtungs-Seite. Erledigt ist nur `DEV.ojhome`.
+2. `… --check`, dann im Admin Settings › System › Configuration ansehen.
+
+**Global Settings importiert** (`--import-settings`): `spaceticker.app` (global.settings.json,
+darin bleibt nur das ungenutzte `CMS_PROVIDER_URL`) und `smp.de` (settings.php, gekürzt,
+Sicherung in `var/config-backup/`). **Nicht `systopic.net`:** Dessen config.json und
+settings.php gehen per Sync nach RC, wo `v1.2.0` läuft und nur die alte Form liest. Der
+Import (er hebt auch config.json in die neue Form) kommt dort am Tag des Tags, zusammen
+mit `--migrate=all`. Vorher zurückgesetzt, die Seiten lesen weiter settings.php.
+
+**Reihenfolge auf Servern:** erst den neuen System-Code, dann Projektdateien, die schon
+umgestellt sind (gekürzte settings.php, config.json mit `packages.*`). Alter Code fände
+Name, Meta und Sprachen sonst nicht. Betrifft STAGING/LIVE von `smp.de` und
+`spaceticker.app`; dort außerdem `--adopt=STAGING` bzw. `--adopt=LIVE`.
+
+**Offen:**
+
+- Rechte je Wert (`x-role`), damit ein cmsAdmin Inhaltswerte, aber nicht Datenbank,
+  Debug und Mail sieht. Bewusst später.
+- Sortierbare Listen und Flaggen der Sprachen im Formular (bisher nur Einträge einer Map).
+- Media Settings: kommt etwas Neues, bis dahin unangetastet.
+- Die alten Instanz-Dateien löschen, wenn alle Maschinen und Stages `--adopt` hinter sich
+  haben. RC liest sie noch.
+- Klassennamen `EnvironmentForm`/`EnvironmentFile` passen nicht mehr, umbenennen ohne
+  Wirkung nach außen.
+- `cms_sites` von systopic.net hat eine zweite Default-Zeile mit leerem Namen (Datenrest).
+- Im CLI-Harness liefern Branch-Sites (`/projects/beautiful-technology.de/public/`) eine
+  leere Ausgabe, über den Webserver laufen sie. Nicht untersucht, ob das vorher auch so
+  war.
+
+### Stand 2026-11-06
+
+**Konzept und beide offenen Themen sind entschieden.** Am Anfang
 alle Repos pullen ([git.md](git.md)).
 
 | Stand | |
