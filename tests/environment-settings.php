@@ -70,16 +70,55 @@ try {
     // saving reconciles the file
     file_put_contents($file, json_encode(['packages'=>['db'=>['connections'=>['main'=>['name'=>'n','pass'=>'in-the-file']]],'system'=>['gone'=>1]]]));
     file_put_contents($root . 'config/DEV.other.config.json', json_encode(['packages'=>['system'=>['gone'=>1]]]));
-    check('a save fills in the defaults of this file', EnvironmentFile::set($F,'system','versionDate','2026-01-01') && $value(['system','debug','debug'])===true && $value(['db','connections','main','host'])==='localhost');
-    check('and takes out what nobody defines, in the own file', $value(['system','gone'])===null);
-    check('another instance keeps it', EnvironmentFile::set('DEV.other.config.json','system','versionDate','2026-01-01') && $value(['system','gone'],'DEV.other.config.json')===1);
+    check('a save writes the change and nothing else', EnvironmentFile::set($F,'system','versionDate','2026-01-01') && $value(['system','debug','debug'])===null && $value(['db','connections','main','host'])===null);
+    check('what nobody defines stays until the click', $value(['system','gone'])===1);
+    check('the click takes it out, in the own file', EnvironmentFile::dropOrphans($F) && $value(['system','gone'])===null);
+    check('another instance keeps it', !EnvironmentFile::dropOrphans('DEV.other.config.json') && $value(['system','gone'],'DEV.other.config.json')===1);
     check('a secret is not moved by a save', $value(['db','connections','main','pass'])==='in-the-file');
-    check('emptying a field brings the default back', EnvironmentFile::set($F,'db','connections.main.host','db.test') && EnvironmentFile::set($F,'db','connections.main.host','') && $value(['db','connections','main','host'])==='localhost');
+    check('emptying a field lets the default count again', EnvironmentFile::set($F,'db','connections.main.host','db.test') && EnvironmentFile::set($F,'db','connections.main.host','') && $value(['db','connections','main','host'])===null);
     check('secrets of another machine are not moved here', !EnvironmentFile::moveSecrets('DEV.other.config.json'));
     check('the click moves them to local', EnvironmentFile::moveSecrets($F) && $value(['db','connections','main','pass'],'config.local.json')!==null && !str_contains(file_get_contents($file),'in-the-file'));
     check('what local had stays', $value(['db','connections','main','pass'],'config.local.json')==='s3cret');
     file_put_contents($local, json_encode(['packages'=>['system'=>['mail'=>['host'=>'in-local']]]]));
     check('a value in the wrong file moves to the instance', EnvironmentFile::moveToInstance('system','mail.host') && $value(['system','mail','host'])==='in-local' && $value(['system','mail','host'],'config.local.json')===null);
+
+    // layers, pruning, blocks
+    file_put_contents($root . 'config/config.json', json_encode(['packages'=>['system'=>['auth'=>['deviceDays'=>90]]]]));
+    file_put_contents($file, json_encode(['packages'=>['system'=>['debug'=>['debug'=>true,'render'=>false],'sysPath'=>'vendor/systopic/system/','auth'=>['deviceDays'=>90],'mail'=>['port'=>587]],'relay'=>['api'=>'http://x','client'=>'/connection/']]]));
+    $layers = EnvironmentFile::layers($F);
+    check('the layers of the running instance', $layers['project']['system']['auth']['deviceDays']===90 && isset($layers['instance']['system']['debug']) && is_array($layers['local']));
+    check('another instance has no local layer', EnvironmentFile::layers('DEV.other.config.json')['local']===null);
+    check('config.json has only itself', EnvironmentFile::layers('config.json')['instance']===null);
+    $pruned = EnvironmentFile::prune($F);
+    check('prune takes what repeats the package, the stage and config.json', is_array($pruned) && in_array('system.debug.debug',$pruned,true) && in_array('system.sysPath',$pruned,true) && in_array('system.auth.deviceDays',$pruned,true) && in_array('relay.client',$pruned,true));
+    check('and keeps what differs', $value(['system','debug','render'])===false && $value(['relay','api'])==='http://x');
+    check('an optional block keeps one value, or its defaults would go with it', $value(['system','mail','port'])===587);
+    check('prune is only for the file running here', EnvironmentFile::prune('DEV.other.config.json')===false);
+    check('an ini value of its own', EnvironmentFile::set($F,'system','ini.session_x','5') && $value(['system','ini','session_x'])==='5');
+    check('but not a reserved one', !EnvironmentFile::set($F,'system','ini.display_errors','1'));
+    check('local overrides start with the value that counts', EnvironmentFile::overrideLocal($F,'system','debug.render') && $value(['system','debug','render'],'config.local.json')===false);
+    check('a secret is no override', !EnvironmentFile::overrideLocal($F,'db','connections.main.pass'));
+    check('a connection is added', EnvironmentFile::addEntry($F,'db','connections','revolver') && $value(['db','connections','revolver','name'])==='revolver');
+    check('a name the definition refuses is not', !EnvironmentFile::addEntry($F,'db','connections','Bad-name') && !EnvironmentFile::addEntry($F,'db','connections','revolver'));
+    check('a block without names is no list of entries', !EnvironmentFile::addEntry($F,'system','mail','x'));
+    check('main cannot be removed', EnvironmentFile::requiredEntry('db',['connections','main']) && !EnvironmentFile::removeBlock($F,'db','connections.main'));
+    check('another one can', EnvironmentFile::removeBlock($F,'db','connections.revolver') && $value(['db','connections','revolver'])===null);
+    check('the fluxo account fills the mail block', \Systopic\System\Settings\Tools\MailTool::reset($F) && $value(['system','mail','host'])===\Systopic\System\Mail\Delivery::DEFAULT_HOST);
+    foreach ([['system', ['auth']], ['system', ['mail']], ['relay', []]] as [$pkg, $at]) {
+        $node = \Systopic\System\Config\Explain::definition($pkg);
+        foreach ($at as $key) $node = $node['properties'][$key] ?? [];
+        check("x-tool of $pkg" . ($at ? '.' . implode('.', $at) : '') . ' is a SettingsTool', is_subclass_of((string) ($node['x-tool'] ?? ''), \Systopic\System\Settings\SettingsTool::class));
+    }
+    check('an optional block goes', EnvironmentFile::removeBlock($F,'system','mail') && $value(['system','mail'])===null);
+    check('a block that is not optional stays', !EnvironmentFile::removeBlock($F,'system','debug'));
+    check('only LIVE is the default', !EnvironmentFile::setDefault($F,true) && EnvironmentFile::setDefault($F,false));
+    file_put_contents($root . 'config/STAGING.config.json', json_encode(['matches'=>[]]));
+    file_put_contents($root . 'config/LIVE.config.json', json_encode(['default'=>true]));
+    check('a config no rule points at may go', EnvironmentFile::deletable('STAGING.config.json') && EnvironmentFile::deleteInstance('STAGING.config.json') && !is_file($root . 'config/STAGING.config.json'));
+    check('not the LIVE default', !EnvironmentFile::deletable('LIVE.config.json'));
+    check('not the one running here', !EnvironmentFile::deletable($F));
+    file_put_contents($root . 'config/RC.config.json', json_encode(['matches'=>[['serverName'=>'rc.test']]]));
+    check('not one with a rule', !EnvironmentFile::deletable('RC.config.json'));
 
     // rules
     check('a rule is added', EnvironmentFile::addMatch($F));

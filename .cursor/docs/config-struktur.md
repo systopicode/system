@@ -270,7 +270,7 @@ Schema, die Zieldatei ergibt sich aus dem Dateinamen, der Besitzer aus dem Pfad.
 | `<paket>/config/project.schema.json` | `config/config.json` | `packages.<paket>` | alle Instanzen |
 | `<paket>/config/machine.schema.json` | `config/<stage>[.<machine>].config.json` | `packages.<paket>` | eine Installation |
 | `<paket>/config/local.schema.json` | `config/config.local.json` | `packages.<paket>` | diese Maschine, weder Git noch Sync |
-| `system/config/header.schema.json` | Instanz-Datei | oberste Ebene | `matches`, `default` |
+| `system/config/match.schema.json` | Instanz-Datei | oberste Ebene | `matches`, `default` |
 
 Beispiele:
 
@@ -314,8 +314,9 @@ ein eigener Prüfer in wenigen Zeilen abdeckt, eine Bibliothek braucht es nicht.
 | Schlüsselwort | Bedeutung |
 |---|---|
 | `type`, `enum`, `default`, `minimum`, `maximum`, `pattern`, `format` | Standard |
-| `title`, `description` | Standard; Beschriftung und Hilfetext im Admin |
-| `required`, `items`, `minItems`, `additionalProperties` | Standard; `additionalProperties: true` = offener Block wie `ini` |
+| `title`, `description` | Standard; Beschriftung und Hilfetext im Admin. Jeder Hilfetext steht hier, nicht im Code: bei Block und Wert (auch einer Rules-Spalte) als (i) mit Tooltip |
+| `required`, `items`, `minItems`, `additionalProperties` | Standard; `additionalProperties: true` = offener Block wie `ini`, ein Schema = Block mit Namen (`connections`), `required` darin = Einträge, die bleiben (`main`) |
+| `propertyNames` | Standard; bei einem Block mit Namen: was ein Name sein darf (`pattern`, `description` als Hinweis). Nur dann bietet der Admin „New …“ an |
 | `writeOnly` | Standard; Passwortfeld, Wert wird nie angezeigt oder geloggt |
 | `x-mandatory` | `"generate"`: entsteht bei Bedarf (`auth.secret`). `"input"`: muss jemand eintragen, der Admin fragt danach (`relay.secret` muss zum Hub passen) |
 | `x-stages` | Default je Stage: `{ "DEV": true }` |
@@ -324,8 +325,49 @@ ein eigener Prüfer in wenigen Zeilen abdeckt, eine Bibliothek braucht es nicht.
 | `x-overridable` | darf in einer später geladenen Datei abweichen (`ini.*`, die Zugangsdaten einer Verbindung) |
 | `x-options` | Auswahl zur Laufzeit, zum Beispiel `"sites"` aus `cms_sites` |
 | `x-backup` | siehe [backup-config.md](backup-config.md) |
+| `x-tool` | an einem Block: Klasse, die `Settings\SettingsTool` umsetzt. Sie zeigt unter den Werten, was mehr ist als ein Wert (Testmail, Sign-in-Key, Hub), und nimmt ihre Aufrufe an. Das Paket bringt sie mit: `system` `Tools\MailTool` und `Tools\AuthTool`, `relay` `Settings\HubTool` |
+| `x-entry-name` | an einem Wert eines Eintrags: ein neuer Eintrag beginnt mit seinem Namen darin (eine Verbindung `revolver` mit der Datenbank `revolver`) |
 
 ### Formular aus dem Schema
+
+Jeder Wert und jeder Abschnitt trägt ein graues (i) für die Definition. Ein
+Wert trägt dazu ein farbiges (i) je Datei, in der er steht: blau config.json,
+grün die Instanz-Datei, rot config.local.json. Deren Tooltip zeigt, was die
+Datei sagt (bei Secrets nur „set“). Abschnitte haben kein solches (i), ihre
+Werte können aus verschiedenen Dateien kommen. Die Herkunfts-Chips tragen
+dieselben Farben.
+
+Für Superuser, wo syscoder liegt (DEV), öffnet ein Klick auf ein (i) die
+Stelle in syscoder, je an der Zeile: das graue die Definition, ein farbiges
+den Wert in seiner Datei. Ein Secret öffnet sich nicht. Die Zeile liefert
+`Config\JsonLines`, das den Text neben `json_decode()` noch einmal durchgeht;
+der Link kommt aus `Debug\Syscoder`.
+
+Jeder Block (`ini`, `constants`, `auth`, eine Verbindung …) ist ein Kasten
+mit eigener Tabelle; die Überschrift ist deren erste Zeile (`th` über alle
+Spalten, grau, im `tbody`, weil das Handy `thead` ausblendet). Erst die Werte
+des Blocks, dann seine Unterblöcke als Kästen darin, eingerückt. Der Pfad
+(`packages.system.constants.…`) und die Beschreibung stehen im Tooltip des
+grauen (i), nicht in der Zeile, bei Paket, Block, Eintrag und Wert gleich.
+Sichtbar unter einer Überschrift bleiben nur `"//"`-Notizen der Dateien.
+Alle Kästen kommen aus einer Funktion (`EnvironmentForm::block()`): ein Block
+mit Werten (`mail`), ein Block mit Namen (`connections`) und jeder Eintrag
+darin. Was neben dem Titel steht (optional, Remove), entscheidet
+`aside()` für alle gleich. Ein Paket kennt das Formular nirgends beim Namen:
+Was ein Block mehr braucht, kommt über `x-tool`. Ein Paket hat oben keine losen
+Werte: Sie stehen im Block „General“, was keine Definition kennt im Block
+„Defined nowhere“. Eine Tabelle ist so breit wie ihr Inhalt, die Spalten
+rechnet der Browser je Tabelle (`table-layout:auto`, keine %-Breiten); Felder
+zählen mit dem, was in ihnen steht (`field-sizing:content`), leer sind sie
+mindestens 8rem breit.
+
+Die Hauptabschnitte (Instance, je Paket, fremde Pakete, Rest) sind
+zugeklappt, bis man sie öffnet; offen bleibt, was offen war (Panel-State
+`open`, Aufruf `fold`). Die Kopfzeile trägt die Auswahl der Config (State
+`file`, Aufruf `pick`), „Open all“/„Close all“ und „Check“: was zu prüfen ist
+(Wiederholtes, Unbekanntes, Falschplatziertes, Secrets, Fehlendes) als
+Lightbox (`035_environment/check/`), mit der Anzahl am Knopf. Die Legende der
+Herkunft steht unten in der Navi der Settings.
 
 | Schema | Feld |
 |---|---|
@@ -379,8 +421,7 @@ Die letzte Array-Zeile ersetzt `setMatch`, `addMatch` und `removeMatch`:
 					"site": {
 						"title": "Site",
 						"type": "string",
-						"x-options": "sites",
-						"x-backup": "stage"
+						"x-options": "sites"
 					}
 				}
 			}
@@ -401,40 +442,48 @@ nicht gespeichert werden.
 
 ## Abgleich
 
+> Geändert am 2026-11-07: Speichern trägt keine Defaults mehr ein, Verwaistes geht nur per
+> Klick, das Admin zeigt die Herkunft je Wert (`Config\Explain`). Siehe
+> [settings-gui.plan.md](../plans/settings-gui.plan.md).
+
 `Config\Reconcile` vergleicht eine Datei mit den Definitionen:
 
 | Status | Bedeutung | Admin | Beim Speichern |
 |---|---|---|---|
 | ok | definiert und vorhanden | Wert, Markierung wenn ≠ Default | bleibt |
-| fehlt | definiert, nicht in der Datei | Default, als „nicht gespeichert“ markiert | wird eingetragen, außer `x-optional`, `x-computed`, Secrets |
-| verwaist | unter `packages.<x>`, `x` installiert, nicht definiert | durchgestrichen | Regeln unten |
+| fehlt | definiert, nicht in der Datei | Wert der Ebene darunter, mit Herkunft (`Package`, `Project` …) | bleibt draußen, der Default kommt zur Laufzeit aus der Definition |
+| überflüssig | in der Datei, gleich dem Wert darunter | „same as below“ | bleibt; „Remove them“ bzw. `--prune-defaults` nimmt ihn heraus |
+| verwaist | unter `packages.<x>`, `x` installiert, nicht definiert | durchgestrichen, am Ende des Paket-Blocks | bleibt bis zum Klick, Regeln unten |
 | fremd | unter `packages.<x>`, `x` nicht installiert | Hinweis | bleibt |
 | falsche Datei | gehört in eine andere Datei, kein `x-overridable` | „gehört nach …“, verschieben per Klick | bleibt |
 | Secret ungeschützt | `writeOnly`-Wert außerhalb von local | Warnung | bleibt |
 
-**Wann:** beim Speichern, und nur die gespeicherte Datei. Nie beim Booten. Nicht
+**Wann:** im Admin beim Anzeigen, und nur die gezeigte Datei. Gespeichert wird nur die
+Änderung. Nie beim Booten. Nicht
 in `composer update`, das änderte alle Instanz-Dateien auf einmal und erzeugte
 Konflikte mit Lars. Der Hook **meldet** nur, `bin/config.php --check` ebenso. Die
 Defaults wirken trotzdem sofort, weil sie zuunterst im Baum liegen.
 
-**Defaults nur in der zuständigen Datei.** Stünde einer auch in einer später
-geladenen Datei, würde er die Werte darunter verdecken.
+**Defaults stehen in keiner Datei.** Bis 2026-11-07 trug jedes Speichern sie ein. Diese
+Kopien blieben stehen, wenn das Paket den Default änderte, und waren von bewusst gesetzten
+Werten nicht zu unterscheiden. Das Admin zeigt sie jetzt als „same as below“.
 
 **Löschen ist enger als Ergänzen:**
 
 | Datei | Verwaiste Schlüssel |
 |---|---|
-| eigene Instanz-Datei | werden beim Speichern gelöscht, vorher angezeigt |
+| eigene Instanz-Datei | per Klick, einzeln oder alle |
 | fremde Instanz-Datei | bleiben. Der DEV-Code kann neuer sein als der auf LIVE (Tag `v1.2.0` ist älter als `main`) |
-| `config.json` | nur per Klick. Die Datei gilt für alle Stages, derselbe Grund |
-| `config.local.json` | nie. Die Datei liegt nirgends sonst |
+| `config.json` | nur Hinweis. Die Datei gilt für alle Stages, derselbe Grund |
+| `config.local.json` | per Klick, mit Bestätigung. Die Datei liegt nirgends sonst |
 
 Offene Blöcke und `"//"`-Schlüssel werden nie gelöscht.
 
 **Grenzen:**
 
-- Ein eingetragener Default bleibt stehen, auch wenn das Paket ihn ändert. Der
-  Admin markiert „≠ default“ und bietet „reset“ an. Ein geleertes Feld setzt ebenso zurück.
+- Ein Wert in der Datei bleibt stehen, auch wenn das Paket seinen Default ändert. Das Admin
+  zeigt daneben, was darunter gilt, und bietet das Zurücksetzen an. Ein geleertes Feld
+  setzt ebenso zurück.
 - „Verschieben per Klick“ gibt es für Secrets und von local in die Instanz-Datei.
   `config.json` schreibt das Admin nicht, dort bleibt es beim Hinweis.
 - Dateien mit echten Kommentaren (JSONC) werden nur gemeldet, wie heute.

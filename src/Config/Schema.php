@@ -74,6 +74,36 @@ final class Schema
         return $tree;
     }
 
+    /**
+     * The top of an instance file (`matches`, `default`): system/config/match.schema.json.
+     *
+     * @return array<string, mixed>
+     */
+    public static function matching(): array
+    {
+        if (isset(self::$loaded['#match'])) {
+            return self::$loaded['#match']['match'];
+        }
+        $dir = self::directory('system') ?? str_replace('\\', '/', dirname(__DIR__, 2));
+        $file = "$dir/config/match.schema.json";
+        $definition = is_file($file) ? json_decode((string) file_get_contents($file), true) : null;
+        self::$loaded['#match'] = ['match' => is_array($definition) ? $definition : []];
+        return self::$loaded['#match']['match'];
+    }
+
+    /**
+     * The definition file itself, `<package>/config/<name>.schema.json`, for
+     * a look into it (EnvironmentForm links it, at the line). Null when the
+     * package or the file is not there.
+     */
+    public static function file(string $package, string $name): ?string
+    {
+        $dir = self::directory($package) ?? ($package === 'system' ? str_replace('\\', '/', dirname(__DIR__, 2)) : null);
+        $file = $dir === null ? '' : "$dir/config/$name.schema.json";
+        // vendor/composer/../systopic/system is a link: the file behind it is the one to edit
+        return $file !== '' && is_file($file) ? (realpath($file) ?: $file) : null;
+    }
+
     /** Is the package there on this installation? */
     public static function installed(string $package): bool
     {
@@ -140,10 +170,27 @@ final class Schema
         foreach (self::load($package) as $file => $definition) {
             $node = self::node($definition, explode('.', $path));
             if ($node !== null && !isset($node['properties']) && !is_array($node['additionalProperties'] ?? null)) {
+                // a block that may be overridden passes it on (`ini`)
+                if (empty($node['x-overridable']) && self::overridableAbove($definition, explode('.', $path))) {
+                    $node['x-overridable'] = true;
+                }
                 return [$node, $file];
             }
         }
         return null;
+    }
+
+    /** @param list<string> $keys */
+    private static function overridableAbove(array $node, array $keys): bool
+    {
+        array_pop($keys);
+        foreach ($keys as $key) {
+            $node = $node['properties'][$key] ?? (is_array($node['additionalProperties'] ?? null) ? $node['additionalProperties'] : []);
+            if (!empty($node['x-overridable'])) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**

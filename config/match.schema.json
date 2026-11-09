@@ -1,0 +1,63 @@
+{
+	"$schema": "https://json-schema.org/draft/2020-12/schema",
+	"title": "Installation",
+	"description": "Top of an instance file. Selects the instance before anything is merged, so it stays outside of packages.*",
+	"type": "object",
+	"properties": {
+		"matches": {
+			"title": "Rules",
+			"description": "Detect this machine and define the site of a request. One rule has to match. A rule matches if all set fields apply.",
+			"type": "array",
+			"default": [],
+			"items": {
+				"title": "Rule",
+				"description": "Every field that is set has to match. A field with several values, separated by commas, matches when one of them does. The most specific rule of all instances wins: an exact host before a wildcard, a host before IP and folder, a longer path before a shorter one.",
+				"type": "object",
+				"additionalProperties": false,
+				"anyOf": [
+					{ "required": ["serverName"] },
+					{ "required": ["serverIp"] },
+					{ "required": ["rootDir"] },
+					{ "required": ["path"] }
+				],
+				"properties": {
+					"serverName": {
+						"title": "Host",
+						"description": "The host name the browser asks for (SERVER_NAME, HTTP_HOST). * as a wildcard: *.systopic.net. A rule with a host is an address of its site, the first one the canonical one.",
+						"type": ["string", "array"],
+						"items": { "type": "string" }
+					},
+					"serverIp": {
+						"title": "IP",
+						"description": "The address of the server (SERVER_ADDR): what the browser calls when it calls an IP, the socket IP on the command line.",
+						"type": ["string", "array"],
+						"items": { "type": "string", "format": "ip" }
+					},
+					"rootDir": {
+						"title": "Project folder",
+						"description": "The folder the project lies in on this machine. A junction matches its target as well.",
+						"type": "string"
+					},
+					"path": {
+						"title": "URL path",
+						"description": "The start of the URL path the project answers under, beginning with /. /projects/x/ also matches /projects/x/public/. Skipped on the command line, where there is no URL.",
+						"type": "string",
+						"pattern": "^/"
+					},
+					"site": {
+						"title": "Site",
+						"description": "Set for installations with several sites: the site a request gets when this rule matches. Empty: the default site.",
+						"type": "string",
+						"x-options": "sites"
+					}
+				}
+			}
+		},
+		"default": {
+			"title": "Default instance",
+			"description": "Taken when no rule matches. LIVE only.",
+			"type": "boolean",
+			"default": false
+		}
+	}
+}

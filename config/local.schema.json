@@ -23,7 +23,7 @@
 			"type": "object",
 			"x-optional": true,
 			"properties": {
-				"password": { "title": "Password", "type": "string", "writeOnly": true, "x-mandatory": "input" }
+				"password": { "title": "Password", "description": "The password of the SMTP user. Only on this machine, never in git or the sync.", "type": "string", "writeOnly": true, "x-mandatory": "input" }
 			}
 		}
 	}

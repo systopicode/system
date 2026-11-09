@@ -160,18 +160,7 @@ class Panel extends CmsPanel {
 	 * under the document root, as on a stage.
 	 */
 	public function syscoder(string $file, int $line): ?string {
-		static $base = FALSE;
-		if ($base === FALSE) {
-			$base = NULL;
-			$root = rtrim(str_replace('\\', '/', (string) ($_SERVER['DOCUMENT_ROOT'] ?? '')), '/');
-			foreach (['/packages/tools/syscoder/', '/_tools/syscoder/'] as $candidate) {
-				if ($root !== '' && is_file($root . $candidate . 'index.php')) {
-					$base = $candidate;
-					break;
-				}
-			}
-		}
-		return $base === NULL ? NULL : $base . '?file=' . rawurlencode(\fs::toInternal($file)) . '&line=' . max(1, $line);
+		return \Systopic\System\Debug\Syscoder::href($file, $line);
 	}
 
 	/**

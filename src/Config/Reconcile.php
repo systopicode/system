@@ -8,28 +8,27 @@ namespace Systopic\System\Config;
  * One config file against the definitions of the packages. See
  * .cursor/docs/config-struktur.md, "Abgleich".
  *
- *   missing    defined, not in the file: goes in when the file is saved
- *   orphan     below an installed package, defined nowhere: goes when the
- *              instance file of this very installation is saved. Another
- *              instance may run newer or older code, config.local.json lies
- *              nowhere else, config.json counts for every stage.
+ *   orphan     below an installed package, defined nowhere: goes by a click,
+ *              in the instance file of this very installation and in
+ *              config.local.json. Another instance may run newer or older
+ *              code, config.json counts for every stage.
  *   foreign    below a package that is not installed here: stays
  *   misplaced  belongs into another file: shown, moved by a click
  *   exposed    a secret outside of config.local.json: shown, moved by a click
  *
- * Runs when a file is saved, for that file. Never at boot, and not in
+ * A save writes what was changed and nothing else: no defaults go into a
+ * file, they lie at the bottom of the tree (Schema). Never at boot, and not in
  * `composer update`: that would change every instance file at once.
  */
 final class Reconcile
 {
-    public const MISSING = 'missing';
     public const ORPHAN = 'orphan';
     public const FOREIGN = 'foreign';
     public const MISPLACED = 'misplaced';
     public const EXPOSED = 'exposed';
 
     /** the packages that may define something */
-    private const PACKAGES = ['system', 'db', 'cms', 'relay'];
+    public const PACKAGES = ['system', 'db', 'cms', 'relay'];
 
     /**
      * @param array<string, mixed> $data the file, in either layout
@@ -64,39 +63,24 @@ final class Reconcile
                 }
             }
         }
-        foreach (self::PACKAGES as $package) {
-            $tree = (array) ($packages[$package] ?? []);
-            $filled = self::filled($file, $package, $tree);
-            foreach (array_keys(array_diff_key(self::leaves($filled), self::leaves($tree))) as $path) {
-                $add(self::MISSING, $package, (string) $path);
-            }
-        }
         return $found;
     }
 
     /**
-     * The file as it is to be saved: in the new layout, with the defaults of
-     * this file, and without what is orphaned when it is `$own`. Keeps the
-     * order, what is new comes last in its block.
+     * The file without what nobody defines. `$paths` limits it to these
+     * (`package.path`), null takes every orphan.
      *
      * @param array<string, mixed> $data
+     * @param list<string>|null    $paths
      * @return array<string, mixed>
      */
-    public static function apply(string $file, array $data, bool $own): array
+    public static function withoutOrphans(string $file, array $data, ?array $paths = null): array
     {
         $data = Layout::lift($data);
-        foreach (self::PACKAGES as $package) {
-            $tree = (array) ($data['packages'][$package] ?? []);
-            $filled = self::filled($file, $package, $tree);
-            if ($filled !== [] && $filled !== $tree) {
-                $data['packages'][$package] = $filled;
-            }
-        }
-        if ($own && self::kind($file) === 'machine') {
-            foreach (self::findings($file, $data) as $finding) {
-                if ($finding['status'] === self::ORPHAN) {
-                    Tree::drop($data, ['packages', $finding['package'], ...explode('.', $finding['path'])]);
-                }
+        foreach (self::findings($file, $data) as $finding) {
+            $name = $finding['package'] . '.' . $finding['path'];
+            if ($finding['status'] === self::ORPHAN && ($paths === null || in_array($name, $paths, true))) {
+                Tree::drop($data, ['packages', $finding['package'], ...explode('.', $finding['path'])]);
             }
         }
         return $data;
@@ -137,17 +121,6 @@ final class Reconcile
             'config.local.json' => 'local',
             default => 'machine',
         };
-    }
-
-    /** Defaults only in the file they belong to: anywhere later they would cover the values below. */
-    private static function filled(string $file, string $package, array $tree): array
-    {
-        $kind = self::kind($file);
-        $definition = Schema::load($package)[$kind] ?? null;
-        if ($kind === 'local' || $definition === null || (!empty($definition['x-optional']) && $tree === [])) {
-            return $tree;
-        }
-        return Schema::fill($definition, $tree, strtoupper(explode('.', $file)[0]));
     }
 
     /**

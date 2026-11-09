@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Systopic\System\Settings;
 
 use Systopic\System\Config\Config;
+use Systopic\System\Config\Explain;
 use Systopic\System\Config\FileWriter;
 use Systopic\System\Config\Layout;
 use Systopic\System\Config\Reconcile;
@@ -25,10 +26,13 @@ final class EnvironmentFile
     public const LOCAL = 'config.local.json';
 
     /** @var list<string> */
-    public const MATCH = ['serverName', 'serverIp', 'path', 'site'];
+    public const MATCH = ['serverName', 'serverIp', 'rootDir', 'path', 'site'];
 
-    /** the fields resetMail() fills in */
-    private const MAIL_FIELDS = ['host', 'port', 'secure', 'user', 'from', 'fromName', 'testMode', 'testRecipient'];
+    /** the file of the project, read here, never written */
+    public const PROJECT = 'config.json';
+
+    /** in ini, as in the definition: they would undo the debug switch */
+    private const RESERVED_INI = ['error_log', 'display_errors', 'error_reporting'];
 
     public static function directory(): ?string
     {
@@ -154,7 +158,7 @@ final class EnvironmentFile
     /** One field from a form. Empty: the value goes, and what lies below it counts again. */
     public static function set(string $file, string $package, string $path, string $raw): bool
     {
-        $field = Schema::field($package, $path);
+        $field = Schema::field($package, $path) ?? self::freeField($package, $path);
         if ($field === null) {
             return false;
         }
@@ -186,22 +190,6 @@ final class EnvironmentFile
         }
         return self::update($file, static function (array $data) use ($keys, $value): array {
             Tree::put($data, $keys, $value);
-            return $data;
-        });
-    }
-
-    public static function resetMail(string $file): bool
-    {
-        return self::update($file, static function (array $data): array {
-            $mail = (array) Tree::get($data, ['packages', 'system', 'mail']);
-            Tree::put($data, ['packages', 'system', 'mail'], array_diff_key($mail, array_flip(self::MAIL_FIELDS)) + [
-                'host' => \Systopic\System\Mail\Delivery::DEFAULT_HOST,
-                'port' => 587,
-                'secure' => 'tls',
-                'user' => \Systopic\System\Mail\Delivery::DEFAULT_SENDER,
-                'from' => \Systopic\System\Mail\Delivery::DEFAULT_SENDER,
-                'fromName' => 'fluxo',
-            ]);
             return $data;
         });
     }
@@ -378,6 +366,262 @@ final class EnvironmentFile
         });
     }
 
+    /**
+     * The layers of an instance, each the `packages` of its file: config.json,
+     * the instance file, and config.local.json when the instance runs here.
+     * For config.json itself only the project.
+     *
+     * @return array{project: array<string, mixed>, instance: array<string, mixed>|null, local: array<string, mixed>|null}
+     */
+    public static function layers(string $file): array
+    {
+        $project = (array) (self::readProject()['packages'] ?? []);
+        if ($file === self::PROJECT) {
+            return ['project' => $project, 'instance' => null, 'local' => null];
+        }
+        return [
+            'project' => $project,
+            'instance' => (array) (self::read($file)['packages'] ?? []),
+            'local' => self::here($file) ? (array) (self::read(self::LOCAL)['packages'] ?? []) : null,
+        ];
+    }
+
+    /** DEV, STAGING, LIVE …; empty for config.json */
+    public static function stage(string $file): string
+    {
+        return $file === self::PROJECT || $file === self::LOCAL ? '' : strtoupper(explode('.', $file)[0]);
+    }
+
+    /**
+     * config.json in the new layout.
+     *
+     * @return array<string, mixed>
+     */
+    public static function readProject(): array
+    {
+        $dir = self::directory();
+        $path = $dir === null ? '' : $dir . DIRECTORY_SEPARATOR . self::PROJECT;
+        if ($path === '' || !is_file($path)) {
+            return [];
+        }
+        try {
+            $data = json_decode((string) file_get_contents($path), true, 512, JSON_THROW_ON_ERROR);
+        } catch (\JsonException) {
+            return [];
+        }
+        return is_array($data) ? Layout::lift($data) : [];
+    }
+
+    /**
+     * Takes out of the instance file what only repeats what lies below it.
+     * Only the file running here: another one may run other code, with other
+     * defaults.
+     *
+     * @return list<string>|false what went
+     */
+    public static function prune(string $file): array|false
+    {
+        if ($file === self::LOCAL || !self::here($file)) {
+            return false;
+        }
+        $layers = self::layers($file);
+        $layers['local'] = null;
+        $found = Explain::redundantIn($layers, 'instance', self::stage($file));
+        if ($found === []) {
+            return [];
+        }
+        $ok = self::update($file, static function (array $data) use ($found): array {
+            foreach ($found as $value) {
+                Tree::drop($data, ['packages', $value['package'], ...explode('.', $value['path'])]);
+            }
+            return $data;
+        });
+        return $ok ? array_map(static fn(array $v): string => $v['package'] . '.' . $v['path'], $found) : false;
+    }
+
+    /**
+     * Takes out what nobody defines: all of it, or one (`package.path`). In
+     * the instance file running here and in config.local.json. Another
+     * instance may run code that still reads it.
+     */
+    public static function dropOrphans(string $file, ?string $only = null): bool
+    {
+        if ($file !== self::LOCAL && !self::here($file)) {
+            return false;
+        }
+        $name = basename($file);
+        return self::update($file, static fn(array $data): array => Reconcile::withoutOrphans($name, $data, $only === null ? null : [$only]));
+    }
+
+    /**
+     * May this instance file go? Not while a rule points at it, not the LIVE
+     * default, not the one running here.
+     */
+    public static function deletable(string $file): bool
+    {
+        if ($file === self::LOCAL || $file === self::PROJECT || self::path($file) === null || self::here($file)) {
+            return false;
+        }
+        $data = self::read($file);
+        $rules = array_filter((array) ($data['matches'] ?? []), static fn($rule): bool => is_array($rule) && array_filter($rule, static fn($v): bool => $v !== '' && $v !== []) !== []);
+        return $rules === [] && !(self::stage($file) === 'LIVE' && !empty($data['default']));
+    }
+
+    public static function deleteInstance(string $file): bool
+    {
+        $path = self::path($file);
+        return $path !== null && self::deletable($file) && unlink($path);
+    }
+
+    /** `default` of an instance file: taken when no rule matches. LIVE only. */
+    public static function setDefault(string $file, bool $on): bool
+    {
+        if ($file === self::LOCAL || ($on && self::stage($file) !== 'LIVE')) {
+            return false;
+        }
+        return self::update($file, static function (array $data) use ($on): array {
+            if ($on) {
+                $data['default'] = true;
+            } else {
+                unset($data['default']);
+            }
+            return $data;
+        });
+    }
+
+    /**
+     * A named entry of a block (`connections.revolver`), when the definition
+     * says what a name may be (`propertyNames`). What is marked `x-entry-name`
+     * starts with the name (a connection: its database).
+     */
+    public static function addEntry(string $file, string $package, string $path, string $name): bool
+    {
+        $node = self::node($package, $path);
+        $pattern = (string) ($node['propertyNames']['pattern'] ?? '');
+        $entry = $node['additionalProperties'] ?? null;
+        $keys = ['packages', $package, ...explode('.', $path), $name];
+        if ($file === self::LOCAL || $pattern === '' || !is_array($entry) || preg_match('~' . str_replace('~', '\~', $pattern) . '~', $name) !== 1 || Tree::get(self::read($file), $keys) !== null) {
+            return false;
+        }
+        $start = [];
+        foreach ($entry['properties'] ?? [] as $key => $field) {
+            if (!empty($field['x-entry-name'])) {
+                $start[$key] = $name;
+            }
+        }
+        return self::update($file, static function (array $data) use ($keys, $start): array {
+            Tree::put($data, $keys, $start === [] ? new \stdClass() : $start);
+            return $data;
+        });
+    }
+
+    /** Is it a named entry the definition requires (`connections.main`)? */
+    public static function requiredEntry(string $package, array $path): bool
+    {
+        $name = array_pop($path);
+        $node = self::node($package, implode('.', $path));
+        return is_array($node['additionalProperties'] ?? null) && in_array($name, (array) ($node['required'] ?? []), true);
+    }
+
+    /**
+     * The definition of a block, by its path; an entry through
+     * additionalProperties, marked `x-entry`. null: nothing defines it.
+     *
+     * @return array<string, mixed>|null
+     */
+    private static function node(string $package, string $path): ?array
+    {
+        $node = Explain::definition($package);
+        foreach ($path === '' ? [] : explode('.', $path) as $key) {
+            $node = $node['properties'][$key] ?? (is_array($node['additionalProperties'] ?? null) ? $node['additionalProperties'] + ['x-entry' => true] : null);
+            if (!is_array($node)) {
+                return null;
+            }
+        }
+        return $node;
+    }
+
+    /**
+     * A block, out of the instance file and, when it runs here, out of
+     * config.local.json too. Only optional blocks and named entries.
+     */
+    public static function removeBlock(string $file, string $package, string $path): bool
+    {
+        if ($file === self::LOCAL) {
+            return false;
+        }
+        $node = self::node($package, $path);
+        if ($node === null || empty($node['x-optional']) && empty($node['x-entry'])) {
+            return false;
+        }
+        if (!empty($node['x-entry']) && self::requiredEntry($package, explode('.', $path))) {
+            return false;
+        }
+        $keys = ['packages', $package, ...($path === '' ? [] : explode('.', $path))];
+        $drop = static function (array $data) use ($keys): array {
+            Tree::drop($data, $keys);
+            return $data;
+        };
+        return self::update($file, $drop) && (!self::here($file) || self::path(self::LOCAL) === null || self::update(self::LOCAL, $drop));
+    }
+
+    /**
+     * This machine takes a value of its own, starting with the one that counts
+     * now. Only what may be overridden, never a secret.
+     */
+    public static function overrideLocal(string $file, string $package, string $path): bool
+    {
+        $field = Schema::field($package, $path) ?? self::freeField($package, $path);
+        if ($field === null || empty($field[0]['x-overridable']) || !empty($field[0]['writeOnly']) || $file === self::LOCAL || !self::here($file)) {
+            return false;
+        }
+        $layers = self::layers($file);
+        $layers['local'] = null;
+        $keys = explode('.', $path);
+        $now = Explain::value($field[0], $layers, [$package, ...$keys], self::stage($file))['value'];
+        return self::updateLocal(static function (array $data) use ($package, $keys, $now): array {
+            Tree::put($data, ['packages', $package, ...$keys], $now ?? '');
+            return $data;
+        });
+    }
+
+    /**
+     * A key of a block that takes anything (`ini`): a string, and it may be
+     * overridden, like the block.
+     *
+     * @return array{0: array<string, mixed>, 1: string}|null
+     */
+    private static function freeField(string $package, string $path): ?array
+    {
+        $keys = explode('.', $path);
+        $key = (string) end($keys);
+        if (count($keys) !== 2 || !Schema::open($package, $path) || preg_match('~^[a-z][a-z0-9_]*$~', $key) !== 1 || in_array($key, self::RESERVED_INI, true)) {
+            return null;
+        }
+        return [['type' => 'string', 'x-overridable' => true], 'project'];
+    }
+
+    /**
+     * The file as it is written, config.json included: for the lines of its
+     * keys (JsonLines). '' when it is not there.
+     */
+    public static function text(string $file): string
+    {
+        $path = self::source($file);
+        return $path === null ? '' : (string) file_get_contents($path);
+    }
+
+    /** where a config file lies, config.json included; null when it is not there */
+    public static function source(string $file): ?string
+    {
+        if ($file !== self::PROJECT) {
+            return self::path($file);
+        }
+        $dir = self::directory();
+        $path = $dir === null ? '' : $dir . DIRECTORY_SEPARATOR . self::PROJECT;
+        return $path !== '' && is_file($path) ? $path : null;
+    }
+
     public static function path(string $file): ?string
     {
         $dir = self::directory();
@@ -418,15 +662,13 @@ final class EnvironmentFile
      *
      * @param callable(array<string, mixed>): ?array<string, mixed> $change null = nothing to write
      */
-    private static function update(string $file, callable $change, bool $unchangedIsFine = false): bool
+    public static function update(string $file, callable $change, bool $unchangedIsFine = false): bool
     {
         $path = self::path($file);
         if ($path === null) {
             return false;
         }
-        $name = basename($file);
-        $own = self::here($file);
-        return FileWriter::locked($path, static function () use ($path, $change, $unchangedIsFine, $name, $own): bool {
+        return FileWriter::locked($path, static function () use ($path, $change, $unchangedIsFine): bool {
             $raw = file_get_contents($path);
             try {
                 $data = $raw === false ? null : json_decode($raw, true, 512, JSON_THROW_ON_ERROR);
@@ -440,8 +682,7 @@ final class EnvironmentFile
             if ($data === null) {
                 return $unchangedIsFine;
             }
-            // the file against the definitions, this file only, see Reconcile
-            $data = Reconcile::apply($name, $data, $own);
+            // the change and nothing else: defaults stay in the definitions
             $json = json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
             return $json !== false && FileWriter::write($path, $json . "\n", 0600);
         });

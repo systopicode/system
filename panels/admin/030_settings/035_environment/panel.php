@@ -21,6 +21,12 @@ class Panel extends SettingsPanel
         $this->label = 'Environment';
     }
 
+    /** open: the main sections open (fold keys), file: the config picked in the header */
+    function getDefaultState()
+    {
+        return (object) ((array) parent::getDefaultState() + ['open' => [], 'file' => '']);
+    }
+
     function onLoad() {}
 
     function onLoadThisClass() {}

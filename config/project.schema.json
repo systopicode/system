@@ -14,19 +14,20 @@
 				"not": { "enum": ["error_log", "display_errors", "error_reporting"] }
 			},
 			"properties": {
-				"max_execution_time": { "title": "Max. execution time", "description": "Seconds", "type": "integer", "minimum": 0, "default": 60 },
-				"memory_limit": { "title": "Memory limit", "type": "string", "default": "1G" },
-				"serialize_precision": { "title": "Serialize precision", "description": "Also applies to json_encode", "type": "integer", "default": 14 },
-				"log_errors": { "title": "Log errors", "type": "boolean", "default": true },
-				"html_errors": { "title": "HTML errors", "type": "boolean", "default": false }
+				"max_execution_time": { "title": "Max. execution time", "description": "Seconds a request may run before PHP stops it. 0: no limit.", "type": "integer", "minimum": 0, "default": 60 },
+				"memory_limit": { "title": "Memory limit", "description": "How much memory one request may take, e.g. 512M or 1G.", "type": "string", "default": "1G" },
+				"serialize_precision": { "title": "Serialize precision", "description": "Digits of floating point numbers in serialize() and json_encode().", "type": "integer", "default": 14 },
+				"log_errors": { "title": "Log errors", "description": "PHP writes its errors to the error log.", "type": "boolean", "default": true },
+				"html_errors": { "title": "HTML errors", "description": "PHP formats the errors it shows as HTML.", "type": "boolean", "default": false }
 			}
 		},
 		"constants": {
 			"title": "Constants",
+			"description": "Defined as PHP constants when the configuration is loaded.",
 			"type": "object",
 			"properties": {
-				"DEFAULT_TABLE_PREFIX": { "title": "Table prefix", "type": "string", "default": "cms" },
-				"PROJECT_NAMESPACE": { "title": "Project namespace", "type": "string" },
+				"DEFAULT_TABLE_PREFIX": { "title": "Table Prefix","description": "Put before the name of every table of the system: cms_nodes.", "type": "string", "default": null },
+				"PROJECT_NAMESPACE": { "title": "Project namespace", "description": "The PHP namespace of the project's classes. Also names its live update channels when the relay has no prefix.", "type": "string" },
 				"ACCOUNT_WHITELIST": {
 					"title": "Allowed mail domains",
 					"description": "Who may create an account. Empty: everybody.",
@@ -38,7 +39,9 @@
 		},
 		"auth": {
 			"title": "Sign-in",
+			"description": "How people sign in, and how long they stay signed in.",
 			"type": "object",
+			"x-tool": "Systopic\\System\\Settings\\Tools\\AuthTool",
 			"properties": {
 				"defaultSignInMethod": {
 					"title": "Default sign-in",

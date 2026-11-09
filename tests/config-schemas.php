@@ -16,11 +16,11 @@ require_once __DIR__ . '/../src/Config/Config.php';
 require_once __DIR__ . '/../src/Config/Layout.php';
 
 const PACKAGES = ['system', 'db', 'relay'];
-const FILES = ['header', 'project', 'machine', 'local'];
+const FILES = ['match', 'project', 'machine', 'local'];
 const KEYWORDS = [
 	'$schema', 'title', 'description', 'type', 'properties', 'required', 'items', 'enum', 'default', 'minimum', 'maximum',
 	'minLength', 'pattern', 'format', 'additionalProperties', 'propertyNames', 'not', 'anyOf', 'writeOnly',
-	'x-mandatory', 'x-stages', 'x-computed', 'x-optional', 'x-overridable', 'x-options', 'x-backup',
+	'x-mandatory', 'x-stages', 'x-computed', 'x-optional', 'x-overridable', 'x-options', 'x-backup', 'x-tool', 'x-entry-name',
 ];
 
 function check(string $label, bool $ok, string $detail = ''): void
@@ -106,8 +106,8 @@ foreach (PACKAGES as $package) {
 	}
 }
 
-check('system has header, project, machine, local', array_keys($definitions['system']) === FILES);
-check('header only in system', !isset($definitions['db']['header']) && !isset($definitions['relay']['header']));
+check('system has match, project, machine, local', array_keys($definitions['system']) === FILES);
+check('match only in system', !isset($definitions['db']['match']) && !isset($definitions['relay']['match']));
 
 $twice = [];
 $misplaced = [];

@@ -27,36 +27,23 @@ check('an empty secret exposes nothing', $of('STAGING.config.json', ['packages' 
 check('open blocks and comments are nobody\'s orphans', !array_filter($of('STAGING.config.json', $file, Reconcile::ORPHAN), static fn(string $p): bool => str_contains($p, 'ini') || str_contains($p, '//')));
 check('the old layout is read as well', $of('STAGING.config.json', ['db' => ['name' => 'n', 'pass' => 'p']], Reconcile::EXPOSED) === ['db.connections.main.pass']);
 
-$missing = $of('STAGING.config.json', $file, Reconcile::MISSING);
-check('a default the file lacks is missing', in_array('db.connections.main.host', $missing, true) && in_array('system.debug.debug', $missing, true));
-check('no computed value', !in_array('system.assets', $missing, true) && !in_array('db.bindOnlyUsedParams', $missing, true));
-check('no optional block', !array_filter($missing, static fn(string $p): bool => str_starts_with($p, 'system.mail') || str_starts_with($p, 'relay')));
-check('a block that is there gets its defaults', in_array('system.mail.port', $of('STAGING.config.json', ['packages' => ['system' => ['mail' => ['host' => 'h']]]], Reconcile::MISSING), true));
-check('config.local.json misses nothing', $of('config.local.json', $file, Reconcile::MISSING) === []);
+check('a default the file lacks is no finding: it lies at the bottom of the tree', !in_array('missing', array_column(Reconcile::findings('STAGING.config.json', $file), 'status'), true));
 
 check('what may not be overridden is misplaced in local', $of('config.local.json', ['packages' => ['system' => ['mail' => ['host' => 'h'], 'debug' => ['debug' => true]]]], Reconcile::MISPLACED) === ['system.mail.host']);
 check('what belongs to config.json is misplaced in an instance', $of('STAGING.config.json', ['packages' => ['system' => ['constants' => ['PROJECT_NAMESPACE' => 'X']]]], Reconcile::MISPLACED) === ['system.constants.PROJECT_NAMESPACE']);
 check('what may be overridden is not', $of('STAGING.config.json', ['packages' => ['system' => ['auth' => ['deviceDays' => 90]]]], Reconcile::MISPLACED) === []);
 
-// saving
-$saved = Reconcile::apply('STAGING.config.json', $file, true);
-check('saving the own file takes the orphans out', !isset($saved['packages']['db']['connections']['main']['gone']) && !isset($saved['packages']['system']['oldKey']));
-check('and fills in the defaults', $saved['packages']['db']['connections']['main']['host'] === 'localhost' && $saved['packages']['system']['debug']['debug'] === false);
-check('a value stays', $saved['packages']['system']['linkSites'] === true && $saved['packages']['db']['connections']['main']['name'] === 'n');
-check('the secret stays where it is, moving it is a click', $saved['packages']['db']['connections']['main']['pass'] === 'secret');
-check('a foreign package stays', $saved['packages']['unknownpackage'] === ['a' => 1]);
-check('open blocks and comments stay', $saved['packages']['system']['ini'] === ['anything' => '1'] && $saved['packages']['system']['//'] === 'a note');
-check('the rules stay', $saved['matches'] === [['path' => '/x/']]);
-check('what is new comes last in its block', array_key_first($saved['packages']['db']['connections']['main']) === 'name');
-
-$other = Reconcile::apply('RC.config.json', $file, false);
-check('another instance keeps its orphans', isset($other['packages']['system']['oldKey']));
-check('and gets the defaults all the same', isset($other['packages']['system']['debug']));
-$local = Reconcile::apply('config.local.json', $file, true);
-check('config.local.json keeps its orphans', isset($local['packages']['system']['oldKey']));
-check('and gets no defaults', !isset($local['packages']['system']['debug']));
-check('the stage of the file decides a default', Reconcile::apply('DEV.x.config.json', [], true)['packages']['system']['debug']['debug'] === true);
-check('saving twice changes nothing', Reconcile::apply('STAGING.config.json', $saved, true) === $saved);
+// orphans go by a click
+$clean = Reconcile::withoutOrphans('STAGING.config.json', $file);
+check('every orphan goes', !isset($clean['packages']['db']['connections']['main']['gone']) && !isset($clean['packages']['system']['oldKey']));
+check('a value stays', $clean['packages']['system']['linkSites'] === true && $clean['packages']['db']['connections']['main']['name'] === 'n');
+check('no default comes in', !isset($clean['packages']['system']['debug']) && !isset($clean['packages']['db']['connections']['main']['host']));
+check('the secret stays where it is, moving it is a click', $clean['packages']['db']['connections']['main']['pass'] === 'secret');
+check('a foreign package stays', $clean['packages']['unknownpackage'] === ['a' => 1]);
+check('open blocks and comments stay', $clean['packages']['system']['ini'] === ['anything' => '1'] && $clean['packages']['system']['//'] === 'a note');
+check('the rules stay', $clean['matches'] === [['path' => '/x/']]);
+$one = Reconcile::withoutOrphans('STAGING.config.json', $file, ['system.oldKey']);
+check('one orphan goes alone', !isset($one['packages']['system']['oldKey']) && $one['packages']['db']['connections']['main']['gone'] === 1);
 
 // secrets
 $data = ['packages' => ['db' => ['connections' => ['main' => ['name' => 'n', 'pass' => 'from-file']]], 'relay' => ['api' => 'a', 'secret' => 'hub']]];

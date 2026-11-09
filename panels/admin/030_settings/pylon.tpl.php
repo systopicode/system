@@ -8,4 +8,6 @@ for ($node = $this->firstChild; $node !== null; $node = $node->next) $items[$nod
     if (isset($items[$name])) { echo $items[$name]->getNaviItem(); unset($items[$name]); }
 } ?>
 <?php if ($items) { ?></ul><hr><h2 class="pylonGroupTitle">Pages</h2><ul><?php foreach ($items as $node) echo $node->getNaviItem(); } ?>
-</ul></nav><div data-drag_type="none" data-on_draginit="draginitPylonwidth"></div></div>
+</ul></nav>
+<?php if ($this->childSelected?->name === 'environment') \Systopic\System\Settings\EnvironmentForm::legend(); // what the marks of Environment mean ?>
+<div data-drag_type="none" data-on_draginit="draginitPylonwidth"></div></div>

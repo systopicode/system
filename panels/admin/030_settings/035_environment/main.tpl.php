@@ -4,4 +4,4 @@
 
 use Systopic\System\Settings\EnvironmentForm;
 
-EnvironmentForm::render();
+EnvironmentForm::render($this);
