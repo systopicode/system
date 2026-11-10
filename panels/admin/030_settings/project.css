@@ -716,15 +716,16 @@ body:has(> .projectTemplatesMenu.is-sheet)::after{
    See .cursor/plans/settings-gui.plan.md. */
 .envSettings .widget > header h2 small,
 .envSettings .projectBar h3 small { display:block; margin-top:.1rem; font-size:.6875rem; font-weight:500; color:var(--cmsMuted); }
-/* every block a table of its own, as wide as what it holds: the columns
-   follow the content, a field never less than a small one */
-.cms .envSettings table.envRows { width:auto; max-width:100%; table-layout:auto; }
-/* a head without rows of its own (a block of blocks) spans its box */
-.cms .envSettings table.envRows.is-head { width:100%; }
-/* a tool wider than the rows (mail): the table, its head with it, spans the box */
-.cms .envSettings .envBlock:has(> .envTool) table.envRows { width:100%; }
+/* one table for the package, every block of the first level a card in it
+   (tbody.tableWidget, gui.md: tableWidgets): the columns line up in all cards */
+.envSettings .envTable { margin:.75rem; }
+.cms .envSettings .envTable > table.envRows { width:100%; table-layout:auto; }
 .envSettings table.envRows td { vertical-align:middle; }
 .envSettings table.envRows td.envLabel { font-weight:600; }
+/* the label on one line, cut with an ellipsis; its marks ((i), file, backup) stay beside it */
+.envSettings table.envRows td.envLabel > span:has(> .envLabelText) { display:flex; align-items:center; max-width:18rem; white-space:nowrap; }
+.envSettings table.envRows td.envLabel .envLabelText { min-width:0; overflow:hidden; text-overflow:ellipsis; }
+.envSettings table.envRows td.envLabel > span:has(> .envLabelText) > :not(.envLabelText) { flex:0 0 auto; }
 .envSettings table.envRows td.envControl { min-width:8rem; }
 /* field-sizing: what is typed counts for the width of the column, as text would */
 .envSettings table.envRows td.envControl :is(input:not([type="checkbox"]), select) { field-sizing:content; width:100%; min-width:8rem; box-sizing:border-box; }
@@ -734,23 +735,26 @@ body:has(> .projectTemplatesMenu.is-sheet)::after{
 .envSettings table.envRows td.envActions { white-space:nowrap; text-align:right; }
 .envSettings table.envRows td.envActions .button { margin:0; }
 .envSettings table.envRows td.envActions .button span { max-width:9rem; overflow:hidden; text-overflow:ellipsis; font-size:.75rem; }
-/* the outline: every block a box of its own, a block in a block sits
-   inside it, indented; the head carries the title, the table follows */
-.envSettings .envBlock { width:fit-content; max-width:calc(100% - 1.5rem); margin:.75rem; border:1px solid var(--cmsLine); border-radius:var(--cmsRadius, .4rem); background:var(--cmsCanvas); overflow:hidden; }
-.envSettings .envBlock .envBlock { max-width:calc(100% - 2.25rem); margin:.75rem .75rem .75rem 1.5rem; }
-/* the head is the first row of the table, a th over all columns, grey */
+/* the head of a card is its first row, a th over all columns, grey */
 .cms .envSettings table.envRows tr.envHead > th { padding:.6rem .75rem; text-align:left; white-space:normal; text-transform:none; letter-spacing:0; font-size:inherit; font-weight:inherit; color:var(--cmsTextColor); border-bottom:1px solid var(--cmsLine); background:color-mix(in srgb, var(--cmsLine) 45%, var(--cmsCanvas)); }
-.cms .envSettings .envBlock .envBlock table.envRows tr.envHead > th { background:color-mix(in srgb, var(--cmsLine) 22%, var(--cmsCanvas)); }
 .cms .envSettings table.envRows tr.envHead:last-child > th { border-bottom:0; }
+/* a block in a block: a lighter head row in the card, its rows indented below it */
+.cms .envSettings .tableWidgets table.envRows.tableWidgetGrid tbody.tableWidget > tr.envSub > th { background:color-mix(in srgb, var(--cmsLine) 22%, var(--cmsCanvas)); border-top:1px solid var(--cmsLine); }
+.cms .envSettings .tableWidgets table.envRows.tableWidgetGrid tbody.tableWidget > tr[data-depth="2"] > :first-child { padding-inline-start:calc(var(--cmsCardPadding) + .75rem); }
+.cms .envSettings .tableWidgets table.envRows.tableWidgetGrid tbody.tableWidget > tr[data-depth="3"] > :first-child { padding-inline-start:calc(var(--cmsCardPadding) + 1.5rem); }
+.cms .envSettings .tableWidgets table.envRows.tableWidgetGrid tbody.tableWidget > tr:is([data-depth="4"], [data-depth="5"]) > :first-child { padding-inline-start:calc(var(--cmsCardPadding) + 2.25rem); }
+/* a row over all columns (a tool, a package not installed here): as wide as
+   the table, it does not widen it; no hover colour over a whole tool */
+.envSettings .envWide { width:0; min-width:100%; box-sizing:border-box; }
+.cms .envSettings .tableWidgets:not(.stacked) table.envRows.tableWidgetGrid tbody.tableWidget > tr.envWideRow > td { background:var(--cmsCanvas); padding-block:.75rem; }
 /* a hint wraps at the width of the table, it does not widen it */
 .envSettings tr.envHead .envHint { width:0; min-width:100%; }
 .envSettings .envGroupHead { display:flex; flex-wrap:wrap; align-items:center; gap:.25rem .75rem; }
 .envSettings .envGroupHead h3 { flex:1 1 auto; min-width:0; margin:0; font-size:.9375rem; font-weight:700; line-height:1.4; color:var(--cmsTextColor); overflow-wrap:anywhere; }
-.envSettings .envBlock .envBlock .envGroupHead h3 { font-size:.875rem; font-weight:600; }
+.envSettings tr.envSub .envGroupHead h3 { font-size:.875rem; font-weight:600; }
 .envSettings .envGroupHead h3 small { display:inline; margin-left:.5rem; font-size:.75rem; font-weight:500; color:var(--cmsMuted); }
 .envSettings .envGroupHead .envNote { display:inline; margin:0; }
 .envSettings .envGroupHead .button { margin:0; }
-.envSettings .envBlock > .tableScroll + .envBlock { margin-top:.75rem; }
 .envSettings .envHint { display:block; margin-top:.15rem; font-size:.75rem; font-weight:400; color:var(--cmsMuted); }
 .envSettings .envValue { display:inline-block; padding:.35rem 0; font-family:var(--cmsMono, monospace); font-size:.8125rem; overflow-wrap:anywhere; }
 .envSettings .envValue.is-empty { color:var(--cmsMuted); font-family:inherit; }
@@ -770,6 +774,7 @@ html[data-mode="dark"] :is(.envSettings, .envLegend) { --envProject:#7aa7ff; --e
 .envSettings .envPair { display:flex; gap:.5rem; }
 .envSettings .envPair input { flex:1 1 0; min-width:0; }
 .envSettings .envTool { padding:.75rem; border-top:1px solid var(--cmsLine); }
+.envSettings .envWide.envTool { padding:0; border-top:0; }
 .envSettings .envToolBox { display:flex; flex-direction:column; gap:.5rem; }
 .envSettings .envToolBox .tagsHint { margin:0; }
 .envSettings .envToolActions { display:flex; flex-wrap:wrap; gap:.5rem; }
@@ -813,25 +818,22 @@ a.envInfo { text-decoration:none; }
 body .envTip code { display:block; margin-top:.3rem; padding:0; font-size:.6875rem; line-height:1.3; color:inherit; background:none; border:0; overflow-wrap:anywhere; }
 body .envTip small { display:block; margin-top:.3rem; color:inherit; opacity:.75; font-size:.6875rem; line-height:1.3; }
 
-/* main sections open and close, closed until opened (state on the server) */
-.envSettings .envFold > header { cursor:pointer; }
-.envSettings .envFold:not(.envBlock):not(.is-open) > :not(header) { display:none !important; }
-/* a block of a package opens and closes on its head, the first row of its table */
-.envSettings .envBlock.envFold tr.envHead { cursor:pointer; }
-.envSettings .envBlock.envFold:not(.is-open) > :not(:first-child) { display:none !important; }
-.envSettings .envBlock.envFold:not(.is-open) > .tableScroll:first-child tbody > tr:not(.envHead) { display:none !important; }
-.envSettings .envBlock.envFold > .tableScroll:first-child tr.envHead .envGroupHead { align-items:center; }
+/* a card opens and closes on its head, closed until opened (state on the
+   server). Closed, its rows collapse: they still size the columns, so
+   opening a card moves nothing. */
+.envSettings tbody.envFold > tr.envHead.tableWidgetTitle { cursor:pointer; }
+.envSettings tbody.envFold:not(.is-open) > tr:not(.tableWidgetTitle, .tableWidgetGap) { visibility:collapse; }
+.cms .envSettings .tableWidgets table.envRows.tableWidgetGrid tbody.envFold:not(.is-open) > tr.tableWidgetTitle > th { border-radius:var(--cmsRadiusLg); }
+/* stacked (phone) the rows are blocks: collapse would keep their height */
+.envSettings .tableWidgets.stacked tbody.envFold:not(.is-open) > tr:not(.tableWidgetTitle, .tableWidgetGap) { display:none; }
 /* what stands beside the package: optional, Remove, the notes of the files */
 .envSettings .envPackageBar { display:flex; flex-wrap:wrap; align-items:center; gap:.5rem 1rem; margin:.75rem .75rem 0; }
 .envSettings .envPackageBar .tagsHint { flex:1 1 100%; margin:0; }
 .envSettings .envViewHint { margin:.75rem; }
-.envSettings .envFold:not(.is-open) > header { border-bottom:0; }
 .envSettings .envFoldToggle { display:inline-flex; align-items:center; justify-content:center; flex:0 0 auto; width:1.75rem; height:1.75rem; margin:0 .25rem 0 -.35rem; padding:0; border:0; border-radius:var(--cmsRadius, .4rem); background:none; color:var(--cmsMuted); cursor:pointer; }
 .envSettings .envFoldToggle:is(:hover, :focus-visible) { color:var(--cmsTextColor); background:var(--cmsLine); }
 .envSettings .envFoldToggle i { transition:transform .15s; }
 .envSettings .envFold.is-open .envFoldToggle i { transform:rotate(90deg); }
-.envSettings .envFold > header { display:flex; align-items:center; gap:.25rem; }
-.envSettings .envFold > header h2 { flex:1 1 auto; min-width:0; }
 
 /* header bar: open/close all, Check */
 
@@ -843,8 +845,6 @@ div.pylon > .envLegend li { display:flex; align-items:center; gap:.5rem; }
 div.pylon > .envLegend li > :first-child { flex:0 0 auto; }
 div.pylon > .envLegend li > i { width:1rem; text-align:center; }
 div.pylon > .envLegend p { margin:.5rem 0 0; }
-.envSettings .envFold > header h2 { display:flex; flex-wrap:wrap; align-items:baseline; gap:0 .1rem; }
-.envSettings .envFold > header h2 small { display:inline; margin:0 0 0 .4rem; }
 /* the (i) of a heading must not take its size: a deeper line pushed the title up */
 .envSettings :is(h2, h3) .envInfo { margin:0 0 0 .3rem; font-size:.8125rem; line-height:1; }
 .envSettings :is(h2, h3) .envInfo i { font-size:.8125rem; line-height:1; vertical-align:0; }
@@ -852,11 +852,7 @@ div.pylon > .envLegend .pylonGroupTitle + ul + .pylonGroupTitle { margin-top:.9r
 div.pylon > .envLegend .pylonGroupTitle { font-size:.6875rem; font-weight:700; letter-spacing:.04em; text-transform:uppercase; color:var(--cmsMuted); }
 div.pylon > .envLegend li span { min-width:0; overflow-wrap:anywhere; }
 @media (max-width: 640px) {
-    .envSettings .envFold > header { flex-wrap:wrap; }
-    .envSettings .envFold > header h2 { flex:1 1 calc(100% - 2.5rem); }
-    .envSettings .envFold > header > :not(.envFoldToggle, h2) { margin-left:2rem; }
-    .envSettings .envBlock { width:auto; max-width:none; margin:.5rem; }
-    .envSettings .envBlock .envBlock { margin:.5rem .5rem .5rem .75rem; }
+    .envSettings .envTable { margin:.5rem; }
     /* folded into cards: the head stays a full row on top */
     .envSettings .tableScroll.stacked tr.envHead { display:block; padding:0; }
     .envSettings .tableScroll.stacked tr.envHead > th { display:block; width:auto; }

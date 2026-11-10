@@ -45,7 +45,7 @@ if (!window.cmsEnvironmentBound) {
 window.cmsEnvironmentBound = true;
 
 // The blocks of a package open and close: a click on their head (the first
-// row of their table) or its chevron, all at once from the header bar. Every
+// row of their card) or its chevron, all at once from the header bar. Every
 // config shows the same ones open; the server keeps them, so a redrawn page
 // opens them again.
 function foldKeys() {
@@ -71,11 +71,10 @@ document.addEventListener('click', event => {
         sendFolds();
         return;
     }
-    var head = event.target.closest?.('.envSettings .envFold > header, .envSettings .envBlock.envFold tr.envHead');
+    // the head of a card (its first row); a block in it has a head row of its own that does not fold
+    var head = event.target.closest?.('.envSettings tbody.envFold > tr.envHead.tableWidgetTitle');
     if (!head) return;
     var section = head.closest('.envFold');
-    // the head of a nested block belongs to that block, not to this one
-    if (head.matches('tr.envHead') && head.closest('.envBlock') !== section) return;
     var toggle = event.target.closest('.envFoldToggle');
     // buttons, links and fields in the header do their own thing
     if (!toggle && event.target.closest('a, button, input, select, label, .envInfo')) return;

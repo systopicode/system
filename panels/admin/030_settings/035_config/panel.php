@@ -24,7 +24,7 @@ class Panel extends SettingsPanel
     public function __construct($name, $parent = null)
     {
         parent::__construct($name, $parent);
-        $this->label = 'Configuration';
+        $this->label = 'Config';
     }
 
     /** package: the one shown, open: the blocks open (fold keys) */
@@ -38,6 +38,10 @@ class Panel extends SettingsPanel
         $asked = \http::get('package');
         if ($asked !== null && in_array((string) $asked, EnvironmentForm::packages(), true)) {
             $this->state->package = (string) $asked;
+            // from one package to the next the panel stays the same: its views are not drawn again unless marked
+            if (\http::method() === 'GET' && $this->inPath()) {
+                $this->updateViews(['main', 'controls']);
+            }
         }
         if (!in_array((string) ($this->state->package ?? ''), EnvironmentForm::packages(), true)) {
             $this->state->package = EnvironmentForm::packages()[0] ?? 'system';

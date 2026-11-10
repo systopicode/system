@@ -33,7 +33,7 @@ final class EnvironmentForm
         'stage' => 'Package',
         'computed' => 'Automatic',
         'project' => 'Project',
-        'local' => 'Installation',
+        'local' => 'Local',
         'none' => 'Not set',
     ];
 
@@ -138,12 +138,8 @@ final class EnvironmentForm
     {
         self::prepare();
         if (self::$package !== '') {
-            self::package(self::$package);
-        }
-        // what belongs to no package of this installation: with the first one
-        if (self::$package === (self::packages()[0] ?? '')) {
-            self::foreign();
-            self::rest();
+            // what belongs to no package of this installation: with the first one
+            self::package(self::$package, self::$package === (self::packages()[0] ?? ''));
         }
     }
 
@@ -399,7 +395,7 @@ final class EnvironmentForm
      * and closes. What stands beside the package (optional, Remove) and what
      * the files note about it come first, its tool last.
      */
-    private static function package(string $package): void
+    private static function package(string $package, bool $withRest = false): void
     {
         $e = static fn($value): string => htmlspecialchars((string) $value, ENT_QUOTES);
         $definition = Explain::definition($package);
@@ -408,18 +404,23 @@ final class EnvironmentForm
         if ($aside !== '' || $notes !== []) {
             echo '<div class="envPackageBar">' . $aside . ($notes === [] ? '' : '<p class="tagsHint">' . implode('</p><p class="tagsHint">', array_map($e, $notes)) . '</p>') . '</div>';
         }
+        self::openTable();
         self::node($package, $definition, []);
         // what nothing defines: a block of its own after the others
         ob_start();
-        self::$head = self::foldHead($package . '.orphans', self::blockHead('Defined nowhere', '', 'In the files, but no definition knows them.'));
         self::orphans($package);
-        $found = self::$head === null;
-        self::$head = null;
-        self::endRows();
         $orphans = (string) ob_get_clean();
-        if ($found) {
-            echo '<div class="envBlock' . self::foldClass($package . '.orphans') . '" data-depth="1" data-fold="' . $e($package . '.orphans') . '">' . $orphans . '</div>';
+        if ($orphans !== '') {
+            self::openCard('', $package . '.orphans', self::blockHead('Defined nowhere', '', 'In the files, but no definition knows them.'));
+            echo $orphans;
+            self::closeCard();
         }
+        if ($withRest) {
+            self::foreign();
+            self::rest();
+        }
+        self::closeTable();
+        // the tool of the whole package (relay: the hub) below the table
         self::tool($definition);
     }
 
@@ -442,6 +443,13 @@ final class EnvironmentForm
             return;
         }
         $v = self::$view;
+        // in a card: a row over all columns, as wide as the table, not widening it
+        if (self::$cardOpen) {
+            echo '<tr class="envWideRow"><td colspan="4"><div class="envWide envTool">';
+            $tool::render(new ToolView($v['file'], $v['here'], $v['project'], $v['data']));
+            echo '</div></td></tr>';
+            return;
+        }
         echo '<div class="envTool">';
         $tool::render(new ToolView($v['file'], $v['here'], $v['project'], $v['data']));
         echo '</div>';
@@ -511,77 +519,116 @@ final class EnvironmentForm
         return $out;
     }
 
-    /** Is a table of rows open? Each block gets one of its own (rows(), endRows()). */
-    private static bool $rowsOpen = false;
+    /** Is the table of the package open, a card (tbody) in it? */
+    private static bool $tableOpen = false;
 
-    /** the head of the block just opened, waiting for its table (openBlock()) */
-    private static ?string $head = null;
+    private static bool $cardOpen = false;
+
+    /** the cards drawn so far: every one after the first starts with a gap */
+    private static int $cards = 0;
+
+    /** @var list<int> the depths of the blocks open (openBlock(), closeBlock()) */
+    private static array $depths = [];
 
     /**
-     * Opens the table of the block, unless it is open. The head of the block
-     * is its first row, a th over all columns: the table is as wide as what
-     * it holds, the head with it. In tbody, not thead: a phone folds the rows
-     * into cards and hides thead; tableWidgetTitle keeps the row out of that.
+     * One table for the whole package, every block of the first level a card
+     * in it (tbody.tableWidget, gui.md: tableWidgets): the columns belong to
+     * the table, so they line up in every card. A closed card keeps its rows
+     * (visibility: collapse), they still size the columns: opening one moves
+     * nothing.
      */
-    private static function rows(): void
+    private static function openTable(): void
     {
-        if (!self::$rowsOpen) {
-            echo '<div class="tableScroll"><table class="envRows"><tbody>';
-            self::$rowsOpen = true;
-        }
-        if (self::$head !== null) {
-            echo '<tr class="envHead tableWidgetTitle"><th colspan="4">' . self::$head . '</th></tr>';
-            self::$head = null;
+        if (!self::$tableOpen) {
+            echo '<div class="tableScroll tableWidgets envTable"><table class="envRows tableWidgetGrid">';
+            self::$tableOpen = true;
+            self::$cards = 0;
+            self::$depths = [];
         }
     }
 
-    /** a head that got no rows (a block of blocks): a table of its own, as wide as the box */
-    private static function flushHead(): void
+    private static function closeTable(): void
     {
-        if (self::$head !== null) {
-            self::endRows();
-            echo '<div class="tableScroll"><table class="envRows is-head"><tbody><tr class="envHead tableWidgetTitle"><th colspan="4">' . self::$head . '</th></tr></tbody></table></div>';
-            self::$head = null;
+        self::closeCard();
+        if (self::$tableOpen) {
+            echo '</table></div>';
+            self::$tableOpen = false;
         }
     }
 
     /**
-     * A block: a box, its head waits for the first row. With a fold key it
-     * opens and closes (the blocks of the first level), as it was left.
+     * A card: its head is the first row, a th over all columns. In tbody, not
+     * thead: a phone folds the rows into cards and hides thead;
+     * tableWidgetTitle keeps the row out of that. With a fold key it opens
+     * and closes, as it was left.
      */
-    private static function openBlock(int $depth, string $head, string $class = '', ?string $fold = null): void
+    private static function openCard(string $class, ?string $fold, string $head): void
     {
         $e = static fn($value): string => htmlspecialchars((string) $value, ENT_QUOTES);
-        self::flushHead();
-        self::endRows();
+        self::openTable();
+        self::closeCard();
         if ($fold !== null) {
             $class .= self::foldClass($fold);
             $head = self::foldHead($fold, $head);
         }
-        echo '<div class="envBlock' . $class . '" data-depth="' . $depth . '"' . ($fold !== null ? ' data-fold="' . $e($fold) . '"' : '') . '>';
-        self::$head = $head;
+        echo '<tbody class="tableWidget envBlock' . $class . '"' . ($fold !== null ? ' data-fold="' . $e($fold) . '"' : '') . '>';
+        if (self::$cards > 0) {
+            echo '<tr class="tableWidgetGap" aria-hidden="true"><td colspan="4"></td></tr>';
+        }
+        echo '<tr class="envHead tableWidgetTitle"><th colspan="4">' . $head . '</th></tr>';
+        self::$cards++;
+        self::$cardOpen = true;
+    }
+
+    private static function closeCard(): void
+    {
+        if (self::$cardOpen) {
+            echo '</tbody>';
+            self::$cardOpen = false;
+        }
+    }
+
+    /** a row is about to come: the card it goes into */
+    private static function rows(): void
+    {
+        if (!self::$cardOpen) {
+            self::openCard('', null, '');
+        }
+    }
+
+    /** ' data-depth="n"' for a row in a block below the first level, else '' */
+    private static function depthAttr(): string
+    {
+        $depth = (int) (end(self::$depths) ?: 1);
+        return $depth > 1 ? ' data-depth="' . $depth . '"' : '';
+    }
+
+    /**
+     * A block. The first level is a card, with a fold key it opens and
+     * closes. A block in a block is a head row in the card of its parent,
+     * its rows indented below it.
+     */
+    private static function openBlock(int $depth, string $head, string $class = '', ?string $fold = null): void
+    {
+        if ($depth <= 1) {
+            self::openCard($class, $fold, $head);
+        } else {
+            self::rows();
+            echo '<tr class="envHead envSub' . $class . '" data-depth="' . $depth . '"><th colspan="4">' . $head . '</th></tr>';
+        }
+        self::$depths[] = max(1, $depth);
     }
 
     private static function closeBlock(): void
     {
-        self::flushHead();
-        self::endRows();
-        echo '</div>';
-    }
-
-    /** closes the table of the block, if one is open: a heading or a tool follows */
-    private static function endRows(): void
-    {
-        if (self::$rowsOpen) {
-            echo '</tbody></table></div>';
-            self::$rowsOpen = false;
+        if (array_pop(self::$depths) === 1) {
+            self::closeCard();
         }
     }
 
     /**
-     * The values of a block first, in one table, then its blocks, each with
-     * a heading and a table of its own: a value never lands in the table of
-     * the block before it.
+     * The values of a block first, then its blocks, each with a head row of
+     * its own: a value never lands below the head of the block before it.
      *
      * @param list<string> $path
      */
@@ -612,7 +659,6 @@ final class EnvironmentForm
         if ($general) {
             self::closeBlock();
         }
-        self::endRows();
         foreach ($blocks as [$child, $at]) {
             self::group($package, $child, $at);
         }
@@ -634,7 +680,7 @@ final class EnvironmentForm
     }
 
     /**
-     * A block: a box, its head the first row of its table. The same for a
+     * A block: a card or a head row in one (openBlock()). The same for a
      * block of values (`mail`), a block of named entries (`connections`) and
      * each entry (`connections.main`). The (i) carries the description and
      * the path, as at a value; what files note (`//`) shows below the title.
@@ -653,8 +699,7 @@ final class EnvironmentForm
             self::node($package, $node, $path);
         }
         if (self::toolOf($node) !== null) {
-            self::flushHead();
-            self::endRows();
+            self::rows();
             self::tool($node);
         }
         self::closeBlock();
@@ -687,9 +732,7 @@ final class EnvironmentForm
         if ($pattern === '' || !self::writable()) {
             return;
         }
-        // the new one below the entries, a table of its own
-        self::flushHead();
-        self::endRows();
+        // the new one below the entries
         self::rows();
         $title = (string) ($entry['title'] ?? 'entry');
         $hint = (string) ($node['propertyNames']['description'] ?? '');
@@ -754,8 +797,10 @@ final class EnvironmentForm
         $below = Explain::below($value['stack'], $layer);
 
         self::rows();
-        echo '<tr' . (count($path) > 1 ? ' data-group="' . $e($path[count($path) - 2]) . '"' : '') . ' data-key="' . $e($key) . '"' . ($target === null ? ' class="is-readonly"' : '') . '>';
-        echo '<td class="envLabel"><span>' . $e((string) ($field['title'] ?? self::label($key))) . self::info($field, self::definition($package, $path), self::keyPath($package, $path)) . self::places($package, $path, $secret) . self::backup($field);
+        echo '<tr' . (count($path) > 1 ? ' data-group="' . $e($path[count($path) - 2]) . '"' : '') . ' data-key="' . $e($key) . '"' . self::depthAttr() . ($target === null ? ' class="is-readonly"' : '') . '>';
+        $title = (string) ($field['title'] ?? self::label($key));
+        // one line: a label too long for its column ends in an ellipsis, the marks stay
+        echo '<td class="envLabel"><span><span class="envLabelText" title="' . $e($title) . '">' . $e($title) . '</span>' . self::info($field, self::definition($package, $path), self::keyPath($package, $path)) . self::places($package, $path, $secret) . self::backup($field);
         echo '</span></td><td class="envControl">';
         $isSet = false;
         if ($secret) {
@@ -876,7 +921,6 @@ final class EnvironmentForm
                 $layer = $finding['file'] === EnvironmentFile::LOCAL ? 'local' : 'project';
                 $raw = Tree::get((array) ($v['layers'][$layer] ?? []), [$package, ...explode('.', $path)]);
                 $may = $layer === 'local';
-                self::rows();
                 echo '<tr class="envOrphan"><td class="envLabel"><span><s>' . $e($path) . '</s>' . self::place($layer, $finding['file'], self::valueIn($finding['file'], $package, explode('.', $path)), self::format($raw)) . '</span></td><td class="envControl"><code>' . $e(self::json($raw)) . '</code></td><td class="envOrigin">' . self::chip($layer, '', self::valueIn($finding['file'], $package, explode('.', $path))) . '</td><td class="envActions">';
                 if ($may) {
                     echo '<button type="button" class="button transparent" data-on_click="userConfirm" data-action="dropOrphan" data-confirm="Remove ' . $e($name) . ' from ' . $e($finding['file']) . '?" data-file="' . $e($finding['file']) . '" data-name="' . $e($name) . '" title="Remove"><i class="cmsIcon cmsIcon-trash"></i></button>';
@@ -898,7 +942,10 @@ final class EnvironmentForm
                 if (Schema::installed((string) $package)) {
                     continue;
                 }
-                echo '<section class="widget envForeign' . self::foldClass('foreign.' . $package) . '" data-fold="foreign.' . $e($package) . '"><header>' . self::foldToggle('foreign.' . $package) . '<h2>' . $e($package) . self::info([], null, self::keyPath((string) $package, [])) . '</h2>' . self::chip($layer, '', ($in = self::layerFile($layer)) === null ? null : self::valueIn($in, (string) $package, [])) . '</header><main><p class="tagsHint">This package is not installed here. Its settings stay as they are.</p><pre>' . $e(self::json($tree, true)) . '</pre></main></section>';
+                $chip = self::chip($layer, '', ($in = self::layerFile($layer)) === null ? null : self::valueIn($in, (string) $package, []));
+                self::openCard(' envForeign', 'foreign.' . $package, self::blockHead($e($package) . self::info([], null, self::keyPath((string) $package, [])), $chip));
+                echo '<tr class="envWideRow"><td colspan="4"><div class="envWide"><p class="tagsHint">This package is not installed here. Its settings stay as they are.</p><pre>' . $e(self::json($tree, true)) . '</pre></div></td></tr>';
+                self::closeCard();
             }
         }
     }
@@ -924,7 +971,9 @@ final class EnvironmentForm
             }
         }
         if ($rows !== '') {
-            echo '<section class="widget envRest' . self::foldClass('rest') . '" data-fold="rest"><header>' . self::foldToggle('rest') . '<h2>More in the files</h2></header><div class="tableScroll"><table class="envRows"><tbody>' . $rows . '</tbody></table></div></section>';
+            self::openCard(' envRest', 'rest', self::blockHead('More in the files'));
+            echo $rows;
+            self::closeCard();
         }
     }
 
