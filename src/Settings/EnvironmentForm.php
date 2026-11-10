@@ -102,12 +102,21 @@ final class EnvironmentForm
         $e = static fn($value): string => htmlspecialchars((string) $value, ENT_QUOTES);
         self::remember($panel);
         echo '<div class="projectFiles envSettings" data-package="' . $e(self::$package) . '">';
+        echo '<div class="envHeading"><h1>' . $e(self::packageTitle(self::$package)) . ' Config</h1>';
+        if (EnvironmentFile::directory() !== null) {
+            self::controls();
+        }
+        echo '</div>';
         echo \message::flush();
         if (EnvironmentFile::directory() === null) {
             echo '<p>No config folder was found.</p></div>';
             return;
         }
+        echo '<p class="tagsHint">Changes save when you leave a field. The badge beside each value shows where it comes from.</p>';
+        echo '<div class="envConfigBody">';
         self::view();
+        echo '</div>';
+        self::legend();
         echo '</div>';
     }
 
@@ -147,17 +156,13 @@ final class EnvironmentForm
      * The header of the page: open and close all blocks, Check with what
      * there is to look at in both files.
      */
-    public static function controls(PanelNode $panel): void
+    private static function controls(): void
     {
-        self::remember($panel);
-        if (EnvironmentFile::directory() === null) {
-            return;
-        }
         $count = count(self::checks());
-        echo '<div class="rightAlign envControls">';
-        echo '<button type="button" class="button transparent envFoldAll" data-open="1" title="Open all blocks"><i class="cmsIcon cmsIcon-chevron-down"></i><span>Open all</span></button>';
-        echo '<button type="button" class="button transparent envFoldAll" data-open="0" title="Close all blocks"><i class="cmsIcon cmsIcon-chevron-up"></i><span>Close all</span></button>';
-        echo '<a class="ajax button transparent envCheckButton" href="check/" title="What to look at in config.json and config.local.json: repeated, unknown and misplaced values, secrets, required values">'
+        echo '<div class="envControls">';
+        echo '<button type="button" class="button transparent icononly envFoldAll" data-open="1" aria-label="Open all blocks" title="Open all blocks"><i class="cmsIcon cmsIcon-chevron-down" aria-hidden="true"></i></button>';
+        echo '<button type="button" class="button transparent icononly envFoldAll" data-open="0" aria-label="Close all blocks" title="Close all blocks"><i class="cmsIcon cmsIcon-chevron-up" aria-hidden="true"></i></button>';
+        echo '<a class="ajax button envCheckButton" href="check/" title="What to look at in config.json and config.local.json: repeated, unknown and misplaced values, secrets, required values">'
             . '<i class="cmsIcon cmsIcon-list-check"></i><span>Check</span><b class="envBadge"' . ($count === 0 ? ' hidden' : '') . '>' . $count . '</b></a>';
         echo '</div>';
     }
@@ -170,39 +175,42 @@ final class EnvironmentForm
     {
         $e = static fn($value): string => htmlspecialchars((string) $value, ENT_QUOTES);
         $checks = EnvironmentFile::directory() === null ? [] : self::checks();
-        echo '<div class="cmslightbox cms envCheck" data-size="1"><section><header><h1>Check<small>config.json, config.local.json</small></h1>'
+        echo '<div class="cmslightbox cms envCheck" data-size="1"><section><header><h1>Check configuration</h1>'
             . '<ul class="barmenu"><li><a class="ajax" href="../" aria-label="Close"><i class="cmsIcon cmsIcon-xmark"></i></a></li></ul></header><main>';
         echo \message::flush();
+        echo '<p class="tagsHint">Results for the project and this installation.</p>';
         if ($checks === []) {
-            echo '<p class="envCheckEmpty"><i class="cmsIcon cmsIcon-circle-check"></i>Nothing to look at.</p>';
-        } else {
-            echo '<section class="widget is-list"><div class="tableScroll"><table class="envChecks"><tbody>';
-            foreach ($checks as $check) {
-                echo '<tr class="is-' . $e($check['kind']) . '"><td class="envCheckIcon"><i class="cmsIcon ' . $e($check['icon']) . '"></i></td><td><strong>' . $e($check['title']) . '</strong><p>' . $check['text'] . '</p></td><td class="envCheckAction">' . $check['action'] . '</td></tr>';
-            }
-            echo '</tbody></table></div></section>';
+            echo '<p class="envCheckEmpty"><i class="cmsIcon cmsIcon-circle-check is-success" aria-hidden="true"></i>No issues found.</p>';
         }
-        echo '<p class="tagsHint">Repeated values are marked “same as below” in the rows, unknown ones are struck through, misplaced and required ones carry a red note.</p>';
+        foreach ($checks as $check) {
+            echo '<article class="widget is-list is-' . $e($check['kind']) . '"><header><h2>'
+                . '<i class="cmsIcon envCheckIcon ' . $e($check['icon']) . '" aria-hidden="true"></i> ' . $e($check['title']) . '</h2></header>'
+                . '<p class="envCheckBody">' . $check['text'] . '</p>';
+            if ($check['action'] !== '') {
+                echo '<footer>' . $check['action'] . '</footer>';
+            }
+            echo '</article>';
+        }
         echo '</main></section></div>';
     }
 
-    /**
-     * What the marks of the rows mean. Below the menu of the settings
-     * (030_settings/pylon.tpl.php), while Environment is open.
-     */
-    public static function legend(): void
+    /** Explain the source badges and marks used by the config tables. */
+    private static function legend(): void
     {
         $item = static fn(string $mark, string $text): string => '<li>' . $mark . '<span>' . $text . '</span></li>';
-        echo '<div class="envLegend"><h2 class="pylonGroupTitle">Where values come from</h2><ul>'
-            . $item(self::chip('package'), 'default of the package')
-            . $item(self::chip('project'), 'config.json, the project')
-            . $item(self::chip('local'), 'config.local.json, this installation')
-            . '</ul><h2 class="pylonGroupTitle">Marks</h2><ul>'
-            . $item('<span class="envInfo"><i class="cmsIcon cmsIcon-circle-info"></i></span>', 'the definition: what it is')
-            . $item('<span class="envInfo envPlace is-project"><i class="cmsIcon cmsIcon-circle-info"></i></span>', 'set in config.json')
-            . $item('<span class="envInfo envPlace is-local"><i class="cmsIcon cmsIcon-circle-info"></i></span>', 'set in config.local.json')
-            . $item('<i class="cmsIcon cmsIcon-database"></i>', 'travels with a backup')
-            . '</ul><p>Without a backup mark a value stays on the installation. A click on an (i) opens it in its file.</p></div>';
+        echo '<footer class="envLegend" aria-label="Sources and symbols">'
+            . '<div><h2>Sources</h2><ul>'
+            . $item(self::chip('package'), 'Package default')
+            . $item(self::chip('project'), 'Shared via config.json')
+            . $item(self::chip('local'), 'This installation via config.local.json')
+            . $item(self::chip('computed'), 'Calculated for this installation')
+            . $item(self::chip('none'), 'No value set')
+            . '</ul></div><div><h2>Symbols</h2><ul>'
+            . $item('<span class="envInfo"><i class="cmsIcon cmsIcon-circle-info"></i></span>', 'Field description')
+            . $item('<span class="envInfo envPlace is-project"><i class="cmsIcon cmsIcon-circle-info"></i></span>', 'Opens the value in config.json')
+            . $item('<span class="envInfo envPlace is-local"><i class="cmsIcon cmsIcon-circle-info"></i></span>', 'Opens the value in config.local.json')
+            . $item('<i class="cmsIcon cmsIcon-database"></i>', 'Included in project backups')
+            . '</ul></div></footer>';
     }
 
     /** ' envFold', ' is-open' as it was left: the classes of a main section */
@@ -215,7 +223,7 @@ final class EnvironmentForm
     private static function foldToggle(string $key): string
     {
         $open = in_array($key, self::$open, true);
-        return '<button type="button" class="envFoldToggle" aria-expanded="' . ($open ? 'true' : 'false') . '" title="Open or close"><i class="cmsIcon cmsIcon-chevron-right"></i></button>';
+        return '<button type="button" class="button transparent icononly envFoldToggle" aria-expanded="' . ($open ? 'true' : 'false') . '" aria-label="Toggle section"><i class="cmsIcon cmsIcon-chevron-down" aria-hidden="true"></i></button>';
     }
 
     /**
@@ -241,9 +249,9 @@ final class EnvironmentForm
                 $checks[] = [
                     'kind' => 'redundant',
                     'icon' => 'cmsIcon-copy',
-                    'title' => count($redundant) . ' ' . (count($redundant) === 1 ? 'value repeats' : 'values repeat') . ' what applies anyway',
-                    'text' => 'In <code>' . $e($file) . '</code>: ' . $list($redundant) . '. Without them the installation follows the package and config.json.',
-                    'action' => '<button type="button" class="button" data-on_click="userConfirm" data-action="prune" data-confirm="Remove from ' . $e($file) . ': ' . $e(implode(', ', $redundant)) . '?" data-file="' . $e($file) . '"><i class="cmsIcon cmsIcon-broom"></i>Remove them</button>',
+                    'title' => count($redundant) . (count($redundant) === 1 ? ' redundant value' : ' redundant values'),
+                    'text' => 'In <code>' . $e($file) . '</code>: ' . $list($redundant) . '. These values already match the defaults or the project configuration.',
+                    'action' => '<button type="button" class="button" data-on_click="userConfirm" data-action="prune" data-confirm="Remove from ' . $e($file) . ': ' . $e(implode(', ', $redundant)) . '?" data-file="' . $e($file) . '"><i class="cmsIcon cmsIcon-trash"></i>Remove them</button>',
                 ];
             }
         }
@@ -260,7 +268,7 @@ final class EnvironmentForm
                 'title' => count($names) . ' defined nowhere',
                 'text' => 'In <code>' . $e($in) . '</code>: ' . $list($names) . '. No package defines ' . (count($names) === 1 ? 'it' : 'them') . '.',
                 'action' => $in === EnvironmentFile::LOCAL
-                    ? '<button type="button" class="button" data-on_click="userConfirm" data-action="dropOrphans" data-confirm="Remove from ' . $e($in) . ': ' . $e(implode(', ', $names)) . '?" data-file="' . $e($in) . '"><i class="cmsIcon cmsIcon-eraser"></i>Remove them</button>'
+                    ? '<button type="button" class="button" data-on_click="userConfirm" data-action="dropOrphans" data-confirm="Remove from ' . $e($in) . ': ' . $e(implode(', ', $names)) . '?" data-file="' . $e($in) . '"><i class="cmsIcon cmsIcon-trash"></i>Remove them</button>'
                     : '<small>config.json counts for every installation: code elsewhere may still read them, so they stay.</small>',
             ];
         }
@@ -424,12 +432,6 @@ final class EnvironmentForm
         self::tool($definition);
     }
 
-    /** the head of a block that opens and closes: the chevron first */
-    private static function foldHead(string $key, string $head): string
-    {
-        return preg_replace('~^<div class="envGroupHead">~', '<div class="envGroupHead">' . self::foldToggle($key), $head, 1) ?? $head;
-    }
-
     /**
      * What a block brings beyond its values (`x-tool`: a class implementing
      * SettingsTool), below its rows.
@@ -569,7 +571,7 @@ final class EnvironmentForm
         self::closeCard();
         if ($fold !== null) {
             $class .= self::foldClass($fold);
-            $head = self::foldHead($fold, $head);
+            $head = '<div class="envFoldHead"><div>' . $head . '</div>' . self::foldToggle($fold) . '</div>';
         }
         echo '<tbody class="tableWidget envBlock' . $class . '"' . ($fold !== null ? ' data-fold="' . $e($fold) . '"' : '') . '>';
         if (self::$cards > 0) {
@@ -822,9 +824,6 @@ final class EnvironmentForm
             echo self::chip($value['source'], $value['source'] === 'stage' ? $v['stage'] : '', self::sourceLink($value['source'], $package, $path));
         }
         // notes
-        if (!$secret && $own && Explain::redundant($value['stack'], $layer)) {
-            echo '<small class="envNote">same as below</small>';
-        }
         if (!$secret && $own && $owner === 'project' && $layer === 'local') {
             echo '<small class="envNote">overrides the project</small>';
         }
@@ -1282,7 +1281,7 @@ final class EnvironmentForm
         }
         if ($result === false) {
             \message::error('That change was not saved.');
-            $panel->updateViews(['main', 'controls']);
+            $panel->updateView('main');
             return;
         }
         \message::confirm(match ($action) {
@@ -1292,7 +1291,7 @@ final class EnvironmentForm
             default => 'Saved.',
         });
         // a save changes where the value comes from: the row shows it again
-        $panel->updateViews(['main', 'controls']);
+        $panel->updateView('main');
     }
 
     private static function posted(): string

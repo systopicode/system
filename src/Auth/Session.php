@@ -335,6 +335,13 @@ final class Session
         return true;
     }
 
+    /** The next request after a successful restore must sign in normally. */
+    public static function finishRecovery(): void
+    {
+        \http::sessionStartOnce();
+        unset($_SESSION[self::RECOVERY_KEY], $_SESSION[self::RETURN_KEY]);
+    }
+
     // ------------------------------------------------------------ state
 
     /** The panels' state tree, kept in the session; `fakeRoles` lives here too. */

@@ -55,7 +55,8 @@ class fsLoader {
 	 * Stylesheets inlined into an @scope block, so they only reach inside
 	 * one element - the page preview in the cms.
 	 *
-	 * @scope limits WHERE rules match without rewriting a single selector.
+	 * @scope limits WHERE rules match. For the page preview, document
+	 * selectors are mapped to the scoped article instead of the admin shell.
 	 * That is the whole point: the legacy did it with a regex that prefixed
 	 * every selector with `article `, which broke on the first @media (the
 	 * pattern cannot do nested braces), turned `:root` into something that
@@ -75,8 +76,9 @@ class fsLoader {
 	 * @param string[] $skip  file names to leave out
 	 * @param string   $limit selector of what the rules stop at, '' for none
 	 * @param bool     $liftDocument lift :root, @font-face and @keyframes out of the scope
+	 * @param bool     $preview map document selectors to the preview, and lift fonts and keyframes
 	 */
-	static function includeCSSFilesScoped($dirFilesOrFile, string $scope, string $layer = '', array $skip = [], $recursive = FALSE, string $limit = '', bool $liftDocument = false): string
+	static function includeCSSFilesScoped($dirFilesOrFile, string $scope, string $layer = '', array $skip = [], $recursive = FALSE, string $limit = '', bool $liftDocument = false, bool $preview = false): string
 	{
 		$css = '';
 		$imports = '';
@@ -102,8 +104,8 @@ class fsLoader {
 				return '';
 			}, $content);
 			$content = preg_replace_callback('~url\(\s*([\'"]?)([^\'")]+)\1\s*\)~i', fn($m) => "url('" . $absolute(trim($m[2])) . "')", $content);
-			if ($liftDocument) {
-				[$wide, $content] = self::liftDocumentRules($content);
+			if ($liftDocument || $preview) {
+				[$wide, $content] = self::splitScopedRules($content, $preview);
 				if (trim($wide) !== '') {
 					$document .= "\n/* $file->name */\n" . $wide;
 				}
@@ -132,7 +134,7 @@ class fsLoader {
 	 *
 	 * @return array{0: string, 1: string} document-wide rules, then the rest
 	 */
-	private static function liftDocumentRules(string $css): array
+	private static function splitScopedRules(string $css, bool $preview = false): array
 	{
 		$document = '';
 		$rest = '';
@@ -168,10 +170,17 @@ class fsLoader {
 			if ($css[$i] === '{') {
 				$end = self::matchingBrace($css, $i);
 				$block = substr($css, $i, $end - $i);
-				if (self::isDocumentWide($buf)) {
+				$head = trim(preg_replace('~/\*.*?\*/~s', '', $buf) ?? $buf);
+				if ($preview && preg_match('/^@(media|supports|container|layer|starting-style)\b/i', $head)) {
+					[$wide, $inside] = self::splitScopedRules(substr($block, 1, -1), true);
+					if (trim($wide) !== '') {
+						$document .= $buf . '{' . $wide . '}';
+					}
+					$rest .= $buf . '{' . $inside . '}';
+				} elseif (self::isDocumentWide($buf) && (!$preview || str_starts_with($head, '@'))) {
 					$document .= $buf . $block;
 				} else {
-					$rest .= $buf . $block;
+					$rest .= ($preview && !str_starts_with($head, '@') ? self::previewSelectors($buf) : $buf) . $block;
 				}
 				$buf = '';
 				$i = $end;
@@ -182,6 +191,44 @@ class fsLoader {
 		}
 		$rest .= $buf;
 		return [$document, $rest];
+	}
+
+	/** Remap document selectors only at the start of each selector list item. */
+	private static function previewSelectors(string $prelude): string
+	{
+		$pattern = <<<'REGEX'
+~ /\* .*? \*/ | "(?:\\.|[^"\\])*" | '(?:\\.|[^'\\])*' | \\. | [(),\[\]] ~sx
+REGEX;
+		preg_match_all($pattern, $prelude, $tokens, PREG_OFFSET_CAPTURE);
+		$start = $depth = 0;
+		$out = '';
+		$replace = static fn(string $selector): string => preg_replace(
+			'~^((?:\s|/\*.*?\*/)*)' .
+			'(?:(?:html|:root)(?:\s*>\s*|\s+)body|:root|html|body)(?![\w\-\x80-\xff\\\\])~is',
+			'$1:scope',
+			$selector,
+		) ?? $selector;
+		foreach ($tokens[0] as [$token, $at]) {
+			if ($token === '(' || $token === '[') {
+				$depth++;
+			} elseif ($token === ')' || $token === ']') {
+				$depth--;
+			} elseif ($token === ',' && $depth === 0) {
+				$out .= $replace(substr($prelude, $start, $at - $start)) . ',';
+				$start = $at + 1;
+			}
+		}
+		return $out . $replace(substr($prelude, $start));
+	}
+
+	/** Responsive project rules use the same selector mapping as the main stylesheet. */
+	public static function previewResponsiveCss(string $css): string
+	{
+		[$document, $scoped] = self::splitScopedRules(
+			preg_replace('/@media\b/', '@container cms-preview', $css) ?? $css,
+			true,
+		);
+		return $document . "\n@scope (article.cmsContent) to (.cmsOwn) {\n$scoped\n}";
 	}
 
 	private static function isDocumentWide(string $prelude): bool

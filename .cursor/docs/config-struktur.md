@@ -458,8 +458,8 @@ Eine neue Sprache wird damit auf allen Installationen nachgezogen; wo die Datenb
 noch nicht hat, sind die Seiten leer. `bin/config.php --import-settings` überträgt
 global.settings.json oder die `define()` einer settings.php (auch mehrzeilige
 Literal-Arrays) nach config.json und nimmt sie dort heraus. Was übrig bleibt (freie
-Konstanten des Projekts in settings.php), zeigt das Panel Global Settings weiter; ohne
-Quelle verschwindet es aus dem Menü. Media Settings bleiben, wie sie sind. Noch offen:
+Konstanten des Projekts in settings.php), zeigt das Panel Legacy Settings weiter. Es
+erscheint nur, wenn die Datei noch Einstellungen enthält, die keinem Paket zugeordnet sind. Media Settings bleiben, wie sie sind. Noch offen:
 sortierbare Listen und die Flaggen der Sprachen im Formular.
 
 Eine Ansicht: Jeder Wert wird in die Datei geschrieben, der er gehört

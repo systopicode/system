@@ -208,10 +208,9 @@
 	 * The preview renders the real page inside <article class="cmsContent">,
 	 * so the site's css has to reach in there - and only there.
 	 *
-	 * Two halves, because three at-rules cannot live inside @scope:
-	 * @font-face, :root and @keyframes are document-wide by nature. The
-	 * project names those in css/system_overrides.css (css/cms_overrides.css
-	 * while a project has not saved the new name yet); everything else is scoped.
+	 * The preview article stands in for the document: html, body and :root
+	 * select that article. Fonts and keyframes are emitted outside @scope.
+	 * System overrides have a separate layer and keep their existing scope.
 	 *
 	 * Not scoped either: x_responsive.css. Its media queries would measure
 	 * the BROWSER window, not the preview pane, so the preview would claim
@@ -228,11 +227,12 @@
 		'preview',
 		['system_overrides.css', 'cms_overrides.css', 'pages_overrides.css', 'fonts.css', 'animate.css', 'x_responsive.css'],
 		limit: '.cmsOwn',
+		preview: true,
 	);
 	$responsiveFile = fs::$siteRoot . 'css/x_responsive.css';
 	if (fs::isFile($responsiveFile)) {
-		$responsive = preg_replace('/@media\b/', '@container cms-preview', fs::getFileContents($responsiveFile));
-		echo "<style>\n@layer preview {\n@scope (article.cmsContent) to (.cmsOwn) {\n$responsive\n}\n}\n</style>\n";
+		$responsive = fsLoader::previewResponsiveCss(fs::getFileContents($responsiveFile));
+		echo "<style>\n@layer preview {\n$responsive\n}\n</style>\n";
 	}
 	echo '<!-- +-+-+-+-+-+-+-+-+-+ PROJECT UI OVERRIDES +-+-+-+-+-+-+-+-+-+-+-->';
 	// Page CSS is parsed into the preview. System CSS is a plain stylesheet

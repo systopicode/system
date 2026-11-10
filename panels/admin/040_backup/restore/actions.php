@@ -204,10 +204,12 @@ switch ($this->action) {
 
 		$this->updateView('lightbox');
 		if (\Systopic\System\Auth\Session::isRecovery()) {
-			// the installation has its accounts now: the setup link is spent
+			// The recovery identity only exists for this request. Open sign-in
+			// as a new document, without sending a second AJAX action to admin.
 			\Systopic\System\Setup\Setup::spendToken(fs::toNative((string) fs::$projectRoot));
+			\Systopic\System\Auth\Session::finishRecovery();
 			message::confirm('Restore complete. Sign in again.');
-			http::redirect(http::$root . 'admin/logout');
+			http::redirect(http::$root . 'auth/', full: true);
 		} else {
 			message::confirm('Restore complete.');
 			http::refresh('./', 'clearTempfiles');

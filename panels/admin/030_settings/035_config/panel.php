@@ -40,7 +40,7 @@ class Panel extends SettingsPanel
             $this->state->package = (string) $asked;
             // from one package to the next the panel stays the same: its views are not drawn again unless marked
             if (\http::method() === 'GET' && $this->inPath()) {
-                $this->updateViews(['main', 'controls']);
+                $this->updateView('main');
             }
         }
         if (!in_array((string) ($this->state->package ?? ''), EnvironmentForm::packages(), true)) {

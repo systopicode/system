@@ -16,7 +16,7 @@ class Panel extends PanelNode {
 	public $icon = 'cmsIcon cmsIcon-duotone cmsIcon-gear';
 	public ?int $naviOrder = 40;
 
-	/** Global Settings and Tags exist before onLoad, so the menu can open one. */
+	/** Settings children exist before onLoad, so the menu can open one. */
 	public bool $buildChildPanels = true;
 
 	/** The request's scope — the settings children read and write through it. */
@@ -37,6 +37,10 @@ class Panel extends PanelNode {
 	function onLoad() {
 		if ($this->inPath()) {
 			$this->updateView('pylon');
+		}
+		$legacy = $this->child('pagesettings');
+		if ($legacy instanceof Pagesettings\Panel) {
+			$legacy->refreshNavigation();
 		}
 		$this->rememberOrOpenChild();
 		// child('page') is the 010_page sub-panel; it is null until the

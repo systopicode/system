@@ -1,8 +1,8 @@
 /* global sys */
 (function () {
 	var setup = {
-		info: 'Environment',
-		route: 'panels.admin.settings.environment',
+		info: 'Config',
+		route: 'panels.admin.settings.config',
 		extends: 'panels.admin',
 	};
 	sys.lib.add(setup, function () {

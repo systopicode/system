@@ -64,6 +64,6 @@ final class AuthTool implements SettingsTool
                 default => 'Sign-in key deleted. Codes already sent stop working.',
             });
         }
-        $panel->updateViews(['main', 'controls']);
+        $panel->updateView('main');
     }
 }

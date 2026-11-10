@@ -60,7 +60,7 @@ class httpHelper {
 		return http_build_query((array) $query);
 	}
 
-	static function redirect($path, $action = '', $get = []) { // page is not rendered
+	static function redirect($path, $action = '', $get = [], bool $full = false) { // page is not rendered
 		// d($path);
 		if (http::ajax()) {
 			// 2do
@@ -73,7 +73,7 @@ class httpHelper {
 					'path' => $path,
 					'action' => $action,
 					'get' => $get,
-					'method' => 'get',
+					'method' => $full ? 'load' : 'get',
 				])
 				->delay(0);
 		} else {

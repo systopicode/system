@@ -34,9 +34,6 @@ final class ProjectForm
         echo \message::flush();
         if ($path === null) {
             echo '<p>Missing ' . $e($filename) . '.</p>';
-            if ($which === 'page' && $show === []) {
-                self::systemSettings();
-            }
             echo '</div>';
             return;
         }
@@ -127,7 +124,7 @@ final class ProjectForm
             }
             echo '</section>';
         }
-        if ($which === 'page' && $show === []) {
+        if ($legalSettings !== []) {
             self::systemSettings($legalSettings);
         }
         echo '</div>';
@@ -144,6 +141,12 @@ final class ProjectForm
     {
         $key = (string) preg_replace('/^[a-z]+:/', '', $group->id);
         return ($show === [] || in_array($key, $show, true)) && !in_array($key, $hide, true);
+    }
+
+    /** @param list<string> $hide the keys another panel shows */
+    public static function hasVisibleGroups(string $path, array $hide): bool
+    {
+        return array_any(ProjectFile::groups($path), static fn(Group $group): bool => self::shown($group, [], $hide));
     }
 
     public static function handle(PanelNode $panel, string $which): void
@@ -326,26 +329,11 @@ final class ProjectForm
         echo '</div>';
     }
 
-    /** @param list<Group> $legalSettings Project-wide legal links beside the instance sign-in default. */
-    private static function systemSettings(array $legalSettings = []): void
+    /** @param list<Group> $legalSettings Project-wide legacy legal links. */
+    private static function systemSettings(array $legalSettings): void
     {
-        $e = static fn($value): string => htmlspecialchars((string) $value, ENT_QUOTES);
-        $file = EnvironmentFile::activeFile();
-        if ($file === null && $legalSettings === []) return;
-        $data = $file !== null ? EnvironmentFile::read($file) : [];
-        $auth = (array) ($data['packages']['system']['auth'] ?? []);
-        $method = \Systopic\System\Auth\AuthConfig::defaultSignInMethod();
-        echo '<section class="widget"><header><h2>System</h2></header>';
-        echo '<div class="tableScroll">';
-        echo '<table class="scalars"><thead><tr><th>Setting</th><th>Value</th></tr></thead><tbody>';
-        if ($file !== null) {
-            echo '<tr class="securityRow"><td><span>Default sign-in<small>defaultSignInMethod</small><small class="settingNote">Which sign-in opens first. Ask each time shows the method list.</small></span></td><td>';
-            echo '<select data-on_change="saveAuthMethod" data-file="' . $e($file) . '" data-group="auth" data-key="defaultSignInMethod" name="value" aria-label="Default sign-in">';
-            foreach (['' => 'Ask each time', 'code' => 'Sign-in code', 'device_code' => 'Sign in from another device', 'passkey' => 'Passkey', 'password' => 'Username & password'] as $option => $label) {
-                echo '<option value="' . $e($option) . '"' . ($method === $option ? ' selected' : '') . '>' . $e($label) . '</option>';
-            }
-            echo '</select></td></tr>';
-        }
+        echo '<section class="widget"><header><h2>Legal</h2></header>';
+        echo '<div class="tableScroll"><table class="scalars"><thead><tr><th>Setting</th><th>Value</th></tr></thead><tbody>';
         self::scalarTable('page', $legalSettings, null, false);
         echo '</tbody></table></div></section>';
     }

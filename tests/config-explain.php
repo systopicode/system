@@ -15,7 +15,7 @@ use Systopic\System\Config\Tree;
 $system = Explain::definition('system');
 check('one definition per package, in its own order', array_slice(array_keys($system['properties']), 0, 3) === ['instance', 'website', 'legal']);
 check('the site addresses are the cms\'s', isset(Explain::definition('cms')['properties']['siteAddress']));
-check('a block holds the project\'s values and the installation\'s', array_keys($system['properties']['auth']['properties']) === ['defaultSignInMethod', 'deviceDays', 'screenDays', 'secret']);
+check('a block holds the project\'s values and the installation\'s', array_keys($system['properties']['auth']['properties']) === ['defaultSignInMethod', 'deviceDays', 'passwordLength', 'screenDays', 'secret']);
 check('every value knows its file', $system['properties']['auth']['properties']['secret']['x-file'] === 'local'
     && $system['properties']['auth']['properties']['deviceDays']['x-file'] === 'project'
     && $system['properties']['debug']['properties']['debug']['x-file'] === 'local');

@@ -46,10 +46,10 @@ final class MailTool implements SettingsTool
                 $recipient = 'Invalid recipient — delivery blocked';
             }
             echo '<p class="tagsHint">Effective delivery: <strong>' . $e($transport) . '</strong> → <strong>' . $e($recipient) . '</strong>. Local overrides apply. SMTP acceptance confirms handover to this server, not delivery to the inbox.</p>';
-            $actions = '<button type="button" class="button" data-action-feedback data-loading data-on_click="testMail" data-file="' . $e($view->file) . '"><i class="cmsIcon cmsIcon-paper-plane"></i>Send test email</button><a class="button outline" href="' . $e(\http::$root . 'admin/tools/logs/email/') . '"><i class="cmsIcon cmsIcon-envelope"></i>Email log</a>';
+            $actions = '<button type="button" class="button" data-action-feedback data-loading data-on_click="testMail" data-file="' . $e($view->file) . '"><i class="cmsIcon cmsIcon-paper-plane"></i>Send test email</button><a class="button" href="' . $e(\http::$root . 'admin/tools/logs/email/') . '"><i class="cmsIcon cmsIcon-envelope"></i>Email log</a>';
         }
         if (Session::isSuperuser()) {
-            echo '<div class="envToolActions"><button type="button" class="button outline" data-on_click="userConfirm" data-action="resetMail" data-confirm="Set the mail settings of this installation to the fluxo account? This clears SMTP credentials and test routing overrides." data-file="' . $e($view->file) . '"><i class="cmsIcon cmsIcon-arrow-rotate-left"></i>Use the fluxo account</button>' . $actions . '</div>';
+            echo '<footer class="envToolActions"><button type="button" class="button" data-on_click="userConfirm" data-action="resetMail" data-confirm="Set the mail settings of this installation to the fluxo account? This clears SMTP credentials and test routing overrides." data-file="' . $e($view->file) . '"><i class="cmsIcon cmsIcon-arrow-rotate-left"></i>Use the fluxo account</button>' . $actions . '</footer>';
         }
         echo '</div>';
     }
@@ -60,7 +60,7 @@ final class MailTool implements SettingsTool
             Session::isSuperuser() && ToolView::running($file) && self::reset()
                 ? \message::confirm('Mail settings set to the fluxo account.')
                 : \message::error('That change was not saved.');
-            $panel->updateViews(['main', 'controls']);
+            $panel->updateView('main');
             return;
         }
         if (!Session::isSuperuser() || !ToolView::running($file)) {
@@ -75,7 +75,7 @@ final class MailTool implements SettingsTool
             $detail = Failure::detail($error->getMessage(), Delivery::settings());
             \message::error('Test mail failed. ' . Failure::hint($detail) . ' Server response: ' . htmlspecialchars($detail, ENT_QUOTES));
         }
-        $panel->updateViews(['main', 'controls']);
+        $panel->updateView('main');
     }
 
     /** The fluxo account for this installation: its fields replaced, test routing off. */

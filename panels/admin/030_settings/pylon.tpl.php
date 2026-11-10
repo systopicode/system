@@ -23,7 +23,7 @@ $packageOf = static function ($node): string {
 };
 $byPackage = [];
 foreach ($items as $node) {
-    $byPackage[$packageOf($node)][] = $node;
+    if ($node->inNavi) $byPackage[$packageOf($node)][] = $node;
 }
 $configured = $config === null ? [] : EnvironmentForm::packages();
 $order = array_values(array_unique([...$configured, ...array_keys($byPackage)]));
@@ -53,5 +53,4 @@ foreach ($order as $package) {
 </ul>
 <?php } ?>
 </nav>
-<?php if ($this->childSelected?->name === 'config') EnvironmentForm::legend(); // what the marks of the configuration mean ?>
 <div data-drag_type="none" data-on_draginit="draginitPylonwidth"></div></div>

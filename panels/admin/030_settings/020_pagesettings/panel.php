@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Systopic\System\Panels\Root\Admin\Settings\Pagesettings;
 
 use Systopic\System\Panels\Root\Admin\Settings\Panel as SettingsPanel;
+use Systopic\System\Settings\ProjectFile;
+use Systopic\System\Settings\ProjectForm;
 
 /**
  * Global settings — one table per group. The file is config/global.settings.json.
@@ -23,12 +25,17 @@ class Panel extends SettingsPanel
     public function __construct($name, $parent = null)
     {
         parent::__construct($name, $parent);
-        $this->label = 'Global Settings';
-        // what is left of global.settings.json or settings.php: without it, nothing to show
-        $this->inNavi = \Systopic\System\Settings\ProjectFile::path('page') !== null;
+        $this->label = 'Legacy Settings';
+        $this->inNavi = false;
     }
 
     function onLoad() {}
+
+    public function refreshNavigation(): void
+    {
+        $path = ProjectFile::path('page');
+        $this->inNavi = $path !== null && ProjectForm::hasVisibleGroups($path, $this->claimed());
+    }
 
     function onLoadThisClass() {}
 
@@ -56,6 +63,6 @@ class Panel extends SettingsPanel
 
     public function searchHits(\Systopic\System\Sys\Search $search): void
     {
-        \Systopic\System\Settings\ProjectForm::searchHits($search, 'page', $this->getHref(\http::$root), [], $this->claimed());
+        ProjectForm::searchHits($search, 'page', $this->getHref(\http::$root), [], $this->claimed(), $this->label);
     }
 }

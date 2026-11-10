@@ -510,14 +510,14 @@ div.table .tc{
 }
 
 /* Row actions share one quiet appearance across settings and administration. */
-.cms table:not(.editor table) tbody .button:not(.submit, .confirm, .active, .selected) {
+.cms table:not(.editor table) tbody .button:not(.submit, .confirm, .active, .selected):where(:not(footer *)) {
     background: transparent;
     color: var(--cmsBrandInk);
 }
-.cms table:not(.editor table) tbody .button:not(.submit, .confirm, .active, .selected):not([disabled], .disabled):is(:hover, :focus-visible) {
+.cms table:not(.editor table) tbody .button:not(.submit, .confirm, .active, .selected):where(:not(footer *)):not([disabled], .disabled):is(:hover, :focus-visible) {
     background: var(--cmsHover);
 }
-.cms table:not(.editor table) tbody .button:not(.submit, .confirm, .active, .selected):not([disabled], .disabled):active {
+.cms table:not(.editor table) tbody .button:not(.submit, .confirm, .active, .selected):where(:not(footer *)):not([disabled], .disabled):active {
     background: color-mix(in srgb, var(--cmsMainColor) 14%, transparent);
 }
 

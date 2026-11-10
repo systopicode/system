@@ -785,6 +785,9 @@ details[open] > summary > .summaryToggle i { transform:rotate(180deg); }
     margin: 0;
     font-size: 1rem;
 }
+.cms .tableWidgets table.tableWidgetGrid tr.tableWidgetGap {
+    pointer-events: none;
+}
 .cms .tableWidgets table.tableWidgetGrid tr.tableWidgetGap > td {
     background: transparent;
     height: 1rem;
