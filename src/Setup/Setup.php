@@ -47,7 +47,9 @@ use Systopic\System\Tables\Users\Operator as UserOperator;
  * works before the config exists.
  *
  * After that the token opens Maintenance: config.local.json, in any state.
- * Sync writes it for that; a token lasts TOKEN_LIFETIME seconds.
+ * Sync writes it for that; a token lasts TOKEN_LIFETIME seconds. With the
+ * token, `&scripts=1` lists the scripts of bin/ and runs those marked
+ * `@setup` (Scripts, ScriptRun), whatever state the config is in.
  */
 final class Setup
 {
@@ -125,6 +127,11 @@ final class Setup
         $root = rtrim(str_replace('\\', '/', $projectRoot), '/');
         $setup = new self($root, $server, null);
         header('Cache-Control: no-store');
+        // the scripts of bin/: before the config, they may be what sets it up
+        if (Scripts::asked()) {
+            (new Scripts($setup, $root, $server, (string) self::tokenIn($root)))->handle();
+            exit;
+        }
         try {
             $config = Config::boot($root . '/config', $server, $root);
         } catch (NotConfigured $reason) {
@@ -708,6 +715,15 @@ final class Setup
     {
         header('Content-Type: text/html; charset=utf-8');
         $title = $this->h($title);
+        // with the token: the scripts of bin/ (Scripts) or back from them, the site, the admin
+        $token = $this->token();
+        $given = (string) ($_POST['setup'] ?? $_GET['setup'] ?? '');
+        if ($token !== null && $given !== '' && hash_equals($token, $given)) {
+            $setup = './?setup=' . $this->h($token);
+            $body .= '<p class="more">'
+                . (Scripts::asked() ? '<a class="button" href="' . $setup . '">back to the setup</a> ' : '<a class="button" href="' . $setup . '&amp;scripts=1">Scripts in bin/</a> ')
+                . '<a class="button" href="./">open home</a> <a class="button" href="./admin/">open admin panel</a></p>';
+        }
         echo <<<HTML
             <!DOCTYPE html>
             <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width">
@@ -729,6 +745,12 @@ final class Setup
                 code { color: orange; }
                 .hint { color: #888; font-size: 13px; }
                 .errors { color: #ff6b5b; padding-left: 18px; }
+                .ok { color: #7cb249; }
+                p.errors { padding-left: 0; }
+                a { color: orange; }
+                a.button { display: inline-block; padding: 7px 16px; border: 1px solid #444; color: #ddd; text-decoration: none; }
+                a.button:hover { border-color: orange; color: orange; }
+                .more { margin-top: 32px; border-top: 1px solid #333; padding-top: 16px; }
             </style></head>
             <body><main><h1>$title</h1>$body</main></body></html>
             HTML;

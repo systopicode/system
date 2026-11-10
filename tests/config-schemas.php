@@ -19,7 +19,7 @@ const PACKAGES = ['system', 'db', 'cms', 'relay'];
 const KEYWORDS = [
 	'$schema', 'title', 'description', 'type', 'properties', 'required', 'items', 'enum', 'default', 'minimum', 'maximum',
 	'minLength', 'pattern', 'format', 'additionalProperties', 'propertyNames', 'not', 'anyOf', 'writeOnly',
-	'x-mandatory', 'x-stages', 'x-computed', 'x-optional', 'x-overridable', 'x-options', 'x-backup', 'x-tool', 'x-entry-name', 'x-project', 'x-icon', 'x-constant',
+	'x-mandatory', 'x-stages', 'x-computed', 'x-optional', 'x-overridable', 'x-options', 'x-backup', 'x-tool', 'x-entry-name', 'x-project', 'x-icon', 'x-constant', 'x-setup',
 ];
 
 function check(string $label, bool $ok, string $detail = ''): void

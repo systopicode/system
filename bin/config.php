@@ -26,6 +26,17 @@ declare(strict_types=1);
  *
  * Every file that changes is copied to var/config-backup/<time>/ first. See
  * .cursor/docs/config-struktur.md.
+ *
+ * Started from the setup page (Setup\Scripts) it knows the request: --adopt
+ * finds this installation's file by its host and path. It asks before it
+ * names an installation that has a name already, and before it changes
+ * config.json, which every installation shares (ScriptRun::confirm()).
+ *
+ * @setup      the config files: check them, take the old instance file over, tidy up
+ * @setup-run  --check
+ * @setup-run  --adopt
+ * @setup-run  --prune-defaults
+ * @setup-run  --import-settings
  */
 
 use Systopic\System\Config\Config;
@@ -34,6 +45,7 @@ use Systopic\System\Config\Layout;
 use Systopic\System\Config\MachineRules;
 use Systopic\System\Config\Reconcile;
 use Systopic\System\Config\Tree;
+use Systopic\System\Setup\ScriptRun;
 use Systopic\System\Setup\Setup;
 
 $root = str_replace('\\', '/', (string) getcwd());
@@ -128,13 +140,17 @@ if ($option === '--adopt' || str_starts_with($option, '--adopt=')) {
 	}
 	$name = substr($option, strlen('--adopt='));
 	if ($name === '' || $option === '--adopt') {
+		// from the setup: its request, host and path; in a terminal only the machine's address
 		$ip = \Systopic\System\Http::getSocketIp();
-		$hit = MachineRules::select(array_filter($entries, static fn(array $e): bool => !empty($e['matches'])), ['SERVER_NAME' => $ip, 'HTTP_HOST' => $ip, 'SERVER_ADDR' => $ip], $root);
+		$server = ScriptRun::fromSetup() ? ScriptRun::server() : ['SERVER_NAME' => $ip, 'HTTP_HOST' => $ip, 'SERVER_ADDR' => $ip];
+		$hit = MachineRules::select(array_filter($entries, static fn(array $e): bool => !empty($e['matches'])), $server, $root);
 		$name = $hit[0] ?? '';
 		if ($name === '') {
-			fwrite(STDERR, "no instance file fits this machine ($ip): name it, --adopt=<instance> (" . implode(', ', array_keys($entries)) . ")\n");
+			$where = (string) ($server['HTTP_HOST'] ?? $server['SERVER_NAME'] ?? $ip);
+			fwrite(STDERR, "no instance file fits this machine ($where): name it, --adopt=<instance> (" . implode(', ', array_keys($entries)) . ")\n");
 			exit(1);
 		}
+		$say("this machine is $name");
 	}
 	if (!isset($entries[$name])) {
 		fwrite(STDERR, "$name.config.json cannot be read\n");
@@ -147,6 +163,11 @@ if ($option === '--adopt' || str_starts_with($option, '--adopt=')) {
 	}
 	$old = Layout::lift($entries[$name]);
 	$local = Layout::lift($local);
+	$named = (string) ($local['packages']['system']['instance'] ?? '');
+	if ($named !== '' && $named !== $name && !ScriptRun::confirm("config.local.json names this installation $named already. Take $name.config.json over it and call it $name?")) {
+		$say('nothing changed');
+		exit(0);
+	}
 	// what config.local.json says already wins, as it did over the instance file
 	$packages = Config::merge((array) ($old['packages'] ?? []), (array) ($local['packages'] ?? []));
 	$packages['system']['instance'] = $name;
@@ -319,6 +340,10 @@ if ($option === '--import-settings') {
 			Tree::put($project, $keys, $value);
 		}
 		$moved[] = $name;
+	}
+	if (!ScriptRun::confirm('config.json is the same on every installation and travels with git and sync. Move ' . implode(', ', $moved) . ' into it?')) {
+		$say('nothing changed');
+		exit(0);
 	}
 	$backup('config.json');
 	if (!Setup::writeJson("$root/config/config.json", $project)) {

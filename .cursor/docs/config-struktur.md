@@ -94,7 +94,9 @@ mit `--migrate=all`. Vorher zurückgesetzt, die Seiten lesen weiter settings.php
 **Reihenfolge auf Servern:** erst den neuen System-Code, dann Projektdateien, die schon
 umgestellt sind (gekürzte settings.php, config.json mit `packages.*`). Alter Code fände
 Name, Meta und Sprachen sonst nicht. Betrifft STAGING/LIVE von `smp.de` und
-`spaceticker.app`; dort außerdem `--adopt=STAGING` bzw. `--adopt=LIVE`.
+`spaceticker.app`; dort außerdem `--adopt=STAGING` bzw. `--adopt=LIVE`. Ohne SSH: Sync →
+„open Setup“ → „Scripts in bin/“ → `config.php` mit `--adopt` (erkennt die Installation am
+Host) oder `--adopt=STAGING`, siehe [setup.md](setup.md), „Skripte aus `bin/`“.
 
 **Offen:**
 
@@ -429,6 +431,7 @@ ein eigener Prüfer in wenigen Zeilen abdeckt, eine Bibliothek braucht es nicht.
 | `x-tool` | an einem Block: Klasse, die `Settings\SettingsTool` umsetzt. Sie zeigt unter den Werten, was mehr ist als ein Wert (Testmail, Sign-in-Key, Hub), und nimmt ihre Aufrufe an. Das Paket bringt sie mit: `system` `Tools\MailTool` und `Tools\AuthTool`, `relay` `Settings\HubTool` |
 | `x-constant` | an einem Wert oder einer Map: die PHP-Konstante, die `Config::defineSettingConstants()` daraus macht (nach einer evtl. noch vorhandenen settings.php, die gewinnt). So lesen die bisherigen Stellen weiter `PUBLIC_PAGE_NAME`, `META_*`, `LANGUAGES` |
 | `x-icon` | an der Wurzel: das Symbol des Pakets im Settings-Menü (`server`, `database`, `sitemap`, `bolt`) |
+| `x-setup` | ohne diesen Wert startet die Installation nicht: das Setup über Sync zeigt nur ihn (`system.instance`, Host, Port, Name, User, Passwort der Verbindung `main`). Alles andere im Admin, Settings › Config |
 | `x-entry-name` | an einem Wert eines Eintrags: ein neuer Eintrag beginnt mit seinem Namen darin (eine Verbindung `revolver` mit der Datenbank `revolver`) |
 
 ### Formular aus dem Schema

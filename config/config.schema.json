@@ -11,7 +11,8 @@
 			"description": "The name of this installation: its stage, then a dot and the machine. DEV.ojhome, STAGING, LIVE. The stage decides the defaults that differ between stages.",
 			"type": "string",
 			"pattern": "^[A-Z]+(\\.[A-Za-z0-9_-]+)?$",
-			"x-mandatory": "input"
+			"x-mandatory": "input",
+			"x-setup": true
 		},
 		"website": {
 			"title": "Website",

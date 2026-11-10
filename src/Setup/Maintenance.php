@@ -16,10 +16,11 @@ use Systopic\System\Config\Tree;
  * writes (Setup::maintenance()), see .cursor/docs/config-struktur.md, "Setup
  * über Sync".
  *
- * The form comes from the definitions: every secret, and every value that may
- * be overridden here. Whatever else the file holds is a block of JSON below
- * them. A secret never reaches the page: it says whether there is one, and an
- * empty field keeps it.
+ * Only what the installation cannot start without: the values the
+ * definitions mark `x-setup` (its name, the access to the database `main`).
+ * Everything else is set in the admin, Settings › Config, once the site
+ * runs; saving here leaves it as it is. A secret never reaches the page: it
+ * says whether there is one, and an empty field keeps it.
  *
  * Saving writes the new layout and spends the token.
  */
@@ -27,9 +28,6 @@ final class Maintenance
 {
     /** @var list<string> */
     private array $errors = [];
-
-    /** the names a secret goes by - also for keys no definition knows */
-    private const SECRET_KEYS = ['pass', 'password', 'secret', 'apiKey'];
 
     public function __construct(
         private readonly Setup $setup,
@@ -70,14 +68,16 @@ final class Maintenance
     private function fields(): array
     {
         $fields = [];
-        foreach (['db', 'system', 'relay'] as $package) {
+        // the name first, then the database
+        foreach (['system', 'db'] as $package) {
             $tree = $this->config->package($package);
             $definition = Schema::load($package);
             if ($definition !== [] && (empty($definition['x-optional']) || $tree !== [])) {
                 $this->walk($package, $definition, [], $tree, $fields);
             }
         }
-        return $fields;
+        // of the connections only main: every other one may be down without the site noticing (connects())
+        return array_filter($fields, static fn(string $name): bool => !str_starts_with($name, 'db.connections.') || str_starts_with($name, 'db.connections.main.'), ARRAY_FILTER_USE_KEY);
     }
 
     /**
@@ -98,52 +98,14 @@ final class Maintenance
                 if (empty($child['x-optional']) || isset($tree[$key])) {
                     $this->walk($package, $child, $here, is_array($tree[$key] ?? null) ? $tree[$key] : [], $fields);
                 }
-            } elseif (!empty($child['writeOnly']) || !empty($child['x-overridable']) || ($child['x-file'] ?? 'local') === 'local') {
+            } elseif (!empty($child['x-setup'])) {
                 $fields[$package . '.' . implode('.', $here)] = [
                     'package' => $package,
                     'path' => $here,
-                    'label' => ucfirst($package) . ($path === [] ? '' : ' ' . implode(' ', array_diff($path, ['connections']))) . ': ' . (string) ($child['title'] ?? $key),
+                    // Installation; Database: Host (the connection main is the only one here)
+                    'label' => ($path === [] ? '' : (string) (Schema::load($package)['title'] ?? ucfirst($package)) . ': ') . (string) ($child['title'] ?? $key),
                     'definition' => $child,
                 ];
-            }
-        }
-    }
-
-    /**
-     * The file in two halves: what the block of JSON shows, and what stays off
-     * the page - the fields, and every secret, known to a definition or not.
-     *
-     * @param array<string, mixed> $file
-     * @param array<string, array<string, mixed>> $fields
-     * @return array{0: array<string, mixed>, 1: array<string, mixed>} shown, kept
-     */
-    private static function split(array $file, array $fields): array
-    {
-        $kept = [];
-        foreach ($fields as $field) {
-            $path = ['packages', $field['package'], ...$field['path']];
-            $value = Tree::get($file, $path);
-            if ($value !== null) {
-                Tree::put($kept, $path, $value);
-                Tree::drop($file, $path);
-            }
-        }
-        self::hideSecrets($file, [], $kept);
-        return [$file, $kept];
-    }
-
-    /** @param list<string> $path */
-    private static function hideSecrets(array &$node, array $path, array &$kept): void
-    {
-        foreach ($node as $key => &$value) {
-            if (is_array($value)) {
-                self::hideSecrets($value, [...$path, (string) $key], $kept);
-                if ($value === []) {
-                    unset($node[$key]);
-                }
-            } elseif (in_array($key, self::SECRET_KEYS, true)) {
-                Tree::put($kept, [...$path, (string) $key], $value);
-                unset($node[$key]);
             }
         }
     }
@@ -157,14 +119,8 @@ final class Maintenance
      */
     private function save(array $current, array $fields): ?array
     {
-        $rest = trim((string) ($_POST['rest'] ?? ''));
-        $shown = $rest === '' ? [] : json_decode($rest, true);
-        if (!is_array($shown)) {
-            $this->errors[] = 'the block of JSON is no JSON object';
-            return null;
-        }
-        [, $kept] = self::split($current, $fields);
-        $file = Config::merge($shown, $kept);
+        // what the form does not show stays as it is
+        $file = $current;
         $posted = is_array($_POST['f'] ?? null) ? $_POST['f'] : [];
         foreach ($fields as $name => $field) {
             if (!array_key_exists($name, $posted)) {
@@ -268,20 +224,29 @@ final class Maintenance
             $html .= '<label><span>' . $h($field['label']) . '</span><input name="' . $input . '" value="' . $h($value)
                 . '" placeholder="' . $h($hint) . '" autocomplete="off"></label>';
         }
-        [$shown] = self::split($current, $fields);
-        $rest = (string) ($_POST['rest'] ?? ($shown === [] ? '' : json_encode($shown, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)));
         $errors = $this->errors === [] ? '' : '<ul class="errors"><li>' . implode('</li><li>', array_map($h, $this->errors)) . '</li></ul>';
         $this->setup->page('Setup of ' . basename($this->root), <<<HTML
-            <p>Installation <b>{$h($this->config->instance->name)}</b>. This writes <code>config/config.local.json</code>, on this installation only.
-            An empty field falls back to config.json or the package, the grey value.</p>
+            {$this->databaseStatus()}
             $errors
             <form method="post">
                 {$this->setup->tokenField()}
                 $html
-                <label><span>Everything else in the file, as JSON</span>
-                    <textarea name="rest" rows="8" spellcheck="false" style="width:100%;box-sizing:border-box;background:#000;color:#fff;border:1px solid #333;font:13px monospace">{$h($rest)}</textarea></label>
                 <button>save</button>
             </form>
             HTML);
+    }
+
+    /** Does the database main answer, with what config.local.json says now? One line. */
+    private function databaseStatus(): string
+    {
+        $h = static fn(string $text): string => htmlspecialchars($text, ENT_QUOTES, 'UTF-8');
+        $access = $this->config->connection();
+        $where = (string) ($access['name'] ?? '') . ' on ' . (string) ($access['host'] ?? 'localhost');
+        try {
+            Connection::open($access);
+            return '<p class="ok">✓ Database connected: ' . $h($where) . '</p>';
+        } catch (\Throwable $e) {
+            return '<p class="errors">✗ No database connection (' . $h($where) . '): ' . $h($e->getMessage()) . '</p>';
+        }
     }
 }
