@@ -394,7 +394,7 @@ final class ProjectForm
                 if ($mediaGroups && $column === $templateField) {
                     $values = self::valuesOf($group, $item);
                     $picked = array_filter(array_map('trim', explode(';', (string) ($values['templates'] ?? ''))));
-                    $label = $picked === [] ? 'All templates' : count($picked) . (count($picked) === 1 ? ' template' : ' templates');
+                    $label = $picked === [] ? 'All templates' : ($picked === ['__none__'] ? 'No templates' : count($picked) . (count($picked) === 1 ? ' template' : ' templates'));
                     echo '<a class="ajax button transparent" href="' . $e(rtrim((string) \http::$root, '/') . '/admin/settings/mediasettings/types/') . '?kind=templates&amp;group=' . rawurlencode($item->key) . '">' . $e($label) . '<i class="cmsIcon cmsIcon-pen"></i></a></td>';
                     continue;
                 }

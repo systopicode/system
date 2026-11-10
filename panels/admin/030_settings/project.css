@@ -444,7 +444,7 @@ body > .projectTemplatesMenu.is-sheet{
     max-height: min(80lvh, calc(100lvh - env(safe-area-inset-top) - 12px));
     padding: 1.35rem var(--cmsInsetRight, 1rem) calc(1rem + env(safe-area-inset-bottom)) var(--cmsInsetLeft, 1rem);
     border: 0;
-    border-radius: 24px 24px 0 0;
+    border-radius: var(--cmsMobileRadius) var(--cmsMobileRadius) 0 0;
     background: var(--cmsBgColor);
     box-shadow: 0 -16px 40px rgb(0 20 25 / 28%);
 }
@@ -720,3 +720,6 @@ body:has(> .projectTemplatesMenu.is-sheet)::after{
 @media (max-width:767px) {
     .envHubTable { margin:.75rem 0 1rem; }
 }
+
+.mediaTypes:has(input[name="templateMode"][value="all"]:checked) .mediaTypeChoices { display:none; }
+.mediaTypes .mediaTemplateMode { margin-bottom:1rem; }

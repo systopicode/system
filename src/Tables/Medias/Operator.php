@@ -82,7 +82,7 @@ final class Operator
         // the target group without the medium, then the medium at its place
         $target = array_values(array_filter(
             self::groupOf($scope, $parentNodeId, $group),
-            static fn(Model $m): bool => $m !== $media,
+            static fn(Model $m): bool => $m->relationId('node') !== $ownId,
         ));
         $at = count($target);
         foreach ($target as $i => $m) {
@@ -112,7 +112,7 @@ final class Operator
         if ($fromParent !== null && ($fromParent !== $parentNodeId || $fromGroup !== $group)) {
             $left = array_values(array_filter(
                 self::groupOf($scope, $fromParent, $fromGroup),
-                static fn(Model $m): bool => $m !== $media,
+                static fn(Model $m): bool => $m->relationId('node') !== $ownId,
             ));
             $changed = [...$changed, ...self::renumber($left)];
         }

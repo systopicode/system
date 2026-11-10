@@ -422,10 +422,10 @@ body .objectContainer > input.ajax{
     text-transform: none;
 }
 
-/* The drop position is a yellow caret. The pointer itself is the drop cursor. */
+/* The drop position is a yellow caret. */
 body.editorMediaDrop,
 body.editorMediaDrop *{
-    cursor: copy !important;
+    cursor: grabbing !important;
     user-select: none !important;
     -webkit-user-select: none !important;
     touch-action: none;
@@ -441,23 +441,6 @@ body.editorMediaDrop *{
     border-radius: 1px;
 }
 
-.editorMediaHold{
-    display: inline-block;
-    width: 2px;
-    height: 1.1em;
-    margin: 0 1px;
-    vertical-align: text-bottom;
-    background: var(--cmsHighlightColor);
-}
-
-.editorMediaHold.is-gap{
-    background: transparent;
-    margin: 0;
-    vertical-align: top;
-    pointer-events: none;
-}
-
-
 
 .editor table{
 	width:100%;
@@ -470,8 +453,6 @@ body.editorMediaDrop *{
 /* Keyboard focus must enter a submenu immediately, without waiting for visibility animation. */
 div.HTMLeditorMenu[data-keyboard="true"] li > ul { transition:none; }
 
-.editorMediaHold.is-gap { overflow:hidden; opacity:.25; outline:1px dashed var(--cmsHighlightColor); }
-.editorMediaHold.is-gap > * { width:100%; height:100%; object-fit:contain; pointer-events:none; }
 body.editorMediaDropInvalid, body.editorMediaDropInvalid * { cursor:not-allowed !important; }
 
 .editor.dropRejected { outline:2px solid var(--cmsError) !important; outline-offset:2px; }
@@ -500,6 +481,26 @@ body.cms.pages .HTMLeditorMenu.cmsPageDock {
 }
 .HTMLeditorMenu.cmsPageDock > ul > li { flex: none; }
 .HTMLeditorMenu.cmsPageDock li > ul { position: fixed; top: auto; }
+div.HTMLeditorMenu.cmsPageDock > .cmsDockSubmenu {
+    position: fixed;
+    flex-direction: column;
+    align-items: stretch;
+    min-width: min(11rem, calc(100vw - 16px));
+    max-width: calc(100vw - 16px);
+    max-height: min(45dvh, 20rem);
+    overflow: auto;
+    padding: .25rem;
+    background: var(--cmsMainColor);
+    border-radius: var(--cmsRadius);
+    box-shadow: var(--cmsShadowLg);
+}
+div.HTMLeditorMenu.cmsPageDock > .cmsDockSubmenu[hidden] { display: none; }
+div.HTMLeditorMenu.cmsPageDock > .cmsDockSubmenu button {
+    width: 100%;
+    padding-inline: .75rem;
+    justify-content: flex-start;
+    white-space: normal;
+}
 
 div.HTMLeditorMenu.cmsPageDock button.pageMediaPaste {
     width: auto;

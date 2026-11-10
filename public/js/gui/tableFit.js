@@ -59,7 +59,7 @@ sys.fitTables.fit = function (box) {
         var hiddenCells = [...row.children].filter(function (cell) {
             return cell.tagName === 'TD' && !cell.matches(':first-child, [data-table-inline], [data-table-desktop-only], :has(> .userStatus, > i[data-drag_type]), :has(> .userStatus, > i[data-drag_type]) + td, .icons, .projectRemove, .schemaApply');
         });
-        var heading = [...row.children].find(function (cell) {
+        var heading = row.querySelector(':scope > [data-table-subject]') || [...row.children].find(function (cell) {
             return cell.tagName === 'TD' && !cell.querySelector('.userStatus, i[data-drag_type]');
         });
         // Selection checkboxes stay available; the subject is the card heading.

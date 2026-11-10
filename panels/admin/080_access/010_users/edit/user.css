@@ -5,7 +5,7 @@
     flex: 0 0 auto;
     gap: 0.25rem 1.25rem;
     margin: 0;
-    padding: 0 1.25rem;
+    padding: 0 1.25rem 0 calc(var(--cmsInsetLeft, var(--cmsCardPadding)) - .4rem);
     border-bottom: 0;
     overflow-x: auto;
     overflow-y: hidden;

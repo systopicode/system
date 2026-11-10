@@ -24,7 +24,9 @@ sys.core.event.drag = function (event, hooks) { // 2. param raus
 	drag.moveY = 0;
 	drag.status = 'down';
 	drag.type = drag.dragObj.dataset.drag_type;
+	var mmlDrag = drag.type === 'media' && drag.dragObj.closest('.mmlContent');
 	var pageId = drag.type === 'page' && drag.dragObj.closest('li[data-node_id]')?.dataset.node_id;
+    var settingId = drag.type === 'setting' && drag.dragObj.closest('[data-setting-row]')?.dataset.settingRow;
 	var css, keysHoldable = ['shift', 'ctrl', 'alt'];
 	drag.e = e;
 	// Touch captures the pointer on the element it went down on; released,
@@ -53,7 +55,7 @@ sys.core.event.drag = function (event, hooks) { // 2. param raus
 		drag.hooks.start();
 		drag.status = 'dragging';
 		var before = drag.dragObj.getBoundingClientRect();
-		drag.$helper = $('<div class="draghelper"></div>');
+		drag.$helper = $('<div class="draghelper"></div>').toggleClass('mmlDragHelper', !!mmlDrag);
 		drag.$helper.append(drag.$keyheldIcon);
 		$('body').append(drag.$helper);
 		$('body').addClass('dragging');
@@ -85,8 +87,9 @@ sys.core.event.drag = function (event, hooks) { // 2. param raus
 		}
 		if (drag.status !== 'down') {
 			// Folding redraws the tree. Keep the live source for hit testing and cues.
-			if (pageId && !drag.dragObj.isConnected) {
-				var replacement = document.querySelector('body.pages ul.tree li[data-node_id="' + CSS.escape(pageId) + '"] > label[data-drag_type="page"]');
+			if ((pageId || settingId) && !drag.dragObj.isConnected) {
+                var selector = pageId ? 'body.pages ul.tree li[data-node_id="' + CSS.escape(pageId) + '"] > label[data-drag_type="page"]' : '[data-setting-row="' + CSS.escape(settingId) + '"] [data-drag_type="setting"]';
+				var replacement = document.querySelector(selector);
 				if (replacement) {
 					drag.dragObj = replacement;
 					replacement.classList.add('dragged');
@@ -111,7 +114,7 @@ sys.core.event.drag = function (event, hooks) { // 2. param raus
 			nextDrop = drag.handoffPoint ? null : holdForOnto(target, nextDrop);
 			// Pages change cue at the midpoint. Other lists keep a few pixels
 			// so the line does not flicker between two neighbours.
-			if (drag.type !== 'page' && isLine(drag.dropObj) && isLine(nextDrop) && drag.dropObj !== nextDrop && distance(nextDrop) + 10 > distance(drag.dropObj)) {
+			if (drag.type !== 'page' && !mmlDrag && !(pointer && drag.type === 'media') && isLine(drag.dropObj) && isLine(nextDrop) && drag.dropObj !== nextDrop && distance(nextDrop) + 10 > distance(drag.dropObj)) {
 				nextDrop = drag.dropObj;
 			}
 			if (drag.dropObj && drag.dropObj !== nextDrop) {
@@ -145,7 +148,7 @@ sys.core.event.drag = function (event, hooks) { // 2. param raus
 				var showLine = !!css.line;
 				delete css.line;
 				if (showLine) {
-					var key = css.top + '|' + css.left + '|' + css.width;
+					var key = css.top + '|' + css.left + '|' + css.width + '|' + css.height;
 					if (key !== lineKey) {
 						lineKey = key;
 						drag.$helper.css(css);
@@ -155,7 +158,7 @@ sys.core.event.drag = function (event, hooks) { // 2. param raus
 					drag.$helper.css(css);
 				}
 			}
-			if (!edgeFrame) {
+			if (!edgeFrame && (!mmlDrag || !mouseHeld)) {
 				edgeFrame = requestAnimationFrame(edgeScroll);
 			}
 		}
@@ -338,6 +341,11 @@ sys.core.event.drag = function (event, hooks) { // 2. param raus
 				var fold = onto.parentElement.querySelector(':scope > .fold[aria-expanded="false"]');
 				if (fold) $(fold).triggerHandler('click');
 			}
+            if (drag.type === 'setting') {
+                var group = onto.closest('[data-setting-row]');
+                var toggle = group?.querySelector('[data-on_click="toggleGroup"][aria-expanded="false"]');
+                if (toggle) $(toggle).triggerHandler('click');
+            }
 			if (drag.e) {
 				mousemove(drag.e);
 			}
@@ -345,7 +353,7 @@ sys.core.event.drag = function (event, hooks) { // 2. param raus
 	}
 
 	function acceptsType(zone) {
-		return !!(zone && zone.dataset && !isSelf(zone) && (zone.dataset.drop_accept || '').split(' ').indexOf(drag.type) !== -1 && zone.getClientRects().length);
+		return !!(zone && zone.dataset && !isSelf(zone) && !settingPolicyRejected(zone) && (zone.dataset.drop_accept || '').split(' ').indexOf(drag.type) !== -1 && zone.getClientRects().length);
 	}
 
 	function isLine(zone) {
@@ -372,6 +380,11 @@ sys.core.event.drag = function (event, hooks) { // 2. param raus
 				}
 			}
 		}
+        var settingRow = target.closest('[data-setting-row]');
+        if (settingRow && !isSelf(settingRow)) {
+            var into = settingRow.querySelector('.sort.insertInto[data-drop_accept="setting"]');
+            if (acceptsType(into)) return into;
+        }
 		var tag = target.closest('.layout.tags .tag');
 		if (tag && !isSelf(tag) && acceptsType(tag)) {
 			return tag;
@@ -394,11 +407,12 @@ sys.core.event.drag = function (event, hooks) { // 2. param raus
 		if (!target || !target.closest || !drag.e) {
 			return null;
 		}
-		var item = target.closest('ul.tree li > label') || target.closest('.layout.tags .tag');
+		var item = target.closest('ul.tree li > label') || target.closest('.layout.tags .tag') || target.closest('[data-setting-row]');
 		if (!item || isSelf(item)) {
 			return null;
 		}
-		var zones = Array.prototype.filter.call(item.children, function (zone) {
+		var zoneNodes = item.matches('[data-setting-row]') ? item.querySelectorAll('.sort') : item.children;
+		var zones = Array.prototype.filter.call(zoneNodes, function (zone) {
 			return zone.classList && zone.classList.contains('sort')
 				&& (zone.classList.contains('insertBefore') || zone.classList.contains('insertAfter'))
 				&& (zone.dataset.drop_accept || '').split(' ').indexOf(drag.type) !== -1
@@ -432,7 +446,7 @@ sys.core.event.drag = function (event, hooks) { // 2. param raus
 			return null;
 		}
 		if (onto.classList.contains('insertInto')) {
-			return onto.closest('label') || onto.parentElement;
+			return onto.closest('[data-setting-row]') || onto.closest('label') || onto.parentElement;
 		}
 		return onto;
 	}
@@ -476,6 +490,17 @@ sys.core.event.drag = function (event, hooks) { // 2. param raus
 	// nearer of them is meant, not the list around the item - otherwise the
 	// helper jumps between the list and a thin line at every gap.
 	function nearestZone(target, drop) {
+		// A finger targets a half of the visible tile, even if the hit is an
+		// image, a control or one of the invisible sort bands at its edges.
+		if (drag.type === 'media') {
+			var tile = target.closest('.mmlContent li[data-drag_type="media"]');
+			if (tile) {
+				if (isSelf(tile)) return null;
+				var rect = tile.getBoundingClientRect();
+				var edge = drag.e.clientX < (rect.left + rect.right) / 2 ? 'insertBefore' : 'insertAfter';
+				return tile.querySelector(':scope > .sort.' + edge + ':not([hidden])');
+			}
+		}
 		// A table row's zones sit in the grip cell. The pointer is usually on
 		// another cell of that row, so the zone is not the element under it.
 		var row = target && target.closest && target.closest('tr');
@@ -563,7 +588,7 @@ sys.core.event.drag = function (event, hooks) { // 2. param raus
         }
 		var zone = obj.classList.contains('sort');
 		if (zone && obj.classList.contains('insertInto') && obj.parentElement) {
-			obj = obj.parentElement;
+			obj = obj.closest('[data-setting-row]') || obj.parentElement;
 			zone = false;
 		}
 		var style = getComputedStyle(obj);
@@ -579,7 +604,9 @@ sys.core.event.drag = function (event, hooks) { // 2. param raus
 			var gap = 8;
 			if (neighbour && neighbour.getBoundingClientRect) {
 				var other = neighbour.getBoundingClientRect();
-				gap = Math.max(0, afterH ? other.left - pill.right : pill.left - other.right);
+				if (other.top < pill.bottom && other.bottom > pill.top) {
+					gap = Math.max(0, afterH ? other.left - pill.right : pill.left - other.right);
+				}
 			}
 			var mid = gap / 2;
             var extension = down.pointerType && down.pointerType !== 'mouse' ? 26 : 0;
@@ -641,14 +668,32 @@ sys.core.event.drag = function (event, hooks) { // 2. param raus
     function mediaPolicyRejected(zone) {
         if (drag.type !== 'media' || !zone) return false;
         if(zone.closest('.editor.plaintext'))return true;
+        // Existing files can be reordered in their own group after its
+        // upload rules change. Moving into a different group still validates.
+        var tile = zone.closest('.mmlContent li[data-drag_type="media"]');
+        if (zone.closest('.mmlContent')) {
+            var isAlias = item => item?.dataset.mml_node_id && item.dataset.mml_node_id !== item.dataset.node_id;
+            if (isAlias(drag.dragObj) || isAlias(tile)) return true;
+        }
+        if (tile && tile.parentElement === drag.dragObj.parentElement) return false;
         var policy = zone.closest('[data-media-accept]');
         if (!policy) return false;
         var ext = drag.dragObj.getAttribute('data-media-extension') || '';
         return (policy.getAttribute('data-media-accept') || '').split(',').indexOf('.' + ext) === -1;
     }
+    function settingPolicyRejected(zone) {
+        if (drag.type !== 'setting' || drag.dragObj.closest('[data-setting-kind]')?.dataset.settingKind !== 'group') return false;
+        var row = zone?.closest('[data-setting-row]');
+        return !!(row && (Number(row.dataset.settingParent) > 0 || zone.classList.contains('insertInto')));
+    }
     function markMediaPolicy(target) {
         var policy = target && target.closest && target.closest('[data-media-accept],.editor.plaintext');
-        var rejected = policy && mediaPolicyRejected(policy) ? policy : null;
+        var rejected = policy && mediaPolicyRejected(target) ? policy : null;
+        if (drag.type === 'setting' && target) {
+            var row = target.closest('[data-setting-row]');
+            var into = row?.querySelector('.insertInto');
+            if (row && !isSelf(row) && (settingPolicyRejected(row) || (into && settingPolicyRejected(into) && !target.closest('.insertBefore,.insertAfter')))) rejected = row;
+        }
         if (rejectedMediaZone && rejectedMediaZone !== rejected) rejectedMediaZone.classList.remove('dropRejected');
         if (rejected) rejected.classList.add('dropRejected');
         rejectedMediaZone = rejected;
@@ -658,7 +703,7 @@ sys.core.event.drag = function (event, hooks) { // 2. param raus
 		if (!drag.dropObj) {
 			return;
 		}
-        if (mediaPolicyRejected(drag.dropObj)) return false;
+        if (mediaPolicyRejected(drag.dropObj) || settingPolicyRejected(drag.dropObj)) return false;
 		if (isSelf(drag.dropObj)) {
 			return false;
 		}

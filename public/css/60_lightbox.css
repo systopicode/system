@@ -16,7 +16,6 @@ body.cms .cmslightbox[hidden]{
     background-color: color-mix(in srgb, var(--cmsMainColor) 45%, transparent);
     -webkit-backdrop-filter: blur(3px);
     backdrop-filter: blur(3px);
-    transition: top 0.32s ease, height 0.32s ease;
 }
 
 dialog.cmslightbox {
@@ -24,14 +23,9 @@ dialog.cmslightbox {
     margin:0; border:0; box-sizing:border-box;
 }
 
-@media (prefers-reduced-motion: reduce){
-    .cmslightbox{
-        transition: none;
-    }
-}
-
 /* Touch: while the on-screen keyboard is open, center in the space it leaves.
    A dialog taller than that space sits at the top of it. */
+@media (min-width:768px) {
 html.cms-keyboard .cmslightbox:not(.fileEditor){
     top: var(--cmsVvTop, 0px);
     bottom: auto;
@@ -44,6 +38,8 @@ html.cms-keyboard .cmslightbox:not(.fileEditor){
 html.cms-keyboard .cmslightbox:not(.fileEditor) > section{
     max-height: none;
     flex: 0 0 auto;
+    transition: none;
+}
 }
 
 .cmslightbox section > header h1{
@@ -208,7 +204,7 @@ body .cmslightbox section > main{
 
 /* One section style in every lightbox: a small uppercase heading over a
    hairline. Cards (.widget) drop their frame here and read as sections. */
-.cmslightbox:not([data-account-sheet]) section > main h2,
+.cmslightbox:not([data-account-sheet]) section > main h2:not(.widget.is-list h2),
 body .cmslightbox section > div.layout > aside:not(.cms) h3{
     margin: 0 0 0.75rem;
     padding-bottom: 0.4rem;
@@ -230,32 +226,32 @@ body .cmslightbox section > div.layout > aside:not(.cms) h3{
     overflow: visible;
 }
 
-.cmslightbox:not([data-account-sheet]) section > main .widget > header,
-.cmslightbox:not([data-account-sheet]) section > main .widget > main,
-.cmslightbox:not([data-account-sheet]) section > main .widget > footer{
+.cmslightbox:not([data-account-sheet]) section > main .widget:not(.is-list) > header,
+.cmslightbox:not([data-account-sheet]) section > main .widget:not(.is-list) > main,
+.cmslightbox:not([data-account-sheet]) section > main .widget:not(.is-list) > footer{
     min-height: 0;
     padding: 0;
     background: none;
     border: 0;
 }
 
-.cmslightbox:not([data-account-sheet]) section > main .widget > header{
+.cmslightbox:not([data-account-sheet]) section > main .widget:not(.is-list) > header{
     margin-bottom: 0.75rem;
     padding-bottom: 0.4rem;
     border-bottom: 1px solid var(--cmsLineStrong);
 }
 
-.cmslightbox:not([data-account-sheet]) section > main .widget > header h2{
+.cmslightbox:not([data-account-sheet]) section > main .widget:not(.is-list) > header h2{
     margin: 0;
     padding: 0;
     border: 0;
 }
 
-.cmslightbox:not([data-account-sheet]) section > main .widget > footer{
+.cmslightbox:not([data-account-sheet]) section > main .widget:not(.is-list) > footer{
     margin-top: 0.75rem;
 }
 
-.cmslightbox:not([data-account-sheet]) section > main .widget > header h2 i{
+.cmslightbox:not([data-account-sheet]) section > main .widget:not(.is-list) > header h2 i{
     display: none;
 }
 

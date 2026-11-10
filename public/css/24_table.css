@@ -31,16 +31,16 @@
     border-bottom: none;
 }
 
-.cms table:not(.octalSelector, .editor table) tbody tr:hover td{
+.cms table:not(.octalSelector, .editor table) tbody > tr:hover > td{
     background: color-mix(in srgb, var(--cmsHighlightColor) 24%, var(--cmsCanvas));
 }
 
-.cms table:not(.octalSelector, .editor table) tbody tr:hover td:first-child{
+.cms table:not(.octalSelector, .editor table) tbody > tr:hover > td:first-child{
     box-shadow: inset 3px 0 0 var(--cmsHighlightColor);
 }
 
 /* Dragging draws the yellow line. The row under the pointer is not a hover. */
-body.dragging .cms table:not(.octalSelector, .editor table) tbody tr:hover td,
+body.dragging .cms table:not(.octalSelector, .editor table) tbody > tr:hover > td,
 body.dragging .cms .tableScroll.stacked > table > tbody > tr:hover,
 body.dragging .cms .tableScroll.stacked > table > tbody > tr:hover > td{
     background: transparent;
@@ -196,8 +196,8 @@ body.dragging section.cms{
     opacity: 1;
 }
 
-.cms .tableScroll > table tbody tr:hover td.icons,
-.cms .tableScroll > table tbody tr:hover td:last-child{
+.cms .tableScroll > table tbody > tr:hover > td.icons,
+.cms .tableScroll > table tbody > tr:hover > td:last-child{
     background: color-mix(in srgb, var(--cmsHighlightColor) 24%, var(--cmsCanvas));
 }
 

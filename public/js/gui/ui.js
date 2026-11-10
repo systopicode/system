@@ -328,6 +328,7 @@ document.addEventListener('click', function (event) {
         // Failed saves stay marked until the field is edited, retried or discarded.
         if (next === 'saved' || (next === 'error' && !eligible(el))) feedbackFields.set(el, setTimeout(() => markField(el, ''), next === 'error' ? 6000 : 2500));
     }
+    let noticeBox = null;
     function paint() {
         if (!mobileFeedback.matches && statusBox?.isConnected) {
             const mobileLine = document.querySelector('body > .cmsSaveState.is-mobile');
@@ -340,11 +341,13 @@ document.addEventListener('click', function (event) {
         }
         const el = line();
         if (!el) return;
-        const visibleState = state || (notice ? 'saved' : '');
-        const visibleMessage = [message, notice].filter(Boolean).join(' · ');
-        el.dataset.state = visibleState;
         const topBox = [...document.querySelectorAll('.cmslightbox')].filter(box => !box.hidden && box.getClientRects().length).at(-1);
-        const hidden = !visibleMessage || !!(topBox && topBox !== statusBox);
+        const shownMessage = !topBox || topBox === statusBox ? message : '';
+        const shownNotice = !topBox || topBox === noticeBox ? notice : '';
+        const visibleState = (shownMessage && state) || (shownNotice ? 'saved' : '');
+        el.dataset.state = visibleState;
+        const displayed = [shownMessage, shownNotice].filter(Boolean).join(' · ');
+        const hidden = !displayed;
         if (el.hidden !== hidden) el.hidden = hidden;
         const host = mobileFeedback.matches ? document.body : (statusBox?.isConnected ? statusBox.querySelector('footer.cmsDialogStatus') : document.querySelector('body > footer.cmsStatusbar'));
         if (host && el.parentElement !== host) host.append(el);
@@ -356,8 +359,8 @@ document.addEventListener('click', function (event) {
             icon = document.createElement('i'); icon.setAttribute('aria-hidden','true');
             text = document.createElement('span'); el.append(icon,text);
         }
-        icon.className = state === 'saving' || state === 'loading' ? 'spin' : 'cmsIcon cmsIcon-' + (icons[visibleState] || 'circle-info');
-        if (text.textContent !== visibleMessage) text.textContent = visibleMessage;
+        icon.className = visibleState === 'saving' || visibleState === 'loading' ? 'spin' : 'cmsIcon cmsIcon-' + (icons[visibleState] || 'circle-info');
+        if (text.textContent !== displayed) text.textContent = displayed;
         let retry = el.querySelector('.cmsSaveRetry');
         const retryable = state === 'error' && [...retryFields].some(field => field.isConnected && dirty.has(field));
         if (retryable && !retry) {
@@ -507,9 +510,10 @@ document.addEventListener('click', function (event) {
         notice(text, box) {
             clearTimeout(noticeTimer);
             if (box && !message) statusBox = box;
+            noticeBox = text ? box || null : null;
             notice = text;
             paint();
-            noticeTimer = setTimeout(() => { notice = ''; paint(); }, 5000);
+            noticeTimer = setTimeout(() => { notice = ''; noticeBox = null; paint(); }, 5000);
         },
         refresh: paint,
         failures() { return failures.map(item => ({...item})); },

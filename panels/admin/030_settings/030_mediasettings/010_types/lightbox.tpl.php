@@ -10,7 +10,10 @@ $picked = $templates ? array_filter(array_map('trim', explode(';', (string) ($gr
 <div class="cmslightbox cms mediaTypes" data-size="2">
 <section><header><h1><?= $templates ? 'Templates' : 'File types' ?> · <?= $e($group['label'] ?? $this->state->group) ?></h1>
 <ul class="barmenu"><li><a class="ajax" href="../" aria-label="Close"><i class="cmsIcon cmsIcon-xmark"></i></a></li></ul></header>
-<main><p class="tagsHint"><?= $templates ? 'No selection: all templates.' : 'No selection: all supported types.' ?></p>
+<main><?php if ($templates) { ?><div class="choiceCards mediaTemplateMode" role="group" aria-label="Available in" data-feedback="none">
+<label><input type="radio" name="templateMode" value="all" data-on_change="templateMode" <?= !$picked ? 'checked' : '' ?>><span><b>All templates</b><small>Offer this group in every template.</small></span></label>
+<label><input type="radio" name="templateMode" value="selected" data-on_change="templateMode" <?= $picked ? 'checked' : '' ?>><span><b>Selected templates</b><small>Choose the templates below.</small></span></label>
+</div><?php } else { ?><p class="tagsHint">No selection: all supported types.</p><?php } ?>
 <?php $impact = \Systopic\System\Settings\Impact::group((string) $this->state->group, $templates ? [] : $picked); ?>
 <p class="tagsHint"><?= $impact['files'] === null ? 'Usage could not be counted.' : (int) $impact['files'] . ' existing files use this group.' ?> <?= $templates ? 'Template selection changes where the group is offered.' : ($impact['outside'] === null ? '' : (int) $impact['outside'] . ' existing files fall outside the selected types.') ?> Existing files are kept; restrictions apply to future uploads, replacements and moves.</p>
 <div class="mediaTypeChoices">

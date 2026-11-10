@@ -180,6 +180,22 @@ function initContenteditableContextMenus() {
 			}
 		}
 	});
+	document.addEventListener('cms-page-tool-open', function () {
+		// Dismiss the system selection menu before showing the sheet. The media
+		// picker keeps its own copy of the insertion range.
+		clearTimeout(selectionTimer);
+		var selection = getSelection();
+		if (wysiwygOf(selection.anchorNode)?.closest('article.cmsContent')) selection.removeAllRanges();
+		var editor = wysiwygOf(document.activeElement);
+		if (editor?.closest('article.cmsContent')) {
+			editor.setAttribute('inputmode', 'none');
+			editor.blur();
+		}
+		document.querySelectorAll('article.cmsContent .editor[data-selecting]').forEach(function (field) {
+			field.removeAttribute('data-selecting');
+		});
+		if (wysiwygOf(editorRange?.startContainer)?.closest('article.cmsContent')) editorRange = null;
+	});
 	// mouse: a click places the caret, a drag or double click selects - both show the bar
 	document.addEventListener('mouseup', function (e) {
 		if (e.button !== 0 || editorPointer === 'touch') {
@@ -291,6 +307,36 @@ var selectedMedia = function (range) {
 		? range.startContainer.childNodes[range.startOffset] : null;
 	return node && node.nodeType === 1 && node.matches('img, video, iframe') ? node : null;
 };
+
+// During the keyboard transition scroll the preview, which owns the page's scroll position.
+function revealTypingCaret(editor, preview) {
+	const viewport = window.visualViewport;
+	const events = new AbortController();
+	let frame;
+	const reveal = () => {
+		cancelAnimationFrame(frame);
+		frame = requestAnimationFrame(() => {
+			const selection = getSelection();
+			if (document.activeElement !== editor || !editor.contains(selection.focusNode)) return;
+			const range = document.createRange();
+			range.setStart(selection.focusNode, selection.focusOffset);
+			const caret = range.getBoundingClientRect();
+			const bounds = preview.getBoundingClientRect();
+			const top = Math.max(bounds.top, viewport?.offsetTop ?? 0) + 16;
+			const bottom = Math.min(bounds.bottom, viewport ? viewport.offsetTop + viewport.height : innerHeight) - 16;
+			if (!caret.height || bottom <= top) return;
+			if (caret.bottom > bottom) preview.scrollTop += caret.bottom - bottom;
+			else if (caret.top < top) preview.scrollTop -= top - caret.top;
+		});
+	};
+
+	const options = {signal: events.signal};
+	viewport?.addEventListener('resize', reveal, options);
+	viewport?.addEventListener('scroll', reveal, options);
+	window.addEventListener('resize', reveal, options);
+	setTimeout(() => events.abort(), 1000);
+	reveal();
+}
 var startTyping = function () {
 	var editor = editorRange && wysiwygOf(editorRange.startContainer);
 	if (!editor) {
@@ -306,6 +352,8 @@ var startTyping = function () {
 	var selection = getSelection();
 	selection.removeAllRanges();
 	selection.addRange(range);
+	var preview = editor.closest('article.cmsContent');
+	if (preview && document.body.classList.contains('cmsMobile')) revealTypingCaret(editor, preview);
 };
 var restoreEditorRange = function () {
 	var selection = getSelection();
@@ -390,7 +438,7 @@ var placeEditorMenu = function (menu, rect, target) {
 };
 /** A sub menu opens to the left or upwards when the window ends. */
 var fitEditorSubmenu = function (li) {
-	var list = li.querySelector('ul');
+	var list = li.cmsDockSubmenu || li.querySelector('ul');
 	if (!list) {
 		return;
 	}
@@ -445,7 +493,7 @@ var contextMenuWW = function (params, event) {
 				button.on('click', () => { closeAllMenus(); action(editor, range); });
 				$('<li>').append(button).appendTo(ul);
 			};
-			mediaButton('Choose media', 'photo-film', sys.pagesMedia.pick);
+			mediaButton('Insert media', 'photo-film', sys.pagesMedia.pick);
 			if (sys.pagesMedia.hasClipboard()) mediaButton('Paste media', 'copy', sys.pagesMedia.paste, true);
 		}
 		$('<li><button type="button" data-cms-action title="Type"><i class="cmsIcon cmsIcon-keyboard"></i></button></li>')
@@ -478,13 +526,10 @@ var contextMenuWW = function (params, event) {
 				e.preventDefault();
 				e.stopPropagation();
 				var media = target && target.closest && target.closest('img, video, iframe');
-				// Keep touch events on the live editor before removing the pressed menu.
-                var owner = media?.closest('.editor');
-                if (owner && e.originalEvent?.pointerId !== undefined) owner.setPointerCapture(e.originalEvent.pointerId);
-				closeAllMenus();
 				if (media && window.editorBeginMediaMove) {
 					editorBeginMediaMove(media, e.originalEvent || e);
 				}
+				closeAllMenus();
 			});
 			return;
 		}
@@ -506,6 +551,15 @@ var contextMenuWW = function (params, event) {
 		.append(ul);
 	$('body').append(this.domWrapper.append(this.domObj));
 	if (this.domObj.hasClass('cmsPageDock')) {
+		const dock = this.domObj[0];
+		dock.querySelectorAll(':scope > ul > li.hasChildren').forEach(li => {
+			const list = li.querySelector(':scope > ul');
+			if (!list) return;
+			li.cmsDockSubmenu = list;
+			list.classList.add('cmsDockSubmenu');
+			list.hidden = true;
+			dock.append(list);
+		});
 		const editor = wysiwygOf(target);
 		ul[0].scrollLeft = editor.cmsDockScrollLeft || 0;
 		ul[0].addEventListener('scroll', () => { editor.cmsDockScrollLeft = ul[0].scrollLeft; }, {passive: true});
@@ -532,6 +586,10 @@ var contextMenuWW = function (params, event) {
 		var li = $(this).parent().toggleClass('open');
         this.setAttribute('aria-expanded',String(li.hasClass('open')));
 		li.siblings().removeClass('open').children('a[aria-expanded],button[data-cms-action][aria-expanded]').attr('aria-expanded','false');
+		const submenu = li[0].cmsDockSubmenu;
+		if (submenu) {
+			submenu.parentElement.querySelectorAll(':scope > .cmsDockSubmenu').forEach(list => { list.hidden = list !== submenu || !li.hasClass('open'); });
+		}
 		fitEditorSubmenu(li[0]);
 	});
 };

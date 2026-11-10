@@ -309,7 +309,7 @@ body.cms > .cmsMobileHeader > .cmsMobileMenuClose, body.cms > .cmsMobileHeader >
 		margin: 0;
 		padding: 0;
 		border: 0;
-		border-radius: 24px;
+		border-radius: var(--cmsMobileRadius);
 		overflow: hidden;
 		clip-path: none;
 		outline: none;
@@ -360,7 +360,7 @@ body.cms > .cmsMobileHeader > .cmsMobileMenuClose, body.cms > .cmsMobileHeader >
 		box-sizing: border-box;
 		min-height: 3.25rem;
 		padding: 20px var(--cmsInsetRight) 8px var(--cmsInsetLeft);
-		border-radius: 24px 24px 0 0;
+		border-radius: var(--cmsMobileRadius) var(--cmsMobileRadius) 0 0;
 		background: transparent; border-bottom: 0;
 	}
 	body.cms .cmslightbox > section > header.cmsMobileEditHeader {
@@ -587,7 +587,7 @@ body.cms > .cmsMobileHeader > .cmsMobileMenuClose, body.cms > .cmsMobileHeader >
 	body.cms > main > div.pylon > footer {
 		bottom: calc(var(--cmsKeyboard, 0px) - 32px);
 		padding-bottom: 32px;
-		border-bottom: 0; border-radius: 24px 24px 0 0;
+		border-bottom: 0; border-radius: var(--cmsMobileRadius) var(--cmsMobileRadius) 0 0;
 	}
 	body.cms.backup:has(> main > .pylon) > main > div.content {
 		bottom: auto;
@@ -605,7 +605,7 @@ body.cms > .cmsMobileHeader > .cmsMobileMenuClose, body.cms > .cmsMobileHeader >
 		bottom: calc(var(--cmsKeyboard, 0px) - 32px);
 		top: auto;
 		min-width: 0; width: 100%; max-width: 100%;
-		border-radius: 24px 24px 0 0;
+		border-radius: var(--cmsMobileRadius) var(--cmsMobileRadius) 0 0;
 		height: fit-content;
 		max-height: min(80dvh, calc(100dvh - max(6px, env(safe-area-inset-top)) - var(--cmsKeyboard, 0px)));
 		padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 32px);
@@ -648,7 +648,7 @@ body.cms > .cmsMobileHeader > .cmsMobileMenuClose, body.cms > .cmsMobileHeader >
 		align-items: center;
 		min-height: 3.25rem;
 		padding: 20px var(--cmsInsetRight) 1.15rem var(--cmsInsetLeft);
-		border-radius: 24px 24px 0 0;
+		border-radius: var(--cmsMobileRadius) var(--cmsMobileRadius) 0 0;
 	}
 	body.cms .cmslightbox > section > header h1,
 	body.cms header.cmsMobileEditHeader > h1,
@@ -680,7 +680,7 @@ body.cms > .cmsMobileHeader > .cmsMobileMenuClose, body.cms > .cmsMobileHeader >
 	body.cms .cmslightbox.cmsFind > section {
 		top: max(10px, env(safe-area-inset-top));
 		bottom: calc(var(--cmsKeyboard, 0px) - 32px);
-		border-radius: 24px 24px 0 0;
+		border-radius: var(--cmsMobileRadius) var(--cmsMobileRadius) 0 0;
 		height: auto;
 		max-height: none;
 		box-shadow: none;
@@ -701,7 +701,7 @@ body.cms > .cmsMobileHeader > .cmsMobileMenuClose, body.cms > .cmsMobileHeader >
 		position: fixed; z-index: 9000; left: var(--sheetSide) !important; right: var(--sheetSide);
 		top: auto !important; bottom: 0; width: auto !important; min-width: 0; max-width: none;
 		max-height: 75dvh; overflow: auto; padding-top: 18px;
-		border-radius: 24px 24px 0 0;
+		border-radius: var(--cmsMobileRadius) var(--cmsMobileRadius) 0 0;
 		box-shadow: 0 0 0 100vmax rgb(0 20 25 / 35%);
 	}
 	body.cms > ul.contextmenu { padding-inline: 0; }
@@ -974,6 +974,7 @@ body.cms .cmslightbox > section > :is(header,header.cmsMobileEditHeader,footer) 
 @media (max-width:767px) {
  body.cms header.cmsMobileEditHeader > h1,
  body.cms .cmslightbox > section > header h1 { flex:0 1 auto; }
+ body.cms .cmslightbox.cmsNestedDialog > section > header > h1 { flex:1 1 0%; }
  body.cms .cmsMobileEditHeader > [data-cms-close-content] { order:99; }
  body.cms.cmsMobile > main > div.main .bottomMenu { padding-bottom:.75rem; gap:.65rem; }
  body.cms .themeContrast > summary { min-height:2.75rem; align-items:center; }
@@ -983,14 +984,13 @@ body.cms .cmslightbox > section > :is(header,header.cmsMobileEditHeader,footer) 
 
 /* Smartphone refinements: use the existing sheet, table and status components. */
 @media (max-width:767px) {
- body.cms:has(> .cmsMobileHeader) { --cmsMobileRadius:24px; }
  body.cms > main > div.pylon > nav { padding-top:.85rem; }
  body.cms:has(> .cmsMobileHeader) > main { padding-bottom:0; }
  body.cms:has(> .cmsMobileHeader) > main > div.content:not([data-cms-sheet="1"]) { border-top-left-radius:var(--cmsMobileRadius); border-top-right-radius:var(--cmsMobileRadius); }
  body.cms > main > div.pylon.cms { border-right:0; }
  body.cms > main > div.pylon > nav,
  body.cms > main > div.content,
- body.cms .cmslightbox > section { border-top-left-radius:var(--cmsMobileRadius, 24px); border-top-right-radius:var(--cmsMobileRadius, 24px); }
+ body.cms .cmslightbox > section { border-top-left-radius:var(--cmsMobileRadius); border-top-right-radius:var(--cmsMobileRadius); }
  body.cms > main > div.pylon nav > ul li > :is(a,button[data-cms-action]) { margin-inline:.5rem; width:calc(100% - 1rem); }
  body.cms > main > div.content[data-cms-sheet="1"] {
   position:fixed; inset:max(6px, env(safe-area-inset-top)) 0 0; z-index:2100;
@@ -1015,8 +1015,8 @@ body.cms .cmslightbox > section > :is(header,header.cmsMobileEditHeader,footer) 
 
 /* Detail sheets and the pylon share the phone shell, not desktop geometry. */
 @media (max-width:767px) {
- body.cms:has(> main > div.pylon) > main > div.pylon { width:100%; max-width:100%; border:0; border-radius:var(--cmsMobileRadius, 24px) var(--cmsMobileRadius, 24px) 0 0; overflow:hidden; }
- body.cms:has(> main > div.pylon) > main > div.pylon > nav { width:100%; border:0; border-radius:var(--cmsMobileRadius, 24px) var(--cmsMobileRadius, 24px) 0 0; }
+ body.cms:has(> main > div.pylon) > main > div.pylon { width:100%; max-width:100%; border:0; border-radius:var(--cmsMobileRadius) var(--cmsMobileRadius) 0 0; overflow:hidden; }
+ body.cms:has(> main > div.pylon) > main > div.pylon > nav { width:100%; border:0; border-radius:var(--cmsMobileRadius) var(--cmsMobileRadius) 0 0; }
  body.cms > main > div.content[data-cms-sheet="1"],
  body.cms .cmslightbox > section { box-shadow:0 -10px 24px -8px rgb(0 0 0 / .32); }
  body.cms > main > div.content[data-cms-sheet="1"] > header.cmsMobileEditHeader { padding-block:14px; align-items:center; }
@@ -1037,22 +1037,6 @@ body.cms .cmslightbox > section > :is(header,header.cmsMobileEditHeader,footer) 
  /* At the top edge there is no sheet behind the content to cast onto. */
  body.cms:has(> main > div.pylon) > main > div.content[data-cms-sheet="1"] { box-shadow:0 120px 0 0 var(--cmsBgColor); }
  body.cms .cmslightbox > section.is-expanded { box-shadow:none; }
-}
-
-/* Phone keyboard: size the sheet once against the visible viewport. Do not
-   animate its height while Safari is changing that viewport. */
-@media (max-width:767px) {
- html.cms-keyboard body.cms .cmslightbox:not(.fileEditor):not(.cmsNestedDialog):not(.cmsFind) {
-  top:var(--cmsVvTop, 0px); height:var(--cmsVvHeight, 100%); bottom:auto;
-  padding:0; overflow:hidden;
- }
- html.cms-keyboard body.cms .cmslightbox:not(.fileEditor):not(.cmsNestedDialog):not(.cmsFind) > section {
-  position:absolute; top:0; bottom:0; height:100%; max-height:100%; padding-bottom:0;
-  transition:none;
- }
- html.cms-keyboard body.cms .cmslightbox:not(.fileEditor):not(.cmsNestedDialog):not(.cmsFind) > section > main {
-  min-height:0; overflow-y:auto;
- }
 }
 
 /* Search results continue behind Safari's floating controls. Reserve the
@@ -1289,26 +1273,45 @@ body.cms .cmslightbox:not(.upload,.fileEditor) > section.cmsHeaderScrolled > hea
     }
 }
 
-/* The visual viewport already excludes the keyboard. */
+/* Keep the cover fixed while the keyboard changes the visible area. Only
+   the active surface follows that area, so no underlying layer peeks out. */
 @media (max-width:767px) {
+    html:is(.cms-keyboard-entering, .cms-keyboard) body.cms > .cmsMobileBackdrop:not([hidden]) {
+        bottom: 0;
+    }
+    html:is(.cms-keyboard-entering, .cms-keyboard) body.cms .cmslightbox:not(.cmsFind) {
+        transition: none;
+    }
+    html.cms-keyboard-entering body.cms .cmslightbox > section {
+        transition: none;
+    }
     html.cms-keyboard body.cms .cmslightbox:not(.cmsFind) {
-        top: var(--cmsVvTop, 0px);
-        bottom: auto;
-        height: var(--cmsVvHeight, 100%);
+        inset: 0;
         padding: 0;
         overflow: hidden;
-        /* Safari's floating address/input controls extend below visualViewport.
-           Paint behind them without making the interactive sheet taller. */
-        box-shadow: 0 var(--cmsVvHeight, 100dvh) 0 0 var(--cmsBgColor);
+        background: var(--cmsBgColor);
+        backdrop-filter: none;
+        -webkit-backdrop-filter: none;
     }
-    html.cms-keyboard body.cms .cmslightbox:not(.cmsFind) > section {
+    html.cms-keyboard body.cms .cmslightbox:not(.cmsFind) > section,
+    html.cms-keyboard body.cms .cmslightbox.cmsNestedDialog > section:not(.is-expanded) {
         position: absolute;
-        inset: 0;
+        inset: var(--cmsVvTop, 0px) 0 auto;
         width: 100%;
-        height: 100%;
-        max-height: 100%;
+        height: var(--cmsVvHeight, 100%);
+        max-height: none;
         padding-bottom: 0;
+        box-shadow: none;
+        animation: none;
         transition: none;
+    }
+    html.cms-keyboard body.cms .cmslightbox:not(.cmsFind) > section > main {
+        min-height: 0;
+        overflow-y: auto;
+    }
+    html.cms-keyboard body.cms > main > div.content[data-cms-sheet="1"] {
+        top: max(6px, env(safe-area-inset-top), var(--cmsVvTop, 0px));
+        bottom: var(--cmsKeyboard, 0px);
     }
 }
 

@@ -48,8 +48,9 @@ try {
  assert.equal(await page.locator('#cmsChromeEdge').count(),1);
  for(const width of [1440,390,1194,390,1440]) {
  await page.setViewportSize({width,height:900});
- await page.waitForTimeout(100);
- assert.equal(await page.locator('#cmsChromeEdge').count(),await page.evaluate(()=>matchMedia('(max-width: 1024px), (orientation: portrait) and (max-width: 1400px)').matches)?1:0);
+ const mobile = await page.evaluate(()=>matchMedia('(max-width: 1024px), (orientation: portrait) and (max-width: 1400px)').matches);
+ await page.locator('#cmsChromeEdge').waitFor({state: mobile ? 'attached' : 'detached'});
+ assert.equal(await page.locator('#cmsChromeEdge').count(), mobile ? 1 : 0);
  }
  assert.deepEqual(errors,[]);
  console.log('PASS: real mobile controller removes Safari edge on desktop, repeated phone/tablet/desktop transitions; no JS errors');

@@ -91,9 +91,7 @@ function chromeColor() {
 		});
 	}
 	if (!mobile.matches || !document.body) {
-		// The mobile Safari edge otherwise covers the desktop status footer.
-		var edge = document.getElementById('cmsChromeEdge');
-		if (edge) edge.remove();
+		document.getElementById('cmsChromeEdge')?.remove();
 		var stale = document.getElementById('cmsChromeColor');
 		if (stale) stale.remove();
 		if (document.documentElement) if (document.documentElement.style.background) document.documentElement.style.background = '';
@@ -249,6 +247,14 @@ function rememberMediaOpen(open) {
 	try { sessionStorage.setItem(mediaOpenKey, open ? '1' : '0'); } catch (error) {}
 }
 document.addEventListener('click', function (event) {
+	if (event.target.closest?.('a[data-cms-media-usage-link]') && !event.defaultPrevented
+		&& event.button === 0 && !event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey) {
+		returnToMedia = false;
+		mobileState.returnToMedia = false;
+		rememberMediaOpen(false);
+		closePageBox('media');
+		return;
+	}
 	if (event.target.closest?.('.pageToolBox[data-page-tool="media"] a.ajax')) {
 		returnToMedia = true;
 		mobileState.returnToMedia = true;
@@ -269,18 +275,21 @@ function closePageBox(kind) {
 	entry.box.remove();
 	if (kind === 'media') document.dispatchEvent(new Event('cms-media-closed'));
 }
-function openPageBox(kind) {
+function openPageBox(kind, picker = false) {
 	if (!mobile.matches || !root.classList.contains('pages') || pageBoxes.has(kind)) return;
 	var content = windowNode('edit');
 	var view = kind === 'media'
 		? document.querySelector('main > .pylon > footer .mmlContent')
 		: content?.querySelector('aside.cms');
 	if (!view) return;
+	closeMore();
+	document.dispatchEvent(new Event('cms-page-tool-open'));
 	var title = kind === 'media' ? 'Media Library' : 'Properties';
 	var home = document.createComment(title);
 	var box = document.createElement('div');
 	box.className = 'cmslightbox cms pageToolBox';
 	box.dataset.pageTool = kind;
+	if (kind === 'media' && picker) box.dataset.mobileDialog = 'sheet';
 	box.innerHTML = '<section><header><h1></h1><button type="button" class="button transparent icononly" data-box-close><i class="cmsIcon cmsIcon-xmark"></i></button></header><main></main></section>';
 	box.querySelector('h1').textContent = title;
 	box.querySelector('button').setAttribute('aria-label', 'Close ' + title);
@@ -303,11 +312,11 @@ function openPageBox(kind) {
 		returnToMedia = false;
 		mobileState.returnToMedia = false;
 	}
-	pageBoxes.set(kind, {box, home, main, observer});
+	pageBoxes.set(kind, {box, home, main, observer, pageId: view.querySelector('[data-all-media-accept]')?.dataset.node_parent_node_id});
 	root.append(box);
 	if (kind === 'properties') view.querySelector('.collapsed .sidebarFlag')?.click();
 }
-document.addEventListener('cms-open-media-picker', function () { openPageBox('media'); }, {signal: mobileEvents.signal});
+document.addEventListener('cms-open-media-picker', function () { openPageBox('media', true); }, {signal: mobileEvents.signal});
 document.addEventListener('cms-close-media-picker', function () {
 	pageBoxes.get('media')?.box.querySelector('[data-box-close]').click();
 }, {signal: mobileEvents.signal});
@@ -394,15 +403,29 @@ function syncMobile() {
 	var pylon = windowNode('base');
 	var content = windowNode('edit');
 	for (var [kind, entry] of pageBoxes) {
-		if (!entry.home.isConnected || !mobile.matches) {
+		if (kind === 'media' && !entry.home.isConnected && mobile.matches && root.classList.contains('pages')) {
+			var fresh = root.querySelector('main > .pylon > footer .mmlContent');
+			var freshList = fresh?.querySelector('[data-all-media-accept]');
+			if (entry.pageId && freshList?.dataset.node_parent_node_id === entry.pageId) {
+				var oldList = entry.main.querySelector('[data-all-media-accept]');
+				var scrollTop = oldList?.scrollTop || 0;
+				fresh.replaceWith(entry.home);
+				entry.main.replaceChildren(fresh);
+				freshList.scrollTop = scrollTop;
+			}
+		}
+		if (!entry.home.isConnected || !mobile.matches || !root.classList.contains('pages')) {
 			if (kind === 'media' && mobile.matches && root.classList.contains('pages')) {
 				returnToMedia = true;
 				mobileState.returnToMedia = true;
 			}
 			closePageBox(kind);
 		} else {
-			var info = root.querySelector('.cmslightbox:not(.pageToolBox)');
-			if (kind === 'media' && info && (info.compareDocumentPosition(entry.box) & Node.DOCUMENT_POSITION_FOLLOWING)) {
+			// Relay can insert the child dialog before the tool sheet it came from.
+			var info = root.querySelector(kind === 'media'
+				? '.cmslightbox:not(.pageToolBox):not([hidden])'
+				: '.cmslightbox:is(.metaDefaults, .relationsHelp, .fileEditor):not([hidden])');
+			if (info && (info.compareDocumentPosition(entry.box) & Node.DOCUMENT_POSITION_FOLLOWING)) {
 				info.before(entry.box);
 			}
 		}
@@ -658,7 +681,7 @@ function syncMobile() {
 		var value = height + 'px';
 		if (surface.parentElement.matches('.mailPreviewBox') || (matchMedia('(max-width:767px)').matches && surface.parentElement.matches('.cmsNestedDialog'))) surface.style.removeProperty('--cmsGlassHeader');
 		else if (surface.style.getPropertyValue('--cmsGlassHeader') !== value) surface.style.setProperty('--cmsGlassHeader', value);
-		surface.classList.toggle('cmsHeaderScrolled', scroll.scrollTop > 1 || [...scroll.querySelectorAll('.flexColumn, section.cms')].some(function (node) { return node.scrollTop > 1; }));
+		surface.classList.toggle('cmsHeaderScrolled', scroll.scrollTop > 1 || [...scroll.querySelectorAll('.flexColumn, section.cms, article.cmsContent')].some(function (node) { return node.scrollTop > 1; }));
 	});
 	if (typeof fitKeyboard === 'function') fitKeyboard();
 	pinSearch();
@@ -806,7 +829,9 @@ document.addEventListener('click', function (event) {
 		openPageBox('properties');
 		return;
 	}
-		if (!event.target.closest('.cmsPageTools, .cmsPageToolsMenu, .splitApply, .splitApplyList, ul.contextmenu, .HTMLeditorMenu')) closeMore();
+	// The shared menu handler already closes old tools on pointerdown.
+	// A touch click in the preview can open the new editor toolbar in capture.
+	if (!event.target.closest('.cmsPageTools, .cmsPageToolsMenu, .splitApply, .splitApplyList, ul.contextmenu, .HTMLeditorMenu, article.cmsContent :is([contenteditable="true"], img, video, .extVideo)')) closeMore();
 	var button = event.target.closest('button[data-cms-window], [data-cms-close]');
 	if (button) {
 		event.preventDefault();
@@ -825,7 +850,7 @@ document.addEventListener('click', function (event) {
 		});
 	}
 	// Only a selection opens Edit; folds, rename, context actions and drags keep the tree.
-	var link = event.target.closest('main > .pylon nav a[href]:not([target]):not([download]), main > .content a.ajax[href]:not([target]):not([download])');
+	var link = event.target.closest('main > .pylon nav a[href]:not([target]):not([download]), main > .content a.ajax[href]:not([target]):not([download]), .pageToolBox a[data-cms-open-sheet]');
 	if (link && !link.classList.contains('put') && !event.defaultPrevented && !root.classList.contains('dragging')) {
 		var url = new URL(link.href, location.href);
 		if (link.hasAttribute('data-cms-branch')) {
@@ -1096,27 +1121,48 @@ mobile.addEventListener('change', function () {
 if (window.visualViewport) {
 	var pinning = false;
 	var keyboardOpen = false;
+	var keyboardTimer;
+	var enteringTimer;
+	var html = document.documentElement;
+	var keyboardField = function (field) {
+		return (field?.isContentEditable || field?.matches('textarea:not([readonly]), input:is(:not([type]), [type=text], [type=search], [type=url], [type=email], [type=password], [type=tel], [type=number]):not([readonly])'))
+			&& field.inputMode !== 'none';
+	};
+	var clearEntering = function () {
+		clearTimeout(enteringTimer);
+		html.classList.remove('cms-keyboard-entering');
+	};
+	document.addEventListener('focusin', function (event) {
+		if (!matchMedia('(max-width:767px)').matches || !navigator.maxTouchPoints
+			|| keyboardOpen || !keyboardField(event.target)) return;
+		// Safari starts moving the page before the first visualViewport event.
+		// Keep the cover in place while the keyboard takes over the viewport.
+		clearTimeout(enteringTimer);
+		html.classList.add('cms-keyboard-entering');
+		enteringTimer = setTimeout(clearEntering, 500);
+	}, {signal: mobileEvents.signal});
 	var fitKeyboard = function () {
 		var vv = window.visualViewport;
-		var covered = Math.max(0, document.documentElement.clientHeight - vv.height - vv.offsetTop);
-		root.style.setProperty('--cmsKeyboard', covered + 'px');
-		// A touch device, and the on-screen keyboard actually covering the page.
-		// A hardware keyboard does not shrink the visible area, so it stays put.
+		var shrink = html.clientHeight - vv.height;
+		var top = Math.max(0, vv.offsetTop);
 		var touch = navigator.maxTouchPoints > 0;
-		var open = touch && covered > 120;
+		var typing = keyboardField(document.activeElement);
+		// Track the first resize while typing and the final frames on dismissal.
+		// Panning changes the bottom inset, not whether the keyboard is open.
+		var open = touch && Math.abs(vv.scale - 1) < .02 && shrink > (typing || keyboardOpen ? 16 : 120);
+		root.style.setProperty('--cmsKeyboard', (open ? Math.max(0, shrink - top) : 0) + 'px');
 		if (open) {
-			document.documentElement.classList.add('cms-keyboard');
-			document.documentElement.style.setProperty('--cmsVvTop', Math.max(0, vv.offsetTop) + 'px');
-			document.documentElement.style.setProperty('--cmsVvHeight', vv.height + 'px');
+			clearTimeout(keyboardTimer);
+			html.style.setProperty('--cmsVvTop', top + 'px');
+			html.style.setProperty('--cmsVvHeight', vv.height + 'px');
+			html.classList.add('cms-keyboard');
+			clearEntering();
 			keyboardOpen = true;
 		} else if (keyboardOpen) {
-			document.documentElement.style.setProperty('--cmsVvTop', '0px');
-			document.documentElement.style.setProperty('--cmsVvHeight', window.innerHeight + 'px');
+			html.style.setProperty('--cmsVvTop', '0px');
+			html.style.setProperty('--cmsVvHeight', window.innerHeight + 'px');
 			keyboardOpen = false;
-			window.setTimeout(function () {
-				if (keyboardOpen) return;
-				document.documentElement.classList.remove('cms-keyboard');
-			}, 340);
+			keyboardTimer = setTimeout(function () { html.classList.remove('cms-keyboard'); }, 100);
 		}
 		// The large layout viewport and visual viewport differ on Safari. Measure
 		// the covered portion of this sheet, not the document's keyboard estimate.
@@ -1125,7 +1171,6 @@ if (window.visualViewport) {
 			var occlusion = open ? Math.max(0, search.getBoundingClientRect().bottom - vv.offsetTop - vv.height) : 0;
 			search.style.setProperty('--cmsFindOcclusion', occlusion + 'px');
 		}
-		chromeColor();
 		// iOS pans the layout to the focused field. A sheet then sits with its
 		// header above the screen and the results in the middle.
 		if (pinning || !touch || vv.offsetTop < 2 || !document.querySelector('.cmslightbox.cmsFind')) return;
@@ -1135,6 +1180,11 @@ if (window.visualViewport) {
 	};
 	visualViewport.addEventListener('resize', fitKeyboard, {signal: mobileEvents.signal});
 	visualViewport.addEventListener('scroll', fitKeyboard, {signal: mobileEvents.signal});
+	mobileEvents.signal.addEventListener('abort', function () {
+		clearTimeout(keyboardTimer);
+		clearEntering();
+		html.classList.remove('cms-keyboard');
+	});
 	fitKeyboard();
 }
 // Panel updates replace nodes; refresh only chrome and availability, never the editor.

@@ -1,0 +1,34 @@
+import fs from 'node:fs';
+import vm from 'node:vm';
+import assert from 'node:assert/strict';
+const source=fs.readFileSync(new URL('../public/js/core/event/event.drag.js',import.meta.url),'utf8');
+const take=(from,to)=>source.slice(source.indexOf('\tfunction '+from),source.indexOf('function '+to));
+let callback,delay,opens=0,moves=0;
+const toggle={};
+const row={classList:{contains:()=>false},querySelector:()=>toggle,getBoundingClientRect:()=>({left:100,top:200,width:600,height:50,right:700,bottom:250})};
+const zone={classList:{contains:c=>['sort','insertInto'].includes(c)},parentElement:{querySelector:()=>toggle},closest:s=>s==='[data-setting-row]'?row:null};
+row.querySelector=s=>s.includes('toggleGroup')?toggle:zone;
+const ctx={drag:{type:'setting',status:'dragging',$helper:{},e:{},helperPadding:3},dwell:{onto:null,ready:false,timer:0},setTimeout:(fn,ms)=>{callback=fn;delay=ms;return 1},clearTimeout(){},$:()=>({triggerHandler:()=>opens++}),mousemove:()=>moves++,acceptsType:z=>!!z,isSelf:()=>false,getComputedStyle:()=>({}),Math};
+vm.createContext(ctx);
+vm.runInContext(take('armDwell','acceptsType')+take('dwellHost','edgeLine')+take('hoverHost','setHover')+take('getBoundingBox','mediaPolicyRejected'),ctx);
+ctx.zone=zone;
+vm.runInContext('armDwell(zone)',ctx);assert.equal(delay,280);assert.equal(opens,0);callback();assert.equal(opens,1);assert.equal(ctx.dwell.ready,true);assert.equal(moves,1);
+ctx.target={closest:s=>s==='[data-setting-row]'?row:null};assert.equal(vm.runInContext('dwellHost(target)',ctx),zone);assert.equal(vm.runInContext('hoverHost(zone)',ctx),row);
+const box=vm.runInContext('getBoundingBox(zone)',ctx);assert.equal(box.width,606);assert.equal(box.height,56);
+console.log('PASS setting rows reuse the 280ms dwell, expand once and frame the entire row');
+
+ctx.drag.type='page';ctx.dwell.onto=null;ctx.pageZone={closest:s=>s==='ul.tree'?{}:null,parentElement:{querySelector:()=>toggle}};vm.runInContext('armDwell(pageZone)',ctx);callback();assert.equal(opens,2);console.log('PASS existing page-tree dwell still expands its fold');
+
+const policySource=source.slice(source.indexOf('    function settingPolicyRejected'),source.indexOf('    function markMediaPolicy'));
+vm.runInContext(policySource,ctx);
+ctx.drag.type='setting';ctx.drag.dragObj={closest:()=>({dataset:{settingKind:'group'}})};
+ctx.rootRow={dataset:{settingParent:'0'}};ctx.childRow={dataset:{settingParent:'1120'}};
+ctx.intoZone={closest:()=>ctx.rootRow,classList:{contains:c=>c==='insertInto'}};
+ctx.edgeZone={closest:()=>ctx.rootRow,classList:{contains:()=>false}};
+ctx.childZone={closest:()=>ctx.childRow,classList:{contains:()=>false}};
+assert.equal(vm.runInContext('settingPolicyRejected(intoZone)',ctx),true);
+assert.equal(vm.runInContext('settingPolicyRejected(childZone)',ctx),true);
+assert.equal(vm.runInContext('settingPolicyRejected(edgeZone)',ctx),false);
+ctx.drag.dragObj={closest:()=>({dataset:{settingKind:'field'}})};
+assert.equal(vm.runInContext('settingPolicyRejected(intoZone)',ctx),false);
+console.log('PASS group destinations reject nesting but preserve root reordering and field drops');

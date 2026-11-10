@@ -45,6 +45,7 @@
 	--cmsAdd: hsl(from var(--cmsMainColor) h 89 78);
 
 	--cmsRadiusLg: calc(var(--cmsRadius) + 4px);
+	--cmsMobileRadius: 16px;
 	--cmsControl: 2rem;
 	--cmsCardPadding: 1.25rem;
 	--cmsBar: 44px;
