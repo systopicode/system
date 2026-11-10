@@ -21,6 +21,8 @@ final class AuthConfig
 {
     public const DEVICE_DAYS = 180;
 
+    public const PASSWORD_LENGTH = 15;
+
     /**
      * Secret written in this request. The loaded instance stays as it was
      * until the next request, so a key created a moment ago still looks missing.
@@ -71,6 +73,12 @@ final class AuthConfig
     public static function deviceDays(): int
     {
         return max(1, (int) (self::block()['deviceDays'] ?? self::DEVICE_DAYS));
+    }
+
+    /** The fewest characters a new password must have - never fewer than 6. */
+    public static function passwordLength(): int
+    {
+        return max(6, (int) (self::block()['passwordLength'] ?? self::PASSWORD_LENGTH));
     }
 
     /** How long a screen lives after its last use - null: until revoked. */

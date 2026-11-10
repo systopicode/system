@@ -9,10 +9,11 @@ if (!$keyValid) {
     return;
 }
 $authTitle = 'Choose a password';
-$authLead = 'At least 15 characters. You can use spaces and a passphrase.';
+$passwordLength = \Systopic\System\Auth\AuthConfig::passwordLength();
+$authLead = 'At least ' . $passwordLength . ' characters. You can use spaces and a passphrase.';
 ob_start();
 ?>
-<form class="appLoginForm" method=post action=setPassword data-password-check data-password-strict="<?= STAGE === 'LIVE' ? 'true' : 'false' ?>" onsubmit='this.classList.add("loading")'>
+<form class="appLoginForm" method=post action=setPassword data-password-check data-password-min="<?= $passwordLength ?>" data-password-strict="<?= STAGE === 'LIVE' ? 'true' : 'false' ?>" onsubmit='this.classList.add("loading")'>
 			<input type=hidden name=key value="<?= htmlspecialchars((string) http::get('key', http::post('key')), ENT_QUOTES) ?>"/>
 			<div class="row">
 				<div class='inputGroup'><i class="cmsIcon cmsIcon-lock"></i>

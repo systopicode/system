@@ -1,6 +1,6 @@
 # Local screening of new passwords
 
-New passwords require at least 15 Unicode characters. No digit, uppercase or symbol composition rule is imposed. Existing sign-in verification is unchanged.
+New passwords require at least 15 Unicode characters by default. A project can lower or raise this with `packages.system.auth.passwordLength` in `config/config.json` (at least 6, `AuthConfig::passwordLength()`). Below 15 the blocklist does not help, because it only holds passwords of 15 or more characters. No digit, uppercase or symbol composition rule is imposed. Existing sign-in verification is unchanged.
 
 `Auth/PasswordBlocklist.php` rejects whole passwords found in the shipped SHA-256 list and values consisting entirely of a repeated pattern of one to six characters. It does not reject a passphrase merely because it contains a common word. Comparison for screening trims surrounding whitespace and lowercases ASCII; the actual password is not rewritten before hashing.
 

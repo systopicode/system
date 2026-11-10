@@ -114,6 +114,7 @@
 					"x-overridable": true
 				},
 				"deviceDays": { "title": "Device days", "description": "How long a device stays signed in.", "type": "integer", "minimum": 1, "default": 180, "x-project": true, "x-overridable": true },
+				"passwordLength": { "title": "Password length", "description": "The fewest characters a new password must have. Passwords that are set already keep working. Only passwords of 15 characters or more are checked against the list of common ones.", "type": "integer", "minimum": 6, "default": 15, "x-project": true, "x-overridable": true },
 				"screenDays": { "title": "Screen days", "description": "How long a screen lives after its last use. Empty: until revoked.", "type": ["integer", "null"], "minimum": 1, "default": null, "x-project": true, "x-overridable": true },
 				"secret": {
 					"title": "Sign-in key",

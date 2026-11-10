@@ -1,4 +1,4 @@
-<form class="widget" method="post" action="<?= $e($this->href . 'changePassword?section=security') ?>" data-password-check data-password-strict="<?= STAGE === 'LIVE' ? 'true' : 'false' ?>">
+<form class="widget" method="post" action="<?= $e($this->href . 'changePassword?section=security') ?>" data-password-check data-password-min="<?= \Systopic\System\Auth\AuthConfig::passwordLength() ?>" data-password-strict="<?= STAGE === 'LIVE' ? 'true' : 'false' ?>">
     <header><h2><i class="cmsIcon cmsIcon-input-password"></i>Password</h2></header>
     <main class="fieldGrid">
         <?= \message::flush('password') ?>
