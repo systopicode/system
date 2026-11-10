@@ -116,7 +116,8 @@ final class CentrifugoHub
         foreach ($rules as $rule) {
             if (!is_array($rule)) continue;
             foreach (['serverName', 'serverIp'] as $key) {
-                $host = strtolower(trim((string) ($rule[$key] ?? '')));
+                foreach ((array) ($rule[$key] ?? []) as $value) {
+                $host = strtolower(trim((string) $value));
                 if ($host === '' || str_contains($host, '*')) continue;
                 if (preg_match('/^[0-9.]+$/', $host) && !filter_var($host, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)) continue;
                 if (filter_var($host, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6)) $host = '[' . $host . ']';
@@ -125,6 +126,7 @@ final class CentrifugoHub
                 if ($parts === false || !isset($parts['host']) || isset($parts['user']) || isset($parts['pass']) || isset($parts['path']) || isset($parts['query']) || isset($parts['fragment'])) continue;
                 if (!preg_match('/^(?:[a-z0-9.-]+|\[[a-f0-9:]+\])(?::[0-9]+)?$/', $host)) continue;
                 $origins[] = $url;
+                }
             }
         }
         return array_values(array_unique($origins));

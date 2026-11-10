@@ -2,7 +2,6 @@
 declare(strict_types=1);
 require __DIR__ . '/bootstrap.php';
 use Systopic\System\Config\FileWriter;
-use Systopic\System\Config\InstanceFiles;
 use Systopic\System\Settings\ProjectFile;
 use Systopic\System\Settings\ProjectJson;
 
@@ -78,11 +77,6 @@ try {
     check('legacy PHP safely quotes values', ProjectFile::replace($php, 'define:PUBLIC_PAGE_NAME', $payload) !== null);
     token_get_all(file_get_contents($php), TOKEN_PARSE);
     check('legacy comments preserved', str_contains(file_get_contents($php), '// Keep this comment'));
-    $config = $root . '/DEV.fixture.config.json';
-    file_put_contents($config, json_encode(['db'=>['name'=>'fixture_database'], 'matches'=>[['serverName'=>'dev.local','site'=>'old','path'=>'/old/']]]));
-    check('site rename runs through protected writer', count(InstanceFiles::renameSite($root, 'old', 'new')) > 0);
-    $data = json_decode(file_get_contents($config), true, 512, JSON_THROW_ON_ERROR);
-    check('site rename preserves database fields', $data['db']['name'] === 'fixture_database' && $data['matches'][0]['site'] === 'new');
     if (extension_loaded('gd')) {
         $image = imagecreatetruecolor(8, 4);
         $source = $root . '/source.png'; imagepng($image, $source);
@@ -113,7 +107,7 @@ try {
         check('favicon generated atomically', $square->invoke(null, $image, 32, $root.'/favicon.png') && getimagesize($root.'/favicon.png')[0] === 32);
         imagedestroy($image);
     }
-    symlink($config, $root . '/link.json');
+    symlink($path, $root . '/link.json');
     check('atomic writer refuses symlink destinations', !FileWriter::write($root . '/link.json', '{}'));
     mkdir($root . '/directory');
     check('failed publication leaves no temporary file', !FileWriter::write($root . '/directory', 'test') && glob($root . '/.fluxo-config-*') === []);

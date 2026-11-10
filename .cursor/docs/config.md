@@ -1,84 +1,46 @@
-# `config/` — Projekt, Instanzen, Sites
+# `config/` — Projekt, Installation, Sites
 
 Ersetzt den `switch ($_SERVER['SERVER_NAME'])` in `public/index.php`.
-Klassen: `src/Config/` (`Config`, `Instance`, `Site`, `Sites`, `SiteHit`,
-`SiteLinks`, `InstanceFiles`).
+Klassen: `src/Config/` (`Config`, `Instance`, `Schema`, `Explain`, `Site`, `Sites`,
+`SiteHit`, `SiteLinks`, `MachineRules`).
 
-Geplanter Umbau (Definitionen je Paket, `packages.*`, Secrets in local):
-[config-struktur.md](config-struktur.md). Bis dahin gilt, was hier steht.
+Definitionen je Paket, Abgleich, Formular: [config-struktur.md](config-struktur.md).
 
 ## Dateien
 
 | Datei | Inhalt | Sync |
 |---|---|---|
-| `config.json` | **nichts Installationsspezifisches**: `constants` (DEFAULT_TABLE_PREFIX, ACCOUNT_WHITELIST, PROJECT_NAMESPACE …), `ini`; `sites` nur als Fallback ohne Datenbank | ja |
-| `<stage>[.<machine>].config.json` | eine Installation. **Dateiname = Instanzname**, der Teil vor dem ersten Punkt ist die Stage (`DEV.ojoffice` → DEV, `RC` → RC). Inhalt: `matches` (Maschine und Site), `default`, `linkSites`, `db`, `debug`, `versionAppendix`/`versionDate`, eigene `constants`/`ini` | ja |
-| `config.local.json` | nur diese Maschine, v. a. LIVE-Zugangsdaten. **Flach**, gilt für die erkannte Instanz: `db`, `debug`, `versionAppendix`, `versionDate`, `constants`, `ini`; `instance` pinnt optional | nein (`*.local.json` in `.sync` ignore) |
+| `config.json` | das Projekt, **nichts Installationsspezifisches**: unter `packages.<paket>` die Werte mit `x-project` (`system.constants`, `system.ini`, `system.auth` ohne Secret), freie `constants` des Projekts, `sites` nur als Fallback ohne Datenbank | ja, und Git |
+| `config.local.json` | **diese Installation**: ihr Name `packages.system.instance` (`DEV.ojhome`, `STAGING`, `LIVE`; der Teil vor dem ersten Punkt ist die Stage), `packages.cms.siteAddress`, `db.connections.<name>`, `system` (`debug`, `mail`, `versionAppendix` …), `relay`, **alle Secrets**, und Werte des Projekts mit `x-overridable` | **nein** (`*.local.json`) |
 
 Alle Dateien sind reines JSON; ein Kommentar ist ein `"//"`-Schlüssel.
-Instanznamen = `stage`-Feld in `.sync`.
+
+Was in welche Datei gehört, sagt die Definition des Pakets (`<paket>/config/config.schema.json`).
+Gelesen wird über `Config::package('db')` und `Config::connection('main')`. Dateien in der
+alten Form (`db`, `debug` … oben) gehen weiter, `Config\Layout` hebt sie beim Boot.
+Installationsnamen = `stage`-Feld in `.sync`.
+
+Die früheren Instanz-Dateien (`<stage>[.<machine>].config.json` mit `matches`) liest der
+Code nicht mehr. `bin/config.php --adopt[=<instanz>]` übernimmt die der eigenen Maschine
+in `config.local.json`.
 
 ## Ablauf
 
 1. `index.php`: `Config::boot(<project>/config, $_SERVER, <project>, CONFIG_INSTANCE?)`
-   liest, wählt Instanz **und Regel** (`matches`), legt `config.local.json`
-   darüber; `defineConstants()` definiert `STAGE`, `INSTANCE`, `SYS_PATH`
-   (Default `vendor/systopic/system/`), `DB_*`, `DB_BIND_ONLY_USED_PARAMS`,
-   `DEBUG`, `DEBUGRENDER`, `DEBUGTIME`, `PUBLIC_VERSIONDATE`,
-   `PUBLIC_VERSIONAPPENDIX` und alle `constants`; setzt `error_reporting`,
-   `display_errors` und `ini`. Jedes `define` ist mit `defined()` geschützt.
+   liest beide Dateien; ohne `config.json` oder ohne Namen in `config.local.json` kommt
+   `NotConfigured` → Einrichtungs-Seite ([setup.md](setup.md)). `defineConstants()`
+   definiert `STAGE`, `INSTANCE`, `SYS_PATH` (Default `vendor/systopic/system/`), `DB_*`,
+   `DB_BIND_ONLY_USED_PARAMS`, `DEBUG`, `DEBUGRENDER`, `DEBUGTIME`, `PUBLIC_VERSIONDATE`,
+   `PUBLIC_VERSIONAPPENDIX` und alle `constants`; setzt `error_reporting`, `display_errors`
+   und `ini`. Jedes `define` ist mit `defined()` geschützt. Bei `constants` und `ini`
+   gewinnt `config.local.json` über `config.json`. `error_log`, `display_errors` und
+   `error_reporting` sind in `ini` reserviert. Die ini-Defaults setzt
+   `Config::applyIniDefaults()` vor dem Boot. `"instance": "STAGING"` im CLI-JSON läuft
+   unter diesem Namen, also mit dessen Stage.
 2. `loader.php` nach dem DB-Connect: `SiteRegistry::boot()` lädt die Sites aus
-   `cms_sites`, `resolveSite()` nimmt die Site der getroffenen Regel (ohne
-   Regel: Name/Alias des Hosts), danach ggf. 301 von einer Alias-Domain.
+   `cms_sites`, `resolveSite()` macht aus `siteAddress` die Adressen aller Sites für
+   diese Anfrage und nimmt die längste passende, danach ggf. 301 von einer Alias-Domain.
 3. Überall: `Config::current()?->site()`, `->instance`, `->baseUrlFor($site)`.
-
-## Instanz und Site: `matches`
-
-Eine Instanz-Datei hat eine Liste von **Regeln**. Eine Regel erkennt die
-Maschine und — optional — die Site des Requests. In einer Regel müssen alle
-Kriterien treffen (UND), ein Kriterium darf mehrere Werte haben (ODER);
-zwischen den Regeln reicht eine:
-
-```json
-"matches": [
-	{ "serverIp": "192.168.22.50", "path": "/projects/systopic.net/",            "site": "systopic.net" },
-	{ "serverIp": "192.168.22.50", "path": "/projects/beautiful-technology.de/", "site": "beautiful-technology.de" }
-]
-```
-
-| Kriterium | gegen |
-|---|---|
-| `serverName` | SERVER_NAME und HTTP_HOST ohne Port, `*` als Wildcard |
-| `serverIp` | SERVER_ADDR, LOCAL_ADDR und der Host, wenn er eine IP ist (CLI: Socket-IP) |
-| `rootDir` | Projektordner im Dateisystem (per `realpath`, eine Junction trifft) |
-| `path` | Präfix des URL-Roots (`dirname(SCRIPT_NAME)`): `/projects/x/` trifft `/projects/x/public/` |
-| `site` | keine Bedingung: die Site (`cms_sites.site_name`), für die die Regel steht; fehlt = Default-Site |
-
-- **Die genaueste Regel über alle Instanzen gewinnt:** `serverName` exakt
-  1000, Wildcard 500, `serverIp`/`rootDir` je 100, `path` 10 + Länge; bei
-  Gleichstand die Dateireihenfolge. `*.systopic.net` fängt damit nie
-  `staging.systopic.net` ab.
-- Ohne URL-Root (ein CLI-Werkzeug ohne `SCRIPT_NAME`) wird `path`
-  übersprungen: die Maschine wird über die übrigen Kriterien erkannt.
-- Keine Regel trifft: die Instanz mit `"default": true` (LIVE, ohne
-  `matches`); sonst `NotConfigured` → Einrichtungs-Seite (siehe
-  [setup.md](setup.md)). `"instance": "LIVE"` im CLI-JSON pinnt.
-- **Seit 2026-10-22:** ein Web-Request auf einen lokalen Host (IP,
-  `localhost`, `*.local`, `*.test`, `*.localhost`) bekommt den Default
-  **nicht** — eine Maschine ohne eigene Datei lief sonst still auf LIVE mit
-  der Live-Datenbank. Er bekommt die Einrichtungs-Seite. Die CLI ist
-  ausgenommen (ein Cron auf einem LIVE-Server kann eine private Socket-IP
-  sehen). `Instance::isLocalHost()`.
-- Das alte `match`-Objekt bricht mit einer Meldung ab.
-
-Die bisherigen Instanzen:
-
-| Datei | Regeln |
-|---|---|
-| `LIVE.config.json` | keine, `default` — jede Site antwortet auf ihren Namen (und ihre Aliase) |
-| `DEV.*` | je Site `serverIp`/`serverName` der Maschine + `path: /projects/<site>/`, dazu `linkSites` |
-| `STAGING.config.json` | je Site `serverName: staging.systopic.net` + `path` |
-| `RC.config.json` | je Site eine Test-Subdomain: `rc.systopic.net`, `beautiful-technology.systopic.net` … |
 
 ## Sites
 
@@ -90,31 +52,34 @@ Baum, Globus für die Default-Site, +-Menü zum Anlegen), siehe
 (`Pages\Sites\SiteRegistry::boot()` → `Config::useSites()` → `resolveSite()`).
 Solange die Tabelle leer ist, gilt ein `sites`-Block in config.json als Fallback.
 
-**Wo** eine Site antwortet, sagen die Regeln ihrer Instanz: jede Regel der
-Site (ohne `site`: der Default-Site) mit Host und/oder Pfad ist eine Adresse
-von ihr — `rc.systopic.net`, `/projects/x/`, `staging.systopic.net/projects/x/`.
-Die **erste** ist kanonisch: `baseUrl()` baut daraus die absolute Wurzel der
-Site für Links von anderen Sites (Pfad-Adressen auf dem aktuellen Host), plus
-dem Rest des aktuellen Roots, den die eigene Adresse nicht abdeckt (`public/`
-auf DEV). Eine Instanz ohne Regeln (LIVE) adressiert jede Site über ihren Namen.
+**Wo** eine Site antwortet, sagt das Muster der Installation,
+`packages.cms.siteAddress` (Settings › CMS › Configuration): reguläre Ausdrücke mit Platzhalter, mehrere als Liste.
 
-**Site anlegen, umbenennen, löschen** schreibt die Regeln **aller**
-Instanz-Dateien nach (`InstanceFiles`, gemeldet im Panel als `config/…`):
+| Stage | `siteAddress` | Adressen |
+|---|---|---|
+| DEV | `/projects(\.[a-z]+)?/{site}/` | `/projects/beautiful-technology.de/` auf dem Host der Anfrage; liegt das Projekt in `/projects.archive/`, dort |
+| STAGING | `staging.systopic.net/projects/{site}/` | Host und Pfad |
+| RC | `rc.systopic.net`, `{name}.systopic.net` | `{name}` ist der Name ohne TLD (Zertifikate); das Muster ohne Platzhalter gehört der Default-Site |
+| LIVE | leer | jede Site unter ihrem Namen |
 
-- umbenennen: `site` und das Pfad-Segment (`/projects/<alt>/` → `/projects/<neu>/`);
-  Hosts bleiben, ein Host mit dem alten Namen wird gemeldet
-- löschen: alle Regeln der Site fallen weg (Ordner und Links bleiben)
-- anlegen: Dateien mit Pfad-Regeln bekommen eine Kopie mit dem neuen Pfad;
-  Dateien nur mit Host-Regeln (RC) werden gemeldet — Host von Hand eintragen
-- Dateien ohne Regeln (LIVE) brauchen nichts; Dateien mit echten Kommentaren
-  werden nicht angefasst, sondern gemeldet. Zurückgeschrieben mit Tabs.
+`Config\Sites` macht daraus je Anfrage die Adressen aller Sites: Passt ein Muster auf
+die Anfrage, wird das, was der Platzhalter genommen hat, gegen die andere Site getauscht;
+passt es nicht, wird es ausgeschrieben, soweit es reiner Text ist. Die **erste** Adresse
+einer Site ist kanonisch: `baseUrl()` baut daraus die absolute Wurzel der Site für Links
+von anderen Sites (Pfad-Adressen auf dem aktuellen Host), plus dem Rest des aktuellen
+Roots, den die eigene Adresse nicht abdeckt (`public/` auf DEV). Ein Ordner, der keine
+Site ist, landet auf der Default-Site.
+
+**Site anlegen, umbenennen, löschen** schreibt keine Config: Das Muster nimmt jede
+Site unter ihrem Namen. Umbenennen verschiebt den Ordner `sites/<name>/` und die Links
+dieser Maschine.
 
 **Alias-Domains** (`cms_sites.site_aliases`, im Site-Editor gepflegt): weitere
 Domains einer Site, z. B. `beautiful-technology.com`. Sie hängen auf jeder
-Instanz als Adressen **hinter** den eigenen (also nie kanonisch), und ein
+Installation als Adressen **hinter** den eigenen (also nie kanonisch), und ein
 Request darauf geht mit 301 auf dieselbe Adresse unter der kanonischen
 (`SiteRegistry::redirectAlias()`, direkt nach `resolveSite()`). Hosts einer
-Stage gehören nicht hierher, sondern in die Regeln: die Alias-Liste reist mit
+Stage gehören nicht hierher, sondern in `siteAddress`: die Alias-Liste reist mit
 jeder Kopie der Datenbank. Geprüft beim Speichern: Domain mit TLD, nicht der
 eigene Name, nicht Name oder Alias einer anderen Site; `www.` wird entfernt.
 
@@ -125,14 +90,14 @@ eigene Name, nicht Name oder Alias einer anderen Site; `www.` wird entfernt.
 
 ### DEV: zweite Site per Pfad
 
-Mit `"linkSites": true` in der Instanz-Datei legt `SiteRegistry::boot()`
-(`$config->linkSites($_SERVER['DOCUMENT_ROOT'], <project>)`, Klasse
-`SiteLinks`) fehlende Links selbst an: pro Pfad-Adresse
-`<DOCUMENT_ROOT><pfad>` → Projektordner. Nur wenn eine der Adressen schon
-das Projekt selbst ist (Schema stimmt auf dieser Maschine), nur Pfad-Adressen,
-Vorhandenes bleibt unangetastet. Bisher nur Windows (Junction, braucht kein
-Admin); macOS/Linux geben `skipped` zurück. Ergebnis in `debugInfo()['siteLinks']`.
-Umbenennen verschiebt den Link mit. Von Hand entspricht das:
+Fehlt auf dieser Maschine der Link einer Site, sagt es ihre Seite im CMS oben
+(„Site link not created“) und bietet „Create site link“ an: Er legt den Link an und, falls
+nötig, `sites/<name>/`. Windows bekommt eine Junction, alle anderen einen Symlink, relativ,
+wenn er neben dem Projekt liegt (`SiteLinks`). Gesucht wird pro Pfad-Adresse
+`<DOCUMENT_ROOT><pfad>` → Projektordner, nur wenn eine der Adressen schon das Projekt
+selbst ist (das Muster stimmt auf dieser Maschine); Vorhandenes bleibt unangetastet.
+Umbenennen verschiebt den Link mit. Beim Booten wird nichts angelegt (die Einstellung
+`linkSites` ist 2026-11-09 entfallen). Von Hand entspricht das:
 
 ```
 mklink /J C:\laragon\www\projects\beautiful-technology.de C:\laragon\www\projects\systopic.net
@@ -140,11 +105,11 @@ mklink /J C:\laragon\www\projects\beautiful-technology.de C:\laragon\www\project
 
 Dann liefert `https://192.168.22.50/projects/beautiful-technology.de/public/`
 dieselben Dateien mit `http::$root = /projects/beautiful-technology.de/public/`,
-und die Regel mit `path: /projects/beautiful-technology.de/` wählt die Site.
+und das Muster `/projects(\.[a-z]+)?/{site}/` wählt die Site.
 Auf STAGING braucht es denselben Link (`ln -s systopic.net beautiful-technology.de`).
 
 ## Debug
 
-`Config::current()->debugInfo()`: gelesene Dateien, Instanz, Kriterium
-(`matchedBy`: die Kriterien der getroffenen Regel), Site, getroffene Adresse, Rest. In den Core-JS-Settings stehen
+`Config::current()->debugInfo()`: gelesene Dateien, Installation, Stage,
+`siteAddress`, Site, getroffene Adresse, Rest. In den Core-JS-Settings stehen
 `instance` und `site`.

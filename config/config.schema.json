@@ -1,0 +1,148 @@
+{
+	"$schema": "https://json-schema.org/draft/2020-12/schema",
+	"title": "System",
+	"description": "packages.system: the installation and how it runs.",
+	"type": "object",
+	"x-icon": "server",
+	"required": ["instance"],
+	"properties": {
+		"instance": {
+			"title": "Installation",
+			"description": "The name of this installation: its stage, then a dot and the machine. DEV.ojhome, STAGING, LIVE. The stage decides the defaults that differ between stages.",
+			"type": "string",
+			"pattern": "^[A-Z]+(\\.[A-Za-z0-9_-]+)?$",
+			"x-mandatory": "input",
+			"x-setup": true
+		},
+		"website": {
+			"title": "Website",
+			"description": "The names of the project, the same on every installation.",
+			"type": "object",
+			"x-project": true,
+			"properties": {
+				"name": { "title": "Name", "description": "The name of the website: the title of the pages, the name of the web app.", "type": "string", "default": "fluxo", "x-constant": "PUBLIC_PAGE_NAME" },
+				"appName": { "title": "App name", "description": "The name on the sign-in pages and in the admin. Empty: the name.", "type": "string", "x-constant": "PUBLIC_APP_NAME" },
+				"titleSeparator": { "title": "Title separator", "description": "Between the parts of a page title, and in the subject of a mail.", "type": "string", "default": "|", "x-constant": "PAGE_TITLE_SEPERATOR" }
+			}
+		},
+		"legal": {
+			"title": "Legal",
+			"description": "What the sign-in pages of this system link and show about who runs it. The website has its own imprint and privacy pages.",
+			"type": "object",
+			"x-project": true,
+			"properties": {
+				"imprintUrl": { "title": "Imprint", "description": "Where the imprint link of the sign-in pages leads: an http(s) URL or a path starting with /. Empty: the /imprint/ page of the website.", "type": "string", "x-constant": "CMS_IMPRINT_URL" },
+				"privacyUrl": { "title": "Privacy policy", "description": "Where the privacy link of the sign-in pages leads: an http(s) URL or a path starting with /. Empty: the /privacy/ page of the website.", "type": "string", "x-constant": "CMS_PRIVACY_URL" },
+				"operator": { "title": "Responsible operator", "description": "Who runs this system, shown on the privacy page of the sign-in. Empty: the start page of the admin reminds of it.", "type": "string", "x-constant": "CMS_OPERATOR_DETAILS" },
+				"dpo": { "title": "Data protection officer", "description": "If one is appointed: shown on the privacy page of the sign-in.", "type": "string", "x-constant": "CMS_DPO_DETAILS" }
+			}
+		},
+		"debug": {
+			"title": "Debug",
+			"description": "What a developer sees while working on the installation. On by default on DEV, off everywhere else.",
+			"type": "object",
+			"properties": {
+				"debug": { "title": "Debug", "description": "The debug output and the debug tool. Render time and script time only work while it is on.", "type": ["boolean", "integer"], "default": false, "x-stages": { "DEV": true } },
+				"render": { "title": "Render time", "description": "Records which template and panel rendered each part of the page, for the layer trees of the debug tool. Costs time on every request.", "type": ["boolean", "integer"], "default": false, "x-stages": { "DEV": true } },
+				"time": { "title": "Script time", "description": "Defines DEBUGTIME. Nothing in the packages reads it at the moment.", "type": ["boolean", "integer"], "default": false, "x-stages": { "DEV": true } },
+				"displayErrors": { "title": "Display PHP errors", "description": "PHP shows its errors in the page (display_errors). Errors are logged either way. Independent of Debug.", "type": ["boolean", "integer"], "default": false, "x-stages": { "DEV": true } }
+			}
+		},
+		"versionAppendix": {
+			"title": "Version appendix",
+			"description": "Appended to asset URLs, so browsers load a new version. time: the current time, every request a new one. Not set: versionDate.",
+			"type": "string",
+			"x-stages": { "DEV": "time" }
+		},
+		"versionDate": { "title": "Version date", "description": "The release the installation runs, appended to asset URLs when no version appendix is set. Empty: nothing is appended.", "type": "string" },
+		"assets": {
+			"title": "Assets",
+			"description": "How scripts and styles of the packages reach the browser. source: straight from their folders. serve: through /assets/, from the originals every time. publish: through /assets/, copied to public/assets/. Not set: the originals where the web reaches them, copies where it does not.",
+			"type": "string",
+			"enum": ["source", "serve", "publish"],
+			"x-computed": true
+		},
+		"sysPath": { "title": "System path", "description": "Where the system package lies, relative to the project folder.", "type": "string", "default": "vendor/systopic/system/" },
+		"ini": {
+			"title": "PHP settings",
+			"description": "Set with ini_set() on every request. Upload limits do not belong here, PHP cannot change them at runtime.",
+			"type": "object",
+			"additionalProperties": true,
+			"x-project": true,
+			"x-overridable": true,
+			"propertyNames": {
+				"not": { "enum": ["error_log", "display_errors", "error_reporting"] }
+			},
+			"properties": {
+				"max_execution_time": { "title": "Max. execution time", "description": "Seconds a request may run before PHP stops it. 0: no limit.", "type": "integer", "minimum": 0, "default": 60 },
+				"memory_limit": { "title": "Memory limit", "description": "How much memory one request may take, e.g. 512M or 1G.", "type": "string", "default": "1G" },
+				"serialize_precision": { "title": "Serialize precision", "description": "Digits of floating point numbers in serialize() and json_encode().", "type": "integer", "default": 14 },
+				"log_errors": { "title": "Log errors", "description": "PHP writes its errors to the error log.", "type": "boolean", "default": true },
+				"html_errors": { "title": "HTML errors", "description": "PHP formats the errors it shows as HTML.", "type": "boolean", "default": false }
+			}
+		},
+		"constants": {
+			"title": "Constants",
+			"description": "Defined as PHP constants when the configuration is loaded.",
+			"type": "object",
+			"x-project": true,
+			"properties": {
+				"DEFAULT_TABLE_PREFIX": { "title": "Table Prefix", "description": "Put before the name of every table of the system: cms_nodes.", "type": "string", "default": null },
+				"PROJECT_NAMESPACE": { "title": "Project namespace", "description": "The PHP namespace of the project's classes. Also names its live update channels when the relay has no prefix.", "type": "string" },
+				"ACCOUNT_WHITELIST": {
+					"title": "Allowed mail domains",
+					"description": "Who may create an account. Empty: everybody.",
+					"type": "array",
+					"default": [],
+					"items": { "type": "string" }
+				}
+			}
+		},
+		"auth": {
+			"title": "Sign-in",
+			"description": "How people sign in, and how long they stay signed in.",
+			"type": "object",
+			"x-tool": "Systopic\\System\\Settings\\Tools\\AuthTool",
+			"properties": {
+				"defaultSignInMethod": {
+					"title": "Default sign-in",
+					"description": "What the sign-in card opens with. Empty: the person picks.",
+					"type": "string",
+					"enum": ["", "code", "device_code", "passkey", "password"],
+					"default": "",
+					"x-project": true,
+					"x-overridable": true
+				},
+				"deviceDays": { "title": "Device days", "description": "How long a device stays signed in.", "type": "integer", "minimum": 1, "default": 180, "x-project": true, "x-overridable": true },
+				"passwordLength": { "title": "Password length", "description": "The fewest characters a new password must have. Passwords that are set already keep working. Only passwords of 15 characters or more are checked against the list of common ones.", "type": "integer", "minimum": 6, "default": 15, "x-project": true, "x-overridable": true },
+				"screenDays": { "title": "Screen days", "description": "How long a screen lives after its last use. Empty: until revoked.", "type": ["integer", "null"], "minimum": 1, "default": null, "x-project": true, "x-overridable": true },
+				"secret": {
+					"title": "Sign-in key",
+					"description": "Keys the one-time codes. Made the first time it is needed.",
+					"type": "string",
+					"minLength": 32,
+					"writeOnly": true,
+					"x-mandatory": "generate"
+				}
+			}
+		},
+		"mail": {
+			"title": "Mail",
+			"description": "Without an account, DEV hands the mail to Mailpit and every other stage refuses to send.",
+			"type": "object",
+			"x-optional": true,
+			"x-tool": "Systopic\\System\\Settings\\Tools\\MailTool",
+			"properties": {
+				"host": { "title": "SMTP host", "description": "The server mail is handed to. Empty on DEV: the local mail catcher (127.0.0.1:1025).", "type": "string" },
+				"port": { "title": "Port", "description": "587 for TLS, 465 for SSL.", "type": "integer", "minimum": 1, "maximum": 65535, "default": 587 },
+				"secure": { "title": "Encryption", "description": "tls: STARTTLS on the port, ssl: encrypted from the start, none: plain text.", "type": "string", "enum": ["tls", "ssl", "none"], "default": "tls" },
+				"user": { "title": "User", "description": "The account name at the SMTP host.", "type": "string" },
+				"password": { "title": "Password", "description": "The password of the SMTP user.", "type": "string", "writeOnly": true, "x-mandatory": "input" },
+				"from": { "title": "From address", "description": "The sender of every mail. The SMTP host has to allow it.", "type": "string", "format": "email" },
+				"fromName": { "title": "From name", "description": "The name shown with the from address.", "type": "string" },
+				"testMode": { "title": "Test mode", "description": "Every To, CC and BCC goes to the test recipient instead. DEV always routes like this, even when the switch is off: it is for LIVE and STAGING.", "type": "boolean", "default": false },
+				"testRecipient": { "title": "Test recipient", "description": "Where test routing sends every mail. Empty: testmail@fluxo.systems. An invalid address blocks delivery.", "type": "string", "format": "email" }
+			}
+		}
+	}
+}

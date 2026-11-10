@@ -120,8 +120,8 @@ final class AgentCli
             define('AUTOLOGON_ID', (int) $in['user']);
         }
         if (!empty($in['instance']) && is_string($in['instance'])) {
-            // Which config/ instance to run as ('DEV.ojoffice', …); default:
-            // matched by serverIp / rootDir like a web request.
+            // The installation name to run as ('STAGING', …): its stage
+            // decides the defaults. Default: the one config.local.json names.
             define('CONFIG_INSTANCE', $in['instance']);
         }
 

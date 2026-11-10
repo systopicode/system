@@ -4,4 +4,5 @@
 
 use Systopic\System\Settings\ProjectForm;
 
-ProjectForm::render('page');
+// what a panel of another package shows (Website of the cms) is not shown here
+ProjectForm::render('page', [], $this->claimed());

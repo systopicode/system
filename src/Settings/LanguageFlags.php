@@ -162,4 +162,33 @@ final class LanguageFlags
             libxml_use_internal_errors($previous);
         }
     }
+
+    /**
+     * The flag calls of a panel that shows the languages (Global Settings,
+     * Website of the cms): upload or reset one. True when the call was one.
+     */
+    public static function handleAction(\Systopic\System\Panels\PanelNode $panel): bool
+    {
+        if (!in_array((string) $panel->action, ['uploadFlag', 'resetFlag'], true)) {
+            return false;
+        }
+        $token = (string) (\http::posted('flagToken') ?? \http::put('flagToken') ?? '');
+        $code = (string) \http::get('code');
+        if (!\Systopic\System\Auth\Session::hasRole('cmsAdmin') || strtoupper((string) \http::$method) !== 'POST' || !self::checkToken($token)) {
+            \message::error('Reload the settings page and try again.');
+        } elseif ($panel->action === 'uploadFlag') {
+            $error = self::store($code);
+            $error === null ? \message::confirm('Flag saved.') : \message::error($error);
+        } else {
+            self::reset($code)
+                ? \message::confirm('Project flag removed. The local default is used where available.')
+                : \message::error('There was no project flag to remove.');
+        }
+        if (\http::ajax()) {
+            $panel->updateView('main');
+        } else {
+            \http::redirect($panel->getHref(\http::$root));
+        }
+        return true;
+    }
 }

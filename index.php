@@ -35,18 +35,13 @@ require $composerAutoload;
 \Systopic\System\Agent\AgentCli::boot($__projectEntry);
 
 /* * **************************** INI DEFAULTS ************************** */
-// Before the config: "ini" in config.json or an instance file overrides them.
-// PHP_INI_PERDIR settings (upload_max_filesize, post_max_size) probably have
-// no effect here - see https://www.php.net/manual/en/configuration.changes.modes.php
-ini_set('upload_max_filesize', '50M');
-ini_set('post_max_size', '50M');
-ini_set('max_execution_time', 60);
-ini_set('memory_limit', '1G');
-ini_set('serialize_precision', 14);
-ini_set('log_errors', 1);
-ini_set('html_errors', false);
-// Absolute, so a later chdir cannot send errors into public/var or nowhere.
-// Config may override this afterwards; a relative override is put back below.
+// Before the config, the setup page runs without one. They come from
+// config/config.schema.json, "ini" in a config file overrides them.
+// upload_max_filesize and post_max_size are the server's: PHP cannot change
+// them at runtime, the systemcheck says when they are too small.
+\Systopic\System\Config\Config::applyIniDefaults();
+// Absolute, so a later chdir cannot send errors into public/var or nowhere,
+// and over what the server's php.ini says. A config cannot change it: reserved.
 $__logDir = $__projectRoot . '/var/log';
 if (!is_dir($__logDir)) {
 	mkdir($__logDir, 0775, true);
@@ -55,9 +50,14 @@ $__phpLog = $__logDir . '/PHP_errors.log';
 ini_set('error_log', $__phpLog);
 
 /* ***************************** INSTANCE + SITE (config/) ************************** */
-// config.json: project constants (and sites without a database);
-// <stage>[.<machine>].config.json: one installation (matches, db, debug);
-// config.local.json: this machine, never synced. See .cursor/docs/config.md
+// config.json: the project (constants, values marked x-project, sites
+// without a database); config.local.json: this installation, its name, its
+// databases and secrets, never synced. See .cursor/docs/config-struktur.md
+// With the token sync writes, the setup comes first: it has to work when the
+// config does not (exits).
+if (\Systopic\System\Setup\Setup::maintenance($__projectRoot, $_SERVER)) {
+	\Systopic\System\Setup\Setup::maintain($__projectRoot, $_SERVER);
+}
 try {
 	$config = \Systopic\System\Config\Config::boot(
 		$__projectRoot . '/config',
@@ -73,10 +73,6 @@ try {
 // project constants from config.json (DEFAULT_TABLE_PREFIX, ACCOUNT_WHITELIST,
 // PROJECT_NAMESPACE)
 $config->defineConstants();
-// The instance or the server php.ini may point at a machine log such as
-// ServBay. This project keeps its own file, next to the other logs.
-ini_set('log_errors', '1');
-ini_set('error_log', $__phpLog);
 if (!defined('PHPLOGFILE')) {
 	define('PHPLOGFILE', $__phpLog);
 }

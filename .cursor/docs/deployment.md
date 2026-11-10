@@ -144,20 +144,20 @@ nur über eine Definition, welche Werte am Inhalt hängen. Das Thema steht in
 
 ## 5. Je Server: Mail und Login (seit systopic/system 1.3)
 
-In `config/<Instance>.config.json` oder `config/config.local.json` des
-Servers, nie in Git (Doku: [auth-devices.md](auth-devices.md)). Die DEV-Configs
-dürfen ins private Projekt-Repo, auch mit `auth.secret` (Benutzer, 2026-11-04):
+Mail steht in `config/<Instance>.config.json`, das Passwort und der Sign-in-Key in
+`config/config.local.json` des Servers. Secrets liegen immer dort, ohne Ausnahme je Stage
+(Doku: [auth-devices.md](auth-devices.md), [config-struktur.md](config-struktur.md)):
 
 ```json
-"mail": {"host": "smtp.systopic.net", "port": 587, "secure": "tls",
-         "user": "…", "password": "…", "from": "noreply@…", "fromName": "…"},
-"auth": {"secret": "<64 zufällige Hex-Zeichen>"}
+"packages": { "system": { "mail": { "host": "smtp.systopic.net", "port": 587, "secure": "tls",
+                                    "user": "…", "from": "noreply@…", "fromName": "…" } } }
 ```
+
+Eingetragen wird das im Admin unter Settings → Environment, oder im Setup über Sync.
 
 - Ohne `mail` versendet ein Server **nichts** (Fehler im Log); DEV ohne Block
   schickt an Mailpit (`127.0.0.1:1025`).
-- `auth.secret` entsteht von selbst, sobald es gebraucht wird, in der Datei der
-  Instanz. Dafür muss der Webserver sie schreiben dürfen. Überschreibt ein Sync
-  die Datei, entsteht ein neues. Das trifft nur Codes, die gerade unterwegs sind.
+- `auth.secret` entsteht von selbst in `config.local.json`, sobald es gebraucht wird.
+  Dafür muss der Webserver sie schreiben dürfen.
 - Der Systemcheck im CMS (Tools → System) zeigt beides.
 - Erst den `mail`-Block eintragen, dann die neue `system`-Version ausrollen.

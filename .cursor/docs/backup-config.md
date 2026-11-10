@@ -39,12 +39,15 @@ sich darin, ob sie mitreisen dürfen:
 |---|---|---|---|
 | Medienformate, Mediengruppen | `media.settings.json` | Medien in der Datenbank, Dateien in `var/formats` | reist mit, heute schon abwählbar |
 | Sprachen | `global.settings.json` (`languages`) | Inhalte je Sprache | reist mit, heute schon abwählbar |
-| Sites | `cms_sites` (Datenbank) und `matches[].site` (Instanz) | Der Name hängt am Inhalt, die Adresse an der Stage | **nicht kopieren, abgleichen** |
+| Sites | `cms_sites` (Datenbank) und `matches[].site` (Instanz) | Der Name hängt am Inhalt, die Adresse an der Stage | **nicht kopieren** |
 | `db`, `debug`, `matches` ohne `site`, Secrets | Instanz, local | nur an der Maschine | nie |
 
 Die Sites sind der schwierige Fall. Eine zurückgespielte Datenbank bringt ihre
 `cms_sites` mit. Die Regeln dazu dürfen aber nicht von der Quelle kommen, denn
-`staging.systopic.net` ist auf DEV falsch.
+`staging.systopic.net` ist auf DEV falsch. Einen automatischen Abgleich gibt es
+nicht: Passen `cms_sites` und `matches[].site` nicht zusammen und wird eine Site
+deshalb nicht erkannt, muss ein User entscheiden, ob die Datenbank oder die
+Config falsch ist (entschieden 2026-11-09).
 
 ## Vorschlag: Definition statt Dateiliste
 
@@ -54,24 +57,9 @@ reist nichts mit, ein neuer Schlüssel ist also von selbst sicher.
 | Angabe | Bedeutung |
 |---|---|
 | `"x-backup": "content"` | Der Wert hängt am Inhalt und reist im Archiv mit. |
-| `"x-backup": "stage"` | Der Wert verweist auf den Inhalt, gehört aber der Stage. Er reist nicht mit, nach dem Zurückspielen wird abgeglichen. |
 
-Für die Sites sähe das so aus:
-
-```json
-"site": {
-	"type": "string",
-	"x-backup": "stage",
-	"x-options": "sites"
-}
-```
-
-Ablauf beim Zurückspielen der Datenbank:
-
-1. `cms_sites` mit den `matches` der **eigenen** Instanz vergleichen.
-2. Site ohne Regel: melden und eine Regel vorschlagen, wie beim Anlegen einer
-   Site (`InstanceFiles`). Der Host kommt von dieser Stage.
-3. Regel ohne Site: melden, nichts löschen.
+Das Formular zeigt `content` mit dem Datenbank-Symbol. Gesetzt ist es heute
+nirgends.
 
 Im Archiv lägen statt ganzer Dateien nur die Werte mit `content`. Das setzt die
 Definitionsdateien aus dem Config-Umbau voraus. Bis dahin bleiben Global und

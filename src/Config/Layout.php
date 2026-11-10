@@ -22,6 +22,9 @@ final class Layout
     /** top level keys that belong to packages.system */
     private const SYSTEM = ['debug', 'versionAppendix', 'versionDate', 'linkSites', 'assets', 'sysPath', 'ini', 'auth', 'mail'];
 
+    /** what packages() takes out of the top of a file */
+    public const MOVED = [...self::SYSTEM, 'db', 'relay'];
+
     /** the constants of the system - every other one stays free, at the top */
     public const SYSTEM_CONSTANTS = ['DEFAULT_TABLE_PREFIX', 'PROJECT_NAMESPACE', 'ACCOUNT_WHITELIST'];
 
@@ -59,5 +62,28 @@ final class Layout
             $tree['relay'] = $file['relay'];
         }
         return Config::merge($tree, is_array($file['packages'] ?? null) ? $file['packages'] : []);
+    }
+
+    /**
+     * The whole file in the new layout: what moved goes under `packages`, the
+     * rest stays where it is.
+     *
+     * @param array<string, mixed> $file
+     * @return array<string, mixed>
+     */
+    public static function lift(array $file): array
+    {
+        $packages = self::packages($file);
+        foreach (self::MOVED as $key) {
+            unset($file[$key]);
+        }
+        foreach (self::SYSTEM_CONSTANTS as $name) {
+            unset($file['constants'][$name]);
+        }
+        if (($file['constants'] ?? null) === []) {
+            unset($file['constants']);
+        }
+        unset($file['packages']);
+        return $packages === [] ? $file : $file + ['packages' => $packages];
     }
 }

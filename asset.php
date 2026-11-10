@@ -93,7 +93,7 @@ declare(strict_types=1);
 	$mode = null;
 	try {
 		$config = \Systopic\System\Config\Config::boot($projectDir . '/config', $_SERVER, $projectDir);
-		$mode = $config->instance->get('assets');
+		$mode = $config->package('system')['assets'] ?? null;
 	} catch (\Throwable) {
 		// no config: publish, like an instance without the key
 	}

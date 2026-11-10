@@ -908,7 +908,8 @@ document.addEventListener('click',event=>{
         const submit = form.querySelector('[type="submit"]');
         if (!password || !repeat || !submit) return;
         const value = password.value;
-        const strong = Array.from(value).length >= 15;
+        const min = parseInt(form.dataset.passwordMin, 10) || 15;
+        const strong = Array.from(value).length >= min;
         const repetitive = /^(.{1,6})\1+$/us.test(value.trim().toLowerCase());
         let hint = form.querySelector('[data-password-hint]');
         if (!hint) {
@@ -918,7 +919,7 @@ document.addEventListener('click',event=>{
         }
         const length = Array.from(value).length;
         const rules = [
-            [strong, strong ? 'At least 15 characters.' : `Add ${15 - length} more character${15 - length === 1 ? '' : 's'} (minimum 15).`],
+            [strong, strong ? `At least ${min} characters.` : `Add ${min - length} more character${min - length === 1 ? '' : 's'} (minimum ${min}).`],
             ...(strong ? [[!repetitive, repetitive ? 'Avoid repeating the same characters or short pattern.' : 'No simple repeated pattern. Common passwords are checked when saving.']] : []),
             [!!repeat.value && value === repeat.value, !repeat.value ? 'Repeat your password.' : value !== repeat.value ? 'Repeat the same password in both fields.' : 'Passwords match.']
         ];

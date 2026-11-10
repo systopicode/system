@@ -6,6 +6,7 @@ declare(strict_types=1);
 spl_autoload_register(static function (string $class): void {
     foreach (['Systopic\\System\\' => dirname(__DIR__) . '/src/',
         'Systopic\\Db\\' => dirname(__DIR__, 2) . '/db/src/',
+        'Systopic\\Relay\\' => dirname(__DIR__, 2) . '/relay/src/',
         'Systopic\\Cms\\' => dirname(__DIR__, 2) . '/cms/src/'] as $prefix => $directory) {
         if (str_starts_with($class, $prefix)) {
             $file = $directory . str_replace('\\', '/', substr($class, strlen($prefix))) . '.php';

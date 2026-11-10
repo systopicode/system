@@ -6,9 +6,8 @@ declare(strict_types=1);
  * The package tree of Config: Layout lifts every file, Schema fills the
  * defaults. See .cursor/docs/config-struktur.md.
  *
- * Read only. Then the proof of step 1: for every instance of every project in
- * projects/*, the tree says what the old accessors say. Values are compared,
- * never printed.
+ * Then every project next to the packages that names its installation in
+ * config.local.json has to boot.
  *
  *   php tests/config-tree.php
  */
@@ -54,74 +53,63 @@ check('an optional block stays away', !isset($system['mail']));
 check('defaults reach the tree', $system['auth']['deviceDays'] === 180 && $system['ini']['memory_limit'] === '1G');
 check('a stage has its own default', Schema::withDefaults('system', [], 'DEV')['debug']['debug'] === true && $system['debug']['debug'] === false);
 
-// ---- a project in the middle of the move
+// ---- the two files
 $dir = sys_get_temp_dir() . '/config-tree-' . bin2hex(random_bytes(4));
 mkdir($dir);
 $write = static fn(string $name, array $data) => file_put_contents("$dir/$name", json_encode($data));
 $write('config.json', ['constants' => ['PROJECT_NAMESPACE' => 'Old', 'FREE' => 1]]);
-$write('LIVE.config.json', ['default' => true, 'packages' => ['db' => ['connections' => [
-	'main' => ['host' => 'h', 'name' => 'n', 'pass' => 'from-the-instance'],
-	'revolver' => ['driver' => 'pgsql', 'name' => 'r'],
-]], 'system' => ['linkSites' => true]]]);
-$write('config.local.json', ['db' => ['pass' => 'from-local'], 'packages' => ['db' => ['connections' => ['revolver' => ['pass' => 'r-local']]]]]);
+rejects('without config.local.json there is no installation', static fn() => Config::boot($dir, [], $dir));
+$write('DEV.old.config.json', ['packages' => ['system' => ['instance' => 'DEV.old']]]);
+rejects('an old instance file names nothing', static fn() => Config::boot($dir, [], $dir));
+$write('config.local.json', ['db' => ['pass' => 'from-local'], 'packages' => ['system' => ['instance' => 'STAGING', 'versionDate' => '2026-01-01'], 'db' => ['connections' => [
+	'main' => ['host' => 'h', 'name' => 'n'],
+	'revolver' => ['driver' => 'pgsql', 'name' => 'r', 'pass' => 'r-local'],
+]]]]);
 $config = Config::boot($dir, ['SERVER_NAME' => 'example.com', 'SERVER_ADDR' => '1.2.3.4'], $dir);
-check('an old local beats a new instance', $config->connection()['pass'] === 'from-local');
-check('the instance keeps the rest', $config->connection()['host'] === 'h');
+check('config.local.json names the installation', $config->instance->name === 'STAGING' && $config->instance->stage === 'STAGING');
+check('the old layout and the new one in one file', $config->connection()['pass'] === 'from-local' && $config->connection()['host'] === 'h');
 check('a second connection', $config->connection('revolver')['driver'] === 'pgsql' && $config->connection('revolver')['pass'] === 'r-local');
 check('an unknown connection is empty', $config->connection('nope') === []);
-check('old and new files side by side', $config->package('system')['constants']['PROJECT_NAMESPACE'] === 'Old' && $config->package('system')['linkSites'] === true);
+check('config.json and config.local.json side by side', $config->package('system')['constants']['PROJECT_NAMESPACE'] === 'Old' && $config->package('system')['versionDate'] === '2026-01-01');
+check('the stage decides the defaults', $config->package('system')['debug']['debug'] === false);
+check('a pinned name runs as its stage', Config::boot($dir, [], $dir, 'DEV.cli')->package('system')['debug']['debug'] === true);
+check('the files read', array_map('basename', $config->files) === ['config.json', 'config.local.json']);
 array_map('unlink', glob("$dir/*") ?: []);
 rmdir($dir);
 
-// ---- step 1: every instance says the same as before
-$checked = 0;
-$different = [];
-foreach (glob(dirname(__DIR__, 3) . '/projects/*/config/config.json') ?: [] as $base) {
-	$dir = dirname($base);
-	$project = basename(dirname($dir));
-	foreach (glob("$dir/*.config.json") ?: [] as $file) {
-		$name = basename($file, '.config.json');
-		if ($name === 'config') {
-			continue;
-		}
-		$config = Config::boot($dir, [], dirname($dir), $name);
-		$old = $config->instance;
-		$system = $config->package('system');
-		$db = $old->db();
-		$bind = $db['bindOnlyUsedParams'] ?? null;
-		unset($db['bindOnlyUsedParams']);
-		$main = $config->connection();
-		$pairs = [
-			'db' => [$db, array_intersect_key($main, $db)],
-			'db host' => [$db['host'] ?? 'localhost', $main['host'] ?? 'localhost'],
-			'bind' => [$bind, $config->package('db')['bindOnlyUsedParams'] ?? null],
-			'debug' => [$old->debug()['debug'] ?? false, $system['debug']['debug'] ?? null],
-			'render' => [$old->debug()['render'] ?? false, $system['debug']['render'] ?? null],
-			'time' => [$old->debug()['time'] ?? false, $system['debug']['time'] ?? null],
-			'displayErrors' => [$old->debug()['displayErrors'] ?? ($old->stage === 'DEV'), $system['debug']['displayErrors'] ?? null],
-			'versionAppendix' => [$old->get('versionAppendix'), $system['versionAppendix'] ?? null],
-			'versionDate' => [$old->get('versionDate'), $system['versionDate'] ?? null],
-			'linkSites' => [!empty($old->get('linkSites')), !empty($system['linkSites'])],
-			'assets' => [$old->get('assets'), $system['assets'] ?? null],
-			'sysPath' => [$old->get('sysPath', $config->data['sysPath'] ?? 'vendor/systopic/system/'), $system['sysPath'] ?? null],
-			'mail' => [(array) $old->get('mail', []), array_intersect_key($system['mail'] ?? [], (array) $old->get('mail', []))],
-			'auth' => [(array) $old->get('auth', []), array_intersect_key($system['auth'] ?? [], (array) $old->get('auth', []))],
-			'relay' => [(array) $old->get('relay', []), array_intersect_key($config->package('relay'), (array) $old->get('relay', []))],
-		];
-		foreach (['DEFAULT_TABLE_PREFIX', 'PROJECT_NAMESPACE', 'ACCOUNT_WHITELIST'] as $constant) {
-			$pairs[$constant] = [$config->data['constants'][$constant] ?? null, $system['constants'][$constant] ?? null];
-		}
-		foreach ($pairs as $key => [$before, $after]) {
-			if ($before != $after) {
-				$different[] = "$project/$name: $key";
-			}
-		}
-		$checked++;
+// ---- constants and ini: config.local.json wins
+$dir = sys_get_temp_dir() . '/config-tree-' . bin2hex(random_bytes(4));
+mkdir($dir);
+$write = static fn(string $name, array $data) => file_put_contents("$dir/$name", json_encode($data));
+$write('config.json', ['constants' => ['TREE_A' => 'project', 'TREE_B' => 'project'], 'ini' => ['precision' => 11]]);
+$write('config.local.json', ['constants' => ['TREE_B' => 'local'], 'ini' => ['precision' => 12, 'error_log' => 'nope.log', 'display_errors' => '1', 'error_reporting' => '0'], 'packages' => ['system' => ['instance' => 'LIVE']]]);
+$config = Config::boot($dir, ['SERVER_NAME' => 'example.com', 'SERVER_ADDR' => '1.2.3.4'], $dir);
+$log = ini_get('error_log');
+Config::applyIniDefaults();
+check('the defaults come from the definitions', ini_get('memory_limit') === '1G' && ini_get('serialize_precision') === '14');
+$config->defineConstants();
+check('config.json alone', TREE_A === 'project');
+check('config.local.json beats config.json', TREE_B === 'local');
+check('ini: config.local.json beats config.json', ini_get('precision') === '12');
+check('a config cannot reach error_log', ini_get('error_log') === $log);
+check('nor error_reporting', error_reporting() === -1);
+check('nor display_errors, that is the debug switch', ini_get('display_errors') === '0');
+check('defaults stay where no file says otherwise', ini_get('memory_limit') === '1G');
+ini_set('display_errors', '1'); // the checks below have to be able to fail out loud
+array_map('unlink', glob("$dir/*") ?: []);
+rmdir($dir);
+
+// ---- every project here boots
+$booted = 0;
+foreach (glob(dirname(__DIR__, 3) . '/projects/*/config/config.local.json') ?: [] as $local) {
+	$dir = dirname($local);
+	$data = json_decode((string) file_get_contents($local), true);
+	if (($data['packages']['system']['instance'] ?? '') === '') {
+		continue;
 	}
+	$config = Config::boot($dir, [], dirname($dir));
+	check(basename(dirname($dir)) . ' boots as ' . $config->instance->name, ($config->connection()['name'] ?? '') !== '');
+	$booted++;
 }
-if ($checked === 0) {
-	echo "skipped: no projects next to the packages\n";
-	exit(0);
-}
-check("$checked instances say the same as before", $different === []);
+echo $booted === 0 ? "skipped: no adopted project next to the packages\n" : '';
 echo "all fine\n";

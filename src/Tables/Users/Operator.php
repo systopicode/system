@@ -163,9 +163,10 @@ final class Operator
         if ($password !== $repeat) {
             return ["Passwords don't match."];
         }
-        // New passwords use the same minimum in every environment. Existing
-        // password hashes and sign-in verification are deliberately unchanged.
-        if (!preg_match('/^.{15,}$/us', $password)) return ['Use at least 15 characters.'];
+        // New passwords use the same minimum in every environment (auth.passwordLength).
+        // Existing password hashes and sign-in verification are deliberately unchanged.
+        $length = \Systopic\System\Auth\AuthConfig::passwordLength();
+        if (!preg_match('/^.{' . $length . ',}$/us', $password)) return ["Use at least $length characters."];
         if (\Systopic\System\Auth\PasswordBlocklist::contains($password)) {
             return ['This password is too common or repetitive. Choose a different password or passphrase.'];
         }

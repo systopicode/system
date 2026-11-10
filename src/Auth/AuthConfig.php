@@ -8,8 +8,8 @@ use Systopic\System\Config\Config;
 use Systopic\System\Settings\EnvironmentFile;
 
 /**
- * The "auth" block of the instance's config (<Instance>.config.json or
- * config.local.json — never git, never synced to another machine):
+ * The "auth" block of the installation\'s config (config.local.json —
+ * never git, never synced to another machine):
  *
  *   "auth": {"secret": "<at least 32 random characters>",
  *            "deviceDays": 180, "screenDays": null}
@@ -20,6 +20,8 @@ use Systopic\System\Settings\EnvironmentFile;
 final class AuthConfig
 {
     public const DEVICE_DAYS = 180;
+
+    public const PASSWORD_LENGTH = 15;
 
     /**
      * Secret written in this request. The loaded instance stays as it was
@@ -60,19 +62,23 @@ final class AuthConfig
      */
     private static function made(): string
     {
-        $file = Config::current() !== null ? EnvironmentFile::activeFile() : null;
-        if ($file === null) {
+        if (EnvironmentFile::activeFile() === null) {
             return '';
         }
-        EnvironmentFile::createAuth($file);
-        $auth = EnvironmentFile::read($file)['auth'] ?? null;
-        return is_array($auth) ? (string) ($auth['secret'] ?? '') : '';
+        EnvironmentFile::createAuth();
+        return EnvironmentFile::authSecret();
     }
 
     /** How long a person's device lives after its last use. */
     public static function deviceDays(): int
     {
         return max(1, (int) (self::block()['deviceDays'] ?? self::DEVICE_DAYS));
+    }
+
+    /** The fewest characters a new password must have - never fewer than 6. */
+    public static function passwordLength(): int
+    {
+        return max(6, (int) (self::block()['passwordLength'] ?? self::PASSWORD_LENGTH));
     }
 
     /** How long a screen lives after its last use - null: until revoked. */

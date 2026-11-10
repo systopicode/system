@@ -10,12 +10,12 @@ namespace Systopic\System\Config;
  * What a site IS lives in cms_sites and is the same on every installation:
  * name (= domain), root (its node, null = the default site), meta, aliases.
  *
- * WHERE it answers is installation-specific and comes from the rules of the
- * instance file (`matches`, see Sites). An entry is
+ * WHERE it answers is installation-specific and comes from the patterns of
+ * the installation (`siteAddress`, see Sites). An entry is
  *
  *   'beautiful-technology.de'                   a host (LIVE — the site's own name)
- *   '/projects/beautiful-technology.de/'        a path below any host (DEV — the ip was
- *                                               already matched by the rule)
+ *   '/projects/beautiful-technology.de/'        a path below any host (DEV — the folder
+ *                                               of the site, made from the pattern)
  *   'staging.systopic.net/projects/x/'          host and path
  *
  * and matched as a prefix against `host + http::$root`. The first entry is

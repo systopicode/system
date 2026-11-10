@@ -1,10 +1,10 @@
 {
-	"build": ["cmsAdmin", "cmsEditor", "recovery"],
+	"build": ["cmsAdmin", "cmsEditor", "recovery", "restore"],
 	"action": {
-		"clearTempdirs": ["cmsAdmin", "recovery"],
+		"clearTempdirs": ["cmsAdmin", "recovery", "restore"],
 		"createDatabase": ["recovery"],
-		"download": ["cmsAdmin", "recovery"],
-		"remove": ["cmsAdmin", "recovery"],
-		"upload": ["cmsAdmin", "recovery"]
+		"download": ["cmsAdmin", "recovery", "restore"],
+		"remove": ["cmsAdmin", "recovery", "restore"],
+		"upload": ["cmsAdmin", "recovery", "restore"]
 	}
 }

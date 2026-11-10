@@ -62,7 +62,7 @@ behalten ihre eigene `index.php`, bis ihre composer.json den
 
 Wann: `Config::boot()` wirft `Config\NotConfigured` (kein config.json,
 keine Instanz, keine passende, lokaler Request auf LIVE-Default), die
-Instanz hat keine `db`, oder `var/setup.account` liegt da.
+Instanz hat keine Verbindung `main` mit Namen, oder `var/setup.account` liegt da.
 
 Wer: ein lokaler Request (Host = IP/`localhost`/`*.local`/`*.test` **und**
 private Client-IP) oder `?setup=<token>` aus `var/setup.token`. Sonst 403.
@@ -71,7 +71,7 @@ Auf der CLI: Meldung auf stderr, Exit 1.
 | Schritt | fragt | schreibt |
 |---|---|---|
 | Projekt | Name (Ordnername), Namespace (`smp.de` → `Smp`), Stage (lokal → DEV, `staging.*`, `rc.*`, sonst LIVE), Maschine (Nachbarprojekt mit Regel auf dieselbe Server-IP → Projektmanager-Config → `gethostname()` → `thismachine`) | `config/config.json` (falls fehlt: `PROJECT_NAMESPACE`, `DEFAULT_TABLE_PREFIX`), `config/<STAGE>[.<maschine>].config.json` mit einer Regel aus diesem Request (`serverIp` oder `serverName` + `path`); DEV mit `debug`. LIVE: `"default": true`, aus einem lokalen Request abgelehnt. Gibt es die Datei schon, wird die Regel angehängt. |
-| Datenbank | host, user, pass, name — leerer Name listet die Datenbanken, ein fehlender kann angelegt werden | `db` in die Instanz-Datei (gesynct) oder `config.local.json` (nie gesynct) |
+| Datenbank | host, user, pass, name — leerer Name listet die Datenbanken, ein fehlender kann angelegt werden | `packages.db.connections.main` in die Instanz-Datei (gesynct) oder `config.local.json` (nie gesynct), das Passwort immer nach local |
 | Konto | Name, Passwort ×2 — oder „skip" (Backup im Recovery-Modus einspielen) | alle Tabellen (verlustfreie Hälfte von `Db\Schema\Audit`), Zeile `user_id 1` (die systemeigene, die der Login nie findet), dann `UserOperator::firstSuperuser()` |
 
 Der Konto-Schritt kommt nur, wenn die gewählte Datenbank noch kein Konto hat.
@@ -79,6 +79,53 @@ Danach werden Token und `var/setup.account` gelöscht — bei „skip" nur
 `var/setup.account`: der Token bleibt für den Recovery-User und führt weiter
 nach `admin/?setup=<token>`; das fertige Restore verbraucht ihn
 (`Setup::spendToken()`).
+
+## Wartung — `src/Setup/Maintenance.php` (seit 2026-11-06)
+
+Das Setup läuft sonst nur einmal. Mit einem gültigen Token an der Adresse der Site
+(`public/?setup=<token>`) antwortet `Setup::maintain()` vor `Config::boot()`, in jedem
+Zustand: falsches Passwort, fehlende Datenbank, kaputte Config. Das Formular schreibt
+nur `config/config.local.json`, und darin nur, was die Definitionen mit `x-setup` markieren:
+den Namen der Installation und den Zugang zur Datenbank `main` (seit 2026-11-10; vorher
+jedes Secret, jeden Wert mit `x-overridable` und den Rest als JSON-Block). Alles andere
+bleibt beim Speichern, wie es ist, und wird im Admin unter Settings › Config gepflegt,
+sobald die Site läuft. Den Token legt Sync an (Button „open Setup“ auf der Seite
+eines Servers), siehe `config-struktur.md`, „Setup über Sync“.
+
+- Ein Token gilt eine Stunde (`Setup::TOKEN_LIFETIME`), Speichern verbraucht ihn.
+- Secrets erreichen die Seite nie, auch solche nicht, die keine Definition kennt. Ein
+  leeres Feld behält sie.
+- Ändert sich der Zugang zu `main`, wird die Datenbank vor dem Schreiben getestet.
+- Fehlt die Config oder die Datenbank, läuft das normale Setup weiter.
+- Prüfung: `php tests/setup-maintenance.php`, baut sich ein Projekt unter `www/tmp-setup/`.
+
+## Skripte aus `bin/` — `src/Setup/Scripts.php`, `ScriptRun.php` (seit 2026-11-10)
+
+Mit dem Token zeigt `public/?setup=<token>&scripts=1` die Skripte aus `bin/` des Projekts
+und aus `vendor/systopic/<paket>/bin/`. Jede Setup-Seite verlinkt sie unten. Die Liste
+kommt vor `Config::boot()`, geht also auch ohne Config, etwa für `--adopt` auf einem
+Server, der noch keinen Namen hat. Ausführen verbraucht den Token nicht.
+
+- **Ausgeführt wird nur, was `@setup` im Docblock trägt.** Die anderen stehen grau in der
+  Liste. `@setup <eine Zeile>` beschreibt das Skript, `@setup-run --check` legt einen
+  Aufruf als Knopf an (beliebig viele). Freie Argumente gehen auch, ohne Shell
+  (`proc_open` mit Liste).
+- **Wie es läuft:** als CLI-Prozess des PHP, mit dem die Site läuft (neben dem FPM/CGI-Binary,
+  Plesk `…/8.4/bin/php`), im Projektordner, höchstens 300 s. Exit 0 = fertig, 10 = Frage,
+  sonst Fehler. Die Ausgabe steht auf der Seite.
+- **Umgebung:** `ScriptRun::server()` gibt dem Skript den Request der Setup-Seite (Host,
+  Pfad, Adresse; ohne Cookies, Zugangsdaten und Token). Im Terminal ist es `$_SERVER`
+  der CLI. So erkennt `config.php --adopt` die Installation am Host, das Terminal
+  kennt keinen.
+- **Das Skript prüft selbst und fragt:** `ScriptRun::confirm('…?')`. Im Terminal eine
+  Frage auf der Konsole, `--yes` beantwortet sie vorab, ohne Terminal endet der Lauf mit
+  10. Aus dem Setup endet er mit 10, die Seite zeigt die Frage, „yes, go on“ startet
+  denselben Aufruf mit der Antwort (Schlüssel der Frage in `SYSTOPIC_SETUP_CONFIRMED`).
+- Ist `proc_open` gesperrt oder kein CLI-PHP zu finden, sagt die Seite das und nennt den
+  Befehl für die Konsole.
+- Bisher trägt nur `vendor/systopic/system/bin/config.php` `@setup`. Es fragt, bevor es
+  eine schon benannte Installation umbenennt (`--adopt`) und bevor es `config.json`
+  ändert (`--import-settings`).
 
 ## Recovery-Modus (seit 2026-10-22)
 

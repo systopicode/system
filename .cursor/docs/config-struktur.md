@@ -1,11 +1,121 @@
 # Config-Struktur: Definitionen, Dateien, Abgleich
 
-Stand 2026-11-06. Konzept, in Teilen umgesetzt (siehe „Nächste Sitzung“). Baut auf [config.md](config.md) auf.
-Backup: siehe [backup-config.md](backup-config.md).
+Stand 2026-11-09. Baut auf [config.md](config.md) auf. Backup: siehe [backup-config.md](backup-config.md).
+
+## Zwei Dateien (entschieden 2026-11-09)
+
+Die reisenden Instanz-Dateien (`DEV.ojhome.config.json`, `STAGING.config.json` …) sind
+abgelöst. Sie gab es aus Gründen der Struktur; seit die Definitionen Defaults, Stages
+und Pflichtwerte mitbringen, unterschieden sich Instanz und `config.local.json` nur noch
+in der Sicherheit.
+
+| Datei | Hält | Reist |
+|---|---|---|
+| `config/config.json` | das Projekt: was für jede Installation gleich ist (`x-project`): Namen, Rechtliches, Meta, Sprachen, `ini`, Konstanten; die Sites vor der Datenbank. Das Formular schreibt hinein, die letzte Änderung gewinnt, ob aus dem Admin, Git oder Sync | Git, Sync |
+| `config/config.local.json` | diese Installation: ihr Name (`packages.system.instance`), wie ihre Sites erreichbar sind (`packages.cms.siteAddress`), Datenbanken, Debug, Mail, alle Secrets | nirgends |
+
+- **Kein Erkennen mehr.** `config.local.json` liegt im Projektordner genau einer
+  Installation, sie sagt selbst, wer sie ist. Fehlt sie oder ihr Name, kommt die
+  Einrichtungs-Seite (`NotConfigured::NO_INSTANCE`). Den LIVE-Default und die Sperre
+  für lokale Adressen braucht es nicht mehr.
+- **Die Stage** ist der Teil des Namens vor dem ersten Punkt (`DEV.ojhome` → `DEV`).
+- **Mehrere Installationen in einem Ordner** gibt es nicht. Bräuchte es sie, müsste
+  `config.local.json` nach Host unterscheiden.
+- **Die Site** kommt aus einem Muster je Installation, siehe „Site-Adressen“.
+- **Ein Schema je Paket** (`<paket>/config/config.schema.json`), der Master für Titel,
+  Beschreibung, Reihenfolge, Defaults und den Ort jedes Werts.
+- **Umstellen:** `php vendor/systopic/system/bin/config.php --adopt[=<instanz>]` übernimmt
+  die alte Instanz-Datei dieser Maschine in `config.local.json`: Werte, Namen und die
+  Site-Adressen, die ihre Regeln ausschreiben. Ohne Namen die, deren Regeln auf diese
+  Maschine passen (`Config\MachineRules`, das auch die Maschinen-Dateien von syscoder
+  auswählt). Die alten Dateien bleiben liegen, bis jede Maschine umgestellt ist; der
+  neue Code liest sie nicht. Erledigt: `DEV.ojhome` in `spaceticker.app`, `systopic.net`,
+  `smp.de`.
+
+### Site-Adressen
+
+Ein Projekt mit mehreren Sites (`systopic.net` mit `beautiful-technology.de`,
+`expo-systems.de` …) erkennt die Site am Ordner (DEV, STAGING), an der Subdomain (RC) oder
+an der Domain (LIVE). Statt einer Regel je Site und Maschine steht in
+`packages.cms.siteAddress` ein Muster, ein regulärer Ausdruck mit Platzhalter:
+
+| Stage | `siteAddress` | Platzhalter |
+|---|---|---|
+| DEV | `/projects(\.[a-z]+)?/{site}/` | `{site}`: der Name der Site. Auch `projects.archive/`, `projects.work/` |
+| STAGING | `staging.systopic.net/projects/{site}/` | |
+| RC | `rc.systopic.net`, `{name}.systopic.net` | `{name}`: der Name ohne TLD (wegen der Zertifikate). Ein Muster ohne Platzhalter gehört der Default-Site |
+| LIVE | leer | jede Site unter ihrem Namen und ihren Aliasen |
+
+`Config\Sites` macht aus den Mustern je Anfrage die Adressen aller Sites: Passt ein
+Muster auf die Anfrage, wird das, was der Platzhalter genommen hat, gegen die andere
+Site getauscht (aus `/projects.archive/expo-systems.de/` wird
+`/projects.archive/systopic.net/`); passt es nicht, wird es ausgeschrieben, soweit es
+reiner Text ist. Die längste passende Adresse gewinnt, die erste einer Site ist ihre
+kanonische. Die Datenbank bekommt nichts Stage-Spezifisches: Sie reist mit jedem Backup.
+Ein Feld für Abweichungen (Ordner ≠ Name) gibt es erst, wenn eine Site nicht ins Muster
+passt. Site anlegen, umbenennen, löschen schreibt keine Config mehr.
 
 ## Nächste Sitzung
 
-Stand 2026-11-06. **Konzept und beide offenen Themen sind entschieden.** Am Anfang
+### Übergabe 2026-11-09 (Arbeitsplatz-Wechsel)
+
+Am Anfang alle Repos pullen ([git.md](git.md)): system, db, cms, relay, spaceticker.app.
+
+**Was an diesem Tag entstand** (Details in den Abschnitten oben und unten):
+
+- Zwei Dateien statt Instanz-Dateien: config.json (Projekt) und config.local.json (diese
+  Installation, nennt sich selbst über `packages.system.instance`). Ein
+  `config.schema.json` je Paket, `x-project`, `x-tool`, `x-icon`, `x-constant`,
+  `x-entry-name`.
+- Sites über `packages.cms.siteAddress` (Muster), `linkSites` entfallen, die Site-Seite
+  bietet den fehlenden Link an.
+- Settings-Menü: Theme, Tags, dann ein Bereich je Paket (eigene Panels + Configuration,
+  `admin/settings/config/?package=`). Environment-Panel und Datei-Auswahl sind weg, die
+  Blöcke klappen auf. Das Formular schreibt Projektwerte nach config.json.
+- Global Settings aufgelöst: Name, Rechtliches (system), Access, Meta, Sprachen (cms) in
+  config.json, Konstanten per `x-constant`.
+
+**Auf einem neuen Arbeitsplatz zuerst, je Projekt** (`spaceticker.app`, `systopic.net`,
+`smp.de`), im Projektordner:
+
+1. `php vendor/systopic/system/bin/config.php --adopt` — übernimmt die alte Instanz-Datei
+   dieses Rechners (erkennt sie an IP/Pfad, sonst `--adopt=DEV.<maschine>`) in die
+   config.local.json, mit Namen und `packages.cms.siteAddress`. Ohne das zeigt die Site
+   die Einrichtungs-Seite. Erledigt ist nur `DEV.ojhome`.
+2. `… --check`, dann im Admin Settings › System › Configuration ansehen.
+
+**Global Settings importiert** (`--import-settings`): `spaceticker.app` (global.settings.json,
+darin bleibt nur das ungenutzte `CMS_PROVIDER_URL`) und `smp.de` (settings.php, gekürzt,
+Sicherung in `var/config-backup/`). **Nicht `systopic.net`:** Dessen config.json und
+settings.php gehen per Sync nach RC, wo `v1.2.0` läuft und nur die alte Form liest. Der
+Import (er hebt auch config.json in die neue Form) kommt dort am Tag des Tags, zusammen
+mit `--migrate=all`. Vorher zurückgesetzt, die Seiten lesen weiter settings.php.
+
+**Reihenfolge auf Servern:** erst den neuen System-Code, dann Projektdateien, die schon
+umgestellt sind (gekürzte settings.php, config.json mit `packages.*`). Alter Code fände
+Name, Meta und Sprachen sonst nicht. Betrifft STAGING/LIVE von `smp.de` und
+`spaceticker.app`; dort außerdem `--adopt=STAGING` bzw. `--adopt=LIVE`. Ohne SSH: Sync →
+„open Setup“ → „Scripts in bin/“ → `config.php` mit `--adopt` (erkennt die Installation am
+Host) oder `--adopt=STAGING`, siehe [setup.md](setup.md), „Skripte aus `bin/`“.
+
+**Offen:**
+
+- Rechte je Wert (`x-role`), damit ein cmsAdmin Inhaltswerte, aber nicht Datenbank,
+  Debug und Mail sieht. Bewusst später.
+- Sortierbare Listen und Flaggen der Sprachen im Formular (bisher nur Einträge einer Map).
+- Media Settings: kommt etwas Neues, bis dahin unangetastet.
+- Die alten Instanz-Dateien löschen, wenn alle Maschinen und Stages `--adopt` hinter sich
+  haben. RC liest sie noch.
+- Klassennamen `EnvironmentForm`/`EnvironmentFile` passen nicht mehr, umbenennen ohne
+  Wirkung nach außen.
+- `cms_sites` von systopic.net hat eine zweite Default-Zeile mit leerem Namen (Datenrest).
+- Im CLI-Harness liefern Branch-Sites (`/projects/beautiful-technology.de/public/`) eine
+  leere Ausgabe, über den Webserver laufen sie. Nicht untersucht, ob das vorher auch so
+  war.
+
+### Stand 2026-11-06
+
+**Konzept und beide offenen Themen sind entschieden.** Am Anfang
 alle Repos pullen ([git.md](git.md)).
 
 | Stand | |
@@ -13,9 +123,27 @@ alle Repos pullen ([git.md](git.md)).
 | Definitionen | liegen unter `<paket>/config/`, `tests/config-schemas.php` prüft sie gegen alle Config-Dateien |
 | Schritt 1 | fertig: `Config\Layout`, `Config\Schema`, `Config::package()`, `Config::connection()`. Alle Lesestellen laufen über den Baum, `tests/config-tree.php` vergleicht jede Instanz mit den alten Werten |
 | Sync | Build mit `composer` und `openSetup`. `composer update` lief am 2026-11-06 auf RC |
-| Bestehende Configs | unverändert, geschrieben wird weiter am alten Ort |
+| Setup über Sync | fertig bis auf das Projekt-Tool, `tests/setup-maintenance.php` spielt jeden Zustand durch |
+| Scaffold | `systopic.net` mit seinen vier Sites (Junctions) umgestellt. `galerie-lattemann.de` und `pwk.systopic.net` nicht, sie haben eigene Logik in `index.php` und `.htaccess` |
+| Schritt 3 | fertig: Formulare aus den Definitionen, alle Schreibwege schreiben die neue Form, Secrets nach local |
+| Dateien | `systopic.net`, `spaceticker.app` und `smp.de` umgestellt, auf STAGING getestet. Ausnahme siehe unten |
+| Projekt-Tool | Token entfernt, Setup und Recovery laufen über Sync |
 
-Als Nächstes: die Seite des Setups aus „Setup über Sync“, dann Schritt 2.
+| Schritt 2 | fertig: Defaults aus den Definitionen (`Config::applyIniDefaults()`), reservierte Schlüssel, Reihenfolge der Konstanten |
+
+| Schritt 4 | fertig: `Config\Reconcile` beim Speichern, „Check“-Widget im Admin, `bin/config.php --check`, Meldung im Composer-Hook |
+
+Als Nächstes: der Tag, siehe „Versionierung“, danach Schritt 8.
+
+**Noch in alter Form, bis zum Tag:** `config.json` und `RC.config.json` von `systopic.net`. Beide
+gehen nach RC, dort läuft `v1.2.0`, das nur die alte Form liest. Am Tag des Tags:
+`bin/config.php --migrate=all`.
+
+**Secrets je Maschine:** Sie ziehen auf jeder Maschine selbst um, im Admin per „Move to this
+machine“ im Check-Widget oder mit `bin/config.php --move-secrets=<instanz>`. Erledigt ist
+`DEV.ojhome` in allen drei Projekten. In den Dateien der anderen stehen sie noch, unter
+`packages.*`.
+`bin/config.php --check` zeigt, was fehlt.
 
 **Entschieden:** `packages.<paket>` als Namensraum, die drei `.schema.json`-Dateien
 je Paket, JSON Schema mit `x-`-Erweiterungen, Formulare aus den Definitionen, alle
@@ -25,35 +153,29 @@ Instanz-Datei. Das Environment ist aus dem Backup entfernt
 
 ### Versionierung
 
-Entschieden am 2026-11-06:
+Entschieden am 2026-11-06. Es gibt noch keine LIVE-Instanz und nur eine RC-Instanz.
+Gearbeitet wird lokal und auf STAGING, das läuft über Git und Sync, Versionen spielen
+dort keine Rolle.
 
 | Frage | Entscheidung |
 |---|---|
-| Wann wird getaggt? | Der Stand vor dem Umbau wird `system v1.3.0`. Gesetzt wird der Tag erst, wenn der Benutzer es sagt |
+| Wann wird getaggt? | **Einmal am Ende,** wenn alles läuft. Danach wird die eine RC-Instanz aktualisiert |
 | Major-Sprung? | Nein, alles bleibt `1.x`, auch das Entfernen der Altpfade in Schritt 8 |
 | Gemeinsame Versionen? | Nein, jedes Paket zählt einzeln und nennt in `composer.json` seine Mindestversion |
 | Schutz vor zu neuer Config? | Keiner im Code, die Reihenfolge unter „Umzug“ reicht |
 | GUI-Version in `releases.php` | bleibt eine eigene Zählung |
 
-**Offen: die Tags.** Sie markieren den Stand vor dem Umbau, also diese Commits und
-nicht den dann aktuellen `main`:
+Für den Tag am Ende:
 
-| Paket | Letzter Tag | Commits danach | Ziel-Commit |
-|---|---|---|---|
-| `db` | `v1.1.0` | 6 | `cabb79b` |
-| `system` | `v1.2.0` | 122 | `5ca5608` |
-| `cms` | `v1.1.1` | 67 | `87a6457` |
-| `relay` | `v1.0.1` | 20 | `323526c` |
-
-- **Reihenfolge:** `db`, `system`, `cms`, `relay`. `cms` verlangt auf `main` seit
-  2026-10-30 `system ^1.3`. Ein neuer `cms`-Tag vor `system v1.3.0` ließe sich nur
-  mit `1.x-dev` erfüllen.
-- **Nummern:** Für `db`, `cms` und `relay` stehen sie noch nicht fest. Vor dem Tag
-  die Änderungen je Paket zeigen und die `composer.json`-Mindestversionen prüfen.
-- **Ein Tag ändert keinen Server.** `composer.lock` liegt je Rechner, und `composer
-  update` auf dem Server führt der Benutzer selbst aus ([composer.md](composer.md)).
-- **Mindestversionen im Umbau:** Sobald `cms`, `db` oder `relay` etwas aus dem Umbau
-  benutzen, etwa `Config::package()`, müssen sie die passende `system`-Version verlangen.
+- **Reihenfolge:** `db`, `system`, `cms`, `relay`. `system` wird `v1.3.0`, `cms` und
+  `relay` verlangen genau das. Ein Tag von `cms` oder `relay` vor `system v1.3.0` ließe
+  sich nur mit `1.x-dev` erfüllen.
+- **Nummern:** Für `db`, `cms` und `relay` stehen sie noch nicht fest. Vor dem Tag die
+  Änderungen je Paket zeigen und die `composer.json`-Mindestversionen prüfen.
+- **Bis dahin nichts von `systopic.net` nach RC, was den Tag braucht.** RC läuft auf
+  `system v1.2.0`, dort gibt es weder `bin/scaffold.php` noch `index.php`. Die
+  `composer.json` mit dem Scaffold-Script ließe Composer dort scheitern, die neue
+  `public/index.php` verlangte die Paket-`index.php` und nähme die Site vom Netz.
 
 ### Secrets
 
@@ -114,8 +236,11 @@ Regeln:
 
 - **Ein Token, ein Mechanismus.** Sync und `scaffold.php` schreiben dieselbe Datei,
   `Setup::trusts()` prüft sie. Der Recovery-Modus funktioniert damit weiter.
-- **Der Token läuft ab,** nach etwa einer Stunde, gemessen am Alter der Datei. Das
-  Setup-Formular merkt ihn sich in der Session wie der Recovery-Modus.
+- **Der Token läuft ab,** nach einer Stunde, gemessen am Alter der Datei
+  (`Setup::TOKEN_LIFETIME`). Das Formular trägt ihn als verstecktes Feld mit, der
+  Recovery-Modus merkt ihn sich in der Session.
+- **Nur die Adresse der Site öffnet das Setup.** `admin/?setup=` bleibt der
+  Recovery-Modus. Ein lokaler Request genügt hier nicht, die Site soll die Site bleiben.
 - **`scaffold.php` behält seinen Token,** eine Erstinstallation ohne Sync bleibt möglich.
 - **Das Projekt-Tool verliert seinen Token:** `create_recovery()`, `recoveryUrl()` und
   die Links in `main.tpl.php`.
@@ -132,20 +257,18 @@ Grenzen:
 - Sind `.htsync` oder alle vertrauten Instanzen weg, bleibt ein neuer Seed per Plesk
   oder SSH.
 
-**Umgesetzt** ist die Seite von Sync: `action/openSetup.php` legt den Token an, leitet
-weiter und löscht einen alten beim Öffnen der Seite.
+**Umgesetzt:** `action/openSetup.php` in Sync, `Setup::maintenance()` vor `Config::boot()`
+in `index.php`, `Setup\Maintenance` für das Formular. Das Formular zeigt jedes Secret
+und jeden Wert mit `x-overridable` aus den Definitionen, alles andere der Datei als
+JSON-Block. Gespeichert wird in der neuen Form. Das erste Setup schreibt das Passwort
+jetzt immer nach local.
 
-**Noch offen,** bewusst nicht vor der Demo vom 2026-11-06, weil `packages/` mit dem
-Sync auf STAGING geht:
+Eine kaputte `config.local.json` lässt schon `Config::boot()` scheitern. Die Seite
+meldet das und legt die Datei auf Knopfdruck nach `var/scaffold/`. Eine kaputte
+Instanz-Datei kommt per Sync zurück.
 
-- `index.php`: Token vor `Config::boot()` prüfen. Bis dahin öffnet der Button das
-  Setup nur in den Zuständen, in denen es heute schon läuft, sonst nur die Site. Mit
-  „open Recovery“ geht der Recovery-Modus schon.
-- `Setup::trusts()`: Alter des Tokens prüfen. Bis dahin gilt er, bis Sync, das Setup
-  oder ein Restore ihn löscht.
-- `Setup`: Formular für `config.local.json` aus den Definitionen, Passwort immer nach
-  local.
-- Projekt-Tool: Token entfernen, sobald der Button auf den Servern getestet ist.
+**Das gilt nur für Projekte mit der Paket-`index.php`,** also mit Scaffold. Offen: Im
+Projekt-Tool den Token entfernen, sobald der Button auf STAGING getestet ist.
 
 ### Composer über Sync
 
@@ -244,32 +367,26 @@ Erhebung über alle 53 Config-Dateien in `projects/*/config`:
 - `matches`: `serverName` ist in 25 Regeln eine Liste, `serverIp` in einer.
   `EnvironmentFile::setMatch()` schreibt nur Strings. `rootDir` wird gelesen, aber nirgends benutzt.
 
-Nebenbefund: `Config::defineConstants()` definiert erst `config.json`, dann die
-Instanz, jeweils mit `defined()`-Schutz. Die erste gewinnt, eine Instanz kann also
-nichts überschreiben, obwohl der Kommentar das sagt. Es fällt nur nicht auf, weil
-keine Instanz `constants` hat.
+Konstanten: Die Reihenfolge ist `config.json`, Instanz, `config.local.json`, die spätere
+Datei gewinnt. Bis Schritt 2 gewann die erste, eine Instanz konnte nichts überschreiben.
 
 ## Kernidee
 
 **Das Paket definiert, das Projekt speichert.** Die Definition steht in JSON
-Schema, die Zieldatei ergibt sich aus dem Dateinamen, der Besitzer aus dem Pfad.
-
-| Definition im Paket | Landet in | Unter | Gilt für |
-|---|---|---|---|
-| `<paket>/config/project.schema.json` | `config/config.json` | `packages.<paket>` | alle Instanzen |
-| `<paket>/config/machine.schema.json` | `config/<stage>[.<machine>].config.json` | `packages.<paket>` | eine Installation |
-| `<paket>/config/local.schema.json` | `config/config.local.json` | `packages.<paket>` | diese Maschine, weder Git noch Sync |
-| `system/config/header.schema.json` | Instanz-Datei | oberste Ebene | `matches`, `default` |
+Schema, eine Datei je Paket: `<paket>/config/config.schema.json`. Jeder Wert gehört
+der Installation (`config.local.json`), außer er oder ein Block über ihm sagt
+`x-project`: dann ist er für jede Installation gleich und steht in `config.json`.
+`Schema::load()` markiert jeden Wert mit seiner Datei (`x-file`: `project` oder
+`local`), damit niemand den Baum wieder hinaufgehen muss.
 
 Beispiele:
 
-- `db/config/machine.schema.json`: `connections.<name>` mit `driver`, `host`, `port`, `name`, `user`, `charset`; `db/config/local.schema.json`: `connections.<name>.pass`
-- `system/config/project.schema.json`: `ini`, `constants`, `auth.defaultSignInMethod`, `auth.deviceDays`, `auth.screenDays`
-- `system/config/local.schema.json`: `auth.secret`, `mail.password`
-- `relay/config/machine.schema.json`: `api`, `client`, `enabled`, `plainTopics`, `prefix`; `relay/config/local.schema.json`: `secret`, `apiKey`
+- `system`: `instance`, `debug`, `versionAppendix`, `assets`, `mail` gehören der Installation; `ini`, `constants`, `auth.defaultSignInMethod`, `auth.deviceDays`, `auth.screenDays` dem Projekt; `auth.secret`, `mail.password` sind Secrets der Installation
+- `db`: `connections.<name>` mit `driver`, `host`, `port`, `name`, `user`, `pass`, `charset`
+- `relay`: `api`, `client`, `enabled`, `plainTopics`, `prefix`, `secret`, `apiKey`
+- `cms`: `siteAddress`
 
-Eine Datei gibt es nur, wenn sie etwas definiert. `cms` hat keine: Es liest keine
-eigenen Config-Werte, nur `sites` über `Config::current()`.
+Jedes Schema trägt `title`, `description` und `x-icon`: Titel und Symbol seines Bereichs im Settings-Menü.
 
 Regeln:
 
@@ -281,16 +398,12 @@ Regeln:
 - **Das System findet sie selbst:** über die installierten `systopic/*`-Pakete
   (`Composer\InstalledVersions`). Eine Anmeldung ginge nicht, `db` kennt `system`
   nicht und hat keine `autoload.php`.
-- **Jeder Schlüssel ist in genau einer Definition.** Ein Test prüft das.
-- **Ein Baum:** Alle Dateien haben dieselbe Form und werden in der Reihenfolge
-  Defaults, `config.json`, Instanz, `config.local.json` zusammengeführt.
-  `LOCAL_INSTANCE_KEYS` entfällt. Zugriff: `Config::package('db')`.
-- **Oben bleiben** `matches`, `default`, `instance` (wählen die Instanz, bevor
-  zusammengeführt wird) und die freien `constants` des Projekts. Sie werden nicht
-  abgeglichen. `debug`, `versionAppendix`, `versionDate`, `linkSites`, `assets`,
-  `ini` und die Systemkonstanten wandern unter `packages.system`.
-- **Alle Secrets liegen immer in local**, ohne Ausnahme je Stage. Das ersetzt die
-  Entscheidung vom 2026-11-04, dass DEV-Configs `auth.secret` enthalten dürfen.
+- **Ein Baum:** Beide Dateien haben dieselbe Form und werden in der Reihenfolge
+  Defaults, `config.json`, `config.local.json` zusammengeführt. Zugriff:
+  `Config::package('db')`.
+- **Oben bleiben** die freien `constants` des Projekts. Sie werden nicht abgeglichen.
+- **Alle Secrets liegen in `config.local.json`.** Ein Secret mit `x-project` lehnt der
+  Test ab.
 
 `global.settings.json`, `media.settings.json` und `controlmap.json` bleiben, wie sie sind.
 
@@ -303,18 +416,94 @@ ein eigener Prüfer in wenigen Zeilen abdeckt, eine Bibliothek braucht es nicht.
 | Schlüsselwort | Bedeutung |
 |---|---|
 | `type`, `enum`, `default`, `minimum`, `maximum`, `pattern`, `format` | Standard |
-| `title`, `description` | Standard; Beschriftung und Hilfetext im Admin |
-| `required`, `items`, `minItems`, `additionalProperties` | Standard; `additionalProperties: true` = offener Block wie `ini` |
+| `title`, `description` | Standard; Beschriftung und Hilfetext im Admin. Jeder Hilfetext steht hier, nicht im Code: bei Block und Wert (auch einer Rules-Spalte) als (i) mit Tooltip |
+| `required`, `items`, `minItems`, `additionalProperties` | Standard; `additionalProperties: true` = offener Block wie `ini`, ein Schema = Block mit Namen (`connections`), `required` darin = Einträge, die bleiben (`main`) |
+| `propertyNames` | Standard; bei einem Block mit Namen: was ein Name sein darf (`pattern`, `description` als Hinweis). Nur dann bietet der Admin „New …“ an |
 | `writeOnly` | Standard; Passwortfeld, Wert wird nie angezeigt oder geloggt |
-| `x-mandatory` | `"generate"`: entsteht bei Bedarf (`auth.secret`). `"input"`: muss jemand eintragen, der Admin fragt danach (`relay.secret` muss zum Hub passen) |
+| `x-mandatory` | `"generate"`: entsteht bei Bedarf (`auth.secret`). `"input"`: muss jemand eintragen, der Admin fragt danach (`relay.secret` muss zum Hub passen, `instance`); ein solcher Wert lässt sich nicht leeren |
 | `x-stages` | Default je Stage: `{ "DEV": true }` |
 | `x-computed` | Default kommt aus dem Code und wird nie eingetragen (`bindOnlyUsedParams` hängt an der PHP-Version) |
 | `x-optional` | Block wird nur ergänzt, wenn es ihn schon gibt (`mail`, `relay`) |
-| `x-overridable` | darf in einer später geladenen Datei abweichen (`ini.*`, die Zugangsdaten einer Verbindung) |
+| `x-project` | an einem Block oder Wert: gehört dem Projekt, steht in `config.json`. Ohne: gehört der Installation |
+| `x-overridable` | ein Wert des Projekts, den eine Installation in `config.local.json` abweichend setzen darf (`ini.*`, `auth.deviceDays`) |
 | `x-options` | Auswahl zur Laufzeit, zum Beispiel `"sites"` aus `cms_sites` |
 | `x-backup` | siehe [backup-config.md](backup-config.md) |
+| `x-tool` | an einem Block: Klasse, die `Settings\SettingsTool` umsetzt. Sie zeigt unter den Werten, was mehr ist als ein Wert (Testmail, Sign-in-Key, Hub), und nimmt ihre Aufrufe an. Das Paket bringt sie mit: `system` `Tools\MailTool` und `Tools\AuthTool`, `relay` `Settings\HubTool` |
+| `x-constant` | an einem Wert oder einer Map: die PHP-Konstante, die `Config::defineSettingConstants()` daraus macht (nach einer evtl. noch vorhandenen settings.php, die gewinnt). So lesen die bisherigen Stellen weiter `PUBLIC_PAGE_NAME`, `META_*`, `LANGUAGES` |
+| `x-icon` | an der Wurzel: das Symbol des Pakets im Settings-Menü (`server`, `database`, `sitemap`, `bolt`) |
+| `x-setup` | ohne diesen Wert startet die Installation nicht: das Setup über Sync zeigt nur ihn (`system.instance`, Host, Port, Name, User, Passwort der Verbindung `main`). Alles andere im Admin, Settings › Config |
+| `x-entry-name` | an einem Wert eines Eintrags: ein neuer Eintrag beginnt mit seinem Namen darin (eine Verbindung `revolver` mit der Datenbank `revolver`) |
 
 ### Formular aus dem Schema
+
+**Menü:** Settings zeigt oben Theme und Tags, darunter einen Bereich je Paket: Titel und
+`x-icon` aus seinem Schema, die Panels, die das Paket mitbringt (welches, sagt der Ordner,
+in dem das Panel liegt), und als letztes seine „Configuration“
+(`admin/settings/config/?package=<paket>`, Panel `035_config`, ein Paket je Ansicht).
+Panels des Projekts selbst stehen in einem Bereich „Project“ am Ende. Das frühere
+Environment-Panel mit allen Paketen untereinander ist entfallen.
+
+**Global Settings sind aufgelöst** (2026-11-09). Was die Pakete lesen, steht in ihren
+Schemas, mit `x-project` und `x-constant`, und liegt in config.json:
+
+| Paket | Block | Konstanten |
+|---|---|---|
+| system | Website | `PUBLIC_PAGE_NAME`, `PUBLIC_APP_NAME`, `PAGE_TITLE_SEPERATOR` |
+| system | Legal | `CMS_IMPRINT_URL`, `CMS_PRIVACY_URL` (Ziele der Links auf den Anmeldeseiten), `CMS_OPERATOR_DETAILS`, `CMS_DPO_DETAILS` (Betreiber und Datenschutzbeauftragter auf der Datenschutzseite der Anmeldung) |
+| cms | Access | `PAGE_IS_PUBLIC`, `PAGE_ACL`, `FRONTEND_EDIT_BAR` |
+| cms | Meta | `META_AUTHOR`, `META_KEYWORDS`, `META_DESCRIPTION`, `META_PAGE_TOPIC`, `META_ROBOTS` |
+| cms | Languages | `DEFAULT_LANG`, `AUTO_LANGUAGE_DETECTION`, `LANGUAGES` (eine Map: Code → Name, Code, an) |
+
+Eine neue Sprache wird damit auf allen Installationen nachgezogen; wo die Datenbank sie
+noch nicht hat, sind die Seiten leer. `bin/config.php --import-settings` überträgt
+global.settings.json oder die `define()` einer settings.php (auch mehrzeilige
+Literal-Arrays) nach config.json und nimmt sie dort heraus. Was übrig bleibt (freie
+Konstanten des Projekts in settings.php), zeigt das Panel Global Settings weiter; ohne
+Quelle verschwindet es aus dem Menü. Media Settings bleiben, wie sie sind. Noch offen:
+sortierbare Listen und die Flaggen der Sprachen im Formular.
+
+Eine Ansicht: Jeder Wert wird in die Datei geschrieben, der er gehört
+(`EnvironmentFile::target()`): ein Wert des Projekts nach config.json, einer der
+Installation und jedes Secret nach config.local.json; einen Wert des Projekts, den die
+Installation schon überschreibt (`x-overridable`), dort. Check prüft beide Dateien. Jeder Wert und jeder
+Abschnitt trägt ein graues (i) für die Definition. Ein Wert trägt dazu ein farbiges (i)
+je Datei, in der er steht: blau `config.json`, grün `config.local.json`. Deren Tooltip
+zeigt, was die Datei sagt (bei Secrets nur „set“). Die Herkunfts-Chips tragen dieselben
+Farben (Package, Project, Installation). Ein Wert des Projekts mit `x-overridable` ist
+in der Installation ein normales Feld; steht er dort, heißt es „overrides the project“.
+
+Für Superuser, wo syscoder liegt (DEV), öffnet ein Klick auf ein (i) die
+Stelle in syscoder, je an der Zeile: das graue die Definition, ein farbiges
+den Wert in seiner Datei. Ein Secret öffnet sich nicht. Die Zeile liefert
+`Config\JsonLines`, das den Text neben `json_decode()` noch einmal durchgeht;
+der Link kommt aus `Debug\Syscoder`.
+
+Jeder Block (`ini`, `constants`, `auth`, eine Verbindung …) ist ein Kasten
+mit eigener Tabelle; die Überschrift ist deren erste Zeile (`th` über alle
+Spalten, grau, im `tbody`, weil das Handy `thead` ausblendet). Erst die Werte
+des Blocks, dann seine Unterblöcke als Kästen darin, eingerückt. Der Pfad
+(`packages.system.constants.…`) und die Beschreibung stehen im Tooltip des
+grauen (i), nicht in der Zeile, bei Paket, Block, Eintrag und Wert gleich.
+Sichtbar unter einer Überschrift bleiben nur `"//"`-Notizen der Dateien.
+Alle Kästen kommen aus einer Funktion (`EnvironmentForm::block()`): ein Block
+mit Werten (`mail`), ein Block mit Namen (`connections`) und jeder Eintrag
+darin. Was neben dem Titel steht (optional, Remove), entscheidet
+`aside()` für alle gleich. Ein Paket kennt das Formular nirgends beim Namen:
+Was ein Block mehr braucht, kommt über `x-tool`. Ein Paket hat oben keine losen
+Werte: Sie stehen im Block „General“, was keine Definition kennt im Block
+„Defined nowhere“. Eine Tabelle ist so breit wie ihr Inhalt, die Spalten
+rechnet der Browser je Tabelle (`table-layout:auto`, keine %-Breiten); Felder
+zählen mit dem, was in ihnen steht (`field-sizing:content`), leer sind sie
+mindestens 8rem breit.
+
+Die Blöcke der ersten Ebene (General, Debug, PHP settings …) sind zugeklappt, bis man
+ihren Kopf anklickt; ebenso „Defined nowhere“, fremde Pakete und „More in the files“
+(diese beiden beim ersten Paket). Offen bleibt, was offen war (Panel-State
+`open`, Aufruf `fold`). Die Kopfzeile trägt die Auswahl der Config (State
+`file`, Aufruf `pick`), „Open all“/„Close all“ und „Check“: was zu prüfen ist
+(Wiederholtes, Unbekanntes, Falschplatziertes, Secrets, Fehlendes) als
+Lightbox (`035_environment/check/`), mit der Anzahl am Knopf. Die Legende der
+Herkunft steht unten in der Navi der Settings.
 
 | Schema | Feld |
 |---|---|
@@ -328,102 +517,52 @@ ein eigener Prüfer in wenigen Zeilen abdeckt, eine Bibliothek braucht es nicht.
 | `object` | Karte oder Gruppe |
 | `object` mit `additionalProperties` als Schema | eine Karte je Name, mit Hinzufügen und Entfernen (`connections`) |
 
-Die letzte Array-Zeile ersetzt `setMatch`, `addMatch` und `removeMatch`:
-
-```json
-{
-	"$schema": "https://json-schema.org/draft/2020-12/schema",
-	"title": "Installation",
-	"type": "object",
-	"properties": {
-		"matches": {
-			"title": "Rules",
-			"description": "Detect this machine and the site of a request. One rule has to match.",
-			"type": "array",
-			"default": [],
-			"items": {
-				"title": "Rule",
-				"type": "object",
-				"additionalProperties": false,
-				"anyOf": [
-					{ "required": ["serverName"] },
-					{ "required": ["serverIp"] },
-					{ "required": ["rootDir"] },
-					{ "required": ["path"] }
-				],
-				"properties": {
-					"serverName": {
-						"title": "Host",
-						"description": "* as a wildcard",
-						"type": ["string", "array"],
-						"items": { "type": "string" }
-					},
-					"serverIp": {
-						"title": "IP",
-						"type": ["string", "array"],
-						"items": { "type": "string", "format": "ip" }
-					},
-					"rootDir": { "title": "Project folder", "type": "string" },
-					"path": { "title": "URL path", "type": "string", "pattern": "^/" },
-					"site": {
-						"title": "Site",
-						"type": "string",
-						"x-options": "sites",
-						"x-backup": "stage"
-					}
-				}
-			}
-		},
-		"default": {
-			"title": "Default instance",
-			"type": "boolean",
-			"default": false
-		}
-	}
-}
-```
-
-`["string", "array"]` hält die 26 bestehenden Listen gültig. Das Formular zeigt
-solche Felder immer als Liste, ein einzelner Wert ist eine Liste mit einem
-Eintrag. `anyOf` verlangt mindestens ein Kriterium, eine leere Regel kann also
-nicht gespeichert werden.
+`siteAddress` ist `["string", "array"]`: im Formular ein Feld, mehrere Muster durch
+Kommas getrennt.
 
 ## Abgleich
+
+> Geändert am 2026-11-07: Speichern trägt keine Defaults mehr ein, Verwaistes geht nur per
+> Klick, das Admin zeigt die Herkunft je Wert (`Config\Explain`). Siehe
+> [settings-gui.plan.md](../plans/settings-gui.plan.md).
 
 `Config\Reconcile` vergleicht eine Datei mit den Definitionen:
 
 | Status | Bedeutung | Admin | Beim Speichern |
 |---|---|---|---|
 | ok | definiert und vorhanden | Wert, Markierung wenn ≠ Default | bleibt |
-| fehlt | definiert, nicht in der Datei | Default, als „nicht gespeichert“ markiert | wird eingetragen, außer `x-optional`, `x-computed`, Secrets |
-| verwaist | unter `packages.<x>`, `x` installiert, nicht definiert | durchgestrichen | Regeln unten |
+| fehlt | definiert, nicht in der Datei | Wert der Ebene darunter, mit Herkunft (`Package`, `Project` …) | bleibt draußen, der Default kommt zur Laufzeit aus der Definition |
+| überflüssig | in der Datei, gleich dem Wert darunter | „same as below“ | bleibt; „Remove them“ bzw. `--prune-defaults` nimmt ihn heraus |
+| verwaist | unter `packages.<x>`, `x` installiert, nicht definiert | durchgestrichen, am Ende des Paket-Blocks | bleibt bis zum Klick, Regeln unten |
 | fremd | unter `packages.<x>`, `x` nicht installiert | Hinweis | bleibt |
-| falsche Datei | gehört in eine andere Datei, kein `x-overridable` | „gehört nach …“, verschieben per Klick | bleibt |
-| Secret ungeschützt | `writeOnly`-Wert außerhalb von local | Warnung | bleibt |
+| falsche Datei | ein Wert der Installation in `config.json`, oder einer des Projekts ohne `x-overridable` in `config.local.json` | „belongs into …“ | bleibt |
+| Secret ungeschützt | `writeOnly`-Wert in `config.json` | Warnung | bleibt |
 
-**Wann:** beim Speichern, und nur die gespeicherte Datei. Nie beim Booten. Nicht
+**Wann:** im Admin beim Anzeigen, und nur die gezeigte Datei. Gespeichert wird nur die
+Änderung. Nie beim Booten. Nicht
 in `composer update`, das änderte alle Instanz-Dateien auf einmal und erzeugte
 Konflikte mit Lars. Der Hook **meldet** nur, `bin/config.php --check` ebenso. Die
 Defaults wirken trotzdem sofort, weil sie zuunterst im Baum liegen.
 
-**Defaults nur in der zuständigen Datei.** Stünde einer auch in einer später
-geladenen Datei, würde er die Werte darunter verdecken.
+**Defaults stehen in keiner Datei.** Bis 2026-11-07 trug jedes Speichern sie ein. Diese
+Kopien blieben stehen, wenn das Paket den Default änderte, und waren von bewusst gesetzten
+Werten nicht zu unterscheiden. Das Admin zeigt sie jetzt als „same as below“.
 
 **Löschen ist enger als Ergänzen:**
 
 | Datei | Verwaiste Schlüssel |
 |---|---|
-| eigene Instanz-Datei | werden beim Speichern gelöscht, vorher angezeigt |
-| fremde Instanz-Datei | bleiben. Der DEV-Code kann neuer sein als der auf LIVE (Tag `v1.2.0` ist älter als `main`) |
-| `config.json` | nur per Klick. Die Datei gilt für alle Stages, derselbe Grund |
-| `config.local.json` | nie. Die Datei liegt nirgends sonst |
+| `config.local.json` | per Klick, einzeln oder alle, mit Bestätigung |
+| `config.json` | nur Hinweis. Die Datei gilt für alle Stages, und der DEV-Code kann neuer sein als der auf LIVE |
 
 Offene Blöcke und `"//"`-Schlüssel werden nie gelöscht.
 
 **Grenzen:**
 
-- Ein eingetragener Default bleibt stehen, auch wenn das Paket ihn ändert. Der
-  Admin markiert „≠ Default“ und bietet „zurücksetzen“ an.
+- Ein Wert in der Datei bleibt stehen, auch wenn das Paket seinen Default ändert. Das Admin
+  zeigt daneben, was darunter gilt, und bietet das Zurücksetzen an. Ein geleertes Feld
+  setzt ebenso zurück.
+- Verwaistes in config.json bleibt beim Hinweis, auch wenn das Admin sonst hineinschreibt.
 - Dateien mit echten Kommentaren (JSONC) werden nur gemeldet, wie heute.
 - Die Reihenfolge der Datei bleibt erhalten, Neues kommt ans Ende des Blocks.
 - Was verwaist ist, sagt die Definition, nicht der Code. Ein Test prüft deshalb
@@ -445,18 +584,19 @@ Geprüft mit `ini_get_all()` und `ini_set()` (PHP 8.5.6, CLI):
 | `html_errors` | false | ja | Definition |
 | `error_log` | `var/log/PHP_errors.log` | ja | bleibt im Code |
 
-- Die Definitionen stehen in `system/config/project.schema.json` unter `ini`,
-  mit `x-overridable` und `additionalProperties: true`.
-- **Die Upload-Werte wirken heute nicht**, es gilt der Serverwert. Sie werden zu
-  Mindestwerten, die `systemcheck` prüft. Eine generierte `public/.user.ini` könnte
-  sie setzen, das ist auf Plesk und der Synology aber ungetestet.
-- **`error_log`:** `index.php:78-79` setzt ihn nach der Config immer zurück. Der
-  Kommentar in Zeile 49 beschreibt das falsch.
+- Die Definitionen stehen in `system/config/config.schema.json` unter `ini`,
+  mit `x-project`, `x-overridable` und `additionalProperties: true`.
+- **Die Upload-Werte wirkten nie**, es gilt der Serverwert. Die Zeilen sind aus
+  `index.php` entfernt, `systemcheck` prüft sie (Upload ab 50 MB, Post ab 128 MB). Eine
+  generierte `public/.user.ini` könnte sie setzen, das ist auf Plesk und der Synology
+  aber ungetestet.
+- **`error_log`** setzt `index.php` vor der Config. Er ist reserviert, das zweite Setzen
+  nach dem Boot ist entfallen.
 - **Reserviert** in `ini`: `error_log`, `display_errors`, `error_reporting`. Sonst
   könnte ein Eintrag den Debug-Schalter aushebeln.
-- **Reihenfolge bleibt:** Die Defaults müssen vor `Config::boot()` wirken, weil die
-  Einrichtungs-Seite läuft, wenn es noch keine Config gibt. Die Zeilen 41-47 werden
-  zu `Config::applyIniDefaults()`.
+- **Reihenfolge bleibt:** Die Defaults wirken vor `Config::boot()`
+  (`Config::applyIniDefaults()`), weil die Einrichtungs-Seite läuft, wenn es noch keine
+  Config gibt. Danach setzt `defineConstants()` nur noch, was in den Dateien steht.
 
 ## Umzug
 
@@ -468,21 +608,20 @@ Im Code gibt es dagegen keinen Schutz, nur diese Reihenfolge.
 1. **Definitionen, nichts schreiben.** Erledigt. Die Lesestellen verstehen beide Orte
    über `Config\Layout`, das jede Datei beim Boot in die neue Form hebt. Prüfung: Alle
    45 Instanzen liefern dieselben Werte wie vorher.
-2. **ini und Konstanten.** `applyIniDefaults()`, reservierte Schlüssel, Upload-Werte
-   in `systemcheck`, Reihenfolge in `defineConstants()`.
-3. **Admin.** Formulare aus den Definitionen, Status und Herkunft. Die Optik gehört
-   Lars, neues CSS geht als Vorschlag in `team/`.
-4. **Abgleich beim Speichern.** Erst Ergänzen, dann Löschen. Dazu Hook-Meldung,
-   `bin/config.php --check` und die Tests.
-5. **Code auf allen Stages.** Die Pakete bis LIVE ausrollen, also Packagist
-   aktualisieren. Dazu gehört „Setup über Sync“ samt neuem Sync-Build auf jeder
-   Instanz. Ohne das kommt nach Schritt 6 niemand mehr an ein geändertes Passwort.
-6. **Secrets nach local, je Maschine.** `bin/config.php --move-secrets` läuft auf
-   jeder Maschine selbst: erst nach local schreiben, dann aus der gesyncten Datei
-   entfernen. Sonst nimmt ein Sync dem Server das Passwort weg. `connectRelay()`
-   schreibt `apiKey` und `secret` ab dann nach local.
-7. **Dateien umstellen.** Blöcke nach `packages.*`, je Projekt. `db` wird zu
-   `packages.db.connections.main`.
-8. **Altpfade entfernen,** `config.md` und `setup.md` nachziehen. Das bleibt `1.x`.
-   Die Projekte verlangen `^1.0`, jedes `composer update` zieht diesen Schritt also
-   mit. Er kommt deshalb erst, wenn alle Projekte auf allen Stages umgestellt sind.
+2. **ini und Konstanten.** Erledigt.
+3. **Admin.** Erledigt. Die Optik gehört Lars, die Formulare nutzen die vorhandenen
+   Klassen. Neu ist nur `small.envDefault` für „not saved“, ohne eigene Regel.
+4. **Abgleich beim Speichern.** Erledigt.
+5. **Code auf allen Stages.** DEV und STAGING: erledigt. RC bekommt ihn mit dem Tag, LIVE
+   gibt es noch nicht.
+6. **Secrets nach local, je Maschine.** Das Werkzeug ist fertig, im Admin per Klick oder mit
+   `bin/config.php --move-secrets`, erst nach local schreiben, dann aus der gesyncten Datei
+   entfernen. Es läuft auf jeder Maschine selbst, offen sind die übrigen Maschinen.
+7. **Dateien umstellen.** Erledigt bis auf `config.json` und `RC.config.json` von
+   `systopic.net`, die am Tag des Tags folgen (`--migrate=all`).
+9. **Zwei Dateien.** 2026-11-09, siehe oben. Offen: `--adopt` auf den anderen Maschinen,
+   STAGING und LIVE; danach die alten Instanz-Dateien löschen.
+8. **Altpfade entfernen.** Die Doku ist nachgezogen. Offen im Code: `Config\Layout`,
+   `Config::LOCAL_INSTANCE_KEYS`, `Instance::db()`, `debug()`, `get()`. Das bleibt `1.x`. Die
+   Projekte verlangen `^1.0`, jedes `composer update` zieht diesen Schritt also mit. Er
+   kommt deshalb erst, wenn RC umgestellt ist und die Secrets aller Maschinen umgezogen sind.

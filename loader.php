@@ -45,6 +45,9 @@ foreach ([
 	}
 }
 unset($__configFile, $__projectSettings);
+// what the definitions name as constants (x-constant: PUBLIC_PAGE_NAME, META_*,
+// LANGUAGES …) from config.json: after settings.php, which still wins where it has them
+\Systopic\System\Config\Config::current()?->defineSettingConstants();
 /* * **************************** CHECK AND DEFINE CONSTANTS (AFTER SETTINGS.PHP) ************************** */
 
 defined('PUBLIC_PAGE_NAME') || define('PUBLIC_PAGE_NAME', 'fluxo');
