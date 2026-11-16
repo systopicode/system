@@ -18,6 +18,22 @@ if ($projectMedia !== '' && is_file($projectMedia) && (include $projectMedia) ==
 	exit;
 }
 
+/* * **************************** VARIANTS, NEW LAYOUT ************************** */
+// var/formats/<id path>/<name>--<variant>.<type> - one folder per medium, made
+// from the master (Media\VariantServer). Everything else is the old layout below.
+if (\Systopic\System\Media\VariantServer::handle((string) app::request()->rawpath)) {
+	logroute('media.php: variant');
+	exit;
+}
+
+// An address of the old layout: the named format is an alias now, the
+// request goes on to its picture. Not while the old rendering is switched
+// back on (Variants::live()).
+if (\Systopic\System\Media\VariantServer::redirectLegacy((string) app::request()->rawpath)) {
+	logroute('media.php: old address, sent on to its variant');
+	exit;
+}
+
 /* * **************************** LEGACY CMS MEDIA ************************** */
 $functions = [];
 global $image_formats;

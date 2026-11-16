@@ -139,6 +139,17 @@ final class ProjectSettings
                 \mediaFormats::add($formats);
             }
         }
+        // Aspect ratios and sizes every picture is made in; a missing key keeps the defaults.
+        if (is_array($data['ratios'] ?? null) || is_array($data['sizes'] ?? null)) {
+            \Systopic\System\Media\Variants::configure(
+                is_array($data['ratios'] ?? null) ? $data['ratios'] : null,
+                is_array($data['sizes'] ?? null) ? $data['sizes'] : null,
+            );
+        }
+        // The way back to the old rendering of named formats, while it still exists (Media\Variants::live()).
+        if (array_key_exists('legacyFormats', $data)) {
+            \Systopic\System\Media\Variants::useLegacy((bool) $data['legacyFormats']);
+        }
         global $image_formats, $media_groups;
         if (class_exists('mediaFormats')) {
             $image_formats = \mediaFormats::get();

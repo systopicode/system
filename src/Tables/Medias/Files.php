@@ -9,6 +9,9 @@ namespace Systopic\System\Tables\Medias;
  *
  *   var/original/<id path><filename>               the upload (and an mp4's poster <name>.webp)
  *   var/formats/<format>/<id path><filename>[.ext] made on first request (system media.php)
+ *   var/formats/<id path><name>--<variant>.<type>  the same in the new layout: one folder
+ *                                                  per medium, the variant in the file name
+ *                                                  (`Media\Variants`, `Media\VariantRenderer`)
  *
  * The id path is the media id in two levels: 42 → `000/42/`. Every method
  * changes the file system only; the row is the caller's to save.
@@ -131,6 +134,11 @@ final class Files
                 @rename($file, $dir . $filename . substr(basename($file), strlen($old)));
             }
         }
+        $dir = self::variantDir((int) $media->id);
+        $from = self::variantStem($old) . '--';
+        foreach (glob($dir . $from . '*') ?: [] as $file) {
+            @rename($file, $dir . self::variantStem($filename) . '--' . substr(basename($file), strlen($from)));
+        }
         $media->filename = $filename;
         return true;
     }
@@ -152,6 +160,83 @@ final class Files
         foreach (glob(self::varDir() . 'formats' . DIRECTORY_SEPARATOR . '*', GLOB_ONLYDIR) ?: [] as $formatDir) {
             self::removeDir($formatDir . DIRECTORY_SEPARATOR . $id);
         }
+        self::removeVariants((int) $media->id);
+    }
+
+    // ------------------------------------------------- variants, new layout
+
+    /** The folder of everything made of one medium: `var/formats/<id path>`, with trailing separator. */
+    public static function variantDir(int $mediaId): string
+    {
+        return self::varDir() . 'formats' . DIRECTORY_SEPARATOR
+            . str_replace('/', DIRECTORY_SEPARATOR, self::idPath($mediaId));
+    }
+
+    /** `bild.jpg` -> `bild`: what the names of a medium's variants begin with. */
+    public static function variantStem(string $filename): string
+    {
+        return pathinfo($filename, PATHINFO_FILENAME);
+    }
+
+    /** `bild--2mp16by9.webp` - the suffix from `Media\Variants::suffix()`. */
+    public static function variantName(string $filename, string $suffix, string $type): string
+    {
+        return self::variantStem($filename) . '--' . $suffix . '.' . $type;
+    }
+
+    public static function variantPath(int $mediaId, string $filename, string $suffix, string $type): string
+    {
+        return self::variantDir($mediaId) . self::variantName($filename, $suffix, $type);
+    }
+
+    /**
+     * What there is of a medium, in one look at its folder - a page asks
+     * this once per picture instead of testing every size.
+     *
+     * @return array<string, int> file name => time it was made
+     */
+    public static function variants(int $mediaId): array
+    {
+        $dir = self::variantDir($mediaId);
+        $found = [];
+        foreach (is_dir($dir) ? (scandir($dir) ?: []) : [] as $name) {
+            if ($name[0] !== '.' && !str_ends_with($name, '.tmp') && is_file($dir . $name)) {
+                $found[$name] = (int) filemtime($dir . $name);
+            }
+        }
+        return $found;
+    }
+
+    /**
+     * Every variant of a medium goes - after a new crop, look or point of
+     * interest, each of which can move every ratio. They are made again on
+     * request.
+     */
+    public static function removeVariants(int $mediaId): void
+    {
+        if ($mediaId > 0) {
+            self::removeDir(self::variantDir($mediaId));
+        }
+    }
+
+    /**
+     * Writes a variant in place of whatever is there, whole or not at all:
+     * two requests making the same file do not serve each other half of it.
+     */
+    public static function writeVariant(int $mediaId, string $filename, string $suffix, string $type, string $content): string
+    {
+        $dir = self::variantDir($mediaId);
+        if (!is_dir($dir)) {
+            @mkdir($dir, 0775, true);
+        }
+        $path = self::variantPath($mediaId, $filename, $suffix, $type);
+        $temp = $path . '.' . bin2hex(random_bytes(4)) . '.tmp';
+        if (file_put_contents($temp, $content) === false || !@rename($temp, $path)) {
+            @unlink($temp);
+            throw new \RuntimeException("Files::writeVariant(): cannot write '$path'");
+        }
+        @chmod($path, 0664);
+        return $path;
     }
 
     /**

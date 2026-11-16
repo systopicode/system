@@ -18,6 +18,15 @@ final class ProjectJson
         'define:VIDEO_FORMATS' => ['videoFormats', null],
         'var:media_groups' => ['groups', null],
         'define:EXTERNAL_MEDIAS' => ['external', null],
+        'media:ratios' => ['ratios', null],
+        'media:sizes' => ['sizes', null],
+    ];
+
+    /** Groups that are a plain list of values, not records: group id => section. */
+    private const LISTS = [
+        'define:EXTERNAL_MEDIAS' => 'external',
+        'media:ratios' => 'ratios',
+        'media:sizes' => 'sizes',
     ];
 
     /** @param array<string, mixed> $data */
@@ -188,6 +197,14 @@ final class ProjectJson
         if ($this->which === 'page') {
             $this->data['legal'] = array_replace(array_fill_keys(LegalLinks::FIELDS, ''), array_intersect_key(is_array($this->data['legal'] ?? null) ? $this->data['legal'] : [], array_fill_keys(LegalLinks::FIELDS, '')));
         }
+        if ($this->which === 'media') {
+            // Not in the file yet: show what is in force, so there is something to edit.
+            foreach (['ratios' => \Systopic\System\Media\Variants::RATIOS, 'sizes' => \Systopic\System\Media\Variants::SIZES] as $section => $default) {
+                if (!is_array($this->data[$section] ?? null) || $this->data[$section] === []) {
+                    $this->data[$section] = $default;
+                }
+            }
+        }
         $groups = [];
         foreach ($layout as $section => $spec) {
             if (!isset($this->data[$section]) || !is_array($this->data[$section])) {
@@ -278,26 +295,31 @@ final class ProjectJson
 
     private function writeItem(string $id, string $key, string $text): ?bool
     {
-        if ($id !== 'define:EXTERNAL_MEDIAS') {
+        if (!isset(self::LISTS[$id])) {
             return false;
         }
-        $list = $this->list();
+        $list = $this->list($id);
         $index = self::listIndex($list, $key);
-        if ($index === null) {
+        $text = self::listValue($id, $text);
+        if ($index === null || $text === null) {
             return false;
         }
         if ($list[$index] === $text) {
             return null;
         }
+        // A ratio or a size twice in the list would be one variant with two rows.
+        if ($id !== 'define:EXTERNAL_MEDIAS' && in_array($text, $list, true)) {
+            return false;
+        }
         $list[$index] = $text;
-        $this->data['external'] = array_values($list);
+        $this->putList($id, $list);
         return $this->save() ? true : false;
     }
 
     private function rename(string $id, string $key, string $text): ?bool
     {
         $text = trim($text);
-        if (!preg_match('/^[A-Za-z0-9_][A-Za-z0-9_-]*$/D', $text) || !isset(self::GROUP[$id]) || $id === 'define:EXTERNAL_MEDIAS') {
+        if (!preg_match('/^[A-Za-z0-9_][A-Za-z0-9_-]*$/D', $text) || !isset(self::GROUP[$id]) || isset(self::LISTS[$id])) {
             return false;
         }
         $rows = $this->recordRows($id);
@@ -326,10 +348,14 @@ final class ProjectJson
         if (!isset(self::GROUP[$id])) {
             return false;
         }
-        if ($id === 'define:EXTERNAL_MEDIAS') {
-            $list = $this->list();
-            $list[] = self::freshKey($list, 'new');
-            $this->data['external'] = array_values($list);
+        if (isset(self::LISTS[$id])) {
+            $list = $this->list($id);
+            $fresh = self::freshListValue($id, $list);
+            if ($fresh === null) {
+                return false;
+            }
+            $list[] = $fresh;
+            $this->putList($id, $list);
             return $this->save() ? true : false;
         }
         $rows = $this->recordRows($id);
@@ -360,14 +386,15 @@ final class ProjectJson
         if (!isset(self::GROUP[$id])) {
             return false;
         }
-        if ($id === 'define:EXTERNAL_MEDIAS') {
-            $list = $this->list();
+        if (isset(self::LISTS[$id])) {
+            $list = $this->list($id);
             $index = self::listIndex($list, $key);
-            if ($index === null) {
+            // Ratios and sizes never run empty: an empty list would silently mean the defaults.
+            if ($index === null || ($id !== 'define:EXTERNAL_MEDIAS' && count($list) <= 1)) {
                 return false;
             }
             unset($list[$index]);
-            $this->data['external'] = array_values($list);
+            $this->putList($id, $list);
             return $this->save() ? true : false;
         }
         $rows = $this->recordRows($id);
@@ -388,8 +415,8 @@ final class ProjectJson
         if ($from === '' || $to === '' || !isset(self::GROUP[$id])) {
             return false;
         }
-        if ($id === 'define:EXTERNAL_MEDIAS') {
-            $list = $this->list();
+        if (isset(self::LISTS[$id])) {
+            $list = $this->list($id);
             $order = array_map('strval', array_keys($list));
             $next = self::reorder($order, $from, $to, $after);
             if ($next === null) {
@@ -402,7 +429,7 @@ final class ProjectJson
             foreach ($next as $key) {
                 $rebuilt[] = $list[(int) $key];
             }
-            $this->data['external'] = $rebuilt;
+            $this->putList($id, $rebuilt);
             return $this->save() ? true : false;
         }
         $rows = $this->recordRows($id);
@@ -424,7 +451,7 @@ final class ProjectJson
 
     private function putField(string $id, string $key, string $field, string $text): ?bool
     {
-        if ($field === '' || str_contains($field, '/') || !isset(self::GROUP[$id]) || $id === 'define:EXTERNAL_MEDIAS') {
+        if ($field === '' || str_contains($field, '/') || !isset(self::GROUP[$id]) || isset(self::LISTS[$id])) {
             return false;
         }
         $rows = $this->recordRows($id);
@@ -522,6 +549,14 @@ final class ProjectJson
             }
             if ($group->id === 'define:EXTERNAL_MEDIAS') {
                 $data['external'] = array_map(static fn(Item $item): string => $item->text, $group->items);
+                continue;
+            }
+            if ($group->id === 'media:ratios') {
+                $data['ratios'] = array_map(static fn(Item $item): string => $item->text, $group->items);
+                continue;
+            }
+            if ($group->id === 'media:sizes') {
+                $data['sizes'] = array_map(static fn(Item $item): int|float => is_numeric($item->text) ? $item->text + 0 : 0, $group->items);
                 continue;
             }
             if ($group->shape === 'scalar' && str_starts_with($group->id, 'define:')) {
@@ -639,6 +674,8 @@ final class ProjectJson
     {
         return [
             'images' => ['category' => 'Images', 'mode' => 'scalars'],
+            'ratios' => ['category' => 'Aspect ratios', 'mode' => 'list', 'id' => 'media:ratios', 'label' => 'Aspect ratios'],
+            'sizes' => ['category' => 'Image sizes', 'mode' => 'list', 'id' => 'media:sizes', 'label' => 'Megapixels'],
             'formats' => ['category' => 'Image formats', 'mode' => 'records', 'id' => 'call:mediaFormats::add', 'label' => 'mediaFormats::add'],
             'videoFormats' => ['category' => 'Video formats', 'mode' => 'records', 'id' => 'define:VIDEO_FORMATS', 'label' => 'VIDEO_FORMATS'],
             'groups' => ['category' => 'Media groups', 'mode' => 'records', 'id' => 'var:media_groups', 'label' => '$media_groups'],
@@ -688,12 +725,66 @@ final class ProjectJson
         $this->data[$section][$inner] = $rows;
     }
 
-    /** @return list<string> */
-    private function list(): array
+    /**
+     * Sizes are numbers in the file, everything else text.
+     *
+     * @param array<string> $list
+     */
+    private function putList(string $id, array $list): void
     {
-        $list = $this->data['external'] ?? null;
-        if (!is_array($list)) {
-            return [];
+        $list = array_values($list);
+        $this->data[self::LISTS[$id]] = $id === 'media:sizes'
+            ? array_map(static fn(string $text): int|float => $text + 0, $list)
+            : $list;
+    }
+
+    /** A value as the list stores it: a ratio reduced (`32:18` is `16:9`), a size a number. Null = not one. */
+    private static function listValue(string $id, string $text): ?string
+    {
+        $text = trim($text);
+        if ($id === 'media:ratios') {
+            return \Systopic\System\Media\Ratio::of($text)?->name;
+        }
+        if ($id === 'media:sizes') {
+            $text = str_replace(',', '.', $text);
+            return is_numeric($text) && $text > 0 && $text <= 100 ? self::textOf($text + 0) : null;
+        }
+        return $text;
+    }
+
+    /**
+     * What "add" puts into a list: the next usual ratio, twice the largest size.
+     *
+     * @param list<string> $list
+     */
+    private static function freshListValue(string $id, array $list): ?string
+    {
+        if ($id === 'media:ratios') {
+            foreach ([...\Systopic\System\Media\Variants::RATIOS, '5:4', '4:5', '21:9', '3:1', '1:2', '1:3'] as $ratio) {
+                if (!in_array($ratio, $list, true)) {
+                    return $ratio;
+                }
+            }
+            return null;
+        }
+        if ($id === 'media:sizes') {
+            $next = $list === [] ? 1 : max(array_map('floatval', $list)) * 2;
+            return $next <= 100 ? self::textOf($next) : null;
+        }
+        return self::freshKey($list, 'new');
+    }
+
+    /** @return list<string> */
+    private function list(string $id = 'define:EXTERNAL_MEDIAS'): array
+    {
+        $list = $this->data[self::LISTS[$id]] ?? null;
+        if (!is_array($list) || $list === []) {
+            // Ratios and sizes not in the file yet: the first edit starts from what is in force.
+            $list = match ($id) {
+                'media:ratios' => \Systopic\System\Media\Variants::RATIOS,
+                'media:sizes' => \Systopic\System\Media\Variants::SIZES,
+                default => [],
+            };
         }
         $texts = [];
         foreach (array_values($list) as $value) {

@@ -93,6 +93,26 @@ final class Model extends TableRow
         get => $this->__get__(__PROPERTY__);
         set => $this->__set__(__PROPERTY__, $value);
     }
+
+    /**
+     * Points of interest, JSON: `[{"x":0.31,"y":0.22,"w":0.08,"h":0.11,"weight":2}]` -
+     * faces, objects. Fractions of the original, `x` / `y` the middle; they
+     * describe the picture, so a new master crop leaves them valid.
+     */
+    public ?Text $pois {
+        get => $this->__get__(__PROPERTY__);
+        set => $this->__set__(__PROPERTY__, $value);
+    }
+
+    /** The master in pixels - the original after its edit and crop. 0 = not made yet. */
+    public ?int $masterWidth = 0 {
+        get => $this->__get__(__PROPERTY__);
+        set => $this->__set__(__PROPERTY__, $value);
+    }
+    public ?int $masterHeight = 0 {
+        get => $this->__get__(__PROPERTY__);
+        set => $this->__set__(__PROPERTY__, $value);
+    }
     public ?string $filename {
         get => $this->__get__(__PROPERTY__);
         set => $this->__set__(__PROPERTY__, $value);

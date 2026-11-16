@@ -1,0 +1,93 @@
+{
+  "about": "Cases for CropResolver - the PHP class and the editor's copy in the browser must both pass them. Centres are fractions of the master, POIs are given by their centre (x, y) and size (w, h). Expected values were worked out by hand, to 1e-6.",
+  "cases": [
+    {
+      "name": "nothing known: the largest crop, centred",
+      "master": [3000, 2000], "ratio": "1:1", "manual": [], "pois": [],
+      "expect": {"cx": 0.5, "cy": 0.5, "scale": 1, "source": "centered"}
+    },
+    {
+      "name": "a crop set by hand is taken as it is",
+      "master": [3000, 2000], "ratio": "16:9",
+      "manual": [{"ratio": "16:9", "cx": 0.3, "cy": 0.4, "scale": 1.5}], "pois": [],
+      "expect": {"cx": 0.3, "cy": 0.4, "scale": 1.5, "source": "manual"}
+    },
+    {
+      "name": "a crop set by hand may show background - it is not pulled back in",
+      "master": [3000, 2000], "ratio": "1:1",
+      "manual": [{"ratio": "1:1", "cx": 0.1, "cy": 0.5, "scale": 0.8}],
+      "pois": [{"x": 0.9, "y": 0.5}],
+      "expect": {"cx": 0.1, "cy": 0.5, "scale": 0.8, "source": "manual"}
+    },
+    {
+      "name": "between two crops set by hand: halfway on the logarithmic scale",
+      "master": [3000, 2000], "ratio": "2:1",
+      "manual": [{"ratio": "1:1", "cx": 0.2, "cy": 0.4, "scale": 4}, {"ratio": "4:1", "cx": 0.6, "cy": 0.6, "scale": 1}],
+      "pois": [],
+      "expect": {"cx": 0.4, "cy": 0.5, "scale": 2, "source": "interpolated"}
+    },
+    {
+      "name": "between two crops set by hand, points of interest do not count",
+      "master": [3000, 2000], "ratio": "2:1",
+      "manual": [{"ratio": "1:1", "cx": 0.2, "cy": 0.4, "scale": 4}, {"ratio": "4:1", "cx": 0.6, "cy": 0.6, "scale": 1}],
+      "pois": [{"x": 0.95, "y": 0.95}],
+      "expect": {"cx": 0.4, "cy": 0.5, "scale": 2, "source": "interpolated"}
+    },
+    {
+      "name": "an interpolated crop is pulled back into the master",
+      "master": [3000, 2000], "ratio": "2:1",
+      "manual": [{"ratio": "1:1", "cx": 0.05, "cy": 0.5, "scale": 0.5}, {"ratio": "4:1", "cx": 0.05, "cy": 0.5, "scale": 0.5}],
+      "pois": [],
+      "expect": {"cx": 0.5, "cy": 0.5, "scale": 1, "source": "interpolated"}
+    },
+    {
+      "name": "one side only: towards the whole master at its own ratio",
+      "master": [3000, 2000], "ratio": "4:3",
+      "manual": [{"ratio": "1:1", "cx": 0.3, "cy": 0.5, "scale": 2}], "pois": [],
+      "expect": {"cx": 0.441902258, "cy": 0.5, "scale": 1.223054514, "source": "interpolated"}
+    },
+    {
+      "name": "outside everything known: the nearest crop's centre and scale",
+      "master": [3000, 2000], "ratio": "9:16",
+      "manual": [{"ratio": "1:1", "cx": 0.3, "cy": 0.5, "scale": 2}], "pois": [],
+      "expect": {"cx": 0.3, "cy": 0.5, "scale": 2, "source": "anchor"}
+    },
+    {
+      "name": "wider than the master, crop set by hand on the far side: the whole master is nearest",
+      "master": [3000, 2000], "ratio": "2:1",
+      "manual": [{"ratio": "1:1", "cx": 0.3, "cy": 0.5, "scale": 2}], "pois": [],
+      "expect": {"cx": 0.5, "cy": 0.5, "scale": 1, "source": "anchor"}
+    },
+    {
+      "name": "the master's own ratio without a crop set by hand: the whole master",
+      "master": [3000, 2000], "ratio": "3:2",
+      "manual": [{"ratio": "1:1", "cx": 0.3, "cy": 0.5, "scale": 2}], "pois": [],
+      "expect": {"cx": 0.5, "cy": 0.5, "scale": 1, "source": "centered"}
+    },
+    {
+      "name": "one point of interest: moved from the middle only as far as needed",
+      "master": [3000, 2000], "ratio": "1:1", "manual": [],
+      "pois": [{"x": 0.9, "y": 0.5}],
+      "expect": {"cx": 0.566666667, "cy": 0.5, "scale": 1, "source": "poi"}
+    },
+    {
+      "name": "points that do not all fit: the most weight wins, then the nearest to their centre",
+      "master": [3000, 2000], "ratio": "9:16", "manual": [],
+      "pois": [{"x": 0.1, "y": 0.5}, {"x": 0.5, "y": 0.5}, {"x": 0.9, "y": 0.5, "weight": 3}],
+      "expect": {"cx": 0.7125, "cy": 0.5, "scale": 1, "source": "poi"}
+    },
+    {
+      "name": "points of interest go before a crop set by hand on one side",
+      "master": [3000, 2000], "ratio": "9:16",
+      "manual": [{"ratio": "1:1", "cx": 0.3, "cy": 0.5, "scale": 2}],
+      "pois": [{"x": 0.9, "y": 0.5}],
+      "expect": {"cx": 0.7125, "cy": 0.5, "scale": 1, "source": "poi"}
+    },
+    {
+      "name": "portrait master: the free axis is the vertical one, a point with a size",
+      "master": [2000, 3000], "ratio": "1:1", "manual": [],
+      "pois": [{"x": 0.5, "y": 0.15, "w": 0.2, "h": 0.1}],
+      "expect": {"cx": 0.5, "cy": 0.433333333, "scale": 1, "source": "poi"}
+    }
+  ]
+}
