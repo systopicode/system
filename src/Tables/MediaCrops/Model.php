@@ -7,6 +7,7 @@ namespace Systopic\System\Tables\MediaCrops;
 use Systopic\Db\Schema\Col;
 use Systopic\Db\TableRow;
 use Systopic\Db\Type\Decimal;
+use Systopic\Db\Type\Text;
 use Systopic\System\Tables\Medias\Model as Media;
 
 /**
@@ -54,6 +55,54 @@ final class Model extends TableRow
     }
     #[Col(length: 13, scale: 12)]
     public ?Decimal $height {
+        get => $this->__get__(__PROPERTY__);
+        set => $this->__set__(__PROPERTY__, $value);
+    }
+
+    /**
+     * The ratio of the picture this crop makes, a reduced fraction (`16:9`).
+     * For the crop of a ratio the same as `$format`; for the master
+     * (`$format` = `original`) its own, free one (`753:1364`).
+     */
+    #[Col(length: 23)]
+    public ?string $ratio {
+        get => $this->__get__(__PROPERTY__);
+        set => $this->__set__(__PROPERTY__, $value);
+    }
+
+    /**
+     * The middle of the crop, a fraction 0-1 of what it is cut from: the
+     * master for the crop of a ratio, the turned original for the master.
+     * Successor of `$left` / `$top`, which held the same and said otherwise.
+     */
+    #[Col(length: 13, scale: 12)]
+    public ?Decimal $centerX {
+        get => $this->__get__(__PROPERTY__);
+        set => $this->__set__(__PROPERTY__, $value);
+    }
+    #[Col(length: 13, scale: 12)]
+    public ?Decimal $centerY {
+        get => $this->__get__(__PROPERTY__);
+        set => $this->__set__(__PROPERTY__, $value);
+    }
+
+    /**
+     * Magnification over "fill in": 1 is the largest crop of the ratio
+     * without a border, below 1 background shows. Successor of `$width` and
+     * `$height` - one value cannot stretch the picture, two could.
+     */
+    #[Col(length: 18, scale: 12)]
+    public ?Decimal $scale {
+        get => $this->__get__(__PROPERTY__);
+        set => $this->__set__(__PROPERTY__, $value);
+    }
+
+    /**
+     * The look of the master, JSON: `{"b":100,"c":100,"s":100,"r":0,"f":0}` -
+     * brightness, contrast, saturation (100 = as it is), angle in degrees,
+     * mirrored. Only in the master's row; null = untouched.
+     */
+    public ?Text $edit {
         get => $this->__get__(__PROPERTY__);
         set => $this->__set__(__PROPERTY__, $value);
     }

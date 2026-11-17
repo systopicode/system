@@ -20,7 +20,14 @@ use Systopic\System\Tables\Medias\Model as MediaRow;
  * the same medium. Every template in the projects calls them chained
  * (`->setFormat('x')->src`), so nothing notices — except that it is right now.
  *
- * Addresses are the legacy ones, byte for byte:
+ * **A named format is an alias now.** `setFormat('fullWidth')` no longer has a
+ * crop or a folder of its own: it stands for a ratio at a size
+ * (`Media\Variants::alias()`), and `src`, `url`, `path` and the tag give the
+ * address of that picture (`var/formats/<id path><name>--5mp.webp?v=…`). The
+ * crop is the one of the ratio, set in the image editor or computed. New
+ * templates name the ratio: `getCrop('16:9')`.
+ *
+ * With `Variants::live()` off, the addresses are the legacy ones, byte for byte:
  *
  *   original   <root>var/original/<id path><filename>
  *   format     <root>var/formats/<format>/<id path><filename>.webp   (images)
@@ -38,7 +45,11 @@ final class Media
     /** @var list<string> */
     private array $classNames = [];
 
-    public function __construct(public readonly MediaRow $row) {}
+    public function __construct(public readonly MediaRow $row)
+    {
+        // Its crops are read with those of every other medium of the page, on the first getCrop().
+        \Systopic\System\Queries\MediaCrops\MediaCrops::announce((int) $row->id);
+    }
 
     /**
      * The medium of a media node — a page's share image, say. Null when
@@ -66,6 +77,41 @@ final class Media
     public int $width { get => (int) $this->row->width; }
     public int $height { get => (int) $this->row->height; }
     public ?string $backgroundType { get => $this->row->backgroundType; }
+
+    // -------------------------------------------------------------- crops
+
+    /**
+     * The medium in one aspect ratio (`16:9`), or - no ratio - its master:
+     *
+     *   <?= $media->getCrop('16:9')->toImgHtml() ?>     <img> with every size, the browser picks
+     *   <?= $media->getCrop('16:9')->getUrl(2) ?>       one address, about 2 megapixels
+     *
+     * Only the ratios of the settings exist; any other is shown in the
+     * nearest of them. The crop itself is the one set in the editor, or
+     * computed from its neighbours and the points of interest.
+     *
+     * Successor of `setFormat()`: the medium has no "current format" any
+     * more - a crop is a thing of its own.
+     */
+    public function getCrop(?string $ratio = null): Picture
+    {
+        $read = $ratio === null ? null : \Systopic\System\Media\Ratio::of($ratio);
+        $set = \Systopic\System\Queries\MediaCrops\MediaCrops::lazy($this->id)
+            ?? new \Systopic\System\Queries\MediaCrops\CropSet($this->row, []);
+        return new Picture($set, $read === null ? null : \Systopic\System\Media\Variants::nearestRatio($read));
+    }
+
+    /**
+     * `<img>` that fits whatever box the page gives it: the browser's side
+     * picks the ratio nearest to the box and the size the screen needs.
+     * The template sizes the element by CSS. See `Picture::toAutoHtml()`.
+     *
+     * @param array<string, string|null> $attributes `alt`, `class`, `style` ...
+     */
+    public function toAutoHtml(array $attributes = []): string
+    {
+        return $this->getCrop()->toAutoHtml($attributes);
+    }
 
     // --------------------------------------------------------- variations
 
@@ -98,6 +144,10 @@ final class Media
     /** The address of this format, bare - to build other names from or to store. */
     public string $url {
         get {
+            $variant = $this->variant();
+            if ($variant !== null) {
+                return explode('?', $variant->variantUrl($this->suffix()), 2)[0];
+            }
             $base = $this->isDerived()
                 ? \http::$root . "var/formats/{$this->format}/"
                 : \http::$root . 'var/original/';
@@ -107,7 +157,13 @@ final class Media
 
     /** The address to show: with the file time, files are cached as immutable and a new crop needs a new address. */
     public string $src {
-        get => is_file($this->path) ? $this->url . '?v=' . filemtime($this->path) : $this->url;
+        get {
+            $variant = $this->variant();
+            if ($variant !== null) {
+                return $variant->variantUrl($this->suffix());
+            }
+            return is_file($this->path) ? $this->url . '?v=' . filemtime($this->path) : $this->url;
+        }
     }
 
     /** The legacy `link` — the same as src. */
@@ -128,6 +184,9 @@ final class Media
     /** The folder of this format in the file system. */
     public string $dir {
         get {
+            if ($this->variant() !== null) {
+                return Files::variantDir($this->id);
+            }
             $base = $this->isDerived()
                 ? \fs::$siteRoot . "var/formats/{$this->format}/"
                 : \fs::$siteRoot . 'var/original/';
@@ -136,7 +195,11 @@ final class Media
     }
 
     /** The file of this format in the file system. */
-    public string $path { get => $this->dir . $this->filename . $this->appendix(); }
+    public string $path {
+        get => $this->variant() !== null
+            ? Files::variantPath($this->id, $this->filename, $this->suffix(), 'webp')
+            : $this->dir . $this->filename . $this->appendix();
+    }
 
     /**
      * The tag: `<img>`, for an mp4 a `<video>` of the original with its poster.
@@ -156,6 +219,40 @@ final class Media
     private function isDerived(): bool
     {
         return $this->format !== null && $this->format !== 'original';
+    }
+
+    /**
+     * What the named format stands for: a ratio (null: the master) at a
+     * size (null: its own pixels). A name the settings do not know is the
+     * master at about a megapixel.
+     *
+     * \return array{ratio: ?\Systopic\System\Media\Ratio, megapixels: ?float}
+     */
+    private function alias(): array
+    {
+        $formats = class_exists('mediaFormats') ? \mediaFormats::get() : [];
+        return \Systopic\System\Media\Variants::alias(is_array($formats[$this->format] ?? null) ? $formats[$this->format] : ['megapixels' => 1]);
+    }
+
+    /** The file name part of that picture: `5mp`, `5mp1by1`. */
+    private function suffix(): string
+    {
+        $alias = $this->alias();
+        return \Systopic\System\Media\Variants::suffix($alias['ratio'], $alias['megapixels']);
+    }
+
+    /**
+     * The picture a named format is shown as - null where the legacy
+     * addresses apply: no format, the original, the old rendering switched
+     * back on, or a medium nothing can be cut from.
+     */
+    private function variant(): ?Picture
+    {
+        if (!$this->isDerived() || !\Systopic\System\Media\Variants::live()) {
+            return null;
+        }
+        $picture = $this->getCrop($this->alias()['ratio']?->name);
+        return $picture->cut ? $picture : null;
     }
 
     /** What the format file adds to the name: .webp for images, .jpg for a pdf, nothing for svg. */

@@ -1,0 +1,506 @@
+/****************************** CROP EDITOR ***************************/
+/* The image editor of master and ratios (public/js/gui/cropEditor.js):
+   tools | stage | ratio slider. It takes the place of the file's stage. */
+
+.cmslightbox .fileStage.cropEditing > :not(.cropEditor){
+	display: none;
+}
+
+.cropEditor{
+	display: grid;
+	grid-template-columns: auto minmax(0, 1fr) auto;
+	gap: 0.75rem;
+	flex: 1 1 auto;
+	min-height: 0;
+	height: 100%;
+}
+
+.cropEditor .button.selected{
+	background: var(--cmsMainColor);
+	color: #fff;
+}
+
+/* ---- A: tools, one below the other */
+.cropEditor .ceTools{
+	position: relative;
+	display: flex;
+	flex-direction: column;
+	gap: 0.35rem;
+}
+
+.cropEditor .ceTools hr{
+	width: 100%;
+	margin: 0.25rem 0;
+	border: 0;
+	border-top: 1px solid rgb(0 0 0 / 0.15);
+}
+
+.cropEditor .ceTools .ceSpace{
+	flex: 1 1 auto;
+}
+
+.cropEditor .ceLevel{
+	position: absolute;
+	left: calc(100% + 0.5rem);
+	z-index: 5;
+	display: flex;
+	align-items: center;
+	gap: 0.6rem;
+	padding: 0.45rem 0.7rem;
+	border-radius: var(--cmsRadius);
+	background: #fff;
+	box-shadow: 0 4px 18px rgb(0 0 0 / 0.22);
+}
+
+.cropEditor .ceLevel[hidden]{
+	display: none;
+}
+
+.cropEditor .ceLevel output{
+	min-width: 2.2rem;
+	text-align: right;
+	font-variant-numeric: tabular-nums;
+}
+
+.cropEditor .ceLevel input{
+	width: 12rem;
+}
+
+/* ---- B: the stage. The frame stands still, the picture moves under it. */
+.cropEditor .ceStage{
+	position: relative;
+	min-height: 16rem;
+	overflow: hidden;
+	border-radius: var(--cmsRadius);
+	cursor: grab;
+	touch-action: none;
+	user-select: none;
+	background-color: #dcdcdc;
+	background-image:
+		linear-gradient(45deg, #cfcfcf 25%, transparent 25%, transparent 75%, #cfcfcf 75%),
+		linear-gradient(45deg, #cfcfcf 25%, transparent 25%, transparent 75%, #cfcfcf 75%);
+	background-size: 16px 16px;
+	background-position: 0 0, 8px 8px;
+}
+
+.cropEditor .ceStage.is-moving{
+	cursor: grabbing;
+}
+
+.cropEditor.is-busy .ceStage{
+	opacity: 0.6;
+}
+
+.cropEditor .ceStage img{
+	position: absolute;
+	max-width: none !important;
+	max-height: none !important;
+	transform-origin: 50% 50%;
+	pointer-events: none;
+	transition: none !important;
+}
+
+/* outside the frame the picture steps back */
+.cropEditor .ceUnder{
+	opacity: 0.3;
+}
+
+.cropEditor .ceFrame{
+	position: absolute;
+	overflow: hidden;
+	pointer-events: none;
+	outline: 2px solid #fff;
+	box-shadow: 0 0 0 3px var(--cmsHighlightColor);
+	/* where the picture does not reach, the background shows: lighter squares */
+	background-color: #f7f7f7;
+	background-image:
+		linear-gradient(45deg, #ececec 25%, transparent 25%, transparent 75%, #ececec 75%),
+		linear-gradient(45deg, #ececec 25%, transparent 25%, transparent 75%, #ececec 75%);
+	background-size: 16px 16px;
+	background-position: 0 0, 8px 8px;
+}
+
+.cropEditor .ceCommit{
+	position: absolute;
+	top: 0.6rem;
+	right: 0.6rem;
+	z-index: 3;
+	display: flex;
+	gap: 0.35rem;
+}
+
+.cropEditor .ceStatus{
+	position: absolute;
+	left: 0.6rem;
+	bottom: 0.5rem;
+	z-index: 3;
+	max-width: calc(100% - 1.2rem);
+	margin: 0;
+	padding: 0.2rem 0.55rem;
+	border-radius: var(--cmsRadius);
+	background: rgb(255 255 255 / 0.88);
+	font-size: 0.8rem;
+	pointer-events: none;
+}
+
+.cropEditor .ceStatus:empty{
+	display: none;
+}
+
+.cropEditor .ceStatus.is-error{
+	color: #b00020;
+}
+
+/* ---- C: buttons, the slider of ratios, back to automatic */
+.cropEditor .ceSide{
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 0.6rem;
+	width: 7rem;
+}
+
+.cropEditor .ceButtons{
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: center;
+	gap: 0.3rem;
+}
+
+.cropEditor .ceButtons [hidden]{
+	display: none;
+}
+
+.cropEditor .ceToggle{
+	display: flex;
+	gap: 1px;
+}
+
+.cropEditor .ceSlider{
+	position: relative;
+	flex: 1 1 auto;
+	width: 100%;
+	min-height: 12rem;
+	margin: 1.1rem 0;
+}
+
+/* a wide strip to hit, a thin line to see */
+.cropEditor .ceTrack{
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	right: 0.2rem;
+	width: 1.4rem;
+}
+
+.cropEditor .ceTrack::before{
+	content: '';
+	position: absolute;
+	top: -0.5rem;
+	bottom: -0.5rem;
+	left: 50%;
+	width: 4px;
+	margin-left: -2px;
+	border-radius: 2px;
+	background: rgb(0 0 0 / 0.22);
+}
+
+.cropEditor .ceSlider.is-free .ceTrack{
+	cursor: ns-resize;
+	touch-action: none;
+}
+
+.cropEditor .ceKnob{
+	position: absolute;
+	top: calc(var(--p, 0.5) * 100%);
+	left: 50%;
+	width: 1.15rem;
+	height: 1.15rem;
+	margin: -0.575rem 0 0 -0.575rem;
+	border: 2px solid #fff;
+	border-radius: 50%;
+	background: var(--cmsHighlightColor);
+	box-shadow: 0 1px 4px rgb(0 0 0 / 0.4);
+	transition: top 0.18s ease;
+	pointer-events: none;
+}
+
+.cropEditor .ceSlider.is-free .ceKnob{
+	transition: none;
+}
+
+.cropEditor .ceRatios{
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	left: 0;
+	right: 2rem;
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.cropEditor .ceRatios li{
+	position: absolute;
+	top: calc(var(--p, 0.5) * 100%);
+	right: 0;
+	margin: 0;
+	transform: translateY(-50%);
+}
+
+/* ratios too close to stand in one column step aside */
+.cropEditor .ceRatios li[data-col="1"]{
+	right: 2.3rem;
+}
+
+/* a ratio: its rectangle in a circle. Filled: set by hand. */
+.cropEditor .ceRatios button{
+	display: grid;
+	place-items: center;
+	width: 2rem;
+	height: 2rem;
+	padding: 0.42rem;
+	border: 1.5px solid var(--cmsMainColor);
+	border-radius: 50%;
+	background: #fff;
+	color: var(--cmsMainColor);
+	cursor: pointer;
+}
+
+.cropEditor .ceRatios button span{
+	display: block;
+	border: 1.5px solid currentColor;
+	border-radius: 1px;
+}
+
+.cropEditor .ceRatios button.is-manual{
+	background: var(--cmsMainColor);
+	color: #fff;
+}
+
+.cropEditor .ceRatios button.selected{
+	border-color: var(--cmsHighlightColor);
+	box-shadow: 0 0 0 2px var(--cmsHighlightColor);
+}
+
+/* ---- the fix point of the zoom and turn tools: a cross that can be put anywhere */
+.cropEditor .cePivot{
+	position: absolute;
+	z-index: 4;
+	width: 2rem;
+	height: 2rem;
+	margin: -1rem 0 0 -1rem;
+	padding: 0;
+	border: 2px solid #fff;
+	border-radius: 50%;
+	cursor: move;
+	touch-action: none;
+	box-shadow: 0 0 0 2px var(--cmsHighlightColor), 0 1px 6px rgb(0 0 0 / 0.5);
+	background:
+		linear-gradient(var(--cmsHighlightColor), var(--cmsHighlightColor)) 50% 50% / 2px 100% no-repeat,
+		linear-gradient(var(--cmsHighlightColor), var(--cmsHighlightColor)) 50% 50% / 100% 2px no-repeat,
+		rgb(0 0 0 / 0.25);
+}
+
+.cropEditor .cePivot[hidden]{
+	display: none;
+}
+
+.cropEditor[data-tool="zoom"] .ceStage{
+	cursor: zoom-in;
+}
+
+.cropEditor[data-tool="turn"] .ceStage{
+	cursor: crosshair;
+}
+
+/* the editor of the named formats, until it goes */
+.cropEditor .ceOld{
+	position: absolute;
+	right: 0.6rem;
+	bottom: 0.5rem;
+	z-index: 3;
+	font-size: 0.8rem;
+}
+
+/* ---- points of interest: marks on the picture; only with their tool they can be touched */
+.cropEditor .cePois{
+	position: absolute;
+	inset: 0;
+	z-index: 2;
+	pointer-events: none;
+}
+
+.cropEditor .cePoi{
+	position: absolute;
+	width: calc(0.9rem + var(--w, 1) * 0.12rem);
+	height: calc(0.9rem + var(--w, 1) * 0.12rem);
+	padding: 0;
+	border: 2px solid #fff;
+	border-radius: 50%;
+	background: var(--cmsHighlightColor);
+	box-shadow: 0 1px 4px rgb(0 0 0 / 0.5);
+	transform: translate(-50%, -50%);
+	opacity: 0.75;
+}
+
+.cropEditor .cePois.is-active .cePoi{
+	pointer-events: auto;
+	cursor: move;
+	touch-action: none;
+	opacity: 1;
+}
+
+.cropEditor .cePoi.is-selected{
+	box-shadow: 0 0 0 3px var(--cmsMainColor), 0 1px 4px rgb(0 0 0 / 0.5);
+}
+
+.cropEditor[data-tool="poi"] .ceStage{
+	cursor: crosshair;
+}
+
+.cropEditor .cePoiBar{
+	position: absolute;
+	left: 50%;
+	bottom: 2.6rem;
+	z-index: 4;
+	display: flex;
+	align-items: center;
+	gap: 0.35rem;
+	padding: 0.3rem 0.45rem;
+	border-radius: var(--cmsRadius);
+	background: #fff;
+	box-shadow: 0 4px 18px rgb(0 0 0 / 0.22);
+	transform: translateX(-50%);
+}
+
+.cropEditor .cePoiBar[hidden]{
+	display: none;
+}
+
+.cropEditor .cePoiBar output{
+	min-width: 1.4rem;
+	text-align: center;
+	font-variant-numeric: tabular-nums;
+}
+
+/* ---- phone: the slider lies across the bottom, everything else folds away */
+.cropEditor .ceMore{
+	display: none;
+	position: absolute;
+	top: 0.6rem;
+	left: 0.6rem;
+	z-index: 3;
+}
+
+@media (max-width: 720px){
+	.cropEditor{
+		grid-template-columns: minmax(0, 1fr);
+		grid-template-rows: auto minmax(0, 1fr) auto;
+		gap: 0.5rem;
+	}
+
+	.cropEditor .ceMore{
+		display: inline-flex;
+	}
+
+	.cropEditor .ceTools{
+		display: none;
+		flex-direction: row;
+		flex-wrap: wrap;
+	}
+
+	.cropEditor.is-open .ceTools{
+		display: flex;
+	}
+
+	.cropEditor .ceTools hr,
+	.cropEditor .ceTools .ceSpace{
+		display: none;
+	}
+
+	/* the slider of a level opens below its row of tools */
+	.cropEditor .ceLevel{
+		top: calc(100% + 0.4rem) !important;
+		left: 0;
+		right: 0;
+	}
+
+	.cropEditor .ceLevel input{
+		flex: 1 1 auto;
+		width: auto;
+	}
+
+	.cropEditor .ceSide{
+		flex-direction: row;
+		flex-wrap: wrap;
+		align-items: center;
+		width: auto;
+	}
+
+	.cropEditor .ceButtons{
+		display: none;
+		flex-basis: 100%;
+		justify-content: flex-start;
+	}
+
+	.cropEditor.is-open .ceButtons{
+		display: flex;
+	}
+
+	.cropEditor .ceSlider{
+		flex: 1 1 0;
+		min-height: 0;
+		height: 5rem;
+		margin: 0 1.2rem;
+	}
+
+	.cropEditor .ceTrack{
+		top: auto;
+		bottom: 0.1rem;
+		left: 0;
+		right: 0;
+		width: auto;
+		height: 1.4rem;
+	}
+
+	.cropEditor .ceTrack::before{
+		top: 50%;
+		bottom: auto;
+		left: -0.5rem;
+		right: -0.5rem;
+		width: auto;
+		height: 4px;
+		margin: -2px 0 0;
+	}
+
+	.cropEditor .ceSlider.is-free .ceTrack{
+		cursor: ew-resize;
+	}
+
+	.cropEditor .ceKnob{
+		top: 50%;
+		left: calc(var(--p, 0.5) * 100%);
+		transition: left 0.18s ease;
+	}
+
+	.cropEditor .ceRatios{
+		top: 0;
+		bottom: 1.8rem;
+		left: 0;
+		right: 0;
+	}
+
+	.cropEditor .ceRatios li{
+		top: auto;
+		bottom: 0;
+		right: auto;
+		left: calc(var(--p, 0.5) * 100%);
+		transform: translateX(-50%);
+	}
+
+	.cropEditor .ceRatios li[data-col="1"]{
+		right: auto;
+		bottom: 2.3rem;
+	}
+}
