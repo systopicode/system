@@ -11,8 +11,8 @@
         this.save = event => {
             const field = event.sourceElement || event.element;
             if (!field) return;
-            if (field.matches('input:not([type="checkbox"])') && field.value === field.defaultValue) return;
-            if (field.matches('input:not([type="checkbox"])') && !field.cmsConnectionEdited) return;
+            if (field.matches('input:not([type="checkbox"]), textarea') && field.value === field.defaultValue) return;
+            if (field.matches('input:not([type="checkbox"]), textarea') && !field.cmsConnectionEdited) return;
             if (typeof field.checkValidity === 'function' && !field.checkValidity()) {
                 field.reportValidity();
                 return;
@@ -58,12 +58,15 @@ function setFold(key, open) {
         if (key !== null && section.dataset.fold !== key) return;
         section.classList.toggle('is-open', open);
         // the first chevron is the section's own: nested blocks have none
-        section.querySelector('.envFoldToggle')?.setAttribute('aria-expanded', open ? 'true' : 'false');
+        section.querySelector('.envFoldToggle, [data-table-fold]')?.setAttribute('aria-expanded', open ? 'true' : 'false');
     });
 }
 function sendFolds() {
-    sys.core.server.sendCall({dataset: {open: foldKeys().join(',')}}, 'fold');
+    sys.core.server.sendCall({dataset: {package: document.querySelector('.envSettings')?.dataset.package, open: foldKeys().join(',')}}, 'fold');
 }
+document.addEventListener('cms:tablefold', event => {
+    if (event.target.matches?.('.envSettings tr.envFold[data-fold]')) sendFolds();
+});
 document.addEventListener('click', event => {
     var all = event.target.closest?.('.envFoldAll');
     if (all) {
@@ -180,5 +183,5 @@ sys.onJSReady(refreshDebugControls);
 
 // beforeinput covers typing, paste and mobile keyboards, unlike autofill on load.
 document.addEventListener('beforeinput', event => {
-    if (event.target.matches?.('.envSettings input:not([type="checkbox"])')) event.target.cmsConnectionEdited = true;
+    if (event.target.matches?.('.envSettings :is(input:not([type="checkbox"]), textarea)')) event.target.cmsConnectionEdited = true;
 }, true);

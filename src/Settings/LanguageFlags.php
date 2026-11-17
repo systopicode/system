@@ -61,18 +61,20 @@ final class LanguageFlags
         echo '<button type="button" class="button transparent languageFlagPreview" data-flag-input="' . self::inputId($rowKey) . '" title="Upload SVG flag for ' . $e($label) . '" aria-label="Upload SVG flag for ' . $e($label) . '"' . (self::code($code) === null ? ' disabled' : '') . ' onclick="document.getElementById(this.dataset.flagInput)?.click()">' . self::html($code) . '</button>';
     }
 
-    public static function control(string $code, string $label, string $rowKey = ''): void
+    public static function control(string $code, string $label, string $rowKey = '', array $context = [], bool $withLabels = false): void
     {
         $e = static fn(string $value): string => htmlspecialchars($value, ENT_QUOTES);
+        $query = $context === [] ? '' : '&' . http_build_query($context);
+        $iconOnly = $withLabels ? '' : ' icononly';
         echo '<div class="languageFlagControl">';
         $code = self::code($code);
         if ($code === null) { echo '</div>'; return; }
-        echo '<form class="languageFlagUpload" method="post" enctype="multipart/form-data" action="uploadFlag?code=' . $e($code) . '">';
+        echo '<form class="languageFlagUpload" method="post" enctype="multipart/form-data" action="uploadFlag?code=' . $e($code . $query) . '">';
         echo '<input type="hidden" name="flagToken" value="' . $e(self::token()) . '">';
-        echo '<label class="button transparent icononly languageFlagChoose" title="Upload SVG flag for ' . $e($label) . '"><i class="cmsIcon cmsIcon-arrow-up-from-bracket" aria-hidden="true"></i>';
+        echo '<label class="button transparent' . $iconOnly . ' languageFlagChoose" title="Upload SVG flag for ' . $e($label) . '"><i class="cmsIcon cmsIcon-arrow-up-from-bracket" aria-hidden="true"></i>' . ($withLabels ? '<span>Upload flag</span>' : '');
         echo '<input type="file" name="file" id="' . self::inputId($rowKey !== '' ? $rowKey : $code) . '" accept=".svg,image/svg+xml" title="Upload SVG flag for ' . $e($label) . '" aria-label="Upload SVG flag for ' . $e($label) . '" onchange="this.form.requestSubmit()"></label></form>';
         if (is_file(self::path($code))) {
-            echo '<form class="languageFlagReset" method="post" action="resetFlag?code=' . $e($code) . '"><input type="hidden" name="flagToken" value="' . $e(self::token()) . '"><button class="button transparent icononly" type="submit" title="Reset flag" aria-label="Remove project flag for ' . $e($label) . '"><i class="cmsIcon cmsIcon-arrow-rotate-left" aria-hidden="true"></i></button></form>';
+            echo '<form class="languageFlagReset" method="post" action="resetFlag?code=' . $e($code . $query) . '"><input type="hidden" name="flagToken" value="' . $e(self::token()) . '"><button class="button transparent' . $iconOnly . '" type="submit" title="Reset flag" aria-label="Remove project flag for ' . $e($label) . '"><i class="cmsIcon cmsIcon-arrow-rotate-left" aria-hidden="true"></i>' . ($withLabels ? '<span>Reset flag</span>' : '') . '</button></form>';
         }
         echo '</div>';
     }

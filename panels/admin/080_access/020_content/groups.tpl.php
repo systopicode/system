@@ -33,7 +33,7 @@ $names = function ($group, string $right) use ($e): string {
 					$color = ($group->color !== null && $group->color !== '') ? $group->color : '#8a8f93';
 				?>
 					<tr data-group_id="<?= (int) $group->id ?>">
-						<td><?= $e($group->name) ?></td>
+						<td><?= $e(trim((string) $group->name) ?: 'Group #' . $group->id) ?></td>
 						<td><span class="swatch" style="background:<?= $e($color) ?>"></span></td>
 						<td><?= $e($group->description) ?></td>
 						<td><?= $names($group, 'read') ?></td>

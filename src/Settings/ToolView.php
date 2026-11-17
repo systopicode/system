@@ -20,6 +20,12 @@ final readonly class ToolView
         public array $data,
     ) {}
 
+    /** Shared information line; callers escape any dynamic values in the trusted HTML. */
+    public static function hint(string $html, string $class = ''): string
+    {
+        return '<p class="tagsHint cmsHint ' . htmlspecialchars($class, ENT_QUOTES) . '"><i class="cmsIcon cmsIcon-circle-info" aria-hidden="true"></i><span>' . $html . '</span></p>';
+    }
+
     /** Is it the file of the installation that runs here? */
     public static function running(string $file): bool
     {

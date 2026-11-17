@@ -91,10 +91,24 @@ final class EnvironmentForm
     {
         if ($panel->action === 'fold') {
             $open = trim((string) \http::dataset('open'));
-            $panel->state->open = $open === '' ? [] : array_values(array_unique(array_filter(explode(',', $open), static fn(string $key): bool => (bool) preg_match('/^[a-z][a-zA-Z0-9:._-]*$/', $key))));
+            $keys = $open === '' ? [] : array_values(array_unique(array_filter(explode(',', $open), static fn(string $key): bool => (bool) preg_match('/^[a-z][a-zA-Z0-9:._-]*$/', $key))));
+            $package = (string) (\http::dataset('package') ?: ($panel->state->package ?? ''));
+            if (in_array($package, self::packages(), true)) {
+                $panel->state->open = self::mergeFolds((array) ($panel->state->open ?? []), $keys, $package);
+            }
             return true;
         }
         return false;
+    }
+
+    /** A page replaces only its own fold keys, preserving every other package. */
+    private static function mergeFolds(array $remembered, array $open, string $package): array
+    {
+        $belongs = static fn(string $key): bool => str_starts_with($key, $package . '.') || str_starts_with($key, 'packages.' . $package . '.');
+        return array_values(array_unique([
+            ...array_filter($remembered, static fn(string $key): bool => !$belongs($key)),
+            ...array_filter($open, $belongs),
+        ]));
     }
 
     public static function render(PanelNode $panel): void
@@ -160,8 +174,8 @@ final class EnvironmentForm
     {
         $count = count(self::checks());
         echo '<div class="envControls">';
-        echo '<button type="button" class="button transparent icononly envFoldAll" data-open="1" aria-label="Open all blocks" title="Open all blocks"><i class="cmsIcon cmsIcon-chevron-down" aria-hidden="true"></i></button>';
-        echo '<button type="button" class="button transparent icononly envFoldAll" data-open="0" aria-label="Close all blocks" title="Close all blocks"><i class="cmsIcon cmsIcon-chevron-up" aria-hidden="true"></i></button>';
+        echo '<button type="button" class="button transparent icononly envFoldAll" data-open="1" aria-label="Open all blocks" title="Open all blocks"><i class="cmsIcon cmsIcon-chevrons-down" aria-hidden="true"></i></button>';
+        echo '<button type="button" class="button transparent icononly envFoldAll" data-open="0" aria-label="Close all blocks" title="Close all blocks"><i class="cmsIcon cmsIcon-chevrons-up" aria-hidden="true"></i></button>';
         echo '<a class="ajax button envCheckButton" href="check/" title="What to look at in config.json and config.local.json: repeated, unknown and misplaced values, secrets, required values">'
             . '<i class="cmsIcon cmsIcon-list-check"></i><span>Check</span><b class="envBadge"' . ($count === 0 ? ' hidden' : '') . '>' . $count . '</b></a>';
         echo '</div>';
@@ -185,7 +199,7 @@ final class EnvironmentForm
         foreach ($checks as $check) {
             echo '<article class="widget is-list is-' . $e($check['kind']) . '"><header><h2>'
                 . '<i class="cmsIcon envCheckIcon ' . $e($check['icon']) . '" aria-hidden="true"></i> ' . $e($check['title']) . '</h2></header>'
-                . '<p class="envCheckBody">' . $check['text'] . '</p>';
+                . '<div class="envCheckBody">' . $check['text'] . '</div>';
             if ($check['action'] !== '') {
                 echo '<footer>' . $check['action'] . '</footer>';
             }
@@ -241,7 +255,7 @@ final class EnvironmentForm
         $file = EnvironmentFile::LOCAL;
         self::prepare();
         $v = self::$view;
-        $list = static fn(array $names): string => '<code>' . implode('</code>, <code>', array_map($e, $names)) . '</code>';
+        $list = static fn(array $names): string => '<ul class="envCheckValues"><li><code>' . implode('</code></li><li><code>', array_map($e, $names)) . '</code></li></ul>';
         $checks = [];
         if (!$v['project']) {
             $redundant = array_map(static fn(array $r): string => $r['package'] . '.' . $r['path'], Explain::redundantIn($v['layers'], 'local', $v['stage']));
@@ -250,7 +264,7 @@ final class EnvironmentForm
                     'kind' => 'redundant',
                     'icon' => 'cmsIcon-copy',
                     'title' => count($redundant) . (count($redundant) === 1 ? ' redundant value' : ' redundant values'),
-                    'text' => 'In <code>' . $e($file) . '</code>: ' . $list($redundant) . '. These values already match the defaults or the project configuration.',
+                    'text' => 'In <code>' . $e($file) . '</code>: ' . $list($redundant) . ' These values already match the defaults or the project configuration.',
                     'action' => '<button type="button" class="button" data-on_click="userConfirm" data-action="prune" data-confirm="Remove from ' . $e($file) . ': ' . $e(implode(', ', $redundant)) . '?" data-file="' . $e($file) . '"><i class="cmsIcon cmsIcon-trash"></i>Remove them</button>',
                 ];
             }
@@ -266,7 +280,7 @@ final class EnvironmentForm
                 'kind' => 'orphan',
                 'icon' => 'cmsIcon-eraser',
                 'title' => count($names) . ' defined nowhere',
-                'text' => 'In <code>' . $e($in) . '</code>: ' . $list($names) . '. No package defines ' . (count($names) === 1 ? 'it' : 'them') . '.',
+                'text' => 'In <code>' . $e($in) . '</code>: ' . $list($names) . ' No package defines ' . (count($names) === 1 ? 'it' : 'them') . '.',
                 'action' => $in === EnvironmentFile::LOCAL
                     ? '<button type="button" class="button" data-on_click="userConfirm" data-action="dropOrphans" data-confirm="Remove from ' . $e($in) . ': ' . $e(implode(', ', $names)) . '?" data-file="' . $e($in) . '"><i class="cmsIcon cmsIcon-trash"></i>Remove them</button>'
                     : '<small>config.json counts for every installation: code elsewhere may still read them, so they stay.</small>',
@@ -277,7 +291,7 @@ final class EnvironmentForm
                 'kind' => 'exposed',
                 'icon' => 'cmsIcon-key-skeleton',
                 'title' => 'Secrets in config.json',
-                'text' => 'In <code>' . $e($in) . '</code>: ' . $list($names) . '. That file is in git. Enter them for each installation and take them out of config.json.',
+                'text' => 'In <code>' . $e($in) . '</code>: ' . $list($names) . ' That file is in git. Enter them for each installation and take them out of config.json.',
                 'action' => '',
             ];
         }
@@ -286,7 +300,7 @@ final class EnvironmentForm
                 'kind' => 'misplaced',
                 'icon' => 'cmsIcon-arrows-left-right',
                 'title' => count($names) . ' in the wrong file',
-                'text' => 'In <code>' . $e($in) . '</code>: ' . $list($names) . '. The rows say where ' . (count($names) === 1 ? 'it belongs' : 'they belong') . '.',
+                'text' => 'In <code>' . $e($in) . '</code>: ' . $list($names) . ' The rows say where ' . (count($names) === 1 ? 'it belongs' : 'they belong') . '.',
                 'action' => '',
             ];
         }
@@ -295,7 +309,7 @@ final class EnvironmentForm
                 'kind' => 'foreign',
                 'icon' => 'cmsIcon-box',
                 'title' => 'Packages not installed here',
-                'text' => 'In <code>' . $e($in) . '</code>: ' . $list($names) . '. Their settings stay as they are.',
+                'text' => 'In <code>' . $e($in) . '</code>: ' . $list($names) . ' Their settings stay as they are.',
                 'action' => '',
             ];
         }
@@ -305,7 +319,7 @@ final class EnvironmentForm
                 'kind' => 'required',
                 'icon' => 'cmsIcon-triangle-exclamation',
                 'title' => count($required) . ' required ' . (count($required) === 1 ? 'value is' : 'values are') . ' missing',
-                'text' => $list($required) . '. Marked “required” in the rows.',
+                'text' => $list($required) . ' Marked “required” in the rows.',
                 'action' => '',
             ];
         }
@@ -409,11 +423,11 @@ final class EnvironmentForm
         $definition = Explain::definition($package);
         $aside = self::aside($package, $definition, []);
         $notes = self::comments([$package]);
-        if ($aside !== '' || $notes !== []) {
-            echo '<div class="envPackageBar">' . $aside . ($notes === [] ? '' : '<p class="tagsHint">' . implode('</p><p class="tagsHint">', array_map($e, $notes)) . '</p>') . '</div>';
+        if ($notes !== []) {
+            echo '<div class="envPackageBar"><p class="tagsHint">' . implode('</p><p class="tagsHint">', array_map($e, $notes)) . '</p></div>';
         }
         self::openTable();
-        self::node($package, $definition, []);
+        self::node($package, $definition, [], $aside);
         // what nothing defines: a block of its own after the others
         ob_start();
         self::orphans($package);
@@ -427,9 +441,12 @@ final class EnvironmentForm
             self::foreign();
             self::rest();
         }
+        // Package tools share the same accordion and open/close-all state as the fields.
+        if (self::toolOf($definition) !== null) {
+            self::openCard(' envPackageTool', $package . '.tool', self::blockHead($e((string) ($definition['x-tool-title'] ?? 'Tools'))));
+            self::tool($definition);
+        }
         self::closeTable();
-        // the tool of the whole package (relay: the hub) below the table
-        self::tool($definition);
     }
 
     /**
@@ -503,7 +520,7 @@ final class EnvironmentForm
      * @param array<string, mixed> $node
      * @param list<string>         $path
      */
-    private static function aside(string $package, array $node, array $path, bool $entry = false): string
+    private static function aside(string $package, array $node, array $path, bool $entry = false, bool $withLabel = false): string
     {
         $e = static fn($value): string => htmlspecialchars((string) $value, ENT_QUOTES);
         $v = self::$view;
@@ -511,12 +528,12 @@ final class EnvironmentForm
         $out = '';
         if ($optional) {
             $active = Explain::active(Explain::definition($package), $v['layers'], $path, $package);
-            $out .= '<span class="envNote">' . ($active ? 'optional, set up' : 'optional, not set up: its defaults apply once a value is entered') . '</span>';
+            $out .= '<span class="envNote">' . ($active ? 'Configured' : 'Not configured') . '</span>';
         }
         $removable = ($optional || $entry && !EnvironmentFile::requiredEntry($package, $path))
             && self::writable() && (Explain::has((array) $v['layers']['local'], [$package, ...$path]) || Explain::has((array) $v['layers']['project'], [$package, ...$path]));
         if ($removable) {
-            $out .= '<button type="button" class="button transparent" data-on_click="userConfirm" data-action="removeBlock" data-confirm="Remove ' . $e(self::keyPath($package, $path)) . '?" data-file="' . $e($v['file']) . '" data-package="' . $e($package) . '" data-path="' . $e(implode('.', $path)) . '"><i class="cmsIcon cmsIcon-trash"></i>Remove</button>';
+            $out .= '<button type="button" class="button transparent' . ($withLabel ? '' : ' icononly') . '" aria-label="Remove ' . $e((string) ($node['title'] ?? end($path)) . ($path === [] ? ' configuration' : '')) . '" title="Remove ' . $e((string) ($node['title'] ?? end($path)) . ($path === [] ? ' configuration' : '')) . '" data-on_click="userConfirm" data-action="removeBlock" data-confirm="Remove ' . $e(self::keyPath($package, $path)) . '?" data-file="' . $e($v['file']) . '" data-package="' . $e($package) . '" data-path="' . $e(implode('.', $path)) . '"><i class="cmsIcon cmsIcon-trash" aria-hidden="true"></i>' . ($withLabel ? '<span>Remove ' . $e(strtolower((string) ($node['title'] ?? 'entry'))) . '</span>' : '') . '</button>';
         }
         return $out;
     }
@@ -634,7 +651,7 @@ final class EnvironmentForm
      *
      * @param list<string> $path
      */
-    private static function node(string $package, array $node, array $path): void
+    private static function node(string $package, array $node, array $path, string $aside = ''): void
     {
         $values = [];
         $blocks = [];
@@ -648,9 +665,9 @@ final class EnvironmentForm
         }
         $free = ($node['additionalProperties'] ?? false) === true;
         // a package has no loose values: they are its block General
-        $general = $path === [] && ($values !== [] || $free);
+        $general = $path === [] && ($values !== [] || $free || $aside !== '');
         if ($general) {
-            self::openBlock(1, self::blockHead('General'), '', $package . '.general');
+            self::openBlock(1, self::blockHead('General', $aside), '', $package . '.general');
         }
         foreach ($values as [$child, $at]) {
             self::row($package, $child, $at);
@@ -726,6 +743,10 @@ final class EnvironmentForm
         $e = static fn($value): string => htmlspecialchars((string) $value, ENT_QUOTES);
         $v = self::$view;
         $entry = $node['additionalProperties'];
+        if (($node['x-display'] ?? '') === 'table') {
+            self::entryTable($package, $node, $path);
+            return;
+        }
         foreach (self::names($package, $node, $path) as $name) {
             $at = [...$path, $name];
             self::block($package, $entry, $at, ($entry['title'] ?? 'Entry') . ': ' . $name, self::aside($package, $entry, $at, true), ' is-entry');
@@ -741,6 +762,64 @@ final class EnvironmentForm
         echo '<tr class="envAdd"><td class="envLabel"><span>' . $e('New ' . strtolower($title)) . ($hint !== '' ? '<small>' . $e($hint) . '</small>' : '') . '</span></td>'
             . '<td class="envControl"><input name="name" aria-label="' . $e('Name of the new ' . strtolower($title)) . '" pattern="' . $e(trim($pattern, '^$')) . '" autocomplete="off"></td><td class="envOrigin"></td>'
             . '<td class="envActions"><button type="button" class="button" data-on_click="addEntry" data-file="' . $e($v['file']) . '" data-package="' . $e($package) . '" data-path="' . $e(implode('.', $path)) . '"><i class="cmsIcon cmsIcon-plus"></i>Add</button></td></tr>';
+    }
+
+    /** Compact schema maps use exactly the same field renderer and layer/reset rules. */
+    private static function entryTable(string $package, array $node, array $path): void
+    {
+        $e = static fn($v): string => htmlspecialchars((string) $v, ENT_QUOTES);
+        $entry = $node['additionalProperties'];
+        $fields = array_filter($entry['properties'] ?? [], Explain::isValue(...));
+        $flags = !empty($node['x-flags']);
+        $orderable = !empty($node['x-orderable']);
+        $file = array_any($fields, static fn(array $f): bool => ($f['x-file'] ?? '') === 'project') ? EnvironmentFile::PROJECT : EnvironmentFile::LOCAL;
+        $base = ' data-file="' . $e($file) . '" data-package="' . $e($package) . '" data-path="' . $e(implode('.', $path)) . '"';
+        self::rows();
+        echo '<tr class="envWideRow envEntries"><td colspan="4"><div class="envWide"><div class="tableScroll"><table class="envEntryTable"><thead><tr><th></th>';
+        echo '<th>' . $e($flags ? 'Flag' : ($entry['title'] ?? 'Entry')) . '</th>';
+        foreach ($fields as $key => $field) echo '<th>' . $e($field['title'] ?? self::label($key)) . '</th>';
+        echo '<th data-table-mobile-only>Actions</th><th></th></tr></thead><tbody>';
+        foreach (self::names($package, $node, $path) as $name) {
+            $at = [...$path, $name];
+            $values = Tree::get((array) EnvironmentFile::effective($package), $at) ?? [];
+            $code = trim((string) ($values['code'] ?? '')) ?: $name;
+            $label = (string) ($values['label'] ?? $name);
+            $data = $base . ' data-key="' . $e($name) . '"';
+            echo '<tr class="' . self::foldClass(self::keyPath($package, $at)) . '" data-fold="' . $e(self::keyPath($package, $at)) . '" data-entry="' . $e($name) . '"><td class="pageSettingDrag">';
+            if ($orderable && self::writable()) {
+                echo '<i class="cmsIcon cmsIcon-grip-dots-vertical" title="Drag to reorder: ' . $e($label) . '" aria-label="Drag to reorder: ' . $e($label) . '" data-drag_type="setting"' . $data . '></i>';
+                echo '<div class="sort v insertBefore" data-drop_accept="setting" data-on_drop="moveEntryBefore"' . $data . '></div><div class="sort v insertAfter" data-drop_accept="setting" data-on_drop="moveEntryAfter"' . $data . '></div>';
+            }
+            echo '</td>';
+            echo '<td class="envEntryKey" data-table-subject><div class="envEntryHeading"><span class="envEntryName">' . $e($flags ? $label : $name) . '</span>';
+            if ($flags) {
+                echo '<span class="envEntryFlag" data-table-mobile-only>' . LanguageFlags::html($code) . '</span><div class="envEntryDesktopFlag" data-table-desktop-only>';
+                LanguageFlags::preview($code, $label, $name);
+                LanguageFlags::control($code, $label, $name, ['package'=>$package]);
+                echo '</div>';
+            }
+            echo '</div></td>';
+            foreach ($fields as $key => $field) {
+                $field['title'] = ($field['title'] ?? self::label($key)) . ': ' . $name;
+                self::row($package, $field, [...$at, $key], true);
+            }
+            echo '<td class="envEntryMobileTools" data-table-mobile-only><div class="languageRowActions">';
+            if ($flags) LanguageFlags::control($code, $label, $name . '-mobile', ['package'=>$package], true);
+            echo str_replace('<button ', '<button data-focus-id="env-remove-mobile-' . $e(self::keyPath($package, $at)) . '" ', self::aside($package, $entry, $at, true, true));
+            echo '</div></td><td class="icons"><div class="languageRowActions" data-table-desktop-only>';
+            echo self::aside($package, $entry, $at, true) . '</div></td></tr>';
+        }
+        $pattern = (string) ($node['propertyNames']['pattern'] ?? '');
+        $title = strtolower((string) ($entry['title'] ?? 'entry'));
+        if ($pattern !== '' && self::writable()) {
+            $inputId = 'env-add-' . self::hintId($package, implode('.', $path));
+            echo '<tr class="envAdd"><td data-table-inline data-table-subject colspan="' . (count($fields) + 4) . '"><div class="envEntryAdd"><label for="' . $e($inputId) . '">New ' . $e($title) . '</label><input id="' . $e($inputId) . '" aria-label="Name of the new ' . $e($title) . '" name="name" pattern="' . $e(trim($pattern, '^$')) . '" placeholder="' . $e($flags ? 'de, en, fr …' : ($node['propertyNames']['description'] ?? '')) . '" autocomplete="off"><button type="button" class="button" data-on_click="addEntry"' . $base . '><i class="cmsIcon cmsIcon-plus" aria-hidden="true"></i>Add</button></div></td></tr>';
+        }
+        echo '</tbody></table></div>';
+        $hint = 'Drag rows to change the order on the website.';
+        if ($flags) $hint .= ' Project flags replace the bundled defaults. SVG, up to 128 KB. <a class="cmsExternalLink" href="' . $e(LanguageFlags::SOURCE) . '" target="_blank" rel="noopener noreferrer">Download flags<i class="cmsIcon cmsIcon-arrow-up-right-from-square" aria-hidden="true"></i></a>';
+        echo ToolView::hint($hint, 'envEntryHint');
+        echo '</div></td></tr>';
     }
 
     /**
@@ -778,7 +857,7 @@ final class EnvironmentForm
      * @param array<string, mixed> $field
      * @param list<string>         $path
      */
-    private static function row(string $package, array $field, array $path): void
+    private static function row(string $package, array $field, array $path, bool $compact = false): void
     {
         $e = static fn($value): string => htmlspecialchars((string) $value, ENT_QUOTES);
         $v = self::$view;
@@ -798,12 +877,16 @@ final class EnvironmentForm
         $own = is_array($v['layers'][$layer] ?? null) && Explain::has($v['layers'][$layer], $keys);
         $below = Explain::below($value['stack'], $layer);
 
-        self::rows();
-        echo '<tr' . (count($path) > 1 ? ' data-group="' . $e($path[count($path) - 2]) . '"' : '') . ' data-key="' . $e($key) . '"' . self::depthAttr() . ($target === null ? ' class="is-readonly"' : '') . '>';
-        $title = (string) ($field['title'] ?? self::label($key));
-        // one line: a label too long for its column ends in an ellipsis, the marks stay
-        echo '<td class="envLabel"><span><span class="envLabelText" title="' . $e($title) . '">' . $e($title) . '</span>' . self::info($field, self::definition($package, $path), self::keyPath($package, $path)) . self::places($package, $path, $secret) . self::backup($field);
-        echo '</span></td><td class="envControl">';
+        if ($compact) {
+            echo '<td class="envControl envEntryCell"><div class="envCellValue">';
+        } else {
+            self::rows();
+            echo '<tr' . (count($path) > 1 ? ' data-group="' . $e($path[count($path) - 2]) . '"' : '') . ' data-key="' . $e($key) . '"' . self::depthAttr() . ($target === null ? ' class="is-readonly"' : '') . '>';
+            $title = (string) ($field['title'] ?? self::label($key));
+            // one line: a label too long for its column ends in an ellipsis, the marks stay
+            echo '<td class="envLabel"><span><span class="envLabelText" title="' . $e($title) . '">' . $e($title) . '</span>' . self::info($field, self::definition($package, $path), self::keyPath($package, $path)) . self::places($package, $path, $secret) . self::backup($field);
+            echo '</span></td><td class="envControl" data-table-summary>';
+        }
         $isSet = false;
         if ($secret) {
             $isSet = (string) $value['value'] !== '' && $value['source'] !== 'none';
@@ -817,7 +900,10 @@ final class EnvironmentForm
         } else {
             self::control($target, $package, $dotted, $field, $own ? Tree::get((array) $v['layers'][$layer], $keys) : null, $own, $below, $value);
         }
-        echo '</td><td class="envOrigin">';
+        if (!empty($field['x-hint'])) {
+            echo '<small class="envHint" id="' . self::hintId($package, $dotted) . '">' . $e($field['x-hint']) . '</small>';
+        }
+        echo $compact ? '<div class="envCellMeta"><span class="envOrigin">' : '</td><td class="envOrigin">';
         if ($secret) {
             echo self::chip($v['project'] ? 'local' : ($isSet ? $value['source'] : 'none'));
         } else {
@@ -842,12 +928,17 @@ final class EnvironmentForm
         } elseif ($mandatory === 'generate') {
             echo '<small class="envNote">made when it is needed</small>';
         }
-        echo '</td><td class="envActions">';
+        echo $compact ? '</span><span class="envActions">' : '</td><td class="envActions">';
         // a required value with nothing below it cannot be emptied: the installation would lose its name
         if ($own && !$secret && !(($field['x-mandatory'] ?? '') === 'input' && $below['source'] === 'none')) {
-            echo '<button type="button" class="button transparent" data-on_click="resetValue" data-file="' . $e($target) . '" data-package="' . $e($package) . '" data-path="' . $e($dotted) . '" title="' . $e('Remove from ' . $target . ': ' . self::show($below) . ' applies then') . '"><i class="cmsIcon cmsIcon-arrow-rotate-left"></i><span>' . $e(self::show($below)) . '</span></button>';
+            echo '<button type="button" class="button transparent" data-focus-id="env-reset-' . $e(self::keyPath($package, $path)) . '" data-on_click="resetValue" data-file="' . $e($target) . '" data-package="' . $e($package) . '" data-path="' . $e($dotted) . '" aria-label="' . $e('Reset ' . ($field['title'] ?? $dotted) . ': ' . self::show($below) . ' applies then') . '" title="' . $e('Remove from ' . $target . ': ' . self::show($below) . ' applies then') . '"><i class="cmsIcon cmsIcon-arrow-rotate-left"></i><span>' . $e(self::show($below)) . '</span></button>';
         }
-        echo '</td></tr>';
+        echo $compact ? '</span></div></div></td>' : '</td></tr>';
+    }
+
+    private static function hintId(string $package, string $path): string
+    {
+        return 'env-hint-' . preg_replace('/[^a-zA-Z0-9_-]+/', '-', $package . '.' . $path);
     }
 
     /**
@@ -864,6 +955,7 @@ final class EnvironmentForm
         $parts = explode('.', $path);
         $group = count($parts) > 1 ? $parts[count($parts) - 2] : '';
         $attrs = ' aria-label="' . $e((string) ($field['title'] ?? self::label($key))) . '" data-file="' . $e($target) . '" data-group="' . $e($group) . '" data-key="' . $e($key) . '" data-package="' . $e($package) . '" data-path="' . $e($path) . '" name="value" autocomplete="off"';
+        if (!empty($field['x-hint'])) $attrs .= ' aria-describedby="' . self::hintId($package, $path) . '"';
         $types = (array) ($field['type'] ?? 'string');
         if (in_array('boolean', $types, true) && !empty($field['x-computed'])) {
             // the code decides unless a file does: a switch could not say so
@@ -900,7 +992,11 @@ final class EnvironmentForm
         }
         $attrs .= ' placeholder="' . $e($below['source'] === 'none' ? '' : self::show($below)) . '"';
         $shown = is_array($own) ? implode(', ', array_map('strval', $own)) : (is_scalar($own) ? (string) $own : '');
-        echo '<input data-on_blur="save"' . $attrs . ' value="' . $e($has ? $shown : '') . '">';
+        if (!empty($field['x-multiline'])) {
+            echo '<textarea rows="4" data-on_blur="save"' . $attrs . '>' . $e($has ? $shown : '') . '</textarea>';
+        } else {
+            echo '<input data-on_blur="save"' . $attrs . ' value="' . $e($has ? $shown : '') . '">';
+        }
     }
 
     /** What is under a package that nobody defines, at its end, struck through. */
@@ -1274,6 +1370,7 @@ final class EnvironmentForm
             'dropOrphan' => EnvironmentFile::dropOrphans((string) \http::dataset('name')),
             'addEntry' => EnvironmentFile::addEntry($package, $path, trim((string) \http::dataset('name'))),
             'removeBlock' => EnvironmentFile::removeBlock($package, $path),
+            'moveEntryBefore', 'moveEntryAfter' => self::moveEntry($package, $path, $file, $action === 'moveEntryAfter'),
             default => null,
         };
         if ($result === null || $action === '') {
@@ -1292,6 +1389,12 @@ final class EnvironmentForm
         });
         // a save changes where the value comes from: the row shows it again
         $panel->updateView('main');
+    }
+
+    private static function moveEntry(string $package, string $path, string $file, bool $after): bool
+    {
+        if ((string) \http::dragdata('package') !== $package || (string) \http::dragdata('path') !== $path || (string) \http::dragdata('file') !== $file) return false;
+        return EnvironmentFile::moveEntry($package, $path, (string) \http::dragdata('key'), (string) \http::dataset('key'), $after);
     }
 
     private static function posted(): string

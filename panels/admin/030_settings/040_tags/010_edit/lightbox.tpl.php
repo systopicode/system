@@ -26,14 +26,14 @@ $this->loadJS();
 				</ul>
 			</header>
 			<main>
-				<div class="tagAssignmentsWrap">
+				<div class="tagAssignmentsWrap"><h2>Used on</h2>
 					<?php if ($pages === []) { ?>
 						<p class="tagAssignmentsEmpty">Nothing is assigned to this tag.</p>
 					<?php } else { ?>
 						<ul class="tagAssignments">
 							<?php foreach ($pages as $page) { ?>
 								<li>
-									<span class="tagAssignmentLabel"><?= htmlspecialchars($page['label']) ?></span>
+									<span class="tagAssignmentLabel"><span><?= htmlspecialchars($page['label']) ?></span><small class="muted"><?= htmlspecialchars($page['context']) ?></small></span>
 									<span class="tagAssignmentActions">
 										<a class="ajax button transparent icononly" data-focus-id="tag-<?= (int) $tag->id ?>-open-<?= (int) $page['nodeId'] ?>" href="<?= htmlspecialchars($page['href']) ?>" <?= empty($page['media']) ? 'target="_blank" rel="noopener"' : '' ?> title="<?= !empty($page['media']) ? 'View' : 'Open in new window' ?>" aria-label="<?= !empty($page['media']) ? 'View' : 'Open in new window' ?>">
 											<i class="cmsIcon <?= !empty($page['media']) ? 'cmsIcon-eye' : 'cmsIcon-arrow-up-right-from-square' ?>"></i>

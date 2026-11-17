@@ -811,10 +811,10 @@ details[open] > summary > .summaryToggle i { transform:rotate(180deg); }
 }
 .cms .tableWidget > tr:last-child > :first-child { border-bottom-left-radius: var(--cmsRadiusLg); }
 .cms .tableWidget > tr:last-child > :last-child { border-bottom-right-radius: var(--cmsRadiusLg); }
-.cms .tableWidgets table.tableWidgetGrid :is(.tableWidgetColumns, .tableWidget > tr:not(.tableWidgetTitle, .tableWidgetGap)) > :first-child {
+.cms .tableWidgets:not(.stacked) table.tableWidgetGrid :is(.tableWidgetColumns, .tableWidget > tr:not(.tableWidgetTitle, .tableWidgetGap)) > :first-child {
     padding-inline-start: var(--cmsCardPadding);
 }
-.cms .tableWidgets table.tableWidgetGrid :is(.tableWidgetColumns, .tableWidget > tr:not(.tableWidgetTitle, .tableWidgetGap)) > :last-child {
+.cms .tableWidgets:not(.stacked) table.tableWidgetGrid :is(.tableWidgetColumns, .tableWidget > tr:not(.tableWidgetTitle, .tableWidgetGap)) > :last-child {
     padding-inline-end: var(--cmsCardPadding);
 }
 .cms .tableWidgets.stacked .tableWidgetColumns { display: none; }
@@ -985,3 +985,46 @@ body.cms .tableWidgets.stacked.is-foldable > table.tableWidgetGrid > tbody.table
 .cmsChoice b { line-height:1.3; }
 .cmsChoice small { color:var(--cmsMuted); white-space:normal; overflow-wrap:anywhere; }
 .cmsChoice > i:last-child { flex:0 0 auto; margin-left:auto; color:var(--cmsMuted); }
+
+/* Information lines share icon placement and have one spacing owner. */
+.cms p.cmsHint { display:flex; align-items:center; gap:.5rem; max-width:none; margin:0; color:var(--cmsMuted); font-size:.8125rem; line-height:1.5; }
+.cms .cmsHint > i { flex:0 0 auto; margin:0; line-height:1; }
+.cms .cmsHint > span { min-width:0; }
+
+/* UI review: keep identity, context and actions on predictable edges. */
+body.cms .widget > header :is(h1,h2) { white-space:normal; overflow:visible; text-overflow:clip; }
+.cms .widget > header h2 { flex:1 1 9rem; }
+.cms .widget > header > .logFilterMenu { flex:0 0 auto; margin:0; }
+.cms .logRetention { margin:0 0 1rem; font-size:.875rem; color:var(--cmsMuted); }
+.cms .logRetention > summary { cursor:pointer; padding:.5rem 0; }
+.cms .addressIdentity { display:flex; flex-direction:column; gap:.25rem; }
+.cms .tagAssignmentLabel { display:flex; flex-direction:column; gap:.3rem; min-width:0; }
+.cms .tagAssignmentLabel > span { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.cms .tagAssignmentLabel > small { display:block; font-size:.75rem; font-weight:400; }
+.cms .envCheckValues { padding-inline-start:1.25rem; margin:.75rem 0; }
+.cms .envCheckValues li { margin:.4rem 0; overflow-wrap:anywhere; }
+.cms .licenseDocument p { line-height:1.6; }
+@media(min-width:768px) {
+ body.cms > main > div.content .projectFiles .tableScroll:not(.stacked) table.projectRows td:nth-child(2) input { min-width:12rem; }
+ body.cms > main > div.content .projectFiles .tableScroll:not(.stacked) table.projectRows td:nth-child(3) input { min-width:10rem; }
+}
+
+/* User identity and permissions stay readable at every table width. */
+.cms .userList .roles { display:flex; flex-wrap:wrap; width:auto; max-width:13rem; }
+.cms .userList table { table-layout:fixed; width:100%; }
+.cms .userList td { overflow-wrap:anywhere; white-space:normal; min-width:0; }
+.cms .userList th:first-child { width:2rem; }
+.cms .userList th:last-child { width:8.5rem; }
+.cms .userListIdentity { min-width:0; max-width:100%; }
+.cms .userList .userListName { white-space:normal; overflow:visible; text-overflow:clip; overflow-wrap:anywhere; }
+@media(max-width:767px) {
+ .cms .userList .roles { max-width:100%; }
+ .cms .userList .tableScroll.stacked tr:not(.is-open) .userSecondaryAction { display:none; }
+ .cms .userList .tableScroll.stacked tr.is-open > td.icons { flex-basis:100%; justify-content:flex-end; }
+}
+
+@media(min-width:768px) {
+ .cms .userList th:nth-last-child(2) { width:28%; }
+ .cms .userList th:nth-child(2) { width:17%; }
+ .cms .userList .roles { max-width:none; }
+}

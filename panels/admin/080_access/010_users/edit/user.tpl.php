@@ -168,7 +168,7 @@ if ($heading === '') {
 					<div class="cmsBoxTitles"><h2>Sign-ins</h2><p class="cmsBoxLead">Sign-ins, failed attempts and sign-outs. Newest first.</p></div>
 				</header>
 				<div class="cmsBoxBody">
-					<p class="cmsBoxLead">Entries older than <?= (int) \Systopic\System\Maintenance\LogRetention::SIGN_IN_DAYS ?> days are eligible for automatic cleanup during site visits or scheduled runs. The retention period is a fixed system rule, not a project setting. Delete entries earlier when their security purpose ends. Review retention regularly and use Clean User Log when these entries are no longer required; include retained copies and backups in that process.</p>
+					<details class="logRetention"><summary>Retention and cleanup</summary><p class="cmsBoxLead">Entries older than <?= (int) \Systopic\System\Maintenance\LogRetention::SIGN_IN_DAYS ?> days are eligible for automatic cleanup during site visits or scheduled runs. The retention period is a fixed system rule, not a project setting. Delete entries earlier when their security purpose ends. Review retention regularly and use Clean User Log when these entries are no longer required; include retained copies and backups in that process.</p></details>
 					<?php if ($signIns === []) { ?>
 						<p class="profileEmpty">No sign-ins logged yet.</p>
 					<?php } else { ?>

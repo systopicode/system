@@ -806,7 +806,7 @@ body.cms > .cmsMobileHeader > .cmsMobileMenuClose, body.cms > .cmsMobileHeader >
 	body.cms > main > div.content[data-cms-sheet="1"] .flexColumn > .widget { margin: 0.75rem; }
 	body.cms > main > div.content .projectFiles { padding: 0.35rem 0 0.25rem; }
 	body.cms > main > div.content .projectFiles h1 { margin: 0 0 0.2rem; }
-	body.cms > main > div.content .projectFiles .tagsHint { margin: 0 0 0.35rem; }
+	body.cms > main > div.content .projectFiles .tagsHint:not(.cmsHint) { margin: 0 0 0.35rem; }
 	body.cms > main > div.content .projectFiles .widget {
 		margin: 0 0 0.75rem; background: var(--cmsCanvas); border: 1px solid var(--cmsLine); border-radius: var(--cmsRadiusLg); box-shadow: var(--cmsShadow); overflow:hidden;
 	}

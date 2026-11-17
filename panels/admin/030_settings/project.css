@@ -607,10 +607,8 @@ body:has(> .projectTemplatesMenu.is-sheet)::after{
 .envOrigins code { overflow-wrap: anywhere; }
 .envOrigins li > div small { display: block; margin-top: .25rem; }
 .envOrigins .button { flex: 0 0 auto; margin: 0; }
-.envHubRestart { display: flex; align-items: start; gap: .5rem; }
-.envHubRestart > i { margin-top: .2rem; }
-
-.envHubRestart > i { flex: 0 0 1rem; text-align: center; line-height: 1.5; margin-top: 0; }
+.envHubRestart { display:flex; align-items:center; gap:.5rem; }
+.envHubRestart > i { flex:0 0 auto; margin:0; }
 .envHubAddressHeader { display: flex; align-items: center; flex-wrap: wrap; gap: .5rem; margin-bottom: .5rem; }
 .envHubAddressHeader h3 { flex: 1; margin: 0; }
 .envHubAddressHeader .button { margin: 0; }
@@ -726,6 +724,64 @@ section.cms:has(> .envSettings) { display:flex; flex-direction:column; }
 .envSettings .envHeading h1 { flex:1 0 auto; margin:0; }
 .envControls { display:flex; flex-wrap:wrap; align-items:center; gap:.25rem; }
 .envControls .button { margin:0; }
+.envSettings .envControl textarea { resize:vertical; min-height:6rem; }
+.envSettings .envEntryTable .envCellMeta { display:flex; flex-wrap:nowrap; min-width:max-content; align-items:center; justify-content:flex-start; gap:.65rem; margin:0; }
+.envSettings .envEntryTable .envCellMeta .envActions { margin:0; }
+.envSettings table.envRows table.envEntryTable td.envControl { min-width:0; }
+.envSettings table.envRows table.envEntryTable td.envControl :is(input:not([type="checkbox"]), select) { min-width:5rem; }
+.envSettings table.envRows table.envEntryTable td.envControl input[data-key="code"] { min-width:4rem; }
+.envSettings .envEntryTable .envEntryKey { white-space:nowrap; font-weight:600; }
+.envSettings .envEntryHeading { display:flex; flex-wrap:wrap; align-items:center; gap:.25rem; }
+.envSettings .envEntryHeading > span { white-space:nowrap; flex-shrink:0; }
+.envSettings .envEntryDesktopFlag > .languageFlagPreview { order:-1; margin:0; padding:0; flex-shrink:0; min-width:var(--cmsControl); width:var(--cmsControl); }
+.envSettings .envEntryTable .envCellMeta .button span { display:none; }
+.envSettings .envEntryTable .envCellMeta .button { padding-inline:.3rem; }
+.envSettings .envEntryHeading .languageFlagControl { margin:0; }
+.envSettings .envEntryDesktopFlag { display:flex; align-items:center; gap:.25rem; }
+@media (min-width:768px) {
+    .envSettings .envEntryHeading:has(.envEntryDesktopFlag) > .envEntryName { display:none; }
+    .envSettings .envEntryTable td.envEntryKey { width:1%; min-width:5.25rem; }
+    .envSettings .envEntryHeading { flex-wrap:nowrap; }
+}
+@media (max-width:767px) {
+    .envSettings .envEntryHeading { flex-wrap:nowrap; gap:.5rem; }
+    .envSettings .envEntryHeading > .envEntryName { order:1; flex:1; white-space:normal; }
+    .envSettings .envEntryHeading > .envEntryFlag { order:0; margin:0; }
+    .envSettings .envEntryMobileTools { margin:0; }
+    .envSettings .envEntryMobileTools .languageRowActions { justify-content:flex-start; gap:.75rem; }
+    /* Opening details preserves the same row inset as the closed header. */
+    body.cms .envSettings .tableScroll.stacked.is-foldable > table.envEntryTable > tbody > tr { padding-inline:var(--cmsCardPadding); }
+}
+/* The map table fills its existing Config card; no additional widget or inset. */
+.cms .envSettings .tableWidgets table.envRows.tableWidgetGrid > tbody.tableWidget > tr.envEntries > td { padding:0; background:var(--cmsCanvas); }
+body.cms .envSettings .tableWidgets.stacked.is-foldable > table.tableWidgetGrid > tbody.tableWidget > tr.envEntries { padding:0; }
+.envSettings .envEntryTable { width:100%; margin:0; }
+.envSettings .envCellValue { display:flex; flex-wrap:wrap; align-items:center; gap:.65rem; }
+.envSettings .envCellValue > :is(input,select) { flex:1 1 0; min-width:0; }
+.envSettings .envCellValue > .envCellMeta { flex:0 0 auto; }
+.envSettings .envEntryTable .envAdd > td { padding-inline:var(--cmsCardPadding); }
+.envSettings .envEntryTable .envEntryAdd { display:flex; flex-wrap:wrap; align-items:center; gap:.5rem .75rem; padding:.25rem 0; }
+.envSettings .envEntryAdd > label { margin:0; font-weight:600; }
+.envSettings .envEntryAdd > input { flex:1 1 7rem; width:auto; max-width:14rem; min-width:0; margin:0; }
+.envSettings .envEntryAdd > .button { margin:0; }
+.envSettings .envEntries .envEntryHint { padding:.75rem var(--cmsCardPadding); border-top:1px solid var(--cmsLine); }
+@media (max-width:767px) {
+    /* One label above each field; its source/reset stays together beside the control. */
+    body.cms .envSettings .tableScroll.stacked.is-foldable > table.envEntryTable > tbody > tr.is-open > td.envEntryCell[data-label],
+    body.cms .envSettings .tableScroll.stacked.is-foldable > table.envEntryTable > tbody > tr.is-open > td.envEntryMobileTools[data-label] {
+        display:grid; grid-template-columns:minmax(0,1fr); gap:.4rem;
+        padding:.6rem 0; border-bottom:1px solid var(--cmsLine); align-items:center;
+    }
+    .envSettings .envEntryTable .envCellValue { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:.65rem; }
+    .envSettings .envEntryTable .envCellValue:has(> .projectSwitch) { display:flex; flex-wrap:nowrap; }
+    .envSettings .envEntryTable .envCellMeta { min-width:0; }
+    .envSettings .envEntryTable .envEntryMobileTools .languageRowActions { flex-wrap:wrap; }
+    .envSettings .envEntryTable .envEntryMobileTools .languageFlagControl { flex-wrap:wrap; gap:.75rem; }
+    .envSettings .envEntryTable .envEntryAdd { gap:.5rem; }
+    .envSettings .envEntryAdd > label { flex-basis:100%; }
+    .envSettings .envEntryAdd > input { max-width:none; }
+}
+
 .envConfigBody { padding-block-end:1rem; }
 .cms .envSettings .envTable > table.envRows { width:100%; table-layout:auto; }
 .envSettings table.envRows td { vertical-align:middle; }
@@ -735,7 +791,7 @@ section.cms:has(> .envSettings) { display:flex; flex-direction:column; }
 .envSettings table.envRows td.envLabel .envLabelText { min-width:0; overflow:hidden; text-overflow:ellipsis; }
 .envSettings table.envRows td.envLabel > span:has(> .envLabelText) > :not(.envLabelText) { flex:0 0 auto; }
 .envSettings table.envRows td.envControl { min-width:8rem; }
-.envSettings table.envRows td.envControl :is(input:not([type="checkbox"]), select) { width:100%; min-width:8rem; margin:0; box-sizing:border-box; }
+.envSettings table.envRows td.envControl :is(input:not([type="checkbox"]), select, textarea) { width:100%; min-width:8rem; margin:0; box-sizing:border-box; }
 .envSettings table.envRows td.envOrigin { white-space:nowrap; }
 .envSettings table.envRows td.envOrigin .envNote { white-space:normal; }
 /* no % width: in a table as wide as its content it would stretch the table */
@@ -752,8 +808,9 @@ section.cms:has(> .envSettings) { display:flex; flex-direction:column; }
 .cms .envSettings .tableWidgets table.envRows.tableWidgetGrid tbody.tableWidget > tr:is([data-depth="4"], [data-depth="5"]):not(.envSub) > :first-child { padding-inline-start:calc(var(--cmsCardPadding) + 2.25rem); }
 /* a row over all columns (a tool, a package not installed here): as wide as
    the table, it does not widen it; no hover colour over a whole tool */
-.envSettings .envWide { width:0; min-width:100%; box-sizing:border-box; }
-.cms .envSettings .tableWidgets:not(.stacked) table.envRows.tableWidgetGrid tbody.tableWidget > tr.envWideRow > td { background:var(--cmsCanvas); padding-block:.75rem; }
+.envSettings .envWide { width:0; min-width:100%; box-sizing:border-box; font-weight:400; }
+.cms .envSettings .tableWidgets:not(.stacked) table.envRows.tableWidgetGrid tbody.tableWidget > tr.envWideRow:not(.envEntries) > td { background:var(--cmsCanvas); padding-block:.75rem; }
+.cms .envSettings .tableWidgets table.envRows.tableWidgetGrid > tbody.tableWidget > tr.envWideRow > td { box-shadow:none; }
 /* a hint wraps at the width of the table, it does not widen it */
 .envSettings tr.envHead .envHint { width:0; min-width:100%; }
 .envSettings .envGroupHead { display:flex; flex-wrap:wrap; align-items:center; gap:.25rem .75rem; }
@@ -847,12 +904,22 @@ body .envTip small { display:block; margin-top:.3rem; color:inherit; opacity:.75
 .envLegend ul { display:grid; grid-template-columns:max-content minmax(0, 1fr); gap:.3rem .5rem; align-items:center; margin:0; padding:0; list-style:none; }
 .envLegend li { display:grid; grid-template-columns:subgrid; grid-column:span 2; align-items:center; min-block-size:1.2rem; }
 .envLegend li > :first-child { justify-self:start; margin:0; }
+.envLegend .envChip { background:var(--cmsCanvas); }
 .envLegend li > :is(.cmsIcon, .envInfo) { inline-size:1rem; text-align:center; }
+/* Fill only the outline's interior, without a separate disk behind the symbol. */
+.envLegend .cmsIcon { isolation:isolate; }
+.envLegend .cmsIcon::after { content:""; position:absolute; left:50%; top:50%; transform:translate(-50%, -50%); background:var(--cmsCanvas); z-index:-1; }
+.envLegend .envInfo .cmsIcon::after { inline-size:.9em; block-size:.9em; border-radius:50%; }
+.envLegend > div li > .cmsIcon-database::after { inline-size:.8em; block-size:.9em; border-radius:50% / 17%; }
 
-@media (max-width: 1024px) {
+@media (max-width: 1024px), (orientation: portrait) and (max-width: 1400px) {
     body.cms.settings > main > .content > .flexRow:has(.envSettings) { display:flex; flex-direction:column; }
     body.cms.settings > main > .content > .flexRow > .flexColumn > section.cms:has(> .envSettings) { flex:1 0 auto; }
+    .envSettings { padding-block-start:0; }
+    .envSettings .envHeading { margin-block-end:.5rem; }
     .envSettings .envHeading h1 { flex-basis:100%; margin:0; }
+    .envSettings > .tagsHint { margin-block:0 .75rem; }
+
 }
 
 /* the (i) of a heading must not take its size: a deeper line pushed the title up */
@@ -862,4 +929,26 @@ body .envTip small { display:block; margin-top:.3rem; color:inherit; opacity:.75
     /* folded into cards: the head stays a full row on top */
     .envSettings .tableScroll.stacked tr.envHead { display:block; padding:0; }
     .envSettings .tableScroll.stacked tr.envHead > th { display:block; width:auto; }
+}
+
+/* Subheadings use the desktop strip on phones as well. */
+@media (max-width:767px) {
+    body.cms .envSettings .tableWidgets.stacked.is-foldable > table.tableWidgetGrid > tbody.tableWidget > tr.envSub { display:block; min-height:0; padding:0; border:0; }
+    .cms .envSettings .tableWidgets.stacked table.envRows.tableWidgetGrid tbody.tableWidget > tr.envSub > th { display:block; width:100%; box-sizing:border-box; border-inline:0; border-bottom:1px solid var(--cmsLine); }
+}
+@media (max-width:767px) {
+    .envSettings .tableInlineSwitch .envLabel > span:has(> .envLabelText) { max-width:100%; white-space:normal; }
+    .envSettings .tableInlineSwitch .envLabelText { white-space:normal; overflow:visible; text-overflow:clip; }
+}
+
+/* Config help has its own hit area; source links stay on the badges on phones. */
+.cms .envSettings :is(.envLabel,.envGroupHead) a.envInfo { display:inline-flex; align-items:center; justify-content:center; min-width:2rem; min-height:2rem; margin-inline:.25rem; flex-shrink:0; }
+.envSettings .envEntryTable .envCellValue { display:grid; grid-template-columns:minmax(0,1fr); align-content:start; gap:.5rem; }
+.envSettings .envEntryTable .envCellMeta { justify-content:flex-start; }
+.envSettings .envEntryTable .envCellValue > .projectSwitch { justify-self:start; }
+@media(max-width:767px) {
+ .cms .envSettings .envLabel a.envPlace { display:none; }
+ .cms .envSettings .envLabel > span:has(>.envLabelText) { flex-wrap:wrap; white-space:normal; }
+ .envSettings .envEntryTable .envCellValue { grid-template-columns:minmax(0,1fr); }
+ .envSettings .envEntryTable .envCellValue:has(>.projectSwitch) { display:flex; flex-wrap:wrap; }
 }

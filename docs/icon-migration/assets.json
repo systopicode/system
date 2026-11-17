@@ -528,6 +528,22 @@
       "changes": "regular stroke 2 retained, removed provider classes"
     },
     {
+      "path": "public/icons/tabler/chevrons-down.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "7669c2cd9e4e10b3501319421ccf1427a39e5b79f47e290e7ae6ca3bb0d3b413",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
+      "path": "public/icons/tabler/chevrons-up.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "876599ac207d57e407d2dc437254ae25a8182ce8d233f1e329edb6e10543bb44",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
       "path": "public/icons/tabler/circle-check.svg",
       "provider": "tabler",
       "version": "3.50.0",

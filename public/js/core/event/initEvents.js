@@ -1,4 +1,18 @@
 /* global sys,c,p,t,l,onInitEvents,updateOctalSelector */
+// Single-line autosave fields commit through their existing change/blur handlers.
+// A real blur also keeps validation/key-rename guards and native change ordering.
+document.addEventListener('keydown', function (event) {
+    if (event.key !== 'Enter' || event.defaultPrevented || event.isComposing || event.keyCode === 229
+        || event.repeat || event.shiftKey || event.ctrlKey || event.altKey || event.metaKey) return;
+    var field = event.target;
+    if (field.tagName !== 'INPUT' || field.disabled || field.readOnly
+        || !['text', 'search', 'url', 'tel', 'email', 'password', 'number', 'date', 'datetime-local', 'time', 'month', 'week'].includes(field.type)
+        || field.closest('form[target]')
+        || !field.closest('[data-on_blur], [data-on_change], .onchangesubmit')) return;
+    event.preventDefault(); // Never submit a surrounding form as well.
+    if (field.reportValidity()) field.blur();
+});
+
 /**
  * Binds the events of the elements in $set and below.
  * exclude: elements that are bound already and stay - the path a rebuild

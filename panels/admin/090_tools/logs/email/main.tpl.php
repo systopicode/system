@@ -9,8 +9,9 @@
 		<?php if (\Systopic\System\Auth\Session::isSuperuser()) { ?>
 		<button type="button" data-cms-action aria-label="Clear email log" data-on_click="userConfirm" data-action="clearLog" data-confirm="Delete this log file?" class="button" title="Clear"><i class="cmsIcon cmsIcon-broom"></i><span>Clear</span></button>
 		<?php } ?>
+	<?= \Systopic\System\Logs\Filters::controls() ?>
 	</header>
-    <?= \Systopic\System\Logs\Filters::controls() ?>
+
     <?php
     // Define EMAILLOGFILE constant if not already defined
     if (!defined('EMAILLOGFILE')) {
@@ -18,7 +19,7 @@
     }
     $logFile = EMAILLOGFILE;
     $output = @fs::file_get_contents($logFile);
-    
+
     if (empty($output)) {
 	?>
 	<main><p>The log is empty.</p></main>
@@ -49,10 +50,10 @@
 			foreach ($entries as $entry) {
 			    $lines = explode("\n", trim($entry));
 			    if (empty($lines)) continue;
-			    
+
 			    // Parse first line: [timestamp] Status: ... | From: ... | To: ... | Subject: ... | User: ...
 			    $headerLine = $lines[0];
-			    
+
 			    // Try to extract JSON data
 			    $jsonData = null;
 			    foreach ($lines as $line) {
@@ -62,40 +63,40 @@
 				    break;
 				}
 			    }
-			    
+
 			    // Extract timestamp
 			    preg_match('/\[([^\]]+)\]/', $headerLine, $timestampMatch);
 			    $timestamp = $timestampMatch[1] ?? '';
-			    
+
 			    // Extract status
 			    preg_match('/Status:\s*([^|]+)/', $headerLine, $statusMatch);
 			    $status = trim($statusMatch[1] ?? 'unknown');
-			    
+
 			    // Extract From
 			    preg_match('/From:\s*([^|]+)/', $headerLine, $fromMatch);
 			    $from = trim($fromMatch[1] ?? '');
-			    
+
 			    // Extract To
 			    preg_match('/To:\s*([^|]+)/', $headerLine, $toMatch);
 			    $to = trim($toMatch[1] ?? '');
-			    
+
 			    // Extract Subject
 			    preg_match('/Subject:\s*([^|]+)/', $headerLine, $subjectMatch);
 			    $subject = trim($subjectMatch[1] ?? '');
-			    
+
 			    // Extract User
 			    preg_match('/User:\s*(.+?)(?:\s*\||$)/', $headerLine, $userMatch);
 			    $user = trim($userMatch[1] ?? 'not logged in');
-			    
+
 			    // Extract Attachments
 			    preg_match('/Attachments:\s*([^|]+)/', $headerLine, $attachmentsMatch);
 			    $attachmentsStr = trim($attachmentsMatch[1] ?? '');
 			    $attachments = $jsonData['attachments'] ?? (!empty($attachmentsStr) ? explode(', ', $attachmentsStr) : []);
-			    
+
 			    // Extract Error if present
 			    preg_match('/Error:\s*(.+?)(?:\s*\||$)/', $headerLine, $errorMatch);
 			    $error = trim($errorMatch[1] ?? '');
-			    
+
 			    // Status badge color
 			    $statusClass = '';
 			    if ($status === 'success') {
@@ -103,7 +104,7 @@
 			    } elseif ($status === 'error' || $status === 'failed') {
 				$statusClass = 'red';
 			    }
-			    
+
 			    // Create unique ID for this entry
 			    $entryId = md5($timestamp . $from . $to . $subject . $entryIndex);
 			    $pill = ($status === 'error' || $status === 'failed') ? 'is-bad' : ($status === 'success' ? 'is-ok' : '');
@@ -116,10 +117,10 @@
 			    ?>
 			    <tr<?= \Systopic\System\Logs\Filters::attributes($row['timestamp'], $row['actor'], $row['status']) ?>>
 				<td><?= htmlspecialchars(($row['timestamp'] === '' ? '' : (new \DateTimeImmutable($row['timestamp']))->format(\Systopic\System\Sys\LocalTime::DATETIME_SECONDS))) ?></td>
-				<td><span class="logPill <?= $row['pill'] ?>"><?= htmlspecialchars($row['status']) ?></span></td>
+				<td data-table-summary><span class="logPill <?= $row['pill'] ?>"><?= htmlspecialchars($row['status']) ?></span></td>
 				<td><?= htmlspecialchars($row['to']) ?></td>
                 <td><?= \Systopic\System\Logs\Filters::userLink($row['actor']) ?></td>
-				<td><?= htmlspecialchars($row['subject']) ?></td>
+				<td data-table-summary><?= htmlspecialchars($row['subject']) ?></td>
 				<td class="icons">
 				    <ul>
 					<li>

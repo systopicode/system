@@ -462,7 +462,8 @@ function syncMobile() {
 	// does not keep the previous sheet's window.
 	// Modules without a pylon are ordinary content, never a detail sheet.
 	if (content && (root.classList.contains('backup') || root.classList.contains('user') || content.querySelector('.dashboard'))) {
-		content.removeAttribute('data-cms-sheet'); showSheet = false; openNow = false;
+		content.removeAttribute('data-cms-sheet'); showSheet = false;
+        if (!pendingHref || pendingHref === location.pathname + location.search) openNow = false;
 		content.querySelectorAll('[data-cms-close-content], .cmsMobileGrip').forEach(node => node.remove());
 	}
 	// Unfolding a branch must not bring up the empty page behind the submenu.
@@ -850,7 +851,7 @@ document.addEventListener('click', function (event) {
 		});
 	}
 	// Only a selection opens Edit; folds, rename, context actions and drags keep the tree.
-	var link = event.target.closest('main > .pylon nav a[href]:not([target]):not([download]), main > .content a.ajax[href]:not([target]):not([download]), .pageToolBox a[data-cms-open-sheet]');
+	var link = event.target.closest('main > .pylon nav a[href]:not([target]):not([download]), main > .content a[href]:not([target]):not([download]), .cmslightbox a[data-cms-open-sheet], .dashNotices a[href], .dashboard a[href]:not([target]):not([download]), .pageToolBox a[data-cms-open-sheet]');
 	if (link && !link.classList.contains('put') && !event.defaultPrevented && !root.classList.contains('dragging')) {
 		var url = new URL(link.href, location.href);
 		if (link.hasAttribute('data-cms-branch')) {

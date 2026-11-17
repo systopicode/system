@@ -4,7 +4,9 @@
  * its name until it is tapped. Desktop keeps the table.
  */
 sys.fitTables = function ($set) {
-	$set.findInSet('.tableScroll, .schemaScroll').each(function () {
+	// Retained ancestors lose rendered classes during a focused field update too.
+	// Fitting is idempotent; unlike event binding it must include those ancestors.
+	$set.find('.tableScroll, .schemaScroll').add($set.filter('.tableScroll, .schemaScroll')).each(function () {
 		sys.fitTables.fit(this);
 	});
 };
@@ -26,7 +28,7 @@ sys.fitTables.fit = function (box) {
 		sys.fitTables.known.set(box, true);
 		sys.fitTables.observer.observe(box);
 	}
-    if (!phone) return;
+    if (!phone) { box.querySelectorAll('.tableRowSummary').forEach(node => node.remove()); return; }
     if (box.matches('.schemaScroll')) {
         box.querySelectorAll('tbody.schemaCard > tr:not(.schemaCardHead,.schemaCardCols,.schemaCardNote)').forEach(function(row) {
             var cell=row.querySelector('td');
@@ -50,14 +52,35 @@ sys.fitTables.fit = function (box) {
 			if (cell.classList.contains('icons') || cell.querySelector('i[data-drag_type], .userStatus')) return;
 			cell.dataset.label = heads[index];
 		});
-        const scalarControl = table.matches('.scalars') && row.cells.length === 2 ? row.cells[1] : null;
-        if (scalarControl?.querySelector(':scope > .projectSwitch:only-child')) {
-            scalarControl.dataset.tableInline = '';
-            delete scalarControl.dataset.label;
+        // A single switch is directly operable, including its source/reset cells.
+        // Rows with several fields (for example a language) keep their details.
+        const switchControl = [...row.cells].find(cell => cell.querySelector(':scope > .projectSwitch:only-child'));
+        const inlineSwitch = !!switchControl && row.querySelectorAll('input[type="checkbox"]').length === 1
+            && !row.querySelector('input:not([type="checkbox"]), select, textarea');
+        row.classList.toggle('tableInlineSwitch', inlineSwitch);
+        if (inlineSwitch) {
+            [...row.cells].slice(1).forEach(cell => {
+                cell.dataset.tableInline = '';
+                delete cell.dataset.label;
+            });
+        }
+        // Only opt-in summaries expose values; never copy controls or secret values.
+        row.querySelectorAll(':scope > td > .tableRowSummary, :scope > td > * > .tableRowSummary').forEach(node => node.remove());
+        var subject = row.querySelector(':scope > [data-table-subject]') || [...row.cells].find(cell => !cell.querySelector('.userStatus, i[data-drag_type]'));
+        var summary = [...row.cells].filter(cell => cell.hasAttribute('data-table-summary')).map(cell => {
+            var control = cell.querySelector('input,select,textarea');
+            if (control?.matches('input[type=checkbox],input[type=radio]')) return '';
+            if (control?.type === 'password') return control.placeholder.startsWith('••') ? 'Set' : 'Not set';
+            if (control?.tagName === 'SELECT') return control.selectedOptions[0]?.textContent.trim();
+            return control ? (control.value.trim() || control.placeholder || 'Not set') : cell.textContent.trim();
+        }).filter(Boolean).join(' · ');
+        if (summary && subject) {
+            var preview = document.createElement('small'); preview.className='tableRowSummary'; preview.textContent=summary;
+            subject.append(preview);
         }
         // Keep native table semantics and provide a separate, named toggle.
         var hiddenCells = [...row.children].filter(function (cell) {
-            return cell.tagName === 'TD' && !cell.matches(':first-child, [data-table-inline], [data-table-desktop-only], :has(> .userStatus, > i[data-drag_type]), :has(> .userStatus, > i[data-drag_type]) + td, .icons, .projectRemove, .schemaApply');
+            return cell.tagName === 'TD' && !cell.matches(':first-child, [data-table-inline], [data-table-desktop-only], [data-table-preview-only], [data-table-subject], [data-table-heading], :has(> .userStatus, > i[data-drag_type]), :has(> .userStatus, > i[data-drag_type]) + td, .icons, .projectRemove, .schemaApply');
         });
         var heading = row.querySelector(':scope > [data-table-subject]') || [...row.children].find(function (cell) {
             return cell.tagName === 'TD' && !cell.querySelector('.userStatus, i[data-drag_type]');
@@ -126,4 +149,5 @@ document.addEventListener('click', function (event) {
     if (!toggle) return;
 	row.classList.toggle('is-open');
     toggle.setAttribute('aria-expanded', String(row.classList.contains('is-open')));
+    row.dispatchEvent(new CustomEvent('cms:tablefold', {bubbles:true}));
 });

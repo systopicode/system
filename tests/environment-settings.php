@@ -52,8 +52,21 @@ try {
     // values of the project
     check('a value of the project goes to config.json', EnvironmentFile::set('system','website.name','Test site') && $value(['system','website','name'],'config.json')==='Test site' && $value(['system','website','name'])===null);
     check('emptying it takes it out of config.json', EnvironmentFile::set('system','website.name','') && $value(['system','website','name'],'config.json')===null);
+    foreach (['operator', 'dpo'] as $key) {
+        $details = "DEV QA Contact\nSecond line & <text>";
+        check('multiline legal details persist: ' . $key, EnvironmentFile::set('system', 'legal.' . $key, $details) && $value(['system', 'legal', $key], 'config.json') === $details);
+        check('multiline details can inherit again: ' . $key, EnvironmentFile::set('system', 'legal.' . $key, '') && $value(['system', 'legal', $key], 'config.json') === null);
+    }
     check('a language is added to config.json', EnvironmentFile::addEntry('cms','languages.list','fr') && $value(['cms','languages','list','fr','code'],'config.json')==='fr');
     check('and goes again', EnvironmentFile::removeBlock('cms','languages.list.fr') && $value(['cms','languages','list','fr'],'config.json')===null);
+    foreach (['de', 'en', 'it'] as $code) check('order fixture added: ' . $code, EnvironmentFile::addEntry('cms', 'languages.list', $code));
+    $orderedBefore = $value(['cms', 'languages', 'list'], 'config.json');
+    check('language can move before the first one', EnvironmentFile::moveEntry('cms', 'languages.list', 'it', 'de', false) && array_keys($value(['cms', 'languages', 'list'], 'config.json')) === ['it', 'de', 'en']);
+    check('language can move after the last one', EnvironmentFile::moveEntry('cms', 'languages.list', 'it', 'en', true) && array_keys($value(['cms', 'languages', 'list'], 'config.json')) === ['de', 'en', 'it']);
+    check('sorting preserves every language value', $value(['cms', 'languages', 'list'], 'config.json') === $orderedBefore);
+    check('unknown language cannot be sorted', !EnvironmentFile::moveEntry('cms', 'languages.list', 'xx', 'de', false));
+    check('unmarked map cannot be sorted', !EnvironmentFile::moveEntry('db', 'connections', 'main', 'main', false));
+    foreach (['de', 'en', 'it'] as $code) check('order fixture removed: ' . $code, EnvironmentFile::removeBlock('cms', 'languages.list.' . $code));
     check('what the project allows goes to config.json too', EnvironmentFile::set('system','auth.deviceDays','30') && $value(['system','auth','deviceDays'],'config.json')===30);
     file_put_contents($local, json_encode(['packages' => ['system' => ['instance' => 'DEV.test', 'auth' => ['deviceDays' => 7]]]] + json_decode(file_get_contents($local), true)));
     check('where this installation overrides it, the override changes', EnvironmentFile::set('system','auth.deviceDays','14') && $value(['system','auth','deviceDays'])===14 && $value(['system','auth','deviceDays'],'config.json')===30);

@@ -284,6 +284,32 @@ final class EnvironmentFile
         return $project ? self::update(self::PROJECT, $change) : self::updateLocal($change);
     }
 
+    /** Reorder a schema-marked map in its owning file; keys and values stay intact. */
+    public static function moveEntry(string $package, string $path, string $from, string $to, bool $after): bool
+    {
+        $node = self::node($package, $path);
+        if (empty($node['x-orderable']) || !is_array($node['additionalProperties'] ?? null)) return false;
+        $project = false;
+        foreach ($node['additionalProperties']['properties'] ?? [] as $field) {
+            $project = $project || ($field['x-file'] ?? '') === 'project';
+        }
+        $keys = ['packages', $package, ...explode('.', $path)];
+        return self::update($project ? self::PROJECT : self::LOCAL, static function (array $data) use ($keys, $from, $to, $after): ?array {
+            $entries = Tree::get($data, $keys);
+            if (!is_array($entries) || !array_key_exists($from, $entries) || !array_key_exists($to, $entries)) return null;
+            if ($from === $to) return $data;
+            $ordered = [];
+            foreach ($entries as $key => $entry) {
+                if ($key === $from) continue;
+                if ($key === $to && !$after) $ordered[$from] = $entries[$from];
+                $ordered[$key] = $entry;
+                if ($key === $to && $after) $ordered[$from] = $entries[$from];
+            }
+            Tree::put($data, $keys, $ordered);
+            return $data;
+        });
+    }
+
     /** Is it a named entry the definition requires (`connections.main`)? */
     public static function requiredEntry(string $package, array $path): bool
     {

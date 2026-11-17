@@ -45,7 +45,7 @@ final class MailTool implements SettingsTool
             } catch (\RuntimeException) {
                 $recipient = 'Invalid recipient — delivery blocked';
             }
-            echo '<p class="tagsHint">Effective delivery: <strong>' . $e($transport) . '</strong> → <strong>' . $e($recipient) . '</strong>. Local overrides apply. SMTP acceptance confirms handover to this server, not delivery to the inbox.</p>';
+            echo ToolView::hint('Effective delivery: <strong>' . $e($transport) . '</strong> → <strong>' . $e($recipient) . '</strong>. Local overrides apply. SMTP acceptance confirms handover to this server, not delivery to the inbox.');
             $actions = '<button type="button" class="button" data-action-feedback data-loading data-on_click="testMail" data-file="' . $e($view->file) . '"><i class="cmsIcon cmsIcon-paper-plane"></i>Send test email</button><a class="button" href="' . $e(\http::$root . 'admin/tools/logs/email/') . '"><i class="cmsIcon cmsIcon-envelope"></i>Email log</a>';
         }
         if (Session::isSuperuser()) {

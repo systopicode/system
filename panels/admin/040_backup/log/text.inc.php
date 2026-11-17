@@ -46,7 +46,7 @@ if ($rows === []) {
 			<?php foreach ($rows as $row) { ?>
 				<tr<?= \Systopic\System\Logs\Filters::attributes($row[1], $row[3], $row[0]) ?>>
 					<td><?= $e($row[0]) ?></td>
-					<td><?= $e($displayTime($row[1])) ?></td>
+					<td data-table-summary><?= $e($displayTime($row[1]) ?: 'Time not recorded') ?></td>
 					<td><?= $row[3] !== '' ? \Systopic\System\Logs\Filters::userLink($row[3]) : 'Not recorded' ?></td>
 					<td><?= $e($row[2]) ?></td>
 				</tr>

@@ -673,3 +673,13 @@ $(function () {
 		}
 	});
 });
+
+let editorSubmenuFitFrame;
+function refitOpenEditorSubmenus() {
+    cancelAnimationFrame(editorSubmenuFitFrame);
+    editorSubmenuFitFrame = requestAnimationFrame(() => {
+        document.querySelectorAll('.HTMLeditorMenu li.hasChildren.open').forEach(fitEditorSubmenu);
+    });
+}
+window.addEventListener('resize', refitOpenEditorSubmenus);
+window.visualViewport?.addEventListener('resize', refitOpenEditorSubmenus);

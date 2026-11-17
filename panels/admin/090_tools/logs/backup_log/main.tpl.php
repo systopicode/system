@@ -11,7 +11,8 @@
 		<?php if (\Systopic\System\Auth\Session::isSuperuser()) { ?>
 		<button type="button" data-cms-action aria-label="Clear backup log" data-on_click="userConfirm" data-action="clearLog" data-confirm="Clear this log?" class="button"><i class="cmsIcon cmsIcon-broom"></i><span>Clear</span></button>
 		<?php } ?>
+	<?= \Systopic\System\Logs\Filters::controls() ?>
 	</header>
-    <?= \Systopic\System\Logs\Filters::controls() ?>
+
 	<?php include dirname(__DIR__, 3) . '/040_backup/log/text.inc.php'; ?>
 </section>

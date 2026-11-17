@@ -50,7 +50,8 @@ document.addEventListener('click', function (event) {
     const link = event.target.closest?.('a[href]');
     if (!link) return;
     const path = new URL(link.href, location.href).pathname;
-    const kind = path.endsWith('/defaultMeta/') ? 'metaDefaults' : path.endsWith('/relationsHelp/') ? 'relationsHelp' : '';
+    const kind = path.endsWith('/defaultMeta/') ? 'metaDefaults' : path.endsWith('/relationsHelp/') ? 'relationsHelp' : path.endsWith('/groupInfo/') ? 'mediaGroupHelp' : '';
+    if (kind === 'mediaGroupHelp' && document.querySelector('.mediaGroupHelp')?.dataset.group !== new URL(link.href).searchParams.get('group')) return;
     const box = kind && document.querySelector('.cmslightbox[data-transient-info].' + kind);
     if (!box?.hidden) return;
     event.preventDefault(); event.stopImmediatePropagation();

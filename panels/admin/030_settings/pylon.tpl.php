@@ -1,7 +1,7 @@
 <?php
 /**
- * The settings menu: one area per package — the panels it brings (Theme and
- * Tags are the system's), then its configuration (035_config, `?package=`).
+ * The settings menu: one area per package — its configuration first
+ * (035_config, `?package=`), followed by its panels (Theme, Tags, etc.).
  * Which package brought a panel says the folder it lies in; a panel of the
  * project itself goes to an area of its own at the end.
  *
@@ -40,7 +40,6 @@ foreach ($order as $package) {
     ?>
 <h2 class="pylonGroupTitle envPackageTitle"><?php if ($package !== 'project') { ?><i class="<?= $e(EnvironmentForm::packageIcon($package)) ?>" aria-hidden="true"></i> <?php } ?><?= $e($title) ?></h2><ul>
 <?php
-    foreach ($own as $node) echo $node->getNaviItem();
     if ($hasConfig) {
         $active = $config->inPath() && ($config->state->package ?? '') === $package;
         $li = \html::create('li.nav_config')->attr('data-name', 'config')->attr('data-package', $package)->class($active ? 'active' : null);
@@ -49,6 +48,7 @@ foreach ($order as $package) {
         $a->append('span')->attr('data-nav-label', 'Config')->append('span')->text('Config');
         echo $li;
     }
+    foreach ($own as $node) echo $node->getNaviItem();
     ?>
 </ul>
 <?php } ?>

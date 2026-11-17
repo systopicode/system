@@ -39,8 +39,9 @@ $entries = array_reverse($entries);
 		<?php if (\Systopic\System\Auth\Session::isSuperuser()) { ?>
 		<button type="button" data-cms-action aria-label="Clear PHP log" data-on_click="userConfirm" data-action="clearLog" data-confirm="Delete this log file?" class="button"><i class="cmsIcon cmsIcon-broom"></i><span>Clear</span></button>
 		<?php } ?>
+	<?= \Systopic\System\Logs\Filters::controls() ?>
 	</header>
-    <?= \Systopic\System\Logs\Filters::controls() ?>
+
 	<?php if ($entries === []) { ?>
 		<main><p>The log is empty.</p></main>
 	<?php } else { ?>
@@ -67,7 +68,7 @@ $entries = array_reverse($entries);
 						?>
 						<tr<?= \Systopic\System\Logs\Filters::attributes($entry['time'], '', $entry['level']) ?>>
 							<td><?= $e($entry['time']) ?></td>
-							<td><span class="logPill<?= $pill ?>"><?= $e($entry['level']) ?></span></td>
+							<td data-table-summary><span class="logPill<?= $pill ?>"><?= $e($entry['level']) ?></span></td>
 							<td>
 								<?= $e($entry['message']) ?>
 								<?php if (trim($entry['trace']) !== '') { ?>

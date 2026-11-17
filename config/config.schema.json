@@ -31,10 +31,10 @@
 			"type": "object",
 			"x-project": true,
 			"properties": {
-				"imprintUrl": { "title": "Imprint", "description": "Where the imprint link of the sign-in pages leads: an http(s) URL or a path starting with /. Empty: the /imprint/ page of the website.", "type": "string", "x-constant": "CMS_IMPRINT_URL" },
-				"privacyUrl": { "title": "Privacy policy", "description": "Where the privacy link of the sign-in pages leads: an http(s) URL or a path starting with /. Empty: the /privacy/ page of the website.", "type": "string", "x-constant": "CMS_PRIVACY_URL" },
-				"operator": { "title": "Responsible operator", "description": "Who runs this system, shown on the privacy page of the sign-in. Empty: the start page of the admin reminds of it.", "type": "string", "x-constant": "CMS_OPERATOR_DETAILS" },
-				"dpo": { "title": "Data protection officer", "description": "If one is appointed: shown on the privacy page of the sign-in.", "type": "string", "x-constant": "CMS_DPO_DETAILS" }
+				"imprintUrl": { "title": "Imprint", "description": "Where the imprint link of the sign-in pages leads: an http(s) URL or a path starting with /. Empty: the /imprint/ page of the website.", "type": "string", "x-hint": "Link: use an https:// address or a path starting with /. Empty uses /imprint/.", "x-constant": "CMS_IMPRINT_URL" },
+				"privacyUrl": { "title": "Privacy policy", "description": "Where the privacy link of the sign-in pages leads: an http(s) URL or a path starting with /. Empty: the /privacy/ page of the website.", "type": "string", "x-hint": "Link: use an https:// address or a path starting with /. Empty uses /privacy/.", "x-constant": "CMS_PRIVACY_URL" },
+				"operator": { "title": "Responsible operator", "description": "Who runs this system, shown on the privacy page of the sign-in. Empty: the start page of the admin reminds of it.", "type": "string", "x-multiline": true, "x-constant": "CMS_OPERATOR_DETAILS" },
+				"dpo": { "title": "Data protection officer", "description": "If one is appointed: shown on the privacy page of the sign-in.", "type": "string", "x-multiline": true, "x-constant": "CMS_DPO_DETAILS" }
 			}
 		},
 		"debug": {

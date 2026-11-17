@@ -77,6 +77,7 @@ class Panel extends PanelNode {
 					? $pages . 'editor/file/?target_id=' . $nodeId
 					: $pages . '?id=' . $nodeId,
 				'media'  => $media,
+                'context' => ($media ? 'Media' : 'Page') . ' ' . $nodeId . ($media ? '' : ' · ' . implode(', ', array_unique(array_filter(array_column($rows, 'page_language_iso'))))),
 			];
 		}
 		usort($out, static fn(array $a, array $b): int => strcasecmp($a['label'], $b['label']));

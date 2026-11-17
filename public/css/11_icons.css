@@ -34,6 +34,8 @@
   --icon-chevron-left: url("../icons/tabler/chevron-left.svg");
   --icon-chevron-right: url("../icons/tabler/chevron-right.svg");
   --icon-chevron-up: url("../icons/tabler/chevron-up.svg");
+  --icon-chevrons-down: url("../icons/tabler/chevrons-down.svg");
+  --icon-chevrons-up: url("../icons/tabler/chevrons-up.svg");
   --icon-circle-check: url("../icons/tabler/circle-check.svg");
   --icon-circle-half-2: url("../icons/tabler/circle-half-2.svg");
   --icon-circle-minus: url("../icons/tabler/circle-minus.svg");
@@ -248,6 +250,8 @@
 .cmsIcon-chevron-left { --icon-mask: var(--icon-chevron-left); }
 .cmsIcon-chevron-right { --icon-mask: var(--icon-chevron-right); }
 .cmsIcon-chevron-up { --icon-mask: var(--icon-chevron-up); }
+.cmsIcon-chevrons-down { --icon-mask: var(--icon-chevrons-down); }
+.cmsIcon-chevrons-up { --icon-mask: var(--icon-chevrons-up); }
 .cmsIcon-circle-check { --icon-mask: var(--icon-circle-check); }
 .cmsIcon-circle-exclamation { --icon-mask: var(--icon-exclamation-circle); }
 .cmsIcon-circle-half-stroke { --icon-mask: var(--icon-circle-half-2); }

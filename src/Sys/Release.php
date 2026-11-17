@@ -24,6 +24,30 @@ final class Release
         return is_file($path) ? (string) file_get_contents($path) : '';
     }
 
+    /** Display the package license with headings, paragraphs, lists and inline code. */
+    public static function licenseHtml(): string
+    {
+        $inline = static fn(string $text): string => preg_replace('/`([^`]+)`/', '<code>$1</code>', htmlspecialchars($text, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'));
+        $html = ''; $paragraph = []; $list = false;
+        $flush = static function () use (&$html, &$paragraph, $inline): void {
+            if ($paragraph !== []) { $html .= '<p>' . $inline(implode(' ', $paragraph)) . '</p>'; $paragraph = []; }
+        };
+        foreach (preg_split('/\R/', self::license()) as $line) {
+            if (preg_match('/^#{1,2} (.+)$/', $line, $match)) {
+                $flush(); if ($list) { $html .= '</ul>'; $list = false; }
+                $html .= '<h2>' . $inline($match[1]) . '</h2>';
+            } elseif (str_starts_with($line, '- ')) {
+                $flush(); if (!$list) { $html .= '<ul>'; $list = true; }
+                $html .= '<li>' . $inline(substr($line, 2)) . '</li>';
+            } else {
+                if ($list) { $html .= '</ul>'; $list = false; }
+                if (trim($line) === '') $flush(); else $paragraph[] = $line;
+            }
+        }
+        $flush(); if ($list) $html .= '</ul>';
+        return $html;
+    }
+
     public static function revision(): string
     {
         if (defined('PUBLIC_VERSIONDATE') && PUBLIC_VERSIONDATE !== '') {

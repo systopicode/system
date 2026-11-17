@@ -18,6 +18,6 @@ $rows = [
 ];
 $html = '<div class="tableScroll"><table><tbody>';
 foreach ($rows as $label => $value) {
-	$html .= '<tr><td class="muted">' . $e($label) . '</td><td>' . $e($value) . '</td></tr>';
+	$html .= '<tr><td class="muted">' . $e($label) . '</td><td data-table-summary>' . $e($value) . '</td></tr>';
 }
 return $html . '</tbody></table></div>';

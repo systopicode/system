@@ -10,6 +10,11 @@ use Composer\InstalledVersions;
  * The definition of a package: `<package>/config/config.schema.json`, JSON
  * Schema with `x-` keywords. One file per package, the master of every
  * block and value: title, description, order, defaults, where it is kept.
+ * GUI annotations: x-multiline renders a string as a textarea; x-hint adds
+ * visible help below its control. Both leave the stored value/type unchanged.
+ * x-tool-title names a package tool; x-display: table shows a map compactly
+ * with the same field/layer controls. x-orderable permits map sorting; x-flags
+ * adds the shared language-flag controls to its entries.
  * See .cursor/docs/config-struktur.md.
  *
  * A value belongs to this installation (config.local.json) unless it or a

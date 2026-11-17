@@ -31,11 +31,11 @@ final class AuthTool implements SettingsTool
         }
         echo '<div class="envToolBox">';
         if (strlen(EnvironmentFile::authSecret()) < 32) {
-            echo '<p class="tagsHint">A sign-in key enables one-time codes for this environment.</p>';
+            echo ToolView::hint('A sign-in key enables one-time codes for this environment.');
             echo '<button type="button" class="button" data-on_click="createAuth" data-file="' . $e($file) . '"><i class="cmsIcon cmsIcon-key-skeleton"></i> Create sign-in key</button></div>';
             return;
         }
-        echo '<p class="tagsHint">Replacing the key makes codes already sent stop working.</p><div class="envToolActions">';
+        echo ToolView::hint('Replacing the key makes codes already sent stop working.') . '<div class="envToolActions">';
         echo '<button type="button" class="button" data-on_click="userConfirm" data-action="replaceAuth" data-confirm="Replace the sign-in key? Codes already sent stop working." data-file="' . $e($file) . '"><i class="cmsIcon cmsIcon-arrows-rotate"></i> Replace sign-in key</button>';
         if (Session::isSuperuser()) {
             echo '<button type="button" class="button" data-on_click="userConfirm" data-action="removeAuth" data-confirm="Delete the sign-in key? Codes already sent stop working." data-file="' . $e($file) . '"><i class="cmsIcon cmsIcon-trash"></i> Delete sign-in key</button>';

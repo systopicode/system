@@ -36,7 +36,7 @@ $hint = match ($mode) {
 						<?php foreach (Assets::roots() as $name => $dir) { ?>
 							<tr>
 								<td class="muted"><?= $e($name) ?></td>
-								<td><?= $e($dir) ?></td>
+								<td data-table-summary><?= $e($dir) ?></td>
 							</tr>
 						<?php } ?>
 					</tbody>
