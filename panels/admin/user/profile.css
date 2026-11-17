@@ -657,6 +657,7 @@ header.cms .rightAlign form{
 .accountSectionSurface, .accountSectionBody { display:contents; }
 body.cms .accountContent .accountSheetHeader { display:none; }
 @media (max-width:767px) {
+    .profileGrid[data-account-area="devices"] > .accountConnectDevice { order:-1; }
     .accountOverview { display:block; }
     .accountNavigation { padding:0; }
     .accountLayout { display:block; }

@@ -172,7 +172,7 @@ $accountMotion = \http::ajax() ? ($this->action === 'showSection' ? 'forward' : 
 		</section>
         <?php } ?>
         <?php if ($area === 'devices' && $codesOn && $me) { ?>
-            <section class="widget">
+            <section class="widget accountConnectDevice">
                 <header><h2><i class="cmsIcon cmsIcon-plus"></i>Connect a device</h2></header>
                 <main><p class="tagsHint">Use a code to sign in to your account on another phone, tablet or computer.</p></main>
                 <footer><?php $pick('self', '', $accountsOf['self']); ?></footer>
