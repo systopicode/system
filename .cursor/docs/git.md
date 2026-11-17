@@ -100,6 +100,17 @@ git status -sb                    # sauber
   `git stash push -u -m "…" -- . ':!<eigene Testdateien>'` und
   `git pull --ff-only`. Der Stash hebt den Stand auf, bis der Benutzer ihn
   verwirft.
+- **Sync von einem älteren Stand, z. B. von staging, nachdem jemand anderes
+  gepusht hat:** Der Sync schreibt die Dateien aus den neueren Commits auf
+  den alten Stand zurück, und neue Dateien aus diesen Commits fehlen dann
+  (`D`). Das Symptom: `status` zeigt Dateien, die man selbst nicht
+  angefasst hat. Lösung: für jede geänderte Datei prüfen, ob sie genau dem
+  Stand vor dem Pull entspricht
+  (`git show <alter HEAD>:<pfad> | diff -q --strip-trailing-cr - <pfad>`)
+  und ob ein neuerer Commit sie ändert (`git log <alter HEAD>..HEAD -- <pfad>`).
+  Trifft beides zu, ist es nur ein Rückfall, dann `git checkout HEAD -- <pfad>`.
+  Was übrig bleibt, ist die eigene Arbeit (so am 2026-11-17 beim
+  Crop-Editor von staging nach Lars' Push).
 - `reset` ohne `--hard` fasst keine Datei an. Geht etwas schief, steht der
   alte HEAD im Reflog (`git reflog`).
 - Wurde die Historie auf GitHub neu angelegt (so bei `relay` am 2026-10-15),
