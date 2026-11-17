@@ -71,17 +71,19 @@ final class Model extends TableRow
     }
 
     /**
-     * The middle of the crop, a fraction 0-1 of what it is cut from: the
-     * master for the crop of a ratio, the turned original for the master.
-     * Successor of `$left` / `$top`, which held the same and said otherwise.
+     * How the crop is aligned in what it is cut from (the master for the
+     * crop of a ratio, the turned original for the master), as with
+     * `background-position` in per cent: 0 flush left / top, 1 flush right /
+     * bottom, 0.5 centred; -10 to 11, past 0-1 the crop reaches over the
+     * edge (`Media\CropBox`). Successor of `$left` / `$top`.
      */
-    #[Col(length: 13, scale: 12)]
-    public ?Decimal $centerX {
+    #[Col(length: 15, scale: 12)]
+    public ?Decimal $alignX {
         get => $this->__get__(__PROPERTY__);
         set => $this->__set__(__PROPERTY__, $value);
     }
-    #[Col(length: 13, scale: 12)]
-    public ?Decimal $centerY {
+    #[Col(length: 15, scale: 12)]
+    public ?Decimal $alignY {
         get => $this->__get__(__PROPERTY__);
         set => $this->__set__(__PROPERTY__, $value);
     }

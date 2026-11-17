@@ -11,9 +11,11 @@
  * worked out again by the server. Both must agree: the resolver here passes
  * the same cases as the PHP class (tests/media-crop-resolver.cases.json).
  *
- * A ratio is {w, h} of whole numbers; a crop {ratio, cx, cy, scale}: the
- * centre a fraction of what it is cut from, the scale over "fill in" (1 =
- * the largest crop without a border, below 1 background shows).
+ * A ratio is {w, h} of whole numbers; a crop {ratio, ax, ay, scale}: the
+ * alignment in what it is cut from, as with background-position in per cent
+ * (0 flush left / top, 1 flush right / bottom, 0.5 centred - Media\CropBox),
+ * the scale over "fill in" (1 = the largest crop without a border, below 1
+ * background shows).
  */
 (function () {
 	'use strict';
@@ -66,10 +68,28 @@
 			: [height * r / width / scale, 1 / scale];
 	};
 
+	/** The middle of a crop of that length (fractions) under an alignment. */
+	math.centreOf = (align, length) => align + length * (0.5 - align);
+
+	/** The alignment that puts the middle of a crop of that length at a place - keep where the length is the whole axis. */
+	math.alignOf = function (centre, length, keep) {
+		const room = 1 - length;
+		if (Math.abs(room) < 1e-9) {
+			return keep === undefined ? 0.5 : keep;
+		}
+		return Math.max(-10, Math.min(11, (centre - length / 2) / room));
+	};
+
+	/** The middle of a crop, fractions of the reference: [cx, cy]. */
+	math.centre = function (crop, width, height) {
+		const [w, h] = math.size(crop.ratio, crop.scale, width, height);
+		return [math.centreOf(crop.ax, w), math.centreOf(crop.ay, h)];
+	};
+
 	/** The crop as a rectangle, x and y its top left corner - fractions, not limited to 0-1. */
 	math.rect = function (crop, width, height) {
 		const [w, h] = math.size(crop.ratio, crop.scale, width, height);
-		return {x: crop.cx - w / 2, y: crop.cy - h / 2, w: w, h: h};
+		return {x: math.centreOf(crop.ax, w) - w / 2, y: math.centreOf(crop.ay, h) - h / 2, w: w, h: h};
 	};
 
 	/** The scale at which the whole reference lies inside the crop. */
@@ -85,14 +105,12 @@
 		return rect.x >= -t && rect.y >= -t && rect.x + rect.w <= 1 + t && rect.y + rect.h <= 1 + t;
 	};
 
-	/** The nearest crop that lies inside the reference: scale at least 1, the centre moved in. */
-	math.clamped = function (crop, width, height) {
-		const scale = Math.max(1, crop.scale);
-		const [w, h] = math.size(crop.ratio, scale, width, height);
+	/** The nearest crop that lies inside the reference: scale at least 1, the alignment within 0-1. */
+	math.clamped = function (crop) {
 		return Object.assign({}, crop, {
-			cx: Math.min(Math.max(crop.cx, w / 2), 1 - w / 2),
-			cy: Math.min(Math.max(crop.cy, h / 2), 1 - h / 2),
-			scale: scale
+			ax: Math.min(Math.max(crop.ax, 0), 1),
+			ay: Math.min(Math.max(crop.ay, 0), 1),
+			scale: Math.max(1, crop.scale)
 		});
 	};
 
@@ -116,8 +134,8 @@
 		const t = math.position(ratio, below.ratio, above.ratio);
 		return {
 			ratio: ratio,
-			cx: below.cx + (above.cx - below.cx) * t,
-			cy: below.cy + (above.cy - below.cy) * t,
+			ax: below.ax + (above.ax - below.ax) * t,
+			ay: below.ay + (above.ay - below.ay) * t,
 			scale: Math.pow(below.scale, 1 - t) * Math.pow(above.scale, t),
 			source: 'interpolated'
 		};
@@ -173,10 +191,12 @@
 	 * The crop of a ratio: set by hand, between two set by hand, over the
 	 * points of interest, towards the whole master, or centred - in this order.
 	 *
-	 * manual: [{ratio, cx, cy, scale}], pois: [{x, y, w, h, weight}] in fractions of the master.
+	 * manual: [{ratio, ax, ay, scale}], pois: [{x, y, w, h, weight}] in fractions of the master,
+	 * declared: the declared ratios - beyond the last crop known, "fill in" is
+	 * reached at the outermost of them (without them: at once).
 	 */
-	math.resolve = function (ratio, width, height, manual, pois) {
-		const centred = {ratio: ratio, cx: 0.5, cy: 0.5, scale: 1, source: 'centered'};
+	math.resolve = function (ratio, width, height, manual, pois, declared) {
+		const centred = {ratio: ratio, ax: 0.5, ay: 0.5, scale: 1, source: 'centered'};
 		const byName = new Map();
 		for (const crop of manual || []) {
 			byName.set(crop.ratio.name, Object.assign({}, crop, {source: 'manual'}));
@@ -190,7 +210,7 @@
 		}
 		if (pois && pois.length) {
 			const [w, h] = math.size(ratio, 1, width, height);
-			return {ratio: ratio, cx: slide(w, pois, 'x', 'w'), cy: slide(h, pois, 'y', 'h'), scale: 1, source: 'poi'};
+			return {ratio: ratio, ax: math.alignOf(slide(w, pois, 'x', 'w'), w), ay: math.alignOf(slide(h, pois, 'y', 'h'), h), scale: 1, source: 'poi'};
 		}
 		if (!byName.size) {
 			return centred;
@@ -201,14 +221,26 @@
 		}
 		const anchors = Array.from(byName.values());
 		if (!byName.has(master.name)) {
-			anchors.push({ratio: master, cx: 0.5, cy: 0.5, scale: 1});
+			anchors.push({ratio: master, ax: 0.5, ay: 0.5, scale: 1});
 		}
 		[below, above] = neighbours(ratio, anchors);
 		if (below && above) {
 			return math.clamped(between(ratio, below, above), width, height);
 		}
+		// Outside everything known: the nearest crop's alignment, towards "fill in" at the outermost declared ratio of that side.
 		const nearest = below || above;
-		return math.clamped({ratio: ratio, cx: nearest.cx, cy: nearest.cy, scale: nearest.scale, source: 'anchor'}, width, height);
+		const wider = !above;
+		let end = null;
+		for (const r of declared || []) {
+			if (!end || math.compare(r, end) === (wider ? 1 : -1)) {
+				end = r;
+			}
+		}
+		if (end && math.compare(end, ratio) === (wider ? 1 : -1)) {
+			const edge = {ratio: end, ax: nearest.ax, ay: nearest.ay, scale: 1};
+			return math.clamped(between(ratio, wider ? nearest : edge, wider ? edge : nearest), width, height);
+		}
+		return math.clamped({ratio: ratio, ax: nearest.ax, ay: nearest.ay, scale: 1, source: 'anchor'}, width, height);
 	};
 
 	// ----------------------------------------------------------------- master
@@ -216,8 +248,8 @@
 	/**
 	 * Where the master lies in the original: mirrored, turned by any angle
 	 * (clockwise, degrees), cut to its crop. Scale 1 is the largest frame of
-	 * the ratio inside the turned picture; the centre is a fraction of the
-	 * box around the turned picture.
+	 * the ratio inside the turned picture; the crop is aligned in the box
+	 * around the turned picture. g.cx, g.cy: the frame's middle, fractions of that box.
 	 */
 	math.master = function (originalWidth, originalHeight, crop, angle, flip) {
 		const quarters = Math.ceil((angle || 0) / 90 - 0.5);
@@ -229,7 +261,7 @@
 		const s = Math.abs(sin);
 		const r = math.value(crop.ratio);
 		const g = {
-			originalWidth: originalWidth, originalHeight: originalHeight, crop: crop, angle: angle || 0, flip: !!flip,
+			originalWidth: originalWidth, originalHeight: originalHeight, crop: crop, angle: angle || 0, flip: !!flip, c: c, s: s,
 			referenceWidth: originalWidth * c + originalHeight * s,
 			referenceHeight: originalWidth * s + originalHeight * c
 		};
@@ -239,8 +271,10 @@
 		g.frameWidth = g.frameHeight * r;
 		g.width = Math.max(1, Math.round(g.frameWidth));
 		g.height = Math.max(1, Math.round(g.frameHeight));
-		const x = (crop.cx - 0.5) * g.referenceWidth;
-		const y = (crop.cy - 0.5) * g.referenceHeight;
+		g.cx = math.centreOf(crop.ax, g.frameWidth / g.referenceWidth);
+		g.cy = math.centreOf(crop.ay, g.frameHeight / g.referenceHeight);
+		const x = (g.cx - 0.5) * g.referenceWidth;
+		const y = (g.cy - 0.5) * g.referenceHeight;
 		const dx = x * cos + y * sin;
 		const dy = -x * sin + y * cos;
 		g.centreX = originalWidth / 2 + (g.flip ? -dx : dx);
@@ -270,19 +304,28 @@
 		return g;
 	};
 
-	/** The master whose four corners touch one edge of the turned picture each - null near the diagonal. */
-	math.touching = function (width, height, angle, flip) {
-		const probe = math.master(width, height, {ratio: math.ratio(width, height), cx: 0.5, cy: 0.5, scale: 1}, angle, flip);
-		const rad = (angle || 0) * Math.PI / 180;
-		const c = Math.abs(Math.round(Math.cos(rad) * 1e12) / 1e12);
-		const s = Math.abs(Math.round(Math.sin(rad) * 1e12) / 1e12);
-		const d = c * c - s * s;
-		if (Math.abs(d) < 1e-9) {
-			return null;
+	/**
+	 * Width and height of the largest frame inside a picture turned by an
+	 * angle of the given |cos| and |sin| (Media\MasterGeometry::largestSize()):
+	 * near a right angle all four corners touch an edge, near the diagonal
+	 * two corners stop at the long edges. The two meet without a jump.
+	 */
+	math.largestSize = function (width, height, c, s) {
+		const long = Math.max(width, height);
+		const short = Math.min(width, height);
+		if (short <= 2 * s * c * long || Math.abs(s - c) < 1e-12) {
+			const half = short / 2;
+			return width >= height ? [half / s, half / c] : [half / c, half / s];
 		}
-		const w = Math.round((width * c - height * s) / d);
-		const h = Math.round((height * c - width * s) / d);
-		return w > 0 && h > 0 ? math.master(width, height, {ratio: math.ratio(w, h), cx: 0.5, cy: 0.5, scale: 1}, probe.angle, flip) : null;
+		const d = c * c - s * s;
+		return [(width * c - height * s) / d, (height * c - width * s) / d];
+	};
+
+	/** The master of the largest area inside the turned picture, no background - what a turned picture without a master crop shows. */
+	math.largest = function (width, height, angle, flip) {
+		const probe = math.master(width, height, {ratio: math.ratio(width, height), ax: 0.5, ay: 0.5, scale: 1}, angle, flip);
+		const [w, h] = math.largestSize(width, height, probe.c, probe.s);
+		return math.master(width, height, {ratio: math.ratio(Math.max(1, Math.round(w)), Math.max(1, Math.round(h))), ax: 0.5, ay: 0.5, scale: 1}, angle, flip);
 	};
 
 	/**

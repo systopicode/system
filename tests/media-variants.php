@@ -75,15 +75,15 @@ check('every alias is an address that is rendered', Variants::parse($alias(['wid
 $media = new MediaRow();
 $crop = Operator::put(null, $media, new CropBox(Ratio::of('16:9'), 0.3, 0.4, 1.5));
 check('a crop of a ratio is found by the ratio\'s name', $crop->format === '16:9' && $crop->ratio === '16:9' && $crop->media === $media);
-check('centre and scale are stored, the row is no longer automatic', (string) $crop->centerX === '0.300000000000' && (string) $crop->centerY === '0.400000000000'
+check('alignment and scale are stored, the row is no longer automatic', (string) $crop->alignX === '0.300000000000' && (string) $crop->alignY === '0.400000000000'
     && (string) $crop->scale === '1.500000000000' && $crop->auto === false && $crop->version === 1);
 $box = Operator::box($crop);
-check('and read back as the same crop, set by hand', $box !== null && $box->ratio->name === '16:9' && $near($box->cx, 0.3) && $near($box->cy, 0.4) && $near($box->scale, 1.5) && $box->source === CropBox::MANUAL);
+check('and read back as the same crop, set by hand', $box !== null && $box->ratio->name === '16:9' && $near($box->alignX, 0.3) && $near($box->alignY, 0.4) && $near($box->scale, 1.5) && $box->source === CropBox::MANUAL);
 $again = Operator::put($crop, $media, new CropBox(Ratio::of('16:9'), 0.5, 0.5, 1));
 check('saving again keeps the row and bumps the version', $again === $crop && $crop->version === 2 && $near(Operator::box($crop)->scale, 1));
 $master = Operator::put(null, $media, new CropBox(Ratio::ofPixels(3012, 5456), 0.5, 0.45, 1.2), master: true);
 check('the master crop is the row named original, with its own free ratio', $master->format === Variants::MASTER && $master->ratio === '753:1364' && Operator::box($master)->ratio->name === '753:1364');
-check('a crop may show background: nothing is clamped on the way in', $near(Operator::box(Operator::put(null, $media, new CropBox(Ratio::of('1:1'), -0.2, 0.5, 0.6)))->cx, -0.2));
+check('a crop may show background: nothing is clamped on the way in', $near(Operator::box(Operator::put(null, $media, new CropBox(Ratio::of('1:1'), -0.2, 0.5, 0.6)))->alignX, -0.2));
 $legacy = Operator::cropped(null, $media, 'fullWidth', 0.5, 0.5, 1.0, 0.8);
 check('a row with only the legacy columns has no crop in the new form', Operator::box($legacy) === null && Operator::box(null) === null);
 $broken = new Crop();

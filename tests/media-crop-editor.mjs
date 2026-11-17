@@ -19,18 +19,32 @@ assert.ok(sys.cropEditor && sys.cropEditor.Session, 'sys.cropEditor is there');
 const names = ['2:1', '16:9', '3:2', '4:3', '1:1', '3:4', '9:16'];
 const first = math.ratio('2:1');
 const last = math.ratio('9:16');
-const state = (master = {}, manual = {}) => ({
-	mediaId: 42, version: 'v1', cut: true,
-	original: {width: 3000, height: 2000, url: '/o.webp'},
-	master: Object.assign({manual: false, ratio: '3:2', cx: 0.5, cy: 0.5, scale: 1, angle: 0, flip: false, look: {b: 100, c: 100, s: 100}, width: 3000, height: 2000,
-		sources: [{url: '/m-0.5.webp', width: 866, height: 577}, {url: '/m-2.webp', width: 1732, height: 1155}]}, master),
-	ratios: names.map(name => {
-		const r = math.ratio(name);
-		const crop = manual[name] || {cx: 0.5, cy: 0.5, scale: 1, source: 'centered'};
-		return Object.assign({name, suffix: name.replace(':', 'by'), w: r.w, h: r.h, position: 1 - math.position(r, last, first)}, crop);
-	}),
-	pois: [], sizes: [0.5, 1, 2, 5, 10]
-});
+// The crops of the fixtures are written by their middle (cx, cy), which reads more easily; the server
+// sends the alignment (ax, ay) - turned into it here, against what each is cut from.
+const aligned = (crop, w, h) => {
+	if (crop.cx === undefined) {
+		return crop;
+	}
+	const {cx, cy, ...rest} = crop;
+	return Object.assign(rest, {ax: math.alignOf(cx, w), ay: math.alignOf(cy, h)});
+};
+const state = (master = {}, manual = {}) => {
+	const m = Object.assign({manual: false, ratio: '3:2', ax: 0.5, ay: 0.5, scale: 1, angle: 0, flip: false, look: {b: 100, c: 100, s: 100}, width: 3000, height: 2000,
+		sources: [{url: '/m-0.5.webp', width: 866, height: 577}, {url: '/m-2.webp', width: 1732, height: 1155}]}, master);
+	const g = math.master(3000, 2000, {ratio: math.ratio(m.ratio), ax: 0.5, ay: 0.5, scale: m.scale}, m.angle, m.flip);
+	return {
+		mediaId: 42, version: 'v1', cut: true,
+		original: {width: 3000, height: 2000, url: '/o.webp'},
+		master: aligned(m, g.frameWidth / g.referenceWidth, g.frameHeight / g.referenceHeight),
+		ratios: names.map(name => {
+			const r = math.ratio(name);
+			const crop = manual[name] || {ax: 0.5, ay: 0.5, scale: 1, source: 'centered'};
+			const [w, h] = math.size(r, crop.scale, m.width, m.height);
+			return Object.assign({name, suffix: name.replace(':', 'by'), w: r.w, h: r.h, position: 1 - math.position(r, last, first)}, aligned(crop, w, h));
+		}),
+		pois: [], sizes: [0.5, 1, 2, 5, 10]
+	};
+};
 const sent = [];
 const session = (data, mode = 'crops', ratio = '1:1') => {
 	const s = new sys.cropEditor.Session({nodeId: 169, url: '/file/'});
@@ -43,6 +57,8 @@ const session = (data, mode = 'crops', ratio = '1:1') => {
 	s.take(data);
 	return s;
 };
+// The middle of the frame in what it is cut from - what moving and zooming are about.
+const mid = s => s.centreOf(s.work);
 // The point of the picture (fractions of what is shown) under a place on the stage.
 const under = (s, x, y) => {
 	const i = s.view.image;
@@ -63,23 +79,23 @@ ok('the frame stands in the middle of the stage, fitted by width or height');
 s = session(state());
 assert.equal(s.free, false, 'a crop inside the picture starts with "the edge stays outside"');
 s.pan(100, 0);
-assert.ok(near(s.work.cx, 0.5 - 100 / 960) && near(s.work.cy, 0.5), 'the picture moved right: the frame\'s middle lies further left in it');
+assert.ok(near(mid(s)[0], 0.5 - 100 / 960) && near(mid(s)[1], 0.5), 'the picture moved right: the frame\'s middle lies further left in it');
 assert.ok(s.dirty());
 s.pan(500, 0);
-assert.ok(near(s.work.cx, 1 / 3, 1e-5), 'the picture stops where its edge meets the frame');
+assert.ok(near(mid(s)[0], 1 / 3, 1e-5), 'the picture stops where its edge meets the frame');
 s.pan(0, 50);
-assert.ok(near(s.work.cy, 0.5), 'a square of the full height cannot move up or down');
+assert.ok(near(mid(s)[1], 0.5), 'a square of the full height cannot move up or down');
 s = session(state());
 s.pan(155, 0);
-assert.ok(near(s.work.cx, 0.5 - 155 / 960), 'five pixels from the edge: it stays where it was put - moving does not snap');
+assert.ok(near(mid(s)[0], 0.5 - 155 / 960), 'five pixels from the edge: it stays where it was put - moving does not snap');
 s.pan(-152, 0);
-assert.ok(near(s.work.cx, 0.5 - 3 / 960, 1e-9), 'nor three pixels from the middle');
+assert.ok(near(mid(s)[0], 0.5 - 3 / 960, 1e-9), 'nor three pixels from the middle');
 ok('moving: the picture follows the pointer and stops at the frame');
 
 // -------------------------------------------------------------------- zoom
 s = session(state());
 s.zoom(2, 500, 400);
-assert.ok(near(s.work.scale, 2) && near(s.work.cx, 0.5) && near(s.work.cy, 0.5), 'zooming at the middle keeps the middle');
+assert.ok(near(s.work.scale, 2) && near(mid(s)[0], 0.5) && near(mid(s)[1], 0.5), 'zooming at the middle keeps the middle');
 s = session(state());
 let before = under(s, 300, 200);
 s.zoom(1.7, 300, 200);
@@ -93,7 +109,7 @@ s.free = true;
 s.zoom(0.5, 500, 400);
 assert.ok(near(s.work.scale, 0.5), 'with "background may show" it goes on');
 s.pan(700, 0);
-assert.ok(s.work.cx < 0, 'and the picture may be pushed out of the frame');
+assert.ok(mid(s)[0] < 0, 'and the picture may be pushed out of the frame');
 s.free = false;
 s.work = s.settled(s.work);
 assert.ok(math.inside(s.work, 3000, 2000, 1e-6), 'back to "the edge stays outside": the nearest crop that shows no background');
@@ -102,7 +118,7 @@ ok('zooming: around the pointer, limited by the frame unless background may show
 // ------------------------------------------------------- a crop set by hand
 s = session(state({}, {'1:1': {cx: 0.1, cy: 0.5, scale: 0.8, source: 'manual'}}));
 assert.equal(s.free, true, 'a stored crop that shows background opens with "background may show"');
-assert.ok(near(s.work.cx, 0.1) && near(s.work.scale, 0.8) && !s.dirty());
+assert.ok(near(mid(s)[0], 0.1) && near(s.work.scale, 0.8) && !s.dirty());
 ok('a stored crop is shown as it is');
 
 // ------------------------------------------------------------------ master
@@ -115,9 +131,9 @@ s.setRatio(math.ratio('1:1'), false);
 assert.ok(s.work.ratio.name === '1:1' && near(s.work.scale, 1) && s.work.auto === false, 'a click on a ratio sets the master to it');
 assert.ok(near(s.view.image.h, 640) && near(s.view.image.w, 960));
 s.pan(-160, 0);
-assert.ok(near(s.work.cx, 0.5 + 160 / 960), 'the centre of the master is a fraction of the picture');
+assert.ok(near(mid(s)[0], 0.5 + 160 / 960), 'the centre of the master is a fraction of the picture');
 s.pan(-600, 0);
-assert.ok(near(s.work.cx, 2 / 3, 3e-4), 'the master stops at the picture\'s edge too (within half a pixel of the original)');
+assert.ok(near(mid(s)[0], 2 / 3, 3e-4), 'the master stops at the picture\'s edge too (within half a pixel of the original)');
 ok('master: the frame is the master crop over the original');
 
 s = session(state(), 'master');
@@ -125,14 +141,39 @@ s.turn(90, false);
 assert.ok(s.work.angle === 90 && s.work.ratio.name === '2:3' && s.work.auto === true && near(s.work.scale, 1), 'turned without a crop: the whole picture, upright');
 assert.ok(near(s.view.frame.h, 640) && near(s.view.frame.w, 640 * 2 / 3) && s.view.image.angle === 90);
 s.turn(100, false);
-assert.ok(s.work.ratio.name !== '2:3' && s.masterOf(s.work).insideOriginal(1.5), 'tilted without a crop: the frame that touches all four edges');
+assert.ok(s.work.ratio.name !== '2:3' && s.masterOf(s.work).insideOriginal(1.5), 'tilted without a crop: the largest frame inside the turned picture');
+// Without a crop of its own the frame follows the angle: the largest area, no jump all the way round.
+s = session(state(), 'master');
+let previousTurn = null;
+let steady = true;
+for (let tenth = 0; tenth <= 1800; tenth++) {
+	s.turn(tenth / 10, false);
+	const g = s.masterOf(s.work);
+	steady = steady && g.insideOriginal(1.5) && s.work.auto === true
+		&& (!previousTurn || (Math.abs(g.width - previousTurn.width) <= 32 && Math.abs(g.height - previousTurn.height) <= 32));
+	previousTurn = g;
+}
+assert.ok(steady, 'turned on in tenths of a degree from 0 to 180 without a crop: inside, and no jump');
+s.turn(30.4, false);
+const wide = s.masterOf(s.work);
+assert.ok(wide.width / wide.height > 1 && wide.width / wide.height < 3 && wide.width * wide.height > 0.35 * 3000 * 2000,
+	'at 30.4 degrees a sensible frame, not a strip: ' + s.work.ratio.name);
+s.turn(45, false);
+assert.equal(s.work.ratio.name, '1:1', 'at 45 degrees a square');
+// A frame of a fixed ratio at "fill in" stays "fill in": the largest of its ratio at every angle.
+s = session(state({manual: true, ratio: '16:9', cx: 0.5, cy: 0.5, scale: 1, width: 3000, height: 1688}), 'master');
+for (const angle of [5, 20, 33, 60, 90]) {
+	s.turn(angle, false);
+	assert.ok(s.work.ratio.name === '16:9' && near(s.work.scale, 1, 1e-9) && near(mid(s)[0], 0.5, 1e-6) && s.masterOf(s.work).insideOriginal(1),
+		'16:9 at "fill in", turned by ' + angle + ': still the largest 16:9 inside');
+}
 s = session(state({manual: true, ratio: '1:1', cx: 0.25, cy: 0.5, scale: 2, width: 1000, height: 1000}), 'master');
 s.turn(90, false);
-assert.ok(near(s.work.cx, 0.5) && near(s.work.cy, 0.25) && near(s.work.scale, 2) && s.work.ratio.name === '1:1', 'turned with a crop: the same piece of the picture, the same pixels - left became top');
+assert.ok(near(mid(s)[0], 0.5) && near(mid(s)[1], 0.25) && near(s.work.scale, 2) && s.work.ratio.name === '1:1', 'turned with a crop: the same piece of the picture, the same pixels - left became top');
 assert.equal(s.masterOf(s.work).width, 1000);
 s = session(state({manual: true, ratio: '1:1', cx: 0.25, cy: 0.5, scale: 2, width: 1000, height: 1000}), 'master');
 s.turn(0, true);
-assert.ok(near(s.work.cx, 0.75) && near(s.work.cy, 0.5) && s.work.flip === true, 'mirrored: the same piece, on the other side');
+assert.ok(near(mid(s)[0], 0.75) && near(mid(s)[1], 0.5) && s.work.flip === true, 'mirrored: the same piece, on the other side');
 s = session(state({manual: true, ratio: '3:2', cx: 0.5, cy: 0.5, scale: 1, width: 3000, height: 2000}), 'master');
 s.turn(10, false);
 assert.ok(s.masterOf(s.work).insideOriginal(0.6) && near(s.work.scale, 1, 1e-3) && s.masterOf(s.work).width < 3000,
@@ -182,7 +223,7 @@ s.dragTool({tool: 'zoom', start: {x: 182, y: 81}, work: s.work}, {x: 400, y: 300
 assert.equal(JSON.stringify(s.work), still, 'a drag that starts on the fix point has no distance to go by');
 ok('zoom tool: the picture grows around the fix point, the grabbed place stays under the pointer');
 
-// Turn tool (master): a click turns by a quarter, a drag turns freely around the fix point.
+// Turn tool (master): a drag turns freely around the fix point (the right angles are a button beside the tick).
 s = session(state({manual: true, ratio: '1:1', cx: 0.5, cy: 0.5, scale: 2, width: 1000, height: 1000}), 'master');
 s.free = true;                                              // background may show: nothing holds the picture back
 s.setTool('turn');
@@ -273,13 +314,14 @@ s.zoom(2, 500, 400);
 s.pan(96, 0);
 s.save();
 assert.equal(sent.at(-1).action, 'saveRatioCrop');
-assert.ok(sent.at(-1).params.ratio === '1:1' && near(sent.at(-1).params.cx, 0.45) && near(sent.at(-1).params.cy, 0.5) && near(sent.at(-1).params.scale, 2));
-ok('a crop is stored as ratio, centre and scale');
+assert.ok(sent.at(-1).params.ratio === '1:1' && near(math.centreOf(sent.at(-1).params.ax, 1 / 3), 0.45) && near(sent.at(-1).params.ay, 0.5) && near(sent.at(-1).params.scale, 2),
+	'stored: the middle at 0.45 of the master, as an alignment');
+ok('a crop is stored as ratio, alignment and scale');
 
 s = session(state(), 'master');
 s.work = Object.assign({}, s.work, {look: {b: 120, c: 100, s: 90}});
 s.save();
-assert.deepEqual({...sent.at(-1).params, cx: 0, cy: 0, scale: 0, ratio: ''}, {ratio: '', cx: 0, cy: 0, scale: 0, brightness: 120, contrast: 100, saturation: 90, angle: 0, flip: 0, auto: 1},
+assert.deepEqual({...sent.at(-1).params, ax: 0, ay: 0, scale: 0, ratio: ''}, {ratio: '', ax: 0, ay: 0, scale: 0, brightness: 120, contrast: 100, saturation: 90, angle: 0, flip: 0, auto: 1},
 	'only the look changed: the master stays automatic');
 s = session(state(), 'master');
 s.setRatio(s.ratioAt(0.37), true);
@@ -290,12 +332,46 @@ const stored = sent.at(-1).params;
 assert.equal(sent.at(-1).action, 'saveMasterCrop');
 assert.equal(stored.auto, undefined, 'a cropped master is not automatic');
 assert.equal(stored.ratio, math.ratio(drawn.width, drawn.height).name, 'a freely set ratio is stored as the fraction of the frame\'s whole pixels');
-const again = math.master(3000, 2000, {ratio: math.ratio(stored.ratio), cx: stored.cx, cy: stored.cy, scale: stored.scale}, stored.angle, stored.flip === 1);
+const again = math.master(3000, 2000, {ratio: math.ratio(stored.ratio), ax: stored.ax, ay: stored.ay, scale: stored.scale}, stored.angle, stored.flip === 1);
 assert.ok(again.width === drawn.width && again.height === drawn.height, 'and comes back with exactly those pixels');
 s = session(state(), 'master');
 s.setRatio(math.ratio('16:9'), false);
 s.save();
 assert.equal(sent.at(-1).params.ratio, '16:9', 'a ratio picked by a click keeps its name');
 ok('the master is stored with its look; a free ratio as its pixels, a picked one by name');
+
+// ------------------------------------------------- crops mode: the slider dragged
+{
+	const square = {cx: 0.3, cy: 0.5, scale: 2, source: 'manual'};
+	const threeFour = {cx: 0.3, cy: 0.5, scale: Math.SQRT2, source: 'interpolated'};
+	s = session(state({}, {'1:1': square, '3:4': threeFour, '9:16': {cx: 0.3, cy: 0.5, scale: 1, source: 'anchor'}}), 'crops', '1:1');
+	const p = name => s.ratios.find(r => r.name === name).position;
+	const at = s.cropAt(p('3:4'));
+	const own = name => s.ratios.find(r => r.name === name);
+	assert.ok(at.crop.ratio.name === '3:4' && near(at.crop.scale, Math.SQRT2) && near(at.crop.ax, own('3:4').ax), 'on a declared ratio: its own crop');
+	const half = (p('1:1') + p('3:4')) / 2;
+	const midway = s.cropAt(half);
+	assert.ok(near(midway.crop.scale, Math.sqrt(2 * Math.SQRT2)) && near(midway.crop.ax, (own('1:1').ax + own('3:4').ax) / 2) && midway.between === '1:1 and 3:4',
+		'between two: the alignment in a straight line, the scale in equal factors');
+	assert.ok(near(s.positionOf(midway.crop.ratio), half, 1e-3), 'and the frame has the ratio of that place');
+	s.slideTo(half);
+	assert.ok(s.sliding && near(s.work.scale, midway.crop.scale) && s.view.frame.w / s.view.frame.h < 1 && s.view.frame.w / s.view.frame.h > 0.75, 'the frame follows the knob');
+	assert.equal(s.nearest(half + 0.01).name, '3:4', 'let go, the nearest declared ratio');
+	s.glide(s.nearest(half + 0.01));
+	assert.ok(!s.sliding && s.ratioName === '3:4' && near(s.work.scale, Math.SQRT2), 'it lands there with that ratio\'s crop - no jump');
+	assert.ok(!s.dirty(), 'nothing to apply after sliding');
+}
+ok('crops mode: the knob drags, the frame follows the interpolation, letting go lands on the nearest ratio');
+
+// -------------------------------------------------------- back to the original
+s = session(state({manual: true, ratio: '4:3', cx: 0.4, cy: 0.5, scale: 1.2, angle: 12, flip: true, look: {b: 120, c: 90, s: 100}}), 'master');
+s.el = {querySelector: () => ({hidden: true}), querySelectorAll: () => []};
+s.hideLevel = () => {};
+s.work = Object.assign({}, s.work, {ratio: math.ratio(3000, 2000), ax: 0.5, ay: 0.5, scale: 1, angle: 0, flip: false, look: {b: 100, c: 100, s: 100}, auto: true, freeRatio: false});
+assert.ok(s.dirty() && s.masterOf(s.work).insideOriginal(), 'the original as the master: a change like any other, applied with the tick');
+s.save();
+assert.ok(sent.at(-1).action === 'saveMasterCrop' && sent.at(-1).params.auto === 1 && sent.at(-1).params.angle === 0 && sent.at(-1).params.flip === 0
+	&& sent.at(-1).params.brightness === 100, 'stored as the whole picture, not turned, not mirrored, no look');
+ok('the master goes back to the original');
 
 console.log('media crop editor: all checks passed');

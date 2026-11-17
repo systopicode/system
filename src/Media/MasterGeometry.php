@@ -20,11 +20,11 @@ namespace Systopic\System\Media;
  *           ratio that lies inside the turned picture, so no background
  *           shows. At a right angle that is the plain fill in; at a tilt the
  *           frame's corners touch the picture's edges.
- *   centre  a fraction of the box around the turned picture (what Imagick's
- *           rotateImage() hands back), 0.5 / 0.5 being the picture's middle.
+ *   align   the alignment in the box around the turned picture (what
+ *           Imagick's rotateImage() hands back), 0.5 / 0.5 being centred.
  *
- * For one ratio per angle all four corners touch an edge each; `touching()`
- * gives that master - what turning a picture in the editor starts with.
+ * `largest()` is the master of the largest area inside the turned picture,
+ * its ratio free - what a turned picture without a master crop shows.
  *
  * Positive angles turn clockwise, as in CSS and Imagick. The original is the
  * one after EXIF orientation.
@@ -35,9 +35,13 @@ final class MasterGeometry
     public readonly int $width;
     public readonly int $height;
 
-    /** The box around the turned original: what the master crop's centre is a fraction of. */
+    /** The box around the turned original: what the master crop is aligned in. */
     public readonly float $referenceWidth;
     public readonly float $referenceHeight;
+
+    /** The middle of the frame, a fraction of the box around the turned picture - where the renderer cuts. */
+    public readonly float $centreFractionX;
+    public readonly float $centreFractionY;
 
     /** The frame, unrounded, in pixels of the original. */
     private readonly float $frameWidth;
@@ -80,9 +84,11 @@ final class MasterGeometry
         $this->width = max(1, (int) round($this->frameWidth));
         $this->height = max(1, (int) round($this->frameHeight));
 
-        // The centre is given on the screen; back through turn and mirror into the original.
-        $x = ($crop->cx - 0.5) * $this->referenceWidth;
-        $y = ($crop->cy - 0.5) * $this->referenceHeight;
+        // The crop is aligned in the box around the turned picture; its middle, back through turn and mirror into the original.
+        $this->centreFractionX = CropBox::centreOf($crop->alignX, $this->frameWidth / $this->referenceWidth);
+        $this->centreFractionY = CropBox::centreOf($crop->alignY, $this->frameHeight / $this->referenceHeight);
+        $x = ($this->centreFractionX - 0.5) * $this->referenceWidth;
+        $y = ($this->centreFractionY - 0.5) * $this->referenceHeight;
         $dx = $x * $this->cos + $y * $this->sin;
         $dy = -$x * $this->sin + $y * $this->cos;
         $this->centreX = $originalWidth / 2 + ($flip ? -$dx : $dx);
@@ -168,23 +174,47 @@ final class MasterGeometry
     }
 
     /**
-     * The master whose four corners touch one edge of the turned picture
-     * each - its ratio follows from the angle. Null where there is none: the
-     * closer the tilt comes to the picture's diagonal, the smaller that
-     * frame gets, and beyond it does not exist.
+     * The master of the largest area that lies inside the turned picture,
+     * no background - its ratio follows from the angle. What a turned
+     * picture without a master crop shows.
+     *
+     * Two cases, which meet without a jump:
+     *
+     *   all four corners on an edge     near a right angle: the frame touches
+     *                                   every edge of the turned picture
+     *   two corners on the long edges   near the diagonal: there the frame
+     *                                   would only get smaller by reaching the
+     *                                   short edges, so it stops at the long
+     *                                   ones - width and height follow from
+     *                                   half the short side
+     *
+     * At a right angle it is the whole picture; in between the ratio goes
+     * where the area is largest - wider than the picture first, through 1:1
+     * at 45 degrees.
      */
-    public static function touching(int $width, int $height, float $angle, bool $flip = false): ?self
+    public static function largest(int $width, int $height, float $angle, bool $flip = false): self
     {
         $probe = new self($width, $height, new CropBox(Ratio::ofPixels($width, $height)), $angle, $flip);
-        $c = abs($probe->cos);
-        $s = abs($probe->sin);
-        $d = $c * $c - $s * $s;
-        if (abs($d) < 1e-9) {
-            return null;
+        [$w, $h] = self::largestSize($width, $height, abs($probe->cos), abs($probe->sin));
+        return new self($width, $height, new CropBox(Ratio::ofPixels(max(1, (int) round($w)), max(1, (int) round($h)))), $angle, $flip);
+    }
+
+    /**
+     * Width and height of the largest frame inside a picture turned by an
+     * angle of the given |cos| and |sin|.
+     *
+     * @return array{0: float, 1: float}
+     */
+    public static function largestSize(float $width, float $height, float $c, float $s): array
+    {
+        $long = max($width, $height);
+        $short = min($width, $height);
+        if ($short <= 2 * $s * $c * $long || abs($s - $c) < 1e-12) {
+            $half = $short / 2;
+            return $width >= $height ? [$half / $s, $half / $c] : [$half / $c, $half / $s];
         }
-        $w = (int) round(($width * $c - $height * $s) / $d);
-        $h = (int) round(($height * $c - $width * $s) / $d);
-        return $w > 0 && $h > 0 ? new self($width, $height, new CropBox(Ratio::ofPixels($w, $h)), $angle, $flip) : null;
+        $d = $c * $c - $s * $s;
+        return [($width * $c - $height * $s) / $d, ($height * $c - $width * $s) / $d];
     }
 
     /**
@@ -224,26 +254,5 @@ final class MasterGeometry
                 'w' => $right - $left, 'h' => $bottom - $top] + $poi;
         }
         return $inMaster;
-    }
-
-    /**
-     * A crop of this master as a crop of another one - what happens to the
-     * crops set by hand when the master crop changes. The same middle of the
-     * picture and the same size in pixels; it is not limited to the new
-     * master, so the caller sees with `CropBox::inside()` what got cut.
-     */
-    public function rebase(CropBox $crop, self $to): CropBox
-    {
-        [$x, $y] = $this->toOriginal($crop->cx * $this->frameWidth, $crop->cy * $this->frameHeight);
-        [$x, $y] = $to->toMaster($x, $y);
-        [$w] = $crop->size($this->frameWidth, $this->frameHeight);
-        [$full] = (new CropBox($crop->ratio))->size($to->frameWidth, $to->frameHeight);
-        return new CropBox(
-            $crop->ratio,
-            $x / $to->frameWidth,
-            $y / $to->frameHeight,
-            $full * $to->frameWidth / ($w * $this->frameWidth),
-            $crop->source,
-        );
     }
 }

@@ -73,31 +73,35 @@ $set = $after($set, $edit);
 check('the master crop is the row named original, with its look', count($edit['save']) === 1 && $edit['save'][0]->format === Variants::MASTER
     && $set->master()->width === 2000 && $set->master()->height === 2000 && $set->look()['b'] === 110);
 
-// A crop set by hand in the whole picture follows a new master.
+// A new master under a crop set by hand: the crop keeps its alignment and scale in the master.
 $media = $medium();
-$set = $after(new CropSet($media, []), CropEdits::crop(new CropSet($media, []), new CropBox(Ratio::of('16:9'), 0.5, 0.5, 2)));   // 1500 px wide, in the middle
-$edit = CropEdits::master($set, new CropBox($square, 0.5, 0.5, 1), []);                                                       // the middle square, 2000 px
-$moved = Operator::box($after($set, $edit)->row('16:9'));
-check('a new master crop: the crops of the ratios are saved with it', count($edit['save']) === 2 && $edit['clipped'] === []);
-check('a crop set by hand stays on the same piece of the picture', $near($moved->cx, 0.5) && $near($moved->cy, 0.5) && $near($moved->scale, 2000 / 1500));
-$set = $after(new CropSet($media, []), CropEdits::crop(new CropSet($media, []), new CropBox(Ratio::of('16:9'), 0.25, 0.5, 2)));   // on the left: 0 to 1500 px
-$edit = CropEdits::master($set, new CropBox($square, 0.5, 0.5, 1), []);                                                       // the master starts at 500 px
+$set = $after(new CropSet($media, []), CropEdits::crop(new CropSet($media, []), new CropBox(Ratio::of('16:9'), 0.5, 0.5, 2)));   // centred, half of fill in
+$edit = CropEdits::master($set, new CropBox($square, 0.5, 0.5, 1), []);                                                       // the middle square
 $kept = Operator::box($after($set, $edit)->row('16:9'));
-check('a crop that would reach out of the new master is kept inside - and named', $edit['clipped'] === ['16:9'] && $kept->inside(2000, 2000) && $near($kept->scale, 2000 / 1500));
-$set = $after(new CropSet($media, []), CropEdits::crop(new CropSet($media, []), new CropBox($square, 0.0, 0.5, 1)));              // shows background on purpose
+check('a new master crop: only the master is written, the crops stay as they are', count($edit['save']) === 1 && $edit['clipped'] === []);
+check('a crop set by hand keeps alignment and scale in the new master', $near($kept->alignX, 0.5) && $near($kept->alignY, 0.5) && $near($kept->scale, 2) && $kept->inside(2000, 2000));
+$set = $after(new CropSet($media, []), CropEdits::crop(new CropSet($media, []), new CropBox(Ratio::of('16:9'), 0.0, 1.0, 1.2)));   // flush left and bottom
+$edit = CropEdits::master($set, new CropBox(Ratio::of('4:5'), 0.3, 0.5, 1.4), []);                                            // a much smaller, upright master
+$kept = Operator::box($after($set, $edit)->row('16:9'));
+$newMaster = $after($set, $edit)->master();
+check('flush left and bottom stays flush left and bottom - and inside, whatever the master', $near($kept->alignX, 0.0) && $near($kept->alignY, 1.0)
+    && $kept->inside($newMaster->width, $newMaster->height) && $edit['clipped'] === []);
+$set = $after(new CropSet($media, []), CropEdits::crop(new CropSet($media, []), new CropBox($square, -0.5, 0.5, 0.8)));           // shows background on purpose
 $edit = CropEdits::master($set, new CropBox($square, 0.5, 0.5, 1), []);
-check('a crop that showed background on purpose is not pulled in', $edit['clipped'] === [] && !Operator::box($after($set, $edit)->row('1:1'))->inside(2000, 2000));
+$kept = Operator::box($after($set, $edit)->row('1:1'));
+check('a crop that showed background on purpose still does', $near($kept->alignX, -0.5) && !$kept->inside(2000, 2000));
 
 // Turning: the master becomes upright, a crop follows the picture.
 $media = $medium();
-$set = $after(new CropSet($media, []), CropEdits::crop(new CropSet($media, []), new CropBox($square, 0.25, 0.5, 2)));             // 1000 px square, left of the middle
+$set = $after(new CropSet($media, []), CropEdits::crop(new CropSet($media, []), new CropBox($square, 0.125, 0.5, 2)));            // 1000 px square, its middle at a quarter
 $edit = CropEdits::master($set, null, ['r' => 90]);
 $turned = $after($set, $edit);
 check('turned by 90 degrees without a master crop: the whole picture, upright', $turned->master()->width === 2000 && $turned->master()->height === 3000 && $turned->look()['r'] === 90.0);
 $followed = Operator::box($turned->row('1:1'));
-check('the crop set by hand is turned with it: left became top', $near($followed->cx, 0.5) && $near($followed->cy, 0.25) && $near($followed->scale, 2));
+[$cx, $cy] = $followed->centre(2000, 3000);
+check('the crop set by hand is turned with it: left became top', $near($cx, 0.5) && $near($cy, 0.25) && $near($followed->scale, 2));
 $tilted = $after($set, CropEdits::master($set, null, ['r' => 10]));
-check('turned by 10 degrees without a master crop: the frame touching all four edges', $tilted->master()->insideOriginal(1.5) && $tilted->master()->width < 3000 && $tilted->master()->crop->scale === 1.0);
+check('turned by 10 degrees without a master crop: the largest frame inside the turned picture', $tilted->master()->insideOriginal(1.5) && $tilted->master()->width < 3000 && $tilted->master()->crop->scale === 1.0);
 
 // Back to automatic: the crop goes, the look stays.
 $media = $medium();
@@ -139,8 +143,10 @@ $byName = array_column($state['ratios'], null, 'name');
 check('every declared ratio, wide to narrow', array_column($state['ratios'], 'name') === Variants::RATIOS);
 check('with its place on the slider: widest at 0, narrowest at 1, 1:1 where the logarithm puts it', $byName['2:1']['position'] === 0.0 && $byName['9:16']['position'] === 1.0
     && $near($byName['1:1']['position'], log(2) / log(2 / 0.5625)) && $byName['16:9']['position'] > $byName['2:1']['position']);
-check('with its crop and where that came from', $byName['1:1']['source'] === 'manual' && $near($byName['1:1']['cx'], 0.3) && $near($byName['1:1']['scale'], 2)
-    && $byName['4:3']['source'] === 'interpolated' && $byName['9:16']['source'] === 'anchor' && $byName['16:9']['source'] === 'anchor' && $byName['3:2']['source'] === 'centered');
+check('with its crop and where that came from', $byName['1:1']['source'] === 'manual' && $near($byName['1:1']['ax'], 0.3) && $near($byName['1:1']['scale'], 2)
+    && $byName['4:3']['source'] === 'interpolated' && $byName['9:16']['source'] === 'anchor' && $byName['16:9']['source'] === 'interpolated' && $byName['3:2']['source'] === 'centered');
+check('beyond the last crop, the end of the slider is "fill in"', $near($byName['9:16']['scale'], 1) && $near($byName['9:16']['ax'], 0.3)
+    && $byName['3:4']['source'] === 'interpolated' && $byName['3:4']['scale'] > 1 && $byName['3:4']['scale'] < 2);
 check('the state is JSON', is_string(json_encode($state, JSON_THROW_ON_ERROR)) && $state['sizes'] === [0.5, 1.0, 2.0, 5.0, 10.0] && $state['pois'] === []);
 check('a medium of unknown size has no master to edit', CropEdits::state(new CropSet($unknown, []))['master'] === null);
 $vector = $medium();
@@ -148,7 +154,7 @@ $vector->mimetype = 'image/svg+xml';
 check('an svg cannot be cut', CropEdits::state(new CropSet($vector, []))['cut'] === false && CropEdits::state(new CropSet($vector, []))['original']['url'] === null);
 
 // ---------------------------------------------------------- what a request sends
-check('a crop from a request', CropEdits::boxFrom('16:9', '0.4', '0.6', '1.5')?->ratio->name === '16:9' && $near(CropEdits::boxFrom('16:9', '0.4', '0.6', '1.5')->cy, 0.6));
+check('a crop from a request', CropEdits::boxFrom('16:9', '0.4', '0.6', '1.5')?->ratio->name === '16:9' && $near(CropEdits::boxFrom('16:9', '0.4', '0.6', '1.5')->alignY, 0.6));
 foreach ([['nonsense', 0.5, 0.5, 1], ['16:9', 'x', 0.5, 1], ['16:9', 0.5, 0.5, 0], ['16:9', 0.5, 0.5, -1], ['16:9', 99, 0.5, 1], ['16:9', 0.5, 0.5, 1000], [null, 0.5, 0.5, 1], ['16:9', NAN, 0.5, 1]] as $i => $bad) {
     check("a request that is no crop is refused - $i", CropEdits::boxFrom(...$bad) === null);
 }

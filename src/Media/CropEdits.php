@@ -33,13 +33,15 @@ final class CropEdits
     // ------------------------------------------------------------ the edits
 
     /**
-     * The master: its crop (null = automatic, the frame touching the turned
-     * picture's edges) and its look.
+     * The master: its crop (null = automatic, the largest frame inside the
+     * turned picture) and its look.
      *
-     * The crops of the ratios follow: each stays on the same piece of the
-     * picture. One that lay inside the old master is kept inside the new
-     * one; `clipped` names those that lost part of their picture that way.
-     * One that showed background on purpose is left as it comes out.
+     * The crops of the ratios keep their alignment and scale in the master
+     * (`CropBox`): flush left stays flush left, "fill in" stays "fill in",
+     * one inside the old master is inside the new one. Turned by quarters
+     * or mirrored, the alignment turns and mirrors with the picture - a crop
+     * on the left of it is on top after a quarter turn. `clipped` stays empty;
+     * nothing is cut any more.
      *
      * @return array{save: list<object>, remove: list<object>, clipped: list<string>}
      */
@@ -51,13 +53,13 @@ final class CropEdits
         if ($width <= 0 || $height <= 0) {
             throw new \InvalidArgumentException('CropEdits::master(): the size of the original is not known');
         }
-        $before = $set->masterOf($width, $height);
+        $was = $set->look();
 
         $row = $set->row(Variants::MASTER);
         if ($crop !== null) {
             $row = Operator::put($row, $media, $crop, master: true);
         } elseif ($row !== null) {
-            $row->ratio = $row->centerX = $row->centerY = $row->scale = null;
+            $row->ratio = $row->alignX = $row->alignY = $row->scale = null;
         }
         $neutral = Operator::look(null);
         $look = ['r' => $look['r'] ?? 0, 'f' => $look['f'] ?? 0] + $look + $neutral;
@@ -66,29 +68,48 @@ final class CropEdits
         }
         $row ??= Operator::put(null, $media, new CropBox(Ratio::ofPixels($width, $height)), master: true);
         if ($crop === null) {
-            $row->ratio = $row->centerX = $row->centerY = $row->scale = null;
+            $row->ratio = $row->alignX = $row->alignY = $row->scale = null;
         }
         $row = Operator::withLook($row, $look);
 
-        $rows = $set->rows;
-        $rows[Variants::MASTER] = $row;
-        $after = (new CropSet($media, array_values($rows)))->masterOf($width, $height);
-
         $save = [$row];
-        $clipped = [];
-        foreach ($set->rows as $format => $other) {
-            $box = $format === Variants::MASTER ? null : Operator::box($other);
-            if ($box === null) {
-                continue;
+        $quarters = (int) round(((float) $look['r'] - (float) $was['r']) / 90);
+        $mirrored = (bool) $look['f'] !== (bool) $was['f'];
+        if ($quarters % 4 !== 0 || $mirrored) {
+            foreach ($set->rows as $format => $other) {
+                $box = $format === Variants::MASTER ? null : Operator::box($other);
+                if ($box !== null) {
+                    $save[] = Operator::put($other, $media, self::reoriented($box, (float) $was['r'], (bool) $was['f'], (float) $look['r'], (bool) $look['f']));
+                }
             }
-            $moved = $before->rebase($box, $after);
-            if ($box->inside($before->width, $before->height) && !$moved->inside($after->width, $after->height, 1e-6)) {
-                $moved = $moved->clamped($after->width, $after->height);
-                $clipped[] = $box->ratio->name;
-            }
-            $save[] = Operator::put($other, $media, $moved);
         }
-        return ['save' => $save, 'remove' => [], 'clipped' => $clipped];
+        return ['save' => $save, 'remove' => [], 'clipped' => []];
+    }
+
+    /**
+     * A crop's alignment after the picture under it was turned by quarters
+     * or mirrored: the point it is aligned to goes where that piece of the
+     * picture goes. The order is the renderer's - mirror, then turn.
+     */
+    public static function reoriented(CropBox $box, float $fromAngle, bool $fromFlip, float $toAngle, bool $toFlip): CropBox
+    {
+        $quarter = static fn(float $angle): int => (((int) round($angle / 90)) % 4 + 4) % 4;
+        // A place in the master (fractions) back to the unturned, unmirrored picture ...
+        [$x, $y] = [$box->alignX, $box->alignY];
+        for ($i = 0; $i < $quarter($fromAngle); $i++) {
+            [$x, $y] = [$y, 1 - $x];          // a quarter back, anticlockwise
+        }
+        if ($fromFlip) {
+            $x = 1 - $x;
+        }
+        // ... and forward into the new one.
+        if ($toFlip) {
+            $x = 1 - $x;
+        }
+        for ($i = 0; $i < $quarter($toAngle); $i++) {
+            [$x, $y] = [1 - $y, $x];          // a quarter on, clockwise
+        }
+        return new CropBox($box->ratio, $x, $y, $box->scale, $box->source);
     }
 
     /**
@@ -216,8 +237,8 @@ final class CropEdits
                 'w' => $ratio->w,
                 'h' => $ratio->h,
                 'position' => $widest === null || $widest->equals($narrowest) ? 0.5 : round(1 - $ratio->position($narrowest, $widest), 6),
-                'cx' => $crop?->cx,
-                'cy' => $crop?->cy,
+                'ax' => $crop?->alignX,
+                'ay' => $crop?->alignY,
                 'scale' => $crop?->scale,
                 'source' => $crop?->source,
             ];
@@ -236,8 +257,8 @@ final class CropEdits
             'master' => $master === null ? null : [
                 'manual' => $box !== null,
                 'ratio' => $master->crop->ratio->name,
-                'cx' => $master->crop->cx,
-                'cy' => $master->crop->cy,
+                'ax' => $master->crop->alignX,
+                'ay' => $master->crop->alignY,
                 'scale' => $master->crop->scale,
                 'angle' => $look['r'],
                 'flip' => (bool) $look['f'],
@@ -254,19 +275,19 @@ final class CropEdits
     }
 
     /** A crop from what a request sends - null when it is not one. */
-    public static function boxFrom(mixed $ratio, mixed $cx, mixed $cy, mixed $scale): ?CropBox
+    public static function boxFrom(mixed $ratio, mixed $ax, mixed $ay, mixed $scale): ?CropBox
     {
         $read = is_string($ratio) ? Ratio::of($ratio) : null;
-        foreach ([$cx, $cy, $scale] as $value) {
+        foreach ([$ax, $ay, $scale] as $value) {
             if (!is_numeric($value) || !is_finite((float) $value)) {
                 return null;
             }
         }
-        // A centre far outside the picture or a scale near nothing shows no picture at all.
-        if ($read === null || abs((float) $cx) > 5 || abs((float) $cy) > 5 || (float) $scale < 0.05 || (float) $scale > 100) {
+        // An alignment far past the picture or a scale near nothing shows no picture at all.
+        if ($read === null || abs((float) $ax - 0.5) > 10.5 || abs((float) $ay - 0.5) > 10.5 || (float) $scale < 0.05 || (float) $scale > 100) {
             return null;
         }
-        return new CropBox($read, (float) $cx, (float) $cy, (float) $scale, CropBox::MANUAL);
+        return new CropBox($read, (float) $ax, (float) $ay, (float) $scale, CropBox::MANUAL);
     }
 
     private static function sameLook(array $a, array $b): bool

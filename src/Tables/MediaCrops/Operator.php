@@ -79,8 +79,8 @@ final class Operator
         }
         $crop->format = $master ? Variants::MASTER : $box->ratio->name;
         $crop->ratio = $box->ratio->name;
-        $crop->centerX = self::decimal($box->cx);
-        $crop->centerY = self::decimal($box->cy);
+        $crop->alignX = self::decimal($box->alignX);
+        $crop->alignY = self::decimal($box->alignY);
         $crop->scale = self::decimal($box->scale);
         $crop->auto = false;
         $crop->version = (int) $crop->version + 1;
@@ -92,10 +92,10 @@ final class Operator
     {
         $ratio = $crop === null || $crop->ratio === null ? null : Ratio::of((string) $crop->ratio);
         $scale = $crop?->scale === null ? 0.0 : (float) (string) $crop->scale;
-        if ($ratio === null || $scale <= 0 || $crop->centerX === null || $crop->centerY === null) {
+        if ($ratio === null || $scale <= 0 || $crop->alignX === null || $crop->alignY === null) {
             return null;
         }
-        return new CropBox($ratio, (float) (string) $crop->centerX, (float) (string) $crop->centerY, $scale, CropBox::MANUAL);
+        return new CropBox($ratio, (float) (string) $crop->alignX, (float) (string) $crop->alignY, $scale, CropBox::MANUAL);
     }
 
     /**

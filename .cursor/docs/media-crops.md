@@ -17,11 +17,32 @@ werden. Plan und Entscheidungen:
 | **Hand-Crop** | im Editor gesetzter Ausschnitt einer Ratio; alles andere wird berechnet |
 | **POI** | Point of Interest: Stelle des Bildes, die in berechneten Ausschnitten bleiben soll |
 
-Ein Crop ist **Ratio + Mitte + Scale**: `cx`, `cy` sind die Mitte als Anteil
-0–1 des Bezugsbildes (Ratio-Crop: der Master; Master-Crop: der Kasten um das
-gedrehte Original). `scale` ist die Vergrößerung über „fill in": 1 = größter
-Ausschnitt der Ratio ohne Rand, unter 1 wird Hintergrund sichtbar. Beim
-gedrehten Master ist 1 der größte Rahmen, der ganz im gedrehten Bild liegt.
+Ein Crop ist **Ratio + Ausrichtung + Scale** (`Media\CropBox`):
+
+- `align_x`, `align_y` (PHP `alignX`/`alignY`, JS und Anfragen `ax`/`ay`):
+  die Ausrichtung im Bezugsbild (Ratio-Crop: der Master; Master-Crop: der
+  Kasten um das gedrehte Original), wie `background-position` in Prozent.
+  Der Punkt bei diesem Anteil des Rahmens liegt auf dem Punkt bei diesem
+  Anteil des Bezugsbildes: 0 = bündig links/oben, 1 = bündig rechts/unten,
+  0,5 = mittig. Außerhalb von 0–1 ragt der Rahmen über den Rand (gespeichert
+  −10 bis 11).
+- `scale`: Vergrößerung über „fill in": 1 = größter Ausschnitt der Ratio
+  ohne Rand, unter 1 wird Hintergrund sichtbar. Beim gedrehten Master ist 1
+  der größte Rahmen, der ganz im gedrehten Bild liegt.
+
+**Warum Ausrichtung statt Mitte:** „Innen" heißt einfach 0 ≤ align ≤ 1 und
+scale ≥ 1, egal wie groß Bezugsbild und Rahmen sind. Ändert sich der Master,
+behalten die Crops Ausrichtung und Scale und bleiben innen: bündig links
+bleibt bündig links.
+
+Umrechnung je Achse, `f` = Rahmenlänge / Bildlänge: Mitte = `a + f·(0,5 − a)`,
+`a = (Mitte − f/2) / (1 − f)`. Bei `f = 1` (Rahmen füllt die Achse, bei
+Scale 1 immer eine) verschiebt die Ausrichtung nichts; der Wert bleibt
+stehen und wirkt erst, wenn sich das Bezugsbild ändert. Der Editor rechnet
+beim Ziehen und Zoomen mit der Mitte und behält dort die alte Ausrichtung
+(`centredAt()`). Folge: Bei „Hintergrund darf sichtbar werden" lässt sich
+ein Rahmen, der auf einer Achse fast genau so lang ist wie das Bild, auf
+dieser Achse kaum verschieben — ein Prozent Zoom löst das.
 
 ## Settings
 
@@ -51,7 +72,7 @@ jedem Speichern im Editor (`VariantServer::preview()`).
 |---|---|
 | `media_crop_format` | `original` = Master, sonst der Name der Ratio (`16:9`) |
 | `media_crop_ratio` | Ratio des Zielbildes; beim Master seine freie (`753:1364`) |
-| `media_crop_center_x`, `_center_y` | Mitte, Anteil des Bezugsbildes |
+| `media_crop_align_x`, `_align_y` | Ausrichtung im Bezugsbild, `decimal(15,12)` |
 | `media_crop_scale` | über „fill in" |
 | `media_crop_edit` | nur Master, JSON: `{"b":100,"c":100,"s":100,"r":0,"f":0}` — Helligkeit, Kontrast, Sättigung (100 = unverändert), Winkel in Grad, gespiegelt |
 | `media_crop_version` | bei jedem Speichern +1 |
@@ -61,7 +82,9 @@ jedem Speichern im Editor (`VariantServer::preview()`).
 `media_master_height`.
 
 Die Spalten `left`, `top`, `width`, `height`, `auto` und Zeilen mit anderen
-Formatnamen stammen vom alten Renderer; der neue liest sie nicht.
+Formatnamen stammen vom alten Renderer; der neue liest sie nicht. Ebenso
+`media_crop_center_x`/`_center_y` (Mitte statt Ausrichtung, bis 2026-11-17):
+nicht umgerechnet, ein Crop nur mit ihnen gilt als automatisch.
 
 **Anlegen der Spalten:** Speichern allein legt nichts an. `Queries\MediaCrops`
 nennt die neuen Spalten in seinen Abfragen; eine Datenbank von vorher bekommt
@@ -72,13 +95,15 @@ sie dort vom Provisioner, beim ersten Bild.
 Für eine Ratio, in dieser Reihenfolge:
 
 1. Hand-Crop dieser Ratio — unverändert, auch wenn er Hintergrund zeigt.
-2. Zwischen zwei Hand-Crops: interpoliert (Mitte linear, Scale geometrisch,
+2. Zwischen zwei Hand-Crops: interpoliert (Ausrichtung linear, Scale geometrisch,
    nach dem Logarithmus der Ratio).
 3. POIs vorhanden: größter Ausschnitt, so verschoben, dass sie darin liegen;
    passen nicht alle, gewinnt das Fenster mit dem meisten Gewicht.
 4. Hand-Crop nur auf einer Seite: der ganze Master zählt als Anker bei
-   seiner eigenen Ratio; außerhalb aller Anker gelten Mitte und Scale des
-   nächsten.
+   seiner eigenen Ratio. Außerhalb aller Anker gilt die Ausrichtung des nächsten,
+   die Scale läuft auf „fill in" zu und erreicht es bei der äußersten
+   deklarierten Ratio dieser Seite (die Enden des Reglers zeigen so viel Bild
+   wie möglich). Ohne Liste der deklarierten Ratios: gleich „fill in".
 5. Sonst zentriert, Scale 1.
 
 Berechnete Ausschnitte liegen immer im Master. Die Fälle stehen als Daten in
@@ -180,10 +205,35 @@ Datei-Editor (`admin/pages/editor/file/`), `public/js/gui/cropEditor.js`
 (`sys.cropMath` — dieselbe wie auf dem Server).
 
 - **Master-Modus:** zeigt das Original; Ratio per Klick oder frei am Regler,
-  Drehen (Klick = 90°, ziehen = freier Winkel um den Fixpunkt), Spiegeln,
-  Helligkeit / Kontrast / Sättigung.
-- **Crops-Modus:** zeigt den Master; eine Ratio je Klick am Regler, gefüllte
-  Symbole sind Hand-Crops.
+  Drehen, Spiegeln, Helligkeit / Kontrast / Sättigung. Der Dreh-Knopf links
+  nimmt nur das Werkzeug auf (ziehen = freier Winkel um den Fixpunkt); der
+  Knopf oben rechts neben ✓ dreht auf den nächsten rechten Winkel im
+  Uhrzeigersinn (30,4° → 90°, nicht 120,4°) — die verlustfreien Drehungen.
+- **Gedreht ohne eigenen Master-Crop** gilt der Rahmen mit der größten
+  Fläche im gedrehten Bild (`MasterGeometry::largest()`, `cropMath.largest`),
+  geschlossen in zwei Fällen: nahe dem rechten Winkel berühren alle vier
+  Ecken eine Kante, nahe der Diagonale stoßen zwei Ecken an die langen
+  Kanten. Die Fälle gehen ohne Sprung ineinander über. Das Format folgt dem
+  Winkel: bei 0° das Bild, erst breiter, bei 45° 1:1, bei 90° hochkant.
+- **Festes Format bei Scale 1** bleibt beim Drehen Scale 1: der größte
+  Rahmen dieses Formats im gedrehten Bild. Ein anderer Scale behält die
+  Pixel des Rahmens.
+- **Crops-Modus:** zeigt den Master; eine Ratio je Klick am Regler oder durch
+  Ziehen des Knopfs. Beim Ziehen folgt der Rahmen der Interpolation zwischen
+  den beiden Nachbar-Ratios (`cropAt()`), beim Loslassen gleitet der Knopf
+  auf die nächste deklarierte Ratio. Dunkle Symbole sind Hand-Crops, das
+  gelbe ist das gezeigte.
+- **Regler:** die Kreise stehen in einer Linie und überlappen; 1:1 liegt
+  ganz hinten, die Enden vorn, Hover und Auswahl holen nach vorn. Links der
+  Name; überdeckte Namen erscheinen nur beim Hover.
+- **Zurücksetzen:** jeder Farbregler hat einen Knopf „unverändert"; der
+  Knopf unten in der linken Leiste setzt den ganzen Master aufs Original
+  (kein Crop, nicht gedreht, nicht gespiegelt, kein Look) — als Änderung,
+  die mit ✓ übernommen wird.
+- **CSS-Falle:** `50_forms.css` kommt nach `14_cropEditor.css` und setzt für
+  `.cms .button` / `.cms button` `display: inline-flex`, Ränder und
+  `box-shadow: none !important`. Eigene Regeln für Knöpfe brauchen mehr
+  Spezifität (`.ceStage > .ceMore`), Schatten gehen nur über `filter`.
 - Der Rahmen steht, das Bild bewegt sich: ziehen, Rad oder zwei Finger.
 - **Zoom-Werkzeug** und **Dreh-Werkzeug** arbeiten um einen Fixpunkt
   (Fadenkreuz, rastet an den neun Punkten des Rahmens); Klick auf das
@@ -194,31 +244,51 @@ Datei-Editor (`admin/pages/editor/file/`), `public/js/gui/cropEditor.js`
 - „Bildrand bleibt außerhalb" / „Hintergrund darf sichtbar werden", fit-in,
   fill-in, „Crop auf Automatik" (ohne Rückfrage).
 
-Endpunkte (`…/editor/file/<aktion>?target_id=<Media-Node>`), jeder antwortet
-mit dem Zustand danach (`Media\CropEdits::state()`):
+Endpunkte: beantwortet von `Media\CropEditorEndpoint` (system), aufgerufen
+aus dem Panel der Anwendung, das vorher die Rechte prüft — in cms
+`…/editor/file/<aktion>?target_id=<Media-Node>`. Jeder antwortet mit dem
+Zustand danach (`Media\CropEdits::state()`):
 
 | Aktion | Parameter |
 |---|---|
 | `cropState` | — |
-| `saveMasterCrop` | `ratio cx cy scale` oder `auto=1`; `brightness contrast saturation angle flip` |
-| `saveRatioCrop` | `ratio cx cy scale` |
+| `saveMasterCrop` | `ratio ax ay scale` oder `auto=1`; `brightness contrast saturation angle flip` |
+| `saveRatioCrop` | `ratio ax ay scale` |
 | `resetCrop` | `format=<ratio>` oder `format=original` |
 | `savePois` | `pois=<json>`, optional `drop_crops=1` |
 
-Ein neuer Master rechnet die Hand-Crops um: jeder bleibt auf demselben Stück
-Bild; was dabei in den Master geschoben werden musste, steht in `clipped`.
+Eine andere Anwendung (z. B. spaceticker, ohne cms) bindet den Editor so ein:
+
+```php
+// in ihrem Panel, nach der eigenen Rechteprüfung
+if (CropEditorEndpoint::handles($action)) {
+    CropEditorEndpoint::send(CropEditorEndpoint::answer($action, $scope, $mediaId,
+        static fn(string $name, mixed $default = null): mixed => http::get($name, $default)));
+}
+```
+
+```js
+sys.cropEditor.open({stage: element, url: '<Adresse dieses Panels>/', nodeId: <wie das Panel das Medium findet>});
+```
+
+Ein neuer Master lässt die Hand-Crops stehen: Ausrichtung und Scale bleiben,
+sie gelten jetzt im neuen Master (`CropEdits::master()`). Nur Drehen um
+Vierteldrehungen und Spiegeln nehmen die Ausrichtung mit: Ein Crop links im
+Bild sitzt nach 90° oben (`CropEdits::reoriented()`, ein schräger Winkel
+zählt als nächste Vierteldrehung). `clipped` bleibt leer.
 
 ## Klassen
 
 | Klasse | Aufgabe |
 |---|---|
-| `Media\Ratio`, `CropBox` | Werte: Ratio; Crop als Ratio + Mitte + Scale |
+| `Media\Ratio`, `CropBox` | Werte: Ratio; Crop als Ratio + Ausrichtung + Scale |
 | `Media\CropResolver` | Ausschnitt einer Ratio aus Hand-Crops und POIs |
 | `Media\MasterGeometry` | Original ↔ Master, mit Spiegeln und beliebigem Winkel |
 | `Media\Variants` | deklarierte Ratios und Sizes, Dateinamen, Aliasse, Schalter |
 | `Media\VariantRenderer` | Master, Ausschnitt, Skalieren, Schreiben (Imagick) |
 | `Media\VariantServer` | Anfrage einer fehlenden Datei, Platzgrenze, Vorschau, Umleitung |
 | `Media\CropEdits` | was der Editor speichert und erfährt |
+| `Media\CropEditorEndpoint` | die fünf Anfragen des Editors, für jede Anwendung gleich |
 | `Queries\MediaCrops\MediaCrops`, `CropSet` | Medien mit ihren Crop-Zeilen |
 | `Tables\MediaCrops\Operator` | `put()` / `box()`, `look()` / `withLook()` |
 | `Tables\Medias\Picture` | Ausgabe: `<img>`, `<picture>`, Adressen |
@@ -240,8 +310,9 @@ node tests/media-crop-editor.mjs        Bedienlogik des Editors ohne Browser
 
 ## Offen
 
-- **Drehen im Editor:** laut Benutzer stimmt dort etwas noch nicht (noch
-  nicht eingegrenzt).
+- **Drehen:** Modell „größte Fläche" seit 2026-11-17. Offen, ob das Format
+  zusätzlich zwischen dem bei 0° und 90° begrenzt werden soll (dann geht das
+  Format nicht erst breiter, kostet bei kleinen Winkeln 3–7 % Fläche).
 - **Aufräumen:** alter Renderer (`mediaImage`, `mediaEditor`,
   `imageEditor.js`), Alias-Ordner und Formatordner, `var/adjust/look.json`,
   die alten Crop-Zeilen und Spalten, Live-Area — erst, wenn der Schalter

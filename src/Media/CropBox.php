@@ -5,17 +5,29 @@ declare(strict_types=1);
 namespace Systopic\System\Media;
 
 /**
- * One crop: a ratio, a centre and a scale. A value - every change is a copy.
+ * One crop: a ratio, an alignment and a scale. A value - every change is a copy.
  *
  * It is always read against a reference image: the master for the crop of a
  * ratio, the turned original for the master crop itself.
  *
- *   centre  `cx`, `cy` - where the middle of the crop lies, as a fraction
- *           0-1 of the reference
+ *   align   `alignX`, `alignY` - how the crop is aligned in the reference,
+ *           as with `background-position` in per cent: the point at that
+ *           fraction of the crop lies on the point at that fraction of the
+ *           reference. 0 = flush left (top), 1 = flush right (bottom),
+ *           0.5 = centred. Outside 0-1 the crop reaches past the edge.
  *   scale   magnification over "fill in": 1 is the largest crop of this
  *           ratio that fits into the reference without a border, 2 has half
  *           the edge length. Below 1 the crop is larger than the image and
  *           background shows.
+ *
+ * Why an alignment and not the middle: inside the reference means simply
+ * 0 <= align <= 1 and scale >= 1, whatever the sizes. When the reference
+ * changes - a new master under the crops of the ratios - a crop keeps its
+ * alignment and stays inside; flush left stays flush left.
+ *
+ * Where the crop is exactly as long as the reference (at scale 1 always
+ * one axis), the alignment of that axis does not move it - it is kept for
+ * when the reference changes.
  *
  * One scale instead of a width and a height: two values could disagree with
  * the ratio and stretch the picture, one cannot.
@@ -28,27 +40,64 @@ final class CropBox
     public const INTERPOLATED = 'interpolated';
     /** Moved so that the points of interest are inside. */
     public const POI = 'poi';
-    /** Outside all crops set by hand: the nearest one's centre and scale. */
+    /** Outside all crops set by hand: the nearest one's alignment, towards "fill in". */
     public const ANCHOR = 'anchor';
     /** Nothing known: the largest crop, centred. */
     public const CENTERED = 'centered';
 
     public function __construct(
         public readonly Ratio $ratio,
-        public readonly float $cx = 0.5,
-        public readonly float $cy = 0.5,
+        public readonly float $alignX = 0.5,
+        public readonly float $alignY = 0.5,
         public readonly float $scale = 1.0,
         public readonly string $source = self::CENTERED,
     ) {
-        if (!is_finite($cx) || !is_finite($cy) || !is_finite($scale) || $scale <= 0) {
-            throw new \InvalidArgumentException("CropBox: centre $cx / $cy, scale $scale");
+        if (!is_finite($alignX) || !is_finite($alignY) || !is_finite($scale) || $scale <= 0) {
+            throw new \InvalidArgumentException("CropBox: align $alignX / $alignY, scale $scale");
         }
     }
 
     /** The same crop under another origin - a stored one is `MANUAL`. */
     public function as(string $source): self
     {
-        return new self($this->ratio, $this->cx, $this->cy, $this->scale, $source);
+        return new self($this->ratio, $this->alignX, $this->alignY, $this->scale, $source);
+    }
+
+    /** The alignment along one axis that puts the middle of a crop of that length (fractions) at a place. */
+    public static function alignOf(float $centre, float $length, float $keep = 0.5): float
+    {
+        $room = 1 - $length;
+        if (abs($room) < 1e-9) {
+            return $keep;       // as long as the reference: any alignment is the same here
+        }
+        return max(-10.0, min(11.0, ($centre - $length / 2) / $room));
+    }
+
+    /** The middle of a crop of that length (fractions) under an alignment. */
+    public static function centreOf(float $align, float $length): float
+    {
+        return $align + $length * (0.5 - $align);
+    }
+
+    /**
+     * The crop whose middle lies at a place of the reference - the same
+     * crop as before where the alignment of an axis does not matter.
+     */
+    public static function at(Ratio $ratio, float $cx, float $cy, float $scale, float $width, float $height, ?self $keep = null, string $source = self::MANUAL): self
+    {
+        [$w, $h] = (new self($ratio, scale: $scale))->size($width, $height);
+        return new self($ratio, self::alignOf($cx, $w, $keep?->alignX ?? 0.5), self::alignOf($cy, $h, $keep?->alignY ?? 0.5), $scale, $source);
+    }
+
+    /**
+     * The middle of the crop as a fraction of a reference of the given size.
+     *
+     * @return array{0: float, 1: float}
+     */
+    public function centre(float $width, float $height): array
+    {
+        [$w, $h] = $this->size($width, $height);
+        return [self::centreOf($this->alignX, $w), self::centreOf($this->alignY, $h)];
     }
 
     /**
@@ -74,7 +123,8 @@ final class CropBox
     public function rect(float $width, float $height): array
     {
         [$w, $h] = $this->size($width, $height);
-        return ['x' => $this->cx - $w / 2, 'y' => $this->cy - $h / 2, 'w' => $w, 'h' => $h];
+        [$cx, $cy] = [self::centreOf($this->alignX, $w), self::centreOf($this->alignY, $h)];
+        return ['x' => $cx - $w / 2, 'y' => $cy - $h / 2, 'w' => $w, 'h' => $h];
     }
 
     /**
@@ -114,18 +164,16 @@ final class CropBox
 
     /**
      * The nearest crop that lies inside the reference: the scale at least 1,
-     * the centre moved as little as needed. For computed crops - one set by
-     * hand may show background and is left alone.
+     * the alignment within 0-1. For computed crops - one set by hand may show
+     * background and is left alone.
      */
     public function clamped(float $width, float $height): self
     {
-        $inside = new self($this->ratio, $this->cx, $this->cy, max(1.0, $this->scale), $this->source);
-        [$w, $h] = $inside->size($width, $height);
         return new self(
             $this->ratio,
-            min(max($this->cx, $w / 2), 1 - $w / 2),
-            min(max($this->cy, $h / 2), 1 - $h / 2),
-            $inside->scale,
+            min(max($this->alignX, 0.0), 1.0),
+            min(max($this->alignY, 0.0), 1.0),
+            max(1.0, $this->scale),
             $this->source,
         );
     }

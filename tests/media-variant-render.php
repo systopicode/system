@@ -58,7 +58,7 @@ $mirrored = VariantRenderer::master($original, new MasterGeometry(300, 200, new 
 check('mirrored: the corner and the halves change sides', $at($mirrored, 290, 10) === 'green' && $at($mirrored, 50, 100) === 'blue' && $at($mirrored, 250, 100) === 'red');
 $cut = VariantRenderer::master($original, new MasterGeometry(300, 200, new CropBox($square, scale: 2)), $look);
 check('master crop: the middle square, half red, half blue', $size($cut) === [100, 100] && $at($cut, 20, 50) === 'red' && $at($cut, 80, 50) === 'blue' && $at($cut, 2, 2) === 'red');
-$left = VariantRenderer::master($original, new MasterGeometry(300, 200, new CropBox($square, 1 / 6, 0.25, 2)), $look);
+$left = VariantRenderer::master($original, new MasterGeometry(300, 200, new CropBox($square, 0.0, 0.0, 2)), $look);   // flush top left
 check('master crop at the top left: the corner square is in it, all red beside', $size($left) === [100, 100] && $at($left, 5, 5) === 'green' && $at($left, 90, 90) === 'red');
 foreach ([10.0, -25.0] as $angle) {
     $geometry = new MasterGeometry(300, 200, new CropBox(Ratio::of('3:2')), $angle);
@@ -66,12 +66,12 @@ foreach ([10.0, -25.0] as $angle) {
     $corners = [$at($tilted, 1, 1), $at($tilted, $geometry->width - 2, 1), $at($tilted, 1, $geometry->height - 2), $at($tilted, $geometry->width - 2, $geometry->height - 2)];
     check("turned by $angle at scale 1: no background in any corner", $size($tilted) === [$geometry->width, $geometry->height] && !in_array('none', $corners, true) && $geometry->width < 300);
 }
-$touching = MasterGeometry::touching(300, 200, 10);
+$touching = MasterGeometry::largest(300, 200, 10);
 $framed = VariantRenderer::master($original, $touching, $look);
-check('turned without a master crop: the frame touching all four edges, no background', $size($framed) === [$touching->width, $touching->height]
+check('turned without a master crop: the largest frame, no background', $size($framed) === [$touching->width, $touching->height]
     && $at($framed, 2, 2) !== 'none' && $at($framed, $touching->width - 3, $touching->height - 3) !== 'none');
-$over = VariantRenderer::master($original, new MasterGeometry(300, 200, new CropBox(Ratio::of('3:2'), 0.0, 0.5)), $look);
-check('a master pushed over the edge: transparent where there is no picture', $size($over) === [300, 200] && $at($over, 50, 100) === 'none' && $at($over, 200, 100) === 'red' && $at($over, 151, 5) === 'green');
+$over = VariantRenderer::master($original, new MasterGeometry(300, 200, new CropBox(Ratio::of('3:2'), -0.5, 0.0, 2)), $look);   // half its width over the left edge
+check('a master pushed over the edge: transparent where there is no picture', $size($over) === [150, 100] && $at($over, 30, 50) === 'none' && $at($over, 140, 50) === 'red' && $at($over, 80, 5) === 'green');
 $fit = VariantRenderer::master($original, new MasterGeometry(300, 200, new CropBox($square, scale: 2 / 3)), $look);
 check('fit in: the whole picture in a square, background above and below', $size($fit) === [300, 300] && $at($fit, 150, 10) === 'none' && $at($fit, 100, 150) === 'red' && $at($fit, 200, 150) === 'blue' && $at($fit, 150, 290) === 'none');
 
@@ -94,9 +94,9 @@ $small = VariantRenderer::cut($whole, new CropBox($square), 0.01);
 check('crop 1:1 at 0.01 megapixels: 100 x 100', $size($small) === [100, 100] && $at($small, 25, 50) === 'red' && $at($small, 75, 50) === 'blue');
 $big = VariantRenderer::cut($whole, new CropBox($square), 5);
 check('a size the crop has no pixels for: its own pixels, not blown up', $size($big) === [200, 200]);
-$zoom = VariantRenderer::cut($whole, new CropBox(Ratio::of('16:9'), 0.25, 0.5, 2));
+$zoom = VariantRenderer::cut($whole, new CropBox(Ratio::of('16:9'), 0.0, 0.5, 2));   // flush left
 check('crop 16:9 at scale 2 on the left: all red', $size($zoom) === [150, 84] && $at($zoom, 5, 5) === 'red' && $at($zoom, 145, 80) === 'red');
-$beyond = VariantRenderer::cut($whole, new CropBox($square, 1.0, 0.5));
+$beyond = VariantRenderer::cut($whole, new CropBox($square, 2.0, 0.5));   // half of it past the right edge
 check('a crop pushed over the edge: transparent where there is no master', $size($beyond) === [200, 200] && $at($beyond, 50, 100) === 'blue' && $at($beyond, 150, 100) === 'none');
 $scaled = VariantRenderer::scaled($whole, 0.015);
 check('the master at 0.015 megapixels keeps its ratio', $size($scaled) === [150, 100] && $at($scaled, 3, 3) === 'green');
@@ -151,7 +151,7 @@ try {
         && isset(Files::variants(42)['bild--original.webp']));
 
     // A crop set by hand and a look, as the editor will store them.
-    $hand = Operator::put(null, $media, new CropBox($square, 0.25, 0.5, 2));
+    $hand = Operator::put(null, $media, new CropBox($square, 0.0, 0.5, 2));   // flush left in the upright master
     $master = Operator::withLook(Operator::put(null, $media, new CropBox(Ratio::of('2:3')), master: true), ['r' => 90]);
     Files::removeVariants(42);
     check('a new crop or look removes everything made of the medium', Files::variants(42) === [] && !is_dir($root . '/var/formats/000/42'));

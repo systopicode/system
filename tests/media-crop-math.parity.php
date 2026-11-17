@@ -10,9 +10,9 @@ use Systopic\System\Media\Ratio;
 $out = [];
 foreach (json_decode((string) stream_get_contents(STDIN), true, 512, JSON_THROW_ON_ERROR) as $case) {
     $ratio = Ratio::of($case['ratio']);
-    $crop = new CropBox($ratio, $case['cx'], $case['cy'], $case['scale']);
+    $crop = new CropBox($ratio, $case['ax'], $case['ay'], $case['scale']);
     $g = new MasterGeometry($case['width'], $case['height'], $crop, $case['angle'], $case['flip']);
-    $touching = MasterGeometry::touching($case['width'], $case['height'], $case['angle'], $case['flip']);
+    $largest = MasterGeometry::largest($case['width'], $case['height'], $case['angle'], $case['flip']);
     $out[] = [
         'width' => $g->width,
         'height' => $g->height,
@@ -21,10 +21,11 @@ foreach (json_decode((string) stream_get_contents(STDIN), true, 512, JSON_THROW_
         'toOriginal' => $g->toOriginal($case['px'], $case['py']),
         'inside' => $g->insideOriginal(),
         'fitScale' => $g->fitScale(),
-        'touching' => $touching === null ? null : [$touching->width, $touching->height, $touching->crop->ratio->name],
+        'largest' => [$largest->width, $largest->height, $largest->crop->ratio->name],
         'rect' => $crop->rect($case['width'], $case['height']),
         'cropInside' => $crop->inside($case['width'], $case['height']),
-        'clamped' => (static fn(CropBox $c): array => [$c->cx, $c->cy, $c->scale])($crop->clamped($case['width'], $case['height'])),
+        'clamped' => (static fn(CropBox $c): array => [$c->alignX, $c->alignY, $c->scale])($crop->clamped($case['width'], $case['height'])),
+        'centre' => [$g->centreFractionX, $g->centreFractionY],
         'cropFit' => CropBox::fitScale($ratio, $case['width'], $case['height']),
     ];
 }

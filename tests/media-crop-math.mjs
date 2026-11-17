@@ -27,9 +27,9 @@ ok('ratios are reduced, compared exactly, placed logarithmically');
 const fixture = JSON.parse(await readFile(new URL('media-crop-resolver.cases.json', here), 'utf8'));
 assert.ok(fixture.cases.length >= 14);
 for (const c of fixture.cases) {
-	const manual = c.manual.map(m => ({ratio: math.ratio(m.ratio), cx: m.cx, cy: m.cy, scale: m.scale}));
-	const crop = math.resolve(math.ratio(c.ratio), c.master[0], c.master[1], manual, c.pois);
-	assert.ok(near(crop.cx, c.expect.cx) && near(crop.cy, c.expect.cy) && near(crop.scale, c.expect.scale), c.name + ': ' + JSON.stringify(crop));
+	const manual = c.manual.map(m => ({ratio: math.ratio(m.ratio), ax: m.ax, ay: m.ay, scale: m.scale}));
+	const crop = math.resolve(math.ratio(c.ratio), c.master[0], c.master[1], manual, c.pois, (c.declared || []).map(name => math.ratio(name)));
+	assert.ok(near(crop.ax, c.expect.ax) && near(crop.ay, c.expect.ay) && near(crop.scale, c.expect.scale), c.name + ': ' + JSON.stringify(crop));
 	assert.equal(crop.source, c.expect.source, c.name);
 	assert.equal(crop.ratio.name, c.ratio, c.name);
 	ok('resolver: ' + c.name);
@@ -45,7 +45,7 @@ for (let i = 0; i < 120; i++) {
 	cases.push({
 		width: 200 + Math.floor(random() * 5800), height: 200 + Math.floor(random() * 5800),
 		ratio: ratios[i % ratios.length], angle: angles[i % angles.length], flip: i % 3 === 0,
-		cx: 0.2 + random() * 0.6, cy: 0.2 + random() * 0.6, scale: 0.6 + random() * 2.4,
+		ax: -0.3 + random() * 1.6, ay: -0.3 + random() * 1.6, scale: 0.6 + random() * 2.4,
 		px: random() * 3000, py: random() * 3000
 	});
 }
@@ -55,7 +55,7 @@ const server = JSON.parse(php.stdout);
 assert.equal(server.length, cases.length);
 cases.forEach((c, i) => {
 	const s = server[i];
-	const crop = {ratio: math.ratio(c.ratio), cx: c.cx, cy: c.cy, scale: c.scale};
+	const crop = {ratio: math.ratio(c.ratio), ax: c.ax, ay: c.ay, scale: c.scale};
 	const g = math.master(c.width, c.height, crop, c.angle, c.flip);
 	const where = `case ${i} ${JSON.stringify(c)}`;
 	assert.equal(g.width, s.width, where);
@@ -65,16 +65,17 @@ cases.forEach((c, i) => {
 	assert.ok(near(g.toOriginal(c.px, c.py)[0], s.toOriginal[0], 1e-5) && near(g.toOriginal(c.px, c.py)[1], s.toOriginal[1], 1e-5), where);
 	assert.equal(g.insideOriginal(), s.inside, where);
 	assert.ok(near(g.fitScale(), s.fitScale), where);
-	const touching = math.touching(c.width, c.height, c.angle, c.flip);
-	assert.deepEqual(touching ? [touching.width, touching.height, touching.crop.ratio.name] : null, s.touching, where);
+	const largest = math.largest(c.width, c.height, c.angle, c.flip);
+	assert.deepEqual([largest.width, largest.height, largest.crop.ratio.name], s.largest, where);
 	const rect = math.rect(crop, c.width, c.height);
 	assert.ok(near(rect.x, s.rect.x) && near(rect.y, s.rect.y) && near(rect.w, s.rect.w) && near(rect.h, s.rect.h), where);
 	assert.equal(math.inside(crop, c.width, c.height), s.cropInside, where);
 	const clamped = math.clamped(crop, c.width, c.height);
-	assert.ok(near(clamped.cx, s.clamped[0]) && near(clamped.cy, s.clamped[1]) && near(clamped.scale, s.clamped[2]), where);
+	assert.ok(near(clamped.ax, s.clamped[0]) && near(clamped.ay, s.clamped[1]) && near(clamped.scale, s.clamped[2]), where);
 	assert.ok(near(math.fitScale(crop.ratio, c.width, c.height), s.cropFit), where);
+	assert.ok(near(g.cx, s.centre[0]) && near(g.cy, s.centre[1]), 'the middle the alignment gives: ' + where);
 });
-ok(`${cases.length} masters and crops: size, mapping both ways, inside, fit in, the touching frame - the same as the server's`);
+ok(`${cases.length} masters and crops: size, mapping both ways, inside, fit in, the largest frame, the middle from the alignment - the same as the server's`);
 
 // ---------------------------------------------------------------- furthest
 const stop = math.furthest(t => 10 * t, value => value <= 4);
@@ -83,9 +84,9 @@ assert.equal(math.furthest(t => 10 * t, value => value <= 20), 10, 'the whole wa
 assert.equal(math.furthest(t => 10 * t, value => value <= 0), 0, 'not at all when the first step is too far');
 // A master pushed left stops when its frame meets the picture's edge - at any angle.
 for (const angle of [0, 10, 90]) {
-	const at = cx => math.master(3000, 2000, {ratio: math.ratio('1:1'), cx: cx, cy: 0.5, scale: 1.5}, angle, false);
-	const g = math.furthest(t => at(0.5 - 0.5 * t), geometry => geometry.insideOriginal(0.01));
-	assert.ok(g.insideOriginal(0.02) && !at(g.crop.cx - 0.002).insideOriginal(0.01), 'angle ' + angle);
+	const at = ax => math.master(3000, 2000, {ratio: math.ratio('1:1'), ax: ax, ay: 0.5, scale: 1.5}, angle, false);
+	const g = math.furthest(t => at(0.5 - 1.5 * t), geometry => geometry.insideOriginal(0.01));
+	assert.ok(g.insideOriginal(0.02) && !at(g.crop.ax - 0.004).insideOriginal(0.01), 'angle ' + angle);
 }
 ok('a move stops where the edge of the picture meets the frame');
 

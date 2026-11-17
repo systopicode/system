@@ -108,7 +108,7 @@ try {
     $make('bild--0.5mp.webp');
     $pending = $tall->toImgHtml(['style' => 'border:0']);
     check('with the small master: it is the preview, cut to the crop by CSS', $bare($attr($pending, 'style')) === "background:url('/site/var/formats/000/42/bild--0.5mp.webp') 50% 50% / 266.667% 100% no-repeat;border:0");
-    $left = Operator::put(null, $media, new CropBox(Ratio::of('9:16'), 0.25, 0.5, 2));
+    $left = Operator::put(null, $media, new CropBox(Ratio::of('9:16'), 5 / 26, 0.5, 2));   // its middle at a quarter
     $moved = new Picture(new CropSet($media, [$left]), Ratio::of('9:16'));
     // The crop is 0.1875 wide and 0.5 high, its left edge at 0.15625, its top at 0.25.
     check('a crop set by hand moves and sizes the preview', str_contains($bare($attr($moved->toImgHtml(), 'style')), ') 19.231% 50% / 533.333% 200% no-repeat'));
@@ -117,7 +117,7 @@ try {
 
     // ----------------------------------------------------- version changes
     check('a crop set by hand is a new version: new addresses', (new CropSet($media, [$left]))->version() !== $v);
-    $again = Operator::put($left, $media, new CropBox(Ratio::of('9:16'), 0.3, 0.5, 2));
+    $again = Operator::put($left, $media, new CropBox(Ratio::of('9:16'), 33 / 130, 0.5, 2));
     check('saving it again is another one', (new CropSet($media, [$again]))->version() !== $v);
     $media->pois = new \Systopic\Db\Type\Text('[{"x":0.2,"y":0.2}]');
     check('a point of interest too', (new CropSet($media, []))->version() !== $v);

@@ -1,93 +1,449 @@
 {
-  "about": "Cases for CropResolver - the PHP class and the editor's copy in the browser must both pass them. Centres are fractions of the master, POIs are given by their centre (x, y) and size (w, h). Expected values were worked out by hand, to 1e-6.",
+  "about": "Cases for CropResolver - the PHP class and the editor's copy in the browser must both pass them. Crops are given by their alignment (ax, ay: 0 flush left / top, 1 flush right / bottom, 0.5 centred - Media\\CropBox) in the master; POIs by their centre (x, y) and size (w, h), fractions of the master. Expected values were worked out by an independent implementation of the rules in .cursor/docs/media-crops.md, to 1e-6.",
   "cases": [
     {
       "name": "nothing known: the largest crop, centred",
-      "master": [3000, 2000], "ratio": "1:1", "manual": [], "pois": [],
-      "expect": {"cx": 0.5, "cy": 0.5, "scale": 1, "source": "centered"}
+      "master": [
+        3000,
+        2000
+      ],
+      "ratio": "1:1",
+      "manual": [],
+      "pois": [],
+      "expect": {
+        "ax": 0.5,
+        "ay": 0.5,
+        "scale": 1,
+        "source": "centered"
+      }
     },
     {
       "name": "a crop set by hand is taken as it is",
-      "master": [3000, 2000], "ratio": "16:9",
-      "manual": [{"ratio": "16:9", "cx": 0.3, "cy": 0.4, "scale": 1.5}], "pois": [],
-      "expect": {"cx": 0.3, "cy": 0.4, "scale": 1.5, "source": "manual"}
+      "master": [
+        3000,
+        2000
+      ],
+      "ratio": "16:9",
+      "manual": [
+        {
+          "ratio": "16:9",
+          "ax": -0.1,
+          "ay": 0.271428571,
+          "scale": 1.5
+        }
+      ],
+      "pois": [],
+      "expect": {
+        "ax": -0.1,
+        "ay": 0.271428571,
+        "scale": 1.5,
+        "source": "manual"
+      }
     },
     {
       "name": "a crop set by hand may show background - it is not pulled back in",
-      "master": [3000, 2000], "ratio": "1:1",
-      "manual": [{"ratio": "1:1", "cx": 0.1, "cy": 0.5, "scale": 0.8}],
-      "pois": [{"x": 0.9, "y": 0.5}],
-      "expect": {"cx": 0.1, "cy": 0.5, "scale": 0.8, "source": "manual"}
+      "master": [
+        3000,
+        2000
+      ],
+      "ratio": "1:1",
+      "manual": [
+        {
+          "ratio": "1:1",
+          "ax": -1.9,
+          "ay": 0.5,
+          "scale": 0.8
+        }
+      ],
+      "pois": [
+        {
+          "x": 0.9,
+          "y": 0.5
+        }
+      ],
+      "expect": {
+        "ax": -1.9,
+        "ay": 0.5,
+        "scale": 0.8,
+        "source": "manual"
+      }
     },
     {
       "name": "between two crops set by hand: halfway on the logarithmic scale",
-      "master": [3000, 2000], "ratio": "2:1",
-      "manual": [{"ratio": "1:1", "cx": 0.2, "cy": 0.4, "scale": 4}, {"ratio": "4:1", "cx": 0.6, "cy": 0.6, "scale": 1}],
+      "master": [
+        3000,
+        2000
+      ],
+      "ratio": "2:1",
+      "manual": [
+        {
+          "ratio": "1:1",
+          "ax": 0.14,
+          "ay": 0.366666667,
+          "scale": 4
+        },
+        {
+          "ratio": "4:1",
+          "ax": 0.5,
+          "ay": 0.66,
+          "scale": 1
+        }
+      ],
       "pois": [],
-      "expect": {"cx": 0.4, "cy": 0.5, "scale": 2, "source": "interpolated"}
+      "expect": {
+        "ax": 0.32,
+        "ay": 0.513333333,
+        "scale": 2.0,
+        "source": "interpolated"
+      }
     },
     {
       "name": "between two crops set by hand, points of interest do not count",
-      "master": [3000, 2000], "ratio": "2:1",
-      "manual": [{"ratio": "1:1", "cx": 0.2, "cy": 0.4, "scale": 4}, {"ratio": "4:1", "cx": 0.6, "cy": 0.6, "scale": 1}],
-      "pois": [{"x": 0.95, "y": 0.95}],
-      "expect": {"cx": 0.4, "cy": 0.5, "scale": 2, "source": "interpolated"}
+      "master": [
+        3000,
+        2000
+      ],
+      "ratio": "2:1",
+      "manual": [
+        {
+          "ratio": "1:1",
+          "ax": 0.14,
+          "ay": 0.366666667,
+          "scale": 4
+        },
+        {
+          "ratio": "4:1",
+          "ax": 0.5,
+          "ay": 0.66,
+          "scale": 1
+        }
+      ],
+      "pois": [
+        {
+          "x": 0.95,
+          "y": 0.95
+        }
+      ],
+      "expect": {
+        "ax": 0.32,
+        "ay": 0.513333333,
+        "scale": 2.0,
+        "source": "interpolated"
+      }
     },
     {
       "name": "an interpolated crop is pulled back into the master",
-      "master": [3000, 2000], "ratio": "2:1",
-      "manual": [{"ratio": "1:1", "cx": 0.05, "cy": 0.5, "scale": 0.5}, {"ratio": "4:1", "cx": 0.05, "cy": 0.5, "scale": 0.5}],
+      "master": [
+        3000,
+        2000
+      ],
+      "ratio": "2:1",
+      "manual": [
+        {
+          "ratio": "1:1",
+          "ax": 1.85,
+          "ay": 0.5,
+          "scale": 0.5
+        },
+        {
+          "ratio": "4:1",
+          "ax": 0.95,
+          "ay": 0.5,
+          "scale": 0.5
+        }
+      ],
       "pois": [],
-      "expect": {"cx": 0.5, "cy": 0.5, "scale": 1, "source": "interpolated"}
+      "expect": {
+        "ax": 1,
+        "ay": 0.5,
+        "scale": 1,
+        "source": "interpolated"
+      }
     },
     {
       "name": "one side only: towards the whole master at its own ratio",
-      "master": [3000, 2000], "ratio": "4:3",
-      "manual": [{"ratio": "1:1", "cx": 0.3, "cy": 0.5, "scale": 2}], "pois": [],
-      "expect": {"cx": 0.441902258, "cy": 0.5, "scale": 1.223054514, "source": "interpolated"}
+      "master": [
+        3000,
+        2000
+      ],
+      "ratio": "4:3",
+      "manual": [
+        {
+          "ratio": "1:1",
+          "ax": 0.2,
+          "ay": 0.5,
+          "scale": 2
+        }
+      ],
+      "pois": [],
+      "expect": {
+        "ax": 0.412853387,
+        "ay": 0.5,
+        "scale": 1.223054514,
+        "source": "interpolated"
+      }
     },
     {
-      "name": "outside everything known: the nearest crop's centre and scale",
-      "master": [3000, 2000], "ratio": "9:16",
-      "manual": [{"ratio": "1:1", "cx": 0.3, "cy": 0.5, "scale": 2}], "pois": [],
-      "expect": {"cx": 0.3, "cy": 0.5, "scale": 2, "source": "anchor"}
+      "name": "outside everything known, no declared ratios: the nearest crop's alignment at fill in",
+      "master": [
+        3000,
+        2000
+      ],
+      "ratio": "9:16",
+      "manual": [
+        {
+          "ratio": "1:1",
+          "ax": 0.2,
+          "ay": 0.5,
+          "scale": 2
+        }
+      ],
+      "pois": [],
+      "expect": {
+        "ax": 0.2,
+        "ay": 0.5,
+        "scale": 1,
+        "source": "anchor"
+      }
+    },
+    {
+      "name": "beyond the last crop: towards fill in, reached at the outermost declared ratio",
+      "master": [
+        3000,
+        2000
+      ],
+      "ratio": "3:4",
+      "manual": [
+        {
+          "ratio": "1:1",
+          "ax": 0.2,
+          "ay": 0.5,
+          "scale": 2
+        }
+      ],
+      "pois": [],
+      "declared": [
+        "2:1",
+        "16:9",
+        "3:2",
+        "1:1",
+        "3:4",
+        "9:16"
+      ],
+      "expect": {
+        "ax": 0.2,
+        "ay": 0.5,
+        "scale": 1.414213562,
+        "source": "interpolated"
+      }
+    },
+    {
+      "name": "the outermost declared ratio itself: fill in, alignment of the nearest crop",
+      "master": [
+        3000,
+        2000
+      ],
+      "ratio": "9:16",
+      "manual": [
+        {
+          "ratio": "1:1",
+          "ax": 0.2,
+          "ay": 0.5,
+          "scale": 2
+        }
+      ],
+      "pois": [],
+      "declared": [
+        "2:1",
+        "16:9",
+        "3:2",
+        "1:1",
+        "3:4",
+        "9:16"
+      ],
+      "expect": {
+        "ax": 0.2,
+        "ay": 0.5,
+        "scale": 1,
+        "source": "anchor"
+      }
+    },
+    {
+      "name": "beyond the last crop on the wide side, past the master: fill in, centred like the master",
+      "master": [
+        2000,
+        2000
+      ],
+      "ratio": "16:9",
+      "manual": [
+        {
+          "ratio": "9:16",
+          "ax": 0.34,
+          "ay": 0.5,
+          "scale": 1.5
+        }
+      ],
+      "pois": [],
+      "declared": [
+        "2:1",
+        "16:9",
+        "1:1",
+        "9:16"
+      ],
+      "expect": {
+        "ax": 0.5,
+        "ay": 0.5,
+        "scale": 1,
+        "source": "interpolated"
+      }
     },
     {
       "name": "wider than the master, crop set by hand on the far side: the whole master is nearest",
-      "master": [3000, 2000], "ratio": "2:1",
-      "manual": [{"ratio": "1:1", "cx": 0.3, "cy": 0.5, "scale": 2}], "pois": [],
-      "expect": {"cx": 0.5, "cy": 0.5, "scale": 1, "source": "anchor"}
+      "master": [
+        3000,
+        2000
+      ],
+      "ratio": "2:1",
+      "manual": [
+        {
+          "ratio": "1:1",
+          "ax": 0.2,
+          "ay": 0.5,
+          "scale": 2
+        }
+      ],
+      "pois": [],
+      "expect": {
+        "ax": 0.5,
+        "ay": 0.5,
+        "scale": 1,
+        "source": "anchor"
+      }
     },
     {
       "name": "the master's own ratio without a crop set by hand: the whole master",
-      "master": [3000, 2000], "ratio": "3:2",
-      "manual": [{"ratio": "1:1", "cx": 0.3, "cy": 0.5, "scale": 2}], "pois": [],
-      "expect": {"cx": 0.5, "cy": 0.5, "scale": 1, "source": "centered"}
+      "master": [
+        3000,
+        2000
+      ],
+      "ratio": "3:2",
+      "manual": [
+        {
+          "ratio": "1:1",
+          "ax": 0.2,
+          "ay": 0.5,
+          "scale": 2
+        }
+      ],
+      "pois": [],
+      "expect": {
+        "ax": 0.5,
+        "ay": 0.5,
+        "scale": 1,
+        "source": "centered"
+      }
     },
     {
       "name": "one point of interest: moved from the middle only as far as needed",
-      "master": [3000, 2000], "ratio": "1:1", "manual": [],
-      "pois": [{"x": 0.9, "y": 0.5}],
-      "expect": {"cx": 0.566666667, "cy": 0.5, "scale": 1, "source": "poi"}
+      "master": [
+        3000,
+        2000
+      ],
+      "ratio": "1:1",
+      "manual": [],
+      "pois": [
+        {
+          "x": 0.9,
+          "y": 0.5
+        }
+      ],
+      "expect": {
+        "ax": 0.7,
+        "ay": 0.5,
+        "scale": 1,
+        "source": "poi"
+      }
     },
     {
       "name": "points that do not all fit: the most weight wins, then the nearest to their centre",
-      "master": [3000, 2000], "ratio": "9:16", "manual": [],
-      "pois": [{"x": 0.1, "y": 0.5}, {"x": 0.5, "y": 0.5}, {"x": 0.9, "y": 0.5, "weight": 3}],
-      "expect": {"cx": 0.7125, "cy": 0.5, "scale": 1, "source": "poi"}
+      "master": [
+        3000,
+        2000
+      ],
+      "ratio": "9:16",
+      "manual": [],
+      "pois": [
+        {
+          "x": 0.1,
+          "y": 0.5
+        },
+        {
+          "x": 0.5,
+          "y": 0.5
+        },
+        {
+          "x": 0.9,
+          "y": 0.5,
+          "weight": 3
+        }
+      ],
+      "expect": {
+        "ax": 0.84,
+        "ay": 0.5,
+        "scale": 1,
+        "source": "poi"
+      }
     },
     {
       "name": "points of interest go before a crop set by hand on one side",
-      "master": [3000, 2000], "ratio": "9:16",
-      "manual": [{"ratio": "1:1", "cx": 0.3, "cy": 0.5, "scale": 2}],
-      "pois": [{"x": 0.9, "y": 0.5}],
-      "expect": {"cx": 0.7125, "cy": 0.5, "scale": 1, "source": "poi"}
+      "master": [
+        3000,
+        2000
+      ],
+      "ratio": "9:16",
+      "manual": [
+        {
+          "ratio": "1:1",
+          "ax": 0.2,
+          "ay": 0.5,
+          "scale": 2
+        }
+      ],
+      "pois": [
+        {
+          "x": 0.9,
+          "y": 0.5
+        }
+      ],
+      "expect": {
+        "ax": 0.84,
+        "ay": 0.5,
+        "scale": 1,
+        "source": "poi"
+      }
     },
     {
       "name": "portrait master: the free axis is the vertical one, a point with a size",
-      "master": [2000, 3000], "ratio": "1:1", "manual": [],
-      "pois": [{"x": 0.5, "y": 0.15, "w": 0.2, "h": 0.1}],
-      "expect": {"cx": 0.5, "cy": 0.433333333, "scale": 1, "source": "poi"}
+      "master": [
+        2000,
+        3000
+      ],
+      "ratio": "1:1",
+      "manual": [],
+      "pois": [
+        {
+          "x": 0.5,
+          "y": 0.15,
+          "w": 0.2,
+          "h": 0.1
+        }
+      ],
+      "expect": {
+        "ax": 0.5,
+        "ay": 0.3,
+        "scale": 1,
+        "source": "poi"
+      }
     }
   ]
 }

@@ -72,20 +72,15 @@ final class CropSet
      * the pixels it actually read, which for a pdf or a video are those of
      * the raster it was drawn at.
      *
-     * Without a master crop: the frame whose corners touch all four edges of
-     * the turned picture - at a right angle that is the whole picture.
+     * Without a master crop: the frame of the largest area inside the turned
+     * picture (`MasterGeometry::largest()`) - at a right angle the whole picture.
      */
     public function masterOf(int $width, int $height): MasterGeometry
     {
         $look = $this->look();
         $crop = Operator::box($this->row(Variants::MASTER));
         if ($crop === null) {
-            $touching = MasterGeometry::touching($width, $height, $look['r'], (bool) $look['f']);
-            if ($touching !== null) {
-                return $touching;
-            }
-            // Near the diagonal there is no such frame: the picture's own ratio, as large as it fits.
-            $crop = new CropBox(Ratio::ofPixels($width, $height));
+            return MasterGeometry::largest($width, $height, $look['r'], (bool) $look['f']);
         }
         return new MasterGeometry($width, $height, $crop, $look['r'], (bool) $look['f']);
     }
@@ -150,7 +145,7 @@ final class CropSet
         if ($pois !== []) {
             $pois = ($this->master() ?? MasterGeometry::whole($masterWidth, $masterHeight))->poisToMaster($pois);
         }
-        return CropResolver::resolve($ratio, $masterWidth, $masterHeight, $this->manual(), $pois);
+        return CropResolver::resolve($ratio, $masterWidth, $masterHeight, $this->manual(), $pois, array_values(Variants::ratios()));
     }
 
     /**

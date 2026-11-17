@@ -91,8 +91,12 @@
 	opacity: 0.6;
 }
 
+/* placed by transform from the top left (cropEditor.js draw()): moving the picture is compositing only */
 .cropEditor .ceStage img{
 	position: absolute;
+	left: 0;
+	top: 0;
+	will-change: transform;
 	max-width: none !important;
 	max-height: none !important;
 	transform-origin: 50% 50%;
@@ -127,6 +131,11 @@
 	z-index: 3;
 	display: flex;
 	gap: 0.35rem;
+}
+
+/* .cms .button of 50_forms.css would show a hidden one */
+.cropEditor .ceCommit > [hidden]{
+	display: none;
 }
 
 .cropEditor .ceStatus{
@@ -205,7 +214,8 @@
 	background: rgb(0 0 0 / 0.22);
 }
 
-.cropEditor .ceSlider.is-free .ceTrack{
+/* the knob is dragged in both modes; where it glides, the script moves it */
+.cropEditor .ceTrack{
 	cursor: ns-resize;
 	touch-action: none;
 }
@@ -221,12 +231,7 @@
 	border-radius: 50%;
 	background: var(--cmsHighlightColor);
 	box-shadow: 0 1px 4px rgb(0 0 0 / 0.4);
-	transition: top 0.18s ease;
 	pointer-events: none;
-}
-
-.cropEditor .ceSlider.is-free .ceKnob{
-	transition: none;
 }
 
 .cropEditor .ceRatios{
@@ -234,43 +239,76 @@
 	top: 0;
 	bottom: 0;
 	left: 0;
-	right: 2rem;
+	right: 1.8rem;
 	margin: 0;
 	padding: 0;
 	list-style: none;
 }
 
+/* one line: the circles overlap, the middle (1:1) furthest back, the ends in front (z-index from the script) */
 .cropEditor .ceRatios li{
 	position: absolute;
 	top: calc(var(--p, 0.5) * 100%);
 	right: 0;
+	display: flex;
+	align-items: center;
+	gap: 0.3rem;
 	margin: 0;
 	transform: translateY(-50%);
 }
 
-/* ratios too close to stand in one column step aside */
-.cropEditor .ceRatios li[data-col="1"]{
-	right: 2.3rem;
+.cropEditor .ceRatios li:is(:hover, :focus-within){
+	z-index: 300 !important;
 }
 
-/* a ratio: its rectangle in a circle. Filled: set by hand. */
+.cropEditor .ceRatios li.is-selected{
+	z-index: 200 !important;
+}
+
+/* the name, left of its circle */
+.cropEditor .ceRatioName{
+	font-size: 0.68rem;
+	line-height: 1;
+	white-space: nowrap;
+	text-align: right;
+	color: rgb(0 0 0 / 0.55);
+	font-variant-numeric: tabular-nums;
+	pointer-events: none;
+}
+
+.cropEditor .ceRatios li.is-quiet .ceRatioName{
+	visibility: hidden;
+}
+
+.cropEditor .ceRatios li:is(:hover, :focus-within, .is-selected) .ceRatioName{
+	visibility: visible;
+	color: var(--cmsMainColor);
+}
+
+/* a ratio: its rectangle in a circle, no outline. Dark: set by hand; yellow: on the stage.
+   The buttons of 50_forms.css come later and forbid box-shadow: a drop shadow keeps overlapping circles apart. */
 .cropEditor .ceRatios button{
 	display: grid;
 	place-items: center;
-	width: 2rem;
-	height: 2rem;
-	padding: 0.42rem;
-	border: 1.5px solid var(--cmsMainColor);
+	width: 1.5rem;
+	min-width: 0;
+	height: 1.5rem;
+	min-height: 0;
+	margin: 0;
+	padding: 0;
+	border: 0;
 	border-radius: 50%;
 	background: #fff;
 	color: var(--cmsMainColor);
+	filter: drop-shadow(0 1px 1.5px rgb(0 0 0 / 0.3));
 	cursor: pointer;
 }
 
 .cropEditor .ceRatios button span{
 	display: block;
-	border: 1.5px solid currentColor;
-	border-radius: 1px;
+	box-sizing: border-box;
+	border: 2px solid currentColor;
+	border-radius: 2px;
 }
 
 .cropEditor .ceRatios button.is-manual{
@@ -279,8 +317,19 @@
 }
 
 .cropEditor .ceRatios button.selected{
-	border-color: var(--cmsHighlightColor);
-	box-shadow: 0 0 0 2px var(--cmsHighlightColor);
+	background: var(--cmsHighlightColor);
+	color: var(--cmsMainColor);
+}
+
+/* on the stage and set by hand: the rectangle filled */
+.cropEditor .ceRatios button.selected.is-manual span{
+	background: currentColor;
+}
+
+/* the reset of a level, beside its slider */
+.cropEditor .ceLevel .button{
+	flex: 0 0 auto;
+	margin: 0;
 }
 
 /* ---- the fix point of the zoom and turn tools: a cross that can be put anywhere */
@@ -384,8 +433,9 @@
 	font-variant-numeric: tabular-nums;
 }
 
-/* ---- phone: the slider lies across the bottom, everything else folds away */
-.cropEditor .ceMore{
+/* ---- phone: the slider lies across the bottom, everything else folds away.
+   The menu button exists only there; its selector outweighs `.cms .button` of 50_forms.css, which comes later. */
+.cropEditor .ceStage > .ceMore{
 	display: none;
 	position: absolute;
 	top: 0.6rem;
@@ -400,7 +450,7 @@
 		gap: 0.5rem;
 	}
 
-	.cropEditor .ceMore{
+	.cropEditor .ceStage > .ceMore{
 		display: inline-flex;
 	}
 
@@ -474,14 +524,13 @@
 		margin: -2px 0 0;
 	}
 
-	.cropEditor .ceSlider.is-free .ceTrack{
+	.cropEditor .ceTrack{
 		cursor: ew-resize;
 	}
 
 	.cropEditor .ceKnob{
 		top: 50%;
 		left: calc(var(--p, 0.5) * 100%);
-		transition: left 0.18s ease;
 	}
 
 	.cropEditor .ceRatios{
@@ -491,16 +540,14 @@
 		right: 0;
 	}
 
+	/* across: the name above its circle */
 	.cropEditor .ceRatios li{
 		top: auto;
 		bottom: 0;
 		right: auto;
 		left: calc(var(--p, 0.5) * 100%);
+		flex-direction: column;
+		gap: 0.2rem;
 		transform: translateX(-50%);
-	}
-
-	.cropEditor .ceRatios li[data-col="1"]{
-		right: auto;
-		bottom: 2.3rem;
 	}
 }

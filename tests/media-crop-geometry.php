@@ -3,6 +3,7 @@ declare(strict_types=1);
 // Phase 1 of media-crop-ratios.plan.md: the pure classes, no database, no files, no Imagick.
 require __DIR__ . '/bootstrap.php';
 use Systopic\System\Media\CropBox;
+use Systopic\System\Media\CropEdits;
 use Systopic\System\Media\CropResolver;
 use Systopic\System\Media\MasterGeometry;
 use Systopic\System\Media\Ratio;
@@ -51,23 +52,45 @@ check('fit in: the whole picture inside a square', $near(CropBox::fitScale($squa
 check('at fit-in scale the wide axis is exactly filled, the other shows background', $near($w, 1) && $near($h, 1.5));
 check('fit in equals fill in when the ratios match', $near(CropBox::fitScale(Ratio::of('3:2'), 3000, 2000), 1));
 check('centred crop lies inside', (new CropBox($square))->inside(3000, 2000));
-check('a crop pushed over the edge does not', !(new CropBox($square, 0.1, 0.5))->inside(3000, 2000));
+check('a crop pushed over the edge does not', !(new CropBox($square, -0.1, 0.5))->inside(3000, 2000));
 check('a crop below scale 1 does not', !(new CropBox($square, scale: 0.9))->inside(3000, 2000));
-$clamped = (new CropBox($square, 0.1, 0.5, 0.9, CropBox::INTERPOLATED))->clamped(3000, 2000);
-check('clamping moves the centre in and lifts the scale to 1',
-    $near($clamped->cx, 1 / 3) && $near($clamped->cy, 0.5) && $near($clamped->scale, 1) && $clamped->inside(3000, 2000));
+// The alignment: 0 flush left / top, 1 flush right / bottom, 0.5 centred - like background-position in per cent.
+$flushLeft = (new CropBox($square, 0.0, 0.5, 2))->rect(3000, 2000);
+$flushRight = (new CropBox($square, 1.0, 1.0, 2))->rect(3000, 2000);
+check('align 0: flush left', $near($flushLeft['x'], 0) && $near($flushLeft['y'], 0.25));
+check('align 1: flush right and bottom', $near($flushRight['x'] + $flushRight['w'], 1) && $near($flushRight['y'] + $flushRight['h'], 1));
+check('align 0.25: the quarter of the crop lies on the quarter of the picture',
+    $near(((new CropBox($square, 0.25, 0.5, 2))->rect(3000, 2000)['x']) + 0.25 / 3, 0.25));
+check('from the middle and back', $near(CropBox::at($square, 0.3, 0.5, 2, 3000, 2000)->centre(3000, 2000)[0], 0.3)
+    && $near(CropBox::alignOf(CropBox::centreOf(0.8, 0.4), 0.4), 0.8));
+check('an axis the crop fills: any alignment is the same there, the one given is kept',
+    $near(CropBox::at($square, 0.3, 0.5, 1, 3000, 2000, new CropBox($square, 0.4, 0.9))->alignY, 0.9));
+// Inside 0-1 at scale 1 or more is inside whatever the reference - why the alignment is stored, not the middle.
+$always = true;
+foreach ([[3000, 2000], [2000, 3000], [1000, 1000], [6000, 1000], [923, 614]] as [$w, $h]) {
+    foreach ([[0.0, 0.0, 1.0], [1.0, 0.3, 1.4], [0.5, 1.0, 2.5], [0.12, 0.98, 1.0]] as [$x, $y, $scale]) {
+        foreach (['2:1', '1:1', '9:16'] as $name) {
+            $always = $always && (new CropBox(Ratio::of($name), $x, $y, $scale))->inside($w, $h);
+        }
+    }
+}
+check('aligned within 0-1 at scale 1 or more: inside any picture', $always);
+$clamped = (new CropBox($square, -0.2, 1.4, 0.9, CropBox::INTERPOLATED))->clamped(3000, 2000);
+check('clamping brings the alignment into 0-1 and lifts the scale to 1',
+    $near($clamped->alignX, 0) && $near($clamped->alignY, 1) && $near($clamped->scale, 1) && $clamped->inside(3000, 2000));
 check('clamping keeps the origin', $clamped->source === CropBox::INTERPOLATED);
 rejects('scale 0 is no crop', static fn() => new CropBox($square, scale: 0));
-rejects('a centre that is no number is no crop', static fn() => new CropBox($square, NAN));
+rejects('an alignment that is no number is no crop', static fn() => new CropBox($square, NAN));
 
 // ----------------------------------------------------------- CropResolver
 $fixture = json_decode((string) file_get_contents(__DIR__ . '/media-crop-resolver.cases.json'), true, flags: JSON_THROW_ON_ERROR);
 check('resolver cases are there', count($fixture['cases']) >= 14);
 foreach ($fixture['cases'] as $case) {
-    $manual = array_map(static fn(array $c): CropBox => new CropBox(Ratio::of($c['ratio']), $c['cx'], $c['cy'], $c['scale']), $case['manual']);
-    $crop = CropResolver::resolve(Ratio::of($case['ratio']), $case['master'][0], $case['master'][1], $manual, $case['pois']);
+    $manual = array_map(static fn(array $c): CropBox => new CropBox(Ratio::of($c['ratio']), $c['ax'], $c['ay'], $c['scale']), $case['manual']);
+    $declared = array_map(static fn(string $name): Ratio => Ratio::of($name), $case['declared'] ?? []);
+    $crop = CropResolver::resolve(Ratio::of($case['ratio']), $case['master'][0], $case['master'][1], $manual, $case['pois'], $declared);
     $expect = $case['expect'];
-    check('resolver: ' . $case['name'], $near($crop->cx, $expect['cx']) && $near($crop->cy, $expect['cy'])
+    check('resolver: ' . $case['name'], $near($crop->alignX, $expect['ax']) && $near($crop->alignY, $expect['ay'])
         && $near($crop->scale, $expect['scale']) && $crop->source === $expect['source'] && $crop->ratio->name === $case['ratio']);
     if ($crop->source !== CropBox::MANUAL) {
         check('resolver: computed crop lies inside the master - ' . $case['name'], $crop->inside($case['master'][0], $case['master'][1]));
@@ -81,7 +104,7 @@ $previous = null;
 foreach (['1:1', '11:10', '6:5', '5:4', '4:3', '7:5', '3:2'] as $name) {
     $crop = CropResolver::resolve(Ratio::of($name), 3000, 2000, [new CropBox($square, 0.3, 0.5, 2)]);
     check("resolver: towards the master the crop only opens up - $name",
-        $previous === null || ($crop->cx >= $previous->cx - 1e-9 && $crop->scale <= $previous->scale + 1e-9));
+        $previous === null || ($crop->alignX >= $previous->alignX - 1e-9 && $crop->scale <= $previous->scale + 1e-9));
     $previous = $crop;
 }
 
@@ -108,11 +131,12 @@ foreach ([[0.0, false], [90.0, true], [10.0, false], [-33.5, true], [180.0, fals
 $cut = new MasterGeometry(300, 200, new CropBox($square, scale: 2));
 check('master crop: a square of half the height, in the middle', $cut->width === 100 && $cut->height === 100
     && $nearPoint($cut->toMaster(100, 50), [0, 0]) && $cut->insideOriginal());
-$left = new MasterGeometry(300, 200, new CropBox($square, 0.25, 0.5, 2));
-check('master crop: the centre is a fraction of the picture', $nearPoint($left->toMaster(75, 100), [50, 50]));
-$turnedLeft = new MasterGeometry(300, 200, new CropBox($square, 0.25, 0.5, 2), 90);
-check('turned master crop: left on the screen is down in the original', $nearPoint($turnedLeft->toMaster(150, 150), [50, 50]));
-check('a master pushed over the edge shows background', !(new MasterGeometry(300, 200, new CropBox($square, 0.0, 0.5)))->insideOriginal());
+$left = new MasterGeometry(300, 200, new CropBox($square, 0.125, 0.5, 2));
+check('master crop: aligned at an eighth, its middle at a quarter of the picture', $nearPoint($left->toMaster(75, 100), [50, 50]));
+$turnedLeft = new MasterGeometry(300, 200, new CropBox($square, 0.0, 0.5, 2), 90);
+check('turned master crop: flush left on the screen is down in the original', $nearPoint($turnedLeft->toMaster(150, 150), [50, 50]));
+check('a master flush left at full height stays inside', (new MasterGeometry(300, 200, new CropBox($square, 0.0, 0.5)))->insideOriginal());
+check('a master pushed over the edge shows background', !(new MasterGeometry(300, 200, new CropBox($square, -0.5, 0.5)))->insideOriginal());
 check('a master below scale 1 shows background', !(new MasterGeometry(300, 200, new CropBox($square, scale: 0.8)))->insideOriginal());
 $free = new MasterGeometry(6000, 8000, new CropBox(Ratio::ofPixels(3012, 5456), 0.5, 0.5, 8000 / 5456));
 check('a freely dragged master keeps its pixels exactly', $free->width === 3012 && $free->height === 5456 && $free->crop->ratio->name === '753:1364');
@@ -149,14 +173,44 @@ foreach ([[0, 0], [300, 0], [300, 200], [0, 200]] as [$x, $y]) {
     $allInside = $allInside && $mx >= -1e-6 && $my >= -1e-6 && $mx <= $fitted->width + 1 && $my <= $fitted->height + 1;
 }
 check('fit in, turned: the whole picture lies in the frame', $allInside && $fitted->fitScale() < 1);
-// Turning a picture in the editor: the one frame whose four corners touch an edge each.
+// Turned without a master crop: the frame of the largest area inside the turned picture.
 foreach ([5.0, -12.0, 20.0, 80.0, 95.0, 185.0] as $angle) {
-    $touching = MasterGeometry::touching(3000, 2000, $angle);
-    check("turned by $angle: all four corners touch an edge", $touching !== null && $onEdge($touching, 1.5) === 4 && $touching->insideOriginal(1.5));
+    $largest = MasterGeometry::largest(3000, 2000, $angle);
+    check("turned by $angle, near a right angle: all four corners touch an edge", $onEdge($largest, 1.5) === 4 && $largest->insideOriginal(1.5));
 }
-check('turned by a right angle: the touching frame is the whole picture',
-    MasterGeometry::touching(3000, 2000, 90)->crop->ratio->name === '2:3' && MasterGeometry::touching(3000, 2000, 0)->crop->ratio->name === '3:2');
-check('near the diagonal there is no such frame', MasterGeometry::touching(3000, 2000, 45) === null && MasterGeometry::touching(3000, 2000, 40) === null);
+foreach ([30.0, 45.0, 60.0, -40.0, 135.0] as $angle) {
+    $largest = MasterGeometry::largest(3000, 2000, $angle);
+    check("turned by $angle, near the diagonal: two corners on the long edges, nothing outside", $onEdge($largest, 1.5) >= 2 && $largest->insideOriginal(1.5));
+}
+check('turned by a right angle: the whole picture',
+    MasterGeometry::largest(3000, 2000, 90)->crop->ratio->name === '2:3' && MasterGeometry::largest(3000, 2000, 0)->crop->ratio->name === '3:2'
+    && MasterGeometry::largest(3000, 2000, 180)->width === 3000 && MasterGeometry::largest(2000, 3000, -90)->height === 2000);
+check('at 45 degrees: a square', MasterGeometry::largest(3000, 2000, 45)->crop->ratio->name === '1:1' && MasterGeometry::largest(2000, 3000, 45)->crop->ratio->name === '1:1');
+// No other ratio gives more area at that angle - the closed form against a search over ratios.
+foreach ([[3000, 2000], [2000, 3000], [4000, 3000], [1000, 1000], [6000, 1000]] as [$w, $h]) {
+    foreach ([3.0, 17.0, 24.0, 31.0, 45.0, 52.0, 77.0] as $angle) {
+        $largest = MasterGeometry::largest($w, $h, $angle);
+        $best = 0.0;
+        for ($i = -400; $i <= 400; $i++) {
+            $probe = new MasterGeometry($w, $h, new CropBox(Ratio::ofPixels((int) round(1000 * exp($i / 100)), 1000)), $angle);
+            $best = max($best, $probe->width * $probe->height);
+        }
+        check("turned by $angle, $w x $h: the largest area there is", $largest->width * $largest->height >= $best * 0.996);   // whole pixels: a frame of 700 px rounds by up to 0.15 %
+    }
+}
+// Turning on, in tenths of a degree: the frame changes in small steps, never jumps.
+foreach ([[3000, 2000], [2000, 3000], [1600, 1000], [1000, 1000]] as [$w, $h]) {
+    $previous = null;
+    $steady = true;
+    for ($tenth = -1800; $tenth <= 1800; $tenth++) {
+        $g = MasterGeometry::largest($w, $h, $tenth / 10);
+        if ($previous !== null) {
+            $steady = $steady && abs($g->width - $previous->width) <= 0.01 * max($w, $h) + 2 && abs($g->height - $previous->height) <= 0.01 * max($w, $h) + 2;
+        }
+        $previous = $g;
+    }
+    check("turning $w x $h all the way round: no jump", $steady);
+}
 
 $pois = [['x' => 0.5, 'y' => 0.5, 'weight' => 2, 'type' => 'face'], ['x' => 0.1, 'y' => 0.5], ['x' => 0.5, 'y' => 0.5, 'w' => 0.5, 'h' => 0.1]];
 $same = $whole->poisToMaster($pois);
@@ -177,14 +231,18 @@ check('points of interest: turned with the picture, width and height swap',
     $near($turned[0]['x'], 0.5) && $near($turned[0]['y'], 0.1) && $near($turned[0]['w'], 0.2) && $near($turned[0]['h'], 0.1));
 // The resolver takes what the geometry hands over.
 $viaMaster = CropResolver::resolve(Ratio::of('9:16'), $whole->width, $whole->height, [], $whole->poisToMaster([['x' => 0.9, 'y' => 0.5]]));
-check('points of interest reach the resolver through the master', $viaMaster->source === CropBox::POI && $viaMaster->cx > 0.5);
+check('points of interest reach the resolver through the master', $viaMaster->source === CropBox::POI && $viaMaster->alignX > 0.5);
 
-$moved = $whole->rebase(new CropBox($square, 0.5, 0.5, 4), $cut);
-check('new master crop: a crop keeps its place and its pixels', $near($moved->cx, 0.5) && $near($moved->cy, 0.5) && $near($moved->scale, 2) && $moved->inside($cut->width, $cut->height));
-$lost = $whole->rebase(new CropBox($square, 0.25, 0.5, 4, CropBox::MANUAL), $cut);
-check('new master crop: a crop that fell outside is not hidden', $near($lost->cx, -0.25) && !$lost->inside($cut->width, $cut->height) && $lost->source === CropBox::MANUAL);
-$back = $cut->rebase($moved, $whole);
-check('new master crop: there and back', $near($back->cx, 0.5) && $near($back->cy, 0.5) && $near($back->scale, 4));
-$afterTurn = $whole->rebase(new CropBox($square, 0.25, 0.5, 2), $turn(90));
-check('master turned: the crop follows the picture', $near($afterTurn->cx, 0.5) && $near($afterTurn->cy, 0.25) && $near($afterTurn->scale, 2));
+// A new master under the crops: they keep alignment and scale (CropEdits::master); by quarter turns and
+// mirroring the alignment goes with the picture.
+$onTheLeft = new CropBox($square, 0.0, 0.5, 2, CropBox::MANUAL);
+$quarter = CropEdits::reoriented($onTheLeft, 0, false, 90, false);
+check('master turned a quarter: a crop on the left of the picture is on top', $near($quarter->alignX, 0.5) && $near($quarter->alignY, 0.0)
+    && $near($quarter->scale, 2) && $quarter->source === CropBox::MANUAL && $quarter->ratio === $square);
+check('master turned by 180 degrees: on the right', $near(CropEdits::reoriented($onTheLeft, 0, false, 180, false)->alignX, 1.0));
+check('master mirrored: on the right', $near(CropEdits::reoriented($onTheLeft, 0, false, 0, true)->alignX, 1.0));
+$roundTrip = CropEdits::reoriented(CropEdits::reoriented($onTheLeft, 0, false, 90, true), 90, true, -90, false);
+$back = CropEdits::reoriented($roundTrip, -90, false, 0, false);
+check('turned and mirrored there and back', $near($back->alignX, 0.0) && $near($back->alignY, 0.5));
+check('a tilt counts as the nearest quarter', $near(CropEdits::reoriented($onTheLeft, 3, false, 84, false)->alignY, 0.0));
 echo "media crop geometry: all checks passed\n";

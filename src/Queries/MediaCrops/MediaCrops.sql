@@ -8,7 +8,7 @@
 SELECT cms_media_crops.*
 FROM cms_media_crops
 WHERE media_crop_media_id IN (:mediaIds)
-	AND COALESCE(media_crop_ratio, media_crop_center_x, media_crop_center_y, media_crop_scale, media_crop_edit, 1) IS NOT NULL
+	AND COALESCE(media_crop_ratio, media_crop_align_x, media_crop_align_y, media_crop_scale, media_crop_edit, 1) IS NOT NULL
 ORDER BY media_crop_media_id, media_crop_id
 
 -- :mediaIds

@@ -132,8 +132,8 @@ final class VariantRenderer
             $image->rotateImage($transparent, $geometry->angle);
             $image->setImagePage(0, 0, 0, 0);
         }
-        $x = (int) round($geometry->crop->cx * $image->getImageWidth() - $geometry->width / 2);
-        $y = (int) round($geometry->crop->cy * $image->getImageHeight() - $geometry->height / 2);
+        $x = (int) round($geometry->centreFractionX * $image->getImageWidth() - $geometry->width / 2);
+        $y = (int) round($geometry->centreFractionY * $image->getImageHeight() - $geometry->height / 2);
         self::frame($image, $geometry->width, $geometry->height, $x, $y);
         self::levels($image, $look);
         return $image;

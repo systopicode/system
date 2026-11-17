@@ -24,8 +24,13 @@
  *   zoom     drag anywhere: the picture grows and shrinks around the fix
  *            point, and the place that was grabbed stays under the pointer -
  *            the two-finger zoom, done with a mouse.
- *   turn     (master) a click turns by 90 degrees; a drag turns freely
- *            around the fix point. With two fingers: turn them.
+ *   turn     (master) a drag turns freely around the fix point. With two
+ *            fingers: turn them. The button beside the tick turns on to
+ *            the next right angle, the turns that lose nothing.
+ *
+ * Turned without a crop of its own, the master is the largest frame inside
+ * the turned picture (sys.cropMath.largest), its ratio following the angle;
+ * a frame at "fill in" stays at "fill in" while it turns.
  *
  * A click on the cross puts the tool away; dragging moves the picture again.
  *
@@ -96,10 +101,12 @@
 				'<button type="button" class="button" data-ce-level="c" title="Contrast" aria-label="Contrast">' + ICON('contrast') + '</button>' +
 				'<button type="button" class="button" data-ce-level="b" title="Brightness" aria-label="Brightness">' + ICON('sun') + '</button>' +
 				'<button type="button" class="button" data-ce-level="s" title="Saturation" aria-label="Saturation">' + ICON('droplet-half-2') + '</button>' +
-				'<button type="button" class="button" data-ce-turn title="Turn by 90 degrees - then drag to turn freely around the fix point" aria-label="Turn by 90 degrees" aria-pressed="false">' + ICON('rotate-right') + '</button>' +
+				'<button type="button" class="button" data-ce-turn title="Turn freely: drag around the fix point" aria-label="Turn freely" aria-pressed="false">' + ICON('rotate') + '</button>' +
 				'<button type="button" class="button" data-ce-flip title="Mirror" aria-label="Mirror">' + ICON('reflect-horizontal') + '</button>' +
 				'<span class="ceSpace"></span>' +
-				'<div class="ceLevel" hidden><output>0</output><input type="range" min="0" max="200" value="100" aria-label="Value"></div>' +
+				'<button type="button" class="button" data-ce-original title="Back to the original: no crop, not turned, not mirrored, no look - then apply" aria-label="Back to the original">' + ICON('clock-rotate-left') + '</button>' +
+				'<div class="ceLevel" hidden><output>0</output><input type="range" min="0" max="200" value="100" aria-label="Value">' +
+					'<button type="button" class="button" data-ce-level-reset title="Back to unchanged" aria-label="Back to unchanged">' + ICON('arrow-rotate-left') + '</button></div>' +
 			'</div>' +
 			'<div class="ceStage">' +
 				'<img class="ceUnder" alt="" draggable="false">' +
@@ -115,6 +122,7 @@
 				'<button type="button" class="button ceOld" data-ce-close title="The editor of the named formats">Old editor</button>' +
 				'<button type="button" class="button ceMore" data-ce-more title="Tools" aria-label="Tools" aria-expanded="false">' + ICON('grip-lines') + '</button>' +
 				'<div class="ceCommit">' +
+					'<button type="button" class="button" data-ce-quarter title="Turn to the next right angle - turns that lose nothing" aria-label="Turn to the next right angle">' + ICON('rotate-right') + '</button>' +
 					'<button type="button" class="button submit" data-ce-save title="Apply" aria-label="Apply" disabled>' + ICON('check') + '</button>' +
 					'<button type="button" class="button" data-ce-cancel title="Discard changes" aria-label="Discard changes" disabled>' + ICON('xmark') + '</button>' +
 				'</div>' +
@@ -160,6 +168,10 @@
 		if (this.resize) {
 			this.resize.disconnect();
 		}
+		if (this.drawing) {
+			window.cancelAnimationFrame(this.drawing);
+			this.drawing = 0;
+		}
 		this.el.remove();
 		this.options.stage.classList.remove('cropEditing');
 		if (this.options.onClose) {
@@ -203,13 +215,13 @@
 		const data = this.data;
 		if (this.mode === 'master') {
 			const m = data.master;
-			this.work = {ratio: this.math.ratio(m.ratio), cx: m.cx, cy: m.cy, scale: m.scale, angle: m.angle, flip: m.flip,
+			this.work = {ratio: this.math.ratio(m.ratio), ax: m.ax, ay: m.ay, scale: m.scale, angle: m.angle, flip: m.flip,
 				look: Object.assign({}, m.look), auto: !m.manual, freeRatio: false};
 			this.free = !this.masterOf(this.work).insideOriginal(1);
 			this.show(data.original.url);
 		} else {
 			const r = this.ratios.find(item => item.name === this.ratioName);
-			this.work = {ratio: r.ratio, cx: r.cx, cy: r.cy, scale: r.scale};
+			this.work = {ratio: r.ratio, ax: r.ax, ay: r.ay, scale: r.scale};
 			this.free = !this.math.inside(this.work, data.master.width, data.master.height, 1e-6);
 			this.show(this.masterUrl());
 		}
@@ -259,8 +271,8 @@
 	Session.prototype.move = function (wanted) {
 		const from = this.work;
 		const make = t => Object.assign({}, wanted, {
-			cx: from.cx + (wanted.cx - from.cx) * t,
-			cy: from.cy + (wanted.cy - from.cy) * t,
+			ax: from.ax + (wanted.ax - from.ax) * t,
+			ay: from.ay + (wanted.ay - from.ay) * t,
 			scale: from.scale * Math.pow(wanted.scale / from.scale, t)
 		});
 		this.work = this.allowed(from) ? this.math.furthest(make, work => this.allowed(work)) : this.settled(wanted);
@@ -273,10 +285,10 @@
 			return work;
 		}
 		// Fill in, centred, is always allowed; from there as far towards the wanted state as it goes.
-		const safe = Object.assign({}, work, {cx: 0.5, cy: 0.5, scale: Math.max(1, work.scale)});
+		const safe = Object.assign({}, work, {ax: 0.5, ay: 0.5, scale: Math.max(1, work.scale)});
 		const make = t => Object.assign({}, work, {
-			cx: safe.cx + (work.cx - safe.cx) * t,
-			cy: safe.cy + (work.cy - safe.cy) * t,
+			ax: safe.ax + (work.ax - safe.ax) * t,
+			ay: safe.ay + (work.ay - safe.ay) * t,
 			scale: safe.scale * Math.pow(work.scale / safe.scale, t)
 		});
 		return this.math.furthest(make, state => this.allowed(state));
@@ -287,8 +299,7 @@
 	 * k is screen pixels per pixel of the picture shown.
 	 */
 	Session.prototype.layout = function () {
-		const sw = this.stageEl.clientWidth;
-		const sh = this.stageEl.clientHeight;
+		const {w: sw, h: sh} = this.stageSize();
 		const r = this.math.value(this.work.ratio);
 		const room = 1 - 2 * editor.margin;
 		const fw = Math.max(1, Math.min(sw * room, sh * room * r));
@@ -320,21 +331,66 @@
 
 	// ----------------------------------------------------------------- render
 
+	/**
+	 * The stage's size. Read from the page only when nothing is known yet:
+	 * the ResizeObserver keeps it, so the pointer's way across the stage
+	 * never makes the browser lay out the page in between.
+	 */
+	Session.prototype.stageSize = function () {
+		return this.size || {w: this.stageEl.clientWidth, h: this.stageEl.clientHeight};
+	};
+
+	/**
+	 * Works out what is on the stage now (this.view - the tools go on from
+	 * it at once) and draws it with the next frame: however many pointer
+	 * events come in between, the page is written once per frame.
+	 */
 	Session.prototype.render = function () {
-		if (!this.work || !this.stageEl.clientWidth) {
+		if (!this.work || !this.stageSize().w) {
 			return;
 		}
 		const view = this.view = this.layout();
+		if ((this.tool === 'zoom' || this.tool === 'turn') && !this.pivot) {
+			this.pivot = {x: view.frame.x + view.frame.w / 2, y: view.frame.y + view.frame.h / 2};
+		}
+		if (typeof window.requestAnimationFrame !== 'function') {
+			this.draw();
+		} else if (!this.drawing) {
+			this.drawing = window.requestAnimationFrame(() => {
+				this.drawing = 0;
+				this.draw();
+			});
+		}
+	};
+
+	Session.prototype.draw = function () {
+		const view = this.view;
+		if (!view) {
+			return;
+		}
 		const px = value => value.toFixed(2) + 'px';
 		const f = view.frame;
-		Object.assign(this.frameEl.style, {left: px(f.x), top: px(f.y), width: px(f.w), height: px(f.h)});
-		const look = this.mode === 'master' ? this.work.look : {b: 100, c: 100, s: 100};
+		const set = (el, styles) => {
+			// Only what changed: the same value written again still costs the browser a look at the element.
+			const was = el.ceStyles || (el.ceStyles = {});
+			for (const key in styles) {
+				if (was[key] !== styles[key]) {
+					el.style[key] = was[key] = styles[key];
+				}
+			}
+		};
+		set(this.frameEl, {left: px(f.x), top: px(f.y), width: px(f.w), height: px(f.h)});
+		const look = this.mode === 'master' ? this.work.look : null;
+		const filter = !look || (look.b === 100 && look.c === 100 && look.s === 100)
+			? 'none'
+			: 'brightness(' + look.b + '%) contrast(' + look.c + '%) saturate(' + look.s + '%)';
+		// Size by width and height (sharp at any zoom), place by transform (moving needs no new layout).
 		const place = (img, ox, oy) => {
 			const i = view.image;
-			Object.assign(img.style, {
-				width: px(i.w), height: px(i.h), left: px(i.cx - i.w / 2 - ox), top: px(i.cy - i.h / 2 - oy),
-				transform: 'rotate(' + i.angle + 'deg) scaleX(' + (i.flip ? -1 : 1) + ')',
-				filter: 'brightness(' + look.b + '%) contrast(' + look.c + '%) saturate(' + look.s + '%)'
+			set(img, {
+				width: px(i.w), height: px(i.h),
+				transform: 'translate(' + px(i.cx - i.w / 2 - ox) + ',' + px(i.cy - i.h / 2 - oy) + ') rotate(' + i.angle + 'deg) scaleX(' + (i.flip ? -1 : 1) + ')',
+				filter: filter
 			});
 		};
 		place(this.under, 0, 0);
@@ -343,9 +399,8 @@
 		const pivot = this.el.querySelector('.cePivot');
 		const around = this.tool === 'zoom' || this.tool === 'turn';
 		pivot.hidden = !around;
-		if (around) {
-			this.pivot = this.pivot || {x: f.x + f.w / 2, y: f.y + f.h / 2};
-			Object.assign(pivot.style, {left: px(this.pivot.x), top: px(this.pivot.y)});
+		if (around && this.pivot) {
+			set(pivot, {left: px(this.pivot.x), top: px(this.pivot.y)});
 		}
 		this.renderSide();
 	};
@@ -360,7 +415,13 @@
 		const dirty = this.dirty();
 		el.dataset.mode = this.mode;
 		el.querySelectorAll('[data-ce-mode]').forEach(b => b.classList.toggle('selected', b.dataset.ceMode === this.mode));
-		el.querySelectorAll('[data-ce-level],[data-ce-turn],[data-ce-flip]').forEach(b => { b.disabled = !master; });
+		el.querySelectorAll('[data-ce-level],[data-ce-turn],[data-ce-flip],[data-ce-original]').forEach(b => { b.disabled = !master; });
+		if (master) {
+			const w = this.work;
+			const o = this.data.original;
+			el.querySelector('[data-ce-original]').disabled = w.auto && !w.angle && !w.flip && w.look.b === 100 && w.look.c === 100 && w.look.s === 100
+				&& this.math.compare(w.ratio, this.math.ratio(o.width, o.height)) === 0;
+		}
 		el.querySelector('[data-ce-tool="zoom"]').classList.toggle('selected', this.tool === 'zoom');
 		el.querySelector('[data-ce-tool="zoom"]').setAttribute('aria-pressed', String(this.tool === 'zoom'));
 		el.querySelector('[data-ce-tool="poi"]').classList.toggle('selected', this.tool === 'poi');
@@ -369,46 +430,63 @@
 		el.querySelector('[data-ce-turn]').setAttribute('aria-pressed', String(this.tool === 'turn'));
 		el.dataset.tool = this.tool || '';
 		el.querySelector('[data-ce-source]').hidden = !master;
+		el.querySelector('[data-ce-quarter]').hidden = !master;
 		el.querySelector('[data-ce-fit]').hidden = master;
 		el.querySelector('[data-ce-fill]').hidden = master;
 		el.querySelectorAll('[data-ce-free]').forEach(b => b.classList.toggle('selected', (b.dataset.ceFree === '1') === this.free));
-		el.querySelector('[data-ce-save]').disabled = !dirty || this.busy;
-		el.querySelector('[data-ce-cancel]').disabled = !dirty || this.busy;
+		el.querySelector('[data-ce-save]').disabled = !dirty || this.busy || !!this.sliding;
+		el.querySelector('[data-ce-cancel]').disabled = !dirty || this.busy || !!this.sliding;
 
-		// The slider: every declared ratio at its place, the knob at the current one.
+		// The slider: every declared ratio at its place, in one line; they overlap, the middle (1:1) lies
+		// furthest back, the ends always in front. Hovered or chosen comes to the front (CSS).
 		const list = el.querySelector('.ceRatios');
 		if (list.dataset.for !== this.data.version + this.mode) {
 			list.dataset.for = this.data.version + this.mode;
+			const square = this.ratios.find(r => r.name === '1:1');
+			const middle = square ? square.position : 0.5;
 			list.innerHTML = this.ratios.map(r => {
 				const box = r.w >= r.h ? [1, r.h / r.w] : [r.w / r.h, 1];
-				return '<li style="--p:' + r.position.toFixed(5) + '"><button type="button" data-ce-ratio="' + r.name + '" title="' + r.name + (master ? '' : ' - ' + SOURCE[r.source]) + '" aria-label="' + r.name + '"' +
+				return '<li style="--p:' + r.position.toFixed(5) + ';z-index:' + (1 + Math.round(Math.abs(r.position - middle) * 100)) + '"><span class="ceRatioName" aria-hidden="true">' + r.name + '</span>' +
+					'<button type="button" data-ce-ratio="' + r.name + '" title="' + r.name + (master ? '' : ' - ' + SOURCE[r.source]) + '" aria-label="' + r.name + '"' +
 					(!master && r.source === 'manual' ? ' class="is-manual"' : '') + '><span style="width:' + (box[0] * 1.05).toFixed(3) + 'rem;height:' + (box[1] * 1.05).toFixed(3) + 'rem"></span></button></li>';
 			}).join('');
 		}
-		// Ratios that would cover each other take a second column (a second row, where the slider lies across).
-		const height = Math.max(list.clientHeight, list.clientWidth);
-		if (height && list.dataset.laid !== list.dataset.for + height) {
-			list.dataset.laid = list.dataset.for + height;
-			const free = [-Infinity, -Infinity];
-			list.querySelectorAll('li').forEach((li, index) => {
-				const y = this.ratios[index].position * height;
-				const size = li.firstChild.offsetHeight + 3;
-				const col = y - free[0] >= size ? 0 : (y - free[1] >= size ? 1 : (free[0] <= free[1] ? 0 : 1));
-				li.dataset.col = col;
-				free[col] = y;
-			});
+		// Names that would cover each other: the one further in front is written, the other only on hover.
+		// The list's length comes from the ResizeObserver - measured again only when it changed.
+		const length = this.listLength || Math.max(list.clientHeight, list.clientWidth);
+		if (length && list.dataset.laid !== list.dataset.for + length) {
+			list.dataset.laid = list.dataset.for + length;
+			const items = Array.from(list.querySelectorAll('li'));
+			const written = [];
+			items.map((li, index) => ({li: li, at: this.ratios[index].position * length, z: Number(li.style.zIndex)}))
+				.sort((a, b) => b.z - a.z)
+				.forEach(item => {
+					const name = item.li.firstChild;
+					const room = list.clientHeight >= list.clientWidth ? name.offsetHeight : name.offsetWidth + 6;
+					const free = written.every(at => Math.abs(at - item.at) >= room);
+					item.li.classList.toggle('is-quiet', !free);
+					if (free) {
+						written.push(item.at);
+					}
+				});
 		}
-		const current = master ? this.work.ratio : this.ratios.find(r => r.name === this.ratioName).ratio;
-		list.querySelectorAll('[data-ce-ratio]').forEach(b => b.classList.toggle('selected', b.dataset.ceRatio === current.name));
-		el.querySelector('.ceKnob').style.setProperty('--p', this.positionOf(current).toFixed(5));
-		el.querySelector('.ceSlider').classList.toggle('is-free', master);
+		const shown = this.sliding ? this.nearest(this.sliding.position) : null;
+		const current = shown ? shown.ratio : (master ? this.work.ratio : this.ratios.find(r => r.name === this.ratioName).ratio);
+		list.querySelectorAll('[data-ce-ratio]').forEach(b => {
+			b.classList.toggle('selected', b.dataset.ceRatio === current.name);
+			b.parentNode.classList.toggle('is-selected', b.dataset.ceRatio === current.name);
+		});
+		el.querySelector('.ceKnob').style.setProperty('--p', (this.sliding ? this.sliding.position : this.positionOf(current)).toFixed(5));
 
 		const auto = el.querySelector('[data-ce-auto]');
-		const shown = master ? null : this.ratios.find(r => r.name === this.ratioName);
-		auto.disabled = this.busy || (master ? !this.data.master.manual : shown.source !== 'manual');
+		const picked = master ? null : this.ratios.find(r => r.name === this.ratioName);
+		auto.disabled = this.busy || !!this.sliding || (master ? !this.data.master.manual : picked.source !== 'manual');
 
-		if (!this.message) {
+		if (this.sliding && !master) {
+			this.statusEl().textContent = 'Between ' + this.sliding.between + ' - let go: ' + current.name;
+		} else if (!this.message) {
 			const m = this.data.master;
+			const shown = picked;
 			const hint = this.tool === 'zoom' ? ' - drag to zoom around the cross, click the cross to finish'
 				: (this.tool === 'turn' ? ' - drag to turn around the cross, click the cross to finish'
 				: (this.tool === 'poi' ? ' - ' + this.pois.length + (this.pois.length === 1 ? ' point' : ' points') + ' of interest: click to set one, drag to move it' : ''));
@@ -452,12 +530,118 @@
 		return this.math.ratio(Math.round(Math.exp(first + (last - first) * position) * 1000), 1000);
 	};
 
+	/** The declared ratio nearest to a place on the slider. */
+	Session.prototype.nearest = function (position) {
+		return this.ratios.reduce((best, r) => Math.abs(r.position - position) < Math.abs(best.position - position) ? r : best);
+	};
+
+	/**
+	 * The crop at any place of the slider (crops mode): between the two
+	 * declared ratios around it, as the resolver interpolates - the centre in
+	 * a straight line, the scale in equal factors. At a declared ratio it is
+	 * that ratio's crop, so letting go there does not jump.
+	 */
+	Session.prototype.cropAt = function (position) {
+		let below = this.ratios[0];
+		let above = this.ratios[this.ratios.length - 1];
+		for (const r of this.ratios) {
+			if (r.position <= position && r.position >= below.position) {
+				below = r;
+			}
+			if (r.position >= position && r.position <= above.position) {
+				above = r;
+			}
+		}
+		const span = above.position - below.position;
+		const t = span > 0 ? (position - below.position) / span : 0;
+		return {
+			crop: {
+				ratio: span > 0 ? this.ratioAt(position) : below.ratio,
+				ax: below.ax + (above.ax - below.ax) * t,
+				ay: below.ay + (above.ay - below.ay) * t,
+				scale: Math.pow(below.scale, 1 - t) * Math.pow(above.scale, t)
+			},
+			between: below.name + ' and ' + above.name
+		};
+	};
+
+	/** Crops mode: the knob at any place, the frame and its crop following. */
+	Session.prototype.slideTo = function (position) {
+		const at = this.cropAt(position);
+		this.sliding = {position: position, between: at.between};
+		this.work = at.crop;
+		this.render();
+	};
+
+	/**
+	 * Crops mode: the knob glides to a declared ratio, the frame following
+	 * on the way; there that ratio is opened.
+	 */
+	Session.prototype.glide = function (target) {
+		const from = this.sliding ? this.sliding.position : this.positionOf(this.ratios.find(r => r.name === this.ratioName).ratio);
+		const done = () => {
+			this.sliding = null;
+			this.ratioName = target.name;
+			this.load();
+		};
+		const distance = Math.abs(target.position - from);
+		if (typeof window.requestAnimationFrame !== 'function' || distance < 1e-4) {
+			done();
+			return;
+		}
+		const duration = 120 + 260 * Math.min(1, distance);
+		const start = window.performance.now();
+		const step = now => {
+			const t = Math.min(1, (now - start) / duration);
+			const eased = 1 - Math.pow(1 - t, 3);
+			if (t >= 1) {
+				done();
+				return;
+			}
+			this.slideTo(from + (target.position - from) * eased);
+			window.requestAnimationFrame(step);
+		};
+		this.slideTo(from);
+		window.requestAnimationFrame(step);
+	};
+
 	// ----------------------------------------------------------------- tools
+
+	/**
+	 * Width and height of the frame as fractions of what it is cut from (the
+	 * box around the turned original, or the master) - what turns the
+	 * frame's middle into its alignment and back.
+	 */
+	Session.prototype.lengths = function (work) {
+		if (this.mode === 'master') {
+			const g = this.masterOf(work);
+			return [g.frameWidth / g.referenceWidth, g.frameHeight / g.referenceHeight];
+		}
+		const m = this.data.master;
+		return this.math.size(work.ratio, work.scale, m.width, m.height);
+	};
+
+	/** The frame's middle, fractions of what it is cut from. */
+	Session.prototype.centreOf = function (work) {
+		const [w, h] = this.lengths(work);
+		return [this.math.centreOf(work.ax, w), this.math.centreOf(work.ay, h)];
+	};
+
+	/**
+	 * The state with its frame's middle at a place - the moving and zooming
+	 * work with the middle, what is kept is the alignment. Along an axis the
+	 * frame fills completely, the alignment stays what it was.
+	 */
+	Session.prototype.centredAt = function (work, cx, cy) {
+		const [w, h] = this.lengths(work);
+		return Object.assign({}, work, {ax: this.math.alignOf(cx, w, work.ax), ay: this.math.alignOf(cy, h, work.ay)});
+	};
 
 	/** Moves the picture by screen pixels - the frame's middle moves the other way in the picture. */
 	Session.prototype.pan = function (dx, dy) {
 		const v = this.view;
-		this.move(Object.assign({}, this.work, {cx: this.work.cx - dx / (v.k * v.refW), cy: this.work.cy - dy / (v.k * v.refH), auto: false}));
+		const [cx, cy] = this.centreOf(this.work);
+		this.move(this.centredAt(Object.assign({}, this.work, {auto: false}), cx - dx / (v.k * v.refW), cy - dy / (v.k * v.refH)));
 	};
 
 	/** Zooms by a factor; the point of the picture under (x, y) on the stage stays where it is. */
@@ -467,12 +651,10 @@
 		const qy = y - (v.frame.y + v.frame.h / 2);
 		const scale = Math.min(100, Math.max(0.05, this.work.scale * factor));
 		const real = scale / this.work.scale;
-		this.move(Object.assign({}, this.work, {
-			scale: scale,
-			cx: this.work.cx + qx / v.k * (1 - 1 / real) / v.refW,
-			cy: this.work.cy + qy / v.k * (1 - 1 / real) / v.refH,
-			auto: false
-		}));
+		const [cx, cy] = this.centreOf(this.work);
+		this.move(this.centredAt(Object.assign({}, this.work, {scale: scale, auto: false}),
+			cx + qx / v.k * (1 - 1 / real) / v.refW,
+			cy + qy / v.k * (1 - 1 / real) / v.refH));
 	};
 
 	/**
@@ -484,11 +666,9 @@
 		const work = this.work;
 		const o = this.data.original;
 		if (work.auto) {
-			// Nothing cropped yet: the frame that touches all four edges of the turned picture.
-			const touching = this.math.touching(o.width, o.height, angle, flip);
-			this.work = touching
-				? Object.assign({}, work, {ratio: touching.crop.ratio, cx: 0.5, cy: 0.5, scale: 1, angle: angle, flip: flip})
-				: this.settled(Object.assign({}, work, {angle: angle, flip: flip, cx: 0.5, cy: 0.5, scale: 1}));
+			// Nothing cropped yet: the frame of the largest area inside the turned picture, its ratio following the angle.
+			const largest = this.math.largest(o.width, o.height, angle, flip);
+			this.work = Object.assign({}, work, {ratio: largest.crop.ratio, ax: 0.5, ay: 0.5, scale: 1, angle: angle, flip: flip});
 			this.render();
 			return;
 		}
@@ -499,7 +679,7 @@
 		const my = pivot ? (pivot.y - view.frame.y) / view.k : before.frameHeight / 2;
 		const held = before.toOriginal(mx, my);
 		const next = Object.assign({}, work, {angle: angle, flip: flip});
-		const probe = this.masterOf(Object.assign({}, next, {cx: 0.5, cy: 0.5, scale: 1}));
+		const probe = this.masterOf(Object.assign({}, next, {ax: 0.5, ay: 0.5, scale: 1}));
 		const rad = angle * Math.PI / 180;
 		const cos = Math.cos(rad);
 		const sin = Math.sin(rad);
@@ -516,10 +696,9 @@
 		if (flip) {
 			dx = -dx;
 		}
-		next.cx = 0.5 + (dx * cos - dy * sin) / probe.referenceWidth;
-		next.cy = 0.5 + (dx * sin + dy * cos) / probe.referenceHeight;
-		next.scale = probe.fill / before.frameHeight;
-		this.work = this.settled(next);
+		// A frame at "fill in" stays there: the largest of its ratio inside the turned picture. Any other keeps its pixels.
+		next.scale = Math.abs(work.scale - 1) < 1e-6 ? 1 : probe.fill / before.frameHeight;
+		this.work = this.settled(this.centredAt(next, 0.5 + (dx * cos - dy * sin) / probe.referenceWidth, 0.5 + (dx * sin + dy * cos) / probe.referenceHeight));
 		this.render();
 	};
 
@@ -533,7 +712,7 @@
 		}
 		const m = this.data.master;
 		const o = this.data.original;
-		const g = this.math.master(o.width, o.height, {ratio: this.math.ratio(m.ratio), cx: m.cx, cy: m.cy, scale: m.scale}, m.angle, m.flip);
+		const g = this.math.master(o.width, o.height, {ratio: this.math.ratio(m.ratio), ax: m.ax, ay: m.ay, scale: m.scale}, m.angle, m.flip);
 		return {g: g, left: view.image.cx - view.image.w / 2, top: view.image.cy - view.image.h / 2, k: view.k};
 	};
 
@@ -556,6 +735,9 @@
 		const layer = this.el.querySelector('.cePois');
 		const active = this.tool === 'poi';
 		layer.classList.toggle('is-active', active);
+		if (!this.pois.length && !layer.firstChild && this.el.querySelector('.cePoiBar').hidden) {
+			return;     // nothing to draw, nothing to clear: no work in every frame of a drag
+		}
 		layer.innerHTML = this.pois.map((poi, index) => {
 			const at = this.toStage(poi);
 			const weight = poi.weight === undefined ? 1 : poi.weight;
@@ -659,7 +841,7 @@
 		}
 		let work = this.work;
 		let action = 'saveRatioCrop';
-		const params = {ratio: work.ratio.name, cx: work.cx, cy: work.cy, scale: work.scale};
+		const params = {ratio: work.ratio.name, ax: work.ax, ay: work.ay, scale: work.scale};
 		if (this.mode === 'master') {
 			action = 'saveMasterCrop';
 			if (work.freeRatio) {
@@ -667,8 +849,9 @@
 				const g = this.masterOf(work);
 				const ratio = this.math.ratio(g.width, g.height);
 				const fill = this.masterOf(Object.assign({}, work, {ratio: ratio, scale: 1})).fill;
-				work = Object.assign({}, work, {ratio: ratio, scale: fill / g.height});
-				Object.assign(params, {ratio: ratio.name, scale: work.scale});
+				// The same frame, its middle where it was: the alignment follows the frame's new, whole-pixel length.
+				work = this.centredAt(Object.assign({}, work, {ratio: ratio, scale: fill / g.height}), g.cx, g.cy);
+				Object.assign(params, {ratio: ratio.name, ax: work.ax, ay: work.ay, scale: work.scale});
 			}
 			Object.assign(params, {brightness: work.look.b, contrast: work.look.c, saturation: work.look.s, angle: work.angle, flip: work.flip ? 1 : 0});
 			if (work.auto) {
@@ -715,7 +898,7 @@
 		const el = this.el;
 		const stage = this.stageEl;
 		const on = (selector, handler) => el.querySelectorAll(selector).forEach(b => b.addEventListener('click', event => {
-			if (!this.work || this.busy) {
+			if (!this.work || this.busy || this.sliding) {
 				return;
 			}
 			handler(event.currentTarget, event);
@@ -762,14 +945,12 @@
 			}
 			this.savePois(false);
 		});
-		on('[data-ce-turn]', () => {
-			// A click turns by a quarter, to the next right angle - and takes the tool up for turning freely.
+		// The tool for turning freely: taken up and put away, nothing turns yet.
+		on('[data-ce-turn]', () => this.setTool(this.tool === 'turn' ? null : 'turn'));
+		// Beside the tick: on to the next right angle clockwise - from 30.4 degrees to 90, not to 120.4.
+		on('[data-ce-quarter]', () => {
 			const quarter = degrees((Math.floor(this.work.angle / 90 + 1e-9) + 1) * 90);
-			if (this.tool !== 'turn') {
-				this.tool = 'turn';
-				this.pivot = null;
-			}
-			this.turn(quarter, this.work.flip, this.pivot);
+			this.turn(quarter, this.work.flip, this.tool === 'turn' ? this.pivot : null);
 		});
 		on('[data-ce-flip]', () => this.turn(this.work.angle, !this.work.flip, this.pivot));
 		on('[data-ce-free]', button => {
@@ -778,22 +959,19 @@
 			this.render();
 		});
 		on('[data-ce-source]', () => {
-			const g = this.masterOf(Object.assign({}, this.work, {cx: 0.5, cy: 0.5, scale: 1}));
-			const touching = this.math.touching(g.originalWidth, g.originalHeight, this.work.angle, this.work.flip);
-			this.work = Object.assign({}, this.work, {
-				ratio: touching ? touching.crop.ratio : this.math.ratio(Math.round(g.referenceWidth), Math.round(g.referenceHeight)),
-				cx: 0.5, cy: 0.5, scale: 1, auto: true, freeRatio: false
-			});
+			const g = this.masterOf(Object.assign({}, this.work, {ax: 0.5, ay: 0.5, scale: 1}));
+			const largest = this.math.largest(g.originalWidth, g.originalHeight, this.work.angle, this.work.flip);
+			this.work = Object.assign({}, this.work, {ratio: largest.crop.ratio, ax: 0.5, ay: 0.5, scale: 1, auto: true, freeRatio: false});
 			this.render();
 		});
 		on('[data-ce-fit]', () => {
 			const m = this.data.master;
 			this.free = true;
-			this.work = Object.assign({}, this.work, {cx: 0.5, cy: 0.5, scale: this.math.fitScale(this.work.ratio, m.width, m.height)});
+			this.work = Object.assign({}, this.work, {ax: 0.5, ay: 0.5, scale: this.math.fitScale(this.work.ratio, m.width, m.height)});
 			this.render();
 		});
 		on('[data-ce-fill]', () => {
-			this.work = Object.assign({}, this.work, {cx: 0.5, cy: 0.5, scale: 1});
+			this.work = Object.assign({}, this.work, {ax: 0.5, ay: 0.5, scale: 1});
 			this.render();
 		});
 
@@ -822,47 +1000,76 @@
 			level.querySelector('output').textContent = Number(range.value) - 100;
 			this.render();
 		});
-		range.addEventListener('dblclick', () => {
+		const unchanged = () => {
 			range.value = 100;
 			range.dispatchEvent(new Event('input'));
+		};
+		range.addEventListener('dblclick', unchanged);
+		on('[data-ce-level-reset]', unchanged);
+		// The whole master back to the original - as a change like any other, applied with the tick.
+		on('[data-ce-original]', () => {
+			const o = this.data.original;
+			this.hideLevel();
+			this.work = Object.assign({}, this.work, {ratio: this.math.ratio(o.width, o.height), ax: 0.5, ay: 0.5, scale: 1, angle: 0, flip: false,
+				look: {b: 100, c: 100, s: 100}, auto: true, freeRatio: false});
+			this.free = false;
+			this.render();
 		});
 
-		// The slider of ratios: a click picks a declared one; the master's knob also moves freely.
+		// The slider of ratios: a click picks a declared one - in crops mode the knob glides there, the
+		// frame following. The knob can be dragged too: the master's stays where it is let go, in crops
+		// mode it glides to the nearest declared ratio.
 		el.querySelector('.ceRatios').addEventListener('click', event => {
 			const button = event.target.closest('[data-ce-ratio]');
-			if (!button || !this.work || this.busy) {
+			if (!button || !this.work || this.busy || this.sliding) {
 				return;
 			}
 			const item = this.ratios.find(r => r.name === button.dataset.ceRatio);
 			if (this.mode === 'master') {
 				this.setRatio(item.ratio, false);
 			} else if (item.name !== this.ratioName && this.leave()) {
-				this.ratioName = item.name;
-				this.load();
+				this.glide(item);
 			}
 		});
 		const track = el.querySelector('.ceTrack');
-		const slide = event => {
+		const along = event => {
 			const box = track.getBoundingClientRect();
 			// Down on a wide screen, across on a phone.
-			const along = box.width > box.height ? (event.clientX - box.left) / box.width : (event.clientY - box.top) / box.height;
-			this.setRatio(this.ratioAt(Math.min(1, Math.max(0, along))), true);
+			return Math.min(1, Math.max(0, box.width > box.height ? (event.clientX - box.left) / box.width : (event.clientY - box.top) / box.height));
+		};
+		const slide = event => {
+			if (this.mode === 'master') {
+				this.setRatio(this.ratioAt(along(event)), true);
+			} else {
+				this.slideTo(along(event));
+			}
 		};
 		track.addEventListener('pointerdown', event => {
-			if (this.mode !== 'master' || !this.work || this.busy || event.button !== 0) {
+			if (!this.work || this.busy || this.sliding || event.button !== 0) {
 				return;
 			}
 			event.preventDefault();
+			if (this.mode !== 'master' && !this.leave()) {
+				return;
+			}
 			track.setPointerCapture(event.pointerId);
-			track.sliding = true;
+			track.held = true;
 			slide(event);
 		});
 		track.addEventListener('pointermove', event => {
-			if (track.sliding) {
+			if (track.held) {
 				slide(event);
 			}
 		});
-		const stop = () => { track.sliding = false; };
+		const stop = () => {
+			if (!track.held) {
+				return;
+			}
+			track.held = false;
+			if (this.mode !== 'master' && this.sliding) {
+				this.glide(this.nearest(this.sliding.position));
+			}
+		};
 		track.addEventListener('pointerup', stop);
 		track.addEventListener('pointercancel', stop);
 
@@ -874,7 +1081,7 @@
 		stage.addEventListener('pointerdown', event => {
 			const onPivot = event.target.closest('.cePivot');
 			const onPoint = this.tool === 'poi' ? event.target.closest('.cePoi') : null;
-			if (!this.work || this.busy || (!onPivot && !onPoint && event.target.closest('button,.cePoiBar')) || (event.pointerType === 'mouse' && event.button !== 0)) {
+			if (!this.work || this.busy || this.sliding || (!onPivot && !onPoint && event.target.closest('button,.cePoiBar')) || (event.pointerType === 'mouse' && event.button !== 0)) {
 				return;
 			}
 			event.preventDefault();
@@ -970,7 +1177,7 @@
 		stage.addEventListener('pointerup', release);
 		stage.addEventListener('pointercancel', release);
 		stage.addEventListener('wheel', event => {
-			if (!this.work || this.busy) {
+			if (!this.work || this.busy || this.sliding) {
 				return;
 			}
 			event.preventDefault();
@@ -994,8 +1201,15 @@
 		});
 
 		if (typeof ResizeObserver === 'function') {
-			this.resize = new ResizeObserver(() => this.render());
+			// The sizes the drawing needs, kept here: read once per resize, not once per pointer event.
+			const list = el.querySelector('.ceRatios');
+			this.resize = new ResizeObserver(() => {
+				this.size = {w: stage.clientWidth, h: stage.clientHeight};
+				this.listLength = Math.max(list.clientHeight, list.clientWidth);
+				this.render();
+			});
 			this.resize.observe(stage);
+			this.resize.observe(list);
 		}
 	};
 
