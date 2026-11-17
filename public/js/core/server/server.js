@@ -316,7 +316,9 @@ sys.core.server = new function () {
         var prev = el.style.minHeight;
         var before = el.clientHeight;
         var held = false;
-        if (top > 0) {
+        // The preview has its height from the layout. Even briefly growing it
+        // makes Safari clamp/animate its scroll while the keyboard is moving.
+        if (top > 0 && !el.matches('article.cmsContent')) {
             el.style.minHeight = (top + before) + 'px';
             if (el.clientHeight > before + 1) {
                 el.style.minHeight = prev;
@@ -574,7 +576,9 @@ sys.core.server.call = function (data) {
 
                         // In-place actions can rebuild descendants too (for example appearance).
                         // They must preserve the same scroll position as other non-navigation updates.
-                        if (method === 'put' && !call.redirecting) sys.core.server.restoreScroll(call.scrolled);
+                        // Background renders preserve the live position in updateDocument. A heartbeat
+                        // must not replay the position from before the user moved the caret.
+                        if (method === 'put' && !call.redirecting && !call.background) sys.core.server.restoreScroll(call.scrolled);
                         if (method !== 'put' && !call.redirecting) {
                             // a post that rendered (a lightbox opened) is what the next diff starts from
                             if (method === 'post' && call.responses.some(response => response.command === 'updateDocument')) {
