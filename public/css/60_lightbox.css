@@ -130,8 +130,11 @@ body.cms .cmslightbox > section > header h1{
 }
 
 .cmslightbox[data-size="1"] > section{
-    min-width: min(50%, 100%);
-    max-width: 50%;
+    /* Grow with wide windows. Below a comfortable working width, let the
+       outer space shrink first; only the available space can make it narrower. */
+    width: min(100%, max(46rem, 50%));
+    min-width: 0;
+    max-width: 100%;
 }
 
 .cmslightbox[data-size="2"] > section{
