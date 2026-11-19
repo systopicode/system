@@ -263,9 +263,10 @@
 			offsets.forEach(offset => {
 				var node = layer.rootNodes[offset.path[0]];
 				for (var i = 1; node && i < offset.path.length; i++) {
-					node = node.children[offset.path[i]];
+					// A different view can put whitespace or a placeholder at the old root index.
+					node = node.nodeType === 1 ? node.children[offset.path[i]] : null;
 				}
-				if (!node) {
+				if (!node || node.nodeType !== 1) {
 					return;
 				}
 				node.scrollTop = offset.top;
