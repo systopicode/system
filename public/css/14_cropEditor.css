@@ -1,6 +1,7 @@
 /****************************** CROP EDITOR ***************************/
 /* The image editor of master and ratios (public/js/gui/cropEditor.js):
-   tools | stage | ratio slider. It takes the place of the file's stage. */
+   the two modes as tabs (in the header of the window), tools | stage | ratio slider.
+   It takes the place of the file's stage. */
 
 .cmslightbox .fileStage.cropEditing > :not(.cropEditor){
 	display: none;
@@ -9,15 +10,57 @@
 .cropEditor{
 	display: grid;
 	grid-template-columns: auto minmax(0, 1fr) auto;
+	grid-template-rows: auto minmax(0, 1fr);
 	gap: 0.75rem;
 	flex: 1 1 auto;
 	min-height: 0;
 	height: 100%;
 }
 
+/* the modes went into the header of the window: tools | stage | slider fill it all */
+.cropEditor.is-headed{
+	grid-template-rows: minmax(0, 1fr);
+}
+
 .cropEditor .button.selected{
 	background: var(--cmsMainColor);
 	color: #fff;
+}
+
+/* what cannot be used is not shown - .cms .button of 50_forms.css would show it */
+.cropEditor .ceTools > [hidden],
+.cropEditor .ceSide > [hidden]{
+	display: none;
+}
+
+/* ---- the modes: tabs - the tabs of 50_forms.css ([role="tab"]), with an icon.
+   In a window they sit in its header, after the title; else across the top of the editor. */
+.ceTabs{
+	display: flex;
+	gap: 1.5rem;
+}
+
+.ceTabs > button{
+	display: inline-flex;
+	align-items: center;
+	gap: 0.45rem;
+}
+
+.cropEditor > .ceTabs{
+	grid-column: 1 / -1;
+	border-bottom: 1px solid var(--cmsLine, rgb(0 0 0 / 0.15));
+}
+
+/* from the top of the header to its bottom line, the mark of the chosen one lies on that line */
+header > .ceTabs{
+	align-self: stretch;
+	flex: 0 0 auto;
+	margin-left: 1.5rem;
+}
+
+/* the title takes no more room than it needs (60_lightbox.css: flex 1 1 auto) */
+.cmslightbox section > header:has(> .ceTabs) > h1{
+	flex: 0 1 auto;
 }
 
 /* ---- A: tools, one below the other */
@@ -160,29 +203,13 @@
 	color: #b00020;
 }
 
-/* ---- C: buttons, the slider of ratios, back to automatic */
+/* ---- C: the slider of ratios */
 .cropEditor .ceSide{
 	display: flex;
 	flex-direction: column;
 	align-items: center;
 	gap: 0.6rem;
 	width: 7rem;
-}
-
-.cropEditor .ceButtons{
-	display: flex;
-	flex-wrap: wrap;
-	justify-content: center;
-	gap: 0.3rem;
-}
-
-.cropEditor .ceButtons [hidden]{
-	display: none;
-}
-
-.cropEditor .ceToggle{
-	display: flex;
-	gap: 1px;
 }
 
 .cropEditor .ceSlider{
@@ -363,6 +390,20 @@
 	cursor: crosshair;
 }
 
+/* turning goes around the middle of the frame: that cross only puts the tool away */
+.cropEditor[data-tool="turn"] .cePivot{
+	cursor: pointer;
+}
+
+/* Shift held with a tool: the hand */
+.cropEditor.is-hand:is([data-tool="zoom"], [data-tool="turn"]) .ceStage{
+	cursor: grab;
+}
+
+.cropEditor.is-hand:is([data-tool="zoom"], [data-tool="turn"]) .ceStage.is-moving{
+	cursor: grabbing;
+}
+
 /* the editor of the named formats, until it goes */
 .cropEditor .ceOld{
 	position: absolute;
@@ -446,9 +487,35 @@
 @media (max-width: 720px){
 	.cropEditor{
 		grid-template-columns: minmax(0, 1fr);
-		grid-template-rows: auto minmax(0, 1fr) auto;
+		grid-template-rows: auto auto minmax(0, 1fr) auto;
 		gap: 0.5rem;
 	}
+
+	.cropEditor > .ceTabs > button{
+		flex: 1 1 0;
+		justify-content: center;
+	}
+
+	/* in the header of the window: only the icons */
+	header > .ceTabs{
+		gap: 1rem;
+		margin-left: 0.75rem;
+	}
+
+	header > .ceTabs > button > span{
+		display: none;
+	}
+
+	/* fixed rows: the tools fold away without the stage taking their row */
+	.cropEditor .ceTabs{ grid-row: 1; }
+	.cropEditor .ceTools{ grid-row: 2; }
+	.cropEditor .ceStage{ grid-row: 3; }
+	.cropEditor .ceSide{ grid-row: 4; }
+
+	.cropEditor.is-headed{ grid-template-rows: auto minmax(0, 1fr) auto; }
+	.cropEditor.is-headed .ceTools{ grid-row: 1; }
+	.cropEditor.is-headed .ceStage{ grid-row: 2; }
+	.cropEditor.is-headed .ceSide{ grid-row: 3; }
 
 	.cropEditor .ceStage > .ceMore{
 		display: inline-flex;
@@ -486,16 +553,6 @@
 		flex-wrap: wrap;
 		align-items: center;
 		width: auto;
-	}
-
-	.cropEditor .ceButtons{
-		display: none;
-		flex-basis: 100%;
-		justify-content: flex-start;
-	}
-
-	.cropEditor.is-open .ceButtons{
-		display: flex;
 	}
 
 	.cropEditor .ceSlider{

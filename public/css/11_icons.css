@@ -81,6 +81,7 @@
   --icon-file-import: url("../icons/tabler/file-import.svg");
   --icon-file-lock: url("../icons/tabler/file-lock.svg");
   --icon-file-off: url("../icons/tabler/file-off.svg");
+  --icon-file-orientation: url("../icons/tabler/file-orientation.svg");
   --icon-file-plus: url("../icons/tabler/file-plus.svg");
   --icon-file-text: url("../icons/tabler/file-text.svg");
   --icon-file-type-csv: url("../icons/tabler/file-type-csv.svg");
@@ -131,6 +132,7 @@
   --icon-map-2: url("../icons/tabler/map-2.svg");
   --icon-map-pin: url("../icons/tabler/map-pin.svg");
   --icon-maximize: url("../icons/tabler/maximize.svg");
+  --icon-maximize-off: url("../icons/tabler/maximize-off.svg");
   --icon-menu-2: url("../icons/tabler/menu-2.svg");
   --icon-message: url("../icons/tabler/message.svg");
   --icon-minus: url("../icons/tabler/minus.svg");
@@ -297,6 +299,7 @@
 .cmsIcon-file-import { --icon-mask: var(--icon-file-import); }
 .cmsIcon-file-lines { --icon-mask: var(--icon-file-text); }
 .cmsIcon-file-lock { --icon-mask: var(--icon-file-lock); }
+.cmsIcon-file-orientation { --icon-mask: var(--icon-file-orientation); }
 .cmsIcon-file-pdf { --icon-mask: var(--icon-file-type-pdf); }
 .cmsIcon-file-powerpoint { --icon-mask: var(--icon-file-type-ppt); }
 .cmsIcon-file-slash { --icon-mask: var(--icon-file-off); }
@@ -350,6 +353,8 @@
 .cmsIcon-lock-open { --icon-mask: var(--icon-lock-open); }
 .cmsIcon-magnifying-glass { --icon-mask: var(--icon-search); }
 .cmsIcon-map-location-dot { --icon-mask: var(--icon-map-2); }
+.cmsIcon-maximize { --icon-mask: var(--icon-maximize); }
+.cmsIcon-maximize-off { --icon-mask: var(--icon-maximize-off); }
 .cmsIcon-minus { --icon-mask: var(--icon-minus); }
 .cmsIcon-minus-circle { --icon-mask: var(--icon-circle-minus); }
 .cmsIcon-mobile { --icon-mask: var(--icon-device-mobile); }

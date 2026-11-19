@@ -896,6 +896,14 @@
       "changes": "regular stroke 2 retained, removed provider classes"
     },
     {
+      "path": "public/icons/tabler/file-orientation.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "529ea6bc5dcfe27bf94d97b6c4c7daf307501e9c7abb1c4859cb5e92ac2dd67f",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
       "path": "public/icons/tabler/file-plus.svg",
       "provider": "tabler",
       "version": "3.50.0",
@@ -1284,6 +1292,14 @@
       "provider": "tabler",
       "version": "3.50.0",
       "sha256": "99ada0a990f5196ff1edee5c7c861c0edc0a6134b368469cd2b220d94026253b",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
+      "path": "public/icons/tabler/maximize-off.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "a595feafa839ec2db6d5f4c9c50abc6a15e63e3d956b94d04f5b3c50166d40e6",
       "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
       "changes": "regular stroke 2 retained, removed provider classes"
     },

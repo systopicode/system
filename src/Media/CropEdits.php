@@ -59,7 +59,7 @@ final class CropEdits
         if ($crop !== null) {
             $row = Operator::put($row, $media, $crop, master: true);
         } elseif ($row !== null) {
-            $row->ratio = $row->alignX = $row->alignY = $row->scale = null;
+            $row->ratio = $row->alignX = $row->alignY = $row->scale = $row->basis = null;
         }
         $neutral = Operator::look(null);
         $look = ['r' => $look['r'] ?? 0, 'f' => $look['f'] ?? 0] + $look + $neutral;
@@ -68,7 +68,7 @@ final class CropEdits
         }
         $row ??= Operator::put(null, $media, new CropBox(Ratio::ofPixels($width, $height)), master: true);
         if ($crop === null) {
-            $row->ratio = $row->alignX = $row->alignY = $row->scale = null;
+            $row->ratio = $row->alignX = $row->alignY = $row->scale = $row->basis = null;
         }
         $row = Operator::withLook($row, $look);
 
@@ -89,7 +89,9 @@ final class CropEdits
     /**
      * A crop's alignment after the picture under it was turned by quarters
      * or mirrored: the point it is aligned to goes where that piece of the
-     * picture goes. The order is the renderer's - mirror, then turn.
+     * picture goes. The order is the renderer's - mirror, then turn. The
+     * same in either basis: in `fit` the point of the crop and the point of
+     * the picture it lies on (1 - a) go the same way.
      */
     public static function reoriented(CropBox $box, float $fromAngle, bool $fromFlip, float $toAngle, bool $toFlip): CropBox
     {
@@ -109,7 +111,7 @@ final class CropEdits
         for ($i = 0; $i < $quarter($toAngle); $i++) {
             [$x, $y] = [1 - $y, $x];          // a quarter on, clockwise
         }
-        return new CropBox($box->ratio, $x, $y, $box->scale, $box->source);
+        return new CropBox($box->ratio, $x, $y, $box->scale, $box->source, $box->basis);
     }
 
     /**
@@ -125,6 +127,41 @@ final class CropEdits
             return null;
         }
         return ['save' => [Operator::put($set->row($ratio->name), $set->media, $crop)], 'remove' => [], 'clipped' => []];
+    }
+
+    /**
+     * Several crops of ratios at once - what the editor applies with its
+     * tick: each `{ratio, ax, ay, scale, basis}` set by hand, or
+     * `{ratio, auto: true}` back to automatic. Null when one of them is not a
+     * crop of a declared ratio; then nothing is stored.
+     *
+     * @param array<mixed> $crops
+     * @return array{save: list<object>, remove: list<object>, clipped: list<string>}|null
+     */
+    public static function crops(CropSet $set, array $crops): ?array
+    {
+        $edit = ['save' => [], 'remove' => [], 'clipped' => []];
+        $seen = [];
+        foreach (array_values($crops) as $crop) {
+            $ratio = is_array($crop) && is_string($crop['ratio'] ?? null) ? Variants::ratio($crop['ratio']) : null;
+            if ($ratio === null || isset($seen[$ratio->name])) {
+                return null;
+            }
+            $seen[$ratio->name] = true;
+            if (($crop['auto'] ?? false) === true) {
+                $row = $set->row($ratio->name);
+                if ($row !== null && Operator::box($row) !== null) {
+                    $edit['remove'][] = $row;
+                }
+                continue;
+            }
+            $box = self::boxFrom($ratio->name, $crop['ax'] ?? null, $crop['ay'] ?? null, $crop['scale'] ?? null, $crop['basis'] ?? null);
+            if ($box === null) {
+                return null;
+            }
+            $edit['save'][] = Operator::put($set->row($ratio->name), $set->media, $box);
+        }
+        return $edit;
     }
 
     /**
@@ -240,6 +277,7 @@ final class CropEdits
                 'ax' => $crop?->alignX,
                 'ay' => $crop?->alignY,
                 'scale' => $crop?->scale,
+                'basis' => $crop?->basis,
                 'source' => $crop?->source,
             ];
         }
@@ -260,6 +298,7 @@ final class CropEdits
                 'ax' => $master->crop->alignX,
                 'ay' => $master->crop->alignY,
                 'scale' => $master->crop->scale,
+                'basis' => $master->crop->basis,
                 'angle' => $look['r'],
                 'flip' => (bool) $look['f'],
                 'look' => ['b' => $look['b'], 'c' => $look['c'], 's' => $look['s']],
@@ -274,8 +313,13 @@ final class CropEdits
         ];
     }
 
-    /** A crop from what a request sends - null when it is not one. */
-    public static function boxFrom(mixed $ratio, mixed $ax, mixed $ay, mixed $scale): ?CropBox
+    /**
+     * A crop from what a request sends - null when it is not one, or not
+     * one its basis allows: an alignment within 0-1, in `fill` a scale of at
+     * least 1 (what the editor sends; rounding is brought in). No basis is
+     * `fill`.
+     */
+    public static function boxFrom(mixed $ratio, mixed $ax, mixed $ay, mixed $scale, mixed $basis = null): ?CropBox
     {
         $read = is_string($ratio) ? Ratio::of($ratio) : null;
         foreach ([$ax, $ay, $scale] as $value) {
@@ -283,11 +327,14 @@ final class CropEdits
                 return null;
             }
         }
-        // An alignment far past the picture or a scale near nothing shows no picture at all.
-        if ($read === null || abs((float) $ax - 0.5) > 10.5 || abs((float) $ay - 0.5) > 10.5 || (float) $scale < 0.05 || (float) $scale > 100) {
+        $basis ??= CropBox::FILL;
+        $off = static fn(mixed $align): bool => (float) $align < -1e-6 || (float) $align > 1 + 1e-6;
+        // A scale near nothing shows no picture at all.
+        if ($read === null || !in_array($basis, [CropBox::FILL, CropBox::FIT], true) || $off($ax) || $off($ay)
+            || (float) $scale < ($basis === CropBox::FILL ? 1 - 1e-6 : 0.05) || (float) $scale > 100) {
             return null;
         }
-        return new CropBox($read, (float) $ax, (float) $ay, (float) $scale, CropBox::MANUAL);
+        return (new CropBox($read, (float) $ax, (float) $ay, (float) $scale, CropBox::MANUAL, $basis))->clamped();
     }
 
     private static function sameLook(array $a, array $b): bool

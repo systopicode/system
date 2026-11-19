@@ -10,7 +10,7 @@ use Systopic\System\Media\Ratio;
 $out = [];
 foreach (json_decode((string) stream_get_contents(STDIN), true, 512, JSON_THROW_ON_ERROR) as $case) {
     $ratio = Ratio::of($case['ratio']);
-    $crop = new CropBox($ratio, $case['ax'], $case['ay'], $case['scale']);
+    $crop = new CropBox($ratio, $case['ax'], $case['ay'], $case['scale'], basis: $case['basis'] ?? CropBox::FILL);
     $g = new MasterGeometry($case['width'], $case['height'], $crop, $case['angle'], $case['flip']);
     $largest = MasterGeometry::largest($case['width'], $case['height'], $case['angle'], $case['flip']);
     $out[] = [
@@ -27,6 +27,7 @@ foreach (json_decode((string) stream_get_contents(STDIN), true, 512, JSON_THROW_
         'clamped' => (static fn(CropBox $c): array => [$c->alignX, $c->alignY, $c->scale])($crop->clamped($case['width'], $case['height'])),
         'centre' => [$g->centreFractionX, $g->centreFractionY],
         'cropFit' => CropBox::fitScale($ratio, $case['width'], $case['height']),
+        'asFill' => (static fn(CropBox $c): array => [$c->alignX, $c->alignY, $c->scale])($crop->asFill($case['width'], $case['height'])),
     ];
 }
 echo json_encode($out);

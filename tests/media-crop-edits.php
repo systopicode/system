@@ -51,9 +51,23 @@ check('a crop of a declared ratio is one row to save', $edit !== null && count($
 $set = $after($set, $edit);
 check('it is the crop of that ratio from now on', $set->crop(Ratio::of('16:9'))->source === CropBox::MANUAL && $near($set->crop(Ratio::of('16:9'))->scale, 1.5));
 check('a ratio that is not declared has no crop', CropEdits::crop($set, new CropBox(Ratio::of('7:5'))) === null);
+
+// Several at once - the editor's tick.
+$many = CropEdits::crops($set, [['ratio' => '1:1', 'ax' => 0.2, 'ay' => 0.5, 'scale' => 1.5, 'basis' => 'fill'], ['ratio' => '9:16', 'ax' => 0.5, 'ay' => 0.5, 'scale' => 0.8, 'basis' => 'fit'], ['ratio' => '16:9', 'auto' => true]]);
+$manyAfter = $after($set, $many);
+check('several crops at once: set, and one back to automatic', count($many['save']) === 2 && count($many['remove']) === 1
+    && Operator::box($manyAfter->row('9:16'))->basis === CropBox::FIT && $near(Operator::box($manyAfter->row('1:1'))->alignX, 0.2) && $manyAfter->row('16:9') === null);
+check('back to automatic where nothing was set: nothing to remove', CropEdits::crops($set, [['ratio' => '1:1', 'auto' => true]])['remove'] === []);
+foreach ([[['ratio' => '7:5', 'ax' => 0.5, 'ay' => 0.5, 'scale' => 1]], [['ratio' => '1:1', 'ax' => 0.5, 'ay' => 0.5, 'scale' => 0.5]], [['ratio' => '1:1', 'auto' => true], ['ratio' => '1:1', 'auto' => true]], ['1:1'], [['ax' => 0.5]]] as $i => $bad) {
+    check("several crops: one that is none, nothing is stored - $i", CropEdits::crops($set, $bad) === null);
+}
 $edit = CropEdits::crop($set, new CropBox(Ratio::of('32:18'), 0.5, 0.5, 1));
 check('saving again changes the same row', count($edit['save']) === 1 && $edit['save'][0] === $set->row('16:9') && $edit['save'][0]->version === 2);
-check('a crop may show background', CropEdits::crop($set, new CropBox($square, 0.1, 0.5, 0.7)) !== null);
+check('a crop may show background', CropEdits::crop($set, new CropBox($square, 0.1, 0.5, 0.7, CropBox::MANUAL, CropBox::FIT)) !== null);
+$stored = Operator::box($after($set, CropEdits::crop($set, new CropBox($square, 0.1, 0.5, 0.7, CropBox::MANUAL, CropBox::FIT)))->row('1:1'));
+check('and comes back with its basis', $stored->basis === CropBox::FIT && $near($stored->scale, 0.7));
+check('the editor is told the basis', CropEdits::state($after($set, CropEdits::crop($set, new CropBox($square, 0.1, 0.5, 0.7, CropBox::MANUAL, CropBox::FIT))))['ratios'][array_search('1:1', array_column(CropEdits::state($set)['ratios'], 'name'), true)]['basis'] === CropBox::FIT
+    && CropEdits::state($set)['master']['basis'] === CropBox::FILL);
 
 // ------------------------------------------------------- back to automatic
 $set = $after($set, $edit);
@@ -86,10 +100,15 @@ $kept = Operator::box($after($set, $edit)->row('16:9'));
 $newMaster = $after($set, $edit)->master();
 check('flush left and bottom stays flush left and bottom - and inside, whatever the master', $near($kept->alignX, 0.0) && $near($kept->alignY, 1.0)
     && $kept->inside($newMaster->width, $newMaster->height) && $edit['clipped'] === []);
-$set = $after(new CropSet($media, []), CropEdits::crop(new CropSet($media, []), new CropBox($square, -0.5, 0.5, 0.8)));           // shows background on purpose
-$edit = CropEdits::master($set, new CropBox($square, 0.5, 0.5, 1), []);
-$kept = Operator::box($after($set, $edit)->row('1:1'));
-check('a crop that showed background on purpose still does', $near($kept->alignX, -0.5) && !$kept->inside(2000, 2000));
+$set = $after(new CropSet($media, []), CropEdits::crop(new CropSet($media, []), new CropBox($square, 0.5, 0.5, 1, CropBox::MANUAL, CropBox::FIT)));   // "fit in"
+$edit = CropEdits::master($set, new CropBox(Ratio::of('4:5'), 0.3, 0.5, 1.4), []);
+$changed = $after($set, $edit);
+$kept = Operator::box($changed->row('1:1'));
+[$kw, $kh] = $kept->size($changed->master()->width, $changed->master()->height);
+check('a crop in "fit" stays "fit in", centred, in any master', $kept->basis === CropBox::FIT && $near($kept->alignX, 0.5) && $near($kept->scale, 1)
+    && (($near($kw, 1) && $kh >= 1 - 1e-9) || ($near($kh, 1) && $kw >= 1 - 1e-9)));
+$turned = Operator::box($after($changed, CropEdits::master($changed, new CropBox(Ratio::of('5:4'), 0.3, 0.5, 1.4), ['r' => 90]))->row('1:1'));
+check('turned by a quarter, a crop in "fit" stays "fit"', $turned->basis === CropBox::FIT);
 
 // Turning: the master becomes upright, a crop follows the picture.
 $media = $medium();
@@ -144,8 +163,8 @@ check('every declared ratio, wide to narrow', array_column($state['ratios'], 'na
 check('with its place on the slider: widest at 0, narrowest at 1, 1:1 where the logarithm puts it', $byName['2:1']['position'] === 0.0 && $byName['9:16']['position'] === 1.0
     && $near($byName['1:1']['position'], log(2) / log(2 / 0.5625)) && $byName['16:9']['position'] > $byName['2:1']['position']);
 check('with its crop and where that came from', $byName['1:1']['source'] === 'manual' && $near($byName['1:1']['ax'], 0.3) && $near($byName['1:1']['scale'], 2)
-    && $byName['4:3']['source'] === 'interpolated' && $byName['9:16']['source'] === 'anchor' && $byName['16:9']['source'] === 'interpolated' && $byName['3:2']['source'] === 'centered');
-check('beyond the last crop, the end of the slider is "fill in"', $near($byName['9:16']['scale'], 1) && $near($byName['9:16']['ax'], 0.3)
+    && $byName['4:3']['source'] === 'interpolated' && $byName['9:16']['source'] === 'centered' && $byName['16:9']['source'] === 'interpolated' && $byName['3:2']['source'] === 'centered');
+check('beyond the last crop, the end of the slider is automatic: centred, "fill in"', $near($byName['9:16']['scale'], 1) && $near($byName['9:16']['ax'], 0.5)
     && $byName['3:4']['source'] === 'interpolated' && $byName['3:4']['scale'] > 1 && $byName['3:4']['scale'] < 2);
 check('the state is JSON', is_string(json_encode($state, JSON_THROW_ON_ERROR)) && $state['sizes'] === [0.5, 1.0, 2.0, 5.0, 10.0] && $state['pois'] === []);
 check('a medium of unknown size has no master to edit', CropEdits::state(new CropSet($unknown, []))['master'] === null);
@@ -154,8 +173,12 @@ $vector->mimetype = 'image/svg+xml';
 check('an svg cannot be cut', CropEdits::state(new CropSet($vector, []))['cut'] === false && CropEdits::state(new CropSet($vector, []))['original']['url'] === null);
 
 // ---------------------------------------------------------- what a request sends
-check('a crop from a request', CropEdits::boxFrom('16:9', '0.4', '0.6', '1.5')?->ratio->name === '16:9' && $near(CropEdits::boxFrom('16:9', '0.4', '0.6', '1.5')->alignY, 0.6));
-foreach ([['nonsense', 0.5, 0.5, 1], ['16:9', 'x', 0.5, 1], ['16:9', 0.5, 0.5, 0], ['16:9', 0.5, 0.5, -1], ['16:9', 99, 0.5, 1], ['16:9', 0.5, 0.5, 1000], [null, 0.5, 0.5, 1], ['16:9', NAN, 0.5, 1]] as $i => $bad) {
+check('a crop from a request', CropEdits::boxFrom('16:9', '0.4', '0.6', '1.5')?->ratio->name === '16:9' && $near(CropEdits::boxFrom('16:9', '0.4', '0.6', '1.5')->alignY, 0.6)
+    && CropEdits::boxFrom('16:9', '0.4', '0.6', '1.5')->basis === CropBox::FILL);
+check('in "fit" a scale below 1 is a crop', CropEdits::boxFrom('16:9', '0', '1', '0.4', 'fit')?->basis === CropBox::FIT);
+check('rounding past the end is brought in', CropEdits::boxFrom('1:1', '1.0000000001', '-0.0000000001', '1')?->alignX === 1.0);
+foreach ([['nonsense', 0.5, 0.5, 1], ['16:9', 'x', 0.5, 1], ['16:9', 0.5, 0.5, 0], ['16:9', 0.5, 0.5, -1], ['16:9', 99, 0.5, 1], ['16:9', 0.5, 0.5, 1000], [null, 0.5, 0.5, 1], ['16:9', NAN, 0.5, 1],
+    ['16:9', 0.5, 0.5, 0.8], ['16:9', 0.5, 0.5, 1, 'cover'], ['16:9', -0.2, 0.5, 1, 'fit'], ['16:9', 0.5, 1.3, 1]] as $i => $bad) {
     check("a request that is no crop is refused - $i", CropEdits::boxFrom(...$bad) === null);
 }
 Variants::reset();

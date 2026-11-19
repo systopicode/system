@@ -225,7 +225,10 @@
     "text-select": "cursor-text",
     "editor-undo": "arrow-back-up",
     "aspect-ratio": "aspect-ratio",
-    "lock-open": "lock-open"
+    "lock-open": "lock-open",
+    "maximize": "maximize",
+    "maximize-off": "maximize-off",
+    "file-orientation": "file-orientation"
   },
   "duotone": {
     "lock": "lock",

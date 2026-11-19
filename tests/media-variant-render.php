@@ -98,6 +98,10 @@ $zoom = VariantRenderer::cut($whole, new CropBox(Ratio::of('16:9'), 0.0, 0.5, 2)
 check('crop 16:9 at scale 2 on the left: all red', $size($zoom) === [150, 84] && $at($zoom, 5, 5) === 'red' && $at($zoom, 145, 80) === 'red');
 $beyond = VariantRenderer::cut($whole, new CropBox($square, 2.0, 0.5));   // half of it past the right edge
 check('a crop pushed over the edge: transparent where there is no master', $size($beyond) === [200, 200] && $at($beyond, 50, 100) === 'blue' && $at($beyond, 150, 100) === 'none');
+$fitIn = VariantRenderer::cut($whole, new CropBox($square, basis: CropBox::FIT));
+check('"fit in": the whole master in the square, transparent above and below', $size($fitIn) === [300, 300] && $at($fitIn, 50, 150) === 'red' && $at($fitIn, 250, 150) === 'blue' && $at($fitIn, 150, 20) === 'none');
+$aside = VariantRenderer::cut($whole, new CropBox(Ratio::of('3:2'), 0.25, 0.5, basis: CropBox::FIT));
+check('"fit" moves where "fill" cannot: the master\'s own ratio, a quarter of the way', $size($aside) === [300, 200] && $at($aside, 50, 100) === 'blue' && $at($aside, 250, 100) === 'none');
 $scaled = VariantRenderer::scaled($whole, 0.015);
 check('the master at 0.015 megapixels keeps its ratio', $size($scaled) === [150, 100] && $at($scaled, 3, 3) === 'green');
 check('scaling never goes up', $size(VariantRenderer::scaled($whole, 10)) === [300, 200]);

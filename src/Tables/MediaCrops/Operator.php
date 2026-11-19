@@ -21,7 +21,7 @@ use Systopic\System\Tables\Medias\Model as MediaRow;
  * Two forms live side by side until the old renderer is gone: `cropped()`,
  * `computed()` and `blank()` write the legacy columns (left, top, width,
  * height, per format name); `put()`, `box()` and the look write the new
- * ones (ratio, centre, scale - see `Media\CropBox`).
+ * ones (ratio, alignment, scale, basis - see `Media\CropBox`).
  */
 final class Operator
 {
@@ -82,6 +82,7 @@ final class Operator
         $crop->alignX = self::decimal($box->alignX);
         $crop->alignY = self::decimal($box->alignY);
         $crop->scale = self::decimal($box->scale);
+        $crop->basis = $box->basis;
         $crop->auto = false;
         $crop->version = (int) $crop->version + 1;
         return $crop;
@@ -95,7 +96,8 @@ final class Operator
         if ($ratio === null || $scale <= 0 || $crop->alignX === null || $crop->alignY === null) {
             return null;
         }
-        return new CropBox($ratio, (float) (string) $crop->alignX, (float) (string) $crop->alignY, $scale, CropBox::MANUAL);
+        $basis = $crop->basis === CropBox::FIT ? CropBox::FIT : CropBox::FILL;
+        return new CropBox($ratio, (float) (string) $crop->alignX, (float) (string) $crop->alignY, $scale, CropBox::MANUAL, $basis);
     }
 
     /**

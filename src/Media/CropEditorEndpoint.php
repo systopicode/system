@@ -9,11 +9,12 @@ use Systopic\System\Queries\MediaCrops\MediaCrops;
 
 /**
  * The server's side of the image editor (`public/js/gui/cropEditor.js`):
- * its five requests, answered the same in every application.
+ * its requests, answered the same in every application.
  *
  *   cropState                                        nothing changes
- *   saveMasterCrop  ratio ax ay scale | auto=1       + brightness contrast saturation angle flip
- *   saveRatioCrop   ratio ax ay scale            (ax, ay: the alignment, see CropBox)
+ *   saveMasterCrop  ratio ax ay scale basis | auto=1  + brightness contrast saturation angle flip
+ *   saveRatioCrop   ratio ax ay scale basis       (ax, ay: the alignment, basis fill|fit - see CropBox)
+ *   saveRatioCrops  crops=<json>                     [{ratio, ax, ay, scale, basis} | {ratio, auto: true}, ...]
  *   resetCrop       format=<ratio>|original          back to automatic
  *   savePois        pois=<json> [drop_crops=1]
  *
@@ -34,7 +35,7 @@ use Systopic\System\Queries\MediaCrops\MediaCrops;
  */
 final class CropEditorEndpoint
 {
-    public const ACTIONS = ['cropState', 'saveMasterCrop', 'saveRatioCrop', 'resetCrop', 'savePois'];
+    public const ACTIONS = ['cropState', 'saveMasterCrop', 'saveRatioCrop', 'saveRatioCrops', 'resetCrop', 'savePois'];
 
     public static function handles(string $action): bool
     {
@@ -52,7 +53,7 @@ final class CropEditorEndpoint
             return ['status' => 404, 'body' => null];
         }
         $edit = ['save' => [], 'remove' => [], 'clipped' => []];
-        $box = CropEdits::boxFrom($param('ratio'), $param('ax'), $param('ay'), $param('scale'));
+        $box = CropEdits::boxFrom($param('ratio'), $param('ax'), $param('ay'), $param('scale'), $param('basis'));
         try {
             switch ($action) {
                 case 'saveMasterCrop':
@@ -67,6 +68,13 @@ final class CropEditorEndpoint
                     break;
                 case 'saveRatioCrop':
                     $edit = $box === null ? null : CropEdits::crop($set, $box);
+                    if ($edit === null) {
+                        return ['status' => 422, 'body' => null];
+                    }
+                    break;
+                case 'saveRatioCrops':
+                    $crops = json_decode((string) $param('crops', '[]'), true);
+                    $edit = is_array($crops) ? CropEdits::crops($set, $crops) : null;
                     if ($edit === null) {
                         return ['status' => 422, 'body' => null];
                     }

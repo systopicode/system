@@ -6,7 +6,7 @@ import assert from 'node:assert/strict';
 const here = new URL('./', import.meta.url);
 const sys = {};
 const context = {sys, Math, Number, Object, Array, Map, String, JSON, URLSearchParams, setTimeout, clearTimeout, console, confirm: () => true,
-	window: {devicePixelRatio: 1}, document: {}};
+	window: {devicePixelRatio: 1, addEventListener() {}, removeEventListener() {}}, document: {addEventListener() {}, removeEventListener() {}}};
 for (const file of ['../public/js/gui/cropMath.js', '../public/js/gui/cropEditor.js']) {
 	vm.runInNewContext(await readFile(new URL(file, here), 'utf8'), context);
 }
@@ -26,20 +26,20 @@ const aligned = (crop, w, h) => {
 		return crop;
 	}
 	const {cx, cy, ...rest} = crop;
-	return Object.assign(rest, {ax: math.alignOf(cx, w), ay: math.alignOf(cy, h)});
+	return Object.assign(rest, {ax: math.alignOf(cx, w, undefined, crop.basis), ay: math.alignOf(cy, h, undefined, crop.basis)});
 };
 const state = (master = {}, manual = {}) => {
-	const m = Object.assign({manual: false, ratio: '3:2', ax: 0.5, ay: 0.5, scale: 1, angle: 0, flip: false, look: {b: 100, c: 100, s: 100}, width: 3000, height: 2000,
+	const m = Object.assign({manual: false, ratio: '3:2', ax: 0.5, ay: 0.5, scale: 1, basis: 'fill', angle: 0, flip: false, look: {b: 100, c: 100, s: 100}, width: 3000, height: 2000,
 		sources: [{url: '/m-0.5.webp', width: 866, height: 577}, {url: '/m-2.webp', width: 1732, height: 1155}]}, master);
-	const g = math.master(3000, 2000, {ratio: math.ratio(m.ratio), ax: 0.5, ay: 0.5, scale: m.scale}, m.angle, m.flip);
+	const g = math.master(3000, 2000, {ratio: math.ratio(m.ratio), ax: 0.5, ay: 0.5, scale: m.scale, basis: m.basis}, m.angle, m.flip);
 	return {
 		mediaId: 42, version: 'v1', cut: true,
 		original: {width: 3000, height: 2000, url: '/o.webp'},
 		master: aligned(m, g.frameWidth / g.referenceWidth, g.frameHeight / g.referenceHeight),
 		ratios: names.map(name => {
 			const r = math.ratio(name);
-			const crop = manual[name] || {ax: 0.5, ay: 0.5, scale: 1, source: 'centered'};
-			const [w, h] = math.size(r, crop.scale, m.width, m.height);
+			const crop = Object.assign({basis: 'fill'}, manual[name] || {ax: 0.5, ay: 0.5, scale: 1, source: 'centered'});
+			const [w, h] = math.size(r, crop.scale, m.width, m.height, crop.basis);
 			return Object.assign({name, suffix: name.replace(':', 'by'), w: r.w, h: r.h, position: 1 - math.position(r, last, first)}, aligned(crop, w, h));
 		}),
 		pois: [], sizes: [0.5, 1, 2, 5, 10]
@@ -77,7 +77,7 @@ ok('the frame stands in the middle of the stage, fitted by width or height');
 
 // -------------------------------------------------------------------- move
 s = session(state());
-assert.equal(s.free, false, 'a crop inside the picture starts with "the edge stays outside"');
+assert.equal(s.work.basis, 'fill', 'a computed crop is "fill": the edge stays outside');
 s.pan(100, 0);
 assert.ok(near(mid(s)[0], 0.5 - 100 / 960) && near(mid(s)[1], 0.5), 'the picture moved right: the frame\'s middle lies further left in it');
 assert.ok(s.dirty());
@@ -105,19 +105,119 @@ assert.ok(near(s.work.scale, 1.7));
 s = session(state());
 s.zoom(0.5, 500, 400);
 assert.ok(near(s.work.scale, 1, 1e-5), 'zooming out stops at "fill in" while the edge stays outside');
-s.free = true;
+ok('zooming: around the pointer, limited by the frame in "fill"');
+
+// ------------------------------------------------------------------ basis
+s = session(state());
+s.zoom(1.5, 500, 400);
+s.pan(60, 0);
+s.switchBasis();
+assert.ok(s.work.basis === 'fit' && s.work.ax === 0.5 && s.work.ay === 0.5 && s.work.scale === 1, 'the toggle starts afresh: centred, scale 1');
+s = session(state());
+s.switchBasis();
+assert.ok(near(s.lengths(s.work)[0], 1) && near(s.lengths(s.work)[1], 1.5) && near(mid(s)[0], 0.5) && near(mid(s)[1], 0.5), '"fill in" centred becomes "fit in" centred');
 s.zoom(0.5, 500, 400);
-assert.ok(near(s.work.scale, 0.5), 'with "background may show" it goes on');
-s.pan(700, 0);
-assert.ok(mid(s)[0] < 0, 'and the picture may be pushed out of the frame');
-s.free = false;
-s.work = s.settled(s.work);
-assert.ok(math.inside(s.work, 3000, 2000, 1e-6), 'back to "the edge stays outside": the nearest crop that shows no background');
-ok('zooming: around the pointer, limited by the frame unless background may show');
+assert.ok(near(s.work.scale, 0.5), 'in "fit" zooming out goes on');
+s.pan(5000, 0);
+let rect = math.rect(s.work, 3000, 2000);
+assert.ok(near(s.work.ax, 1) && near(rect.x + rect.w, 0, 1e-9), 'the picture goes as far as touching the frame from outside: alignment 1, the picture on the right');
+s.pan(-10000, 0);
+rect = math.rect(s.work, 3000, 2000);
+assert.ok(near(s.work.ax, 0) && near(rect.x, 1, 1e-9), 'and 0 on the other side');
+s.pan(0, 300);
+assert.ok(s.work.ay > 0.5, 'up and down too, though the frame is longer than the picture there');
+s.switchBasis();
+assert.ok(s.work.basis === 'fill' && s.work.ax === 0.5 && s.work.scale === 1 && math.inside(s.work, 3000, 2000, 1e-6), 'back to "fill": "fill in", centred');
+// The case "fill" cannot move: a frame exactly as long as the picture. In "fit" it moves along both axes.
+s = session(state(), 'crops', '3:2');
+s.pan(50, 30);
+assert.ok(near(mid(s)[0], 0.5) && near(mid(s)[1], 0.5) && !s.dirty(), '"fill in" of the picture\'s own ratio: nothing to move in "fill" - and nothing to apply');
+s.switchBasis();
+s.pan(50, 30);
+assert.ok(mid(s)[0] < 0.5 && mid(s)[1] < 0.5 && !math.inside(s.work, 3000, 2000), 'in "fit" it moves both ways, background showing');
+s = session(state(), 'master');
+s.switchBasis();
+assert.ok(s.work.basis === 'fit' && s.work.auto === false && s.masterOf(s.work).width === 3000, 'master: "fit" is a crop - "fit in" of the whole picture is the whole picture');
+s.pan(40, -20);
+assert.ok(mid(s)[0] < 0.5 && mid(s)[1] > 0.5, 'and it moves, the master being the original');
+s = session(state(), 'master');
+s.switchBasis();
+s.switchBasis();
+assert.ok(s.work.auto === true && !s.dirty(), 'back again without anything else: automatic again, nothing to apply');
+ok('basis: the toggle starts at scale 1, centred; "fit" moves where "fill" cannot');
+
+// ----------------------------------------------- Ctrl + wheel: steps of a twentieth
+s = session(state());
+const notch = up => s.zoomStep({deltaY: up ? -100 : 100, deltaMode: 0}, {x: 500, y: 400});
+notch(true);
+assert.ok(near(s.work.scale, 1.05), 'one notch: 1 -> 1.05');
+notch(true);
+assert.ok(near(s.work.scale, 1.1), 'and on: 1.1');
+s.zoom(1.37 / 1.1, 500, 400);
+notch(true);
+assert.ok(near(s.work.scale, 1.4), 'from anywhere to the next step: 1.37 -> 1.4');
+s.zoom(1.37 / 1.4, 500, 400);
+notch(false);
+assert.ok(near(s.work.scale, 1.35), 'and down: 1.37 -> 1.35');
+for (let i = 0; i < 9; i++) {
+	s.zoomStep({deltaY: -6, deltaMode: 0}, {x: 500, y: 400});
+}
+assert.ok(near(s.work.scale, 1.4), 'a touchpad pinch adds up to a notch first');
+for (let i = 0; i < 10; i++) {
+	notch(false);
+}
+assert.ok(near(s.work.scale, 1, 1e-5), 'in "fill" it stops at "fill in"');
+ok('Ctrl + wheel: the scale in steps of a twentieth');
+
+// ------------------------------------------------ crops mode: changes go from ratio to ratio
+sent.length = 0;
+let asks = 0;
+context.confirm = () => { asks++; return true; };
+s = session(state(), 'crops', '1:1');
+s.zoom(2, 500, 400);
+s.pan(96, 0);
+const changedSquare = {...s.work};
+s.stash();
+s.ratioName = '3:4';
+s.load();
+assert.ok(asks === 0 && s.dirty() && !s.changed() && s.pending.has('1:1'), 'to another ratio without a question: the change waits');
+assert.ok(s.ratios.find(r => r.name === '1:1').source === 'manual' && near(s.ratios.find(r => r.name === '1:1').scale, 2), 'and counts as set by hand');
+const expected = math.resolve(math.ratio('3:4'), 3000, 2000, [{ratio: math.ratio('1:1'), ax: changedSquare.ax, ay: changedSquare.ay, scale: 2, basis: 'fill'}], [], names.map(n => math.ratio(n)));
+assert.ok(near(s.work.ax, expected.ax) && near(s.work.scale, expected.scale) && s.ratios.find(r => r.name === '3:4').source === expected.source, 'the crops beside it follow at once, as the server would compute them');
+s.zoom(1.5, 500, 400);
+s.save();
+assert.equal(sent.length, 1, 'the tick: one request');
+assert.equal(sent.at(-1).action, 'saveRatioCrops');
+let crops = JSON.parse(sent.at(-1).params.crops);
+assert.ok(crops.length === 2 && crops[0].ratio === '1:1' && near(crops[0].scale, 2) && crops[0].basis === 'fill' && crops[1].ratio === '3:4' && near(crops[1].scale, expected.scale * 1.5),
+	'with every crop changed');
+s = session(state({}, {'1:1': {cx: 0.3, cy: 0.5, scale: 2, source: 'manual'}}), 'crops', '1:1');
+s.auto();
+assert.ok(s.pending.get('1:1').auto === true && s.ratios.find(r => r.name === '1:1').source !== 'manual' && s.dirty(), 'back to automatic: a change like any other');
+s.save();
+crops = JSON.parse(sent.at(-1).params.crops);
+assert.deepEqual(crops, [{ratio: '1:1', auto: true}], 'stored as such');
+s = session(state(), 'crops', '1:1');
+s.zoom(2, 500, 400);
+s.stash();
+s.ratioName = '16:9';
+s.load();
+s.zoom(1.2, 500, 400);
+s.cancel();
+assert.ok(!s.dirty() && s.pending.size === 0 && near(s.work.scale, 1) && s.ratios.find(r => r.name === '1:1').source !== 'manual', 'the cross: everything goes');
+s.zoom(2, 500, 400);
+assert.ok(s.leave() && asks === 1 && s.pending.size === 0, 'leaving the mode asks - once');
+s.load();
+assert.ok(!s.dirty(), 'and what was not stored is gone');
+context.confirm = () => false;
+s.zoom(1.5, 500, 400);
+assert.ok(!s.leave() && s.dirty(), 'no: it stays');
+context.confirm = () => true;
+ok('crops mode: changes wait from ratio to ratio, the tick stores them all, the cross discards them all');
 
 // ------------------------------------------------------- a crop set by hand
-s = session(state({}, {'1:1': {cx: 0.1, cy: 0.5, scale: 0.8, source: 'manual'}}));
-assert.equal(s.free, true, 'a stored crop that shows background opens with "background may show"');
+s = session(state({}, {'1:1': {cx: 0.1, cy: 0.5, scale: 0.8, basis: 'fit', source: 'manual'}}));
+assert.equal(s.work.basis, 'fit', 'a stored crop opens in its basis');
 assert.ok(near(mid(s)[0], 0.1) && near(s.work.scale, 0.8) && !s.dirty());
 ok('a stored crop is shown as it is');
 
@@ -224,8 +324,9 @@ assert.equal(JSON.stringify(s.work), still, 'a drag that starts on the fix point
 ok('zoom tool: the picture grows around the fix point, the grabbed place stays under the pointer');
 
 // Turn tool (master): a drag turns freely around the fix point (the right angles are a button beside the tick).
-s = session(state({manual: true, ratio: '1:1', cx: 0.5, cy: 0.5, scale: 2, width: 1000, height: 1000}), 'master');
-s.free = true;                                              // background may show: nothing holds the picture back
+// "fit": background may show, nothing holds the picture back. 3 over "fit in" (2/3 of "fill in") is 1000 pixels.
+s = session(state({manual: true, ratio: '1:1', cx: 0.5, cy: 0.5, scale: 3, basis: 'fit', width: 1000, height: 1000}), 'master');
+assert.equal(s.masterOf(s.work).width, 1000);
 s.setTool('turn');
 s.pivot = {x: 180, y: 80};
 const place = (session_, x, y) => session_.masterOf(session_.work).toOriginal((x - session_.view.frame.x) / session_.view.k, (y - session_.view.frame.y) / session_.view.k);
@@ -306,22 +407,42 @@ context.confirm = () => true;
 ok('points of interest: stored at once; the first one asks about the crops set by hand');
 
 // ------------------------------------------------------------------- store
-s = session(state());
+let one;
+s = session(state({}, {'1:1': {cx: 0.3, cy: 0.5, scale: 2, source: 'manual'}}));
 const untouched = sent.length;
 s.save();
-assert.equal(sent.length, untouched, 'nothing changed, nothing sent');
+assert.equal(sent.length, untouched, 'a crop set by hand, nothing changed: nothing sent');
+assert.ok(!s.pinnable() && !s.dirty(), 'neither tick nor cross');
+s = session(state({}, {'1:1': {cx: 0.3, cy: 0.5, scale: 2, source: 'manual'}}), 'master');
+s.save();
+assert.equal(sent.length, untouched, 'the master unchanged: nothing sent');
+s = session(state(), 'crops', '3:4');
+assert.ok(s.pinnable() && !s.dirty(), 'a computed crop: the tick keeps it, no cross - nothing to discard');
+const shownPin = Object.assign({}, s.work);
+s.save();
+one = JSON.parse(sent.at(-1).params.crops);
+assert.ok(sent.at(-1).action === 'saveRatioCrops' && one.length === 1 && one[0].ratio === '3:4' && near(one[0].ax, shownPin.ax) && near(one[0].scale, shownPin.scale),
+	'stored as it is shown');
+ok('a computed crop can be kept as it is (its neighbours may change)');
+s = session(state());
 s.zoom(2, 500, 400);
 s.pan(96, 0);
 s.save();
-assert.equal(sent.at(-1).action, 'saveRatioCrop');
-assert.ok(sent.at(-1).params.ratio === '1:1' && near(math.centreOf(sent.at(-1).params.ax, 1 / 3), 0.45) && near(sent.at(-1).params.ay, 0.5) && near(sent.at(-1).params.scale, 2),
-	'stored: the middle at 0.45 of the master, as an alignment');
-ok('a crop is stored as ratio, alignment and scale');
+assert.equal(sent.at(-1).action, 'saveRatioCrops');
+one = JSON.parse(sent.at(-1).params.crops)[0];
+assert.ok(one.ratio === '1:1' && near(math.centreOf(one.ax, 1 / 3), 0.45) && near(one.ay, 0.5) && near(one.scale, 2)
+	&& one.basis === 'fill', 'stored: the middle at 0.45 of the master, as an alignment');
+s = session(state());
+s.switchBasis();
+s.save();
+one = JSON.parse(sent.at(-1).params.crops)[0];
+assert.ok(one.basis === 'fit' && one.scale === 1, 'the basis is stored with it');
+ok('a crop is stored as ratio, alignment, scale and basis');
 
 s = session(state(), 'master');
 s.work = Object.assign({}, s.work, {look: {b: 120, c: 100, s: 90}});
 s.save();
-assert.deepEqual({...sent.at(-1).params, ax: 0, ay: 0, scale: 0, ratio: ''}, {ratio: '', ax: 0, ay: 0, scale: 0, brightness: 120, contrast: 100, saturation: 90, angle: 0, flip: 0, auto: 1},
+assert.deepEqual({...sent.at(-1).params, ax: 0, ay: 0, scale: 0, ratio: ''}, {ratio: '', ax: 0, ay: 0, scale: 0, basis: 'fill', brightness: 120, contrast: 100, saturation: 90, angle: 0, flip: 0, auto: 1},
 	'only the look changed: the master stays automatic');
 s = session(state(), 'master');
 s.setRatio(s.ratioAt(0.37), true);
@@ -334,6 +455,15 @@ assert.equal(stored.auto, undefined, 'a cropped master is not automatic');
 assert.equal(stored.ratio, math.ratio(drawn.width, drawn.height).name, 'a freely set ratio is stored as the fraction of the frame\'s whole pixels');
 const again = math.master(3000, 2000, {ratio: math.ratio(stored.ratio), ax: stored.ax, ay: stored.ay, scale: stored.scale}, stored.angle, stored.flip === 1);
 assert.ok(again.width === drawn.width && again.height === drawn.height, 'and comes back with exactly those pixels');
+s = session(state(), 'master');
+s.setRatio(s.ratioAt(0.37), true);
+s.switchBasis();
+s.zoom(0.8, 500, 400);
+const drawnFit = s.masterOf(s.work);
+s.save();
+const fitStored = sent.at(-1).params;
+const fitAgain = math.master(3000, 2000, {ratio: math.ratio(fitStored.ratio), ax: fitStored.ax, ay: fitStored.ay, scale: fitStored.scale, basis: fitStored.basis}, 0, false);
+assert.ok(fitStored.basis === 'fit' && fitAgain.width === drawnFit.width && fitAgain.height === drawnFit.height && near(fitAgain.cx, drawnFit.cx, 1e-9), 'in "fit" too');
 s = session(state(), 'master');
 s.setRatio(math.ratio('16:9'), false);
 s.save();
@@ -367,7 +497,7 @@ ok('crops mode: the knob drags, the frame follows the interpolation, letting go 
 s = session(state({manual: true, ratio: '4:3', cx: 0.4, cy: 0.5, scale: 1.2, angle: 12, flip: true, look: {b: 120, c: 90, s: 100}}), 'master');
 s.el = {querySelector: () => ({hidden: true}), querySelectorAll: () => []};
 s.hideLevel = () => {};
-s.work = Object.assign({}, s.work, {ratio: math.ratio(3000, 2000), ax: 0.5, ay: 0.5, scale: 1, angle: 0, flip: false, look: {b: 100, c: 100, s: 100}, auto: true, freeRatio: false});
+s.work = Object.assign({}, s.work, {ratio: math.ratio(3000, 2000), ax: 0.5, ay: 0.5, scale: 1, basis: 'fill', angle: 0, flip: false, look: {b: 100, c: 100, s: 100}, auto: true, freeRatio: false});
 assert.ok(s.dirty() && s.masterOf(s.work).insideOriginal(), 'the original as the master: a change like any other, applied with the tick');
 s.save();
 assert.ok(sent.at(-1).action === 'saveMasterCrop' && sent.at(-1).params.auto === 1 && sent.at(-1).params.angle === 0 && sent.at(-1).params.flip === 0

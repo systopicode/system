@@ -71,11 +71,23 @@ final class Model extends TableRow
     }
 
     /**
+     * What alignment and scale are read on (`Media\CropBox`): `fill` - the
+     * edge of the picture stays outside, scale 1 = "fill in"; `fit` -
+     * background may show, scale 1 = "fit in". Null is `fill`.
+     */
+    #[Col(length: 4)]
+    public ?string $basis = 'fill' {
+        get => $this->__get__(__PROPERTY__);
+        set => $this->__set__(__PROPERTY__, $value);
+    }
+
+    /**
      * How the crop is aligned in what it is cut from (the master for the
-     * crop of a ratio, the turned original for the master), as with
-     * `background-position` in per cent: 0 flush left / top, 1 flush right /
-     * bottom, 0.5 centred; -10 to 11, past 0-1 the crop reaches over the
-     * edge (`Media\CropBox`). Successor of `$left` / `$top`.
+     * crop of a ratio, the turned original for the master), 0-1: in `fill`
+     * as with `background-position` in per cent (0 flush left / top, 1 flush
+     * right / bottom), in `fit` from the picture touching the crop on the
+     * left / top to touching it on the right / bottom; 0.5 centred in both
+     * (`Media\CropBox`). Successor of `$left` / `$top`.
      */
     #[Col(length: 15, scale: 12)]
     public ?Decimal $alignX {
@@ -89,8 +101,8 @@ final class Model extends TableRow
     }
 
     /**
-     * Magnification over "fill in": 1 is the largest crop of the ratio
-     * without a border, below 1 background shows. Successor of `$width` and
+     * Magnification over scale 1 of the basis: "fill in", the largest crop
+     * of the ratio without a border, or "fit in". Successor of `$width` and
      * `$height` - one value cannot stretch the picture, two could.
      */
     #[Col(length: 18, scale: 12)]

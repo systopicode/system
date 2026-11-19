@@ -16,12 +16,15 @@ namespace Systopic\System\Media;
  *
  * The master crop is read against the turned picture:
  *
- *   scale   1 is "fill in" as the picture stands - the largest frame of the
- *           ratio that lies inside the turned picture, so no background
- *           shows. At a right angle that is the plain fill in; at a tilt the
- *           frame's corners touch the picture's edges.
+ *   scale   `fill`: 1 is "fill in" as the picture stands - the largest frame
+ *           of the ratio that lies inside the turned picture, so no
+ *           background shows. At a right angle that is the plain fill in; at
+ *           a tilt the frame's corners touch the picture's edges.
+ *           `fit`: 1 is "fit in" - the box around the turned picture inside
+ *           the frame.
  *   align   the alignment in the box around the turned picture (what
- *           Imagick's rotateImage() hands back), 0.5 / 0.5 being centred.
+ *           Imagick's rotateImage() hands back), 0.5 / 0.5 being centred -
+ *           read by the crop's basis (`CropBox`).
  *
  * `largest()` is the master of the largest area inside the turned picture,
  * its ratio free - what a turned picture without a master crop shows.
@@ -79,14 +82,14 @@ final class MasterGeometry
         // A frame w x h inside the turned picture: w·c + h·s <= width, w·s + h·c <= height.
         $r = $crop->ratio->value;
         $this->fill = min($originalWidth / ($r * $c + $s), $originalHeight / ($r * $s + $c));
-        $this->frameHeight = $this->fill / $crop->scale;
+        $this->frameHeight = $this->fill / ($crop->basis === CropBox::FIT ? $crop->scale * $this->fitScale() : $crop->scale);
         $this->frameWidth = $this->frameHeight * $r;
         $this->width = max(1, (int) round($this->frameWidth));
         $this->height = max(1, (int) round($this->frameHeight));
 
         // The crop is aligned in the box around the turned picture; its middle, back through turn and mirror into the original.
-        $this->centreFractionX = CropBox::centreOf($crop->alignX, $this->frameWidth / $this->referenceWidth);
-        $this->centreFractionY = CropBox::centreOf($crop->alignY, $this->frameHeight / $this->referenceHeight);
+        $this->centreFractionX = CropBox::centreOf($crop->alignX, $this->frameWidth / $this->referenceWidth, $crop->basis);
+        $this->centreFractionY = CropBox::centreOf($crop->alignY, $this->frameHeight / $this->referenceHeight, $crop->basis);
         $x = ($this->centreFractionX - 0.5) * $this->referenceWidth;
         $y = ($this->centreFractionY - 0.5) * $this->referenceHeight;
         $dx = $x * $this->cos + $y * $this->sin;
@@ -165,8 +168,9 @@ final class MasterGeometry
     }
 
     /**
-     * The scale of "fit in": the whole turned picture lies inside the frame,
-     * background around it. Never above 1.
+     * The scale of "fit in" over "fill in": the whole turned picture lies
+     * inside the frame, background around it. Never above 1. A master crop
+     * of the basis `fit` has its scale over this.
      */
     public function fitScale(): float
     {

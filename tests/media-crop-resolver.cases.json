@@ -1,5 +1,5 @@
 {
-  "about": "Cases for CropResolver - the PHP class and the editor's copy in the browser must both pass them. Crops are given by their alignment (ax, ay: 0 flush left / top, 1 flush right / bottom, 0.5 centred - Media\\CropBox) in the master; POIs by their centre (x, y) and size (w, h), fractions of the master. Expected values were worked out by an independent implementation of the rules in .cursor/docs/media-crops.md, to 1e-6.",
+  "about": "Cases for CropResolver - the PHP class and the editor's copy in the browser must both pass them. Crops are given by their alignment (ax, ay - Media\\CropBox) and basis ('fill' when not given: 0 flush left / top, 1 flush right / bottom, 0.5 centred, scale 1 = fill in; 'fit': 0 the picture touches the crop on the left / top, 1 on the right / bottom, scale 1 = fit in) in the master; POIs by their centre (x, y) and size (w, h), fractions of the master. Expected values were worked out by an independent implementation of the rules in .cursor/docs/media-crops.md, to 1e-6.",
   "cases": [
     {
       "name": "nothing known: the largest crop, centred",
@@ -41,7 +41,7 @@
       }
     },
     {
-      "name": "a crop set by hand may show background - it is not pulled back in",
+      "name": "a crop set by hand in \"fit\" may show background - it is not pulled back in",
       "master": [
         3000,
         2000
@@ -50,9 +50,10 @@
       "manual": [
         {
           "ratio": "1:1",
-          "ax": -1.9,
+          "ax": 0.1,
           "ay": 0.5,
-          "scale": 0.8
+          "scale": 0.8,
+          "basis": "fit"
         }
       ],
       "pois": [
@@ -62,9 +63,10 @@
         }
       ],
       "expect": {
-        "ax": -1.9,
+        "ax": 0.1,
         "ay": 0.5,
         "scale": 0.8,
+        "basis": "fit",
         "source": "manual"
       }
     },
@@ -184,7 +186,128 @@
       }
     },
     {
-      "name": "outside everything known, no declared ratios: the nearest crop's alignment at fill in",
+      "name": "between two crops in \"fit\": \"fit\", interpolated as they are",
+      "master": [
+        3000,
+        2000
+      ],
+      "ratio": "2:1",
+      "manual": [
+        {
+          "ratio": "1:1",
+          "ax": 0.3,
+          "ay": 0.5,
+          "scale": 1,
+          "basis": "fit"
+        },
+        {
+          "ratio": "4:1",
+          "ax": 0.7,
+          "ay": 0.5,
+          "scale": 1.5,
+          "basis": "fit"
+        }
+      ],
+      "pois": [],
+      "expect": {
+        "ax": 0.5,
+        "ay": 0.5,
+        "scale": 1.224744871,
+        "basis": "fit",
+        "source": "interpolated"
+      }
+    },
+    {
+      "name": "between \"fit\" and \"fill\": both read as \"fill\", the crop inside",
+      "master": [
+        3000,
+        2000
+      ],
+      "ratio": "2:1",
+      "manual": [
+        {
+          "ratio": "1:1",
+          "ax": 0.5,
+          "ay": 0.5,
+          "scale": 1,
+          "basis": "fit"
+        },
+        {
+          "ratio": "4:1",
+          "ax": 0.2,
+          "ay": 0.5,
+          "scale": 2
+        }
+      ],
+      "pois": [],
+      "expect": {
+        "ax": 0.35,
+        "ay": 0.5,
+        "scale": 1.154700538,
+        "basis": "fill",
+        "source": "interpolated"
+      }
+    },
+    {
+      "name": "one side only, in \"fit\": towards the whole master at its own ratio, in \"fit\"",
+      "master": [
+        3000,
+        2000
+      ],
+      "ratio": "4:3",
+      "manual": [
+        {
+          "ratio": "1:1",
+          "ax": 0.2,
+          "ay": 0.5,
+          "scale": 2,
+          "basis": "fit"
+        }
+      ],
+      "pois": [],
+      "expect": {
+        "ax": 0.412853387,
+        "ay": 0.5,
+        "scale": 1.223054514,
+        "basis": "fit",
+        "source": "interpolated"
+      }
+    },
+    {
+      "name": "beyond the last crop in \"fit\": towards automatic (centred, fit in) at the outermost declared ratio",
+      "master": [
+        3000,
+        2000
+      ],
+      "ratio": "3:4",
+      "manual": [
+        {
+          "ratio": "1:1",
+          "ax": 0.2,
+          "ay": 0.5,
+          "scale": 2,
+          "basis": "fit"
+        }
+      ],
+      "pois": [],
+      "declared": [
+        "2:1",
+        "16:9",
+        "3:2",
+        "1:1",
+        "3:4",
+        "9:16"
+      ],
+      "expect": {
+        "ax": 0.35,
+        "ay": 0.5,
+        "scale": 1.414213562,
+        "basis": "fit",
+        "source": "interpolated"
+      }
+    },
+    {
+      "name": "outside everything known, no declared ratios: automatic (centred, fill in)",
       "master": [
         3000,
         2000
@@ -200,14 +323,14 @@
       ],
       "pois": [],
       "expect": {
-        "ax": 0.2,
+        "ax": 0.5,
         "ay": 0.5,
         "scale": 1,
-        "source": "anchor"
+        "source": "centered"
       }
     },
     {
-      "name": "beyond the last crop: towards fill in, reached at the outermost declared ratio",
+      "name": "beyond the last crop: towards automatic (centred, fill in) at the outermost declared ratio",
       "master": [
         3000,
         2000
@@ -231,14 +354,14 @@
         "9:16"
       ],
       "expect": {
-        "ax": 0.2,
+        "ax": 0.35,
         "ay": 0.5,
         "scale": 1.414213562,
         "source": "interpolated"
       }
     },
     {
-      "name": "the outermost declared ratio itself: fill in, alignment of the nearest crop",
+      "name": "the outermost declared ratio itself: automatic, not the alignment of the nearest crop",
       "master": [
         3000,
         2000
@@ -262,10 +385,10 @@
         "9:16"
       ],
       "expect": {
-        "ax": 0.2,
+        "ax": 0.5,
         "ay": 0.5,
         "scale": 1,
-        "source": "anchor"
+        "source": "centered"
       }
     },
     {
@@ -298,7 +421,7 @@
       }
     },
     {
-      "name": "wider than the master, crop set by hand on the far side: the whole master is nearest",
+      "name": "wider than the master, crop set by hand on the far side: past the whole master, automatic",
       "master": [
         3000,
         2000
@@ -317,7 +440,7 @@
         "ax": 0.5,
         "ay": 0.5,
         "scale": 1,
-        "source": "anchor"
+        "source": "centered"
       }
     },
     {

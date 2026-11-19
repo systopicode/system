@@ -17,11 +17,15 @@ namespace Systopic\System\Media;
  *                                                     moved over them
  *   4. a crop set by hand on one side only          - towards the whole
  *                                                     master; beyond the last
- *                                                     crop towards "fill in" at
+ *                                                     crop towards automatic
+ *                                                     (centred, scale 1) at
  *                                                     the outermost ratio
  *   5. nothing                                      - the largest crop, centred
  *
- * Everything from 2 on lies inside the master. The editor's preview runs the
+ * Everything from 2 on is `fill`, inside the master - unless the crops it
+ * comes from are all `fit` (`CropBox::$basis`): then it is `fit` too, so
+ * between two crops showing the whole picture the whole picture shows. The
+ * editor's preview runs the
  * same rules in the browser; `tests/media-crop-resolver.cases.json` holds
  * the cases both must pass.
  */
@@ -33,8 +37,9 @@ final class CropResolver
      *        points of interest in fractions of the master: `x`, `y` the
      *        centre, `w`, `h` the size (a point has none)
      * @param list<Ratio> $declared the declared ratios: the outermost of them
-     *        on either side is where a crop beyond the last one known reaches
-     *        "fill in". Without them, it is "fill in" at once.
+     *        on either side is automatic (centred, scale 1) unless set by
+     *        hand - beyond the last crop known the crops run towards it.
+     *        Without them, automatic at once.
      */
     public static function resolve(Ratio $ratio, int $width, int $height, array $manual, array $pois = [], array $declared = []): CropBox
     {
@@ -48,7 +53,7 @@ final class CropResolver
 
         [$below, $above] = self::neighbours($ratio, $byName);
         if ($below !== null && $above !== null) {
-            return self::between($ratio, $below, $above)->clamped($width, $height);
+            return self::between($ratio, $below, $above, $width, $height);
         }
         if ($pois !== []) {
             return self::overPois($ratio, $width, $height, $pois);
@@ -58,28 +63,32 @@ final class CropResolver
         }
 
         // One side only. The whole master stands in for the missing side, at
-        // its own ratio - so the crop opens up towards the full picture.
+        // its own ratio - so the crop opens up towards the full picture. It
+        // takes the basis of the nearest crop: centred at scale 1 it is the
+        // same frame in either.
         $master = Ratio::ofPixels($width, $height);
         if ($master->equals($ratio)) {
             return new CropBox($ratio);
         }
-        $anchors = $byName + [$master->name => new CropBox($master)];
+        $basis = ($below ?? $above)->basis;
+        $anchors = $byName + [$master->name => new CropBox($master, basis: $basis)];
         [$below, $above] = self::neighbours($ratio, $anchors);
         if ($below !== null && $above !== null) {
-            return self::between($ratio, $below, $above)->clamped($width, $height);
+            return self::between($ratio, $below, $above, $width, $height);
         }
-        // Outside everything known: the nearest crop's alignment, and towards
-        // "fill in", reached at the outermost declared ratio of that side -
-        // the ends of the slider show as much of the picture as they can.
+        // Outside everything known: the outermost declared ratio of that side
+        // is automatic - centred at scale 1, in the basis of the nearest
+        // crop ("fill in", or "fit in" - all of the picture). In between, the
+        // crops run from the nearest towards it; it does not inherit the
+        // nearest one's alignment.
         $nearest = $below ?? $above;
         $wider = $above === null;
         $end = self::outermost($declared, $wider);
         if ($end !== null && Ratio::compare($end, $ratio) === ($wider ? 1 : -1)) {
-            $edge = new CropBox($end, $nearest->alignX, $nearest->alignY);
-            return self::between($ratio, $wider ? $nearest : $edge, $wider ? $edge : $nearest)->clamped($width, $height);
+            $edge = new CropBox($end, basis: $nearest->basis);
+            return self::between($ratio, $wider ? $nearest : $edge, $wider ? $edge : $nearest, $width, $height);
         }
-        return (new CropBox($ratio, $nearest->alignX, $nearest->alignY, 1.0, CropBox::ANCHOR))
-            ->clamped($width, $height);
+        return new CropBox($ratio, basis: $nearest->basis);
     }
 
     /**
@@ -138,19 +147,27 @@ final class CropResolver
     /**
      * The alignment moves in a straight line, the scale in equal factors -
      * by how far the ratio lies between the two, logarithmically. At either
-     * end the neighbour itself comes out; two neighbours inside the master
-     * give crops inside it all the way.
+     * end the neighbour itself comes out.
+     *
+     * Two neighbours of one basis give a crop of that basis. Of two bases,
+     * both are read as `fill` first (`CropBox::asFill()`) - the crop in
+     * between lies inside the master.
      */
-    private static function between(Ratio $ratio, CropBox $below, CropBox $above): CropBox
+    private static function between(Ratio $ratio, CropBox $below, CropBox $above, int $width, int $height): CropBox
     {
+        if ($below->basis !== $above->basis) {
+            $below = $below->asFill($width, $height);
+            $above = $above->asFill($width, $height);
+        }
         $t = $ratio->position($below->ratio, $above->ratio);
-        return new CropBox(
+        return (new CropBox(
             $ratio,
             $below->alignX + ($above->alignX - $below->alignX) * $t,
             $below->alignY + ($above->alignY - $below->alignY) * $t,
             $below->scale ** (1 - $t) * $above->scale ** $t,
             CropBox::INTERPOLATED,
-        );
+            $below->basis,
+        ))->clamped();
     }
 
     /**

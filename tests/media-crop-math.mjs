@@ -27,11 +27,12 @@ ok('ratios are reduced, compared exactly, placed logarithmically');
 const fixture = JSON.parse(await readFile(new URL('media-crop-resolver.cases.json', here), 'utf8'));
 assert.ok(fixture.cases.length >= 14);
 for (const c of fixture.cases) {
-	const manual = c.manual.map(m => ({ratio: math.ratio(m.ratio), ax: m.ax, ay: m.ay, scale: m.scale}));
+	const manual = c.manual.map(m => ({ratio: math.ratio(m.ratio), ax: m.ax, ay: m.ay, scale: m.scale, basis: m.basis}));
 	const crop = math.resolve(math.ratio(c.ratio), c.master[0], c.master[1], manual, c.pois, (c.declared || []).map(name => math.ratio(name)));
 	assert.ok(near(crop.ax, c.expect.ax) && near(crop.ay, c.expect.ay) && near(crop.scale, c.expect.scale), c.name + ': ' + JSON.stringify(crop));
 	assert.equal(crop.source, c.expect.source, c.name);
 	assert.equal(crop.ratio.name, c.ratio, c.name);
+	assert.equal(crop.basis, c.expect.basis || 'fill', c.name);
 	ok('resolver: ' + c.name);
 }
 
@@ -46,7 +47,7 @@ for (let i = 0; i < 120; i++) {
 		width: 200 + Math.floor(random() * 5800), height: 200 + Math.floor(random() * 5800),
 		ratio: ratios[i % ratios.length], angle: angles[i % angles.length], flip: i % 3 === 0,
 		ax: -0.3 + random() * 1.6, ay: -0.3 + random() * 1.6, scale: 0.6 + random() * 2.4,
-		px: random() * 3000, py: random() * 3000
+		px: random() * 3000, py: random() * 3000, basis: i % 2 ? 'fit' : 'fill'
 	});
 }
 const php = spawnSync(process.env.FLUXO_PHP || 'php', [fileURLToPath(new URL('media-crop-math.parity.php', here))], {input: JSON.stringify(cases), encoding: 'utf8', maxBuffer: 1 << 26});
@@ -55,7 +56,7 @@ const server = JSON.parse(php.stdout);
 assert.equal(server.length, cases.length);
 cases.forEach((c, i) => {
 	const s = server[i];
-	const crop = {ratio: math.ratio(c.ratio), ax: c.ax, ay: c.ay, scale: c.scale};
+	const crop = {ratio: math.ratio(c.ratio), ax: c.ax, ay: c.ay, scale: c.scale, basis: c.basis};
 	const g = math.master(c.width, c.height, crop, c.angle, c.flip);
 	const where = `case ${i} ${JSON.stringify(c)}`;
 	assert.equal(g.width, s.width, where);
@@ -74,8 +75,12 @@ cases.forEach((c, i) => {
 	assert.ok(near(clamped.ax, s.clamped[0]) && near(clamped.ay, s.clamped[1]) && near(clamped.scale, s.clamped[2]), where);
 	assert.ok(near(math.fitScale(crop.ratio, c.width, c.height), s.cropFit), where);
 	assert.ok(near(g.cx, s.centre[0]) && near(g.cy, s.centre[1]), 'the middle the alignment gives: ' + where);
+	const fill = math.asFill(crop, c.width, c.height);
+	assert.ok(near(fill.ax, s.asFill[0]) && near(fill.ay, s.asFill[1]) && near(fill.scale, s.asFill[2]) && fill.basis === 'fill', 'the same frame in "fill": ' + where);
+	const centre = math.centre(crop, c.width, c.height);
+	assert.ok(near(math.alignOf(centre[0], rect.w, undefined, c.basis), Math.min(1, Math.max(0, c.ax))), 'alignment and middle, there and back: ' + where);
 });
-ok(`${cases.length} masters and crops: size, mapping both ways, inside, fit in, the largest frame, the middle from the alignment - the same as the server's`);
+ok(`${cases.length} masters and crops, "fill" and "fit": size, mapping both ways, inside, fit in, the largest frame, the middle from the alignment - the same as the server's`);
 
 // ---------------------------------------------------------------- furthest
 const stop = math.furthest(t => 10 * t, value => value <= 4);
