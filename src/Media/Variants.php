@@ -8,9 +8,14 @@ namespace Systopic\System\Media;
  * What a picture is made in: the aspect ratios and the sizes of a project,
  * and the names the files of those variants carry.
  *
- * From `ratios` and `sizes` in `config/media.settings.json`, or from
- * `Variants::configure()` in a `settings.php`. A project that says nothing
- * gets the lists below.
+ * From `packages.system.media` in config.json (`ratios`, `sizes`, with
+ * the lists below as their defaults in the system's config.schema.json), or
+ * from `Variants::configure()` in a `settings.php`. Without a config (a
+ * test, the setup page) the lists below.
+ *
+ * The format names a template asks for with `setFormat()` are aliases of a
+ * ratio and a size: `packages.system.media.aliases`, added to `mediaFormats`
+ * by `addAliases()` (a settings.php may still add its own).
  *
  *   ratios   the crops an editor can set and a template can ask for
  *   sizes    megapixels; every ratio (and the master) exists in each of
@@ -42,30 +47,45 @@ final class Variants
     /** `media_crop_format` of the master's row. */
     public const MASTER = 'original';
 
-    /** null = not said: the new pictures are in force. */
-    private static ?bool $legacy = null;
-
     /**
-     * Are the pictures of master and ratios what a page shows?
+     * What config.json says under `packages.system.media`: `ratios`, `sizes`,
+     * `aliases` - with the defaults of the schema. Empty without a config.
      *
-     * Yes, unless a project says otherwise: `"legacyFormats": true` in
-     * `media.settings.json`, or `define('MEDIA_LEGACY_FORMATS', true)`. Then
-     * the named formats are rendered and edited the old way again (their
-     * own crops, the old editor) - the way back while the old renderer is
-     * still there. Nothing is converted either way.
+     * @return array<string, mixed>
      */
-    public static function live(): bool
+    private static function config(): array
     {
-        if (self::$legacy !== null) {
-            return !self::$legacy;
-        }
-        return !(defined('MEDIA_LEGACY_FORMATS') && constant('MEDIA_LEGACY_FORMATS'));
+        $media = \Systopic\System\Config\Config::current()?->package('system')['media'] ?? null;
+        return is_array($media) ? $media : [];
     }
 
-    /** Switches back to the old rendering of named formats (true) or to the new pictures (false); null = not said. */
-    public static function useLegacy(?bool $legacy): void
+    /** A list of the config, also when it was typed as one value ("16:9"). */
+    private static function listOf(mixed $value): ?array
     {
-        self::$legacy = $legacy;
+        if (is_array($value)) {
+            return $value;
+        }
+        return is_scalar($value) && (string) $value !== '' ? [$value] : null;
+    }
+
+    /**
+     * The format names of config.json into `mediaFormats`, beside the
+     * system's and those a settings.php added (which win). Run once by
+     * loader.php.
+     */
+    public static function addAliases(): void
+    {
+        $aliases = self::config()['aliases'] ?? null;
+        if (!is_array($aliases) || $aliases === [] || !class_exists('mediaFormats')) {
+            return;
+        }
+        $formats = [];
+        foreach ($aliases as $name => $row) {
+            if (is_string($name) && $name !== '' && is_array($row)) {
+                $formats[$name] = $row + ['cms_display' => 'image'];
+            }
+        }
+        \mediaFormats::add($formats);
     }
 
     /** A size above this is a typing error, not a wish. */
@@ -112,6 +132,9 @@ final class Variants
     public static function ratios(): array
     {
         if (self::$ratios === null) {
+            self::configure(self::listOf(self::config()['ratios'] ?? null) ?? self::RATIOS);
+        }
+        if (self::$ratios === null) {
             self::configure(self::RATIOS);
         }
         return self::$ratios;
@@ -127,6 +150,9 @@ final class Variants
     /** @return list<float> megapixels, small to large */
     public static function sizes(): array
     {
+        if (self::$sizes === null) {
+            self::configure(null, self::listOf(self::config()['sizes'] ?? null) ?? self::SIZES);
+        }
         if (self::$sizes === null) {
             self::configure(null, self::SIZES);
         }
@@ -280,7 +306,6 @@ final class Variants
     public static function reset(): void
     {
         self::$ratios = self::$sizes = null;
-        self::$legacy = null;
     }
 
     /** `0.5`, `2`, `10` - a size as it stands in a file name. */

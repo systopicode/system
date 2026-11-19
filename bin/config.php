@@ -23,6 +23,10 @@ declare(strict_types=1);
  *       config/global.settings.json, or the single-line define()s of a
  *       settings.php. What moved leaves the source; an empty
  *       global.settings.json goes. What config.json has already stays.
+ *       And config/media.settings.json, which goes as a whole: ratios,
+ *       sizes, format names (formats), video formats and providers into
+ *       packages.system.media, the media groups into packages.cms.media.
+ *       Its images (JPEG_QUALITY …) and legacyFormats are read by nothing.
  *
  * Every file that changes is copied to var/config-backup/<time>/ first. See
  * .cursor/docs/config-struktur.md.
@@ -325,12 +329,57 @@ if ($option === '--import-settings') {
 			$i = $k;
 		}
 	}
-	if ($found === []) {
+	// Media Settings: everything but images (JPEG_QUALITY …, read by nothing) and
+	// legacyFormats (the switch back to the old renderer, gone)
+	$mediaJson = is_file("$root/config/media.settings.json") ? $read('media.settings.json') : null;
+	$mediaPut = [];
+	if (is_array($mediaJson)) {
+		$named = static function (string $what, array $rows, array $skip = []) use ($say): array {
+			$out = [];
+			foreach ($rows as $name => $row) {
+				if (!is_array($row) || in_array((string) $name, $skip, true)) {
+					continue;
+				}
+				if (preg_match('/^[a-z][a-zA-Z0-9]*$/', (string) $name) !== 1) {
+					$say("media.settings.json: $what $name is no name config.json takes (a-z, then letters and digits), move it by hand");
+					continue;
+				}
+				$out[(string) $name] = $row;
+			}
+			return $out;
+		};
+		foreach (['ratios' => ['system', 'media', 'ratios'], 'sizes' => ['system', 'media', 'sizes'], 'external' => ['system', 'media', 'external']] as $key => $path) {
+			if (is_array($mediaJson[$key] ?? null) && $mediaJson[$key] !== []) {
+				$mediaPut[$key] = [$path, array_values($mediaJson[$key])];
+			}
+		}
+		$aliases = [];
+		foreach ($named('format', is_array($mediaJson['formats'] ?? null) ? $mediaJson['formats'] : [], ['original', 'alias', 'mmlThumb', 'shareImage', 'portrait']) as $name => $row) {
+			$aliases[$name] = array_intersect_key($row, array_flip(['aspect_ratio', 'megapixels', 'width', 'height', 'cms_display']));
+		}
+		$video = $named('video format', is_array($mediaJson['videoFormats'] ?? null) ? $mediaJson['videoFormats'] : []);
+		$groups = $named('group', is_array($mediaJson['groups'] ?? null) ? $mediaJson['groups'] : []);
+		foreach (['formats' => [['system', 'media', 'aliases'], $aliases], 'videoFormats' => [['system', 'media', 'videoFormats'], $video], 'groups' => [['cms', 'media', 'groups'], $groups]] as $key => $put) {
+			if ($put[1] !== []) {
+				$mediaPut[$key] = $put;
+			}
+		}
+	}
+	if ($found === [] && !is_array($mediaJson)) {
 		$say('nothing to import');
 		exit(0);
 	}
 	$project = Layout::lift($project);
 	$moved = [];
+	foreach ($mediaPut as $key => [$path, $value]) {
+		$keys = ['packages', ...$path];
+		if (Tree::get($project, $keys) !== null) {
+			$say("media.settings.json $key: config.json has packages." . implode('.', $path) . ' already, it stays');
+		} else {
+			Tree::put($project, $keys, $value);
+		}
+		$moved[] = "media $key";
+	}
 	foreach ($found as $name => [$value, $at]) {
 		[$package, $path] = $map[$name];
 		$keys = ['packages', $package, ...$path];
@@ -341,7 +390,7 @@ if ($option === '--import-settings') {
 		}
 		$moved[] = $name;
 	}
-	if (!ScriptRun::confirm('config.json is the same on every installation and travels with git and sync. Move ' . implode(', ', $moved) . ' into it?')) {
+	if (!ScriptRun::confirm('config.json is the same on every installation and travels with git and sync. Move ' . ($moved === [] ? 'nothing (media.settings.json only goes)' : implode(', ', $moved)) . ' into it?')) {
 		$say('nothing changed');
 		exit(0);
 	}
@@ -350,7 +399,12 @@ if ($option === '--import-settings') {
 		fwrite(STDERR, "config.json: cannot write\n");
 		exit(1);
 	}
-	if (is_array($settings)) {
+	if (is_array($mediaJson)) {
+		$backup('media.settings.json');
+		unlink("$root/config/media.settings.json");
+		$say('media.settings.json: deleted, Media Settings are in config.json now');
+	}
+	if ($found !== [] && is_array($settings)) {
 		foreach ($found as [, $at]) {
 			unset($settings[$at[0]][$at[1]]);
 			if ($settings[$at[0]] === []) {
@@ -366,7 +420,7 @@ if ($option === '--import-settings') {
 			Setup::writeJson("$root/config/$jsonFile", $settings);
 			$say("$jsonFile: left in it: " . implode(', ', array_keys($left)));
 		}
-	} else {
+	} elseif ($found !== []) {
 		$dir = "$root/var/config-backup/$stamp";
 		@mkdir($dir, 0775, true);
 		copy($php, "$dir/settings.php");

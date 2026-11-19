@@ -18,20 +18,20 @@ if (($argv[1] ?? '') === 'theme-worker') {
 // Each child uses the real settings API in a separate PHP process.
 if (($argv[1] ?? '') === 'worker') {
     class_exists(ProjectFile::class); // Group/Leaf value objects share this source file.
-    exit(ProjectJson::setField($argv[2], 'call:mediaFormats::add', $argv[3], 'label', 'saved-' . $argv[3]) ? 0 : 1);
+    exit(ProjectJson::setField($argv[2], 'define:LANGUAGES', $argv[3], 'label', 'saved-' . $argv[3]) ? 0 : 1);
 }
 $root = sys_get_temp_dir() . '/fluxo-config-write-' . bin2hex(random_bytes(6));
 mkdir($root, 0700);
 try {
-    $path = $root . '/media.settings.json';
+    $path = $root . '/global.settings.json';
     $rows = [];
-    for ($i = 0; $i < 16; $i++) $rows['format' . $i] = ['width' => 800, 'height' => 600, 'label' => 'before'];
-    check('initial JSON written atomically', ProjectJson::put($path, ['formats' => $rows, 'untouched' => ['secret' => 'fixture']]));
+    for ($i = 0; $i < 16; $i++) $rows['l' . $i] = ['label' => 'before', 'code' => 'l' . $i, 'activated' => true];
+    check('initial JSON written atomically', ProjectJson::put($path, ['languages' => ['LANGUAGES' => $rows], 'untouched' => ['secret' => 'fixture']]));
     chmod($path, 0600);
     $children = [];
     for ($i = 0; $i < 16; $i++) {
         $pipes = [];
-        $process = proc_open([PHP_BINARY, __FILE__, 'worker', $path, 'format' . $i], [0 => ['pipe','r'], 1 => ['pipe','w'], 2 => ['pipe','w']], $pipes);
+        $process = proc_open([PHP_BINARY, __FILE__, 'worker', $path, 'l' . $i], [0 => ['pipe','r'], 1 => ['pipe','w'], 2 => ['pipe','w']], $pipes);
         if (!is_resource($process)) throw new RuntimeException('Could not launch worker');
         fclose($pipes[0]);
         $children[] = [$process, $pipes];
@@ -42,12 +42,12 @@ try {
         if (proc_close($process) !== 0) throw new RuntimeException('Worker failed: ' . $output);
     }
     $data = json_decode(file_get_contents($path), true, 512, JSON_THROW_ON_ERROR);
-    foreach ($rows as $key => $row) check('concurrent save retained: ' . $key, $data['formats'][$key]['label'] === 'saved-' . $key);
+    foreach ($rows as $key => $row) check('concurrent save retained: ' . $key, $data['languages']['LANGUAGES'][$key]['label'] === 'saved-' . $key);
     check('unknown data preserved', $data['untouched']['secret'] === 'fixture');
     clearstatcache(true, $path);
-    check('file permissions preserved', (fileperms($path) & 0777) === 0600);
+    check('file permissions preserved', PHP_OS_FAMILY === 'Windows' || (fileperms($path) & 0777) === 0600); // Windows has no such modes
     file_put_contents($path, '{broken');
-    check('invalid JSON retained on edit', ProjectJson::setField($path, 'call:mediaFormats::add', 'format0', 'label', 'oops') === null && file_get_contents($path) === '{broken');
+    check('invalid JSON retained on edit', ProjectJson::setField($path, 'define:LANGUAGES', 'l0', 'label', 'oops') === null && file_get_contents($path) === '{broken');
     fs::$siteRoot = $root;
     mkdir($root . '/overrides/css', 0700, true);
     $theme = \Systopic\System\Settings\ThemeFile::path();

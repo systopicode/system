@@ -61,17 +61,31 @@ mit der Mitte (`centredAt()`).
 
 ## Settings
 
-`config/media.settings.json`, im Settings-GUI unter „Aspect ratios" und
-„Image sizes":
+In `config.json`, im Admin unter Settings › System › Config, Block „Media"
+(Schema `system/config/config.schema.json`, `x-project`):
 
 ```json
-"ratios": ["2:1", "191:100", "16:9", "3:2", "4:3", "1:1", "3:4", "2:3", "9:16"],
-"sizes":  [0.5, 1, 2, 5, 10]
+"packages": { "system": { "media": {
+  "ratios":  ["2:1", "191:100", "16:9", "3:2", "4:3", "1:1", "3:4", "2:3", "9:16"],
+  "sizes":   [0.5, 1, 2, 5, 10],
+  "aliases": { "fullWidth": { "megapixels": 5 }, "square": { "width": 800, "height": 800 } },
+  "videoFormats": { … },          // VIDEO_FORMATS
+  "external": ["YouTube", "Vimeo"] // EXTERNAL_MEDIAS
+} } }
 ```
 
-Fehlen die Schlüssel, gilt diese Vorgabe (`Media\Variants::RATIOS`, `SIZES`).
-Ein Projekt mit `settings.php` ruft `Variants::configure([...], [...])` auf;
-das GUI bearbeitet die Listen dort nicht.
+Die Vorgaben stehen im Schema (gleich `Media\Variants::RATIOS`, `SIZES`, die
+ohne Config gelten, etwa in Tests). Ein Projekt mit `settings.php` kann
+weiter `Variants::configure([...], [...])` und `mediaFormats::add()` rufen.
+Die **Media-Gruppen** stehen in cms: `packages.cms.media.groups` (Settings ›
+CMS › Config, Block „Media"); ohne sie gilt `$media_groups` einer settings.php.
+
+Die früheren **Media Settings** (`config/media.settings.json`, eigenes Panel)
+sind entfallen (2026-11-19). `bin/config.php --import-settings` zieht eine
+noch vorhandene Datei nach config.json und löscht sie; `images`
+(JPEG_QUALITY …) und `legacyFormats` liest nichts mehr. Ein altes
+Backup-Archiv mit der Datei wird ohne sie zurückgespielt. Erledigt in
+`spaceticker.app` und `rebekka-degott.com`.
 
 **Nur Deklariertes wird gerendert.** Eine Adresse mit anderer Ratio oder Size
 ist 404 — sonst ließen sich über die URL beliebig viele Dateien erzeugen.
@@ -185,9 +199,12 @@ $media->toAutoHtml(['style' => 'width:100%;height:40vh'])   // die Box entscheid
 
 `$media->setFormat('fullWidth')` gibt es weiter, als **Alias**: der Name
 steht für Ratio + Size (`Variants::alias()`), ohne eigenen Crop und ohne
-exakte Pixelmaße.
+exakte Pixelmaße. Die Namen: `packages.system.media.aliases` (beim Laden
+in `mediaFormats`, `Variants::addAliases()`), die des Systems (`portrait`,
+`shareImage` …) und was eine settings.php noch hinzufügt. Ein unbekannter
+Name ist der Master in 1 MP.
 
-| Format in den Settings | wird zu |
+| Format | wird zu |
 |---|---|
 | `megapixels: 4` | Master, `5mp` |
 | `megapixels: 3, aspect_ratio: 16:9` | `5mp16by9` |
@@ -195,14 +212,13 @@ exakte Pixelmaße.
 | `width: 1788, height: 2160` | nächste deklarierte Ratio: `5mp3by4` |
 | `width: 1200, height: 630` (Share-Bild) | `1mp191by100` |
 
-Alte Adressen (`var/formats/<format>/…`) leitet `media.php` auf die neue
-weiter (302), sofern die alte Datei nicht mehr auf der Platte liegt — eine
-vorhandene liefert der Webserver weiter aus.
-
-**Schalter zurück:** `"legacyFormats": true` in `media.settings.json` oder
-`define('MEDIA_LEGACY_FORMATS', true)`. Dann werden benannte Formate wieder
-vom alten Renderer gemacht, mit ihren alten Crops, und der alte Editor ist
-erreichbar. Es wird in keiner Richtung etwas umgerechnet.
+Seit 2026-11-19 gibt es **keinen Schalter zurück** zum alten Renderer mehr
+(`Variants::live()`, `legacyFormats`, `MEDIA_LEGACY_FORMATS` entfallen), den
+alten Editor im Datei-Editor nicht mehr, und alte Adressen
+(`var/formats/<format>/…`) werden nicht mehr auf die neuen umgeleitet: eine
+vorhandene alte Datei liefert der Webserver, eine fehlende macht noch der
+alte Teil von `media.php`. Das Aufräumen des alten Renderers steht unter
+„Offen".
 
 ## Im Browser
 
@@ -357,7 +373,7 @@ zählt als nächste Vierteldrehung). `clipped` bleibt leer.
 | `Media\Ratio`, `CropBox` | Werte: Ratio; Crop als Ratio + Ausrichtung + Scale + Basis |
 | `Media\CropResolver` | Ausschnitt einer Ratio aus Hand-Crops und POIs |
 | `Media\MasterGeometry` | Original ↔ Master, mit Spiegeln und beliebigem Winkel |
-| `Media\Variants` | deklarierte Ratios und Sizes, Dateinamen, Aliasse, Schalter |
+| `Media\Variants` | deklarierte Ratios und Sizes (aus config.json), Dateinamen, Aliasse |
 | `Media\VariantRenderer` | Master, Ausschnitt, Skalieren, Schreiben (Imagick) |
 | `Media\VariantServer` | Anfrage einer fehlenden Datei, Platzgrenze, Vorschau, Umleitung |
 | `Media\CropEdits` | was der Editor speichert und erfährt |
@@ -398,8 +414,14 @@ node tests/media-crop-editor.mjs        Bedienlogik des Editors ohne Browser
   Format nicht erst breiter, kostet bei kleinen Winkeln 3–7 % Fläche).
 - **Aufräumen:** alter Renderer (`mediaImage`, `mediaEditor`,
   `imageEditor.js`), Alias-Ordner und Formatordner, `var/adjust/look.json`,
-  die alten Crop-Zeilen und Spalten, Live-Area — erst, wenn der Schalter
-  zurück nicht mehr gebraucht wird. Dann auch 301 statt 302.
+  die alten Crop-Zeilen und Spalten, Live-Area, der alte Teil von
+  `media.php` — der Schalter zurück ist seit 2026-11-19 weg, das Aufräumen
+  steht an. Ebenso totes CSS/JS der früheren Media Settings und des alten
+  Datei-Editors (GUI, Lars: `.cursor/team/2026-11-19-media-settings-gui.md`).
+- **Formatnamen aus settings.php** (systopic.net, beautiful-technology.de,
+  expo, smp, galerie …: `mediaFormats::add()`, `$media_groups`) gelten weiter;
+  `--import-settings` liest nur die JSON-Datei. Umzug nach config.json von
+  Hand oder mit dem Umstellen der Templates auf `getCrop()`.
 - **Templates** von `setFormat()` auf `getCrop()` umstellen.
 - **Zuschneiden direkt in der Seite** (`runImageEditor`, inline): erkennt die
   neuen Adressen nicht und tut nichts.

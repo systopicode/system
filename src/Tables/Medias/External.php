@@ -19,7 +19,11 @@ final class External
     /** @return array<string, string> value => label */
     public static function types(): array
     {
-        $raw = defined('EXTERNAL_MEDIAS') && is_array(EXTERNAL_MEDIAS) ? EXTERNAL_MEDIAS : ['YouTube', 'Vimeo'];
+        // packages.system.media.external; one name typed alone is a string
+        $raw = defined('EXTERNAL_MEDIAS') ? (array) EXTERNAL_MEDIAS : [];
+        if ($raw === []) {
+            $raw = ['YouTube', 'Vimeo'];
+        }
         $out = [];
         foreach ($raw as $label) {
             $label = trim((string) $label);

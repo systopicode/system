@@ -66,13 +66,11 @@ class Panel extends CmsPanel
 				'spanindex'          => 0,
 				'backupFiles'        => false,
 				'backupPageSettings' => true,
-				'backupMediaSettings' => true,
 				'spanbasename'       => '',
 				'restoreName'        => '',
 				'restoreDatabase'    => true,
 				'restoreMedia'       => false,
 				'restorePageSettings' => false,
-				'restoreMediaSettings' => false,
 				'restoreNotice'      => '',
 				'restoreMediaFolder' => false,
 				'date'               => '',
@@ -88,13 +86,15 @@ class Panel extends CmsPanel
 		'database' => 'Database',
 		'media' => 'Media',
 		'pageSettings' => 'Global Settings',
-		'mediaSettings' => 'Media Settings',
 	];
 
-	/** File settings, named like their panels. Template settings stay in the database. */
+	/**
+	 * File settings, named like their panels. Template settings stay in the
+	 * database. Media Settings are gone (config.json); their file in an older
+	 * archive is not restored.
+	 */
 	public const SETTING_LABELS = [
 		'page' => 'Global Settings',
-		'media' => 'Media Settings',
 	];
 
 	public static function settingKey(string $which, bool $restore): string
@@ -124,10 +124,10 @@ class Panel extends CmsPanel
 		$patch = new \stdClass();
 		$superuser = \Systopic\System\Auth\Session::isSuperuser();
 		foreach ([
-			'backupNotes', 'backupFiles', 'backupPageSettings', 'backupMediaSettings',
-			'restoreDatabase', 'restoreMedia', 'restorePageSettings', 'restoreMediaSettings',
+			'backupNotes', 'backupFiles', 'backupPageSettings',
+			'restoreDatabase', 'restoreMedia', 'restorePageSettings',
 		] as $key) {
-			if (!$superuser && in_array($key, ['restorePageSettings', 'restoreMediaSettings'], true)) {
+			if (!$superuser && $key === 'restorePageSettings') {
 				continue;
 			}
 			if (property_exists($form, $key)) {
@@ -175,7 +175,7 @@ class Panel extends CmsPanel
 	}
 
 	/**
-	 * Page and media settings files. JSON lives in config/; an older project
+	 * Global Settings files. JSON lives in config/; an older project
 	 * still has the PHP files next to settings.php.
 	 *
 	 * @return array<string, string> archive path => source path
@@ -236,8 +236,7 @@ class Panel extends CmsPanel
 			'extractMysqldump' => self::chosen($this->state, 'restoreDatabase', true),
 			'extractMediaDir' => self::chosen($this->state, 'restoreMedia', false),
 			'extractSettings' => \Systopic\System\Auth\Session::isSuperuser()
-				&& (self::chosen($this->state, 'restorePageSettings', false)
-					|| self::chosen($this->state, 'restoreMediaSettings', false)),
+				&& self::chosen($this->state, 'restorePageSettings', false),
 			// an older backup may hold config/: it never goes back, see .cursor/docs/backup-config.md
 			'extractEnvironment' => false,
 			default => true,

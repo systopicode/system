@@ -103,7 +103,6 @@ Host) oder `--adopt=STAGING`, siehe [setup.md](setup.md), „Skripte aus `bin/`�
 - Rechte je Wert (`x-role`), damit ein cmsAdmin Inhaltswerte, aber nicht Datenbank,
   Debug und Mail sieht. Bewusst später.
 - Sortierbare Listen und Flaggen der Sprachen im Formular (bisher nur Einträge einer Map).
-- Media Settings: kommt etwas Neues, bis dahin unangetastet.
 - Die alten Instanz-Dateien löschen, wenn alle Maschinen und Stages `--adopt` hinter sich
   haben. RC liest sie noch.
 - Klassennamen `EnvironmentForm`/`EnvironmentFile` passen nicht mehr, umbenennen ohne
@@ -405,7 +404,8 @@ Regeln:
 - **Alle Secrets liegen in `config.local.json`.** Ein Secret mit `x-project` lehnt der
   Test ab.
 
-`global.settings.json`, `media.settings.json` und `controlmap.json` bleiben, wie sie sind.
+`global.settings.json` und `controlmap.json` bleiben, wie sie sind. `media.settings.json` ist
+aufgelöst (2026-11-19), siehe unten.
 
 ## Definitionsformat
 
@@ -459,8 +459,20 @@ noch nicht hat, sind die Seiten leer. `bin/config.php --import-settings` übertr
 global.settings.json oder die `define()` einer settings.php (auch mehrzeilige
 Literal-Arrays) nach config.json und nimmt sie dort heraus. Was übrig bleibt (freie
 Konstanten des Projekts in settings.php), zeigt das Panel Legacy Settings weiter. Es
-erscheint nur, wenn die Datei noch Einstellungen enthält, die keinem Paket zugeordnet sind. Media Settings bleiben, wie sie sind. Noch offen:
+erscheint nur, wenn die Datei noch Einstellungen enthält, die keinem Paket zugeordnet sind. Noch offen:
 sortierbare Listen und die Flaggen der Sprachen im Formular.
+
+**Media Settings sind aufgelöst** (2026-11-19), mit ihrem Panel. `--import-settings`
+nimmt `config/media.settings.json` als Ganzes und löscht sie:
+
+| Paket | Block | Werte |
+|---|---|---|
+| system | Media | `ratios`, `sizes` (die Bilder, `Media\Variants`), `aliases` (Formatnamen der Templates, früher `formats`), `videoFormats` (`VIDEO_FORMATS`), `external` (`EXTERNAL_MEDIAS`) |
+| cms | Media | `groups` (Media-Gruppen: Label, Dateitypen, Templates) |
+
+`images` (JPEG_QUALITY …) und `legacyFormats` liest nichts mehr. Eine settings.php mit
+`mediaFormats::add()` oder `$media_groups` gilt weiter; das Skript liest nur die JSON-Datei.
+Siehe [media-crops.md](media-crops.md), „Settings".
 
 Eine Ansicht: Jeder Wert wird in die Datei geschrieben, der er gehört
 (`EnvironmentFile::target()`): ein Wert des Projekts nach config.json, einer der

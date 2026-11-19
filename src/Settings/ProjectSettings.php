@@ -5,9 +5,13 @@ declare(strict_types=1);
 namespace Systopic\System\Settings;
 
 /**
- * Loads config/global.settings.json and config/media.settings.json into the
- * same constants and globals settings.php used to define. A name that is not
- * on the list below is ignored, so a key in the file cannot define DB_PASS.
+ * Loads config/global.settings.json into the same constants settings.php
+ * used to define. A name that is not on the list below is ignored, so a key
+ * in the file cannot define DB_PASS.
+ *
+ * Media Settings (config/media.settings.json) are gone: ratios, sizes and
+ * format names are `packages.system.media`, the media groups
+ * `packages.cms.media` in config.json (bin/config.php --import-settings).
  */
 final class ProjectSettings
 {
@@ -35,11 +39,6 @@ final class ProjectSettings
         'META_PAGE_TOPIC',
         'META_ROBOTS',
         'DEFAULT_LANG',
-        'JPEG_QUALITY',
-        'BLUR_LEVEL',
-        'USED_FILTER',
-        'BACKGROUND_JPG',
-        'BACKGROUND_COLOR',
     ];
 
     public static function scalarAllowed(string $name): bool
@@ -58,21 +57,12 @@ final class ProjectSettings
             return false;
         }
         $page = ProjectFile::existingJson('page');
-        $media = ProjectFile::existingJson('media');
-        if ($page === null && $media === null) {
+        if ($page === null) {
             return false;
         }
-        if ($page !== null) {
-            $data = self::read($page);
-            if ($data !== null) {
-                self::apply('page', $data);
-            }
-        }
-        if ($media !== null) {
-            $data = self::read($media);
-            if ($data !== null) {
-                self::apply('media', $data);
-            }
+        $data = self::read($page);
+        if ($data !== null) {
+            self::apply('page', $data);
         }
         return true;
     }
@@ -82,10 +72,6 @@ final class ProjectSettings
     {
         if ($which === 'page') {
             self::applyPage($data);
-            return;
-        }
-        if ($which === 'media') {
-            self::applyMedia($data);
         }
     }
 
@@ -115,72 +101,6 @@ final class ProjectSettings
             $clean[(string) $code] = $row;
         }
         define('LANGUAGES', $clean);
-    }
-
-    /** @param array<string, mixed> $data */
-    private static function applyMedia(array $data): void
-    {
-        if (is_array($data['images'] ?? null)) {
-            foreach ($data['images'] as $name => $value) {
-                if (!is_string($name) || is_array($value)) {
-                    continue;
-                }
-                self::defineScalar($name, $value);
-            }
-        }
-        if (is_array($data['formats'] ?? null) && class_exists('mediaFormats')) {
-            $formats = [];
-            foreach ($data['formats'] as $name => $row) {
-                if (is_string($name) && is_array($row)) {
-                    $formats[$name] = $row;
-                }
-            }
-            if ($formats !== []) {
-                \mediaFormats::add($formats);
-            }
-        }
-        // Aspect ratios and sizes every picture is made in; a missing key keeps the defaults.
-        if (is_array($data['ratios'] ?? null) || is_array($data['sizes'] ?? null)) {
-            \Systopic\System\Media\Variants::configure(
-                is_array($data['ratios'] ?? null) ? $data['ratios'] : null,
-                is_array($data['sizes'] ?? null) ? $data['sizes'] : null,
-            );
-        }
-        // The way back to the old rendering of named formats, while it still exists (Media\Variants::live()).
-        if (array_key_exists('legacyFormats', $data)) {
-            \Systopic\System\Media\Variants::useLegacy((bool) $data['legacyFormats']);
-        }
-        global $image_formats, $media_groups;
-        if (class_exists('mediaFormats')) {
-            $image_formats = \mediaFormats::get();
-        }
-        if (is_array($data['groups'] ?? null)) {
-            $groups = [];
-            foreach ($data['groups'] as $name => $row) {
-                if ((is_string($name) || is_int($name)) && is_array($row)) {
-                    $groups[(string) $name] = $row;
-                }
-            }
-            $media_groups = $groups;
-        }
-        if (is_array($data['videoFormats'] ?? null) && !defined('VIDEO_FORMATS')) {
-            $formats = [];
-            foreach ($data['videoFormats'] as $name => $row) {
-                if (is_string($name) && is_array($row)) {
-                    $formats[$name] = $row;
-                }
-            }
-            define('VIDEO_FORMATS', $formats);
-        }
-        if (is_array($data['external'] ?? null) && !defined('EXTERNAL_MEDIAS')) {
-            $names = [];
-            foreach ($data['external'] as $name) {
-                if (is_string($name) && $name !== '') {
-                    $names[] = $name;
-                }
-            }
-            define('EXTERNAL_MEDIAS', $names);
-        }
     }
 
     private static function defineScalar(string $name, mixed $value): void

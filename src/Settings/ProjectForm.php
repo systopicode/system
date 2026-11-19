@@ -7,13 +7,11 @@ namespace Systopic\System\Settings;
 use Systopic\System\Panels\PanelNode;
 
 /**
- * Global Settings and Media Settings: one table per group in the file.
+ * Global Settings: one table per group in the file. (Media Settings are gone,
+ * see ProjectSettings.)
  */
 final class ProjectForm
 {
-    /** Record fields that name page templates (`a;b`, empty for all) - ticked, not typed. */
-    private const TEMPLATE_FIELDS = ['var:media_groups' => 'templates'];
-
     /**
      * One settings file as tables. Global Settings is shared by packages: a
      * panel of a package shows its keys (`$show`, Website of the cms), Global
@@ -25,12 +23,12 @@ final class ProjectForm
     public static function render(string $which, array $show = [], array $hide = [], string $title = ''): void
     {
         $e = static fn($value): string => htmlspecialchars((string) $value, ENT_QUOTES);
-        $title = $title !== '' ? $title : ($which === 'media' ? 'Media Settings' : 'Global Settings');
+        $title = $title !== '' ? $title : 'Global Settings';
         $path = ProjectFile::path($which);
         $filename = $path !== null ? basename($path) : (ProjectFile::FILES[$which] ?? '');
         echo '<div class="projectFiles">';
         echo '<h1>' . $e($title) . '</h1>';
-        echo '<p class="tagsHint">' . ($which === 'media' ? 'Image and video formats control generated media. Groups define where files can be used and which uploads are allowed.' : ($show !== [] ? 'Defaults of the website: who may see it, its meta data, its languages. Page-specific settings can provide their own values.' : 'Shared defaults for this project. Page-specific settings can provide their own values.')) . '</p>';
+        echo '<p class="tagsHint">' . ($show !== [] ? 'Defaults of the website: who may see it, its meta data, its languages. Page-specific settings can provide their own values.' : 'Shared defaults for this project. Page-specific settings can provide their own values.') . '</p>';
         echo \message::flush();
         if ($path === null) {
             echo '<p>Missing ' . $e($filename) . '.</p>';
@@ -165,10 +163,7 @@ final class ProjectForm
             'renameItem' => ProjectFile::renameItem($path, $id, $key, $text),
             'addItem' => ProjectFile::addItem($path, $id),
             'removeItem' => ProjectFile::removeItem($path, $id, $key),
-            'setImageSizing' => ProjectJson::setImageSizing($path, $key, $text),
-            'setImageVisibility' => ProjectFile::setField($path, 'call:mediaFormats::add', $key, 'cms_display', in_array($text, ['1','true','on'], true) ? 'image' : 'none'),
             'setField' => ProjectFile::setField($path, $id, $key, (string) \http::dataset('field'), $text),
-            'toggleTemplate' => self::toggleTemplate($path, $id, $key),
             'moveBefore' => self::relocate($path, false),
             'moveAfter' => self::relocate($path, true),
             default => null,
@@ -184,62 +179,12 @@ final class ProjectForm
             });
             return;
         }
-        // Generated files only; retain original files, saved crops and adjustments.
-        if ($which === 'media' && ($panel->action === 'setImageSizing' || ($panel->action === 'setField' && $id === 'call:mediaFormats::add' && in_array((string) \http::dataset('field'), ['aspect_ratio','megapixels','width','height'], true)))) {
-            \Systopic\System\Tables\Medias\Files::clearFormat($key);
-        }
         \message::confirm('Saved.');
         // Reordering moves the row in the browser. A redraw would drop the
         // scroll position and whatever had focus.
-        if (in_array($panel->action, ['renameItem', 'addItem', 'removeItem', 'setField', 'setImageSizing'], true)) {
+        if (in_array($panel->action, ['renameItem', 'addItem', 'removeItem', 'setField'], true)) {
             $panel->updateView();
         }
-    }
-
-    private static function toggleTemplate(string $path, string $id, string $key): ?bool
-    {
-        $field = self::TEMPLATE_FIELDS[$id] ?? '';
-        $template = trim((string) \http::dataset('template'));
-        if ($field === '' || $template === '' || str_contains($template, ';')) {
-            return false;
-        }
-        $current = self::templatesOf($path, $id, $key, $field);
-        $current = array_values(array_diff($current, [$template]));
-        if (in_array(self::posted(), ['1', 'true', 'on'], true)) {
-            $current[] = $template;
-        }
-        return ProjectFile::setField($path, $id, $key, $field, implode(';', $current)) ?? true;
-    }
-
-    /** @return list<string> */
-    private static function templatesOf(string $path, string $id, string $key, string $field): array
-    {
-        foreach (ProjectFile::groups($path) as $group) {
-            foreach ($group->id === $id ? $group->items : [] as $item) {
-                foreach ($item->key === $key ? $item->fields : [] as $leaf) {
-                    if (ProjectFile::fieldName($group, $item, $leaf) === $field) {
-                        return array_values(array_filter(array_map('trim', explode(';', $leaf->text))));
-                    }
-                }
-            }
-        }
-        return [];
-    }
-
-    /** @param list<string> $picked */
-    private static function templatePicker(string $data, array $picked): void
-    {
-        $e = static fn($value): string => htmlspecialchars((string) $value, ENT_QUOTES);
-        $templates = class_exists('template') ? (array) \template::getAll() : [];
-        uksort($templates, 'strnatcmp');
-        $some = $picked !== [] ? ' data-some' : '';
-        echo '<details class="projectTemplates"' . $some . '><summary title="Choose templates"><span class="all">All templates</span><span class="some">Only the ticked</span><i class="cmsIcon cmsIcon-pen"></i></summary><div class="projectTemplatesMenu">';
-        foreach ($templates as $name => $template) {
-            $checked = in_array((string) $name, $picked, true) ? ' checked' : '';
-            $shown = trim(str_replace(['_', '-'], ' ', (string) ($template->name ?? $name)));
-            echo '<label class="projectSwitch"><input type="checkbox" class="switch" data-on_change="toggleTemplate"' . $data . ' data-template="' . $e($name) . '" name="value"' . $checked . '><div><div></div></div><span>' . $e($shown) . '</span></label>';
-        }
-        echo '<small>No tick: on every template.</small></div></details>';
     }
 
     private static function relocate(string $path, bool $after): ?bool
@@ -342,15 +287,6 @@ final class ProjectForm
     {
         $e = static fn($value): string => htmlspecialchars((string) $value, ENT_QUOTES);
         $columns = ProjectFile::columns($group);
-        $images = $group->id === 'call:mediaFormats::add';
-        $mediaGroups = $group->id === 'var:media_groups';
-        if ($group->id === 'define:VIDEO_FORMATS') $columns = ['label', ...array_diff($columns, ['label'])];
-        if ($images) $columns = ['label', 'size', ...array_diff($columns, ['label','width','height','megapixels','aspect_ratio','autocrop','autocrop_limit','cms_display']), 'show_in_editor'];
-        if ($mediaGroups) $columns = array_values(array_unique([...array_diff($columns,['public']), 'file_extension', 'templates']));
-        $templateField = self::TEMPLATE_FIELDS[$group->id] ?? null;
-        if ($templateField !== null) {
-            $columns = [...array_diff($columns, [$templateField]), $templateField];
-        }
         $languages = $group->id === 'define:LANGUAGES';
         if ($languages) $columns = array_values(array_diff($columns, ['code']));
         if ($frame) {
@@ -369,7 +305,7 @@ final class ProjectForm
         }
         foreach ($group->items as $item) {
             $data = self::data($which, $group->id, $item->key);
-            echo '<tr' . ($images ? ' class="imageFormatRow"' : '') . '><td class="pageSettingDrag">';
+            echo '<tr><td class="pageSettingDrag">';
             self::grip($data);
             echo '</td>';
             if ($languages) {
@@ -379,48 +315,11 @@ final class ProjectForm
                 echo '</td>';
             }
             echo '<td>';
-            if ($images) echo '<label class="formatField"><span aria-hidden="true">&nbsp;</span>';
             echo '<input aria-label="' . $e(($languages ? 'Language' : 'Key') . ': ' . $item->key) . '" data-key-impact="Renaming a technical key can break template code, stored references and integrations. References are not updated automatically. Rename this key?" data-setting-key pattern="[A-Za-z0-9_][A-Za-z0-9_\\-]*" required title="Use letters, digits, underscores or hyphens; no spaces." data-on_blur="renameItem"' . $data . ' name="value" value="' . $e($item->key) . '" autocomplete="off">';
-            if ($images) echo '</label>';
             echo '</td>';
             foreach ($columns as $column) {
                 $on = $languages && $column === 'activated';
                 echo '<td' . ($on ? ' class="langOn"' : '') . '>';
-                if ($images && $column === 'size') {
-                    self::imageSize($which, $group, $item, $data);
-                    echo '</td>'; continue;
-                }
-                if ($images && $column === 'show_in_editor') {
-                    $values = self::valuesOf($group,$item);
-                    echo '<div class="formatField"><span aria-hidden="true">&nbsp;</span><label class="projectSwitch"><input type="checkbox" class="switch" aria-label="Show in editor" data-on_change="setImageVisibility"' . $data . ' name="value"' . (($values['cms_display'] ?? '') === 'none' ? '' : ' checked') . '><div><div></div></div></label></div></td>';
-                    continue;
-                }
-                if ($mediaGroups && $column === 'file_extension') {
-                    $values = self::valuesOf($group,$item);
-                    $picked = \Systopic\System\Media\GroupPolicy::parse((string) ($values['file_extension'] ?? ''));
-                    $rawTypes = trim((string) ($values['file_extension'] ?? ''));
-                    $label = $rawTypes === '' || $rawTypes === '*' ? 'All supported types' : ($picked === [] ? 'No supported types' : count($picked) . (count($picked) === 1 ? ' file type' : ' file types'));
-                    echo '<a class="ajax button transparent" href="' . $e(rtrim((string) \http::$root, '/') . '/admin/settings/mediasettings/types/') . '?group=' . rawurlencode($item->key) . '">' . $e($label) . '<i class="cmsIcon cmsIcon-pen"></i></a></td>';
-                    continue;
-                }
-                if ($mediaGroups && $column === $templateField) {
-                    $values = self::valuesOf($group, $item);
-                    $picked = array_filter(array_map('trim', explode(';', (string) ($values['templates'] ?? ''))));
-                    $label = $picked === [] ? 'All templates' : ($picked === ['__none__'] ? 'No templates' : count($picked) . (count($picked) === 1 ? ' template' : ' templates'));
-                    echo '<a class="ajax button transparent" href="' . $e(rtrim((string) \http::$root, '/') . '/admin/settings/mediasettings/types/') . '?kind=templates&amp;group=' . rawurlencode($item->key) . '">' . $e($label) . '<i class="cmsIcon cmsIcon-pen"></i></a></td>';
-                    continue;
-                }
-                if ($column === $templateField) {
-                    $picked = [];
-                    foreach ($item->fields as $field) {
-                        if (ProjectFile::fieldName($group, $item, $field) === $column) {
-                            $picked = array_values(array_filter(array_map('trim', explode(';', $field->text))));
-                        }
-                    }
-                    self::templatePicker($data, $picked);
-                    echo '</td>';
-                    continue;
-                }
                 $leaf = null;
                 foreach ($item->fields as $field) {
                     if (ProjectFile::fieldName($group, $item, $field) === $column) {
@@ -428,20 +327,18 @@ final class ProjectForm
                         break;
                     }
                 }
-                if ($images && $column === 'label') echo '<label class="formatField"><span aria-hidden="true">&nbsp;</span>';
                 if ($leaf !== null) {
                     self::control($which, $leaf, 'save', ($languages && $column === 'label' ? 'Name' : ($on ? 'On' : self::human($column))) . ': ' . $item->key);
                 } else {
                     $kind = self::columnKind($group, $column);
                     $blank = new Leaf($group->id, '', $column, $kind, '', 0, 0);
                     $fieldData = $data . ' aria-label="' . $e(self::human($column) . ': ' . $item->key) . '"';
-                    if (self::isFlag($blank) && $group->id !== 'define:VIDEO_FORMATS') {
+                    if (self::isFlag($blank)) {
                         echo '<label class="projectSwitch"><input type="checkbox" class="switch" data-on_change="setField"' . $fieldData . ' data-field="' . $e($column) . '" name="value"><div><div></div></div></label>';
                     } else {
                         echo '<input data-on_blur="setField"' . $fieldData . ' data-field="' . $e($column) . '" name="value" value="" autocomplete="off">';
                     }
                 }
-                if ($images && $column === 'label') echo '</label>';
                 echo '</td>';
             }
             echo '<td class="projectRemove' . ($languages ? ' languageActions' : '') . '">';
@@ -465,19 +362,6 @@ final class ProjectForm
         $values=[];
         foreach ($item->fields as $leaf) $values[ProjectFile::fieldName($group,$item,$leaf)]=$leaf->text;
         return $values;
-    }
-
-    private static function imageSize(string $which, Group $group, Item $item, string $data): void
-    {
-        $e=static fn($v)=>htmlspecialchars((string)$v,ENT_QUOTES);
-        $values=self::valuesOf($group,$item);
-        $mp=(float)($values['megapixels']??0)>0;
-        echo '<div class="formatSizing"><label><span aria-hidden="true">&nbsp;</span><select name="value" data-on_change="setImageSizing"' . $data . ' aria-label="Sizing mode"><option value="megapixels"' . ($mp?' selected':'') . '>Megapixels</option><option value="pixels"' . (!$mp?' selected':'') . '>Pixel dimensions</option></select></label>';
-        foreach ($mp ? ['megapixels'=>'MP'] : ['width'=>'Width','height'=>'Height'] as $field=>$label) {
-            echo '<label><span>' . $label . '</span><input type="number" min="' . ($mp?'0.01':'0') . '" step="' . ($mp?'any':'1') . '" name="value" data-on_blur="setField"' . $data . ' data-field="' . $field . '" value="' . $e($values[$field]??'') . '" aria-label="' . $label . '"></label>';
-        }
-        if ($mp) echo '<label><span>Aspect ratio</span><input type="text" name="value" data-on_blur="setField"' . $data . ' data-field="aspect_ratio" value="' . $e($values['aspect_ratio']??'') . '" placeholder="Free · e.g. 16:9" pattern="[0-9]+([.][0-9]+)?((:|/)[0-9]+([.][0-9]+)?)?" title="Positive width:height, e.g. 16:9. Leave empty for a free crop." aria-label="Aspect ratio"></label>';
-        echo '</div>';
     }
 
     private static function listTable(string $which, Group $group): void
@@ -511,7 +395,7 @@ final class ProjectForm
             echo '<input class="systemLegalUrl" type="text" inputmode="url" spellcheck="false" pattern="' . $e($pattern) . '" title="Use an HTTP(S) URL, a path starting with /, or leave empty." data-on_blur="' . $e($action) . '"' . $attrs . ' value="' . $e($leaf->text) . '">';
             return;
         }
-        if (self::isFlag($leaf) && !str_starts_with($leaf->id, 'define:VIDEO_FORMATS')) {
+        if (self::isFlag($leaf)) {
             $checked = self::isOn($leaf) ? ' checked' : '';
             echo '<label class="projectSwitch"><input type="checkbox" class="switch" data-on_change="' . $e($action) . '"' . $attrs . $checked . '><div><div></div></div></label>';
             return;
@@ -588,7 +472,7 @@ final class ProjectForm
     public static function searchHits(\Systopic\System\Sys\Search $search, string $which, string $href, array $show = [], array $hide = [], string $title = ''): void
     {
         $path = ProjectFile::path($which);
-        $title = $title !== '' ? $title : ($which === 'media' ? 'Media Settings' : 'Global Settings');
+        $title = $title !== '' ? $title : 'Global Settings';
         foreach ($path === null ? [] : ProjectFile::groups($path) as $group) {
             if (!self::shown($group, $show, $hide)) {
                 continue;

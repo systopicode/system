@@ -19,7 +19,7 @@ switch ($this->action) {
 	case 'updateRestoreSelection':
 		$values = http::put()->values;
 		if (!\Systopic\System\Auth\Session::isSuperuser()) {
-			foreach (['restorePageSettings', 'restoreMediaSettings'] as $key) {
+			foreach (['restorePageSettings'] as $key) {
 				if (is_object($values)) {
 					unset($values->$key);
 				} elseif (is_array($values)) {

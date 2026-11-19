@@ -404,15 +404,6 @@ header > .ceTabs{
 	cursor: grabbing;
 }
 
-/* the editor of the named formats, until it goes */
-.cropEditor .ceOld{
-	position: absolute;
-	right: 0.6rem;
-	bottom: 0.5rem;
-	z-index: 3;
-	font-size: 0.8rem;
-}
-
 /* ---- points of interest: marks on the picture; only with their tool they can be touched */
 .cropEditor .cePois{
 	position: absolute;

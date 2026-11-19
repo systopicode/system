@@ -37,6 +37,52 @@
 				"dpo": { "title": "Data protection officer", "description": "If one is appointed: shown on the privacy page of the sign-in.", "type": "string", "x-multiline": true, "x-constant": "CMS_DPO_DETAILS" }
 			}
 		},
+		"media": {
+			"title": "Media",
+			"description": "How the pictures of the project are made: in which aspect ratios and sizes, and what the format names of the templates stand for.",
+			"type": "object",
+			"x-project": true,
+			"properties": {
+				"ratios": { "title": "Aspect ratios", "description": "Every picture is made in these, wide to narrow, separated by commas. The crop editor shows them on its slider; the widest and the narrowest are automatic (centred) unless a crop is set by hand. An address with another ratio is not found. Pictures made already stay as they are until their medium is saved again.", "type": ["string", "array"], "items": { "type": "string" }, "default": ["2:1", "191:100", "16:9", "3:2", "4:3", "1:1", "3:4", "2:3", "9:16"] },
+				"sizes": { "title": "Sizes", "description": "Megapixels every picture is made in, separated by commas. The smallest is the preview, made with the upload.", "type": ["string", "array"], "items": { "type": "number" }, "default": [0.5, 1, 2, 5, 10] },
+				"aliases": {
+					"title": "Format names",
+					"description": "What a template's setFormat('<name>') stands for, until the templates ask for a ratio and a size themselves (getCrop()). Megapixels with an aspect ratio, or width and height in pixels: the nearest declared ratio and size is taken. Without a ratio: the master. The names of the system (original, portrait, shareImage …) need no entry.",
+					"type": "object",
+					"x-display": "table",
+					"propertyNames": { "description": "The name the templates use: fullWidth, background …", "pattern": "^[a-z][a-zA-Z0-9]*$" },
+					"additionalProperties": {
+						"title": "Format name",
+						"type": "object",
+						"properties": {
+							"label": { "title": "Label", "description": "In the format menu of the page editor. Empty: the name.", "type": "string" },
+							"aspect_ratio": { "title": "Aspect ratio", "description": "16:9, 1:1 … Empty: the master's.", "type": "string" },
+							"megapixels": { "title": "Megapixels", "type": "number" },
+							"width": { "title": "Width", "description": "Pixels, instead of megapixels.", "type": "integer" },
+							"height": { "title": "Height", "description": "Pixels, instead of megapixels.", "type": "integer" },
+							"cms_display": { "title": "In the page editor", "description": "image: offered in the format menu of the page editor; none: only for templates.", "type": "string", "enum": ["image", "none"], "default": "image" }
+						}
+					}
+				},
+				"videoFormats": {
+					"title": "Video formats",
+					"description": "The formats a video can be made in.",
+					"type": "object",
+					"x-display": "table",
+					"x-constant": "VIDEO_FORMATS",
+					"propertyNames": { "description": "The name of the format.", "pattern": "^[a-z][a-zA-Z0-9]*$" },
+					"additionalProperties": {
+						"title": "Video format",
+						"type": "object",
+						"properties": {
+							"label": { "title": "Label", "type": "string", "x-entry-name": true },
+							"max_width": { "title": "Largest width", "description": "Pixels.", "type": "integer" }
+						}
+					}
+				},
+				"external": { "title": "External providers", "description": "Where an external medium may come from, separated by commas: YouTube, Vimeo … Empty: YouTube and Vimeo.", "type": ["string", "array"], "items": { "type": "string" }, "x-constant": "EXTERNAL_MEDIAS" }
+			}
+		},
 		"debug": {
 			"title": "Debug",
 			"description": "What a developer sees while working on the installation. On by default on DEV, off everywhere else.",

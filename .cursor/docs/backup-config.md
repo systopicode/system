@@ -5,9 +5,10 @@ Config-Werte wieder mitreisen, ist noch offen.
 
 ## Stand
 
-Ein Backup enthält die Datenbank, auf Wunsch die Medien sowie Global Settings
-und Media Settings. `config/*.config.json` und `config/config.local.json` gehören
-nicht mehr dazu.
+Ein Backup enthält die Datenbank, auf Wunsch die Medien sowie Global Settings.
+`config/*.config.json` und `config/config.local.json` gehören nicht mehr dazu.
+Media Settings gibt es seit 2026-11-19 nicht mehr (in config.json); ihre Datei
+in einem älteren Archiv wird nicht zurückgespielt.
 
 - **Anlegen:** Der Schalter „Environment“ und der Schritt `addEnvironment` sind weg.
 - **Zurückspielen:** Ein älteres Archiv mit `config/` bleibt gültig (`Preflight`
@@ -37,7 +38,7 @@ sich darin, ob sie mitreisen dürfen:
 
 | Element | Liegt in | Hängt an | Beim Zurückspielen |
 |---|---|---|---|
-| Medienformate, Mediengruppen | `media.settings.json` | Medien in der Datenbank, Dateien in `var/formats` | reist mit, heute schon abwählbar |
+| Ratios, Sizes, Formatnamen, Mediengruppen | `config.json` (`packages.system.media`, `packages.cms.media`) | Medien in der Datenbank, Dateien in `var/formats` | reist nicht mit (Kandidat für `x-backup: content`) |
 | Sprachen | `global.settings.json` (`languages`) | Inhalte je Sprache | reist mit, heute schon abwählbar |
 | Sites | `cms_sites` (Datenbank) und `matches[].site` (Instanz) | Der Name hängt am Inhalt, die Adresse an der Stage | **nicht kopieren** |
 | `db`, `debug`, `matches` ohne `site`, Secrets | Instanz, local | nur an der Maschine | nie |
@@ -62,8 +63,8 @@ Das Formular zeigt `content` mit dem Datenbank-Symbol. Gesetzt ist es heute
 nirgends.
 
 Im Archiv lägen statt ganzer Dateien nur die Werte mit `content`. Das setzt die
-Definitionsdateien aus dem Config-Umbau voraus. Bis dahin bleiben Global und
-Media Settings als ganze Dateien im Backup.
+Definitionsdateien aus dem Config-Umbau voraus. Bis dahin bleiben Global
+Settings als ganze Datei im Backup.
 
 ## Offen
 

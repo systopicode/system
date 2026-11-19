@@ -20,6 +20,7 @@ const KEYWORDS = [
 	'$schema', 'title', 'description', 'type', 'properties', 'required', 'items', 'enum', 'default', 'minimum', 'maximum',
 	'minLength', 'pattern', 'format', 'additionalProperties', 'propertyNames', 'not', 'anyOf', 'writeOnly',
 	'x-mandatory', 'x-stages', 'x-computed', 'x-optional', 'x-overridable', 'x-options', 'x-backup', 'x-tool', 'x-entry-name', 'x-project', 'x-icon', 'x-constant', 'x-setup',
+	'x-hint', 'x-multiline', 'x-display', 'x-orderable', 'x-flags',
 ];
 
 function check(string $label, bool $ok, string $detail = ''): void
@@ -69,7 +70,7 @@ function leaves(array $node, string $path = '', bool $project = false): array
 
 function typeOk(mixed $value, array $definition): bool
 {
-	$names = ['boolean' => 'is_bool', 'integer' => 'is_int', 'string' => 'is_string', 'array' => 'is_array', 'object' => 'is_array', 'null' => 'is_null'];
+	$names = ['boolean' => 'is_bool', 'integer' => 'is_int', 'number' => static fn($v) => is_int($v) || is_float($v), 'string' => 'is_string', 'array' => 'is_array', 'object' => 'is_array', 'null' => 'is_null'];
 	foreach ((array) ($definition['type'] ?? []) as $type) {
 		if ($names[$type]($value)) {
 			return true;

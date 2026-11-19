@@ -75,7 +75,7 @@ if (is_array($contents)) {
 						</li>
 					<?php } ?>
 				</ul>
-				<?php if ($superuser && (!empty($contents['pageSettings']) || !empty($contents['mediaSettings']))) { ?>
+				<?php if ($superuser && !empty($contents['pageSettings'])) { ?>
 					<p class="tagsHint">Settings are not selected by default. Including them can replace the current configuration.</p>
 				<?php } ?>
 			<?php } ?>

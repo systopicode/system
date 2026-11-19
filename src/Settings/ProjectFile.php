@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace Systopic\System\Settings;
 
 /**
- * Global Settings and Media Settings. The files are config/global.settings.json
- * and config/media.settings.json. A project that still has page.settings.json
- * or page.settings.php is read from that name, so older installations and
- * backups keep working.
+ * Global Settings: config/global.settings.json. A project that still has
+ * page.settings.json or page.settings.php is read from that name, so older
+ * installations and backups keep working. (Media Settings are gone: see
+ * ProjectSettings.)
  *
  * JSON is rewritten as data. The PHP files are still edited as literals: a
  * value goes back only as a quoted string, a number, a bool, or a list of
@@ -19,7 +19,6 @@ final class ProjectFile
     /** @var array<string, string> */
     public const FILES = [
         'page' => 'global.settings.json',
-        'media' => 'media.settings.json',
     ];
 
     /** @var array<string, list<string>> JSON names written before the current one */
@@ -30,7 +29,6 @@ final class ProjectFile
     /** @var array<string, string> the names a backup may still be carrying */
     public const LEGACY_FILES = [
         'page' => 'page.settings.php',
-        'media' => 'media.settings.php',
     ];
 
     /**
@@ -49,7 +47,7 @@ final class ProjectFile
         return self::legacyDirectory();
     }
 
-    /** Where global.settings.json and media.settings.json are written. */
+    /** Where global.settings.json is written. */
     public static function configDirectory(): ?string
     {
         $dir = rtrim(\fs::toNative((string) \fs::$projectRoot . 'config'), '\\/');

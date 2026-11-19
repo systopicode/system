@@ -27,7 +27,8 @@ use Systopic\System\Tables\Medias\Model as MediaRow;
  * crop is the one of the ratio, set in the image editor or computed. New
  * templates name the ratio: `getCrop('16:9')`.
  *
- * With `Variants::live()` off, the addresses are the legacy ones, byte for byte:
+ * The addresses of the old layout remain for the original, and for a medium
+ * nothing can be cut from (svg, pdf):
  *
  *   original   <root>var/original/<id path><filename>
  *   format     <root>var/formats/<format>/<id path><filename>.webp   (images)
@@ -223,8 +224,9 @@ final class Media
 
     /**
      * What the named format stands for: a ratio (null: the master) at a
-     * size (null: its own pixels). A name the settings do not know is the
-     * master at about a megapixel.
+     * size (null: its own pixels). A name the config
+     * (`packages.system.media.aliases`) does not know is the master at about
+     * a megapixel.
      *
      * \return array{ratio: ?\Systopic\System\Media\Ratio, megapixels: ?float}
      */
@@ -243,12 +245,12 @@ final class Media
 
     /**
      * The picture a named format is shown as - null where the legacy
-     * addresses apply: no format, the original, the old rendering switched
-     * back on, or a medium nothing can be cut from.
+     * addresses apply: no format, the original, or a medium nothing can be
+     * cut from.
      */
     private function variant(): ?Picture
     {
-        if (!$this->isDerived() || !\Systopic\System\Media\Variants::live()) {
+        if (!$this->isDerived()) {
             return null;
         }
         $picture = $this->getCrop($this->alias()['ratio']?->name);

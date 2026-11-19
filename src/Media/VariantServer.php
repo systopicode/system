@@ -98,39 +98,6 @@ final class VariantServer
     }
 
     /**
-     * An address of the old layout - `var/formats/<format>/<id path>/<file>` -
-     * sent on to the picture that named format stands for now. Links out in
-     * the world, and pages stored somewhere, keep working.
-     *
-     * 302, not 301: while the old rendering can still be switched back on, a
-     * browser must not remember the move for good.
-     *
-     * \return bool false: not such an address, or not to be sent on - the old renderer answers
-     */
-    public static function redirectLegacy(string $path): bool
-    {
-        if (!Variants::live() || !preg_match('~(?:^|/)var/formats/([A-Za-z0-9_-]+)/(\d{3})/(\d{2,3})/[^/]+$~D', explode('?', $path, 2)[0], $m)) {
-            return false;
-        }
-        $formats = class_exists('mediaFormats') ? \mediaFormats::get() : [];
-        // The working copy and the original of the old renderer are not pictures of a page.
-        if (in_array($m[1], ['alias', 'original'], true) || !is_array($formats[$m[1]] ?? null)) {
-            return false;
-        }
-        $set = MediaCrops::one(Scope::default(), (int) ($m[2] . $m[3]));
-        if ($set === null || !VariantRenderer::supports($set->media->mimetype)) {
-            return false;
-        }
-        $alias = Variants::alias($formats[$m[1]]);
-        $url = (new \Systopic\System\Tables\Medias\Picture($set, $alias['ratio']))->variantUrl(Variants::suffix($alias['ratio'], $alias['megapixels']));
-        while (ob_get_level() > 0) {
-            ob_end_clean();
-        }
-        header('Location: ' . $url, true, 302);
-        return true;
-    }
-
-    /**
      * Makes the master of a medium and its smallest size - the preview every
      * picture has from the start, shown wherever a variant is still to be
      * made. Called after an upload and after the master was edited.

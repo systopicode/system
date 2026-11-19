@@ -120,8 +120,9 @@ normal von Packagist.
 
 ## 4. Daten zwischen Stages (DEV → STAGING …)
 
-Datenbank, Global Settings (`config/global.settings.json`) und Media Settings
-(`config/media.settings.json`) wandern über das Backup-Panel im CMS
+Datenbank und Global Settings (`config/global.settings.json`) wandern über das
+Backup-Panel im CMS (Ratios, Sizes, Formatnamen und Media-Gruppen stehen in
+`config.json` und reisen mit Git und Sync)
 (`admin/backup`, `panels/admin/040_backup`). Mediendateien unter
 `public/var/original/` nur, wenn „Media files“ an ist. Die Liste zeigt unter
 Contents, was im Archiv liegt. Zurückspielen bietet dieselben Teile an, gelesen

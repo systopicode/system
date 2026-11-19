@@ -37,7 +37,6 @@ class Panel extends BackupPanel
 			// Settings rewrite the current configuration. They stay off until a
 			// superuser turns them on.
 			'restorePageSettings' => false,
-			'restoreMediaSettings' => false,
 		]);
 	}
 }

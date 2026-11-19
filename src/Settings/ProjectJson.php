@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Systopic\System\Settings;
 
 /**
- * global.settings.json and media.settings.json. The CMS still speaks in the
+ * global.settings.json. The CMS still speaks in the
  * same groups the PHP files produced (define:PUBLIC_PAGE_NAME, …). A write
  * rebuilds the JSON document. It never splices text into a file PHP will run.
  */
@@ -14,20 +14,10 @@ final class ProjectJson
     /** @var array<string, array{0: string, 1: ?string}> group id => [section, inner key] */
     private const GROUP = [
         'define:LANGUAGES' => ['languages', 'LANGUAGES'],
-        'call:mediaFormats::add' => ['formats', null],
-        'define:VIDEO_FORMATS' => ['videoFormats', null],
-        'var:media_groups' => ['groups', null],
-        'define:EXTERNAL_MEDIAS' => ['external', null],
-        'media:ratios' => ['ratios', null],
-        'media:sizes' => ['sizes', null],
     ];
 
     /** Groups that are a plain list of values, not records: group id => section. */
-    private const LISTS = [
-        'define:EXTERNAL_MEDIAS' => 'external',
-        'media:ratios' => 'ratios',
-        'media:sizes' => 'sizes',
-    ];
+    private const LISTS = [];
 
     /** @param array<string, mixed> $data */
     private function __construct(
@@ -69,13 +59,7 @@ final class ProjectJson
      */
     public static function documentFromGroups(string $which, array $groups): array
     {
-        if ($which === 'page') {
-            return self::pageDocument($groups);
-        }
-        if ($which === 'media') {
-            return self::mediaDocument($groups);
-        }
-        return [];
+        return $which === 'page' ? self::pageDocument($groups) : [];
     }
 
     /** @param array<string, mixed> $data */
@@ -168,43 +152,11 @@ final class ProjectJson
         return self::open($path)?->putField($id, $key, $field, $text);
     }
 
-    public static function setImageSizing(string $path, string $key, string $mode): bool
-    {
-        return \Systopic\System\Config\FileWriter::locked($path, static fn() => self::setImageSizingLocked($path, $key, $mode), false);
-    }
-
-    private static function setImageSizingLocked(string $path, string $key, string $mode): bool
-    {
-        $doc = self::open($path);
-        if ($doc === null || !in_array($mode, ['megapixels', 'pixels'], true) || !isset($doc->data['formats'][$key])) return false;
-        $row = $doc->data['formats'][$key];
-        if ($mode === 'megapixels') {
-            $row['megapixels'] = (float) ($row['megapixels'] ?? 0) > 0 ? $row['megapixels'] : 3;
-            unset($row['width'], $row['height']);
-        } else {
-            unset($row['megapixels'], $row['aspect_ratio']);
-            if ((int) ($row['width'] ?? 0) <= 0 && (int) ($row['height'] ?? 0) <= 0) $row['width'] = 1600;
-        }
-        unset($row['autocrop'], $row['autocrop_limit']);
-        $doc->data['formats'][$key] = $row;
-        return $doc->save();
-    }
-
     /** @return list<Group> */
     private function build(): array
     {
-        $layout = $this->which === 'page' ? self::pageLayout() : self::mediaLayout();
-        if ($this->which === 'page') {
-            $this->data['legal'] = array_replace(array_fill_keys(LegalLinks::FIELDS, ''), array_intersect_key(is_array($this->data['legal'] ?? null) ? $this->data['legal'] : [], array_fill_keys(LegalLinks::FIELDS, '')));
-        }
-        if ($this->which === 'media') {
-            // Not in the file yet: show what is in force, so there is something to edit.
-            foreach (['ratios' => \Systopic\System\Media\Variants::RATIOS, 'sizes' => \Systopic\System\Media\Variants::SIZES] as $section => $default) {
-                if (!is_array($this->data[$section] ?? null) || $this->data[$section] === []) {
-                    $this->data[$section] = $default;
-                }
-            }
-        }
+        $layout = self::pageLayout();
+        $this->data['legal'] = array_replace(array_fill_keys(LegalLinks::FIELDS, ''), array_intersect_key(is_array($this->data['legal'] ?? null) ? $this->data['legal'] : [], array_fill_keys(LegalLinks::FIELDS, '')));
         $groups = [];
         foreach ($layout as $section => $spec) {
             if (!isset($this->data[$section]) || !is_array($this->data[$section])) {
@@ -307,10 +259,6 @@ final class ProjectJson
         if ($list[$index] === $text) {
             return null;
         }
-        // A ratio or a size twice in the list would be one variant with two rows.
-        if ($id !== 'define:EXTERNAL_MEDIAS' && in_array($text, $list, true)) {
-            return false;
-        }
         $list[$index] = $text;
         $this->putList($id, $list);
         return $this->save() ? true : false;
@@ -374,8 +322,6 @@ final class ProjectJson
                 $row[(string) $name] = self::blank(self::kindOf($value));
             }
         }
-        if ($id === 'call:mediaFormats::add') $row = ['width' => 1600, 'cms_display' => 'image'];
-        if ($id === 'var:media_groups') $row = ['label' => 'New group', 'file_extension' => '', 'templates' => ''];
         $rows[$newKey] = $row;
         $this->putRecords($id, $rows);
         return $this->save() ? true : false;
@@ -389,8 +335,7 @@ final class ProjectJson
         if (isset(self::LISTS[$id])) {
             $list = $this->list($id);
             $index = self::listIndex($list, $key);
-            // Ratios and sizes never run empty: an empty list would silently mean the defaults.
-            if ($index === null || ($id !== 'define:EXTERNAL_MEDIAS' && count($list) <= 1)) {
+            if ($index === null) {
                 return false;
             }
             unset($list[$index]);
@@ -459,30 +404,6 @@ final class ProjectJson
         if ($current === null || !is_array($rows[$current])) {
             return false;
         }
-        if ($id === 'call:mediaFormats::add' && $field === 'aspect_ratio') {
-            $value = trim($text);
-            if ((float) ($rows[$current]['megapixels'] ?? 0) <= 0 || ($value !== '' && \mediaFormats::aspectRatio($value) === null)) return false;
-            if ($value === '') unset($rows[$current]['aspect_ratio']);
-            else $rows[$current]['aspect_ratio'] = str_replace('/', ':', $value);
-            $this->putRecords($id, $rows);
-            return $this->save();
-        }
-        if ($id === 'call:mediaFormats::add' && in_array($field, ['megapixels','width','height'], true)) {
-            $number = trim($text) === '' ? 0 : filter_var($text, FILTER_VALIDATE_FLOAT);
-            if ($number === false || !is_finite((float) $number) || $number < 0 || ($field === 'megapixels' && $number <= 0)
-                || ($field !== 'megapixels' && floor($number) !== (float) $number)) return false;
-            if ($field === 'megapixels') {
-                unset($rows[$current]['width'], $rows[$current]['height']);
-                $rows[$current][$field] = (float) $number;
-            } else {
-                unset($rows[$current]['megapixels'], $rows[$current]['aspect_ratio']);
-                if ($number > 0) $rows[$current][$field] = (int) $number;
-                else unset($rows[$current][$field]);
-            }
-            unset($rows[$current]['autocrop'], $rows[$current]['autocrop_limit']);
-            $this->putRecords($id, $rows);
-            return $this->save();
-        }
         $kind = 'string';
         foreach ($rows as $row) {
             if (is_array($row) && array_key_exists($field, $row) && !is_array($row[$field])) {
@@ -527,46 +448,6 @@ final class ProjectJson
             $data[$section][$name] = self::stored($group->kind, $group->text);
         }
         return self::dropEmpty($data);
-    }
-
-    /** @param list<Group> $groups @return array<string, mixed> */
-    private static function mediaDocument(array $groups): array
-    {
-        $data = [];
-        $images = [];
-        foreach ($groups as $group) {
-            if ($group->id === 'call:mediaFormats::add') {
-                $data['formats'] = self::rowsOf($group);
-                continue;
-            }
-            if ($group->id === 'define:VIDEO_FORMATS') {
-                $data['videoFormats'] = self::rowsOf($group);
-                continue;
-            }
-            if ($group->id === 'var:media_groups') {
-                $data['groups'] = self::rowsOf($group);
-                continue;
-            }
-            if ($group->id === 'define:EXTERNAL_MEDIAS') {
-                $data['external'] = array_map(static fn(Item $item): string => $item->text, $group->items);
-                continue;
-            }
-            if ($group->id === 'media:ratios') {
-                $data['ratios'] = array_map(static fn(Item $item): string => $item->text, $group->items);
-                continue;
-            }
-            if ($group->id === 'media:sizes') {
-                $data['sizes'] = array_map(static fn(Item $item): int|float => is_numeric($item->text) ? $item->text + 0 : 0, $group->items);
-                continue;
-            }
-            if ($group->shape === 'scalar' && str_starts_with($group->id, 'define:')) {
-                $images[substr($group->id, strlen('define:'))] = self::stored($group->kind, $group->text);
-            }
-        }
-        if ($images !== []) {
-            $data = ['images' => $images] + $data;
-        }
-        return $data;
     }
 
     /** @return array<string, mixed> */
@@ -669,23 +550,9 @@ final class ProjectJson
         ];
     }
 
-    /** @return array<string, array{category: string, mode: string, id?: string, label?: string}> */
-    private static function mediaLayout(): array
-    {
-        return [
-            'images' => ['category' => 'Images', 'mode' => 'scalars'],
-            'ratios' => ['category' => 'Aspect ratios', 'mode' => 'list', 'id' => 'media:ratios', 'label' => 'Aspect ratios'],
-            'sizes' => ['category' => 'Image sizes', 'mode' => 'list', 'id' => 'media:sizes', 'label' => 'Megapixels'],
-            'formats' => ['category' => 'Image formats', 'mode' => 'records', 'id' => 'call:mediaFormats::add', 'label' => 'mediaFormats::add'],
-            'videoFormats' => ['category' => 'Video formats', 'mode' => 'records', 'id' => 'define:VIDEO_FORMATS', 'label' => 'VIDEO_FORMATS'],
-            'groups' => ['category' => 'Media groups', 'mode' => 'records', 'id' => 'var:media_groups', 'label' => '$media_groups'],
-            'external' => ['category' => 'External medias', 'mode' => 'list', 'id' => 'define:EXTERNAL_MEDIAS', 'label' => 'EXTERNAL_MEDIAS'],
-        ];
-    }
-
     private function scalarSection(string $name): ?string
     {
-        foreach (['general', 'meta', 'languages', 'legal', 'images'] as $section) {
+        foreach (['general', 'meta', 'languages', 'legal'] as $section) {
             if (!isset($this->data[$section]) || !is_array($this->data[$section])) {
                 continue;
             }
@@ -725,69 +592,34 @@ final class ProjectJson
         $this->data[$section][$inner] = $rows;
     }
 
-    /**
-     * Sizes are numbers in the file, everything else text.
-     *
-     * @param array<string> $list
-     */
+    /** @param array<string> $list */
     private function putList(string $id, array $list): void
     {
-        $list = array_values($list);
-        $this->data[self::LISTS[$id]] = $id === 'media:sizes'
-            ? array_map(static fn(string $text): int|float => $text + 0, $list)
-            : $list;
+        $this->data[self::LISTS[$id]] = array_values($list);
     }
 
-    /** A value as the list stores it: a ratio reduced (`32:18` is `16:9`), a size a number. Null = not one. */
+    /** A value as the list stores it. Null = not one. */
     private static function listValue(string $id, string $text): ?string
     {
-        $text = trim($text);
-        if ($id === 'media:ratios') {
-            return \Systopic\System\Media\Ratio::of($text)?->name;
-        }
-        if ($id === 'media:sizes') {
-            $text = str_replace(',', '.', $text);
-            return is_numeric($text) && $text > 0 && $text <= 100 ? self::textOf($text + 0) : null;
-        }
-        return $text;
+        return trim($text);
     }
 
     /**
-     * What "add" puts into a list: the next usual ratio, twice the largest size.
+     * What "add" puts into a list.
      *
      * @param list<string> $list
      */
     private static function freshListValue(string $id, array $list): ?string
     {
-        if ($id === 'media:ratios') {
-            foreach ([...\Systopic\System\Media\Variants::RATIOS, '5:4', '4:5', '21:9', '3:1', '1:2', '1:3'] as $ratio) {
-                if (!in_array($ratio, $list, true)) {
-                    return $ratio;
-                }
-            }
-            return null;
-        }
-        if ($id === 'media:sizes') {
-            $next = $list === [] ? 1 : max(array_map('floatval', $list)) * 2;
-            return $next <= 100 ? self::textOf($next) : null;
-        }
         return self::freshKey($list, 'new');
     }
 
     /** @return list<string> */
-    private function list(string $id = 'define:EXTERNAL_MEDIAS'): array
+    private function list(string $id): array
     {
         $list = $this->data[self::LISTS[$id]] ?? null;
-        if (!is_array($list) || $list === []) {
-            // Ratios and sizes not in the file yet: the first edit starts from what is in force.
-            $list = match ($id) {
-                'media:ratios' => \Systopic\System\Media\Variants::RATIOS,
-                'media:sizes' => \Systopic\System\Media\Variants::SIZES,
-                default => [],
-            };
-        }
         $texts = [];
-        foreach (array_values($list) as $value) {
+        foreach (is_array($list) ? array_values($list) : [] as $value) {
             if (!is_array($value)) {
                 $texts[] = self::textOf($value);
             }

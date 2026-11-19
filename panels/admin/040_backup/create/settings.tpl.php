@@ -36,7 +36,7 @@ $chosen = [\Systopic\System\Panels\Root\Admin\Backup\Panel::class, 'chosen'];
 			</li>
 		<?php } ?>
 	</ul>
-    <p class="tagsHint">Project configuration (config.json) and local configuration (config.local.json) are not included in this archive. Back up these files separately. Page settings are part of the database; Media Settings can be selected above.</p>
+    <p class="tagsHint">Project configuration (config.json) and local configuration (config.local.json) are not included in this archive. Back up these files separately. Page settings are part of the database; ratios, sizes and media groups are in config.json.</p>
 	<div class="inputGroup">
 		<input type="text" aria-label="Notes" data-on_input="updateBackupSettings" name="backupNotes" value="<?= htmlspecialchars((string) $state->backupNotes, ENT_QUOTES, 'UTF-8') ?>">
 		<span class="bar"></span>

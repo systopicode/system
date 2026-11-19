@@ -148,7 +148,6 @@
 					'<button type="button" class="button" data-ce-poi="remove" title="Remove this point" aria-label="Remove this point">' + ICON('trash') + '</button>' +
 				'</div>' +
 				'<button type="button" class="cePivot" hidden title="Fix point - drag to move it, click to put the tool away" aria-label="Fix point"></button>' +
-				'<button type="button" class="button ceOld" data-ce-close title="The editor of the named formats">Old editor</button>' +
 				'<button type="button" class="button ceMore" data-ce-more title="Tools" aria-label="Tools" aria-expanded="false">' + ICON('grip-lines') + '</button>' +
 				'<div class="ceCommit">' +
 					'<button type="button" class="button" data-ce-quarter title="Turn to the next right angle - turns that lose nothing" aria-label="Turn to the next right angle">' + ICON('file-orientation') + '</button>' +
@@ -160,10 +159,6 @@
 			'<div class="ceSide">' +
 				'<div class="ceSlider"><div class="ceTrack"><span class="ceKnob"></span></div><ol class="ceRatios"></ol></div>' +
 			'</div>';
-		if (this.options.old === false) {
-			// The named formats are aliases now: their editor would store crops nothing reads.
-			el.querySelector('.ceOld').remove();
-		}
 		// The modes go into the header of the window, after its title - where a window has one.
 		const tabs = this.tabsEl = el.querySelector('.ceTabs');
 		const header = this.options.header !== undefined ? this.options.header
@@ -1194,8 +1189,6 @@
 		el.querySelector('[data-ce-more]').addEventListener('click', event => {
 			event.currentTarget.setAttribute('aria-expanded', String(el.classList.toggle('is-open')));
 		});
-		// Leaving works whatever state the editor is in - also when the picture could not be loaded.
-		el.querySelectorAll('[data-ce-close]').forEach(button => button.addEventListener('click', () => this.close()));
 		on('[data-ce-save]', () => this.save());
 		on('[data-ce-cancel]', () => this.cancel());
 		on('[data-ce-auto]', () => this.auto());
