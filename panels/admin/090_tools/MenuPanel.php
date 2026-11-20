@@ -10,15 +10,12 @@ use Systopic\System\Panels\PanelNode;
  * A tools section whose menu opens the child that was open last,
  * or the first one.
  *
- * Children must be built during the tree pass (`buildChildPanels`), not
- * lazily in onLoad: PanelNode::setTree() runs only after build()/onLoad,
- * so ensureChildrenBuilt() would mark the panel built with an empty list
- * and the nested menu + redirect would never recover.
+ * The children are built when onLoad asks for them (rememberOrOpenChild()
+ * → ensureChildrenBuilt()), which works in onLoad because loader.php
+ * installs the tree before build(). No `buildChildPanels` needed.
  */
 class MenuPanel extends PanelNode
 {
-    public bool $buildChildPanels = true;
-
     public function getDefaultState()
     {
         return (object) [

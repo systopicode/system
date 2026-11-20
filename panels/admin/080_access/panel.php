@@ -16,7 +16,6 @@ class Panel extends CmsPanel {
 	public $showSubnavi = FALSE;
 	public $icon = 'cmsIcon cmsIcon-duotone cmsIcon-lock';
 	public ?int $naviOrder = 45;
-	public bool $buildChildPanels = true;
 
 	function onLoad() {
 		$this->label = 'Access';

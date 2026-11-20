@@ -14,8 +14,6 @@ class Panel extends SettingsPanel
 {
     public $icon = 'cmsIcon cmsIcon-swatchbook';
 
-    public bool $buildChildPanels = false;
-
     public function __construct($name, $parent = null)
     {
         parent::__construct($name, $parent);

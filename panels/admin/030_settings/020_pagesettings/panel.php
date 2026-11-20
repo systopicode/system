@@ -20,8 +20,6 @@ class Panel extends SettingsPanel
 {
     public $icon = 'cmsIcon cmsIcon-globe';
 
-    public bool $buildChildPanels = false;
-
     public function __construct($name, $parent = null)
     {
         parent::__construct($name, $parent);

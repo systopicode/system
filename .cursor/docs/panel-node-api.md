@@ -48,7 +48,11 @@ echo $this->getNavi(3);    // 3 Levels tief
   (`Patchworkkit\Panels\Root\Panel`), und ein Panel ohne eigenen Eintrag erscheint nicht im Menü.
 - Lazy-built Kinder haben nur Constructor/Builder-Properties (`name`, `label`, `href`, `path`,
   `folder`, `parent`, `inPath()`). Properties aus `onLoad()` sind **nicht** verfügbar.
-- `eachChild()` setzt `ensureChildrenBuilt()` automatisch voraus.
+- `eachChild()`, `child()`, `hasChild()` und das Lesen von `firstChild` / `lastChild` bauen die Kinder
+  bei Bedarf (`ensureChildrenBuilt()`), auch in `onLoad()`. `children` / `childrenByName` sind
+  einfache Arrays und bauen **nicht** — abseits des URL-Pfads `child('name')` nehmen.
+- Ein Menü-Label gehört in eine Property (`protected ?string $labelOverride = '…';`), nicht in `onLoad()`:
+  dort fehlt es, sobald das Panel nicht geöffnet ist.
 
 ---
 
@@ -68,8 +72,9 @@ echo $this->getNavi(3);    // 3 Levels tief
 | `$this->parent` | `?PanelNode` | Eltern-Panel |
 | `$this->root` | `?PanelNode` | Oberster Panel im Teilbaum |
 | `$this->children` | `PanelNode[]` | Kinder-Array (nach `ensureChildrenBuilt()`) |
-| `$this->childrenByName['name']` | `?PanelNode` | Direktzugriff auf ein Kind |
-| `$this->hasChild('name')` | `bool` | Kind mit dem Namen vorhanden? |
+| `$this->childrenByName['name']` | `?PanelNode` | Direktzugriff auf ein Kind — nur wo die Kinder gebaut sind, sonst `child('name')` |
+| `$this->child('name')` | `?PanelNode` | Ein Kind, baut die Kinder bei Bedarf |
+| `$this->hasChild('name')` | `bool` | Kind mit dem Namen vorhanden? (baut bei Bedarf) |
 | `$this->childSelected` | `?PanelNode` | Das per URL gewählte Kind |
 | `$this->childSelectedName` | `?string` | Name des erwarteten Kindes (nächstes URL-Segment) |
 | `$this->getSiblings()` | `PanelNode[]` | Geschwister-Panels |

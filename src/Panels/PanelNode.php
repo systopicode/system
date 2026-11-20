@@ -79,8 +79,24 @@ class PanelNode implements ClientExportable, RenderNode
     public ?PanelNode $next = null;
     public ?PanelNode $prev = null;
 
-    public ?PanelNode $firstChild = null;
-    public ?PanelNode $lastChild  = null;
+    /**
+     * First and last child. Reading them builds the children on first access
+     * (ensureChildrenBuilt()): templates walk `for ($c = $panel->firstChild;
+     * $c !== null; $c = $c->next)` also over panels the build pass did not
+     * expand. The builder sets them; only reading is hooked.
+     */
+    public ?PanelNode $firstChild = null {
+        get {
+            $this->ensureChildrenBuilt();
+            return $this->firstChild;
+        }
+    }
+    public ?PanelNode $lastChild = null {
+        get {
+            $this->ensureChildrenBuilt();
+            return $this->lastChild;
+        }
+    }
 
     /** Iteration pointer used by PanelNavigator::openNextChild(). */
     public ?PanelNode $activeChild = null;
@@ -109,24 +125,29 @@ class PanelNode implements ClientExportable, RenderNode
 
     /**
      * When true, all child panels are constructed eagerly during the initial
-     * build (even when not selected by the URL) and their after-build hooks
-     * (onLoad / onLoadSelected / onLoadThisFolder) are run before any render
-     * begins. Useful for parents whose children must initialise themselves
-     * (load DB data, dispatch messages, redirect) before any output is
-     * captured by DomLayerTree.
+     * pass (even when not selected by the URL) and their onBuild() runs —
+     * but only where the after-build hooks reach this panel: it is on the
+     * URL path, or every panel above it hooks its children
+     * ($loadChildPanels). Off that path nothing would ever run on them, so
+     * they are left to ensureChildrenBuilt().
      *
-     * If you only need the children to *exist* (so navigation templates can
-     * iterate them via eachChild() / openChild()), do nothing — they will be
-     * lazy-built on first access by ensureChildrenBuilt(). Lazy-built panels
+     * This flag alone runs no onLoad on the children — that is
+     * $loadChildPanels. If you only need the children to *exist* (templates
+     * iterate them via eachChild(), child(), firstChild; onLoad looks at
+     * them), do nothing: they are built on first access. Lazy-built panels
      * are stubs: only constructor-set / Builder-set properties are
      * available; their lifecycle hooks are intentionally NOT executed.
      */
     public bool $buildChildPanels = false;
 
     /**
-     * Alias of $buildChildPanels with identical semantics under the new
-     * builder. Kept as a separate flag for legacy intent ("hooks too"); the
-     * builder treats both as eager-build-with-hooks triggers.
+     * The after-build hooks (onLoad / onLoadThisClass / onLoadThisFolder,
+     * loadJS()) run on every child, not only on the one the URL selects —
+     * for children that must initialise or bring their JS although they are
+     * not opened (a toolbar, a search lightbox). Builds them eagerly like
+     * $buildChildPanels, with the same restriction: it only takes effect
+     * where the hooks reach this panel. Not inherited by intent: a subclass
+     * that keeps it hooks its own children as well, down the whole subtree.
      */
     public bool $loadChildPanels = false;
 
@@ -384,17 +405,35 @@ class PanelNode implements ClientExportable, RenderNode
      * Templates iterating them via eachChild() can rely on constructor
      * data (name, label, icon, path, folder, parent) but MUST NOT depend
      * on properties that are typically populated by hooks. Panels that
-     * need hook-driven properties for siblings must opt into eager build
-     * via $buildChildPanels = true on the parent.
+     * need hook-driven properties for their children must opt into
+     * $loadChildPanels = true on the parent.
      *
-     * Called automatically from PanelNode::eachChild() and from
-     * PanelNavigator::openChild / openFirstChild / openNextChild.
+     * Called automatically from eachChild(), child(), hasChild(), reading
+     * firstChild / lastChild, and from PanelNavigator::openChild /
+     * openFirstChild / openNextChild. Without a tree (before setTree(), in
+     * tests) it does nothing and does not mark the panel built, so the
+     * children still come once the tree is there.
      */
     public function ensureChildrenBuilt(): void
     {
-        if ($this->childrenBuilt) return;
+        if ($this->childrenBuilt || self::$tree === null) return;
         $this->childrenBuilt = true;
-        self::$tree?->ensureChildrenBuilt($this);
+        self::$tree->ensureChildrenBuilt($this);
+    }
+
+    /** The after-build hooks run on all children, not only the selected one ($loadChildPanels, legacy $loadChildModules). */
+    public function hooksChildren(): bool
+    {
+        return $this->loadChildPanels
+            || (property_exists($this, 'loadChildModules') && (bool) $this->loadChildModules);
+    }
+
+    /** The children are built in the build pass, where the hooks reach this panel ($buildChildPanels, $loadChildPanels and their legacy names). */
+    public function expandsChildren(): bool
+    {
+        return $this->buildChildPanels
+            || $this->hooksChildren()
+            || (property_exists($this, 'buildChildModules') && (bool) $this->buildChildModules);
     }
 
     /**
@@ -738,6 +777,7 @@ class PanelNode implements ClientExportable, RenderNode
 
     public function hasChild(string $childName): bool
     {
+        $this->ensureChildrenBuilt();
         return array_key_exists($childName, $this->childrenByName);
     }
 
@@ -1116,6 +1156,7 @@ class PanelNode implements ClientExportable, RenderNode
      */
     public function child(string $name): ?PanelNode
     {
+        $this->ensureChildrenBuilt();
         return $this->childrenByName[$name] ?? null;
     }
 

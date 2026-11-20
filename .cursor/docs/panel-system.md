@@ -186,27 +186,49 @@ earlier ones — useful for project and user-specific replacements of system pan
    - Hook into siblings (linked list + `childrenByName`).
    - Call `$child->onBuild()`.
 4. Walk into the URL-selected child and recurse with the rest of the path.
+   Every level builds all siblings (one panel per folder), but goes
+   **deeper only where the hooks of step 6 reach**: along the URL path,
+   and into a flagged panel (`buildChildPanels`, `loadChildPanels`, legacy
+   `loadChildModules` / `buildChildModules`) whose parent hooks it. The
+   subtrees of siblings off the path stay unbuilt (§5a) — a request builds
+   what it touches, not the whole installation. `buildChildren()` carries
+   this as `$hooked`; `runAfterBuildHooks()` walks the same nodes
+   (`PanelNode::hooksChildren()` in both).
 5. Selected leaf still has its children expanded **eagerly** if it sets
-   `buildChildPanels`, `loadChildPanels`, or the legacy
-   `loadChildModules` / `buildChildModules` flags. Eager-expanded
-   children participate in `runAfterBuildHooks()` (step 6) — their
-   `onLoad`/`onLoadSelected`/`onLoadThisFolder` runs before any
-   rendering output. Set this flag on parents whose children must
-   initialise (DB lookups, message dispatch, redirect) before render.
+   one of the flags, so its `onLoad` finds them built.
 6. Resolve the `selectedPanel` (deepest `inPath()` child) and run
    `runAfterBuildHooks()`:
-   - `onLoad()` everywhere on the selection chain.
+   - `onLoad()` (and `loadJS()` where the panel has a `panel.js`) on the
+     selection chain, and on **all** children of a panel that hooks its
+     children (`loadChildPanels`, legacy `loadChildModules`).
    - `onLoadSelected()` on the deepest selected.
    - `onLoadThisFolder()` on every panel whose class came from its own
      `module.php`.
 
+   `buildChildPanels` alone builds the children (their `onBuild` runs)
+   but runs no `onLoad` on them. Since `PanelNode::setTree()` is called
+   **before** `build()` (loader.php), an `onLoad` that reaches for its
+   children builds them lazily — the flag is not needed for that.
+   `loadChildPanels` is for children that must initialise or bring their
+   JS although the URL does not open them (a toolbar, a search lightbox).
+   It is inherited like any property: on a base class it hooks the whole
+   subtree below every subclass. Restrict it, e.g.
+   `public bool $loadChildPanels { get => static::class === self::class; }`
+   (admin) or `{ get => $this->inPath(); }` (admin/pages).
+
 ### 5a. Lazy children (render-time stubs)
 
-If a navigation template calls `eachChild()` / `openChild()` /
-`openFirstChild()` / `openNextChild()` on a panel whose children were
-**not** eagerly built (no flag, not on URL path), `PanelNode::ensureChildrenBuilt()`
-is invoked automatically and asks `PanelTree::ensureChildrenBuilt($panel)`
-to construct them on the spot via `PanelBuilder::buildChildren($panel, [], $roots)`.
+If code calls `eachChild()` / `child()` / `hasChild()`, reads `firstChild` /
+`lastChild` (property hooks), or uses `openChild()` / `openFirstChild()` /
+`openNextChild()` on a panel whose children were **not** built yet,
+`PanelNode::ensureChildrenBuilt()` is invoked automatically and asks
+`PanelTree::ensureChildrenBuilt($panel)` to construct them on the spot via
+`PanelBuilder::buildChildren($panel, [], $roots)` — in onLoad as well as
+while rendering. **Not lazy:** the plain arrays `children` and
+`childrenByName`. Read them only where the children are certainly built
+(the URL path, a flagged panel), otherwise use `child()` / `eachChild()`.
+A debug dump of a panel (`p($panel)`) reads `firstChild` and so builds
+its children as well.
 
 Lazy-built children are **stubs**:
 
@@ -218,12 +240,15 @@ This preserves the hard invariant: *all* lifecycle hooks complete before
 *any* render output begins. Templates iterating lazy stubs may rely on
 constructor-set / Builder-set properties (`name`, `label`, `icon`,
 `path`, `folder`, `parent`, `realPath`) but MUST NOT depend on
-properties that are typically populated by hooks. If a parent needs its
-children's hook-driven properties, opt into eager build with
-`public bool $buildChildPanels = true;` (or `loadChildPanels = true`).
+properties that are typically populated by hooks — a menu label belongs
+in a property (`protected ?string $labelOverride = 'Panel Map';`), not in
+`onLoad()`. If a parent needs its children's hooks to run, it sets
+`loadChildPanels` (§5, step 6); `buildChildPanels` does not run them.
 
 The `$childrenBuilt` flag on `PanelNode` is set by both code paths so
-empty children-arrays are not re-scanned on every iteration.
+empty children-arrays are not re-scanned on every iteration. Without a
+tree (before `setTree()`, in tests) `ensureChildrenBuilt()` does nothing
+and leaves the flag unset.
 CWD is saved and restored around the lazy build to avoid leaking
 `chdir()` side effects into the calling template.
 

@@ -14,7 +14,16 @@ class Panel extends PanelNode {
 		get => Scope::default();
 	}
 
-	public $loadChildModules = TRUE;
+	/**
+	 * The hooks of admin's own children (onLoad, their panel.js) run on every
+	 * admin page: the frame around the open panel uses them — the search
+	 * lightbox, the user menu. Only admin itself: the panels below extend
+	 * this class, and inherited (it was `$loadChildModules = TRUE`) the flag
+	 * built the whole admin tree and ran every onLoad in it on each request.
+	 */
+	public bool $loadChildPanels {
+		get => static::class === self::class;
+	}
 	public $showSubnavi = TRUE;
 
 	/**

@@ -171,7 +171,7 @@ class PanelTree implements RenderTree
         $this->rootPanel = $this->builder->constructAppRoot($this->roots);
         $this->rootPanel->onBuild();
 
-        $result = $this->builder->buildChildren($this->rootPanel, $path, $this->roots);
+        $result = $this->builder->buildChildren($this->rootPanel, $path, $this->roots, hooked: true);
 
         $this->path     = $result->resolvedPath;
         $this->realPath = $result->resolvedRealPath;
@@ -218,7 +218,7 @@ class PanelTree implements RenderTree
 
         $this->rootPanel = $this->builder->constructAppRoot($this->roots);
         $this->rootPanel->onBuild();
-        $this->builder->buildChildren($this->rootPanel, [], $this->roots);
+        $this->builder->buildChildren($this->rootPanel, [], $this->roots, hooked: true);
 
         $this->selectedRoot = $this->computeSelectedRoot($this->rootPanel);
         $this->runAfterBuildHooks($this->rootPanel);
@@ -292,10 +292,9 @@ class PanelTree implements RenderTree
             $root->onLoadThisFolder();
         }
 
-        $loadAll = $root->loadChildPanels
-            || (property_exists($root, 'loadChildModules') && (bool) $root->loadChildModules);
-
-        if ($loadAll && $root->children !== []) {
+        // The builder expanded exactly the panels this walk reaches
+        // (PanelBuilder::buildChildren(), $hooked) — keep both in step.
+        if ($root->hooksChildren() && $root->children !== []) {
             foreach ($root->children as $child) {
                 $this->runAfterBuildHooks($child);
             }

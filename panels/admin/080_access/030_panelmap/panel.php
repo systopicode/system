@@ -22,8 +22,9 @@ class Panel extends CmsPanel {
 	public $showSubnavi = FALSE;
 	public $icon = 'cmsIcon cmsIcon-sitemap';
 	public ?int $naviOrder = 45;
-	public bool $buildChildPanels = true;
 	public bool $pylonBranch = true;
+	/** A property, not set in onLoad: the access menu shows it also when onLoad does not run. */
+	protected ?string $labelOverride = 'Panel Map';
 
 	/**
 	 * The top-level panels, read once per request — their actions marked
@@ -137,7 +138,6 @@ class Panel extends CmsPanel {
 	}
 
 	function onLoad() {
-		$this->label = 'Panel Map';
 		// a node of the tree is a get to the open child (./?panel=cms.pages, see nodeHref())
 		$chosen = \http::get('panel', \http::get('detail') === '1' ? '' : NULL);
 		if ($chosen !== NULL && \http::method() === 'GET') {

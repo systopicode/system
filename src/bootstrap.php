@@ -22,12 +22,12 @@ declare(strict_types=1);
  *
  *   // Register autoloader for module-based panel namespace resolution:
  *   PanelAutoloader::registerRoots($panelTree->getRoots());
- *   // Build tree and finish wiring:
+ *   // Build tree and finish wiring (setTree first: lazy children in onLoad need it):
+ *   PanelNode::setTree($panelTree);
  *   $panelTree->build(app::request()->modulePath);
  *   $nav = new PanelNavigator($panelTree, $layerTree, $domRenderer);
  *   $nav->setActive($panelTree->getRoot());
  *   PanelNode::setNavigator($nav);
- *   PanelNode::setTree($panelTree);
  *   PanelTree::setInstance($panelTree);
  *
  * After this file is included the following variables are available:

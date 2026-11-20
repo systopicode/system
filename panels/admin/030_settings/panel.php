@@ -16,9 +16,6 @@ class Panel extends PanelNode {
 	public $icon = 'cmsIcon cmsIcon-duotone cmsIcon-gear';
 	public ?int $naviOrder = 40;
 
-	/** Settings children exist before onLoad, so the menu can open one. */
-	public bool $buildChildPanels = true;
-
 	/** The request's scope — the settings children read and write through it. */
 	public Scope $scope {
 		get => Scope::default();

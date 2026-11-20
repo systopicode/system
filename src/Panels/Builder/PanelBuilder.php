@@ -54,12 +54,23 @@ class PanelBuilder
      * Walks $limb to select the correct child and recurses into it. The
      * caller is responsible for restoring CWD afterwards.
      *
+     * Below the children it builds, it goes on only where something will
+     * use the panels before rendering: along the URL path, and into a
+     * flagged panel ($buildChildPanels / $loadChildPanels) that the
+     * after-build hooks reach. Everything else — the subtrees of siblings
+     * off the path — is left to PanelNode::ensureChildrenBuilt(), so a
+     * request builds what it touches and not the whole installation.
+     *
      * @param PanelRootFolder[] $roots
+     * @param bool $hooked PanelTree::runAfterBuildHooks() will run on
+     *                     $parent: true from PanelTree::build(), false for a
+     *                     lazy build or a rebuild, which run no hooks
      */
     public function buildChildren(
         PanelNode $parent,
         array     $limb,
         array     $roots,
+        bool      $hooked = false,
     ): ChildBuildResult {
         if ($parent->children !== [] || count($parent->path) > 20) {
             if (count($parent->path) > 20) {
@@ -67,6 +78,10 @@ class PanelBuilder
             }
             return new ChildBuildResult([], [], null);
         }
+
+        // Marked first: an onBuild() below that reads firstChild or calls
+        // eachChild() on $parent must not start a second, lazy scan of it.
+        $parent->childrenBuilt = true;
 
         $parent->childSelectedName = count($limb) > 0 ? reset($limb) : '';
 
@@ -126,6 +141,9 @@ class PanelBuilder
             $parent->lastChild = $child;
             $child->onBuild();
 
+            // the hooks reach the child: it is selected, or $parent hooks all of its children
+            $childHooked = $hooked && ($isSelected || $parent->hooksChildren());
+
             if ($isSelected) {
                 $parent->childSelected = $child;
                 $resolvedPath[]        = $child->name;
@@ -135,28 +153,25 @@ class PanelBuilder
                 $subLimb = array_slice($limb, 1);
                 if (count($subLimb) > 0) {
                     chdir($savedCwd);
-                    $sub          = $this->buildChildren($child, $subLimb, $roots);
+                    $sub          = $this->buildChildren($child, $subLimb, $roots, $childHooked);
                     $resolvedPath = array_merge($resolvedPath, $sub->resolvedPath);
                     $resolvedReal = array_merge($resolvedReal, $sub->resolvedRealPath);
                     $selected     = $sub->selected ?? $selected;
                     continue;
                 }
-                // Selected leaf — still expand its children when the panel
-                // requests it (loadChildPanels / legacy loadChildModules),
-                // so navigation templates calling eachChild() find siblings
-                // to iterate over even on URLs like /admin/.
-                if ($child->buildChildPanels
-                 || $child->loadChildPanels
-                 || $this->legacyBuildAllChildren($child)) {
+                // Selected leaf — expand its children when the panel asks
+                // for it, so its onLoad finds them built (with their onBuild run).
+                if ($child->expandsChildren()) {
                     chdir($savedCwd);
-                    $this->buildChildren($child, [], $roots);
+                    $this->buildChildren($child, [], $roots, $childHooked);
                     continue;
                 }
-            } elseif ($child->buildChildPanels
-                   || $child->loadChildPanels
-                   || $this->legacyBuildAllChildren($child)) {
+            } elseif ($childHooked && $child->expandsChildren()) {
+                // Off the path, but its hooks run (a toolbar beside the open
+                // panel): its children have to be there, and theirs where it
+                // hooks them as well.
                 chdir($savedCwd);
-                $this->buildChildren($child, [], $roots);
+                $this->buildChildren($child, [], $roots, true);
                 continue;
             }
 
@@ -174,10 +189,6 @@ class PanelBuilder
         ) {
             $parent->action = \app::request()->action;
         }
-
-        // Mark this scan complete so PanelNode::ensureChildrenBuilt() does
-        // not re-scan when children are legitimately empty.
-        $parent->childrenBuilt = true;
 
         return new ChildBuildResult($resolvedPath, $resolvedReal, $selected);
     }
@@ -321,22 +332,6 @@ class PanelBuilder
     // =========================================================================
     // Internal helpers
     // =========================================================================
-
-    /**
-     * Backward-compat check for legacy property names that older module.php
-     * files may set instead of $buildChildPanels / $loadChildPanels.
-     *
-     * Both legacy flags trigger an "always build all children" path here:
-     * in the legacy moduleBuilder, $loadChildModules implied that the
-     * children would be present (built by default) so its hooks could run —
-     * to preserve that contract under the new builder, where the default
-     * no longer constructs every sibling, treat both as build triggers.
-     */
-    private function legacyBuildAllChildren(PanelNode $child): bool
-    {
-        return (property_exists($child, 'buildChildModules') && (bool) $child->buildChildModules)
-            || (property_exists($child, 'loadChildModules')  && (bool) $child->loadChildModules);
-    }
 
     private function createReferences(PanelNode $child, PanelNode $parent, string $folder): void
     {

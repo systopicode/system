@@ -255,6 +255,12 @@ if (in_array(app::request()->modulePath, PUBLIC_ACCESS_ROUTES, true)) {
 	$panelTree->disableAccessControl();
 }
 
+// Before build(): an onLoad that reaches for children (eachChild, child(),
+// firstChild) builds them lazily. Installed afterwards, ensureChildrenBuilt()
+// had no tree yet, marked the panel built with no children and the panel
+// stayed empty for the rest of the request.
+\Systopic\System\Panels\PanelNode::setTree($panelTree);
+
 $panelTree->build(app::request()->modulePath);
 
 $nav = new \Systopic\System\Panels\Navigator\PanelNavigator($panelTree, $layerTree, $domRenderer);
@@ -263,7 +269,6 @@ if ($panelTree->getRoot() !== null) {
 }
 
 \Systopic\System\Panels\PanelNode::setNavigator($nav);
-\Systopic\System\Panels\PanelNode::setTree($panelTree);
 \Systopic\System\Panels\Tree\PanelTree::setInstance($panelTree);
 
 // Register panel tree export with the legacy clientData system so that

@@ -17,8 +17,6 @@ class Panel extends SettingsPanel
 {
     public $icon = 'cmsIcon cmsIcon-sliders';
 
-    public bool $buildChildPanels = false;
-
     public bool $inNavi = false;
 
     public function __construct($name, $parent = null)

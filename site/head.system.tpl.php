@@ -31,17 +31,14 @@ echo fsLoader::includeScriptFiles(fs::$sysRoot . 'public/js/core/event/',);
 echo fsLoader::includeScriptFiles(fs::$sysRoot . 'public/js/core/lib/',);
 echo fsLoader::includeScriptFiles(fs::$sysRoot . 'public/js/core/server/',);
 
-// Load JS for panel classes needed on site pages (replaces legacy moduleBuilder::build).
-// Walks the named panels in the tree and calls loadJS() on each so their
-// panel.js files end up in the client::flushScripts() output below.
-$_pt = \Systopic\System\Panels\Tree\PanelTree::getInstance();
-if ($_pt !== null) {
-	foreach (['admin', 'pages'] as $_panelName) {
-		$_panel = $_pt->findByName($_panelName);
-		if ($_panel !== null) {
-			$_panel->loadJS();
-		}
-	}
-	unset($_pt, $_panelName, $_panel);
+// Load JS for panel classes needed on site pages (replaces legacy moduleBuilder::build):
+// admin and admin/pages, so their panel.js files end up in the
+// client::flushScripts() output below. Asked for by path — a site page is
+// off the admin path, the tree builds admin's children only on request
+// (child()), where findByName() would only search what is built already.
+$_admin = \Systopic\System\Panels\Tree\PanelTree::getInstance()?->getRoot()?->child('admin');
+foreach ([$_admin, $_admin?->child('pages')] as $_panel) {
+	$_panel?->loadJS();
 }
+unset($_admin, $_panel);
 echo client::flushScripts();
