@@ -86,10 +86,11 @@ Am Anfang alle Repos pullen ([git.md](git.md)): system, db, cms, relay, spacetic
 
 **Global Settings importiert** (`--import-settings`): `spaceticker.app` (global.settings.json,
 darin bleibt nur das ungenutzte `CMS_PROVIDER_URL`) und `smp.de` (settings.php, gekürzt,
-Sicherung in `var/config-backup/`). **Nicht `systopic.net`:** Dessen config.json und
-settings.php gehen per Sync nach RC, wo `v1.2.0` läuft und nur die alte Form liest. Der
-Import (er hebt auch config.json in die neue Form) kommt dort am Tag des Tags, zusammen
-mit `--migrate=all`. Vorher zurückgesetzt, die Seiten lesen weiter settings.php.
+Sicherung in `var/config-backup/`). **`systopic.net`** am 2026-11-20 (Entscheidung des
+Users: vor RC/LIVE kommt ohnehin eine neue Version auf Packagist, bis dahin läuft alles per
+Git/Sync): Defines, `$media_groups` und `mediaFormats::add()` nach config.json, der Rest
+der settings.php (`JPEG_QUALITY`, `SMARTPHONEBREAKPOINT` … - von nichts gelesen)
+entfallen, **settings.php gelöscht**.
 
 **Reihenfolge auf Servern:** erst den neuen System-Code, dann Projektdateien, die schon
 umgestellt sind (gekürzte settings.php, config.json mit `packages.*`). Alter Code fände
@@ -134,9 +135,8 @@ alle Repos pullen ([git.md](git.md)).
 
 Als Nächstes: der Tag, siehe „Versionierung“, danach Schritt 8.
 
-**Noch in alter Form, bis zum Tag:** `config.json` und `RC.config.json` von `systopic.net`. Beide
-gehen nach RC, dort läuft `v1.2.0`, das nur die alte Form liest. Am Tag des Tags:
-`bin/config.php --migrate=all`.
+**systopic.net** ist seit 2026-11-20 in der neuen Form (siehe oben). RC bekommt den Code
+mit der nächsten Version auf Packagist, vorher keinen Projektstand.
 
 **Secrets je Maschine:** Sie ziehen auf jeder Maschine selbst um, im Admin per „Move to this
 machine“ im Check-Widget oder mit `bin/config.php --move-secrets=<instanz>`. Erledigt ist
@@ -629,8 +629,7 @@ Im Code gibt es dagegen keinen Schutz, nur diese Reihenfolge.
 6. **Secrets nach local, je Maschine.** Das Werkzeug ist fertig, im Admin per Klick oder mit
    `bin/config.php --move-secrets`, erst nach local schreiben, dann aus der gesyncten Datei
    entfernen. Es läuft auf jeder Maschine selbst, offen sind die übrigen Maschinen.
-7. **Dateien umstellen.** Erledigt bis auf `config.json` und `RC.config.json` von
-   `systopic.net`, die am Tag des Tags folgen (`--migrate=all`).
+7. **Dateien umstellen.** Erledigt (`systopic.net` am 2026-11-20).
 9. **Zwei Dateien.** 2026-11-09, siehe oben. Offen: `--adopt` auf den anderen Maschinen,
    STAGING und LIVE; danach die alten Instanz-Dateien löschen.
 8. **Altpfade entfernen.** Die Doku ist nachgezogen. Offen im Code: `Config\Layout`,

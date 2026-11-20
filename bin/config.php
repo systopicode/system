@@ -333,29 +333,103 @@ if ($option === '--import-settings') {
 	// legacyFormats (the switch back to the old renderer, gone)
 	$mediaJson = is_file("$root/config/media.settings.json") ? $read('media.settings.json') : null;
 	$mediaPut = [];
-	if (is_array($mediaJson)) {
-		$named = static function (string $what, array $rows, array $skip = []) use ($say): array {
-			$out = [];
-			foreach ($rows as $name => $row) {
-				if (!is_array($row) || in_array((string) $name, $skip, true)) {
-					continue;
-				}
-				if (preg_match('/^[a-z][a-zA-Z0-9]*$/', (string) $name) !== 1) {
-					$say("media.settings.json: $what $name is no name config.json takes (a-z, then letters and digits), move it by hand");
-					continue;
-				}
-				$out[(string) $name] = $row;
+	$named = static function (string $what, array $rows, array $skip = []) use ($say): array {
+		$out = [];
+		foreach ($rows as $name => $row) {
+			if (!is_array($row) || in_array((string) $name, $skip, true)) {
+				continue;
 			}
-			return $out;
+			if (preg_match('/^[a-z][a-zA-Z0-9]*$/', (string) $name) !== 1) {
+				$say("media settings: $what $name is no name config.json takes (a-z, then letters and digits), move it by hand");
+				continue;
+			}
+			$out[(string) $name] = $row;
+		}
+		return $out;
+	};
+	// The names of the system's own formats: no alias of the project.
+	$systemFormats = ['original', 'alias', 'mmlThumb', 'shareImage', 'portrait'];
+	$groupKeys = array_flip(['label', 'file_extension', 'templates']);
+	$aliasKeys = array_flip(['label', 'aspect_ratio', 'megapixels', 'width', 'height', 'cms_display']);
+	// A settings.php of the old kind (no media.settings.json): `$media_groups = [...];` and
+	// `mediaFormats::add([...]);` - plain literals only, as with the define()s above.
+	if (!is_array($mediaJson) && !is_array($settings) && is_file($php)) {
+		$allowed = [T_CONSTANT_ENCAPSED_STRING, T_LNUMBER, T_DNUMBER, T_ARRAY, T_DOUBLE_ARROW, T_WHITESPACE, T_COMMENT, T_DOC_COMMENT];
+		$tokens = token_get_all((string) file_get_contents($php));
+		$count = count($tokens);
+		$skip = static function (int $j) use ($tokens, $count): int {
+			while ($j < $count && is_array($tokens[$j]) && in_array($tokens[$j][0], [T_WHITESPACE, T_COMMENT, T_DOC_COMMENT], true)) $j++;
+			return $j;
 		};
+		$text = static fn($t): string => is_array($t) ? $t[1] : $t;
+		for ($i = 0; $i < $count; $i++) {
+			$token = $tokens[$i];
+			$what = null;
+			if (is_array($token) && $token[0] === T_VARIABLE && $token[1] === '$media_groups') {
+				$j = $skip($i + 1);
+				if (($tokens[$j] ?? null) !== '=') continue;
+				$what = 'groups';
+				$j++;
+				$close = ';';
+			} elseif (is_array($token) && $token[0] === T_STRING && $token[1] === 'mediaFormats') {
+				$j = $skip($i + 1);
+				if (!is_array($tokens[$j] ?? null) || $tokens[$j][0] !== T_DOUBLE_COLON) continue;
+				$j = $skip($j + 1);
+				if (!is_array($tokens[$j] ?? null) || strtolower($tokens[$j][1]) !== 'add') continue;
+				$j = $skip($j + 1);
+				if (($tokens[$j] ?? null) !== '(') continue;
+				$what = 'formats';
+				$j++;
+				$close = ')';
+			} else {
+				continue;
+			}
+			$start = $token[2];
+			$expression = '';
+			$plain = true;
+			$depth = 0;
+			for (; $j < $count; $j++) {
+				$part = $tokens[$j];
+				if ($depth === 0 && $part === $close) break;
+				if ($part === '(' || $part === '[') $depth++;
+				if ($part === ')' || $part === ']') $depth--;
+				if (is_array($part)) {
+					$word = strtolower($part[1]);
+					$plain = $plain && (in_array($part[0], $allowed, true) || ($part[0] === T_STRING && in_array($word, ['true', 'false', 'null'], true)));
+				} else {
+					$plain = $plain && in_array($part, ['[', ']', '(', ')', ',', '-'], true);
+				}
+				$expression .= $text($part);
+			}
+			$k = $close === ')' ? $skip($j + 1) : $j;
+			if (($tokens[$k] ?? null) !== ';') continue;
+			if (!$plain) {
+				$say("settings.php: the media $what are no plain value, move them by hand");
+				continue;
+			}
+			$value = eval('return ' . $expression . ';');
+			if (!is_array($value)) continue;
+			$end = $start + substr_count(implode('', array_map($text, array_slice($tokens, $i, $k - $i + 1))), "\n");
+			if ($what === 'groups') {
+				$rows = array_map(static fn($row) => is_array($row) ? array_intersect_key($row, $groupKeys) : $row, $named('group', $value));
+				if ($rows !== []) $mediaPut['groups'] = [['cms', 'media', 'groups'], $rows];
+			} else {
+				$rows = array_map(static fn($row) => array_intersect_key($row, $aliasKeys), $named('format', $value, $systemFormats));
+				if ($rows !== []) $mediaPut['formats'] = [['system', 'media', 'aliases'], $rows];
+			}
+			array_push($phpLines, ...range($start - 1, $end - 1));
+			$i = $k;
+		}
+	}
+	if (is_array($mediaJson)) {
 		foreach (['ratios' => ['system', 'media', 'ratios'], 'sizes' => ['system', 'media', 'sizes'], 'external' => ['system', 'media', 'external']] as $key => $path) {
 			if (is_array($mediaJson[$key] ?? null) && $mediaJson[$key] !== []) {
 				$mediaPut[$key] = [$path, array_values($mediaJson[$key])];
 			}
 		}
 		$aliases = [];
-		foreach ($named('format', is_array($mediaJson['formats'] ?? null) ? $mediaJson['formats'] : [], ['original', 'alias', 'mmlThumb', 'shareImage', 'portrait']) as $name => $row) {
-			$aliases[$name] = array_intersect_key($row, array_flip(['aspect_ratio', 'megapixels', 'width', 'height', 'cms_display']));
+		foreach ($named('format', is_array($mediaJson['formats'] ?? null) ? $mediaJson['formats'] : [], $systemFormats) as $name => $row) {
+			$aliases[$name] = array_intersect_key($row, $aliasKeys);
 		}
 		$video = $named('video format', is_array($mediaJson['videoFormats'] ?? null) ? $mediaJson['videoFormats'] : []);
 		$groups = $named('group', is_array($mediaJson['groups'] ?? null) ? $mediaJson['groups'] : []);
@@ -365,7 +439,7 @@ if ($option === '--import-settings') {
 			}
 		}
 	}
-	if ($found === [] && !is_array($mediaJson)) {
+	if ($found === [] && !is_array($mediaJson) && $mediaPut === []) {
 		$say('nothing to import');
 		exit(0);
 	}
@@ -420,7 +494,7 @@ if ($option === '--import-settings') {
 			Setup::writeJson("$root/config/$jsonFile", $settings);
 			$say("$jsonFile: left in it: " . implode(', ', array_keys($left)));
 		}
-	} elseif ($found !== []) {
+	} elseif ($found !== [] || $phpLines !== []) {
 		$dir = "$root/var/config-backup/$stamp";
 		@mkdir($dir, 0775, true);
 		copy($php, "$dir/settings.php");
@@ -430,7 +504,7 @@ if ($option === '--import-settings') {
 			unset($lines[$index]);
 		}
 		file_put_contents($php, implode(str_contains($text, "\r\n") ? "\r\n" : "\n", $lines));
-		$say('settings.php: ' . count($found) . ' define()s taken out (' . count($phpLines) . ' lines)');
+		$say('settings.php: ' . count($found) . ' define()s' . ($mediaPut !== [] ? ' and the media ' . implode(', ', array_keys($mediaPut)) : '') . ' taken out (' . count($phpLines) . ' lines)');
 	}
 	$say('config.json: ' . implode(', ', $moved));
 	exit(0);
