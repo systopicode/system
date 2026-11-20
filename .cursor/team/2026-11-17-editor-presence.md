@@ -2,6 +2,15 @@
 
 Von: Oliver · Für: Lars · Status: offen (abgesprochen am 2026-11-17, umsetzen nach dem Bild-Editor) · 2026-11-17
 
+**Nachtrag 2026-11-20 (Oliver):** Umgesetzt **ohne relay** — kein Timer, keine
+eigene Abfrage. `pages.js` hängt per `sys.core.server.addHeaders` an jeden
+Request `X-Editor-Client` / `X-Editor-Page`; `Panel::onLoadThisClass` →
+`Panel::editorPresence()` antwortet mit `client::callFunction('cmsPresence', …)`.
+Andere sehen es erst bei ihrem nächsten Request. `pagehide` schickt
+`X-Editor-Leave` an `admin/pages/editorPresence` (die Action tut sonst nichts
+mehr). TTL 30 min (`EditorPresence::TTL`). Die relay-Variante unten ist
+damit nicht geplant. Zur Durchsicht für Lars: der JS-Block in `pages.js`.
+
 ## Anlass
 
 Jede offene Pages-Ansicht fragt alle 2 Sekunden `admin/pages/editorPresence` ab

@@ -60,5 +60,5 @@ Fehlt die Zeile, gilt die Tabelle oben.
 | 2026-11-02 | [Nach dem Rendern verliert ein Feld im Pylon-`nav` den Fokus](2026-11-02-nav-blur.md) | Oliver | Lars | offen | in admin/controlmap umgangen (Feld außerhalb `nav`) |
 | 2026-11-03 | [auth liegt oben: `auth/` statt `admin/auth/`](2026-11-03-auth-top-level.md) | Oliver | Lars | offen | verschoben; Kopf und Body-Klasse minimal angepasst, Modul-CSS/JS von admin zur Entscheidung |
 | 2026-11-04 | [Anmeldung umgebaut: was an der GUI hängt](2026-11-04-auth-workflows.md) | Oliver | Lars | offen | umgesetzt wie abgesprochen, Aussehen und gui.md zur Durchsicht |
-| 2026-11-17 | [Editor-Präsenz der Pages über relay statt Abfrage alle 2 s](2026-11-17-editor-presence.md) | Oliver | Lars | offen | abgesprochen, umsetzen nach dem Bild-Editor |
+| 2026-11-17 | [Editor-Präsenz der Pages über relay statt Abfrage alle 2 s](2026-11-17-editor-presence.md) | Oliver | Lars | offen | 2026-11-20 ohne relay umgesetzt (Präsenz reist mit jedem Request, kein Timer), JS-Block in pages.js zur Durchsicht |
 | 2026-11-19 | [Media Settings und alter Datei-Editor entfernt: was in der GUI übrig ist](2026-11-19-media-settings-gui.md) | Oliver | Lars | offen | Panel und alter Editor weg, totes CSS/JS und gui.md zur Entscheidung |
