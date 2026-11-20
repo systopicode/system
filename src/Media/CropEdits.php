@@ -79,7 +79,8 @@ final class CropEdits
             foreach ($set->rows as $format => $other) {
                 $box = $format === Variants::MASTER ? null : Operator::box($other);
                 if ($box !== null) {
-                    $save[] = Operator::put($other, $media, self::reoriented($box, (float) $was['r'], (bool) $was['f'], (float) $look['r'], (bool) $look['f']));
+                    // a fixed format's row keeps its name
+                    $save[] = Operator::put($other, $media, self::reoriented($box, (float) $was['r'], (bool) $was['f'], (float) $look['r'], (bool) $look['f']), format: (string) $format);
                 }
             }
         }
@@ -308,9 +309,110 @@ final class CropEdits
                 'sources' => array_map(static fn(array $s): array => ['url' => $s['url'], 'width' => $s['width'], 'height' => $s['height']], $picture->sources()),
             ],
             'ratios' => $list,
+            'formats' => $master === null ? [] : self::formatsState($set, $master->width, $master->height, $narrowest, $widest),
             'pois' => $set->pois(),
             'sizes' => Variants::sizes(),
         ];
+    }
+
+    /**
+     * The fixed formats for the editor's tab Formats: each with its place on
+     * the slider (as a ratio would have, within 0-1), its crop - set by hand
+     * or computed - and the computed one it goes back to (`auto`).
+     *
+     * @return list<array<string, mixed>>
+     */
+    private static function formatsState(CropSet $set, int $width, int $height, ?Ratio $narrowest, ?Ratio $widest): array
+    {
+        $list = [];
+        foreach (Variants::formats() as $name => $format) {
+            $crop = $set->formatCrop($name, $width, $height);
+            $auto = $set->computedFormatCrop($format['ratio'], $width, $height);
+            $position = $widest === null || $narrowest === null || $widest->equals($narrowest) ? 0.5 : 1 - $format['ratio']->position($narrowest, $widest);
+            $list[] = [
+                'name' => $name,
+                'label' => $format['label'],
+                'w' => $format['ratio']->w,
+                'h' => $format['ratio']->h,
+                'width' => $format['width'],
+                'height' => $format['height'],
+                'type' => $format['type'],
+                'position' => round(max(0.0, min(1.0, $position)), 6),
+                'ax' => $crop->alignX,
+                'ay' => $crop->alignY,
+                'scale' => $crop->scale,
+                'basis' => $crop->basis,
+                'source' => $crop->source,
+                'auto' => ['ax' => $auto->alignX, 'ay' => $auto->alignY, 'scale' => $auto->scale, 'basis' => $auto->basis, 'source' => $auto->source],
+            ];
+        }
+        return $list;
+    }
+
+    /**
+     * The crops of fixed formats at once - the editor's tab Formats applies
+     * them so: each `{format, ax, ay, scale, basis}` set by hand (its ratio
+     * is the format's), or `{format, auto: true}` back to computed. Null when
+     * one of them is none (`formatsProblem()` says why); then nothing is
+     * stored. A format's crop is no anchor of the ratios: nothing else changes.
+     *
+     * @param array<mixed> $crops
+     * @return array{save: list<object>, remove: list<object>, clipped: list<string>}|null
+     */
+    public static function formats(CropSet $set, array $crops): ?array
+    {
+        if (self::formatsProblem($crops) !== null) {
+            return null;
+        }
+        $edit = ['save' => [], 'remove' => [], 'clipped' => []];
+        foreach (array_values($crops) as $crop) {
+            $format = Variants::format($crop['format']);
+            $row = $set->row($format['name']);
+            if (($crop['auto'] ?? false) === true) {
+                if ($row !== null && Operator::box($row) !== null) {
+                    if ($row->left === null && $row->top === null) {
+                        $edit['remove'][] = $row;
+                    } else {
+                        // A row of the old editor under the same name (shareImage): its old crop stays.
+                        $row->ratio = $row->alignX = $row->alignY = $row->scale = $row->basis = null;
+                        $row->version = (int) $row->version + 1;
+                        $edit['save'][] = $row;
+                    }
+                }
+                continue;
+            }
+            $box = self::boxFrom($format['ratio']->name, $crop['ax'], $crop['ay'], $crop['scale'], $crop['basis'] ?? null);
+            $edit['save'][] = Operator::put($row, $set->media, $box, format: $format['name']);
+        }
+        return $edit;
+    }
+
+    /** Why a list of fixed formats' crops is not taken (`formats()` gives null) - null when it is. */
+    public static function formatsProblem(array $crops): ?string
+    {
+        $seen = [];
+        foreach (array_values($crops) as $crop) {
+            $name = is_array($crop) && is_string($crop['format'] ?? null) ? $crop['format'] : null;
+            if ($name === null) {
+                return 'Every crop names its format.';
+            }
+            $format = Variants::format($name);
+            if ($format === null) {
+                return "There is no fixed format $name.";
+            }
+            if (isset($seen[$name])) {
+                return "The format $name comes twice.";
+            }
+            $seen[$name] = true;
+            if (($crop['auto'] ?? false) === true) {
+                continue;
+            }
+            $problem = self::boxProblem($format['ratio']->name, $crop['ax'] ?? null, $crop['ay'] ?? null, $crop['scale'] ?? null, $crop['basis'] ?? null);
+            if ($problem !== null) {
+                return $name . ': ' . $problem;
+            }
+        }
+        return null;
     }
 
     /**

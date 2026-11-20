@@ -115,12 +115,39 @@ final class CropSet
         }
         $manual = [];
         foreach ($this->rows as $format => $row) {
+            // Only the rows of ratios (named by their ratio): the master's and a fixed format's are no anchors.
             $box = $format === Variants::MASTER ? null : Operator::box($row);
-            if ($box !== null) {
+            if ($box !== null && (string) $format === $box->ratio->name) {
                 $manual[] = $box;
             }
         }
         return $this->manual = $manual;
+    }
+
+    /**
+     * The crop of a fixed format (`Variants::formats()`) in a master of the
+     * given pixels: its own, set by hand - it changes nothing else - or
+     * computed from the crops of the ratios at its exact ratio, as a ratio
+     * nobody set would be. Null for a name that is no fixed format.
+     */
+    public function formatCrop(string $name, int $masterWidth, int $masterHeight): ?CropBox
+    {
+        $format = Variants::format($name);
+        if ($format === null) {
+            return null;
+        }
+        $own = Operator::box($this->row($name));
+        if ($own !== null && $own->ratio->equals($format['ratio'])) {
+            return $own;
+        }
+        return $this->computedFormatCrop($format['ratio'], $masterWidth, $masterHeight);
+    }
+
+    /** What a fixed format's crop is without one of its own: the ratios' crops at its ratio. */
+    public function computedFormatCrop(Ratio $ratio, int $masterWidth, int $masterHeight): CropBox
+    {
+        $crop = $this->cropIn($ratio, $masterWidth, $masterHeight);
+        return $crop->source === CropBox::MANUAL ? $crop->as(CropBox::INTERPOLATED) : $crop;
     }
 
     /**

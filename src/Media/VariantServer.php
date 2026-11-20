@@ -11,7 +11,8 @@ use Systopic\System\Tables\Medias\Files;
 /**
  * Answers the address of a variant that is not there yet:
  *
- *   var/formats/<id path>/<name>--<variant>.<type>
+ *   var/formats/<id path>/<name>--<variant>.<type>      a ratio, a size (Variants::parse())
+ *   var/formats/<id path>/<name>--<format>.<type>       a fixed format (Variants::formats()), its type only
  *
  * A file that exists is sent by the web server and never comes here. What
  * comes here is made, stored and sent - if it is declared (`Variants`), and
@@ -47,14 +48,18 @@ final class VariantServer
         $set = MediaCrops::one($scope, $request['mediaId']);
         $media = $set?->media;
         $stem = $media === null ? '' : Files::variantStem((string) $media->filename) . '--';
-        $variant = $media !== null && $stem !== '--' && str_starts_with($request['name'], $stem) && VariantRenderer::supports($media->mimetype)
-            ? Variants::parse(substr($request['name'], strlen($stem)))
-            : null;
-        if ($variant === null) {
+        $ours = $media !== null && $stem !== '--' && str_starts_with($request['name'], $stem) && VariantRenderer::supports($media->mimetype);
+        $suffix = $ours ? substr($request['name'], strlen($stem)) : '';
+        $variant = $ours ? Variants::parse($suffix) : null;
+        // A fixed format (`--shareImage.jpg`): only in its own type.
+        $format = $ours && $variant === null ? Variants::format($suffix) : null;
+        if ($format !== null && $format['type'] !== $request['type']) {
+            $format = null;
+        }
+        if ($variant === null && $format === null) {
             self::fail(404, 'No such picture.');
             return true;
         }
-        $suffix = substr($request['name'], strlen($stem));
         $file = Files::variantPath((int) $media->id, (string) $media->filename, $suffix, $request['type']);
         $rebuild = isset($_GET['rebuild']);
         if (!$rebuild && is_file($file)) {
@@ -81,7 +86,7 @@ final class VariantServer
                     @unlink($file);
                 }
                 $renderer = new VariantRenderer($set, $original);
-                $file = $renderer->make($variant, $request['type']);
+                $file = $format !== null ? $renderer->makeFormat($format) : $renderer->make($variant, $request['type']);
                 if ($renderer->sizeChanged) {
                     $scope->save($media);
                 }

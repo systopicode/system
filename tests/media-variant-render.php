@@ -199,4 +199,8 @@ foreach ([['b' => 100, 'c' => 161, 's' => 100], ['b' => 97, 'c' => 100, 's' => 0
             abs($got['r'] - $want[0]) <= 1 && abs($got['g'] - $want[1]) <= 1 && abs($got['b'] - $want[2]) <= 1);
     }
 }
+// A fixed format: exactly its pixels - down where the crop has more, up where it has fewer.
+$exact = VariantRenderer::exactly($original, new CropBox(Ratio::of('40:21'), 0.5, 0.5, 1), 1200, 630);
+$small = VariantRenderer::exactly($original, new CropBox(Ratio::of('40:21'), 0.5, 0.5, 1), 120, 63);
+check('a fixed format is exactly its pixels, enlarged or reduced', $size($exact) === [1200, 630] && $size($small) === [120, 63] && $at($exact, 300, 315) === 'red' && $at($exact, 900, 315) === 'blue');
 echo "media variant render: all checks passed\n";

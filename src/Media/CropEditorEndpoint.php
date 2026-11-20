@@ -15,6 +15,7 @@ use Systopic\System\Queries\MediaCrops\MediaCrops;
  *   saveMasterCrop  ratio ax ay scale basis | auto=1  + brightness contrast saturation angle flip
  *   saveRatioCrop   ratio ax ay scale basis       (ax, ay: the alignment, basis fill|fit - see CropBox)
  *   saveRatioCrops  crops=<json>                     [{ratio, ax, ay, scale, basis} | {ratio, auto: true}, ...]
+ *   saveFormatCrops crops=<json>                     [{format, ax, ay, scale, basis} | {format, auto: true}, ...] - fixed formats
  *   resetCrop       format=<ratio>|original          back to automatic
  *   savePois        pois=<json> [drop_crops=1]
  *
@@ -35,7 +36,7 @@ use Systopic\System\Queries\MediaCrops\MediaCrops;
  */
 final class CropEditorEndpoint
 {
-    public const ACTIONS = ['cropState', 'saveMasterCrop', 'saveRatioCrop', 'saveRatioCrops', 'resetCrop', 'savePois'];
+    public const ACTIONS = ['cropState', 'saveMasterCrop', 'saveRatioCrop', 'saveRatioCrops', 'saveFormatCrops', 'resetCrop', 'savePois'];
 
     public static function handles(string $action): bool
     {
@@ -77,6 +78,13 @@ final class CropEditorEndpoint
                     $edit = is_array($crops) ? CropEdits::crops($set, $crops) : null;
                     if ($edit === null) {
                         return self::refused(422, is_array($crops) ? CropEdits::cropsProblem($crops) ?? 'The crops are not taken.' : 'The crops are no list.');
+                    }
+                    break;
+                case 'saveFormatCrops':
+                    $crops = json_decode((string) $param('crops', '[]'), true);
+                    $edit = is_array($crops) ? CropEdits::formats($set, $crops) : null;
+                    if ($edit === null) {
+                        return self::refused(422, is_array($crops) ? CropEdits::formatsProblem($crops) ?? 'The crops are not taken.' : 'The crops are no list.');
                     }
                     break;
                 case 'resetCrop':

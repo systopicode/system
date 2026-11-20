@@ -74,7 +74,7 @@ class Panel extends PanelNode {
 				'nodeId' => $nodeId,
 				'label'  => $label !== '' ? $label : ($media ? 'File ' : 'Page ') . $nodeId,
 				'href'   => $media
-					? $pages . 'editor/file/?target_id=' . $nodeId
+					? $pages . \Systopic\System\Media\Presentation::editorPath((int) $nodeId, (string) ($row['media_mimetype'] ?? ''), (string) ($row['media_filename'] ?? ''))
 					: $pages . '?id=' . $nodeId,
 				'media'  => $media,
                 'context' => ($media ? 'Media' : 'Page') . ' ' . $nodeId . ($media ? '' : ' · ' . implode(', ', array_unique(array_filter(array_column($rows, 'page_language_iso'))))),
@@ -93,7 +93,7 @@ class Panel extends PanelNode {
 		$pages = class_exists(\Systopic\Cms\Tables\Pages\Model::class)
 			? \Systopic\Db\Schema\Schema::tableNameOf(\Systopic\Cms\Tables\Pages\Model::class)
 			: null;
-		$sql = 'SELECT n.node_id, n.node_type, m.media_label, m.media_filename'
+		$sql = 'SELECT n.node_id, n.node_type, m.media_label, m.media_filename, m.media_mimetype'
 			. ($pages !== null ? ', p.page_label, p.page_language_iso' : '')
 			. " FROM {$nodes} n"
 			. " LEFT JOIN {$medias} m ON m.media_node_id = n.node_id"

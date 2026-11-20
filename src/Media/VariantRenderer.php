@@ -81,6 +81,26 @@ final class VariantRenderer
     }
 
     /**
+     * Makes a fixed format (`Variants::formats()`) and stores it: its crop
+     * (`CropSet::formatCrop()`) at exactly its pixels, in its type. A crop
+     * with fewer pixels is enlarged - the format's size is its point.
+     *
+     * @param array{name: string, width: int, height: int, type: string} $format
+     * @return string the file
+     */
+    public function makeFormat(array $format): string
+    {
+        $media = $this->set->media;
+        $master = $this->masterImage();
+        $crop = $this->set->formatCrop($format['name'], $master->getImageWidth(), $master->getImageHeight());
+        $image = self::exactly($master, $crop, $format['width'], $format['height']);
+        $master->clear();
+        $path = Files::writeVariant((int) $media->id, (string) $media->filename, $format['name'], $format['type'], self::encode($image, $format['type'], self::QUALITY));
+        $image->clear();
+        return $path;
+    }
+
+    /**
      * The master as a picture: from its file, or made from the original and
      * stored. The medium's row gets the master's size (and the original's,
      * where it was not known) - `$sizeChanged` says so.
@@ -154,6 +174,18 @@ final class VariantRenderer
             if ($width < $pixels['w']) {
                 $image->resizeImage($width, $height, \Imagick::FILTER_LANCZOS, 1);
             }
+        }
+        return $image;
+    }
+
+    /** A crop of the master at exactly these pixels - scaled down, or up where it has fewer. */
+    public static function exactly(\Imagick $master, CropBox $crop, int $width, int $height): \Imagick
+    {
+        $image = clone $master;
+        $pixels = $crop->pixels($image->getImageWidth(), $image->getImageHeight());
+        self::frame($image, $pixels['w'], $pixels['h'], $pixels['x'], $pixels['y']);
+        if ($pixels['w'] !== $width || $pixels['h'] !== $height) {
+            $image->resizeImage($width, $height, \Imagick::FILTER_LANCZOS, 1);
         }
         return $image;
     }

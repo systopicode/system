@@ -44,10 +44,11 @@
 	gap: 1.5rem;
 }
 
-.ceTabs > button{
+.ceTabs > :is(a, button){
 	display: inline-flex;
 	align-items: center;
 	gap: 0.45rem;
+	font-size: 0.8125rem;   /* as the buttons the tabs once were (50_forms.css) - a link takes the header's */
 }
 
 .cropEditor > .ceTabs{
@@ -348,7 +349,7 @@ header > .ceTabs{
 	pointer-events: none;
 }
 
-.cropEditor .ceRatios{
+.cropEditor :is(.ceRatios, .ceGhosts){
 	position: absolute;
 	top: 0;
 	bottom: 0;
@@ -360,7 +361,7 @@ header > .ceTabs{
 }
 
 /* one line: the circles overlap, the middle (1:1) furthest back, the ends in front (z-index from the script) */
-.cropEditor .ceRatios li{
+.cropEditor :is(.ceRatios, .ceGhosts) li{
 	position: absolute;
 	top: calc(var(--p, 0.5) * 100%);
 	right: 0;
@@ -438,6 +439,38 @@ header > .ceTabs{
 /* on the stage and set by hand: the rectangle filled */
 .cropEditor .ceRatios button.selected.is-manual span{
 	background: currentColor;
+}
+
+/* fixed formats: the declared ratios greyed behind them - where they lie, not to be picked */
+.cropEditor .ceGhosts{
+	pointer-events: none;
+	opacity: 0.4;
+}
+
+.cropEditor .ceGhosts[hidden]{
+	display: none;
+}
+
+.cropEditor .ceGhostBox{
+	display: grid;
+	place-items: center;
+	width: 1.5rem;
+	height: 1.5rem;
+	border-radius: 50%;
+	background: #fff;
+	color: var(--cmsMuted, #777);
+}
+
+.cropEditor .ceGhostBox span{
+	display: block;
+	box-sizing: border-box;
+	border: 2px solid currentColor;
+	border-radius: 2px;
+}
+
+/* a fixed format's name may be long: it stays one line */
+.cropEditor[data-fixed] .ceRatios .ceRatioName{
+	font-weight: 600;
 }
 
 /* the reset of a level, beside its slider */
@@ -597,7 +630,7 @@ header > .ceTabs{
 		gap: 0.5rem;
 	}
 
-	.cropEditor > .ceTabs > button{
+	.cropEditor > .ceTabs > :is(a, button){
 		flex: 1 1 0;
 		justify-content: center;
 	}
@@ -608,7 +641,7 @@ header > .ceTabs{
 		margin-left: 0.75rem;
 	}
 
-	header > .ceTabs > button > span{
+	header > .ceTabs > :is(a, button) > span{
 		display: none;
 	}
 
@@ -704,7 +737,7 @@ header > .ceTabs{
 		left: calc(var(--p, 0.5) * 100%);
 	}
 
-	.cropEditor .ceRatios{
+	.cropEditor :is(.ceRatios, .ceGhosts){
 		top: 0;
 		bottom: 1.8rem;
 		left: 0;
@@ -712,7 +745,7 @@ header > .ceTabs{
 	}
 
 	/* across: the name above its circle */
-	.cropEditor .ceRatios li{
+	.cropEditor :is(.ceRatios, .ceGhosts) li{
 		top: auto;
 		bottom: 0;
 		right: auto;
@@ -721,4 +754,70 @@ header > .ceTabs{
 		gap: 0.2rem;
 		transform: translateX(-50%);
 	}
+}
+
+/* ---- every file of a picture (cms: editor/file/image/files/, Media\VariantList): in place of the editor.
+   A grid - across the sizes, down the master and the ratios - and lists below it. Made: green;
+   hatched: a size the picture has not the pixels for (made in its own). Everything left aligned. */
+.cmslightbox .fileFrame.fileVariants{
+	display: block;
+	align-self: stretch;
+	width: 100%;
+	height: 100%;
+	min-height: 0;
+	overflow: auto;
+	padding: 0;
+	background: none;
+	font-size: 0.9375rem;
+}
+
+.cmslightbox .fileVariants .fileHint{
+	margin: 0 0 1rem;
+	padding: 0;
+}
+
+.cmslightbox .fileVariants h3{
+	margin: 1.5rem 0 0.5rem;
+	font-size: 1rem;
+}
+
+.cmslightbox .fileVariants table{
+	width: 100%;
+	border-collapse: collapse;
+}
+
+.cmslightbox .fileVariants :is(th, td){
+	padding: 0.45rem 0.6rem;
+	border: 1px solid var(--cmsLine, rgb(0 0 0 / 0.15));
+	text-align: left;
+	vertical-align: top;
+	white-space: nowrap;
+	font-size: inherit;
+}
+
+.cmslightbox .fileVariants thead th,
+.cmslightbox .fileVariants tbody th{
+	background: rgb(0 0 0 / 0.04);
+	font-weight: 600;
+}
+
+
+.cmslightbox .fileVariants .fileVariantsGrid small{
+	display: block;
+	margin-top: 0.15rem;
+	font-size: 0.75rem;
+	color: var(--cmsMuted, #777);
+}
+
+.cmslightbox .fileVariants tr.is-made > td:first-child,
+.cmslightbox .fileVariants td.is-made{
+	background: color-mix(in srgb, var(--cmsSuccess, #2a7) 16%, transparent);
+}
+
+.cmslightbox .fileVariants td.is-capped:not(.is-made){
+	background: repeating-linear-gradient(45deg, transparent 0 6px, rgb(0 0 0 / 0.04) 6px 12px);
+}
+
+.cmslightbox .fileVariants .fileVariantsList td:not(:first-child){
+	color: var(--cmsMuted, #777);
 }

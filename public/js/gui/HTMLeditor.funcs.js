@@ -165,7 +165,8 @@ function formatImage(event) {
 	if (!id) {
 		return;
 	}
-	const editorUrl = settings.siteRoot + 'admin/pages/editor/file/?target_id=' + id + '&format=' + encodeURIComponent(media ? media.format : mediaFormatOf(el));
+	// A picture of the page: the image editor (cms: editor/file/image/), at the format it has here.
+	const editorUrl = settings.siteRoot + 'admin/pages/editor/file/image/?target_id=' + id + '&format=' + encodeURIComponent(media ? media.format : mediaFormatOf(el));
 	// The toolbar may already own focus. Keep the actual edited field in
 	// the blur-save flow before opening a dialog that can update the page.
 	(el.closest('.editor[contenteditable="true"]') || document.activeElement?.closest('.editor[contenteditable="true"]'))?.blur();

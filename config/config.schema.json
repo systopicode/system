@@ -64,6 +64,25 @@
 						}
 					}
 				},
+				"formats": {
+					"title": "Fixed formats",
+					"description": "Pictures of exact pixels, one file each (<name>--<format>.<type>): the share image, a feed's picture. Their crop is computed from the crops of the ratios; set in the image editor (tab Formats), it changes this format only. A crop with fewer pixels than the format is enlarged.",
+					"type": "object",
+					"x-display": "table",
+					"propertyNames": { "description": "The name templates ask for (setFormat('<name>')) - a letter first: shareImage …", "pattern": "^[a-z][a-zA-Z0-9]*$" },
+					"additionalProperties": {
+						"title": "Fixed format",
+						"type": "object",
+						"properties": {
+							"label": { "title": "Label", "description": "In the image editor. Empty: the name.", "type": "string" },
+							"width": { "title": "Width", "description": "Pixels.", "type": "integer", "minimum": 1 },
+							"height": { "title": "Height", "description": "Pixels.", "type": "integer", "minimum": 1 },
+							"type": { "title": "File type", "description": "jpg for link previews - not every platform reads webp.", "type": "string", "enum": ["jpg", "webp", "png"], "default": "jpg" }
+						},
+						"required": ["width", "height"]
+					},
+					"default": { "shareImage": { "label": "Share image", "width": 1200, "height": 630, "type": "jpg" } }
+				},
 				"videoFormats": {
 					"title": "Video formats",
 					"description": "The formats a video can be made in.",

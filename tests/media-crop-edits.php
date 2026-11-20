@@ -187,5 +187,59 @@ foreach ([['nonsense', 0.5, 0.5, 1], ['16:9', 'x', 0.5, 1], ['16:9', 0.5, 0.5, 0
     ['16:9', 0.5, 0.5, 0.8], ['16:9', 0.5, 0.5, 1, 'cover'], ['16:9', -0.2, 0.5, 1, 'fit'], ['16:9', 0.5, 1.3, 1]] as $i => $bad) {
     check("a request that is no crop is refused - $i", CropEdits::boxFrom(...$bad) === null);
 }
+
+// ------------------------------------------------------------ fixed formats
+Variants::reset();
+$share = Variants::format('shareImage');
+check('without a config: the share image, 1200 x 630, jpg, its exact ratio', $share !== null && $share['width'] === 1200 && $share['height'] === 630
+    && $share['type'] === 'jpg' && $share['ratio']->name === '40:21');
+Variants::configureFormats(['card' => ['width' => 800, 'height' => 800, 'type' => 'webp'], '2mp' => ['width' => 10, 'height' => 10], 'master' => ['width' => 10, 'height' => 10],
+    'Upper' => ['width' => 10, 'height' => 10], 'noSize' => ['width' => 10], 'odd' => ['width' => 10, 'height' => 10, 'type' => 'gif']]);
+check('a name is a letter first, not master, with a size; an unknown type is jpg', array_keys(Variants::formats()) === ['card', 'odd'] && Variants::format('odd')['type'] === 'jpg');
+Variants::reset();
+
+$media = $medium();
+$set = $after(new CropSet($media, []), CropEdits::crop(new CropSet($media, []), new CropBox($square, 0.2, 0.5, 2)));
+$computed = $set->formatCrop('shareImage', 3000, 2000);
+check('a fixed format without a crop of its own: computed from the crops of the ratios at its ratio', $computed->source !== CropBox::MANUAL
+    && $computed->ratio->name === '40:21' && $near($computed->alignX, $set->cropIn(Ratio::of('40:21'), 3000, 2000)->alignX));
+check('no fixed format of that name: null', $set->formatCrop('nope', 3000, 2000) === null);
+$edit = CropEdits::formats($set, [['format' => 'shareImage', 'ax' => 0.1, 'ay' => 0.7, 'scale' => 1.4, 'basis' => 'fill']]);
+check('its crop set by hand: one row, named by the format, with the format\'s ratio', $edit !== null && count($edit['save']) === 1
+    && $edit['save'][0]->format === 'shareImage' && $edit['save'][0]->ratio === '40:21');
+$withShare = $after($set, $edit);
+check('it is the format\'s crop from now on', $withShare->formatCrop('shareImage', 3000, 2000)->source === CropBox::MANUAL && $near($withShare->formatCrop('shareImage', 3000, 2000)->alignX, 0.1));
+check('and no anchor of the ratios: their crops stay as they were', count($withShare->manual()) === 1
+    && $near($withShare->crop(Ratio::of('16:9'))->alignX, $set->crop(Ratio::of('16:9'))->alignX) && $near($withShare->crop(Ratio::of('2:1'))->scale, $set->crop(Ratio::of('2:1'))->scale));
+$back = CropEdits::formats($withShare, [['format' => 'shareImage', 'auto' => true]]);
+check('back to computed: its row goes', count($back['remove']) === 1 && $after($withShare, $back)->formatCrop('shareImage', 3000, 2000)->source !== CropBox::MANUAL);
+$old = Operator::blank($media, 'shareImage', false, 1.0, 1.0);
+$withOld = new CropSet($media, [Operator::put($old, $media, new CropBox(Ratio::of('40:21'), 0.1, 0.5, 1.2), format: 'shareImage')]);
+$keep = CropEdits::formats($withOld, [['format' => 'shareImage', 'auto' => true]]);
+check('a row of the old editor under the name keeps its old crop: only the new one goes', $keep['remove'] === [] && count($keep['save']) === 1
+    && $keep['save'][0]->ratio === null && $keep['save'][0]->left !== null);
+check('several formats: none that is no fixed format, twice, or no crop', CropEdits::formats($set, [['format' => 'nope', 'auto' => true]]) === null
+    && str_contains((string) CropEdits::formatsProblem([['format' => 'shareImage', 'auto' => true], ['format' => 'shareImage', 'auto' => true]]), 'twice')
+    && str_contains((string) CropEdits::formatsProblem([['format' => 'shareImage', 'ax' => 0.5, 'ay' => 0.5, 'scale' => 0.5]]), 'shareImage: In fill'));
+$state = CropEdits::state($withShare);
+$shareState = $state['formats'][0] ?? [];
+check('the editor is told the formats: its pixels, its place on the slider, its crop and the computed one', ($shareState['name'] ?? '') === 'shareImage'
+    && $shareState['width'] === 1200 && $shareState['source'] === CropBox::MANUAL && $near($shareState['ax'], 0.1)
+    && $shareState['auto']['source'] !== CropBox::MANUAL && $shareState['position'] >= 0 && $shareState['position'] < 0.2);
+$turned = $after($withShare, CropEdits::master($withShare, null, ['r' => 90]));
+check('a quarter turn of the master turns its crop too - and it keeps its name', $turned->row('shareImage') !== null && $turned->row('shareImage')->ratio === '40:21');
+
+// ------------------------------------------------------------ every file of a picture
+$list = \Systopic\System\Media\VariantList::of($withShare);
+check('every file of a picture: across the sizes, down the master and each ratio', $list['sizes'] === Variants::sizes()
+    && array_column($list['grid'], 'title') === ['Master', ...array_keys(Variants::ratios())] && $list['grid'][0]['cells']['own']['name'] === 'master');
+$squareRow = $list['grid'][array_search('1:1', array_column($list['grid'], 'title'), true)]['cells'];
+check('a cell: the variant by its name - a size beyond the picture in its own pixels', $squareRow['0.5']['name'] === '0.5mp1by1' && $squareRow['0.5']['file'] === 'bild--0.5mp1by1.webp'
+    && $squareRow['own']['name'] === '1by1' && $squareRow['10']['name'] === '10mp1by1' && $squareRow['10']['note'] !== '' && $squareRow['10']['width'] === $squareRow['own']['width']);
+$shareRow = $list['fixed'][0];
+check('below: the fixed formats - file, pixels, address, not made yet', $shareRow['file'] === 'bild--shareImage.jpg' && $shareRow['width'] === 1200
+    && !$shareRow['made'] && str_contains($shareRow['url'], 'var/formats/000/42/bild--shareImage.jpg?v=') && $list['names'] === [] && $list['original']['name'] === 'bild.jpg'
+    && $list['made'] === 0 && $list['all'] > 40);
+
 Variants::reset();
 echo "media crop edits: all checks passed\n";

@@ -68,16 +68,18 @@ final class Operator
 
     /**
      * A crop set by hand in the new form: the crop of a ratio (found by the
-     * ratio's name), or - `$master` - the master crop, whose ratio is free.
-     * Version bumped: every picture made of the medium is made again.
+     * ratio's name), - `$master` - the master crop, whose ratio is free, or
+     * - `$format` - the crop of a fixed format (`Variants::formats()`,
+     * found by its name). Version bumped: every picture made of the medium
+     * is made again.
      */
-    public static function put(?Model $crop, MediaRow $media, CropBox $box, bool $master = false): Model
+    public static function put(?Model $crop, MediaRow $media, CropBox $box, bool $master = false, ?string $format = null): Model
     {
         if ($crop === null) {
             $crop = new Model();
             $crop->media = $media;
         }
-        $crop->format = $master ? Variants::MASTER : $box->ratio->name;
+        $crop->format = $master ? Variants::MASTER : ($format ?? $box->ratio->name);
         $crop->ratio = $box->ratio->name;
         $crop->alignX = self::decimal($box->alignX);
         $crop->alignY = self::decimal($box->alignY);

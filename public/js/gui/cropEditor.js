@@ -65,17 +65,19 @@
  * (sys.cropMath); what is stored is worked out again by the server, and the
  * editor redraws from the server's answer.
  *
- *   sys.cropEditor.open({stage: element, url: '…/admin/pages/editor/file/', nodeId: 169})
+ *   sys.cropEditor.open({stage: element, url: '…/admin/pages/editor/file/image/', nodeId: 169, mode: 'crops', ratio: '16:9'})
  *
- * The two modes (tabs) go into the header of the window the stage lies in
- * (`.cmslightbox > section > header`), after its title; option `header`:
- * another element, or null for the top of the editor.
+ * The modes are tabs in the header of the window, each an address of its
+ * own (cms: admin/pages/editor/file/image/master|crops/) - the panel writes
+ * them, a tab opens the editor anew in its mode. Leaving with changes not
+ * applied asks first, as any link out does.
  */
 (function () {
 	'use strict';
 
 	const editor = {};
 	const ICON = name => '<i class="cmsIcon cmsIcon-' + name + '" aria-hidden="true"></i>';
+	const esc = text => String(text).replace(/[&<>"']/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'})[c]);
 	/**
 	 * The basis, drawn: dashed the picture (16:9), solid the crop (1:1). Fill: the
 	 * crop inside the picture; fit: the picture inside the crop. The crop stays,
@@ -103,8 +105,18 @@
 	/** Ctrl + wheel: the scale goes in steps of this (1, 1.05, 1.1 ...). */
 	editor.step = 0.05;
 
+	/**
+	 * options: stage (the element it takes the place of), url (where its
+	 * requests go, ending in /), nodeId, mode ('master' | 'crops' | 'formats'
+	 * - the tab the address chose), ratio (the ratio, or the fixed format,
+	 * to show first).
+	 * A new editor puts away the one before it, whose page went with the tab.
+	 */
 	editor.open = function (options) {
-		const session = new Session(options);
+		if (editor.current) {
+			editor.current.close(true);
+		}
+		const session = editor.current = new Session(options);
 		session.start();
 		return session;
 	};
@@ -112,8 +124,9 @@
 	function Session(options) {
 		this.options = options;
 		this.math = sys.cropMath;
-		this.mode = 'master';
-		this.ratioName = null;      // crops mode: the ratio on screen
+		this.mode = options.mode === 'crops' || options.mode === 'formats' ? 'crops' : 'master';   // the tab: an address of its own (Editor\File\Image\Panel)
+		this.fixed = options.mode === 'formats';   // crops of fixed formats: each its own, no interpolation, none an anchor
+		this.ratioName = options.ratio || null;   // crops mode: the ratio (or the fixed format) on screen
 		this.work = null;           // what is being edited
 		this.saved = null;          // the same as last stored
 		this.pending = new Map();   // crops mode: ratio name -> a crop changed, or {auto: true}, not stored yet
@@ -139,12 +152,8 @@
 		const el = this.el = document.createElement('div');
 		el.className = 'cropEditor';
 		el.innerHTML =
-			'<div class="ceTabs" role="tablist" aria-label="What to edit">' +
-				'<button type="button" role="tab" data-ce-mode="master" title="Turn, look and crop of the whole picture" aria-selected="false">' + ICON('image') + '<span>Edit master</span></button>' +
-				'<button type="button" role="tab" data-ce-mode="crops" title="One crop per aspect ratio" aria-selected="false">' + ICON('crop-simple') + '<span>Edit crops</span></button>' +
-			'</div>' +
 			'<div class="ceSide">' +
-				'<div class="ceSlider"><div class="ceTrack"><span class="ceKnob"></span></div><ol class="ceRatios"></ol></div>' +
+				'<div class="ceSlider"><div class="ceTrack"><span class="ceKnob"></span></div><ol class="ceGhosts" aria-hidden="true" hidden></ol><ol class="ceRatios"></ol></div>' +
 			'</div>' +
 			'<div class="ceStage">' +
 				'<img class="ceUnder" alt="" draggable="false">' +
@@ -191,19 +200,8 @@
 					'<button type="button" class="button submit" data-ce-save title="Apply all changes" hidden>Apply</button>' +
 				'</div>' +
 			'</div>';
-		// The modes go into the header of the window, after its title - where a window has one.
-		const tabs = this.tabsEl = el.querySelector('.ceTabs');
-		const header = this.options.header !== undefined ? this.options.header
-			: (stage.closest('.cmslightbox > section') || {querySelector: () => null}).querySelector(':scope > header');
-		if (header) {
-			el.classList.add('is-headed');
-			const title = header.querySelector(':scope > h1');
-			if (title) {
-				title.after(tabs);
-			} else {
-				header.prepend(tabs);
-			}
-		}
+		// The modes are tabs of the window's header, each an address (the panel writes them).
+		el.classList.add('is-headed');
 		stage.classList.add('cropEditing');
 		stage.append(el);
 		this.stageEl = el.querySelector('.ceStage');
@@ -233,8 +231,10 @@
 			this.drawing = 0;
 		}
 		this.el.remove();
-		this.tabsEl.remove();
 		this.options.stage.classList.remove('cropEditing');
+		if (editor.current === this) {
+			editor.current = null;
+		}
 		if (this.options.onClose) {
 			this.options.onClose(this.stored);
 		}
@@ -278,7 +278,11 @@
 	/** Takes what the server says the medium is now - nothing is pending any more - and shows the current mode from it. */
 	Session.prototype.take = function (data) {
 		this.data = data;
-		this.base = data.ratios.map(r => Object.assign({}, r, {ratio: this.math.ratio(r.w, r.h), basis: r.basis || 'fill'}));
+		this.base = (this.fixed ? data.formats || [] : data.ratios).map(r => Object.assign({}, r, {ratio: this.math.ratio(r.w, r.h), basis: r.basis || 'fill'}));
+		if (!this.base.length) {
+			this.status('There are no fixed formats.');
+			return;
+		}
 		this.pending.clear();
 		this.recompute();
 		if (!this.ratioName || !this.ratios.some(r => r.name === this.ratioName)) {
@@ -298,6 +302,17 @@
 		this.revision++;
 		if (!this.pending.size) {
 			this.ratios = this.base.map(r => Object.assign({}, r));
+			return;
+		}
+		if (this.fixed) {
+			// A fixed format's crop changes that format only: its own, or back to the one computed from the ratios.
+			this.ratios = this.base.map(r => {
+				const changed = this.pending.get(r.name);
+				if (!changed) {
+					return Object.assign({}, r);
+				}
+				return Object.assign({}, r, changed.auto ? r.auto : {ax: changed.ax, ay: changed.ay, scale: changed.scale, basis: changed.basis, source: 'manual'});
+			});
 			return;
 		}
 		const m = this.data.master;
@@ -402,9 +417,9 @@
 	};
 
 	/**
-	 * While something is not stored: leaving asks first. Inside the editor
-	 * that is the tabs (leave()); outside it a link or a close button of the
-	 * page, or the page itself.
+	 * While something is not stored: leaving asks first - a link or a close
+	 * button outside the editor (the tabs in the window's header too), or
+	 * the page itself. Inside it, the tool for points of interest (leave()).
 	 */
 	Session.prototype.guard = function () {
 		if (this.guarding) {
@@ -696,7 +711,7 @@
 		const master = this.mode === 'master';
 		const dirty = this.dirty();
 		el.dataset.mode = this.mode;
-		this.tabsEl.querySelectorAll('[data-ce-mode]').forEach(b => b.setAttribute('aria-selected', String(b.dataset.ceMode === this.mode)));
+		el.toggleAttribute('data-fixed', !!this.fixed);
 		// What cannot be used is not shown.
 		el.querySelectorAll('[data-ce-level],[data-ce-turn],[data-ce-quarter],[data-ce-flip],[data-ce-look],[data-ce-reset="geometry"],[data-ce-reset="look"]').forEach(b => { b.hidden = !master; });
 		const resetCrops = el.querySelector('[data-ce-reset="crops"]');
@@ -747,9 +762,18 @@
 			const middle = square ? square.position : 0.5;
 			list.innerHTML = this.ratios.map(r => {
 				const box = r.w >= r.h ? [1, r.h / r.w] : [r.w / r.h, 1];
-				return '<li style="--p:' + r.position.toFixed(5) + ';z-index:' + (1 + Math.round(Math.abs(r.position - middle) * 100)) + '"><span class="ceRatioName" aria-hidden="true">' + r.name + '</span>' +
-					'<button type="button" data-ce-ratio="' + r.name + '" title="' + r.name + (master ? '' : ' - ' + SOURCE[r.source]) + '" aria-label="' + r.name + '"' +
+				const name = this.fixed ? r.label || r.name : r.name;
+				const title = this.fixed ? name + ' (' + r.width + ' x ' + r.height + ') - ' + this.sourceOf(r) : r.name + (master ? '' : ' - ' + this.sourceOf(r));
+				return '<li style="--p:' + r.position.toFixed(5) + ';z-index:' + (1 + Math.round(Math.abs(r.position - middle) * 100)) + '"><span class="ceRatioName" aria-hidden="true">' + esc(name) + '</span>' +
+					'<button type="button" data-ce-ratio="' + esc(r.name) + '" title="' + esc(title) + '" aria-label="' + esc(name) + '"' +
 					(!master && r.source === 'manual' ? ' class="is-manual"' : '') + '><span style="width:' + (box[0] * 1.05).toFixed(3) + 'rem;height:' + (box[1] * 1.05).toFixed(3) + 'rem"></span></button></li>';
+			}).join('');
+			// Fixed formats: the declared ratios greyed behind them, to see where they lie - not to be picked.
+			const ghosts = el.querySelector('.ceGhosts');
+			ghosts.hidden = !this.fixed;
+			ghosts.innerHTML = !this.fixed ? '' : this.data.ratios.map(r => {
+				const box = r.w >= r.h ? [1, r.h / r.w] : [r.w / r.h, 1];
+				return '<li style="--p:' + r.position.toFixed(5) + '"><span class="ceRatioName">' + esc(r.name) + '</span><span class="ceGhostBox"><span style="width:' + (box[0] * 1.05).toFixed(3) + 'rem;height:' + (box[1] * 1.05).toFixed(3) + 'rem"></span></span></li>';
 			}).join('');
 		}
 		// Names that would cover each other: the one further in front is written, the other only on hover.
@@ -789,7 +813,7 @@
 		auto.disabled = pin.disabled = this.busy;
 
 		if (this.sliding && !master) {
-			this.statusEl().textContent = 'Between ' + this.sliding.between + ' - let go: ' + current.name;
+			this.statusEl().textContent = this.fixed ? this.sliding.between : 'Between ' + this.sliding.between + ' - let go: ' + current.name;
 		} else if (!this.message) {
 			const m = this.data.master;
 			const shown = picked;
@@ -799,9 +823,11 @@
 			const turned = master && this.work.angle ? ', turned ' + (Math.round(this.work.angle * 10) / 10) + ' degrees' : '';
 			const others = master ? 0 : Array.from(this.pending.keys()).filter(name => name !== this.ratioName).length;
 			const open = master ? '' : (others ? ' - ' + others + (others === 1 ? ' other crop' : ' other crops') + ' not applied yet' : '');
-			this.statusEl().textContent = this.tool ? (master ? 'Master ' + this.work.ratio.name + turned : this.ratioName) + hint : master
+			const name = this.fixed ? (shown.label || shown.name) + ' ' + shown.width + ' x ' + shown.height : this.ratioName;
+			this.statusEl().textContent = this.tool ? (master ? 'Master ' + this.work.ratio.name + turned : name) + hint : master
 				? 'Master ' + this.work.ratio.name + turned + ' - ' + (this.work.auto && !dirty ? 'the whole picture' : 'cropped') + (dirty ? ' - not applied yet' : '')
-				: this.ratioName + ' - ' + (this.changed() || this.pending.has(this.ratioName) ? 'not applied yet' : SOURCE[shown.source]) + open + ' (master ' + m.width + ' x ' + m.height + ')';
+				: name + ' - ' + (this.changed() || this.pending.has(this.ratioName) ? 'not applied yet' : this.sourceOf(shown)) + open
+					+ (this.fixed ? this.enlarged(shown) : ' (master ' + m.width + ' x ' + m.height + ')');
 		}
 	};
 
@@ -838,6 +864,20 @@
 		host.replaceChildren(row);
 	};
 
+	/** Where a crop on the slider comes from, in words. */
+	Session.prototype.sourceOf = function (r) {
+		return this.fixed && r.source !== 'manual' ? 'computed from the crops of the ratios' : SOURCE[r.source];
+	};
+
+	/** A fixed format whose crop has fewer pixels than the format: says so - the picture is enlarged. */
+	Session.prototype.enlarged = function (format) {
+		const m = this.data.master;
+		const work = this.ratioName === format.name && this.work ? this.work : format;
+		const [w] = this.math.size(format.ratio, work.scale, m.width, m.height, work.basis);
+		const pixels = Math.round(w * m.width);
+		return pixels < format.width ? ' - only ' + pixels + ' px wide here, enlarged to ' + format.width : '';
+	};
+
 	Session.prototype.statusEl = function () {
 		return this.el.querySelector('.ceStatus');
 	};
@@ -859,15 +899,21 @@
 
 	/** Where a ratio sits on the slider: 0 the widest declared one, 1 the narrowest. */
 	Session.prototype.positionOf = function (ratio) {
-		const first = this.ratios[0].ratio;
-		const last = this.ratios[this.ratios.length - 1].ratio;
+		const [first, last] = this.ends();
 		return Math.min(1, Math.max(0, 1 - this.math.position(ratio, last, first)));
+	};
+
+	/** The widest and the narrowest declared ratio: the ends of the slider, in every mode. */
+	Session.prototype.ends = function () {
+		const declared = this.data.ratios;
+		return [this.math.ratio(declared[0].w, declared[0].h), this.math.ratio(declared[declared.length - 1].w, declared[declared.length - 1].h)];
 	};
 
 	/** The ratio at a place on the slider - for the master, whose ratio is free. */
 	Session.prototype.ratioAt = function (position) {
-		const first = Math.log(this.math.value(this.ratios[0].ratio));
-		const last = Math.log(this.math.value(this.ratios[this.ratios.length - 1].ratio));
+		const [widest, narrowest] = this.ends();
+		const first = Math.log(this.math.value(widest));
+		const last = Math.log(this.math.value(narrowest));
 		return this.math.ratio(Math.round(Math.exp(first + (last - first) * position) * 1000), 1000);
 	};
 
@@ -883,6 +929,11 @@
 	 * letting go there does not jump.
 	 */
 	Session.prototype.cropAt = function (position) {
+		if (this.fixed) {
+			// Fixed formats have nothing between them: the nearest one.
+			const r = this.nearest(position);
+			return {crop: {ratio: r.ratio, ax: r.ax, ay: r.ay, scale: r.scale, basis: r.basis || 'fill'}, between: r.label || r.name};
+		}
 		let below = this.ratios[0];
 		let above = this.ratios[this.ratios.length - 1];
 		for (const r of this.ratios) {
@@ -923,7 +974,7 @@
 			this.load();
 		};
 		const distance = Math.abs(target.position - from);
-		if (typeof window.requestAnimationFrame !== 'function' || distance < 1e-4) {
+		if (typeof window.requestAnimationFrame !== 'function' || distance < 1e-4 || this.fixed) {
 			done();
 			return;
 		}
@@ -1264,9 +1315,11 @@
 		let params = {};
 		if (this.mode === 'crops') {
 			this.stash();
+			const key = this.fixed ? 'format' : 'ratio';
+			action = this.fixed ? 'saveFormatCrops' : 'saveRatioCrops';
 			params = {crops: JSON.stringify(Array.from(this.pending, ([name, crop]) => crop.auto
-				? {ratio: name, auto: true}
-				: {ratio: name, ax: crop.ax, ay: crop.ay, scale: crop.scale, basis: crop.basis}))};
+				? {[key]: name, auto: true}
+				: {[key]: name, ax: crop.ax, ay: crop.ay, scale: crop.scale, basis: crop.basis}))};
 		} else {
 			action = 'saveMasterCrop';
 			if (work.freeRatio) {
@@ -1383,19 +1436,13 @@
 	Session.prototype.bind = function () {
 		const el = this.el;
 		const stage = this.stageEl;
-		const on = (selector, handler) => [el, this.tabsEl].flatMap(root => Array.from(root.querySelectorAll(selector))).filter((b, i, all) => all.indexOf(b) === i).forEach(b => b.addEventListener('click', event => {
+		const on = (selector, handler) => el.querySelectorAll(selector).forEach(b => b.addEventListener('click', event => {
 			if (!this.work || this.busy || this.sliding) {
 				return;
 			}
 			handler(event.currentTarget, event);
 		}));
 
-		on('[data-ce-mode]', button => {
-			if (button.dataset.ceMode !== this.mode && this.leave()) {
-				this.mode = button.dataset.ceMode;
-				this.load();
-			}
-		});
 		el.querySelector('[data-ce-more]').addEventListener('click', event => {
 			event.currentTarget.setAttribute('aria-expanded', String(el.classList.toggle('is-open')));
 		});

@@ -159,6 +159,7 @@ var/formats/000/42/bild--2mp.webp          Master, ca. 2 MP
 var/formats/000/42/bild--16by9.webp        16:9, eigene Pixel
 var/formats/000/42/bild--2mp16by9.webp     16:9, ca. 2 MP
 var/formats/000/42/bild--original.webp     unbearbeitetes Original, ca. 2 MP (für den Editor)
+var/formats/000/42/bild--shareImage.jpg    festes Format: exakte Pixel, sein Typ (siehe unten)
 ```
 
 - Typen: `webp`, `jpg`, `png` — die Endung der Anfrage entscheidet.
@@ -215,8 +216,42 @@ Name ist der Master in 1 MP.
 | `megapixels: 3, aspect_ratio: 16:9` | `5mp16by9` |
 | `width: 1920, height: 1920` | `5mp1by1` |
 | `width: 1788, height: 2160` | nächste deklarierte Ratio: `5mp3by4` |
-| `width: 1200, height: 630` (Share-Bild) | `1mp191by100` |
+| `width: 1200, height: 630` (nur als Alias) | `1mp2by1` |
 
+Ein Name, der ein **festes Format** ist, geht vor (`Media::fixed()`).
+
+### Feste Formate (2026-11-20)
+
+Bilder mit **exakten Pixeln**, eine Datei je Medium, ein eigener Crop:
+das Share-Bild, ein Feed-Bild. `packages.system.media.formats`
+(`Variants::formats()`), Vorgabe des Systems:
+`shareImage: {width: 1200, height: 630, type: "jpg"}` (jpg, weil nicht
+jede Plattform webp liest).
+
+- **Name:** ein Buchstabe zuerst (`^[a-z][a-zA-Z0-9]*$`), nie `master`/
+  `original` — so liest ihn `Variants::parse()` nie als Variante.
+- **Datei:** `bild--shareImage.jpg`, genau `width × height`, nur im
+  eigenen Typ (`--shareImage.webp` ist 404). `VariantServer` →
+  `VariantRenderer::makeFormat()` / `exactly()`. Hat der Ausschnitt weniger
+  Pixel, wird **vergrößert** — die Größe ist der Zweck; der Editor sagt es
+  in der Statuszeile.
+- **Crop:** Zeile in `media_crops` mit `media_crop_format = <Name>`,
+  `media_crop_ratio` = die exakte Ratio (1200×630 → `40:21`).
+  Ohne eigene Zeile: **berechnet aus den Crops der Ratios** an seiner
+  Ratio (`CropSet::formatCrop()` / `computedFormatCrop()`), wie eine nicht
+  gesetzte Ratio. Ein eigener Crop wirkt **nur auf dieses Bild**: er ist
+  kein Anker (`CropSet::manual()` nimmt nur Zeilen, deren Format ihre
+  Ratio ist). Passt die gespeicherte Ratio nicht mehr zur Config (Pixel
+  geändert), gilt wieder der berechnete.
+- **Speichern:** `saveFormatCrops crops=[{format, ax, ay, scale, basis} |
+  {format, auto: true}]` (`CropEdits::formats()`, Gründe
+  `formatsProblem()`). Zurück auf berechnet löscht die Zeile — eine Zeile
+  des alten Editors unter demselben Namen (Spalten left/top …) bleibt und
+  verliert nur den neuen Crop.
+- **Viertel-Drehung/Spiegeln des Masters** dreht auch diese Crops mit; die
+  Zeile behält ihren Namen (`Operator::put(…, format:)`).
+- Im Template: `$media->setFormat('shareImage')->src` (so auch
+  `appSite::buildShareImage()`).
 Seit 2026-11-19 gibt es **keinen Schalter zurück** zum alten Renderer mehr
 (`Variants::live()`, `legacyFormats`, `MEDIA_LEGACY_FORMATS` entfallen), den
 alten Editor im Datei-Editor nicht mehr, und alte Adressen
@@ -246,11 +281,24 @@ Datei-Editor (`admin/pages/editor/file/`), `public/js/gui/cropEditor.js`
 (`sys.cropEditor`), Rechnung in `public/js/gui/cropMath.js`
 (`sys.cropMath` — dieselbe wie auf dem Server).
 
-- **Zwei Modi als Reiter:** „Edit master" und „Edit crops" (Symbol +
-  Beschriftung, die Reiter von `50_forms.css`, `[role="tab"]`). Sie stehen im
-  Kopf des Fensters hinter dem Titel (`.cmslightbox > section > header`,
-  Option `header`: ein anderes Element, `null` = oben im Editor); auf dem
-  Telefon nur die Symbole.
+- **Drei Modi als Reiter, jeder eine Adresse** (cms, seit 2026-11-20):
+  „Edit master", „Edit crops", „Edit formats" (nur wenn es feste Formate
+  gibt) — `…/editor/file/image/master|crops|formats/?target_id=…`. Das
+  Panel schreibt sie als Links in den Kopf des Fensters hinter den Titel
+  (`Editor\File\Image\Panel::tabs()`, `nav.ceTabs`, die Reiter von
+  `50_forms.css`, `[role="tab"]`); auf dem Telefon nur die Symbole. Ein
+  Reiter öffnet den Editor neu in seinem Modus (`open({mode, ratio})`, der
+  vorige wird mit `close(true)` weggeräumt); ungespeicherte Änderungen
+  fragt der Wächter für Links nach draußen ab. `&format=` an der Adresse
+  des Datei-Editors wählt Reiter und Startbild: ein festes Format → Formats,
+  eine Ratio oder ein Alias (`16by9`, `fullWidth`) → Crops bei dieser Ratio.
+- **Formats-Modus** (`fixed` im Script, intern `mode = 'crops'`): links die
+  Ratios ausgegraut (`ol.ceGhosts`, nicht wählbar), darüber die festen
+  Formate mit Namen an ihrer Ratio-Stelle (außerhalb geklemmt). Zwischen
+  ihnen wird nichts interpoliert (`cropAt()` = das nächste), Ziehen am
+  Regler springt. ↺ = zurück auf den berechneten Crop (`auto` aus dem
+  Zustand des Servers), 📌, Reset all wie bei den Crops; Apply schickt
+  `saveFormatCrops`.
 - **Der Ort sagt, worauf etwas wirkt** (2026-11-20):
   - **Links der Regler:** was bearbeitet wird (im Crops-Modus Navigation).
   - **Mitte das Bild; seine Ecke oben rechts** (nur Crops-Modus) wirkt nur
@@ -392,6 +440,47 @@ Vierteldrehungen und Spiegeln nehmen die Ausrichtung mit: Ein Crop links im
 Bild sitzt nach 90° oben (`CropEdits::reoriented()`, ein schräger Winkel
 zählt als nächste Vierteldrehung). `clipped` bleibt leer.
 
+### Wo der Editor im cms sitzt
+
+```
+admin/pages/editor/file/                 Rahmen: Kopf, Stage der Art, Seitenleiste; Löschen, Name, Label, Typ, Tags
+  image/                                 Bild-Editor: stage.tpl.php, actions.php (CropEditorEndpoint), Reiter-Panels
+    master/  crops/  formats/            Reiter (nur lightbox.tpl.php, tags.tpl.php → eine Ebene höher)
+    files/                               Reiter „Show files“ (der letzte): alle Dateien des Bildes
+  video/   svg/                          stage.tpl.php + actions.php (Poster, Quelltext)
+  audio.tpl.php pdf.tpl.php skp.tpl.php  Betrachter ohne Requests, Templates des Rahmens
+```
+
+- **Links** auf den Datei-Editor bauen ihre Adresse mit der Art
+  (`Media\Presentation::editorPath($node, $mime, $filename, $type, $format)`
+  → `editor/file/image/?target_id=…`, `…/svg/…`, `…/video/…`; PDF, Audio
+  … bleiben `editor/file/`): Mediathek, Kontextmenü, Dashboard, Share-Bild
+  der Seitenleiste, Tags. Der HTML-Editor öffnet Bilder unter
+  `editor/file/image/?…&format=`. `editor/file/?target_id=…` geht weiter.
+- **Show files** (`image/files/`, `Media\VariantList::of()`): oben das
+  Original (`var/original/`), dann ein Raster - quer die Größen und die
+  eigenen Pixel, längs Master und Ratios, je Zelle der Variantenname
+  (`2mp4by3`) mit Pixeln; eine Größe über dem Bild entsteht in seinen
+  eigenen Pixeln (schraffiert). Darunter Listen: feste Formate, Formatnamen
+  (System und Projekt, mit der Variante, die sie sind), übrige Dateien im
+  Ordner. Gemacht: grün. Ein Klick öffnet die Datei in einem neuen Fenster -
+  eine noch nicht gemachte entsteht dabei.
+- `File\Panel::$kind` (`Presentation::editorKind()`) wählt die Stage; Panels der Arten erben die Klasse
+  (`bequests`), `image/` hat eine eigene (Reiter) und vererbt sie an die
+  Reiter. `targetId`, `format` stehen im State des Datei-Editors
+  (`file()`), jede Ebene schreibt dorthin.
+- **Requests an jeder Adresse:** `File\Panel::runActions()` führt erst die
+  `actions.php` der Art aus, dann die des Rahmens. So kommt `updateSVG` an
+  `editor/file/` an und `updateMediaLabel` an `editor/file/image/crops/`
+  (die Seitenleiste sendet an die Adresse, die offen ist). Discover sieht
+  die Actions im Ordner der Art; die Rechte erben.
+- Der Bild-Editor schickt seine Requests an `…/editor/file/image/`
+  (`url`); `image/actions.php` prüft `PageAccess` (403 mit `{error}`) und
+  gibt an `Media\CropEditorEndpoint` weiter.
+- Jedes Panel, das die Adresse wählen kann, braucht `lightbox.tpl.php`
+  (der Body rendert `withSelected('lightbox')`) und `tags.tpl.php`
+  (`withView('tags')` sucht im Ordner des aktiven Panels).
+
 ## Klassen
 
 | Klasse | Aufgabe |
@@ -454,6 +543,13 @@ node tests/media-crop-editor.mjs        Bedienlogik des Editors ohne Browser
   Lösung (2026-11-20): gemischt wird in `fit` gerechnet (`asFit()`), `fit`
   kann jeden `fill`-Rahmen ausdrücken.
 
+- **`og:image` mit doppeltem Pfad** in einer Installation im Unterordner
+  (`…/public/projects/x/public/var/…`). Ursache: `Media::$src` ist ab der
+  Wurzel (`/projects/x/public/var/…`), `appSite` hängte das an
+  `http::$siteUrl`, das schon auf den Unterordner endet. Lösung
+  (2026-11-20, cms): `appSite::absoluteUrl()` nimmt die Wurzel vorher ab,
+  `crawlerTags()` nutzt es. Live (Wurzel `/`) war nicht betroffen.
+
 ## Offen
 
 - **Drehen:** Modell „größte Fläche" seit 2026-11-17. Offen, ob das Format
@@ -466,9 +562,12 @@ node tests/media-crop-editor.mjs        Bedienlogik des Editors ohne Browser
   steht an. Ebenso totes CSS/JS der früheren Media Settings und des alten
   Datei-Editors (GUI, Lars: `.cursor/team/2026-11-19-media-settings-gui.md`).
 - **Formatnamen aus settings.php** (systopic.net, beautiful-technology.de,
-  expo, smp, galerie …: `mediaFormats::add()`, `$media_groups`) gelten weiter;
-  `--import-settings` liest nur die JSON-Datei. Umzug nach config.json von
-  Hand oder mit dem Umstellen der Templates auf `getCrop()`.
+  expo, smp, galerie …: `mediaFormats::add()`, `$media_groups`) gelten weiter.
+  `--import-settings` nimmt sie seit 2026-11-20 mit (als reine Literale;
+  Gruppen → `packages.cms.media.groups` mit label/file_extension/templates,
+  Formate → `packages.system.media.aliases` ohne die Namen des Systems).
+  systopic.net ist umgezogen (2026-11-20, settings.php gelöscht); offen sind
+  beautiful-technology.de, expo, smp, galerie …
 - **Templates** von `setFormat()` auf `getCrop()` umstellen.
 - **Zuschneiden direkt in der Seite** (`runImageEditor`, inline): erkennt die
   neuen Adressen nicht und tut nichts.

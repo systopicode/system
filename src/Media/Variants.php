@@ -88,6 +88,57 @@ final class Variants
         \mediaFormats::add($formats);
     }
 
+    /**
+     * The fixed formats: pictures of exact pixels, one file each
+     * (`<name>--shareImage.jpg`), with a crop of their own - computed from
+     * the crops of the ratios until one is set (`CropSet::formatCrop()`).
+     * `packages.system.media.formats`, by default the share image.
+     *
+     * @return array<string, array{name: string, label: string, width: int, height: int, type: string, ratio: Ratio}>
+     */
+    public static function formats(): array
+    {
+        return self::$formats ??= self::readFormats(self::config()['formats'] ?? self::FORMATS);
+    }
+
+    /** The fixed formats from a list like the config's - a settings.php, a test. An empty list: none. */
+    public static function configureFormats(array $formats): void
+    {
+        self::$formats = self::readFormats($formats);
+    }
+
+    /** What reads as a fixed format; the rest is left out, not guessed at. */
+    private static function readFormats(mixed $config): array
+    {
+        $formats = [];
+        foreach (is_array($config) ? $config : [] as $name => $row) {
+            $width = is_array($row) && is_numeric($row['width'] ?? null) ? (int) $row['width'] : 0;
+            $height = is_array($row) && is_numeric($row['height'] ?? null) ? (int) $row['height'] : 0;
+            // A letter first: a name is never read as a variant (2mp16by9, master).
+            if (!is_string($name) || !preg_match('~^[a-z][a-zA-Z0-9]*$~D', $name) || in_array($name, [self::MASTER, 'master'], true)
+                || $width <= 0 || $height <= 0 || $width * $height > self::MAX_MEGAPIXELS * 1e6) {
+                continue;
+            }
+            $type = is_string($row['type'] ?? null) && isset(VariantRenderer::TYPES[$row['type']]) ? $row['type'] : 'jpg';
+            $label = trim((string) ($row['label'] ?? ''));
+            $formats[$name] = ['name' => $name, 'label' => $label !== '' ? $label : $name, 'width' => $width, 'height' => $height,
+                'type' => $type, 'ratio' => Ratio::ofPixels($width, $height)];
+        }
+        return $formats;
+    }
+
+    /** The fixed format of that name - null for any other. */
+    public static function format(string $name): ?array
+    {
+        return self::formats()[$name] ?? null;
+    }
+
+    /** Without a config: the share image (the system's default of `formats`). */
+    private const FORMATS = ['shareImage' => ['label' => 'Share image', 'width' => 1200, 'height' => 630, 'type' => 'jpg']];
+
+    /** @var array<string, array<string, mixed>>|null */
+    private static ?array $formats = null;
+
     /** A size above this is a typing error, not a wish. */
     private const MAX_MEGAPIXELS = 100;
 
@@ -305,7 +356,7 @@ final class Variants
     /** Back to the defaults - for tests. */
     public static function reset(): void
     {
-        self::$ratios = self::$sizes = null;
+        self::$ratios = self::$sizes = self::$formats = null;
     }
 
     /** `0.5`, `2`, `10` - a size as it stands in a file name. */

@@ -582,4 +582,30 @@ s.save();
 assert.ok(sent.at(-1).action === 'saveMasterCrop' && sent.at(-1).params.scale === 1 && sent.at(-1).params.ay === 1, 'the master too: half a pixel under fill in is sent as fill in');
 ok('crops and the master go to the server within what their basis allows');
 
+// ------------------------------------------------- fixed formats: each its own crop
+{
+	const data = state({}, {'1:1': {ax: 0.3, ay: 0.5, scale: 2, source: 'manual'}});
+	data.formats = [{name: 'shareImage', label: 'Share image', w: 40, h: 21, width: 1200, height: 630, type: 'jpg', position: 0.03,
+		ax: 0.5, ay: 0.5, scale: 1, basis: 'fill', source: 'interpolated', auto: {ax: 0.5, ay: 0.5, scale: 1, basis: 'fill', source: 'interpolated'}}];
+	const f = new sys.cropEditor.Session({nodeId: 169, url: '/file/image/', mode: 'formats', ratio: 'shareImage'});
+	f.stageEl = {clientWidth: 1000, clientHeight: 800};
+	f.render = function () { this.view = this.layout(); };
+	f.renderSide = f.status = f.show = f.hideLevel = () => {};
+	f.request = (action, params) => { sent.push({action, params}); return {then() {}}; };
+	f.take(data);
+	assert.ok(f.fixed && f.mode === 'crops' && f.ratioName === 'shareImage' && f.work.ratio.name === '40:21', 'the formats tab: the format asked for, at its ratio');
+	f.pan(0, -40);
+	f.stash();
+	assert.ok(f.ratios[0].source === 'manual' && f.ratios[0].ay !== 0.5, 'its crop changed: set by hand, nothing else computed again');
+	assert.ok(near(f.positionOf(math.ratio('2:1')), 0) && near(f.positionOf(math.ratio('9:16')), 1, 0.2), 'the slider spans the declared ratios, not the formats');
+	f.save();
+	const savedFormats = JSON.parse(sent.at(-1).params.crops);
+	assert.ok(sent.at(-1).action === 'saveFormatCrops' && savedFormats[0].format === 'shareImage' && savedFormats[0].ratio === undefined, 'applied as the crop of a fixed format');
+	f.take(Object.assign({}, data, {formats: [Object.assign({}, data.formats[0], {ax: 0.2, source: 'manual'})]}));
+	f.auto();
+	assert.ok(f.ratios[0].source === 'interpolated' && f.ratios[0].ax === 0.5 && f.waiting() === 1, 'back to computed: the crop computed from the ratios, waiting to be applied');
+	assert.equal(f.cropAt(0.5).crop.ratio.name, '40:21', 'nothing between fixed formats: the nearest one');
+	ok('fixed formats: each its own crop, applied as such, back to the computed one');
+}
+
 console.log('media crop editor: all checks passed');

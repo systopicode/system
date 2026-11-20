@@ -145,6 +145,10 @@ final class Media
     /** The address of this format, bare - to build other names from or to store. */
     public string $url {
         get {
+            $fixed = $this->fixed();
+            if ($fixed !== null) {
+                return explode('?', $this->getCrop()->variantUrl($fixed['name'], $fixed['type']), 2)[0];
+            }
             $variant = $this->variant();
             if ($variant !== null) {
                 return explode('?', $variant->variantUrl($this->suffix()), 2)[0];
@@ -159,6 +163,10 @@ final class Media
     /** The address to show: with the file time, files are cached as immutable and a new crop needs a new address. */
     public string $src {
         get {
+            $fixed = $this->fixed();
+            if ($fixed !== null) {
+                return $this->getCrop()->variantUrl($fixed['name'], $fixed['type']);
+            }
             $variant = $this->variant();
             if ($variant !== null) {
                 return $variant->variantUrl($this->suffix());
@@ -185,7 +193,7 @@ final class Media
     /** The folder of this format in the file system. */
     public string $dir {
         get {
-            if ($this->variant() !== null) {
+            if ($this->fixed() !== null || $this->variant() !== null) {
                 return Files::variantDir($this->id);
             }
             $base = $this->isDerived()
@@ -197,9 +205,15 @@ final class Media
 
     /** The file of this format in the file system. */
     public string $path {
-        get => $this->variant() !== null
-            ? Files::variantPath($this->id, $this->filename, $this->suffix(), 'webp')
-            : $this->dir . $this->filename . $this->appendix();
+        get {
+            $fixed = $this->fixed();
+            if ($fixed !== null) {
+                return Files::variantPath($this->id, $this->filename, $fixed['name'], $fixed['type']);
+            }
+            return $this->variant() !== null
+                ? Files::variantPath($this->id, $this->filename, $this->suffix(), 'webp')
+                : $this->dir . $this->filename . $this->appendix();
+        }
     }
 
     /**
@@ -220,6 +234,22 @@ final class Media
     private function isDerived(): bool
     {
         return $this->format !== null && $this->format !== 'original';
+    }
+
+    /**
+     * The fixed format the name stands for (`Variants::formats()`: exact
+     * pixels, a crop of its own - `bild--shareImage.jpg`), for a medium
+     * pictures are made of. Null for any other name: an alias.
+     *
+     * eturn array{name: string, width: int, height: int, type: string}|null
+     */
+    private function fixed(): ?array
+    {
+        if (!$this->isDerived()) {
+            return null;
+        }
+        $format = \Systopic\System\Media\Variants::format((string) $this->format);
+        return $format !== null && \Systopic\System\Media\VariantRenderer::supports($this->mimetype) ? $format : null;
     }
 
     /**
