@@ -144,6 +144,20 @@ sys.onload(() => {
 		sys.dom.body = new sys.core.dom.layer.__class();
 		sys.dom.body.createRootLayer(sys.singletons.dom.renderer.__data);
         sys.loader.paintStatus();
+	} else if (document.getElementById('systemPagesBodyPlaceholder')) {
+		// Public pages (cms/site.php): pagesRenderer binds every layer it
+		// mounts (domLayer createDomObjects). The lib can be ready before
+		// DOMContentLoaded, so the layers may sit in the body already -
+		// binding the whole body would bind them a second time: every
+		// handler runs twice, data-on_load functions start twice (two
+		// canvas animations drawing over each other). Only the static
+		// markup site.php puts after the placeholder (EditBar) is left.
+		var staticNodes = [];
+		for (var node = document.getElementById('systemPagesBodyPlaceholder').nextElementSibling; node; node = node.nextElementSibling) {
+			staticNodes.push(node);
+		}
+		l('sys.onload => initEvents (static page markup)');
+		sys.initEvents($(staticNodes));
 	} else {
 		if (document.getElementById('siteDomRendererPlaceholder')) {
 			// sys.onLibReady(() => sys.siteRenderer.updateDocument()); -> moved to php routeRenderer::clientData_export()
