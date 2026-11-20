@@ -28,7 +28,7 @@ const fixture = JSON.parse(await readFile(new URL('media-crop-resolver.cases.jso
 assert.ok(fixture.cases.length >= 14);
 for (const c of fixture.cases) {
 	const manual = c.manual.map(m => ({ratio: math.ratio(m.ratio), ax: m.ax, ay: m.ay, scale: m.scale, basis: m.basis}));
-	const crop = math.resolve(math.ratio(c.ratio), c.master[0], c.master[1], manual, c.pois, (c.declared || []).map(name => math.ratio(name)));
+	const crop = math.resolve(math.ratio(c.ratio), c.master[0], c.master[1], manual, c.pois, (c.declared || []).map(name => math.ratio(name)), c.basis);
 	assert.ok(near(crop.ax, c.expect.ax) && near(crop.ay, c.expect.ay) && near(crop.scale, c.expect.scale), c.name + ': ' + JSON.stringify(crop));
 	assert.equal(crop.source, c.expect.source, c.name);
 	assert.equal(crop.ratio.name, c.ratio, c.name);
@@ -75,8 +75,8 @@ cases.forEach((c, i) => {
 	assert.ok(near(clamped.ax, s.clamped[0]) && near(clamped.ay, s.clamped[1]) && near(clamped.scale, s.clamped[2]), where);
 	assert.ok(near(math.fitScale(crop.ratio, c.width, c.height), s.cropFit), where);
 	assert.ok(near(g.cx, s.centre[0]) && near(g.cy, s.centre[1]), 'the middle the alignment gives: ' + where);
-	const fill = math.asFill(crop, c.width, c.height);
-	assert.ok(near(fill.ax, s.asFill[0]) && near(fill.ay, s.asFill[1]) && near(fill.scale, s.asFill[2]) && fill.basis === 'fill', 'the same frame in "fill": ' + where);
+	const fit = math.asFit(crop, c.width, c.height);
+	assert.ok(near(fit.ax, s.asFit[0]) && near(fit.ay, s.asFit[1]) && near(fit.scale, s.asFit[2]) && fit.basis === 'fit', 'the same frame in "fit": ' + where);
 	const centre = math.centre(crop, c.width, c.height);
 	assert.ok(near(math.alignOf(centre[0], rect.w, undefined, c.basis), Math.min(1, Math.max(0, c.ax))), 'alignment and middle, there and back: ' + where);
 });

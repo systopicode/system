@@ -5,7 +5,7 @@
  * Media\CropEditorEndpoint (cropState, saveMasterCrop, saveRatioCrops,
  * savePois).
  *
- * Two modes, two tabs across the top:
+ * Two modes, two tabs (in the header of the window):
  *
  *   master   shows the original. The frame is the master crop: any ratio
  *            (the slider moves freely, a click on a ratio sets that one),
@@ -15,38 +15,44 @@
  *            ratio keeps what was changed (this.pending); the crops nobody
  *            set by hand are worked out again from it as the server would.
  *
- * The tick stores everything changed in the mode, the cross discards it.
- * Only leaving - another mode, closing, a link out - asks first.
+ * Where a control is says what it acts on: left the slider - what is
+ * edited; in the middle the picture, and its corner acts on the picture on
+ * screen only (back to automatic, or keep a computed crop as it is); right
+ * the tools, and below them Apply and Discard for everything of the mode
+ * that waits. Only leaving - another mode, closing, a link out - asks first.
  *
  * **The frame stands still, the picture moves under it**: drag to move,
  * wheel or two fingers to zoom. What is stored is how the frame is aligned
  * in the picture and how far it is zoomed in - over "fill in" or over
- * "fit in", by the crop's basis (Media\CropBox): the toggle at the top of
- * the side bar switches it. In 'fill' the edge of the picture stays outside
+ * "fit in", by the crop's basis (Media\CropBox): the first of the tools
+ * switches it. In 'fill' the edge of the picture stays outside
  * the frame, in 'fit' background may show. Switching starts the frame
  * afresh: centred at scale 1, "fill in" or "fit in".
  *
- * Two tools work around a **fix point** (a cross on the stage):
+ * Pan and zoom are a choice of two, pan the one in the hand at first. Two
+ * tools work around a **fix point** (a cross on the stage):
  *
  *   zoom     drag anywhere: the picture grows and shrinks around the fix
  *            point, and the place that was grabbed stays under the pointer -
- *            the two-finger zoom, done with a mouse. The cross can be put
- *            anywhere; it snaps to the frame's corners, the middles of its
- *            edges and its middle.
+ *            the two-finger zoom, done with a mouse. The pointer is an arrow
+ *            away from the fix point, in steps of 45 degrees. The cross can
+ *            be put anywhere; it snaps to the frame's corners, the middles of
+ *            its edges and its middle - shown as circles while it is dragged.
  *   turn     (master) a drag turns freely around the middle of the frame -
  *            that cross stays where it is. With two fingers: turn them.
- *            The button beside the tick turns on to the next right angle,
- *            the turns that lose nothing.
+ *            Beside it the angle, with the way back to none; the 90 degree
+ *            tool turns on to the next right angle, the turns that lose
+ *            nothing.
  *
  * With either tool, Shift held is the hand: dragging moves the picture.
- * The wheel zooms freely; with Ctrl it goes in steps of a tenth of the
- * scale (1, 1.1, 1.2 ...).
+ * The wheel zooms freely; with Ctrl it goes in steps of editor.step
+ * (1, 1.05, 1.1 ...).
  *
  * Turned without a crop of its own, the master is the largest frame inside
  * the turned picture (sys.cropMath.largest), its ratio following the angle;
  * a frame at "fill in" stays at "fill in" while it turns.
  *
- * A click on the cross puts the tool away; dragging moves the picture again.
+ * A click on the cross puts the tool away: pan again.
  *
  * **Points of interest** (faces, objects) are set with a third tool: a click
  * puts one down, dragging moves it, the bar below weighs or removes the
@@ -70,6 +76,22 @@
 
 	const editor = {};
 	const ICON = name => '<i class="cmsIcon cmsIcon-' + name + '" aria-hidden="true"></i>';
+	/**
+	 * The basis, drawn: dashed the picture (16:9), solid the crop (1:1). Fill: the
+	 * crop inside the picture; fit: the picture inside the crop. The crop stays,
+	 * the picture is scaled - hovering shows the other basis (14_cropEditor.css).
+	 */
+	const BASIS = '<svg class="ceBasisIcon" viewBox="0 0 60 44" aria-hidden="true">' +
+		'<rect class="cePicture" x="3.333" y="7" width="53.333" height="30" rx="1.5"/>' +
+		'<rect class="ceCrop" x="15" y="7" width="30" height="30" rx="1"/></svg>';
+	/**
+	 * The pointer of the zoom: an arrow away from the fix point, one for every
+	 * 45 degrees clockwise from the right; the system's resize pointer where an
+	 * image cannot be one.
+	 */
+	const ARROWS = ['e', 'se', 's', 'sw', 'w', 'nw', 'n', 'ne'].map((fallback, step) => 'url("data:image/svg+xml,' + encodeURIComponent(
+		'<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32"><path transform="rotate(' + step * 45 + ' 16 16)" ' +
+		'd="M6 13.5h12v-5l9 7.5-9 7.5v-5H6z" fill="#000" stroke="#fff" stroke-width="1.5" stroke-linejoin="round"/></svg>') + '") 16 16, ' + fallback + '-resize');
 	const SOURCE = {manual: 'set by hand', interpolated: 'computed between its neighbours', poi: 'computed from the points of interest', anchor: 'computed from the nearest crop', centered: 'automatic: centred'};
 
 	/** The frame keeps this much of the stage free around it. */
@@ -121,21 +143,8 @@
 				'<button type="button" role="tab" data-ce-mode="master" title="Turn, look and crop of the whole picture" aria-selected="false">' + ICON('image') + '<span>Edit master</span></button>' +
 				'<button type="button" role="tab" data-ce-mode="crops" title="One crop per aspect ratio" aria-selected="false">' + ICON('crop-simple') + '<span>Edit crops</span></button>' +
 			'</div>' +
-			'<div class="ceTools" role="toolbar" aria-label="Image tools">' +
-				'<button type="button" class="button" data-ce-basis aria-label="Fit in: background may show" aria-pressed="false"></button>' +
-				'<button type="button" class="button" data-ce-auto title="Back to automatic" aria-label="Back to automatic">' + ICON('arrow-rotate-left') + '</button>' +
-				'<button type="button" class="button" data-ce-tool="zoom" title="Zoom around a fix point - Shift: move the picture" aria-label="Zoom around a fix point" aria-pressed="false">' + ICON('magnifying-glass') + '</button>' +
-				'<button type="button" class="button" data-ce-turn title="Turn freely: drag around the middle - Shift: move the picture" aria-label="Turn freely" aria-pressed="false">' + ICON('rotate') + '</button>' +
-				'<button type="button" class="button" data-ce-flip title="Mirror" aria-label="Mirror">' + ICON('reflect-horizontal') + '</button>' +
-				(editor.pois ? '<button type="button" class="button" data-ce-tool="poi" title="Points of interest: what must stay in every crop" aria-label="Points of interest" aria-pressed="false">' + ICON('location-dot') + '</button>' : '') +
-				'<hr data-ce-look>' +
-				'<button type="button" class="button" data-ce-level="b" title="Brightness" aria-label="Brightness">' + ICON('sun') + '</button>' +
-				'<button type="button" class="button" data-ce-level="c" title="Contrast" aria-label="Contrast">' + ICON('contrast') + '</button>' +
-				'<button type="button" class="button" data-ce-level="s" title="Saturation" aria-label="Saturation">' + ICON('droplet-half-2') + '</button>' +
-				'<span class="ceSpace"></span>' +
-				'<button type="button" class="button" data-ce-original title="Back to the original: no crop, not turned, not mirrored, no look - then apply" aria-label="Back to the original">' + ICON('clock-rotate-left') + '</button>' +
-				'<div class="ceLevel" hidden><output>0</output><input type="range" min="0" max="200" value="100" aria-label="Value">' +
-					'<button type="button" class="button" data-ce-level-reset title="Back to unchanged" aria-label="Back to unchanged">' + ICON('arrow-rotate-left') + '</button></div>' +
+			'<div class="ceSide">' +
+				'<div class="ceSlider"><div class="ceTrack"><span class="ceKnob"></span></div><ol class="ceRatios"></ol></div>' +
 			'</div>' +
 			'<div class="ceStage">' +
 				'<img class="ceUnder" alt="" draggable="false">' +
@@ -147,17 +156,40 @@
 					'<button type="button" class="button" data-ce-poi="heavier" title="More important" aria-label="More important">' + ICON('plus') + '</button>' +
 					'<button type="button" class="button" data-ce-poi="remove" title="Remove this point" aria-label="Remove this point">' + ICON('trash') + '</button>' +
 				'</div>' +
+				'<div class="ceSnaps" hidden aria-hidden="true">' + '<span></span>'.repeat(9) + '</div>' +
 				'<button type="button" class="cePivot" hidden title="Fix point - drag to move it, click to put the tool away" aria-label="Fix point"></button>' +
 				'<button type="button" class="button ceMore" data-ce-more title="Tools" aria-label="Tools" aria-expanded="false">' + ICON('grip-lines') + '</button>' +
-				'<div class="ceCommit">' +
-					'<button type="button" class="button" data-ce-quarter title="Turn to the next right angle - turns that lose nothing" aria-label="Turn to the next right angle">' + ICON('file-orientation') + '</button>' +
-					'<button type="button" class="button submit" data-ce-save title="Apply all changes" aria-label="Apply all changes" hidden>' + ICON('check') + '</button>' +
-					'<button type="button" class="button" data-ce-cancel title="Discard all changes" aria-label="Discard all changes" hidden>' + ICON('xmark') + '</button>' +
+				// The corner acts on what the stage shows: back to automatic, or keep a computed crop as it is.
+				'<div class="ceCorner">' +
+					'<button type="button" class="button" data-ce-auto title="Back to automatic" aria-label="Back to automatic" hidden>' + ICON('arrow-rotate-left') + '</button>' +
+					'<button type="button" class="button" data-ce-pin title="Keep this crop as it is: set by hand, its neighbours no longer move it" aria-label="Keep this crop as it is" hidden>' + ICON('pin') + '</button>' +
 				'</div>' +
 				'<p class="ceStatus" role="status"></p>' +
 			'</div>' +
-			'<div class="ceSide">' +
-				'<div class="ceSlider"><div class="ceTrack"><span class="ceKnob"></span></div><ol class="ceRatios"></ol></div>' +
+			'<div class="ceRight">' +
+				'<div class="ceTools" role="toolbar" aria-label="Image tools">' +
+					'<button type="button" class="button ceWide" data-ce-basis aria-label="Fit in: background may show" aria-pressed="false">' + BASIS + '</button>' +
+					'<button type="button" class="button" data-ce-tool="pan" title="Move the picture - the wheel zooms" aria-label="Move the picture" aria-pressed="true">' + ICON('hand-stop') + '</button>' +
+					'<button type="button" class="button" data-ce-tool="zoom" title="Zoom around a fix point - Shift: move the picture" aria-label="Zoom around a fix point" aria-pressed="false">' + ICON('resize') + '</button>' +
+					'<button type="button" class="button" data-ce-flip title="Mirror" aria-label="Mirror" aria-pressed="false">' + ICON('reflect-horizontal') + '</button>' +
+					'<button type="button" class="button" data-ce-turn title="Turn freely: drag around the middle - Shift: move the picture" aria-label="Turn freely" aria-pressed="false">' + ICON('rotate') + '</button>' +
+					'<button type="button" class="button" data-ce-quarter title="Turn to the next right angle - turns that lose nothing" aria-label="Turn to the next right angle">' + ICON('file-orientation') + '</button>' +
+					(editor.pois ? '<button type="button" class="button" data-ce-tool="poi" title="Points of interest: what must stay in every crop" aria-label="Points of interest" aria-pressed="false">' + ICON('location-dot') + '</button>' : '') +
+					'<button type="button" class="button ceWide" data-ce-reset="geometry" title="Back to automatic: the whole picture, not turned, not mirrored">' + ICON('arrow-rotate-left') + '<span>Reset</span></button>' +
+					'<button type="button" class="button ceWide" data-ce-reset="crops" title="All crops back to automatic: computed again">' + ICON('arrow-rotate-left') + '<span>Reset all</span></button>' +
+					'<hr data-ce-look>' +
+					'<button type="button" class="button" data-ce-level="b" title="Brightness" aria-label="Brightness">' + ICON('sun') + '</button>' +
+					'<button type="button" class="button" data-ce-level="c" title="Contrast" aria-label="Contrast">' + ICON('contrast') + '</button>' +
+					'<button type="button" class="button" data-ce-level="s" title="Saturation" aria-label="Saturation">' + ICON('droplet-half-2') + '</button>' +
+					'<button type="button" class="button ceWide" data-ce-reset="look" title="Brightness, contrast and saturation unchanged">' + ICON('arrow-rotate-left') + '<span>Reset</span></button>' +
+					'<div class="ceLevel" hidden><output>0</output><input type="range" min="0" max="200" value="100" aria-label="Value">' +
+						'<button type="button" class="button" data-ce-level-reset title="Back to unchanged" aria-label="Back to unchanged">' + ICON('arrow-rotate-left') + '</button></div>' +
+				'</div>' +
+				// For everything of the mode that is not applied yet.
+				'<div class="ceCommit">' +
+					'<button type="button" class="button" data-ce-cancel title="Discard all changes not applied yet" hidden>Discard</button>' +
+					'<button type="button" class="button submit" data-ce-save title="Apply all changes" hidden>Apply</button>' +
+				'</div>' +
 			'</div>';
 		// The modes go into the header of the window, after its title - where a window has one.
 		const tabs = this.tabsEl = el.querySelector('.ceTabs');
@@ -215,14 +247,29 @@
 		const query = new URLSearchParams(Object.assign({target_id: this.options.nodeId}, params || {}));
 		this.busy = true;
 		this.el.classList.add('is-busy');
+		this.notify(null);
+		let reason = null;
 		return fetch(this.options.url + action + '?' + query.toString(), {credentials: 'same-origin'})
-			.then(response => response.ok ? response.json() : null)
-			.catch(() => null)
+			.then(response => {
+				if (response.ok) {
+					return response.json();
+				}
+				// Refused: the server says why ({error}) - or at least how.
+				return response.json().catch(() => null).then(body => {
+					reason = (body && body.error) || 'The server refused it (HTTP ' + response.status + ').';
+					return null;
+				});
+			})
+			.catch(() => {
+				reason = reason || 'No answer from the server - is the connection there?';
+				return null;
+			})
 			.then(data => {
 				this.busy = false;
 				this.el.classList.remove('is-busy');
 				if (!data) {
-					this.status('That did not work. Please try again.', true);
+					this.notify(reason || 'That did not work. Please try again.', 'error');
+					this.status('Not applied.', true);
 				}
 				return data;
 			});
@@ -265,7 +312,7 @@
 		const declared = this.base.map(r => r.ratio);
 		const pois = this.poisInMaster();
 		this.ratios = this.base.map(r => {
-			const crop = this.math.resolve(r.ratio, m.width, m.height, manual, pois, declared);
+			const crop = this.math.resolve(r.ratio, m.width, m.height, manual, pois, declared, m.basis);
 			return Object.assign({}, r, {ax: crop.ax, ay: crop.ay, scale: crop.scale, basis: crop.basis, source: crop.source});
 		});
 	};
@@ -301,13 +348,24 @@
 		return inMaster;
 	};
 
+	/**
+	 * A crop - or the master - as it goes to the server: within what its
+	 * basis allows. Moving to the edge stops a hair beyond it (math.furthest;
+	 * the master half a pixel), in 'fill' a scale of 0.9998 - the server
+	 * takes no scale under 1.
+	 */
+	Session.prototype.toStore = function (w) {
+		const crop = this.math.clamped({ax: w.ax, ay: w.ay, scale: w.scale, basis: w.basis});
+		return {ax: crop.ax, ay: crop.ay, scale: crop.scale, basis: w.basis};
+	};
+
 	/** Crops mode: what was changed on the ratio on screen goes with the others still to store. */
 	Session.prototype.stash = function () {
 		if (this.mode !== 'crops' || !this.changed()) {
 			return;
 		}
 		const w = this.work;
-		this.pending.set(this.ratioName, {ax: w.ax, ay: w.ay, scale: w.scale, basis: w.basis});
+		this.pending.set(this.ratioName, this.toStore(w));
 		this.recompute();
 		this.saved = JSON.stringify(this.work);
 	};
@@ -579,6 +637,16 @@
 		if (around && this.pivot) {
 			set(pivot, {left: px(this.pivot.x), top: px(this.pivot.y)});
 		}
+		// Where the cross snaps to, while it is dragged.
+		const snaps = this.el.querySelector('.ceSnaps');
+		snaps.hidden = !(around && this.pivot && this.gesture && this.gesture.tool === 'pivot' && this.gesture.moved);
+		if (!snaps.hidden) {
+			this.snapPoints().forEach((point, index) => {
+				const span = snaps.children[index];
+				set(span, {left: px(point.x), top: px(point.y)});
+				span.classList.toggle('is-snapped', Math.abs(point.x - this.pivot.x) < 0.01 && Math.abs(point.y - this.pivot.y) < 0.01);
+			});
+		}
 		this.renderSide();
 	};
 
@@ -593,15 +661,34 @@
 	};
 
 	/**
-	 * Crops mode, nothing to store: the crop on screen is computed - the tick
+	 * Crops mode: the crop on screen is computed and untouched - the pin
 	 * keeps it as it is, set by hand, so it stays when its neighbours change.
+	 * A change like any other: applied with the others.
 	 */
 	Session.prototype.pinnable = function () {
-		if (this.mode !== 'crops' || this.work === null || this.dirty()) {
+		if (this.mode !== 'crops' || this.work === null || this.sliding || this.changed() || this.pending.has(this.ratioName)) {
 			return false;
 		}
 		const shown = this.ratios.find(r => r.name === this.ratioName);
 		return !!shown && shown.source !== 'manual';
+	};
+
+	Session.prototype.pin = function () {
+		if (!this.pinnable()) {
+			return;
+		}
+		const w = this.work;
+		this.pending.set(this.ratioName, this.toStore(w));
+		this.recompute();
+		this.render();
+	};
+
+	/** How many crops (or the master: 1) apply would store. */
+	Session.prototype.waiting = function () {
+		if (this.mode === 'master') {
+			return this.changed() ? 1 : 0;
+		}
+		return this.pending.size + (this.changed() && !this.pending.has(this.ratioName) ? 1 : 0);
 	};
 
 	Session.prototype.renderSide = function () {
@@ -611,39 +698,45 @@
 		el.dataset.mode = this.mode;
 		this.tabsEl.querySelectorAll('[data-ce-mode]').forEach(b => b.setAttribute('aria-selected', String(b.dataset.ceMode === this.mode)));
 		// What cannot be used is not shown.
-		el.querySelectorAll('[data-ce-level],[data-ce-turn],[data-ce-flip],[data-ce-original],[data-ce-look]').forEach(b => { b.hidden = !master; });
+		el.querySelectorAll('[data-ce-level],[data-ce-turn],[data-ce-quarter],[data-ce-flip],[data-ce-look],[data-ce-reset="geometry"],[data-ce-reset="look"]').forEach(b => { b.hidden = !master; });
+		const resetCrops = el.querySelector('[data-ce-reset="crops"]');
+		resetCrops.hidden = master;
+		resetCrops.disabled = master || this.busy || !!this.sliding || !this.anyCrop();
+		const flip = el.querySelector('[data-ce-flip]');
+		flip.classList.toggle('selected', master && this.work.flip);
+		flip.setAttribute('aria-pressed', String(master && this.work.flip));
+		// The master's resets: below their group, there at the defaults too, but not to be pressed.
 		if (master) {
-			const w = this.work;
-			const o = this.data.original;
-			el.querySelector('[data-ce-original]').hidden = w.auto && !w.angle && !w.flip && w.look.b === 100 && w.look.c === 100 && w.look.s === 100
-				&& this.math.compare(w.ratio, this.math.ratio(o.width, o.height)) === 0;
+			el.querySelector('[data-ce-reset="geometry"]').disabled = this.busy || this.geometryUnchanged();
+			el.querySelector('[data-ce-reset="look"]').disabled = this.busy || this.lookUnchanged();
 		}
+		// Pan or zoom: one of them is in the hand unless another tool is.
+		const inHand = this.tool || 'pan';
 		el.querySelectorAll('[data-ce-tool]').forEach(b => {
-			b.classList.toggle('selected', this.tool === b.dataset.ceTool);
-			b.setAttribute('aria-pressed', String(this.tool === b.dataset.ceTool));
+			b.classList.toggle('selected', inHand === b.dataset.ceTool);
+			b.setAttribute('aria-pressed', String(inHand === b.dataset.ceTool));
 		});
 		el.querySelector('[data-ce-turn]').classList.toggle('selected', this.tool === 'turn');
 		el.querySelector('[data-ce-turn]').setAttribute('aria-pressed', String(this.tool === 'turn'));
 		el.dataset.tool = this.tool || '';
-		el.querySelector('[data-ce-quarter]').hidden = !master;
 		// One toggle, its icon the basis on screen: "fill in" or "fit in".
 		const basis = el.querySelector('[data-ce-basis]');
 		const fit = this.work.basis === 'fit';
 		if (basis.dataset.shows !== this.work.basis) {
 			basis.dataset.shows = this.work.basis;
-			basis.innerHTML = ICON(fit ? 'maximize-off' : 'maximize');
 			basis.title = fit
 				? 'Fit in: background may show, scale 1 shows the whole picture - click for fill in'
 				: 'Fill in: the edge of the picture stays outside, scale 1 fills the frame - click for fit in';
 			basis.setAttribute('aria-pressed', String(fit));
 		}
-		// The tick also keeps a computed crop as it is; the cross only shows with something to discard.
+		// Apply and discard: for all that waits, shown only when something does.
 		const save = el.querySelector('[data-ce-save]');
-		const pin = this.pinnable();
-		save.hidden = !dirty && !pin;
-		save.title = save.ariaLabel = pin ? 'Keep this crop as it is: set by hand, its neighbours no longer move it' : 'Apply all changes';
-		el.querySelector('[data-ce-cancel]').hidden = !dirty;
-		el.querySelector('[data-ce-save]').disabled = el.querySelector('[data-ce-cancel]').disabled = this.busy || !!this.sliding;
+		const cancel = el.querySelector('[data-ce-cancel]');
+		const waiting = this.waiting();
+		save.hidden = cancel.hidden = !dirty;
+		save.textContent = master || waiting < 2 ? 'Apply' : 'Apply (' + waiting + ')';
+		save.title = master ? 'Apply the changes of the master' : (waiting === 1 ? 'Apply the changed crop' : 'Apply the ' + waiting + ' changed crops');
+		save.disabled = cancel.disabled = this.busy || !!this.sliding;
 
 		// The slider: every declared ratio at its place, in one line; they overlap, the middle (1:1) lies
 		// furthest back, the ends always in front. Hovered or chosen comes to the front (CSS).
@@ -686,11 +779,14 @@
 		});
 		el.querySelector('.ceKnob').style.setProperty('--p', (this.sliding ? this.sliding.position : this.positionOf(current)).toFixed(5));
 
+		// The corner of the stage: back to automatic - or, for a computed crop, keep it.
 		const auto = el.querySelector('[data-ce-auto]');
+		const pin = el.querySelector('[data-ce-pin]');
 		const picked = master ? null : this.ratios.find(r => r.name === this.ratioName);
-		auto.hidden = master ? this.work.auto : picked.source !== 'manual' && !this.changed();
-		auto.title = auto.ariaLabel = master ? 'Back to automatic: the whole picture, at the angle it is turned' : 'Crop back to automatic';
-		auto.disabled = this.busy || !!this.sliding;
+		auto.hidden = master || !!this.sliding || (picked.source !== 'manual' && !this.changed());
+		auto.title = auto.ariaLabel = 'Crop back to automatic: computed again';
+		pin.hidden = !this.pinnable();
+		auto.disabled = pin.disabled = this.busy;
 
 		if (this.sliding && !master) {
 			this.statusEl().textContent = 'Between ' + this.sliding.between + ' - let go: ' + current.name;
@@ -707,6 +803,39 @@
 				? 'Master ' + this.work.ratio.name + turned + ' - ' + (this.work.auto && !dirty ? 'the whole picture' : 'cropped') + (dirty ? ' - not applied yet' : '')
 				: this.ratioName + ' - ' + (this.changed() || this.pending.has(this.ratioName) ? 'not applied yet' : SOURCE[shown.source]) + open + ' (master ' + m.width + ' x ' + m.height + ')';
 		}
+	};
+
+	/**
+	 * A message of the system (div.cms.message, as the server writes them) on
+	 * the stage: what went wrong, in words. It goes by itself after a while
+	 * (ui.js); null takes it away at once.
+	 */
+	Session.prototype.notify = function (text, type) {
+		const stage = this.stageEl;
+		if (!stage || typeof stage.querySelector !== 'function') {
+			return;
+		}
+		let host = stage.querySelector('.ceMessages');
+		if (!text) {
+			if (host) {
+				host.replaceChildren();
+			}
+			return;
+		}
+		if (!host) {
+			host = document.createElement('div');
+			host.className = 'cms message ceMessages';
+			host.setAttribute('data-system-messages', '');
+			host.setAttribute('role', 'status');
+			host.setAttribute('aria-live', 'polite');
+			stage.appendChild(host);
+		}
+		const row = document.createElement('div');
+		row.className = type || 'info';
+		const p = document.createElement('p');
+		p.textContent = text;
+		row.appendChild(p);
+		host.replaceChildren(row);
 	};
 
 	Session.prototype.statusEl = function () {
@@ -1011,23 +1140,55 @@
 		this.tool = tool;
 		this.pivot = null;
 		this.gesture = null;
+		this.arrow(null);
 		this.render();
+	};
+
+	/** The points of the frame the fix point snaps to: its corners, the middles of its edges, its middle. */
+	Session.prototype.snapPoints = function () {
+		const f = this.view.frame;
+		const points = [];
+		for (const x of [f.x, f.x + f.w / 2, f.x + f.w]) {
+			for (const y of [f.y, f.y + f.h / 2, f.y + f.h]) {
+				points.push({x: x, y: y});
+			}
+		}
+		return points;
 	};
 
 	/** Puts the fix point at a place on the stage - on a point of the frame when it is near one. */
 	Session.prototype.movePivot = function (x, y) {
-		const f = this.view.frame;
 		let best = null;
-		for (const px of [f.x, f.x + f.w / 2, f.x + f.w]) {
-			for (const py of [f.y, f.y + f.h / 2, f.y + f.h]) {
-				const distance = Math.hypot(x - px, y - py);
-				if (distance <= editor.snap && (!best || distance < best.distance)) {
-					best = {x: px, y: py, distance: distance};
-				}
+		for (const point of this.snapPoints()) {
+			const distance = Math.hypot(x - point.x, y - point.y);
+			if (distance <= editor.snap && (!best || distance < best.distance)) {
+				best = {x: point.x, y: point.y, distance: distance};
 			}
 		}
 		this.pivot = best ? {x: best.x, y: best.y} : {x: x, y: y};
 		this.render();
+	};
+
+	/**
+	 * The zoom's pointer at a place on the stage: the arrow away from the fix
+	 * point, in steps of 45 degrees; none on the fix point itself (null: none at all).
+	 */
+	Session.prototype.arrow = function (at) {
+		let step = -1;
+		if (at && this.tool === 'zoom' && this.pivot) {
+			const dx = at.x - this.pivot.x;
+			const dy = at.y - this.pivot.y;
+			step = Math.hypot(dx, dy) < 6 ? -1 : (Math.round(Math.atan2(dy, dx) / (Math.PI / 4)) + 8) % 8;
+		}
+		const style = this.stageEl && this.stageEl.style;
+		if (style && step !== this.arrowStep) {
+			this.arrowStep = step;
+			if (step < 0) {
+				style.removeProperty('--ceArrow');
+			} else {
+				style.setProperty('--ceArrow', ARROWS[step]);
+			}
+		}
 	};
 
 	/**
@@ -1069,8 +1230,21 @@
 	};
 
 	Session.prototype.setRatio = function (ratio, free) {
-		this.work = this.settled(Object.assign({}, this.work, {ratio: ratio, freeRatio: !!free, auto: false}));
+		this.work = this.unchangedMaster(this.settled(Object.assign({}, this.work, {ratio: ratio, freeRatio: !!free, auto: false})));
 		this.render();
+	};
+
+	/** The master as stored, automatic again, when a change ended where it started. */
+	Session.prototype.unchangedMaster = function (work) {
+		if (this.mode !== 'master' || !this.saved) {
+			return work;
+		}
+		const stored = JSON.parse(this.saved);
+		const same = this.math.compare(work.ratio, this.math.ratio(stored.ratio.w, stored.ratio.h)) === 0
+			&& Math.abs(work.ax - stored.ax) < 1e-6 && Math.abs(work.ay - stored.ay) < 1e-6 && Math.abs(work.scale - stored.scale) < 1e-6
+			&& work.basis === stored.basis && work.angle === stored.angle && work.flip === stored.flip
+			&& JSON.stringify(work.look) === JSON.stringify(stored.look);
+		return same ? stored : work;
 	};
 
 	Session.prototype.hideLevel = function () {
@@ -1082,23 +1256,18 @@
 
 	/** Stores everything changed: the master, or every crop changed in crops mode - one request. */
 	Session.prototype.save = function () {
-		const pin = this.pinnable();
-		if ((!this.dirty() && !pin) || this.busy) {
+		if (!this.dirty() || this.busy) {
 			return;
 		}
 		let work = this.work;
 		let action = 'saveRatioCrops';
 		let params = {};
 		if (this.mode === 'crops') {
-			if (pin) {
-				this.pending.set(this.ratioName, {ax: work.ax, ay: work.ay, scale: work.scale, basis: work.basis});
-			}
 			this.stash();
 			params = {crops: JSON.stringify(Array.from(this.pending, ([name, crop]) => crop.auto
 				? {ratio: name, auto: true}
 				: {ratio: name, ax: crop.ax, ay: crop.ay, scale: crop.scale, basis: crop.basis}))};
 		} else {
-			params = {ratio: work.ratio.name, ax: work.ax, ay: work.ay, scale: work.scale, basis: work.basis};
 			action = 'saveMasterCrop';
 			if (work.freeRatio) {
 				// A freely set ratio is the fraction of the frame's whole pixels in the original.
@@ -1107,8 +1276,8 @@
 				const scale = this.masterOf(Object.assign({}, work, {ratio: ratio, scale: 1})).scaleFor(g.height);
 				// The same frame, its middle where it was: the alignment follows the frame's new, whole-pixel length.
 				work = this.centredAt(Object.assign({}, work, {ratio: ratio, scale: scale}), g.cx, g.cy);
-				Object.assign(params, {ratio: ratio.name, ax: work.ax, ay: work.ay, scale: work.scale});
 			}
+			params = Object.assign({ratio: work.ratio.name}, this.toStore(work));
 			Object.assign(params, {brightness: work.look.b, contrast: work.look.c, saturation: work.look.s, angle: work.angle, flip: work.flip ? 1 : 0});
 			if (work.auto) {
 				Object.assign(params, {auto: 1});
@@ -1127,22 +1296,43 @@
 		});
 	};
 
-	/** The cross: everything not stored goes. */
+	/** Discard: everything not stored goes. */
 	Session.prototype.cancel = function () {
 		this.discard();
 	};
 
+	/** The master's geometry as it is without anything done: the whole picture, not turned, not mirrored. */
+	Session.prototype.geometryUnchanged = function () {
+		const w = this.work;
+		return w.auto && !w.angle && !w.flip && w.basis === 'fill';
+	};
+
+	Session.prototype.lookUnchanged = function () {
+		const look = this.work.look;
+		return look.b === 100 && look.c === 100 && look.s === 100;
+	};
+
 	/**
-	 * Back to automatic - as a change like any other, applied with the tick.
-	 * The master: the largest frame inside the picture as it is turned, its
-	 * look kept. The crop of a ratio: computed again.
+	 * The master's geometry back: automatic - the whole picture -, not turned,
+	 * not mirrored; its look kept. A change like any other, applied with the others.
 	 */
+	Session.prototype.resetGeometry = function () {
+		const o = this.data.original;
+		this.work = this.unchangedMaster(Object.assign({}, this.work, {ratio: this.math.ratio(o.width, o.height), ax: 0.5, ay: 0.5, scale: 1, basis: 'fill',
+			angle: 0, flip: false, auto: true, freeRatio: false}));
+		this.render();
+	};
+
+	/** The master's look back to unchanged; its geometry kept. */
+	Session.prototype.resetLook = function () {
+		this.hideLevel();
+		this.work = this.unchangedMaster(Object.assign({}, this.work, {look: {b: 100, c: 100, s: 100}}));
+		this.render();
+	};
+
+	/** The crop of the ratio on screen back to automatic: computed again - a change like any other. */
 	Session.prototype.auto = function () {
-		if (this.mode === 'master') {
-			const g = this.masterOf(Object.assign({}, this.work, {ax: 0.5, ay: 0.5, scale: 1}));
-			const largest = this.math.largest(g.originalWidth, g.originalHeight, this.work.angle, this.work.flip);
-			this.work = Object.assign({}, this.work, {ratio: largest.crop.ratio, ax: 0.5, ay: 0.5, scale: 1, basis: 'fill', auto: true, freeRatio: false});
-			this.render();
+		if (this.mode !== 'crops') {
 			return;
 		}
 		const stored = this.base.find(r => r.name === this.ratioName);
@@ -1150,6 +1340,26 @@
 			this.pending.set(this.ratioName, {auto: true});
 		} else {
 			this.pending.delete(this.ratioName);
+		}
+		this.recompute();
+		this.load();
+	};
+
+	/** Crops mode: is any crop set by hand - stored and not reset, waiting, or on screen? */
+	Session.prototype.anyCrop = function () {
+		return this.changed() || this.ratios.some(r => r.source === 'manual');
+	};
+
+	/** Every crop back to automatic: computed again - changes like any other, applied with the others. */
+	Session.prototype.resetCrops = function () {
+		if (this.mode !== 'crops') {
+			return;
+		}
+		this.pending.clear();
+		for (const stored of this.base) {
+			if (stored.source === 'manual') {
+				this.pending.set(stored.name, {auto: true});
+			}
 		}
 		this.recompute();
 		this.load();
@@ -1192,8 +1402,18 @@
 		on('[data-ce-save]', () => this.save());
 		on('[data-ce-cancel]', () => this.cancel());
 		on('[data-ce-auto]', () => this.auto());
+		on('[data-ce-pin]', () => this.pin());
+		on('[data-ce-reset]', button => {
+			const reset = button.dataset.ceReset;
+			reset === 'look' ? this.resetLook() : (reset === 'crops' ? this.resetCrops() : this.resetGeometry());
+		});
 		on('[data-ce-tool]', button => {
-			const tool = this.tool === button.dataset.ceTool ? null : button.dataset.ceTool;
+			// Pan and zoom: a choice, not a toggle. Points of interest: taken up and put away.
+			const picked = button.dataset.ceTool;
+			const tool = picked === 'pan' ? null : (picked === 'poi' && this.tool === 'poi' ? null : picked);
+			if (tool === this.tool) {
+				return;
+			}
 			if (tool === 'poi' && this.dirty()) {
 				// Points are stored at once and redraw everything: what is not applied yet would be lost without a word.
 				if (!this.leave()) {
@@ -1221,7 +1441,7 @@
 		});
 		// The tool for turning freely: taken up and put away, nothing turns yet.
 		on('[data-ce-turn]', () => this.setTool(this.tool === 'turn' ? null : 'turn'));
-		// Beside the tick: on to the next right angle clockwise - from 30.4 degrees to 90, not to 120.4.
+		// On to the next right angle clockwise - from 30.4 degrees to 90, not to 120.4.
 		on('[data-ce-quarter]', () => {
 			const quarter = degrees((Math.floor(this.work.angle / 90 + 1e-9) + 1) * 90);
 			this.turn(quarter, this.work.flip, this.tool === 'turn' ? this.pivot : null);
@@ -1229,8 +1449,13 @@
 		on('[data-ce-flip]', () => this.turn(this.work.angle, !this.work.flip, this.pivot));
 		// The basis: fill in or fit in, the frame starts afresh.
 		on('[data-ce-basis]', () => this.switchBasis());
+		// After a switch the icon shows the new basis; what hovering shows comes back once the pointer has left.
+		const basisButton = el.querySelector('[data-ce-basis]');
+		basisButton.addEventListener('click', () => basisButton.classList.add('is-switched'));
+		basisButton.addEventListener('pointerleave', () => basisButton.classList.remove('is-switched'));
+		basisButton.addEventListener('blur', () => basisButton.classList.remove('is-switched'));
 
-		// Brightness, contrast, saturation: one slider, beside the tool that opened it.
+		// Brightness, contrast, saturation: one slider, beside the tool that opened it (left of the tools).
 		const level = el.querySelector('.ceLevel');
 		const range = level.querySelector('input');
 		on('[data-ce-level]', button => {
@@ -1261,14 +1486,6 @@
 		};
 		range.addEventListener('dblclick', unchanged);
 		on('[data-ce-level-reset]', unchanged);
-		// The whole master back to the original - as a change like any other, applied with the tick.
-		on('[data-ce-original]', () => {
-			const o = this.data.original;
-			this.hideLevel();
-			this.work = Object.assign({}, this.work, {ratio: this.math.ratio(o.width, o.height), ax: 0.5, ay: 0.5, scale: 1, basis: 'fill', angle: 0, flip: false,
-				look: {b: 100, c: 100, s: 100}, auto: true, freeRatio: false});
-			this.render();
-		});
 
 		// The slider of ratios: a click picks a declared one - in crops mode the knob glides there, the
 		// frame following. The knob can be dragged too: the master's stays where it is let go, in crops
@@ -1294,6 +1511,11 @@
 		};
 		const slide = event => {
 			if (this.mode === 'master') {
+				// A press is no change: the master's ratio follows only once the knob is moved.
+				if (!track.moved && Math.hypot(event.clientX - track.from.x, event.clientY - track.from.y) < 4) {
+					return;
+				}
+				track.moved = true;
 				this.setRatio(this.ratioAt(along(event)), true);
 			} else {
 				this.slideTo(along(event));
@@ -1307,6 +1529,8 @@
 			this.stash();
 			track.setPointerCapture(event.pointerId);
 			track.held = true;
+			track.moved = false;
+			track.from = {x: event.clientX, y: event.clientY};
 			slide(event);
 		});
 		track.addEventListener('pointermove', event => {
@@ -1357,6 +1581,9 @@
 			}
 		});
 		stage.addEventListener('pointermove', event => {
+			if (this.tool === 'zoom') {
+				this.arrow(local(event));
+			}
 			const last = this.pointers.get(event.pointerId);
 			if (!last) {
 				return;
@@ -1422,6 +1649,8 @@
 				this.gesture = null;
 				if (gesture && gesture.tool === 'pivot' && !gesture.moved && up) {
 					this.setTool(null);
+				} else if (gesture && gesture.tool === 'pivot') {
+					this.render();      // the snap points go
 				} else if (gesture && gesture.tool === 'point' && up) {
 					if (gesture.moved) {
 						this.savePois(false);
@@ -1451,7 +1680,7 @@
 		}, {passive: false});
 
 		el.addEventListener('keydown', event => {
-			if (event.key === 'Enter' && (this.dirty() || this.pinnable()) && !event.target.closest('input')) {
+			if (event.key === 'Enter' && this.dirty() && !event.target.closest('input')) {
 				event.preventDefault();
 				this.save();
 			} else if (event.key === 'Escape' && this.tool) {

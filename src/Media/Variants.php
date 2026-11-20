@@ -37,9 +37,9 @@ final class Variants
 {
     /**
      * Wide to narrow - the order of the editor's slider, top to bottom.
-     * `191:100` is the share image's (1200 x 628 in a link preview).
+     * The same as the default of config.schema.json.
      */
-    public const RATIOS = ['2:1', '191:100', '16:9', '3:2', '4:3', '1:1', '3:4', '2:3', '9:16'];
+    public const RATIOS = ['2:1', '16:9', '3:2', '4:3', '1:1', '3:4', '2:3', '9:16', '1:2'];
 
     /** Megapixels. The smallest is the preview: made at once, kept in backups. */
     public const SIZES = [0.5, 1, 2, 5, 10];

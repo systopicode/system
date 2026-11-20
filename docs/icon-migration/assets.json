@@ -1120,6 +1120,14 @@
       "changes": "regular stroke 2 retained, removed provider classes"
     },
     {
+      "path": "public/icons/tabler/hand-stop.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "67feab44f127ee744aa5e7f16ec9d0f775a70a2c03e8b92a5f778c0ad17c8f78",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
       "path": "public/icons/tabler/hash.svg",
       "provider": "tabler",
       "version": "3.50.0",
@@ -1448,6 +1456,14 @@
       "changes": "regular stroke 2 retained, removed provider classes"
     },
     {
+      "path": "public/icons/tabler/pin.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "eab77c3ebf20f663954002d3903279d9b4850a9a19a0d6834687b7117fa40147",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
       "path": "public/icons/tabler/player-play.svg",
       "provider": "tabler",
       "version": "3.50.0",
@@ -1500,6 +1516,14 @@
       "provider": "tabler",
       "version": "3.50.0",
       "sha256": "5a187715189b76b29bbb451ba2755e56595211a1233dcc88ecc949ce12af4de0",
+      "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
+      "changes": "regular stroke 2 retained, removed provider classes"
+    },
+    {
+      "path": "public/icons/tabler/resize.svg",
+      "provider": "tabler",
+      "version": "3.50.0",
+      "sha256": "17285eebf551821a58fd0a84498ecc50a797cea8e4eea844b6a424486d6fe21f",
       "source": "https://registry.npmjs.org/@tabler/icons/-/icons-3.50.0.tgz",
       "changes": "regular stroke 2 retained, removed provider classes"
     },

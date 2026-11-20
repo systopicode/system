@@ -104,15 +104,15 @@
 		return {x: math.centreOf(crop.ax, w, crop.basis) - w / 2, y: math.centreOf(crop.ay, h, crop.basis) - h / 2, w: w, h: h};
 	};
 
-	/** The same frame in the basis 'fill' - where crops of two bases are interpolated; the alignment within 0-1. */
-	math.asFill = function (crop, width, height) {
-		if (crop.basis !== 'fit') {
+	/** The same frame in the basis 'fit' - where crops of two bases are interpolated; 'fit' holds every frame 'fill' can. */
+	math.asFit = function (crop, width, height) {
+		if (crop.basis === 'fit') {
 			return crop;
 		}
 		const [cx, cy] = math.centre(crop, width, height);
-		const scale = crop.scale * math.fitScale(crop.ratio, width, height);
-		const [w, h] = math.size(crop.ratio, scale, width, height);
-		return Object.assign({}, crop, {ax: math.alignOf(cx, w), ay: math.alignOf(cy, h), scale: scale, basis: 'fill'});
+		const [w, h] = math.size(crop.ratio, crop.scale, width, height);
+		const scale = crop.scale / math.fitScale(crop.ratio, width, height);
+		return Object.assign({}, crop, {ax: math.alignOf(cx, w, undefined, 'fit'), ay: math.alignOf(cy, h, undefined, 'fit'), scale: scale, basis: 'fit'});
 	};
 
 	/** The scale at which the whole reference lies inside the crop. */
@@ -155,15 +155,16 @@
 
 	/**
 	 * Between two crops: the alignment in a straight line, the scale in equal
-	 * factors. Of one basis: that basis; of two, both read as 'fill' first.
+	 * factors. Of one basis: that basis; of two, both read as 'fit' first -
+	 * read as 'fill', a frame showing background would jump at the 'fit' end.
 	 * Kept to what the basis allows (math.clamped). t: how far between, when
 	 * it is known better than from the ratio (the editor's slider).
 	 */
 	math.between = function (ratio, below, above, width, height, t) {
 		const basis = b => b.basis === 'fit' ? 'fit' : 'fill';
 		if (basis(below) !== basis(above)) {
-			below = math.asFill(below, width, height);
-			above = math.asFill(above, width, height);
+			below = math.asFit(below, width, height);
+			above = math.asFit(above, width, height);
 		}
 		if (t === undefined) {
 			t = math.position(ratio, below.ratio, above.ratio);
@@ -231,9 +232,11 @@
 	 * manual: [{ratio, ax, ay, scale}], pois: [{x, y, w, h, weight}] in fractions of the master,
 	 * declared: the declared ratios - the outermost of them is automatic (centred, scale 1)
 	 * unless set by hand; beyond the last crop known the crops run towards it (without them: automatic at once).
+	 * basis: that of what is automatic - the master's; with 'fit' the points of interest are not needed.
 	 */
-	math.resolve = function (ratio, width, height, manual, pois, declared) {
-		const centred = {ratio: ratio, ax: 0.5, ay: 0.5, scale: 1, basis: 'fill', source: 'centered'};
+	math.resolve = function (ratio, width, height, manual, pois, declared, basis) {
+		const automatic = basis === 'fit' ? 'fit' : 'fill';
+		const centred = {ratio: ratio, ax: 0.5, ay: 0.5, scale: 1, basis: automatic, source: 'centered'};
 		const byName = new Map();
 		for (const crop of manual || []) {
 			byName.set(crop.ratio.name, Object.assign({}, crop, {basis: crop.basis === 'fit' ? 'fit' : 'fill', source: 'manual'}));
@@ -245,7 +248,7 @@
 		if (below && above) {
 			return math.between(ratio, below, above, width, height);
 		}
-		if (pois && pois.length) {
+		if (pois && pois.length && automatic === 'fill') {
 			const [w, h] = math.size(ratio, 1, width, height);
 			return {ratio: ratio, ax: math.alignOf(slide(w, pois, 'x', 'w'), w), ay: math.alignOf(slide(h, pois, 'y', 'h'), h), scale: 1, basis: 'fill', source: 'poi'};
 		}
@@ -265,7 +268,7 @@
 		if (below && above) {
 			return math.between(ratio, below, above, width, height);
 		}
-		// Outside everything known: the outermost declared ratio of that side is automatic - centred at scale 1, in the nearest crop's basis.
+		// Outside everything known: the outermost declared ratio of that side is automatic - centred at scale 1, in the master's basis.
 		// In between, the crops run from the nearest towards it.
 		const nearest = below || above;
 		const wider = !above;
@@ -276,10 +279,10 @@
 			}
 		}
 		if (end && math.compare(end, ratio) === (wider ? 1 : -1)) {
-			const edge = {ratio: end, ax: 0.5, ay: 0.5, scale: 1, basis: nearest.basis};
+			const edge = {ratio: end, ax: 0.5, ay: 0.5, scale: 1, basis: automatic};
 			return math.between(ratio, wider ? nearest : edge, wider ? edge : nearest, width, height);
 		}
-		return Object.assign({}, centred, {basis: nearest.basis});
+		return centred;
 	};
 
 	// ----------------------------------------------------------------- master

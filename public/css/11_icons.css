@@ -108,6 +108,7 @@
   --icon-grip-horizontal: url("../icons/tabler/grip-horizontal.svg");
   --icon-grip-vertical: url("../icons/tabler/grip-vertical.svg");
   --icon-hammer: url("../icons/tabler/hammer.svg");
+  --icon-hand-stop: url("../icons/tabler/hand-stop.svg");
   --icon-hash: url("../icons/tabler/hash.svg");
   --icon-heading: url("../icons/tabler/heading.svg");
   --icon-help-circle: url("../icons/tabler/help-circle.svg");
@@ -150,6 +151,7 @@
   --icon-photo-off: url("../icons/tabler/photo-off.svg");
   --icon-photo-video: url("../icons/tabler/photo-video.svg");
   --icon-pilcrow: url("../icons/tabler/pilcrow.svg");
+  --icon-pin: url("../icons/tabler/pin.svg");
   --icon-player-play: url("../icons/tabler/player-play.svg");
   --icon-player-stop: url("../icons/tabler/player-stop.svg");
   --icon-player-track-next: url("../icons/tabler/player-track-next.svg");
@@ -157,6 +159,7 @@
   --icon-qrcode: url("../icons/tabler/qrcode.svg");
   --icon-refresh: url("../icons/tabler/refresh.svg");
   --icon-repeat: url("../icons/tabler/repeat.svg");
+  --icon-resize: url("../icons/tabler/resize.svg");
   --icon-restore: url("../icons/tabler/restore.svg");
   --icon-rotate: url("../icons/tabler/rotate.svg");
   --icon-rotate-2: url("../icons/tabler/rotate-2.svg");
@@ -325,6 +328,7 @@
 .cmsIcon-grip-dots-vertical { --icon-mask: var(--icon-grip-vertical); }
 .cmsIcon-grip-lines { --icon-mask: var(--icon-grip-horizontal); }
 .cmsIcon-hammer { --icon-mask: var(--icon-hammer); }
+.cmsIcon-hand-stop { --icon-mask: var(--icon-hand-stop); }
 .cmsIcon-hashtag { --icon-mask: var(--icon-hash); }
 .cmsIcon-heading { --icon-mask: var(--icon-heading); }
 .cmsIcon-id-card { --icon-mask: var(--icon-id); }
@@ -372,6 +376,7 @@
 .cmsIcon-phone { --icon-mask: var(--icon-phone); }
 .cmsIcon-phone-laptop { --icon-mask: var(--icon-devices); }
 .cmsIcon-photo-film { --icon-mask: var(--icon-photo-video); }
+.cmsIcon-pin { --icon-mask: var(--icon-pin); }
 .cmsIcon-play { --icon-mask: var(--icon-player-play); }
 .cmsIcon-plus { --icon-mask: var(--icon-plus); }
 .cmsIcon-plus-circle { --icon-mask: var(--icon-circle-plus); }
@@ -381,6 +386,7 @@
 .cmsIcon-rectangle-history-circle-plus { --icon-mask: var(--icon-folder-plus); }
 .cmsIcon-reflect-horizontal { --icon-mask: var(--icon-flip-horizontal); }
 .cmsIcon-repeat { --icon-mask: var(--icon-repeat); }
+.cmsIcon-resize { --icon-mask: var(--icon-resize); }
 .cmsIcon-right-from-bracket { --icon-mask: var(--icon-logout); }
 .cmsIcon-right-from-line { --icon-mask: var(--icon-logout); }
 .cmsIcon-right-to-bracket { --icon-mask: var(--icon-login-2); }

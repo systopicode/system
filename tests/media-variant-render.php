@@ -175,4 +175,28 @@ try {
     $remove($root);
     Variants::reset();
 }
+// The look: the arithmetic of the CSS filters the editor previews with - brightness(), contrast(), saturate().
+$css = static function (array $rgb, array $look): array {
+    [$b, $c, $s] = [$look['b'] / 100, $look['c'] / 100, $look['s'] / 100];
+    $clip = static fn(float $v): float => max(0.0, min(1.0, $v));
+    $rgb = array_map(static fn($v) => $clip($v / 255 * $b), $rgb);
+    $rgb = array_map(static fn($v) => $clip($v * $c + (1 - $c) * 0.5), $rgb);
+    [$r, $g, $bl] = $rgb;
+    return array_map(static fn($v) => (int) round($clip($v) * 255), [
+        (0.213 + 0.787 * $s) * $r + (0.715 - 0.715 * $s) * $g + (0.072 - 0.072 * $s) * $bl,
+        (0.213 - 0.213 * $s) * $r + (0.715 + 0.285 * $s) * $g + (0.072 - 0.072 * $s) * $bl,
+        (0.213 - 0.213 * $s) * $r + (0.715 - 0.715 * $s) * $g + (0.072 + 0.928 * $s) * $bl,
+    ]);
+};
+foreach ([['b' => 100, 'c' => 161, 's' => 100], ['b' => 97, 'c' => 100, 's' => 0], ['b' => 120, 'c' => 80, 's' => 150], ['b' => 60, 'c' => 140, 's' => 40]] as $look) {
+    foreach ([[200, 100, 50], [250, 240, 230], [20, 60, 200]] as $rgb) {
+        $pixel = new \Imagick();
+        $pixel->newImage(1, 1, new \ImagickPixel('rgb(' . implode(',', $rgb) . ')'));
+        VariantRenderer::levels($pixel, $look);
+        $got = $pixel->getImagePixelColor(0, 0)->getColor();
+        $want = $css($rgb, $look);
+        check('the look as the editor shows it: ' . json_encode($look) . ' on ' . implode(',', $rgb) . ' -> ' . implode(',', $want),
+            abs($got['r'] - $want[0]) <= 1 && abs($got['g'] - $want[1]) <= 1 && abs($got['b'] - $want[2]) <= 1);
+    }
+}
 echo "media variant render: all checks passed\n";

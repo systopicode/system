@@ -20,7 +20,7 @@ use Systopic\System\Queries\MediaCrops\MediaCrops;
  *
  * Every one answers with the medium as it is afterwards
  * (`CropEdits::state()`): the editor redraws from that, so what it shows is
- * what was stored.
+ * what was stored. Refused (404, 422): `{error: "why"}` - the editor shows it.
  *
  * Who may edit which medium is the application's business - it checks that
  * before it asks, and hands in the medium's id and its scope:
@@ -50,7 +50,7 @@ final class CropEditorEndpoint
     {
         $set = $mediaId > 0 && self::handles($action) ? MediaCrops::one($scope, $mediaId) : null;
         if ($set === null) {
-            return ['status' => 404, 'body' => null];
+            return self::refused(404, 'There is no such picture.');
         }
         $edit = ['save' => [], 'remove' => [], 'clipped' => []];
         $box = CropEdits::boxFrom($param('ratio'), $param('ax'), $param('ay'), $param('scale'), $param('basis'));
@@ -59,7 +59,7 @@ final class CropEditorEndpoint
                 case 'saveMasterCrop':
                     $auto = (int) $param('auto', 0) === 1;
                     if (!$auto && $box === null) {
-                        return ['status' => 422, 'body' => null];
+                        return self::refused(422, self::boxProblem($param));
                     }
                     $edit = CropEdits::master($set, $auto ? null : $box, [
                         'b' => $param('brightness', 100), 'c' => $param('contrast', 100), 's' => $param('saturation', 100),
@@ -69,14 +69,14 @@ final class CropEditorEndpoint
                 case 'saveRatioCrop':
                     $edit = $box === null ? null : CropEdits::crop($set, $box);
                     if ($edit === null) {
-                        return ['status' => 422, 'body' => null];
+                        return self::refused(422, $box === null ? self::boxProblem($param) : 'The ratio ' . $box->ratio->name . ' is not declared.');
                     }
                     break;
                 case 'saveRatioCrops':
                     $crops = json_decode((string) $param('crops', '[]'), true);
                     $edit = is_array($crops) ? CropEdits::crops($set, $crops) : null;
                     if ($edit === null) {
-                        return ['status' => 422, 'body' => null];
+                        return self::refused(422, is_array($crops) ? CropEdits::cropsProblem($crops) ?? 'The crops are not taken.' : 'The crops are no list.');
                     }
                     break;
                 case 'resetCrop':
@@ -85,16 +85,32 @@ final class CropEditorEndpoint
                 case 'savePois':
                     $pois = json_decode((string) $param('pois', '[]'), true);
                     if (!is_array($pois)) {
-                        return ['status' => 422, 'body' => null];
+                        return self::refused(422, 'The points of interest are no list.');
                     }
                     $edit = CropEdits::pois($set, $pois, (int) $param('drop_crops', 0) === 1);
                     break;
             }
-        } catch (\InvalidArgumentException) {
-            return ['status' => 422, 'body' => null];
+        } catch (\InvalidArgumentException $e) {
+            return self::refused(422, $e->getMessage());
         }
         $set = CropEdits::apply($scope, $set, $edit);
         return ['status' => 200, 'body' => CropEdits::state($set) + ['clipped' => $edit['clipped']]];
+    }
+
+    /**
+     * Not done, and why - the editor shows the reason.
+     *
+     * @return array{status: int, body: array{error: string}}
+     */
+    private static function refused(int $status, string $reason): array
+    {
+        return ['status' => $status, 'body' => ['error' => $reason]];
+    }
+
+    /** Why the crop a request sends is none. */
+    private static function boxProblem(callable $param): string
+    {
+        return CropEdits::boxProblem($param('ratio'), $param('ax'), $param('ay'), $param('scale'), $param('basis')) ?? 'That is no crop.';
     }
 
     /**

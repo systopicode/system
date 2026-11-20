@@ -37,8 +37,9 @@ beziehen:
 - `scale`: Vergrößerung über Scale 1 der Basis. Beim gedrehten Master ist
   „fill in" der größte Rahmen, der ganz im gedrehten Bild liegt, „fit in"
   der Rahmen um den Kasten des gedrehten Bildes.
-- `basis`: `fill` oder `fit`, ohne Angabe `fill`. Berechnete Crops sind
-  `fill`, außer zwischen lauter `fit`-Crops (siehe Resolver).
+- `basis`: `fill` oder `fit`, ohne Angabe `fill`. Automatische Crops haben
+  die Basis des Masters (`CropSet::basis()`): ein Master „fit in" hat seine
+  Crops „fit in" (siehe Resolver).
 
 **Warum Ausrichtung statt Mitte:** Ändert sich das Bezugsbild (ein neuer
 Master unter den Crops), behält ein Crop Ausrichtung, Scale und Basis:
@@ -127,21 +128,25 @@ Für eine Ratio, in dieser Reihenfolge:
 1. Hand-Crop dieser Ratio — unverändert, auch wenn er Hintergrund zeigt.
 2. Zwischen zwei Hand-Crops: interpoliert (Ausrichtung linear, Scale geometrisch,
    nach dem Logarithmus der Ratio). Beide in derselben Basis: in dieser
-   Basis. Verschieden: beide erst als `fill` gelesen (`CropBox::asFill()`,
-   derselbe Rahmen), das Ergebnis ist `fill` und liegt innen.
-3. POIs vorhanden: größter Ausschnitt, so verschoben, dass sie darin liegen;
-   passen nicht alle, gewinnt das Fenster mit dem meisten Gewicht.
+   Basis. Verschieden: beide erst als `fit` gelesen (`CropBox::asFit()`,
+   derselbe Rahmen), das Ergebnis ist `fit`. Als `fill` gelesen würde ein
+   Rahmen mit Hintergrund bis kurz vor das `fit`-Ende ins Bild gezogen und
+   spränge dort (auch beim Gleiten des Reglers).
+3. POIs vorhanden und Master in `fill`: größter Ausschnitt, so verschoben,
+   dass sie darin liegen; passen nicht alle, gewinnt das Fenster mit dem
+   meisten Gewicht. Master in `fit`: entfällt, der ganze Master ist zu sehen.
 4. Hand-Crop nur auf einer Seite: der ganze Master zählt als Anker bei
    seiner eigenen Ratio, in der Basis des nächsten Hand-Crops (mittig bei
    Scale 1 ist er in beiden derselbe Rahmen). Außerhalb aller Anker ist die
    äußerste deklarierte Ratio dieser Seite **automatisch**: mittig, Scale 1,
-   in der Basis des nächsten Hand-Crops („fill in" bzw. „fit in"); sie erbt
-   nicht dessen Ausrichtung. Dazwischen wird vom nächsten Hand-Crop zu ihr
-   hin interpoliert. Ohne Liste der deklarierten Ratios: gleich automatisch.
-5. Sonst zentriert, Scale 1, `fill`.
+   in der Basis des Masters („fill in" bzw. „fit in"); sie erbt vom nächsten
+   Hand-Crop weder Ausrichtung noch Basis. Dazwischen wird vom nächsten
+   Hand-Crop zu ihr hin interpoliert. Ohne Liste der deklarierten Ratios:
+   gleich automatisch.
+5. Sonst zentriert, Scale 1, in der Basis des Masters.
 
-Berechnete Ausschnitte in `fill` liegen immer im Master; `fit` entsteht nur
-aus `fit`-Hand-Crops. Die Fälle stehen als Daten in
+Berechnete Ausschnitte in `fill` liegen immer im Master; `fit` entsteht aus
+`fit`-Hand-Crops oder einem Master in `fit`. Die Fälle stehen als Daten in
 `tests/media-crop-resolver.cases.json`; PHP und Browser müssen sie bestehen.
 
 ## Dateien und Adressen
@@ -246,36 +251,64 @@ Datei-Editor (`admin/pages/editor/file/`), `public/js/gui/cropEditor.js`
   Kopf des Fensters hinter dem Titel (`.cmslightbox > section > header`,
   Option `header`: ein anderes Element, `null` = oben im Editor); auf dem
   Telefon nur die Symbole.
-- **Linke Leiste, von oben:** Basis fill/fit (setzt zurück), Zurücksetzen
-  im Modus (`arrow-rotate-left`), Zoom, Drehen, Spiegeln — Trennlinie —
-  Helligkeit, Kontrast, Sättigung; ganz unten „zurück aufs Original". Die
-  rechte Leiste ist nur noch der Regler. Rechts oben im Bild: 90°, ✓, ✕.
+- **Der Ort sagt, worauf etwas wirkt** (2026-11-20):
+  - **Links der Regler:** was bearbeitet wird (im Crops-Modus Navigation).
+  - **Mitte das Bild; seine Ecke oben rechts** (nur Crops-Modus) wirkt nur
+    auf den gezeigten Crop: ↺ zurück auf automatisch (wieder berechnet, bei
+    einem Hand-Crop also Löschen) — oder 📌 (`pin`) bei einem berechneten,
+    unveränderten Crop: ihn so behalten, wie er zu sehen ist, als Hand-Crop;
+    Änderungen der Nachbarn bewegen ihn dann nicht mehr (`pinnable()`,
+    `pin()`). Immer nur einer der beiden.
+  - **Rechts oben die Werkzeuge**, zwei je Zeile: Basis fill/fit (doppelt
+    breit), Pan (Tabler `hand-stop`) und Zoom (`resize`) als Auswahl —
+    einer ist immer gewählt, Pan zu Beginn; dann Spiegeln, Drehen, 90°,
+    darunter doppelt breit **Reset Geometrie** — Trennlinie — Helligkeit, Kontrast,
+    Sättigung, darunter **Reset Farbe**. Die beiden Resets gibt es nur im
+    Master; sie bleiben sichtbar und sind ausgegraut, solange die Gruppe
+    unverändert ist (`geometryUnchanged()`, `lookUnchanged()`). Reset
+    Geometrie: automatisch (das ganze Bild), nicht gedreht, nicht gespiegelt,
+    `fill`, der Look bleibt (`resetGeometry()`); Reset Farbe: Look 100/100/100,
+    die Geometrie bleibt (`resetLook()`). Der Regler eines Farbwerkzeugs
+    öffnet links daneben. Im Crops-Modus unter Pan/Zoom doppelt breit
+    **Reset all**: alle Hand-Crops zurück auf automatisch, als ausstehende
+    Änderung wie jede andere (`resetCrops()`); ausgegraut, solange kein Crop
+    von Hand gesetzt, ausstehend oder auf dem Bild verändert ist (`anyCrop()`).
+  - **Basis-Symbol** (eigenes SVG, `BASIS` in cropEditor.js): gestrichelt
+    das Bild (16:9, halbe Deckkraft), durchgezogen der Crop (1:1), dünne
+    Linien, kleine Radien. fill: der Crop im Bild, fit: das Bild im Crop.
+    Hover zeigt animiert den anderen Zustand — das Bild schrumpft auf 9/16,
+    der Crop bleibt; nach dem Umschalten erst wieder, wenn die Maus den Knopf
+    verlassen hat (`.is-switched`; ohne Animation bei `prefers-reduced-motion`).
+  - **Rechts unten „Discard" und „Apply"** (Text, kein Symbol; „Apply (n)",
+    wenn mehrere Crops warten) für alles, was im Modus wartet; nur sichtbar,
+    wenn etwas wartet.
+  - Telefon: Regler unten quer, Werkzeuge im Menü, Discard/Apply als Zeile
+    ganz unten.
 - **Was nicht geht, wird nicht gezeigt** (statt ausgegraut): Look, Drehen,
-  Spiegeln nur im Master-Modus, „zurück aufs Original" nur, wenn es etwas
-  zurückzusetzen gibt, ✕ nur, wenn etwas geändert ist; ✓ dann und zusätzlich
-  bei einem berechneten Crop (s. u.).
-- **Speichern:** ✓ oben rechts speichert alle Änderungen des Modus, ✕ verwirft
-  alle. Im Crops-Modus warten Änderungen beim Wechsel der Ratio
+  90°, Spiegeln nur im Master-Modus.
+- **Speichern:** Im Crops-Modus warten Änderungen beim Wechsel der Ratio
   (`pending`); die berechneten Crops daneben rechnet der Editor sofort neu,
   nach denselben Regeln wie der Server (`cropMath.resolve`, POIs wie
-  `poisToMaster()`). ✓ schickt alle in einer Anfrage (`saveRatioCrops`).
-  Zurücksetzen auf Automatik ist ebenfalls eine solche Änderung.
-  **Berechneten Crop behalten:** ist nichts geändert und der Crop auf dem
-  Schirm berechnet (interpoliert, automatisch …), zeigt sich ✓ allein — er
-  speichert den Crop so, wie er zu sehen ist, als Hand-Crop; Änderungen der
-  Nachbarn bewegen ihn dann nicht mehr (`pinnable()`, auch Enter). Rückfrage nur
+  `poisToMaster()`). Apply schickt alle in einer Anfrage (`saveRatioCrops`).
+  Zurücksetzen auf Automatik und 📌 sind ebenfalls solche Änderungen. Enter
+  = Apply. Rückfrage nur
   beim Verlassen: Moduswechsel, Schließen, ein Link oder Schließknopf
   außerhalb des Editors (Klick-Wächter in der Capture-Phase), Verlassen der
   Seite (`beforeunload`). Escape mit Werkzeug legt es weg, sonst schließt es
   wie gewohnt (mit Rückfrage).
 - **Master-Modus:** zeigt das Original; Ratio per Klick oder frei am Regler,
-  Drehen, Spiegeln, Helligkeit / Kontrast / Sättigung. Der Dreh-Knopf links
-  nimmt nur das Werkzeug auf (ziehen = freier Winkel um den Fixpunkt); der
-  Knopf oben rechts neben ✓ (Tabler `file-orientation`) dreht auf den
-  nächsten rechten Winkel im Uhrzeigersinn (30,4° → 90°, nicht 120,4°) —
-  die verlustfreien Drehungen. Gedreht wird immer um die Mitte des Rahmens;
-  dieses Fadenkreuz lässt sich nicht verschieben, ein Klick legt das
-  Werkzeug weg.
+  Drehen, Spiegeln, Helligkeit / Kontrast / Sättigung. Der Dreh-Knopf
+  nimmt nur das Werkzeug auf (ziehen = freier Winkel um den Fixpunkt; der
+  Winkel steht in der Statuszeile); der 90°-Knopf
+  (Tabler `file-orientation`) dreht auf den nächsten rechten Winkel im
+  Uhrzeigersinn (30,4° → 90°, nicht 120,4°) — die verlustfreien Drehungen.
+  Gedreht wird immer um die Mitte des Rahmens; dieses Fadenkreuz lässt sich
+  nicht verschieben, ein Klick legt das Werkzeug weg. Spiegeln ist ein
+  Schalter (gedrückt = gespiegelt). Jeder Farbregler hat zusätzlich ↺
+  „unverändert". Alles aufs Original = Reset Geometrie + Reset Farbe.
+- **Der Regler im Master** stellt die Ratio des Masters ein: ein Druck
+  allein ändert nichts, erst Ziehen; eine Ratio, die er schon hat, ist keine
+  Änderung, der Master bleibt automatisch (`unchangedMaster()`).
 - **Gedreht ohne eigenen Master-Crop** gilt der Rahmen mit der größten
   Fläche im gedrehten Bild (`MasterGeometry::largest()`, `cropMath.largest`),
   geschlossen in zwei Fällen: nahe dem rechten Winkel berühren alle vier
@@ -293,10 +326,6 @@ Datei-Editor (`admin/pages/editor/file/`), `public/js/gui/cropEditor.js`
 - **Regler:** die Kreise stehen in einer Linie und überlappen; 1:1 liegt
   ganz hinten, die Enden vorn, Hover und Auswahl holen nach vorn. Links der
   Name; überdeckte Namen erscheinen nur beim Hover.
-- **Zurücksetzen:** jeder Farbregler hat einen Knopf „unverändert"; der
-  Knopf unten in der linken Leiste setzt den ganzen Master aufs Original
-  (kein Crop, nicht gedreht, nicht gespiegelt, kein Look) — als Änderung,
-  die mit ✓ übernommen wird.
 - **CSS-Falle:** `50_forms.css` kommt nach `14_cropEditor.css` und setzt für
   `.cms .button` / `.cms button` `display: inline-flex`, Ränder und
   `box-shadow: none !important`. Eigene Regeln für Knöpfe brauchen mehr
@@ -304,7 +333,10 @@ Datei-Editor (`admin/pages/editor/file/`), `public/js/gui/cropEditor.js`
 - Der Rahmen steht, das Bild bewegt sich: ziehen, Rad oder zwei Finger.
 - **Zoom-Werkzeug** und **Dreh-Werkzeug** arbeiten um einen Fixpunkt
   (Fadenkreuz; beim Zoom verschiebbar, rastet an den neun Punkten des
-  Rahmens); Klick auf das Fadenkreuz oder Escape legt sie weg. Mit
+  Rahmens — beim Ziehen des Kreuzes als Kreise gezeigt, Durchmesser =
+  Fangweite `editor.snap`); Klick auf das Fadenkreuz oder Escape legt sie
+  weg (zurück auf Pan). Beim Zoom ist der Zeiger ein Pfeil vom Fixpunkt
+  weg, in 45°-Schritten (`ARROWS`, `arrow()`). Mit
   gedrückter **Shift**-Taste ist es in beiden Werkzeugen die Hand: Ziehen
   verschiebt das Bild.
 - **Rad:** zoomt stufenlos. **Strg + Rad:** in Schritten von 0,05 der
@@ -316,18 +348,12 @@ Datei-Editor (`admin/pages/editor/file/`), `public/js/gui/cropEditor.js`
   dem Werkzeug: Klick setzt, ziehen verschiebt, die Leiste gewichtet und
   löscht; sie werden sofort gespeichert. Beim ersten POI fragt der Editor,
   ob die Hand-Crops gelöscht werden sollen.
-- **Basis:** der oberste Knopf der linken Leiste, in beiden Modi; das
-  Symbol zeigt die Basis des Rahmens (`maximize` = fill in, `maximize-off`
-  = fit in). Umschalten setzt den Rahmen zurück auf mittig, Scale 1 — „fill
+- **Basis:** der erste Knopf der Werkzeuge, in beiden Modi; das
+  Symbol zeigt die Basis des Rahmens (eigenes SVG, s. o.). Umschalten setzt den Rahmen zurück auf mittig, Scale 1 — „fill
   in" bzw. „fit in", so zeigt sich gleich, was der Modus heißt. Ein Master
   ohne Crop ist `fill`; `fit` macht ihn zum Crop, zurück ohne weitere
   Änderung ist er wieder automatisch. Ersetzt die früheren Knöpfe Schloss
   zu/offen, fit-in und fill-in.
-- **Zurücksetzen im Modus** (zweiter Knopf): Master — Automatik, der größte
-  Rahmen im Bild beim aktuellen Winkel, Look bleibt (ersetzt den früheren
-  Knopf „Ratio des Bildes"); Crops — der Crop der Ratio wieder berechnet.
-  Nur sichtbar, wenn es etwas zurückzusetzen gibt; eine Änderung wie jede
-  andere, übernommen mit ✓.
 
 Endpunkte: beantwortet von `Media\CropEditorEndpoint` (system), aufgerufen
 aus dem Panel der Anwendung, das vorher die Rechte prüft — in cms
@@ -406,6 +432,27 @@ node tests/media-crop-editor.mjs        Bedienlogik des Editors ohne Browser
   `media-crop-resolver.cases.json` („the outermost declared ratio itself").
   Nach einer Regeländerung im Resolver sind schon gemachte Varianten
   veraltet, bis das Medium neu gespeichert oder `var/formats/` geleert wird.
+
+- **Look im Crops-Modus anders als im Master-Modus** (Kontrast vergraut,
+  Sättigung 0 andere Grautöne). Ursache: der Master-Modus zeigt das Original
+  mit CSS-Filtern, der Crops-Modus den vom Server gerechneten Master — und
+  der rechnete Kontrast in zwei Schritten (mal, dann plus: die Lichter wurden
+  bei Weiß abgeschnitten, bevor sie wieder herunterkamen) und Sättigung über
+  HSL (`modulateImage`). Lösung (2026-11-20): `VariantRenderer::levels()`
+  rechnet genau wie `brightness() contrast() saturate()` — Kontrast in einem
+  Schritt (`FUNCTION_POLYNOMIAL`), Sättigung mit der Matrix von CSS
+  `saturate()`; Test gegen die CSS-Formel in `media-variant-render.php`, im
+  Browser (Canvas-Filter) nachgemessen. Schon gemachte Master mit Look sind
+  veraltet: ihre Varianten löschen (`Files::removeVariants()`) oder das
+  Medium neu speichern — lokal erledigt für 95 und 325, auf Staging/Live
+  noch zu tun.
+
+- **Übergang zwischen einem `fill`- und einem `fit`-Crop springt** (beim
+  Gleiten des Reglers und bei den berechneten Ratios dazwischen). Ursache:
+  beide wurden als `fill` interpoliert und auf Scale ≥ 1 geklemmt — ein
+  Rahmen mit Hintergrund blieb bis kurz vor dem `fit`-Ende im Bild.
+  Lösung (2026-11-20): gemischt wird in `fit` gerechnet (`asFit()`), `fit`
+  kann jeden `fill`-Rahmen ausdrücken.
 
 ## Offen
 

@@ -174,8 +174,14 @@ final class VariantRenderer
     /**
      * Brightness, contrast, saturation - the arithmetic of the CSS filters
      * the editor previews with: brightness(), then contrast(), then
-     * saturate(). Imagick's own brightnessContrastImage() follows another
-     * curve and blows the picture out.
+     * saturate(), each on the sRGB values and cut to 0-1 after it.
+     * Imagick's own brightnessContrastImage() follows another curve and
+     * blows the picture out.
+     *
+     * Contrast is one step (a x + b): as multiply, then add, the highlights
+     * were cut at white before they came down again and turned grey.
+     * Saturation is the matrix of CSS saturate() (luminance weights), not
+     * modulateImage(), whose HSL lightness gives other greys.
      *
      * @param array{b?: int, c?: int, s?: int} $look 100 = as it is
      */
@@ -190,11 +196,17 @@ final class VariantRenderer
         }
         if ($contrast !== 100) {
             $factor = $contrast / 100;
-            $image->evaluateImage(\Imagick::EVALUATE_MULTIPLY, $factor, $channels);
-            $image->evaluateImage(\Imagick::EVALUATE_ADD, (1 - $factor) * 0.5 * \Imagick::getQuantum(), $channels);
+            $image->functionImage(\Imagick::FUNCTION_POLYNOMIAL, [$factor, (1 - $factor) * 0.5], $channels);
         }
         if ($saturation !== 100) {
-            $image->modulateImage(100, $saturation, 100);
+            $s = $saturation / 100;
+            $image->colorMatrixImage([
+                0.213 + 0.787 * $s, 0.715 - 0.715 * $s, 0.072 - 0.072 * $s, 0, 0,
+                0.213 - 0.213 * $s, 0.715 + 0.285 * $s, 0.072 - 0.072 * $s, 0, 0,
+                0.213 - 0.213 * $s, 0.715 - 0.715 * $s, 0.072 + 0.928 * $s, 0, 0,
+                0, 0, 0, 1, 0,
+                0, 0, 0, 0, 1,
+            ]);
         }
     }
 

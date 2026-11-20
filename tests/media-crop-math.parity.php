@@ -27,7 +27,7 @@ foreach (json_decode((string) stream_get_contents(STDIN), true, 512, JSON_THROW_
         'clamped' => (static fn(CropBox $c): array => [$c->alignX, $c->alignY, $c->scale])($crop->clamped($case['width'], $case['height'])),
         'centre' => [$g->centreFractionX, $g->centreFractionY],
         'cropFit' => CropBox::fitScale($ratio, $case['width'], $case['height']),
-        'asFill' => (static fn(CropBox $c): array => [$c->alignX, $c->alignY, $c->scale])($crop->asFill($case['width'], $case['height'])),
+        'asFit' => (static fn(CropBox $c): array => [$c->alignX, $c->alignY, $c->scale])($crop->asFit($case['width'], $case['height'])),
     ];
 }
 echo json_encode($out);

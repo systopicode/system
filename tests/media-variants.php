@@ -62,7 +62,7 @@ $alias = static function (array $format): string {
 check('named format 1920 x 1920: the square, the size that holds its pixels', $alias(['width' => 1920, 'height' => 1920]) === '5mp1by1');
 check('named format 2880 x 1620: 16:9 at 5 megapixels', $alias(['width' => 2880, 'height' => 1620]) === '5mp16by9');
 check('an odd size goes to the nearest declared ratio', $alias(['width' => 1788, 'height' => 2160]) === '5mp3by4' && $alias(['width' => 2160, 'height' => 1788]) === '5mp4by3');
-check('the share image 1200 x 630 is 191:100', $alias(['width' => 1200, 'height' => 630]) === '1mp191by100');
+check('1200 x 630 as a name only (not a fixed format): the nearest ratio, 2:1', $alias(['width' => 1200, 'height' => 630]) === '1mp2by1');
 check('a thumbnail takes the smallest size', $alias(['width' => 200, 'height' => 200]) === '0.5mp1by1');
 check('megapixels alone: the master at that size', $alias(['megapixels' => 4]) === '5mp' && $alias(['megapixels' => 2]) === '2mp');
 check('megapixels with a ratio', $alias(['megapixels' => 3, 'aspect_ratio' => '16:9']) === '5mp16by9' && $alias(['megapixels' => 1, 'aspect_ratio' => '5:6']) === '1mp3by4');

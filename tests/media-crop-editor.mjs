@@ -412,13 +412,19 @@ s = session(state({}, {'1:1': {cx: 0.3, cy: 0.5, scale: 2, source: 'manual'}}));
 const untouched = sent.length;
 s.save();
 assert.equal(sent.length, untouched, 'a crop set by hand, nothing changed: nothing sent');
-assert.ok(!s.pinnable() && !s.dirty(), 'neither tick nor cross');
+assert.ok(!s.pinnable() && !s.dirty(), 'neither pin nor apply');
 s = session(state({}, {'1:1': {cx: 0.3, cy: 0.5, scale: 2, source: 'manual'}}), 'master');
 s.save();
 assert.equal(sent.length, untouched, 'the master unchanged: nothing sent');
 s = session(state(), 'crops', '3:4');
-assert.ok(s.pinnable() && !s.dirty(), 'a computed crop: the tick keeps it, no cross - nothing to discard');
+assert.ok(s.pinnable() && !s.dirty(), 'a computed crop: the pin keeps it, nothing to apply yet');
 const shownPin = Object.assign({}, s.work);
+s.pin();
+assert.ok(s.dirty() && !s.pinnable() && s.waiting() === 1 && s.ratios.find(r => r.name === '3:4').source === 'manual',
+	'pinned: a change like any other, waiting to be applied, shown as set by hand');
+s.auto();
+assert.ok(!s.dirty() && s.pinnable(), 'back to automatic undoes the pin');
+s.pin();
 s.save();
 one = JSON.parse(sent.at(-1).params.crops);
 assert.ok(sent.at(-1).action === 'saveRatioCrops' && one.length === 1 && one[0].ratio === '3:4' && near(one[0].ax, shownPin.ax) && near(one[0].scale, shownPin.scale),
@@ -493,15 +499,87 @@ ok('the master is stored with its look; a free ratio as its pixels, a picked one
 }
 ok('crops mode: the knob drags, the frame follows the interpolation, letting go lands on the nearest ratio');
 
-// -------------------------------------------------------- back to the original
+// --------------------------------------------- the master: the turn back to none, a ratio picked again
+s = session(state({manual: true, ratio: '4:3', cx: 0.4, cy: 0.5, scale: 1.2, angle: 12, flip: true}), 'master');
+s.turn(0, s.work.flip, null);
+assert.ok(s.work.angle === 0 && s.dirty(), 'the turn back to 0 degrees: a change like any other');
+s = session(state(), 'master');
+s.setRatio(math.ratio('3:2'), false);
+assert.ok(!s.dirty() && s.work.auto, 'the ratio it has picked again: the master stays automatic, nothing to apply');
+s.setRatio(math.ratio('1:1'), false);
+s.setRatio(math.ratio('3:2'), false);
+assert.ok(!s.dirty() && s.work.auto, 'and back to it: nothing to apply');
+s.setRatio(math.ratio('1:1'), false);
+assert.ok(s.dirty() && !s.work.auto && s.waiting() === 1, 'another ratio is a change');
+ok('the master: back to no turn; a ratio picked again is no change');
+
+// ------------------------------------------------- the master: reset geometry, reset look
+s = session(state(), 'master');
+assert.ok(s.geometryUnchanged() && s.lookUnchanged(), 'an untouched master: both resets there, but not to be pressed');
 s = session(state({manual: true, ratio: '4:3', cx: 0.4, cy: 0.5, scale: 1.2, angle: 12, flip: true, look: {b: 120, c: 90, s: 100}}), 'master');
-s.el = {querySelector: () => ({hidden: true}), querySelectorAll: () => []};
-s.hideLevel = () => {};
-s.work = Object.assign({}, s.work, {ratio: math.ratio(3000, 2000), ax: 0.5, ay: 0.5, scale: 1, basis: 'fill', angle: 0, flip: false, look: {b: 100, c: 100, s: 100}, auto: true, freeRatio: false});
-assert.ok(s.dirty() && s.masterOf(s.work).insideOriginal(), 'the original as the master: a change like any other, applied with the tick');
+assert.ok(!s.geometryUnchanged() && !s.lookUnchanged());
+s.resetGeometry();
+assert.ok(s.work.auto && s.work.angle === 0 && !s.work.flip && s.work.basis === 'fill' && s.work.look.b === 120 && s.dirty() && s.geometryUnchanged(),
+	'geometry: the whole picture, not turned, not mirrored - the look stays');
 s.save();
 assert.ok(sent.at(-1).action === 'saveMasterCrop' && sent.at(-1).params.auto === 1 && sent.at(-1).params.angle === 0 && sent.at(-1).params.flip === 0
-	&& sent.at(-1).params.brightness === 100, 'stored as the whole picture, not turned, not mirrored, no look');
-ok('the master goes back to the original');
+	&& sent.at(-1).params.brightness === 120, 'stored as the whole picture, not turned, not mirrored, with its look');
+s = session(state({manual: true, ratio: '4:3', cx: 0.4, cy: 0.5, scale: 1.2, angle: 12, flip: true, look: {b: 120, c: 90, s: 100}}), 'master');
+s.hideLevel = () => {};
+s.resetLook();
+assert.ok(s.lookUnchanged() && s.work.angle === 12 && s.work.flip && s.dirty(), 'look: unchanged - the geometry stays');
+s = session(state({}, {}), 'master');
+s.turn(10, false, null);
+s.resetGeometry();
+assert.ok(!s.dirty(), 'reset back to what is stored: nothing to apply');
+ok('the master: reset geometry and reset look, each for its own group');
+
+// ------------------------------------------------- zoom: the arrow, pan or zoom
+s = session(state());
+const props = {};
+s.stageEl.style = {setProperty: (k, v) => { props[k] = v; }, removeProperty: k => { delete props[k]; }};
+s.setTool('zoom');
+s.pivot = {x: 500, y: 400};
+const stepOf = () => ['e', 'se', 's', 'sw', 'w', 'nw', 'n', 'ne'].find(d => (props['--ceArrow'] || '').endsWith(' ' + d + '-resize'));
+s.arrow({x: 700, y: 410});
+assert.equal(stepOf(), 'e', 'right of the fix point: the arrow points right');
+s.arrow({x: 380, y: 280});
+assert.equal(stepOf(), 'nw', 'up left: up left, in steps of 45 degrees');
+s.arrow({x: 503, y: 402});
+assert.equal(props['--ceArrow'], undefined, 'on the fix point itself: no arrow');
+s.arrow({x: 500, y: 700});
+s.setTool(null);
+assert.equal(props['--ceArrow'], undefined, 'pan again: the arrow goes');
+ok('zoom: the pointer is an arrow away from the fix point, in steps of 45 degrees');
+
+// ------------------------------------------------- crops: reset all, the master's basis
+s = session(state());
+assert.ok(!s.anyCrop(), 'no crop set by hand: reset all is there, but not to be pressed');
+s = session(state({}, {'1:1': {ax: 0.3, ay: 0.5, scale: 2, source: 'manual'}, '16:9': {ax: 0.5, ay: 0.2, scale: 1.5, source: 'manual'}}), 'crops', '3:4');
+assert.ok(s.anyCrop());
+s.resetCrops();
+assert.ok(!s.anyCrop() && s.waiting() === 2 && s.ratios.every(r => r.source !== 'manual'), 'reset all: every crop set by hand automatic again, waiting to be applied');
+s.save();
+assert.ok(sent.at(-1).action === 'saveRatioCrops' && JSON.parse(sent.at(-1).params.crops).every(c => c.auto === true), 'applied as two crops back to automatic');
+s = session(state(), 'crops', '3:4');
+s.pan(30, 0);
+assert.ok(s.anyCrop(), 'a crop changed on screen counts');
+s.resetCrops();
+assert.ok(!s.dirty(), 'and goes - nothing was stored, nothing to apply');
+s = session(state({manual: true, basis: 'fit'}, {'1:1': {ax: 0.3, ay: 0.5, scale: 2, source: 'manual'}}), 'crops', '1:1');
+s.auto();
+assert.ok(s.ratios.every(r => r.basis === 'fit'), 'the master "fit in": automatic crops "fit in" too');
+ok('crops: reset all, and the basis of the master for what is automatic');
+
+// ------------------------------------------------- what goes to the server
+s = session(state(), 'crops', '4:3');
+s.work = Object.assign({}, s.work, {ax: 0.8065232844184549, ay: 0.5572280723097853, scale: 0.9999982054059304});
+s.save();
+assert.equal(JSON.parse(sent.at(-1).params.crops)[0].scale, 1, 'zoomed out to the edge, a hair under fill in: sent as fill in');
+s = session(state({manual: true, ratio: '3:2'}), 'master');
+s.work = Object.assign({}, s.work, {ax: 0.7281177559154488, ay: 1, scale: 0.9997711516819886, auto: false});
+s.save();
+assert.ok(sent.at(-1).action === 'saveMasterCrop' && sent.at(-1).params.scale === 1 && sent.at(-1).params.ay === 1, 'the master too: half a pixel under fill in is sent as fill in');
+ok('crops and the master go to the server within what their basis allows');
 
 console.log('media crop editor: all checks passed');

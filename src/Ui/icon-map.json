@@ -228,7 +228,10 @@
     "lock-open": "lock-open",
     "maximize": "maximize",
     "maximize-off": "maximize-off",
-    "file-orientation": "file-orientation"
+    "file-orientation": "file-orientation",
+    "pin": "pin",
+    "resize": "resize",
+    "hand-stop": "hand-stop"
   },
   "duotone": {
     "lock": "lock",

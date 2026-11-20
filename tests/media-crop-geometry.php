@@ -103,11 +103,12 @@ foreach ([[0.2, 0.7, 1.3], [0.0, 1.0, 0.6], [0.55, 0.45, 3.0]] as [$ax, $ay, $sc
     [$cx, $cy] = $crop->centre(3000, 2000);
     [$w, $h] = $crop->size(3000, 2000);
     check("fit: from the alignment to the middle and back - $ax / $ay", $near(CropBox::alignOf($cx, $w, basis: CropBox::FIT), $ax) && $near(CropBox::alignOf($cy, $h, basis: CropBox::FIT), $ay));
-    $fill = $crop->asFill(3000, 2000);
-    $a = $crop->rect(3000, 2000);
-    $b = $fill->rect(3000, 2000);
-    check("fit: the same frame in 'fill' - $ax / $ay", $fill->basis === CropBox::FILL && $near($a['w'], $b['w']) && $near($a['h'], $b['h'])
-        && (!$crop->inside(3000, 2000) || ($near($a['x'], $b['x']) && $near($a['y'], $b['y']))));
+    $fill = new CropBox($square, $ax, $ay, max(1.0, $scale));
+    $asFit = $fill->asFit(3000, 2000);
+    $a = $fill->rect(3000, 2000);
+    $b = $asFit->rect(3000, 2000);
+    check("fill: the same frame in 'fit' - $ax / $ay", $asFit->basis === CropBox::FIT && $asFit->asFit(3000, 2000) === $asFit
+        && $near($a['w'], $b['w']) && $near($a['h'], $b['h']) && $near($a['x'], $b['x']) && $near($a['y'], $b['y']));
 }
 check('an alignment from the middle is within 0-1', CropBox::alignOf(-3.0, 0.5) === 0.0 && CropBox::alignOf(5.0, 0.5, basis: CropBox::FIT) === 0.0);
 $clamped = $fit(1.4, -0.2, 0.5)->clamped();
@@ -121,7 +122,7 @@ check('resolver cases are there', count($fixture['cases']) >= 14);
 foreach ($fixture['cases'] as $case) {
     $manual = array_map(static fn(array $c): CropBox => new CropBox(Ratio::of($c['ratio']), $c['ax'], $c['ay'], $c['scale'], basis: $c['basis'] ?? CropBox::FILL), $case['manual']);
     $declared = array_map(static fn(string $name): Ratio => Ratio::of($name), $case['declared'] ?? []);
-    $crop = CropResolver::resolve(Ratio::of($case['ratio']), $case['master'][0], $case['master'][1], $manual, $case['pois'], $declared);
+    $crop = CropResolver::resolve(Ratio::of($case['ratio']), $case['master'][0], $case['master'][1], $manual, $case['pois'], $declared, $case['basis'] ?? CropBox::FILL);
     $expect = $case['expect'];
     check('resolver: ' . $case['name'], $near($crop->alignX, $expect['ax']) && $near($crop->alignY, $expect['ay'])
         && $near($crop->scale, $expect['scale']) && $crop->source === $expect['source'] && $crop->ratio->name === $case['ratio']

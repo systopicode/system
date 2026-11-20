@@ -1,6 +1,8 @@
 /****************************** CROP EDITOR ***************************/
 /* The image editor of master and ratios (public/js/gui/cropEditor.js):
-   the two modes as tabs (in the header of the window), tools | stage | ratio slider.
+   the two modes as tabs (in the header of the window), then ratio slider | stage | tools.
+   Left what is edited, in the middle the picture - its corner acts on what it shows -,
+   right the tools, below them apply and discard for all that waits.
    It takes the place of the file's stage. */
 
 .cmslightbox .fileStage.cropEditing > :not(.cropEditor){
@@ -29,7 +31,9 @@
 
 /* what cannot be used is not shown - .cms .button of 50_forms.css would show it */
 .cropEditor .ceTools > [hidden],
-.cropEditor .ceSide > [hidden]{
+.cropEditor .ceSide > [hidden],
+.cropEditor .ceCorner > [hidden],
+.cropEditor .ceCommit > [hidden]{
 	display: none;
 }
 
@@ -63,28 +67,105 @@ header > .ceTabs{
 	flex: 0 1 auto;
 }
 
-/* ---- A: tools, one below the other */
-.cropEditor .ceTools{
-	position: relative;
+/* ---- C: right, the tools at the top (two to a row), apply and discard at the bottom */
+.cropEditor .ceRight{
 	display: flex;
 	flex-direction: column;
+	gap: 0.75rem;
+	min-height: 0;
+}
+
+.cropEditor .ceTools{
+	position: relative;
+	display: grid;
+	grid-template-columns: repeat(2, auto);
+	justify-content: start;
+	align-content: start;
 	gap: 0.35rem;
 }
 
+/* double width: the basis, the resets below a group */
+.cropEditor .ceTools > .ceWide{
+	grid-column: 1 / -1;
+	justify-content: center;
+	gap: 0.4rem;
+}
+
+/* a reset at the defaults: there, but not to be pressed */
+.cropEditor .ceTools > [data-ce-reset]:disabled{
+	opacity: 0.45;
+}
+
+/* The basis, drawn (cropEditor.js BASIS): dashed the picture (16:9), solid the crop (1:1).
+   Fill: the crop inside the picture; fit: the picture inside the crop - the
+   picture shrinks to 9/16, the crop stays. Hovering shows the other one; not
+   right after a switch (.is-switched) - only once the pointer has left. */
+.cropEditor .ceBasisIcon{
+	display: block;
+	width: 2.6rem;
+	height: 1.9rem;
+	overflow: visible;
+}
+
+.cropEditor .ceBasisIcon rect{
+	fill: none;
+	stroke: currentColor;
+	vector-effect: non-scaling-stroke;
+}
+
+.cropEditor .ceBasisIcon .cePicture{
+	fill: currentColor;
+	fill-opacity: 0.12;
+	stroke-width: 1;
+	stroke-opacity: 0.5;
+	stroke-dasharray: 2.5 2;
+	transform-box: view-box;
+	transform-origin: 30px 22px;
+	transition: transform 0.35s ease;
+}
+
+.cropEditor .ceBasisIcon .ceCrop{
+	stroke-width: 1.25;
+}
+
+.cropEditor [data-shows="fit"] .cePicture,
+.cropEditor [data-shows="fill"]:not(.is-switched):is(:hover, :focus-visible) .cePicture{
+	transform: scale(0.5625);
+}
+
+.cropEditor [data-shows="fit"]:not(.is-switched):is(:hover, :focus-visible) .cePicture{
+	transform: none;
+}
+
+@media (prefers-reduced-motion: reduce){
+	.cropEditor .ceBasisIcon .cePicture{
+		transition: none;
+	}
+}
+
 .cropEditor .ceTools hr{
+	grid-column: 1 / -1;
 	width: 100%;
 	margin: 0.25rem 0;
 	border: 0;
 	border-top: 1px solid rgb(0 0 0 / 0.15);
 }
 
-.cropEditor .ceTools .ceSpace{
-	flex: 1 1 auto;
+.cropEditor .ceCommit{
+	display: flex;
+	flex-direction: column;
+	gap: 0.35rem;
+	margin-top: auto;
 }
 
+.cropEditor .ceCommit > .button{
+	justify-content: center;
+}
+
+/* a level's slider: beside the tool, towards the picture */
 .cropEditor .ceLevel{
 	position: absolute;
-	left: calc(100% + 0.5rem);
+	right: calc(100% + 0.5rem);
 	z-index: 5;
 	display: flex;
 	align-items: center;
@@ -167,7 +248,8 @@ header > .ceTabs{
 	background-position: 0 0, 8px 8px;
 }
 
-.cropEditor .ceCommit{
+/* the corner of the stage: what acts on the picture on screen only */
+.cropEditor .ceCorner{
 	position: absolute;
 	top: 0.6rem;
 	right: 0.6rem;
@@ -176,9 +258,14 @@ header > .ceTabs{
 	gap: 0.35rem;
 }
 
-/* .cms .button of 50_forms.css would show a hidden one */
-.cropEditor .ceCommit > [hidden]{
-	display: none;
+/* what went wrong, in words (cropEditor.js notify()): a message of the system, over the top of the stage */
+.cropEditor .ceStage > .ceMessages{
+	position: absolute;
+	top: 0.6rem;
+	left: 0.6rem;
+	right: 3.6rem;
+	z-index: 5;
+	margin: 0;
 }
 
 .cropEditor .ceStatus{
@@ -203,7 +290,7 @@ header > .ceTabs{
 	color: #b00020;
 }
 
-/* ---- C: the slider of ratios */
+/* ---- A: left, the slider of ratios - the track beside the picture */
 .cropEditor .ceSide{
 	display: flex;
 	flex-direction: column;
@@ -382,8 +469,36 @@ header > .ceTabs{
 	display: none;
 }
 
+/* while the cross is dragged: where it snaps to (cropEditor.js editor.snap - the circle is that reach) */
+.cropEditor .ceSnaps{
+	position: absolute;
+	inset: 0;
+	z-index: 3;
+	pointer-events: none;
+}
+
+.cropEditor .ceSnaps[hidden]{
+	display: none;
+}
+
+.cropEditor .ceSnaps span{
+	position: absolute;
+	width: 24px;
+	height: 24px;
+	margin: -12px 0 0 -12px;
+	border: 2px solid #fff;
+	border-radius: 50%;
+	box-shadow: 0 0 0 1px var(--cmsHighlightColor), 0 1px 4px rgb(0 0 0 / 0.5);
+}
+
+.cropEditor .ceSnaps span.is-snapped{
+	background: rgb(255 255 255 / 0.35);
+	border-color: var(--cmsHighlightColor);
+}
+
+/* zooming: an arrow away from the fix point (cropEditor.js ARROWS), set as the pointer moves */
 .cropEditor[data-tool="zoom"] .ceStage{
-	cursor: zoom-in;
+	cursor: var(--ceArrow, zoom-in);
 }
 
 .cropEditor[data-tool="turn"] .ceStage{
@@ -478,7 +593,7 @@ header > .ceTabs{
 @media (max-width: 720px){
 	.cropEditor{
 		grid-template-columns: minmax(0, 1fr);
-		grid-template-rows: auto auto minmax(0, 1fr) auto;
+		grid-template-rows: auto auto minmax(0, 1fr) auto auto;
 		gap: 0.5rem;
 	}
 
@@ -497,16 +612,25 @@ header > .ceTabs{
 		display: none;
 	}
 
-	/* fixed rows: the tools fold away without the stage taking their row */
+	/* fixed rows: the tools fold away without the stage taking their row; apply and discard at the very bottom */
+	.cropEditor .ceRight{ display: contents; }
 	.cropEditor .ceTabs{ grid-row: 1; }
 	.cropEditor .ceTools{ grid-row: 2; }
 	.cropEditor .ceStage{ grid-row: 3; }
 	.cropEditor .ceSide{ grid-row: 4; }
+	.cropEditor .ceCommit{ grid-row: 5; }
 
-	.cropEditor.is-headed{ grid-template-rows: auto minmax(0, 1fr) auto; }
+	.cropEditor.is-headed{ grid-template-rows: auto minmax(0, 1fr) auto auto; }
 	.cropEditor.is-headed .ceTools{ grid-row: 1; }
 	.cropEditor.is-headed .ceStage{ grid-row: 2; }
 	.cropEditor.is-headed .ceSide{ grid-row: 3; }
+	.cropEditor.is-headed .ceCommit{ grid-row: 4; }
+
+	.cropEditor .ceCommit{
+		flex-direction: row;
+		justify-content: flex-end;
+		margin: 0;
+	}
 
 	.cropEditor .ceStage > .ceMore{
 		display: inline-flex;
@@ -522,12 +646,11 @@ header > .ceTabs{
 		display: flex;
 	}
 
-	.cropEditor .ceTools hr,
-	.cropEditor .ceTools .ceSpace{
+	.cropEditor .ceTools hr{
 		display: none;
 	}
 
-	/* the slider of a level opens below its row of tools */
+	/* the slider of a level: below the row of tools */
 	.cropEditor .ceLevel{
 		top: calc(100% + 0.4rem) !important;
 		left: 0;

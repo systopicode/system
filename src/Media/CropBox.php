@@ -152,19 +152,20 @@ final class CropBox
     }
 
     /**
-     * The same frame in the basis `fill` - where crops of two bases are
-     * interpolated. The alignment within 0-1: a frame reaching past the
-     * edge comes in.
+     * The same frame in the basis `fit` - where crops of two bases are
+     * interpolated. `fit` holds every frame `fill` can, so nothing moves:
+     * the crops in between run without a jump into the one that shows
+     * background.
      */
-    public function asFill(float $width, float $height): self
+    public function asFit(float $width, float $height): self
     {
-        if ($this->basis === self::FILL) {
+        if ($this->basis === self::FIT) {
             return $this;
         }
         [$cx, $cy] = $this->centre($width, $height);
-        $scale = $this->fillScale($width, $height);
-        [$w, $h] = (new self($this->ratio, scale: $scale))->size($width, $height);
-        return new self($this->ratio, self::alignOf($cx, $w), self::alignOf($cy, $h), $scale, $this->source);
+        [$w, $h] = $this->size($width, $height);
+        $scale = $this->scale / self::fitScale($this->ratio, $width, $height);
+        return new self($this->ratio, self::alignOf($cx, $w, basis: self::FIT), self::alignOf($cy, $h, basis: self::FIT), $scale, $this->source, self::FIT);
     }
 
     /**

@@ -101,6 +101,12 @@ final class CropSet
         return dechex(crc32(json_encode($state)));
     }
 
+    /** The basis of the master crop - the crops of the ratios have it unless set otherwise. */
+    public function basis(): string
+    {
+        return Operator::box($this->row(Variants::MASTER))?->basis ?? CropBox::FILL;
+    }
+
     /** @return list<CropBox> the crops of ratios set by hand, relative to the master */
     public function manual(): array
     {
@@ -145,7 +151,7 @@ final class CropSet
         if ($pois !== []) {
             $pois = ($this->master() ?? MasterGeometry::whole($masterWidth, $masterHeight))->poisToMaster($pois);
         }
-        return CropResolver::resolve($ratio, $masterWidth, $masterHeight, $this->manual(), $pois, array_values(Variants::ratios()));
+        return CropResolver::resolve($ratio, $masterWidth, $masterHeight, $this->manual(), $pois, array_values(Variants::ratios()), $this->basis());
     }
 
     /**
@@ -159,6 +165,6 @@ final class CropSet
         if ($master === null) {
             return [];
         }
-        return CropResolver::resolveAll(array_values(Variants::ratios()), $master->width, $master->height, $this->manual(), $master->poisToMaster($this->pois()));
+        return CropResolver::resolveAll(array_values(Variants::ratios()), $master->width, $master->height, $this->manual(), $master->poisToMaster($this->pois()), $this->basis());
     }
 }

@@ -160,11 +160,11 @@ check('the master: whole picture, not set by hand, with its sizes to show', $sta
     && count($state['master']['sources']) === 4 && $state['master']['sources'][0]['width'] === 866);
 $byName = array_column($state['ratios'], null, 'name');
 check('every declared ratio, wide to narrow', array_column($state['ratios'], 'name') === Variants::RATIOS);
-check('with its place on the slider: widest at 0, narrowest at 1, 1:1 where the logarithm puts it', $byName['2:1']['position'] === 0.0 && $byName['9:16']['position'] === 1.0
-    && $near($byName['1:1']['position'], log(2) / log(2 / 0.5625)) && $byName['16:9']['position'] > $byName['2:1']['position']);
+check('with its place on the slider: widest at 0, narrowest at 1, 1:1 where the logarithm puts it', $byName['2:1']['position'] === 0.0 && $byName['1:2']['position'] === 1.0
+    && $near($byName['1:1']['position'], 0.5) && $byName['16:9']['position'] > $byName['2:1']['position']);
 check('with its crop and where that came from', $byName['1:1']['source'] === 'manual' && $near($byName['1:1']['ax'], 0.3) && $near($byName['1:1']['scale'], 2)
-    && $byName['4:3']['source'] === 'interpolated' && $byName['9:16']['source'] === 'centered' && $byName['16:9']['source'] === 'interpolated' && $byName['3:2']['source'] === 'centered');
-check('beyond the last crop, the end of the slider is automatic: centred, "fill in"', $near($byName['9:16']['scale'], 1) && $near($byName['9:16']['ax'], 0.5)
+    && $byName['4:3']['source'] === 'interpolated' && $byName['1:2']['source'] === 'centered' && $byName['16:9']['source'] === 'interpolated' && $byName['3:2']['source'] === 'centered');
+check('beyond the last crop, the end of the slider is automatic: centred, "fill in"', $near($byName['1:2']['scale'], 1) && $near($byName['1:2']['ax'], 0.5)
     && $byName['3:4']['source'] === 'interpolated' && $byName['3:4']['scale'] > 1 && $byName['3:4']['scale'] < 2);
 check('the state is JSON', is_string(json_encode($state, JSON_THROW_ON_ERROR)) && $state['sizes'] === [0.5, 1.0, 2.0, 5.0, 10.0] && $state['pois'] === []);
 check('a medium of unknown size has no master to edit', CropEdits::state(new CropSet($unknown, []))['master'] === null);
@@ -177,6 +177,12 @@ check('a crop from a request', CropEdits::boxFrom('16:9', '0.4', '0.6', '1.5')?-
     && CropEdits::boxFrom('16:9', '0.4', '0.6', '1.5')->basis === CropBox::FILL);
 check('in "fit" a scale below 1 is a crop', CropEdits::boxFrom('16:9', '0', '1', '0.4', 'fit')?->basis === CropBox::FIT);
 check('rounding past the end is brought in', CropEdits::boxFrom('1:1', '1.0000000001', '-0.0000000001', '1')?->alignX === 1.0);
+check('zoomed out to the edge, a hair under fill in (as the editor stops there): taken as fill in', CropEdits::boxFrom('4:3', '0.8065232844184549', '0.5572280723097853', '0.9999982054059304', 'fill')?->scale === 1.0);
+check('clearly under fill in is no crop of fill', CropEdits::boxFrom('4:3', '0.5', '0.5', '0.99', 'fill') === null);
+check('and why, in words', str_contains((string) CropEdits::boxProblem('3:2', '0.728', '1', '0.9997711516819886', 'fill'), 'at least 1')
+    && str_contains((string) CropEdits::boxProblem('3:2', '1.5', '0.5', '1'), 'outside 0-1') && CropEdits::boxProblem('3:2', '0.5', '0.5', '1') === null);
+check('several crops: why one is not taken', str_contains((string) CropEdits::cropsProblem([['ratio' => '1:1', 'ax' => 0.5, 'ay' => 0.5, 'scale' => 0.5, 'basis' => 'fill']]), '1:1: In fill')
+    && str_contains((string) CropEdits::cropsProblem([['ratio' => '7:5', 'auto' => true]]), 'not declared') && CropEdits::cropsProblem([['ratio' => '1:1', 'auto' => true]]) === null);
 foreach ([['nonsense', 0.5, 0.5, 1], ['16:9', 'x', 0.5, 1], ['16:9', 0.5, 0.5, 0], ['16:9', 0.5, 0.5, -1], ['16:9', 99, 0.5, 1], ['16:9', 0.5, 0.5, 1000], [null, 0.5, 0.5, 1], ['16:9', NAN, 0.5, 1],
     ['16:9', 0.5, 0.5, 0.8], ['16:9', 0.5, 0.5, 1, 'cover'], ['16:9', -0.2, 0.5, 1, 'fit'], ['16:9', 0.5, 1.3, 1]] as $i => $bad) {
     check("a request that is no crop is refused - $i", CropEdits::boxFrom(...$bad) === null);

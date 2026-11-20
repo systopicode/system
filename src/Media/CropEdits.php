@@ -315,26 +315,75 @@ final class CropEdits
 
     /**
      * A crop from what a request sends - null when it is not one, or not
-     * one its basis allows: an alignment within 0-1, in `fill` a scale of at
-     * least 1 (what the editor sends; rounding is brought in). No basis is
-     * `fill`.
+     * one its basis allows (`boxProblem()` tells why): an alignment within
+     * 0-1, in `fill` a scale of at least 1 (what the editor sends; rounding
+     * is brought in). No basis is `fill`.
      */
     public static function boxFrom(mixed $ratio, mixed $ax, mixed $ay, mixed $scale, mixed $basis = null): ?CropBox
     {
-        $read = is_string($ratio) ? Ratio::of($ratio) : null;
-        foreach ([$ax, $ay, $scale] as $value) {
+        if (self::boxProblem($ratio, $ax, $ay, $scale, $basis) !== null) {
+            return null;
+        }
+        return (new CropBox(Ratio::of($ratio), (float) $ax, (float) $ay, (float) $scale, CropBox::MANUAL, $basis ?? CropBox::FILL))->clamped();
+    }
+
+    /** Why what a request sends is no crop (`boxFrom()`) - null when it is one. For the editor to show. */
+    public static function boxProblem(mixed $ratio, mixed $ax, mixed $ay, mixed $scale, mixed $basis = null): ?string
+    {
+        if (!is_string($ratio) || Ratio::of($ratio) === null) {
+            return 'Not a ratio: ' . json_encode($ratio) . '.';
+        }
+        foreach (['alignment x' => $ax, 'alignment y' => $ay, 'scale' => $scale] as $name => $value) {
             if (!is_numeric($value) || !is_finite((float) $value)) {
-                return null;
+                return "The $name is no number: " . json_encode($value) . '.';
             }
         }
         $basis ??= CropBox::FILL;
-        $off = static fn(mixed $align): bool => (float) $align < -1e-6 || (float) $align > 1 + 1e-6;
-        // A scale near nothing shows no picture at all.
-        if ($read === null || !in_array($basis, [CropBox::FILL, CropBox::FIT], true) || $off($ax) || $off($ay)
-            || (float) $scale < ($basis === CropBox::FILL ? 1 - 1e-6 : 0.05) || (float) $scale > 100) {
-            return null;
+        if (!in_array($basis, [CropBox::FILL, CropBox::FIT], true)) {
+            return 'The basis is fill or fit, not ' . json_encode($basis) . '.';
         }
-        return (new CropBox($read, (float) $ax, (float) $ay, (float) $scale, CropBox::MANUAL, $basis))->clamped();
+        // Rounding is brought in (clamped()): the editor stops a hair beyond an edge.
+        foreach (['x' => $ax, 'y' => $ay] as $axis => $align) {
+            if ((float) $align < -1e-4 || (float) $align > 1 + 1e-4) {
+                return "The alignment $axis lies outside 0-1: $align.";
+            }
+        }
+        if ($basis === CropBox::FILL && (float) $scale < 1 - 1e-4) {
+            return "In fill the scale is at least 1 - the edge of the picture stays outside; it is $scale.";
+        }
+        // A scale near nothing shows no picture at all.
+        if ((float) $scale < 0.05 || (float) $scale > 100) {
+            return "The scale lies between 0.05 and 100; it is $scale.";
+        }
+        return null;
+    }
+
+    /** Why a list of crops is not taken (`crops()` gives null) - null when it is. For the editor to show. */
+    public static function cropsProblem(array $crops): ?string
+    {
+        $seen = [];
+        foreach (array_values($crops) as $crop) {
+            $name = is_array($crop) && is_string($crop['ratio'] ?? null) ? $crop['ratio'] : null;
+            if ($name === null) {
+                return 'Every crop names its ratio.';
+            }
+            $ratio = Variants::ratio($name);
+            if ($ratio === null) {
+                return "The ratio $name is not declared.";
+            }
+            if (isset($seen[$ratio->name])) {
+                return "The ratio {$ratio->name} comes twice.";
+            }
+            $seen[$ratio->name] = true;
+            if (($crop['auto'] ?? false) === true) {
+                continue;
+            }
+            $problem = self::boxProblem($ratio->name, $crop['ax'] ?? null, $crop['ay'] ?? null, $crop['scale'] ?? null, $crop['basis'] ?? null);
+            if ($problem !== null) {
+                return $ratio->name . ': ' . $problem;
+            }
+        }
+        return null;
     }
 
     private static function sameLook(array $a, array $b): bool

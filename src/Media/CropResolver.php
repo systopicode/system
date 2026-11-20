@@ -22,11 +22,13 @@ namespace Systopic\System\Media;
  *                                                     the outermost ratio
  *   5. nothing                                      - the largest crop, centred
  *
- * Everything from 2 on is `fill`, inside the master - unless the crops it
- * comes from are all `fit` (`CropBox::$basis`): then it is `fit` too, so
- * between two crops showing the whole picture the whole picture shows. The
- * editor's preview runs the
- * same rules in the browser; `tests/media-crop-resolver.cases.json` holds
+ * The basis (`CropBox::$basis`): what is automatic - nothing known, the
+ * outermost ratios - has the master's (`$basis`: a master "fit in" has
+ * its crops "fit in" by default); with it `fit`, points of interest are
+ * not needed, the whole master shows. Between two crops of one basis that
+ * basis; of `fill` and `fit` both are read as `fit` - the crops in between
+ * run into the one showing background without a jump. The editor's
+ * preview runs the same rules in the browser; `tests/media-crop-resolver.cases.json` holds
  * the cases both must pass.
  */
 final class CropResolver
@@ -40,8 +42,9 @@ final class CropResolver
      *        on either side is automatic (centred, scale 1) unless set by
      *        hand - beyond the last crop known the crops run towards it.
      *        Without them, automatic at once.
+     * @param string $basis the basis of what is automatic: the master's
      */
-    public static function resolve(Ratio $ratio, int $width, int $height, array $manual, array $pois = [], array $declared = []): CropBox
+    public static function resolve(Ratio $ratio, int $width, int $height, array $manual, array $pois = [], array $declared = [], string $basis = CropBox::FILL): CropBox
     {
         $byName = [];
         foreach ($manual as $crop) {
@@ -55,11 +58,11 @@ final class CropResolver
         if ($below !== null && $above !== null) {
             return self::between($ratio, $below, $above, $width, $height);
         }
-        if ($pois !== []) {
+        if ($pois !== [] && $basis === CropBox::FILL) {
             return self::overPois($ratio, $width, $height, $pois);
         }
         if ($byName === []) {
-            return new CropBox($ratio);
+            return new CropBox($ratio, basis: $basis);
         }
 
         // One side only. The whole master stands in for the missing side, at
@@ -68,27 +71,26 @@ final class CropResolver
         // same frame in either.
         $master = Ratio::ofPixels($width, $height);
         if ($master->equals($ratio)) {
-            return new CropBox($ratio);
+            return new CropBox($ratio, basis: $basis);
         }
-        $basis = ($below ?? $above)->basis;
-        $anchors = $byName + [$master->name => new CropBox($master, basis: $basis)];
+        $anchors = $byName + [$master->name => new CropBox($master, basis: ($below ?? $above)->basis)];
         [$below, $above] = self::neighbours($ratio, $anchors);
         if ($below !== null && $above !== null) {
             return self::between($ratio, $below, $above, $width, $height);
         }
         // Outside everything known: the outermost declared ratio of that side
-        // is automatic - centred at scale 1, in the basis of the nearest
-        // crop ("fill in", or "fit in" - all of the picture). In between, the
-        // crops run from the nearest towards it; it does not inherit the
-        // nearest one's alignment.
+        // is automatic - centred at scale 1, in the master's basis ("fill
+        // in", or "fit in" - all of the picture). In between, the crops run
+        // from the nearest towards it; it does not inherit the nearest one's
+        // alignment or basis.
         $nearest = $below ?? $above;
         $wider = $above === null;
         $end = self::outermost($declared, $wider);
         if ($end !== null && Ratio::compare($end, $ratio) === ($wider ? 1 : -1)) {
-            $edge = new CropBox($end, basis: $nearest->basis);
+            $edge = new CropBox($end, basis: $basis);
             return self::between($ratio, $wider ? $nearest : $edge, $wider ? $edge : $nearest, $width, $height);
         }
-        return new CropBox($ratio, basis: $nearest->basis);
+        return new CropBox($ratio, basis: $basis);
     }
 
     /**
@@ -115,11 +117,11 @@ final class CropResolver
      * @param list<CropBox> $manual
      * @return array<string, CropBox>
      */
-    public static function resolveAll(array $ratios, int $width, int $height, array $manual, array $pois = []): array
+    public static function resolveAll(array $ratios, int $width, int $height, array $manual, array $pois = [], string $basis = CropBox::FILL): array
     {
         $crops = [];
         foreach ($ratios as $ratio) {
-            $crops[$ratio->name] = self::resolve($ratio, $width, $height, $manual, $pois, $ratios);
+            $crops[$ratio->name] = self::resolve($ratio, $width, $height, $manual, $pois, $ratios, $basis);
         }
         return $crops;
     }
@@ -150,14 +152,15 @@ final class CropResolver
      * end the neighbour itself comes out.
      *
      * Two neighbours of one basis give a crop of that basis. Of two bases,
-     * both are read as `fill` first (`CropBox::asFill()`) - the crop in
-     * between lies inside the master.
+     * both are read as `fit` first (`CropBox::asFit()`): read as `fill`, a
+     * frame showing background would be pulled in up to the `fit` end and
+     * jump there.
      */
     private static function between(Ratio $ratio, CropBox $below, CropBox $above, int $width, int $height): CropBox
     {
         if ($below->basis !== $above->basis) {
-            $below = $below->asFill($width, $height);
-            $above = $above->asFill($width, $height);
+            $below = $below->asFit($width, $height);
+            $above = $above->asFit($width, $height);
         }
         $t = $ratio->position($below->ratio, $above->ratio);
         return (new CropBox(
